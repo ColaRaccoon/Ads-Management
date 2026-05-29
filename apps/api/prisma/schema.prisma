@@ -1,0 +1,524 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UploadStatus {
+  PENDING
+  VALIDATING
+  VALIDATED
+  IMPORTED
+  PARTIAL
+  FAILED
+  CANCELLED
+
+  @@map("upload_status")
+}
+
+enum UploadLevel {
+  ADSET
+  AD
+  CAMPAIGN
+
+  @@map("upload_level")
+}
+
+enum ConflictPolicy {
+  SKIP
+  OVERWRITE
+  NEW_VERSION
+
+  @@map("conflict_policy")
+}
+
+enum RowValidationStatus {
+  VALID
+  WARNING
+  ERROR
+  UNMATCHED
+
+  @@map("row_validation_status")
+}
+
+enum MatchType {
+  CONTAINS
+  EXACT
+  REGEX
+  MANUAL
+
+  @@map("match_type")
+}
+
+enum MatchSource {
+  RULE
+  MANUAL
+  INFERRED
+  UNMATCHED
+
+  @@map("match_source")
+}
+
+enum AdStage {
+  SC
+  CBO
+  ASC
+  UNKNOWN
+
+  @@map("ad_stage")
+}
+
+enum DecisionType {
+  SCALE
+  KEEP
+  WATCH
+  STOP_CANDIDATE
+  SC_TO_CBO
+  CBO_TO_ASC
+  SC_TO_ASC
+  ASC_TO_SC
+  PROFIT
+  LOSS
+
+  @@map("decision_type")
+}
+
+enum ReportType {
+  DAILY_HTML
+  PERIOD_XLSX
+  CHANGE_LOG_XLSX
+  CPA_RULE_XLSX
+
+  @@map("report_type")
+}
+
+enum ExchangeRateFallbackType {
+  EXACT
+  PREVIOUS_AVAILABLE
+  LATEST_AVAILABLE
+  MANUAL
+
+  @@map("exchange_rate_fallback_type")
+}
+
+model AppUser {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String?  @unique
+  name      String
+  role      String   @default("ADMIN")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_users")
+}
+
+model Product {
+  id              String                    @id @default(uuid()) @db.Uuid
+  code            String                    @unique
+  name            String
+  displayName     String                    @map("display_name")
+  sku             String?
+  sortOrder       Int                       @default(100) @map("sort_order")
+  isActive        Boolean                   @default(true) @map("is_active")
+  createdAt       DateTime                  @default(now()) @map("created_at")
+  updatedAt       DateTime                  @updatedAt @map("updated_at")
+  costRules       ProductCostRule[]
+  cpaRules        ProductCpaRule[]
+  matchRules      ProductMatchRule[]
+  adsetHistories  AdsetProductHistory[]
+  uploadRows      UploadRow[]
+  dailyMetrics    MetaAdsetDailyMetric[]
+  decisionLogs    DecisionLog[]
+  changeLogs      ChangeLog[]
+  currentAdsets   MetaAdset[]               @relation("CurrentAdsetProduct")
+
+  @@map("products")
+}
+
+model ProductCostRule {
+  id                 String   @id @default(uuid()) @db.Uuid
+  productId          String   @map("product_id") @db.Uuid
+  salePriceKrw       Decimal  @map("sale_price_krw") @db.Decimal(14, 2)
+  vatKrw             Decimal  @default(0) @map("vat_krw") @db.Decimal(14, 2)
+  productCostKrw     Decimal  @default(0) @map("product_cost_krw") @db.Decimal(14, 2)
+  shippingKrw        Decimal  @default(0) @map("shipping_krw") @db.Decimal(14, 2)
+  extraCostKrw       Decimal  @default(0) @map("extra_cost_krw") @db.Decimal(14, 2)
+  fxRateKrwPerUsd    Decimal  @map("fx_rate_krw_per_usd") @db.Decimal(12, 4)
+  effectiveFrom      DateTime @map("effective_from") @db.Date
+  effectiveTo        DateTime? @map("effective_to") @db.Date
+  note               String?
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  product            Product  @relation(fields: [productId], references: [id])
+
+  @@index([productId, effectiveFrom, effectiveTo])
+  @@map("product_cost_rules")
+}
+
+model ExchangeRate {
+  id              String                   @id @default(uuid()) @db.Uuid
+  rateDate        DateTime                 @map("rate_date") @db.Date
+  sourceDate      DateTime                 @map("source_date") @db.Date
+  baseCurrency    String                   @default("USD") @map("base_currency") @db.VarChar(3)
+  quoteCurrency   String                   @default("KRW") @map("quote_currency") @db.VarChar(3)
+  rate            Decimal                  @db.Decimal(14, 6)
+  provider        String                   @default("KOREA_EXIM") @db.VarChar(32)
+  providerPayload Json?                    @map("provider_payload")
+  fallbackType    ExchangeRateFallbackType @default(EXACT) @map("fallback_type")
+  fetchedAt       DateTime                 @default(now()) @map("fetched_at")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+
+  @@unique([rateDate, baseCurrency, quoteCurrency, provider])
+  @@index([baseCurrency, quoteCurrency, rateDate])
+  @@map("exchange_rates")
+}
+
+model ProductCpaRule {
+  id            String   @id @default(uuid()) @db.Uuid
+  productId     String   @map("product_id") @db.Uuid
+  targetRatio   Decimal  @default(0.8000) @map("target_ratio") @db.Decimal(6, 4)
+  watchRatio    Decimal  @default(1.1000) @map("watch_ratio") @db.Decimal(6, 4)
+  stopRatio     Decimal  @default(1.2500) @map("stop_ratio") @db.Decimal(6, 4)
+  effectiveFrom DateTime @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  product       Product  @relation(fields: [productId], references: [id])
+
+  @@index([productId, effectiveFrom, effectiveTo])
+  @@map("product_cpa_rules")
+}
+
+model MetaAdset {
+  id                String                    @id @default(uuid()) @db.Uuid
+  platform          String                    @default("META")
+  externalAdsetId   String?                   @map("external_adset_id")
+  adsetName         String                    @map("adset_name")
+  adsetNameKey      String                    @map("adset_name_key")
+  firstSeenOn       DateTime?                 @map("first_seen_on") @db.Date
+  lastSeenOn        DateTime?                 @map("last_seen_on") @db.Date
+  currentProductId  String?                   @map("current_product_id") @db.Uuid
+  currentStage      AdStage                   @default(UNKNOWN) @map("current_stage")
+  isActive          Boolean                   @default(true) @map("is_active")
+  createdAt         DateTime                  @default(now()) @map("created_at")
+  updatedAt         DateTime                  @updatedAt @map("updated_at")
+  currentProduct    Product?                  @relation("CurrentAdsetProduct", fields: [currentProductId], references: [id])
+  aliases           AdsetNameAlias[]
+  productHistories  AdsetProductHistory[]
+  stageHistories    AdsetStageHistory[]
+  uploadRows        UploadRow[]
+  dailyMetrics      MetaAdsetDailyMetric[]
+  decisionLogs      DecisionLog[]
+  changeLogs        ChangeLog[]
+
+  @@index([platform, externalAdsetId])
+  @@index([platform, adsetNameKey])
+  @@map("meta_adsets")
+}
+
+model AdsetNameAlias {
+  id           String      @id @default(uuid()) @db.Uuid
+  metaAdsetId  String      @map("meta_adset_id") @db.Uuid
+  aliasName    String      @map("alias_name")
+  aliasKey     String      @unique @map("alias_key")
+  source       MatchSource @default(INFERRED)
+  firstSeenOn  DateTime?   @map("first_seen_on") @db.Date
+  lastSeenOn   DateTime?   @map("last_seen_on") @db.Date
+  createdAt    DateTime    @default(now()) @map("created_at")
+  metaAdset    MetaAdset   @relation(fields: [metaAdsetId], references: [id])
+
+  @@map("adset_name_aliases")
+}
+
+model ProductMatchRule {
+  id             String                    @id @default(uuid()) @db.Uuid
+  matchType      MatchType                 @map("match_type")
+  pattern        String
+  patternKey     String?                   @map("pattern_key")
+  productId      String                    @map("product_id") @db.Uuid
+  priority       Int                       @default(100)
+  isActive       Boolean                   @default(true) @map("is_active")
+  validFrom      DateTime                  @default(now()) @map("valid_from") @db.Date
+  validTo        DateTime?                 @map("valid_to") @db.Date
+  note           String?
+  createdBy      String?                   @map("created_by") @db.Uuid
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  updatedAt      DateTime                  @updatedAt @map("updated_at")
+  product        Product                   @relation(fields: [productId], references: [id])
+  histories      AdsetProductHistory[]
+  uploadRows     UploadRow[]
+  dailyMetrics   MetaAdsetDailyMetric[]
+
+  @@index([isActive, priority])
+  @@map("product_match_rules")
+}
+
+model AdsetProductHistory {
+  id            String            @id @default(uuid()) @db.Uuid
+  metaAdsetId   String            @map("meta_adset_id") @db.Uuid
+  productId     String            @map("product_id") @db.Uuid
+  effectiveFrom DateTime          @map("effective_from") @db.Date
+  effectiveTo   DateTime?         @map("effective_to") @db.Date
+  source        MatchSource       @default(MANUAL)
+  matchRuleId   String?           @map("match_rule_id") @db.Uuid
+  note          String?
+  createdBy     String?           @map("created_by") @db.Uuid
+  createdAt     DateTime          @default(now()) @map("created_at")
+  metaAdset     MetaAdset         @relation(fields: [metaAdsetId], references: [id])
+  product       Product           @relation(fields: [productId], references: [id])
+  matchRule     ProductMatchRule? @relation(fields: [matchRuleId], references: [id])
+
+  @@index([metaAdsetId, effectiveFrom, effectiveTo])
+  @@map("adset_product_histories")
+}
+
+model AdsetStageHistory {
+  id            String      @id @default(uuid()) @db.Uuid
+  metaAdsetId   String      @map("meta_adset_id") @db.Uuid
+  stage         AdStage
+  effectiveFrom DateTime    @map("effective_from") @db.Date
+  effectiveTo   DateTime?   @map("effective_to") @db.Date
+  source        MatchSource @default(MANUAL)
+  note          String?
+  createdBy     String?     @map("created_by") @db.Uuid
+  createdAt     DateTime    @default(now()) @map("created_at")
+  metaAdset     MetaAdset   @relation(fields: [metaAdsetId], references: [id])
+
+  @@index([metaAdsetId, effectiveFrom, effectiveTo])
+  @@map("adset_stage_histories")
+}
+
+model UploadBatch {
+  id             String                 @id @default(uuid()) @db.Uuid
+  originalFilename String               @map("original_filename")
+  storedFilePath String?                @map("stored_file_path")
+  fileHashSha256 String                 @unique @map("file_hash_sha256") @db.Char(64)
+  reportStart    DateTime?              @map("report_start") @db.Date
+  reportEnd      DateTime?              @map("report_end") @db.Date
+  level          UploadLevel            @default(ADSET)
+  columnSchema   Json                   @map("column_schema")
+  rowCount       Int                    @default(0) @map("row_count")
+  validRowCount  Int                    @default(0) @map("valid_row_count")
+  warningCount   Int                    @default(0) @map("warning_count")
+  errorCount     Int                    @default(0) @map("error_count")
+  conflictPolicy ConflictPolicy         @default(SKIP) @map("conflict_policy")
+  status         UploadStatus           @default(PENDING)
+  timezone       String                 @default("Asia/Seoul")
+  uploadedBy     String?                @map("uploaded_by") @db.Uuid
+  uploadedAt     DateTime               @default(now()) @map("uploaded_at")
+  validatedAt    DateTime?              @map("validated_at")
+  importedAt     DateTime?              @map("imported_at")
+  note           String?
+  rows           UploadRow[]
+  errors         UploadRowError[]
+  metrics        MetaAdsetDailyMetric[]
+
+  @@index([reportStart, reportEnd])
+  @@map("upload_batches")
+}
+
+model UploadRow {
+  id                 String              @id @default(uuid()) @db.Uuid
+  uploadBatchId      String              @map("upload_batch_id") @db.Uuid
+  rowNumber          Int                 @map("row_number")
+  sourceRowHash      String              @map("source_row_hash") @db.Char(64)
+  rawRow             Json                @map("raw_row")
+  parsedRow          Json?               @map("parsed_row")
+  dateStart          DateTime?           @map("date_start") @db.Date
+  dateEnd            DateTime?           @map("date_end") @db.Date
+  adsetName          String?             @map("adset_name")
+  adsetNameKey       String?             @map("adset_name_key")
+  metaAdsetId        String?             @map("meta_adset_id") @db.Uuid
+  productId          String?             @map("product_id") @db.Uuid
+  stage              AdStage             @default(UNKNOWN)
+  productMatchSource MatchSource         @default(UNMATCHED) @map("product_match_source")
+  productMatchRuleId String?             @map("product_match_rule_id") @db.Uuid
+  validationStatus   RowValidationStatus @default(VALID) @map("validation_status")
+  validationErrors   Json                @default("[]") @map("validation_errors")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  batch              UploadBatch         @relation(fields: [uploadBatchId], references: [id])
+  metaAdset          MetaAdset?          @relation(fields: [metaAdsetId], references: [id])
+  product            Product?            @relation(fields: [productId], references: [id])
+  productMatchRule   ProductMatchRule?   @relation(fields: [productMatchRuleId], references: [id])
+  rowErrors          UploadRowError[]
+  metric             MetaAdsetDailyMetric?
+
+  @@unique([uploadBatchId, rowNumber])
+  @@index([uploadBatchId, validationStatus])
+  @@map("upload_rows")
+}
+
+model UploadRowError {
+  id            String      @id @default(uuid()) @db.Uuid
+  uploadBatchId String      @map("upload_batch_id") @db.Uuid
+  uploadRowId   String?     @map("upload_row_id") @db.Uuid
+  rowNumber     Int?        @map("row_number")
+  columnName    String?     @map("column_name")
+  severity      String      @default("ERROR")
+  errorCode     String      @map("error_code")
+  message       String
+  rawValue      String?     @map("raw_value")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  batch         UploadBatch @relation(fields: [uploadBatchId], references: [id])
+  row           UploadRow?  @relation(fields: [uploadRowId], references: [id])
+
+  @@index([uploadBatchId, severity])
+  @@map("upload_row_errors")
+}
+
+model MetaAdsetDailyMetric {
+  id                            String            @id @default(uuid()) @db.Uuid
+  uploadBatchId                 String            @map("upload_batch_id") @db.Uuid
+  uploadRowId                   String?           @unique @map("upload_row_id") @db.Uuid
+  metaAdsetId                   String            @map("meta_adset_id") @db.Uuid
+  metricDate                    DateTime          @map("metric_date") @db.Date
+  dateStart                     DateTime          @map("date_start") @db.Date
+  dateEnd                       DateTime          @map("date_end") @db.Date
+  adsetName                     String            @map("adset_name")
+  adsetNameKey                  String            @map("adset_name_key")
+  deliveryStatus                String?           @map("delivery_status")
+  attributionSetting            String?           @map("attribution_setting")
+  resultCount                   Int               @default(0) @map("result_count")
+  resultIndicator               String?           @map("result_indicator")
+  reach                         Int               @default(0)
+  frequency                     Decimal?          @db.Decimal(12, 6)
+  costPerResultUsd              Decimal?          @map("cost_per_result_usd") @db.Decimal(14, 4)
+  adsetBudgetLabel              String?           @map("adset_budget_label")
+  adsetBudgetType               String?           @map("adset_budget_type")
+  spendUsd                      Decimal           @default(0) @map("spend_usd") @db.Decimal(14, 4)
+  endStatus                     String?           @map("end_status")
+  startDate                     DateTime?         @map("start_date") @db.Date
+  impressions                   BigInt            @default(0)
+  cpmUsd                        Decimal?          @map("cpm_usd") @db.Decimal(14, 4)
+  linkClicks                    Int               @default(0) @map("link_clicks")
+  shopClicks                    Int               @default(0) @map("shop_clicks")
+  cpcLinkUsd                    Decimal?          @map("cpc_link_usd") @db.Decimal(14, 4)
+  ctrLinkPct                    Decimal?          @map("ctr_link_pct") @db.Decimal(10, 6)
+  clicksAll                     Int               @default(0) @map("clicks_all")
+  ctrAllPct                     Decimal?          @map("ctr_all_pct") @db.Decimal(10, 6)
+  cpcAllUsd                     Decimal?          @map("cpc_all_usd") @db.Decimal(14, 4)
+  landingPageViews              Int               @default(0) @map("landing_page_views")
+  costPerLandingPageViewUsd     Decimal?          @map("cost_per_landing_page_view_usd") @db.Decimal(14, 4)
+  productId                     String?           @map("product_id") @db.Uuid
+  stage                         AdStage           @default(UNKNOWN)
+  productMatchSource            MatchSource       @default(UNMATCHED) @map("product_match_source")
+  stageMatchSource              MatchSource       @default(UNMATCHED) @map("stage_match_source")
+  productMatchRuleId            String?           @map("product_match_rule_id") @db.Uuid
+  importVersion                 Int               @default(1) @map("import_version")
+  isCurrent                     Boolean           @default(true) @map("is_current")
+  supersededByMetricId          String?           @map("superseded_by_metric_id") @db.Uuid
+  rawRow                        Json              @map("raw_row")
+  createdAt                     DateTime          @default(now()) @map("created_at")
+  updatedAt                     DateTime          @updatedAt @map("updated_at")
+  batch                         UploadBatch       @relation(fields: [uploadBatchId], references: [id])
+  uploadRow                     UploadRow?        @relation(fields: [uploadRowId], references: [id])
+  metaAdset                     MetaAdset         @relation(fields: [metaAdsetId], references: [id])
+  product                       Product?          @relation(fields: [productId], references: [id])
+  productMatchRule              ProductMatchRule? @relation(fields: [productMatchRuleId], references: [id])
+
+  @@unique([metricDate, metaAdsetId, importVersion])
+  @@index([metricDate])
+  @@index([productId, metricDate])
+  @@index([stage, metricDate])
+  @@map("meta_adset_daily_metrics")
+}
+
+model DecisionRun {
+  id          String        @id @default(uuid()) @db.Uuid
+  periodStart DateTime      @map("period_start") @db.Date
+  periodEnd   DateTime      @map("period_end") @db.Date
+  compareType String?       @map("compare_type")
+  filters     Json          @default("{}")
+  status      String        @default("DONE")
+  createdBy   String?       @map("created_by") @db.Uuid
+  createdAt   DateTime      @default(now()) @map("created_at")
+  logs        DecisionLog[]
+
+  @@map("decision_runs")
+}
+
+model DecisionLog {
+  id                String       @id @default(uuid()) @db.Uuid
+  decisionRunId     String?      @map("decision_run_id") @db.Uuid
+  decisionDate      DateTime     @default(now()) @map("decision_date") @db.Date
+  periodStart       DateTime     @map("period_start") @db.Date
+  periodEnd         DateTime     @map("period_end") @db.Date
+  scopeType         String       @map("scope_type")
+  productId         String?      @map("product_id") @db.Uuid
+  metaAdsetId       String?      @map("meta_adset_id") @db.Uuid
+  stage             AdStage?
+  decision          DecisionType
+  severity          Int          @default(1) @db.SmallInt
+  reason            String
+  recommendedAction String?      @map("recommended_action")
+  metricsSnapshot   Json         @map("metrics_snapshot")
+  ruleSnapshot      Json         @default("{}") @map("rule_snapshot")
+  isAuto            Boolean      @default(true) @map("is_auto")
+  createdBy         String?      @map("created_by") @db.Uuid
+  createdAt         DateTime     @default(now()) @map("created_at")
+  run               DecisionRun? @relation(fields: [decisionRunId], references: [id])
+  product           Product?     @relation(fields: [productId], references: [id])
+  metaAdset         MetaAdset?   @relation(fields: [metaAdsetId], references: [id])
+  changeLogs        ChangeLog[]
+
+  @@index([periodStart, periodEnd, decision])
+  @@index([productId, decisionDate])
+  @@index([metaAdsetId, decisionDate])
+  @@map("decision_logs")
+}
+
+model ChangeLog {
+  id                String       @id @default(uuid()) @db.Uuid
+  actionDate        DateTime     @default(now()) @map("action_date") @db.Date
+  actionType        String       @map("action_type")
+  targetType        String       @map("target_type")
+  productId         String?      @map("product_id") @db.Uuid
+  metaAdsetId       String?      @map("meta_adset_id") @db.Uuid
+  stageFrom         AdStage?     @map("stage_from")
+  stageTo           AdStage?     @map("stage_to")
+  previousValue     Json?        @map("previous_value")
+  newValue          Json?        @map("new_value")
+  reason            String
+  relatedDecisionId String?      @map("related_decision_id") @db.Uuid
+  nextCheckDate     DateTime?    @map("next_check_date") @db.Date
+  createdBy         String?      @map("created_by") @db.Uuid
+  createdAt         DateTime     @default(now()) @map("created_at")
+  product           Product?     @relation(fields: [productId], references: [id])
+  metaAdset         MetaAdset?   @relation(fields: [metaAdsetId], references: [id])
+  relatedDecision   DecisionLog? @relation(fields: [relatedDecisionId], references: [id])
+
+  @@index([actionDate, actionType])
+  @@map("change_logs")
+}
+
+model ReportExport {
+  id             String     @id @default(uuid()) @db.Uuid
+  reportType     ReportType @map("report_type")
+  periodStart    DateTime   @map("period_start") @db.Date
+  periodEnd      DateTime   @map("period_end") @db.Date
+  parameters     Json       @default("{}")
+  filePath       String?    @map("file_path")
+  fileHashSha256 String?    @map("file_hash_sha256") @db.Char(64)
+  status         String     @default("CREATED")
+  createdBy      String?    @map("created_by") @db.Uuid
+  createdAt      DateTime   @default(now()) @map("created_at")
+
+  @@index([reportType, periodStart, periodEnd])
+  @@map("report_exports")
+}
+
+model AppSetting {
+  key         String   @id
+  valueJson   Json     @map("value_json")
+  description String?
+  updatedBy   String?  @map("updated_by") @db.Uuid
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}

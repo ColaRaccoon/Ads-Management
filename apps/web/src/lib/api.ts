@@ -1,0 +1,106 @@
+import { DateRange } from "./date-range";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4100/api";
+
+export async function apiGet<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "DELETE"
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function uploadCsv(file: File, conflictPolicy: string) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("conflictPolicy", conflictPolicy);
+  const response = await fetch(`${API_BASE}/uploads/meta-adset-csv`, {
+    method: "POST",
+    body: formData
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
+export function rangeQuery(range: DateRange) {
+  return `from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`;
+}
+
+export function withPeriod(path: string, from: string, to: string) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+}
+
+export const reportDownloadUrl = (id: string) => `${API_BASE}/reports/${id}/download`;
+
+export type DashboardSummary = {
+  selectedPeriod: { from: string; to: string; selectedDays: number; dataDays: number };
+  totals: {
+    spendUsd: number;
+    spendKrw: number;
+    purchaseCount: number;
+    revenueKrw: number;
+    marginKrw: number;
+    cpaKrw: number | null;
+    cpaUsd: number | null;
+    roas: number | null;
+    ctrLinkPct: number | null;
+    cpcLinkUsd: number | null;
+    landingPageViews: number;
+  };
+  averages: { dailySpendKrw: number | null; dailyPurchaseCount: number | null; dailyMarginKrw: number | null };
+  comparisons: Record<string, unknown>;
+  health: {
+    unmatchedCount: number;
+    missingCostRuleCount: number;
+    missingCpaRuleCount: number;
+    missingExchangeRateCount: number;
+    uploadErrorCount: number;
+  };
+  decisions: { counts: Record<string, number>; topRecommendations: DecisionLog[] };
+};
+
+export type DecisionLog = {
+  id: string;
+  scopeType: string;
+  decision: string;
+  severity: number;
+  reason: string;
+  recommendedAction?: string | null;
+};
