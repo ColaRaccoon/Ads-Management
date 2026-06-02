@@ -15,6 +15,11 @@ export class MappingsController {
     return this.mappingsService.createProductRule(body);
   }
 
+  @Post("rematch")
+  rematchCurrentMetrics(@Body() body: Record<string, unknown>) {
+    return this.mappingsService.rematchCurrentMetrics(body);
+  }
+
   @Post("product/manual")
   createManualProductMapping(@Body() body: Record<string, unknown>) {
     return this.mappingsService.createManualProductMapping(body);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AdsetNameNormalizer } from "./adset-name-normalizer";
 import { CsvHeaderValidator, META_ADSET_REQUIRED_COLUMNS, MetaCsvParser } from "./meta-csv";
+import { dailyAdMetricKey, MetaAdDailyCsvParser, MetaAdDailyCsvValidator, syntheticAdKey } from "./meta-ad-daily-csv";
 import { parseDateString, parseNumberValue } from "./date-number";
 import { MarginCalculator } from "./margin-calculator";
 import { PeriodMetricCalculator } from "./period-metric-calculator";
@@ -9,6 +10,10 @@ import { DuplicatePolicyResolver } from "./duplicate-policy";
 import { DecisionClassifier } from "./decision-classifier";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { encode } from "iconv-lite";
+import { existsSync, readFileSync } from "node:fs";
+
+const SAMPLE_AD_DAILY_CSV =
+  "C:/Users/seong/Downloads/Patima-group-파티마그룹-광고-2026.-6.-1.-~-2026.-6.-1. (1).csv";
 
 describe("AdsetNameNormalizer", () => {
   it("trims, collapses spaces, and lowercases keys", () => {
@@ -79,6 +84,94 @@ describe("CSV header and parser", () => {
 
     expect(parsed.headers).toContain("보고 시작");
     expect(parsed.rows[0]["광고 세트 이름"]).toBe("SC 버닝웨이브바");
+  });
+});
+
+describe("Meta ad daily CSV parser", () => {
+  it("validates the 32-column ad-level schema without requiring ad id", () => {
+    const headers = [
+      "보고 시작",
+      "보고 종료",
+      "광고 이름",
+      "광고 게재",
+      "기여 설정",
+      "결과",
+      "결과 표시 도구",
+      "도달",
+      "빈도",
+      "결과당 비용",
+      "광고 세트 예산",
+      "광고 세트 예산 유형",
+      "지출 금액 (USD)",
+      "종료",
+      "품질 순위",
+      "참여율 순위",
+      "전환율 순위",
+      "노출",
+      "CPM(1,000회 노출당 비용) (USD)",
+      "링크 클릭",
+      "shop_clicks",
+      "CPC(링크 클릭당 비용) (USD)",
+      "CTR(링크 클릭률)",
+      "클릭(전체)",
+      "CTR(전체)",
+      "CPC(전체) (USD)",
+      "랜딩 페이지 조회",
+      "랜딩 페이지 조회당 비용 (USD)",
+      "광고 세트 이름",
+      "캠페인 이름",
+      "광고 세트 ID",
+      "캠페인 ID"
+    ];
+
+    const result = MetaAdDailyCsvValidator.validate(headers);
+
+    expect(result.valid).toBe(true);
+    expect(result.missingColumns).toHaveLength(0);
+    expect(result.warnings.join("\n")).toContain("광고 ID");
+  });
+
+  it("keeps Meta IDs as strings and uses a synthetic ad key when ad id is absent", () => {
+    const parsed = new MetaAdDailyCsvParser().parseRow({
+      "보고 시작": "2026-06-01",
+      "보고 종료": "2026-06-01",
+      "캠페인 이름": "버닝웨이브바_CBO",
+      "캠페인 ID": "120247264695860494",
+      "광고 세트 이름": "테스트 광고세트",
+      "광고 세트 ID": "120247264695870494",
+      "광고 이름": "버닝웨이브바_02",
+      "광고 게재": "active",
+      "결과": "3",
+      "결과 표시 도구": "actions:offsite_conversion.fb_pixel_purchase",
+      "지출 금액 (USD)": "$12.34",
+      "노출": "1,000"
+    });
+
+    expect(parsed.issues).toHaveLength(0);
+    expect(parsed.parsedRow?.metaCampaignId).toBe("120247264695860494");
+    expect(parsed.parsedRow?.metaAdsetExternalId).toBe("120247264695870494");
+    expect(parsed.parsedRow?.syntheticAdKey).toBe(
+      syntheticAdKey("120247264695860494", "120247264695870494", "버닝웨이브바_02")
+    );
+    expect(parsed.parsedRow?.adIdentityKey).toBe(parsed.parsedRow?.syntheticAdKey);
+    expect(parsed.parsedRow?.purchaseCount).toBe(3);
+  });
+
+  it.runIf(existsSync(SAMPLE_AD_DAILY_CSV))("matches the provided June 1 Meta ad CSV summary", () => {
+    const parser = new MetaAdDailyCsvParser();
+    const preview = parser.preview(readFileSync(SAMPLE_AD_DAILY_CSV));
+    const keys = new Set(preview.sampleRows.map(dailyAdMetricKey));
+
+    expect(preview.rowCount).toBe(38);
+    expect(preview.columnCount).toBe(32);
+    expect(preview.campaignCount).toBe(5);
+    expect(preview.adsetCount).toBe(16);
+    expect(preview.uniqueAdNameCount).toBe(33);
+    expect(preview.dailyAdKeyCount).toBe(38);
+    expect(preview.totalSpendUsd).toBe(142.46);
+    expect(preview.totalPurchases).toBe(13);
+    expect(preview.duplicateKeys).toHaveLength(0);
+    expect(keys.size).toBe(preview.sampleRows.length);
   });
 });
 

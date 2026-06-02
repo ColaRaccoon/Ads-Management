@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { AdStage, DecisionType, Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { dateRangeDays, numberFrom, parseDateRange } from "../common/date-range";
@@ -31,11 +31,14 @@ type DecoratedMetric = {
   cpaKrw: number | null;
   cpaUsd: number | null;
   ruleStatus: RuleStatus;
+
   thresholds: ProductCpaThresholds | null;
   costRule: CostRule | null;
   cpaRule: CpaRule | null;
   exchangeRate: ExchangeRateRow | null;
 };
+
+export type DeliveryStatusFilter = "active" | "inactive" | "all";
 
 @Injectable()
 export class MetricsService {
@@ -45,9 +48,10 @@ export class MetricsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async dashboardSummary(from?: string, to?: string, compare?: string) {
+  async dashboardSummary(from?: string, to?: string, compare?: string, deliveryStatusInput?: string) {
+    const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
     const range = parseDateRange(from, to);
-    const decorated = await this.decoratedMetrics(range.fromDate, range.toDate);
+    const decorated = await this.decoratedMetrics(range.fromDate, range.toDate, deliveryStatus);
     const aggregate = this.aggregate(decorated);
     const selectedDays = dateRangeDays(range.from, range.to);
     const health = await this.health(range.fromDate, range.toDate, decorated);
@@ -59,10 +63,10 @@ export class MetricsService {
     const lastDayRange = { fromDate: range.toDate, toDate: range.toDate };
 
     const [previousDay, previousSamePeriod, firstDay, lastDay] = await Promise.all([
-      this.aggregate(await this.decoratedMetrics(previousDayRange.fromDate, previousDayRange.toDate)),
-      this.aggregate(await this.decoratedMetrics(previousSamePeriodRange.fromDate, previousSamePeriodRange.toDate)),
-      this.aggregate(await this.decoratedMetrics(firstDayRange.fromDate, firstDayRange.toDate)),
-      this.aggregate(await this.decoratedMetrics(lastDayRange.fromDate, lastDayRange.toDate))
+      this.aggregate(await this.decoratedMetrics(previousDayRange.fromDate, previousDayRange.toDate, deliveryStatus)),
+      this.aggregate(await this.decoratedMetrics(previousSamePeriodRange.fromDate, previousSamePeriodRange.toDate, deliveryStatus)),
+      this.aggregate(await this.decoratedMetrics(firstDayRange.fromDate, firstDayRange.toDate, deliveryStatus)),
+      this.aggregate(await this.decoratedMetrics(lastDayRange.fromDate, lastDayRange.toDate, deliveryStatus))
     ]);
 
     return {
@@ -89,9 +93,10 @@ export class MetricsService {
     };
   }
 
-  async dashboardTrends(from?: string, to?: string, groupBy = "date") {
+  async dashboardTrends(from?: string, to?: string, groupBy = "date", deliveryStatusInput?: string) {
+    const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
     const range = parseDateRange(from, to);
-    const decorated = await this.decoratedMetrics(range.fromDate, range.toDate);
+    const decorated = await this.decoratedMetrics(range.fromDate, range.toDate, deliveryStatus);
     const groups = new Map<string, DecoratedMetric[]>();
     for (const row of decorated) {
       const key =
@@ -124,9 +129,10 @@ export class MetricsService {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  async productMetrics(from?: string, to?: string) {
+  async productMetrics(from?: string, to?: string, deliveryStatusInput?: string) {
+    const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
     const range = parseDateRange(from, to);
-    const decorated = (await this.decoratedMetrics(range.fromDate, range.toDate)).filter((row) => row.metric.productId);
+    const decorated = (await this.decoratedMetrics(range.fromDate, range.toDate, deliveryStatus)).filter((row) => row.metric.productId);
     const groups = groupBy(decorated, (row) => row.metric.productId ?? "unmatched");
 
     return Array.from(groups.entries()).map(([productId, rows]) => {
@@ -156,16 +162,27 @@ export class MetricsService {
   async adsetMetrics(query: {
     from?: string;
     to?: string;
+    campaignId?: string;
     productId?: string;
     stage?: string;
     decision?: string;
+    deliveryStatus?: string;
   }) {
     const range = parseDateRange(query.from, query.to);
+    const deliveryStatus = parseDeliveryStatusFilter(query.deliveryStatus);
     const where: Prisma.MetaAdsetDailyMetricWhereInput = {
       isCurrent: true,
       metricDate: { gte: range.fromDate, lte: range.toDate },
+      ...deliveryStatusWhere(deliveryStatus),
       ...(query.productId ? { productId: query.productId } : {}),
-      ...(query.stage ? { stage: query.stage as AdStage } : {})
+      ...(query.stage ? { stage: query.stage as AdStage } : {}),
+      ...(query.campaignId
+        ? {
+            metaAdset: isUuid(query.campaignId)
+              ? { campaignRefId: query.campaignId }
+              : { campaign: { externalCampaignId: query.campaignId } }
+          }
+        : {})
     };
     const metrics = await this.prisma.metaAdsetDailyMetric.findMany({
       where,
@@ -210,12 +227,136 @@ export class MetricsService {
     return rows.filter((row) => allowed.has(row.metaAdsetId));
   }
 
-  async unmatchedMetrics(from?: string, to?: string) {
+  async campaignMetrics(query: { from?: string; to?: string; productId?: string; stage?: string; deliveryStatus?: string }) {
+    const metrics = await this.currentAdMetrics(query);
+    const groups = groupBy(metrics, (row) => row.metaCampaignId);
+    return Array.from(groups.entries()).map(([metaCampaignId, rows]) => {
+      const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
+      const last = rows[rows.length - 1];
+      return {
+        metaCampaignId,
+        campaignName: last.campaignNameSnapshot,
+        adsetCount: new Set(rows.map((row) => row.metaAdsetId)).size,
+        adCount: new Set(rows.map((row) => `${row.metaAdsetId}:${row.adIdentityKey}`)).size,
+        deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
+        stage: last.stage,
+        totals: aggregate.totals,
+        dataDays: aggregate.dataDays
+      };
+    });
+  }
+
+  async adMetrics(query: {
+    from?: string;
+    to?: string;
+    campaignId?: string;
+    adsetId?: string;
+    productId?: string;
+    stage?: string;
+    deliveryStatus?: string;
+  }) {
+    const metrics = await this.currentAdMetrics(query);
+    const groups = groupBy(metrics, (row) => `${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`);
+    return Array.from(groups.entries()).map(([, rows]) => {
+      const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
+      const first = rows[0];
+      const last = rows[rows.length - 1];
+      return {
+        metaAdRefId: last.metaAdRefId,
+        metaCampaignId: last.metaCampaignId,
+        campaignName: last.campaignNameSnapshot,
+        metaAdsetId: last.metaAdsetId,
+        metaAdsetRefId: last.metaAdsetRefId,
+        adsetName: last.adsetNameSnapshot,
+        metaAdId: last.metaAdId,
+        syntheticAdKey: last.syntheticAdKey,
+        adIdentityKey: last.adIdentityKey,
+        adName: last.adNameSnapshot,
+        productId: last.productId,
+        stage: last.stage,
+        deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
+        totals: aggregate.totals,
+        dataDays: aggregate.dataDays,
+        firstSeenOn: formatDateOnly(first.metricDate),
+        lastSeenOn: formatDateOnly(last.metricDate)
+      };
+    });
+  }
+
+  async compareAdsByName(adName: string | undefined, from?: string, to?: string) {
+    if (!adName?.trim()) {
+      throw new BadRequestException({ code: "AD_NAME_REQUIRED", message: "adName 값이 필요합니다." });
+    }
+    return this.adMetrics({ from, to, deliveryStatus: "all" }).then((rows) =>
+      rows.filter((row) => row.adName === adName.trim()).sort((a, b) => b.totals.spendUsd - a.totals.spendUsd)
+    );
+  }
+
+  async adsForAdset(metaAdsetId: string, from?: string, to?: string, deliveryStatusInput?: string) {
     const range = parseDateRange(from, to);
+    const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
+    const metrics = await this.prisma.metaAdDailyMetric.findMany({
+      where: {
+        isCurrent: true,
+        metricDate: { gte: range.fromDate, lte: range.toDate },
+        ...adDeliveryStatusWhere(deliveryStatus),
+        ...(isUuid(metaAdsetId) ? { OR: [{ metaAdsetRefId: metaAdsetId }, { metaAdsetId }] } : { metaAdsetId })
+      },
+      orderBy: [{ metricDate: "asc" }, { adNameSnapshot: "asc" }]
+    });
+    const groups = groupBy(metrics, (row) => `${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`);
+    return Array.from(groups.values()).map((rows) => {
+      const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
+      const last = rows[rows.length - 1];
+      return {
+        metaAdRefId: last.metaAdRefId,
+        metaAdId: last.metaAdId,
+        syntheticAdKey: last.syntheticAdKey,
+        adIdentityKey: last.adIdentityKey,
+        adName: last.adNameSnapshot,
+        deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
+        totals: aggregate.totals,
+        dataDays: aggregate.dataDays
+      };
+    });
+  }
+
+  async adsetsForCampaign(metaCampaignId: string, from?: string, to?: string, deliveryStatusInput?: string) {
+    const range = parseDateRange(from, to);
+    const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
+    const metrics = await this.prisma.metaAdDailyMetric.findMany({
+      where: {
+        isCurrent: true,
+        metricDate: { gte: range.fromDate, lte: range.toDate },
+        ...adDeliveryStatusWhere(deliveryStatus),
+        ...(isUuid(metaCampaignId) ? { OR: [{ campaignRefId: metaCampaignId }, { metaCampaignId }] } : { metaCampaignId })
+      },
+      orderBy: [{ metricDate: "asc" }, { adsetNameSnapshot: "asc" }]
+    });
+    const groups = groupBy(metrics, (row) => `${row.metaCampaignId}:${row.metaAdsetId}`);
+    return Array.from(groups.values()).map((rows) => {
+      const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
+      const last = rows[rows.length - 1];
+      return {
+        metaAdsetRefId: last.metaAdsetRefId,
+        metaAdsetId: last.metaAdsetId,
+        adsetName: last.adsetNameSnapshot,
+        adCount: new Set(rows.map((row) => row.adIdentityKey)).size,
+        deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
+        totals: aggregate.totals,
+        dataDays: aggregate.dataDays
+      };
+    });
+  }
+
+  async unmatchedMetrics(from?: string, to?: string, deliveryStatusInput?: string) {
+    const range = parseDateRange(from, to);
+    const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
     return this.prisma.metaAdsetDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: range.fromDate, lte: range.toDate },
+        ...deliveryStatusWhere(deliveryStatus),
         productId: null
       },
       orderBy: [{ metricDate: "desc" }, { adsetName: "asc" }],
@@ -223,13 +364,57 @@ export class MetricsService {
     });
   }
 
-  async decoratedMetrics(fromDate: Date, toDate: Date) {
+  async decoratedMetrics(fromDate: Date, toDate: Date, deliveryStatusInput?: string) {
+    const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
     const metrics = await this.prisma.metaAdsetDailyMetric.findMany({
-      where: { isCurrent: true, metricDate: { gte: fromDate, lte: toDate } },
+      where: {
+        isCurrent: true,
+        metricDate: { gte: fromDate, lte: toDate },
+        ...deliveryStatusWhere(deliveryStatus)
+      },
       include: { product: true, metaAdset: true },
       orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
     });
     return this.decorate(metrics);
+  }
+
+  private async currentAdMetrics(query: {
+    from?: string;
+    to?: string;
+    campaignId?: string;
+    adsetId?: string;
+    productId?: string;
+    stage?: string;
+    deliveryStatus?: string;
+  }) {
+    const range = parseDateRange(query.from, query.to);
+    const deliveryStatus = parseDeliveryStatusFilter(query.deliveryStatus);
+    const and: Prisma.MetaAdDailyMetricWhereInput[] = [];
+    if (query.campaignId) {
+      and.push(
+        isUuid(query.campaignId)
+          ? { OR: [{ campaignRefId: query.campaignId }, { metaCampaignId: query.campaignId }] }
+          : { metaCampaignId: query.campaignId }
+      );
+    }
+    if (query.adsetId) {
+      and.push(
+        isUuid(query.adsetId)
+          ? { OR: [{ metaAdsetRefId: query.adsetId }, { metaAdsetId: query.adsetId }] }
+          : { metaAdsetId: query.adsetId }
+      );
+    }
+    return this.prisma.metaAdDailyMetric.findMany({
+      where: {
+        isCurrent: true,
+        metricDate: { gte: range.fromDate, lte: range.toDate },
+        ...adDeliveryStatusWhere(deliveryStatus),
+        ...(query.productId ? { productId: query.productId } : {}),
+        ...(query.stage ? { stage: query.stage as AdStage } : {}),
+        ...(and.length > 0 ? { AND: and } : {})
+      },
+      orderBy: [{ metricDate: "asc" }, { campaignNameSnapshot: "asc" }, { adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
+    });
   }
 
   aggregate(rows: DecoratedMetric[]) {
@@ -468,4 +653,74 @@ function divideOrNull(value: number | null, denominator: number): number | null 
     return null;
   }
   return value / denominator;
+}
+
+export function parseDeliveryStatusFilter(value?: string): DeliveryStatusFilter {
+  if (!value) {
+    return "active";
+  }
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "active" || normalized === "inactive" || normalized === "all") {
+    return normalized;
+  }
+  throw new BadRequestException({
+    code: "INVALID_DELIVERY_STATUS",
+    message: "deliveryStatus must be active, inactive, or all."
+  });
+}
+
+function aggregateAdDailyRows(
+  calculator: PeriodMetricCalculator,
+  rows: Prisma.MetaAdDailyMetricGetPayload<Record<string, never>>[]
+) {
+  const totals = calculator.calculate(
+    rows.map((row) => ({
+      metricDate: formatDateOnly(row.metricDate),
+      spendUsd: numberFrom(row.spendUsd),
+      spendKrw: null,
+      resultCount: row.purchaseCount,
+      impressions: numberFrom(row.impressions),
+      linkClicks: row.linkClicks,
+      clicksAll: row.clicksAll,
+      landingPageViews: row.landingPageViews,
+      revenueKrw: null,
+      marginKrw: null
+    }))
+  );
+  return {
+    totals: {
+      ...totals,
+      cpmUsd: divideOrNull(totals.spendUsd * 1000, totals.impressions)
+    },
+    dataDays: totals.dataDays
+  };
+}
+
+function summarizeDeliveryStatus(values: Array<string | null>) {
+  const normalized = values.filter((value): value is string => Boolean(value)).map((value) => value.toLowerCase());
+  if (normalized.includes("active")) {
+    return "active";
+  }
+  if (normalized.includes("inactive")) {
+    return "inactive";
+  }
+  return values.find((value): value is string => Boolean(value)) ?? null;
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+export function deliveryStatusWhere(filter: DeliveryStatusFilter): Prisma.MetaAdsetDailyMetricWhereInput {
+  if (filter === "all") {
+    return {};
+  }
+  return { deliveryStatus: { equals: filter, mode: "insensitive" } };
+}
+
+export function adDeliveryStatusWhere(filter: DeliveryStatusFilter): Prisma.MetaAdDailyMetricWhereInput {
+  if (filter === "all") {
+    return {};
+  }
+  return { adDeliveryStatus: { equals: filter, mode: "insensitive" } };
 }

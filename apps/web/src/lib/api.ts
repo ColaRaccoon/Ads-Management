@@ -44,11 +44,11 @@ export async function apiDelete<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function uploadCsv(file: File, conflictPolicy: string) {
+export async function uploadCsv(file: File, conflictPolicy = "SKIP") {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("conflictPolicy", conflictPolicy);
-  const response = await fetch(`${API_BASE}/uploads/meta-adset-csv`, {
+  const response = await fetch(`${API_BASE}/uploads/meta-ad-daily-csv`, {
     method: "POST",
     body: formData
   });
@@ -58,8 +58,14 @@ export async function uploadCsv(file: File, conflictPolicy: string) {
   return response.json();
 }
 
-export function rangeQuery(range: DateRange) {
-  return `from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`;
+export function rangeQuery(range: DateRange, extra?: Record<string, string | undefined>) {
+  const params = new URLSearchParams({ from: range.from, to: range.to });
+  for (const [key, value] of Object.entries(extra ?? {})) {
+    if (value) {
+      params.set(key, value);
+    }
+  }
+  return params.toString();
 }
 
 export function withPeriod(path: string, from: string, to: string) {

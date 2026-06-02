@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { AdStage, MatchSource, MatchType } from "@prisma/client";
+import { AdStage, MatchSource, MatchType, RowValidationStatus } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
-import { asDateOnly } from "../common/date-range";
+import { asDateOnly, parseDateRange } from "../common/date-range";
 import { AdsetNameNormalizer } from "../domain/adset-name-normalizer";
 import { formatDateOnly } from "../domain/date-number";
 import { AdsetProductMatcher, AdsetStageMatcher } from "../domain/matching";
@@ -38,6 +38,248 @@ export class MappingsService {
     });
   }
 
+  async rematchCurrentMetrics(body: Record<string, unknown> = {}) {
+    const range = dateRangeFromBody(body);
+    const metrics = await this.prisma.metaAdsetDailyMetric.findMany({
+      where: {
+        isCurrent: true,
+        productId: null,
+        ...(range ? { metricDate: { gte: range.fromDate, lte: range.toDate } } : {})
+      },
+      select: {
+        id: true,
+        metricDate: true,
+        adsetName: true,
+        metaAdsetId: true,
+        uploadRowId: true
+      },
+      orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
+    });
+
+    if (metrics.length === 0) {
+      return {
+        scannedCount: 0,
+        rematchedCount: 0,
+        rematchedAdMetricCount: 0,
+        rematchedByRuleCount: 0,
+        rematchedByManualCount: 0,
+        stillUnmatchedCount: 0,
+        range: range ? { from: range.from, to: range.to } : null
+      };
+    }
+
+    const metaAdsetIds = Array.from(new Set(metrics.map((metric) => metric.metaAdsetId)));
+    const metricDates = Array.from(new Map(metrics.map((metric) => [formatDateOnly(metric.metricDate), metric.metricDate])).values());
+    const [histories, rules, adMetrics] = await Promise.all([
+      this.prisma.adsetProductHistory.findMany({ where: { metaAdsetId: { in: metaAdsetIds } } }),
+      this.prisma.productMatchRule.findMany({ where: { isActive: true }, orderBy: { priority: "asc" } }),
+      this.prisma.metaAdDailyMetric.findMany({
+        where: {
+          isCurrent: true,
+          metaAdsetRefId: { in: metaAdsetIds },
+          metricDate: { in: metricDates }
+        },
+        select: {
+          id: true,
+          uploadRowId: true,
+          metaAdsetRefId: true,
+          metricDate: true,
+          adNameSnapshot: true,
+          adsetNameSnapshot: true,
+          campaignNameSnapshot: true,
+          productId: true,
+          productMatchSource: true,
+          productMatchRuleId: true
+        },
+        orderBy: [{ metricDate: "asc" }, { adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
+      })
+    ]);
+    const historiesByAdset = new Map<string, typeof histories>();
+    for (const history of histories) {
+      historiesByAdset.set(history.metaAdsetId, [...(historiesByAdset.get(history.metaAdsetId) ?? []), history]);
+    }
+    const adMetricsByAdsetDate = new Map<string, typeof adMetrics>();
+    for (const adMetric of adMetrics) {
+      const key = adsetDateKey(adMetric.metaAdsetRefId, adMetric.metricDate);
+      adMetricsByAdsetDate.set(key, [...(adMetricsByAdsetDate.get(key) ?? []), adMetric]);
+    }
+    const matcher = new AdsetProductMatcher();
+    const activeRules = rules.map((rule) => ({
+      id: rule.id,
+      productId: rule.productId,
+      matchType: rule.matchType,
+      pattern: rule.pattern,
+      patternKey: rule.patternKey,
+      priority: rule.priority,
+      validFrom: formatDateOnly(rule.validFrom),
+      validTo: rule.validTo ? formatDateOnly(rule.validTo) : null,
+      isActive: rule.isActive
+    }));
+
+    let rematchedCount = 0;
+    let rematchedAdMetricCount = 0;
+    let rematchedByRuleCount = 0;
+    let rematchedByManualCount = 0;
+    const affectedAdsetIds = new Set<string>();
+
+    for (const metric of metrics) {
+      const metricDate = formatDateOnly(metric.metricDate);
+      const historiesForMetric = (historiesByAdset.get(metric.metaAdsetId) ?? []).map((history) => ({
+        productId: history.productId,
+        effectiveFrom: formatDateOnly(history.effectiveFrom),
+        effectiveTo: history.effectiveTo ? formatDateOnly(history.effectiveTo) : null
+      }));
+      const sourceRows = adMetricsByAdsetDate.get(adsetDateKey(metric.metaAdsetId, metric.metricDate)) ?? [];
+
+      if (sourceRows.length === 0) {
+        const result = matcher.match(metric.adsetName, metricDate, historiesForMetric, activeRules);
+        if (!result.productId) {
+          continue;
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+          await tx.metaAdsetDailyMetric.update({
+            where: { id: metric.id },
+            data: {
+              productId: result.productId,
+              productMatchSource: result.source as MatchSource,
+              productMatchRuleId: result.matchRuleId ?? null
+            }
+          });
+          if (metric.uploadRowId) {
+            await tx.uploadRow.update({
+              where: { id: metric.uploadRowId },
+              data: {
+                productId: result.productId,
+                productMatchSource: result.source as MatchSource,
+                productMatchRuleId: result.matchRuleId ?? null,
+                validationStatus: RowValidationStatus.VALID
+              }
+            });
+          }
+        });
+
+        rematchedCount += 1;
+        rematchedByRuleCount += result.source === "RULE" ? 1 : 0;
+        rematchedByManualCount += result.source === "MANUAL" ? 1 : 0;
+        affectedAdsetIds.add(metric.metaAdsetId);
+        continue;
+      }
+
+      const sourceMatches = sourceRows.map((row) => {
+        if (row.productId) {
+          return {
+            id: row.id,
+            uploadRowId: row.uploadRowId,
+            productId: row.productId,
+            source: row.productMatchSource,
+            matchRuleId: row.productMatchRuleId,
+            shouldUpdate: false
+          };
+        }
+        const result = matcher.match(
+          sourceRowMatchText(row),
+          metricDate,
+          historiesForMetric,
+          activeRules
+        );
+        return {
+          id: row.id,
+          uploadRowId: row.uploadRowId,
+          productId: result.productId,
+          source: result.source as MatchSource,
+          matchRuleId: result.matchRuleId,
+          shouldUpdate: Boolean(result.productId)
+        };
+      });
+
+      const matchedSourceRows = sourceMatches.filter((row) => row.shouldUpdate && row.productId);
+      const aggregateMatch = aggregateSourceProductMatch(sourceMatches);
+      if (matchedSourceRows.length === 0 && !aggregateMatch) {
+        continue;
+      }
+
+      await this.prisma.$transaction(async (tx) => {
+        for (const sourceRow of matchedSourceRows) {
+          await tx.metaAdDailyMetric.update({
+            where: { id: sourceRow.id },
+            data: {
+              productId: sourceRow.productId,
+              productMatchSource: sourceRow.source,
+              productMatchRuleId: sourceRow.matchRuleId ?? null
+            }
+          });
+          if (sourceRow.uploadRowId) {
+            await tx.uploadRow.updateMany({
+              where: { id: sourceRow.uploadRowId, productId: null },
+              data: {
+                productId: sourceRow.productId,
+                productMatchSource: sourceRow.source,
+                productMatchRuleId: sourceRow.matchRuleId ?? null,
+                validationStatus: RowValidationStatus.VALID
+              }
+            });
+          }
+        }
+
+        if (aggregateMatch) {
+          await tx.metaAdsetDailyMetric.update({
+            where: { id: metric.id },
+            data: {
+              productId: aggregateMatch.productId,
+              productMatchSource: aggregateMatch.source,
+              productMatchRuleId: aggregateMatch.matchRuleId
+            }
+          });
+          if (metric.uploadRowId) {
+            await tx.uploadRow.update({
+              where: { id: metric.uploadRowId },
+              data: {
+                productId: aggregateMatch.productId,
+                productMatchSource: aggregateMatch.source,
+                productMatchRuleId: aggregateMatch.matchRuleId,
+                validationStatus: RowValidationStatus.VALID
+              }
+            });
+          }
+        }
+      });
+
+      rematchedAdMetricCount += matchedSourceRows.length;
+      rematchedByRuleCount += matchedSourceRows.filter((row) => row.source === MatchSource.RULE).length;
+      rematchedByManualCount += matchedSourceRows.filter((row) => row.source === MatchSource.MANUAL).length;
+      if (aggregateMatch) {
+        rematchedCount += 1;
+        if (matchedSourceRows.length === 0) {
+          rematchedByRuleCount += aggregateMatch.source === MatchSource.RULE ? 1 : 0;
+          rematchedByManualCount += aggregateMatch.source === MatchSource.MANUAL ? 1 : 0;
+        }
+        affectedAdsetIds.add(metric.metaAdsetId);
+      }
+    }
+
+    for (const metaAdsetId of affectedAdsetIds) {
+      const latest = await this.prisma.metaAdsetDailyMetric.findFirst({
+        where: { metaAdsetId, isCurrent: true, productId: { not: null } },
+        orderBy: { metricDate: "desc" },
+        select: { productId: true }
+      });
+      if (latest?.productId) {
+        await this.prisma.metaAdset.update({ where: { id: metaAdsetId }, data: { currentProductId: latest.productId } });
+      }
+    }
+
+    return {
+      scannedCount: metrics.length,
+      rematchedCount,
+      rematchedAdMetricCount,
+      rematchedByRuleCount,
+      rematchedByManualCount,
+      stillUnmatchedCount: metrics.length - rematchedCount,
+      range: range ? { from: range.from, to: range.to } : null
+    };
+  }
+
   async createManualProductMapping(body: Record<string, unknown>) {
     const productId = requiredString(body.productId, "productId");
     const effectiveFrom = asDateOnly(requiredString(body.effectiveFrom, "effectiveFrom"));
@@ -62,26 +304,61 @@ export class MappingsService {
     });
 
     let rematchedMetricCount = 0;
+    let rematchedAdMetricCount = 0;
     if (Boolean(body.applyCurrentMetrics)) {
-      const result = await this.prisma.metaAdsetDailyMetric.updateMany({
-        where: {
-          metaAdsetId: metaAdset.id,
-          isCurrent: true,
-          metricDate: {
-            gte: effectiveFrom,
-            ...(effectiveTo ? { lte: effectiveTo } : {})
+      const result = await this.prisma.$transaction(async (tx) => {
+        const adsetResult = await tx.metaAdsetDailyMetric.updateMany({
+          where: {
+            metaAdsetId: metaAdset.id,
+            isCurrent: true,
+            metricDate: {
+              gte: effectiveFrom,
+              ...(effectiveTo ? { lte: effectiveTo } : {})
+            }
+          },
+          data: {
+            productId,
+            productMatchSource: MatchSource.MANUAL,
+            productMatchRuleId: null
           }
-        },
-        data: {
-          productId,
-          productMatchSource: MatchSource.MANUAL,
-          productMatchRuleId: null
-        }
+        });
+        const adResult = await tx.metaAdDailyMetric.updateMany({
+          where: {
+            metaAdsetRefId: metaAdset.id,
+            isCurrent: true,
+            metricDate: {
+              gte: effectiveFrom,
+              ...(effectiveTo ? { lte: effectiveTo } : {})
+            }
+          },
+          data: {
+            productId,
+            productMatchSource: MatchSource.MANUAL,
+            productMatchRuleId: null
+          }
+        });
+        await tx.uploadRow.updateMany({
+          where: {
+            metaAdsetId: metaAdset.id,
+            dateStart: {
+              gte: effectiveFrom,
+              ...(effectiveTo ? { lte: effectiveTo } : {})
+            }
+          },
+          data: {
+            productId,
+            productMatchSource: MatchSource.MANUAL,
+            productMatchRuleId: null,
+            validationStatus: RowValidationStatus.VALID
+          }
+        });
+        return { adsetMetricCount: adsetResult.count, adMetricCount: adResult.count };
       });
-      rematchedMetricCount = result.count;
+      rematchedMetricCount = result.adsetMetricCount;
+      rematchedAdMetricCount = result.adMetricCount;
     }
 
-    return { history, rematchedMetricCount };
+    return { history, rematchedMetricCount, rematchedAdMetricCount };
   }
 
   async createManualStageMapping(body: Record<string, unknown>) {
@@ -104,25 +381,54 @@ export class MappingsService {
     await this.prisma.metaAdset.update({ where: { id: metaAdset.id }, data: { currentStage: stage } });
 
     let rematchedMetricCount = 0;
+    let rematchedAdMetricCount = 0;
     if (Boolean(body.applyCurrentMetrics)) {
-      const result = await this.prisma.metaAdsetDailyMetric.updateMany({
-        where: {
-          metaAdsetId: metaAdset.id,
-          isCurrent: true,
-          metricDate: {
-            gte: effectiveFrom,
-            ...(effectiveTo ? { lte: effectiveTo } : {})
+      const result = await this.prisma.$transaction(async (tx) => {
+        const adsetResult = await tx.metaAdsetDailyMetric.updateMany({
+          where: {
+            metaAdsetId: metaAdset.id,
+            isCurrent: true,
+            metricDate: {
+              gte: effectiveFrom,
+              ...(effectiveTo ? { lte: effectiveTo } : {})
+            }
+          },
+          data: {
+            stage,
+            stageMatchSource: MatchSource.MANUAL
           }
-        },
-        data: {
-          stage,
-          stageMatchSource: MatchSource.MANUAL
-        }
+        });
+        const adResult = await tx.metaAdDailyMetric.updateMany({
+          where: {
+            metaAdsetRefId: metaAdset.id,
+            isCurrent: true,
+            metricDate: {
+              gte: effectiveFrom,
+              ...(effectiveTo ? { lte: effectiveTo } : {})
+            }
+          },
+          data: {
+            stage,
+            stageMatchSource: MatchSource.MANUAL
+          }
+        });
+        await tx.uploadRow.updateMany({
+          where: {
+            metaAdsetId: metaAdset.id,
+            dateStart: {
+              gte: effectiveFrom,
+              ...(effectiveTo ? { lte: effectiveTo } : {})
+            }
+          },
+          data: { stage }
+        });
+        return { adsetMetricCount: adsetResult.count, adMetricCount: adResult.count };
       });
-      rematchedMetricCount = result.count;
+      rematchedMetricCount = result.adsetMetricCount;
+      rematchedAdMetricCount = result.adMetricCount;
     }
 
-    return { history, rematchedMetricCount };
+    return { history, rematchedMetricCount, rematchedAdMetricCount };
   }
 
   async matchProduct(metaAdsetId: string, adsetName: string, metricDate: Date) {
@@ -177,11 +483,52 @@ export class MappingsService {
       return found;
     }
 
+    const externalAdsetId = optionalString(body.externalAdsetId) ?? optionalString(body.metaAdsetExternalId);
+    if (externalAdsetId) {
+      const found = await this.prisma.metaAdset.findFirst({ where: { platform: "META", externalAdsetId } });
+      if (found) {
+        return found;
+      }
+
+      const adsetNameForExternalId = optionalString(body.adsetName);
+      if (!adsetNameForExternalId) {
+        throw new BadRequestException({ code: "ADSET_NOT_FOUND", message: "externalAdsetId에 해당하는 광고세트를 찾을 수 없습니다." });
+      }
+
+      const adsetNameKey = AdsetNameNormalizer.toKey(adsetNameForExternalId);
+      const legacyCandidates = await this.prisma.metaAdset.findMany({
+        where: { platform: "META", externalAdsetId: null, adsetNameKey },
+        orderBy: [{ lastSeenOn: "desc" }, { createdAt: "desc" }]
+      });
+      const legacy = bestAdsetCandidate(legacyCandidates);
+      if (legacy) {
+        return this.prisma.metaAdset.update({
+          where: { id: legacy.id },
+          data: {
+            externalAdsetId,
+            adsetName: AdsetNameNormalizer.normalizeName(adsetNameForExternalId),
+            adsetNameKey
+          }
+        });
+      }
+
+      return this.prisma.metaAdset.create({
+        data: {
+          platform: "META",
+          externalAdsetId,
+          adsetName: AdsetNameNormalizer.normalizeName(adsetNameForExternalId),
+          adsetNameKey
+        }
+      });
+    }
+
     const adsetName = requiredString(body.adsetName, "adsetName");
     const adsetNameKey = AdsetNameNormalizer.toKey(adsetName);
-    const existing = await this.prisma.metaAdset.findFirst({
-      where: { platform: "META", externalAdsetId: null, adsetNameKey }
+    const candidates = await this.prisma.metaAdset.findMany({
+      where: { platform: "META", adsetNameKey },
+      orderBy: [{ lastSeenOn: "desc" }, { createdAt: "desc" }]
     });
+    const existing = bestAdsetCandidate(candidates);
     if (existing) {
       return existing;
     }
@@ -202,6 +549,44 @@ export class MappingsService {
   }
 }
 
+type RematchSourceProduct = {
+  productId: string | null;
+  source: MatchSource;
+  matchRuleId: string | null;
+};
+
+function sourceRowMatchText(row: { adNameSnapshot: string; adsetNameSnapshot: string; campaignNameSnapshot: string }) {
+  return `${row.adNameSnapshot} ${row.adsetNameSnapshot} ${row.campaignNameSnapshot}`;
+}
+
+function aggregateSourceProductMatch(rows: RematchSourceProduct[]) {
+  if (rows.length === 0 || rows.some((row) => !row.productId)) {
+    return null;
+  }
+
+  const productIds = Array.from(new Set(rows.map((row) => row.productId)));
+  if (productIds.length !== 1 || !productIds[0]) {
+    return null;
+  }
+
+  const sources = new Set(rows.map((row) => row.source).filter((source) => source !== MatchSource.UNMATCHED));
+  const source =
+    sources.size === 1
+      ? Array.from(sources)[0]
+      : sources.has(MatchSource.MANUAL)
+        ? MatchSource.MANUAL
+        : sources.has(MatchSource.RULE)
+          ? MatchSource.RULE
+          : MatchSource.INFERRED;
+  const ruleIds = Array.from(new Set(rows.map((row) => row.matchRuleId).filter((id): id is string => Boolean(id))));
+
+  return {
+    productId: productIds[0],
+    source,
+    matchRuleId: source === MatchSource.RULE && ruleIds.length === 1 ? ruleIds[0] : null
+  };
+}
+
 function requiredString(value: unknown, field: string): string {
   if (typeof value !== "string" || value.trim() === "") {
     throw new BadRequestException({ code: "FIELD_REQUIRED", message: `${field} 값이 필요합니다.` });
@@ -215,6 +600,36 @@ function optionalString(value: unknown): string | undefined {
   }
   const text = String(value).trim();
   return text ? text : undefined;
+}
+
+function bestAdsetCandidate<T extends { externalAdsetId: string | null; lastSeenOn: Date | null; createdAt: Date }>(candidates: T[]) {
+  return [...candidates].sort((left, right) => {
+    const externalRank = Number(Boolean(right.externalAdsetId)) - Number(Boolean(left.externalAdsetId));
+    if (externalRank !== 0) {
+      return externalRank;
+    }
+    return timestamp(right.lastSeenOn ?? right.createdAt) - timestamp(left.lastSeenOn ?? left.createdAt);
+  })[0];
+}
+
+function timestamp(value: Date | null | undefined): number {
+  return value ? value.getTime() : 0;
+}
+
+function adsetDateKey(metaAdsetId: string, metricDate: Date): string {
+  return `${metaAdsetId}:${formatDateOnly(metricDate)}`;
+}
+
+function dateRangeFromBody(body: Record<string, unknown>) {
+  const from = optionalString(body.from);
+  const to = optionalString(body.to);
+  if (!from && !to) {
+    return null;
+  }
+  if (!from || !to) {
+    throw new BadRequestException({ code: "DATE_RANGE_REQUIRED", message: "Both from and to dates are required." });
+  }
+  return parseDateRange(from, to);
 }
 
 function numberOrDefault(value: unknown, fallback: number): number {

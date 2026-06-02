@@ -20,7 +20,9 @@ import { DateRangePicker } from "./date-range-picker";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/uploads", label: "Uploads", icon: Upload },
+  { href: "/campaigns", label: "Campaigns", icon: BarChart3 },
   { href: "/adsets", label: "Adsets", icon: TableProperties },
+  { href: "/ads", label: "Ads", icon: Package },
   { href: "/products/performance", label: "Products", icon: BarChart3 },
   { href: "/mappings", label: "Mappings", icon: Shuffle },
   { href: "/settings/products", label: "Product Settings", icon: Settings },

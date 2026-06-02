@@ -20,8 +20,8 @@ export function TrendChart({ data }: { data: unknown[] }) {
         <LineChart data={data}>
           <CartesianGrid stroke="#e4e9ee" />
           <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={formatInteger} />
+          <Tooltip formatter={formatInteger} />
           <Legend />
           <Line type="monotone" dataKey="spendKrw" name="광고비" stroke="#2764b7" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="purchaseCount" name="구매수" stroke="#137a45" strokeWidth={2} dot={false} />
@@ -40,8 +40,8 @@ export function ProductBarChart({ data }: { data: unknown[] }) {
         <BarChart data={data}>
           <CartesianGrid stroke="#e4e9ee" />
           <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={formatInteger} />
+          <Tooltip formatter={formatInteger} />
           <Legend />
           <Bar dataKey="spendKrw" name="광고비" fill="#2764b7" />
           <Bar dataKey="marginKrw" name="마진" fill="#137a45" />
@@ -58,8 +58,8 @@ export function StageBarChart({ data }: { data: unknown[] }) {
         <BarChart data={data}>
           <CartesianGrid stroke="#e4e9ee" />
           <XAxis dataKey="group" />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={formatInteger} />
+          <Tooltip formatter={formatInteger} />
           <Legend />
           <Bar dataKey="spendKrw" name="광고비" fill="#146c63" />
           <Bar dataKey="purchaseCount" name="구매수" fill="#a15c00" />
@@ -67,4 +67,12 @@ export function StageBarChart({ data }: { data: unknown[] }) {
       </ResponsiveContainer>
     </div>
   );
+}
+
+function formatInteger(value: unknown) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return String(value ?? "-");
+  }
+  return Math.floor(number).toLocaleString("ko-KR");
 }

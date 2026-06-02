@@ -1,18 +1,19 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { shiftDate, todayString } from "./format";
+import { defaultRange, presetRange } from "./date-range";
 
 export function usePeriod() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const to = searchParams.get("to") ?? todayString();
-  const from = searchParams.get("from") ?? shiftDate(to, -6);
+  const fallback = defaultRange(7);
+  const to = searchParams.get("to") ?? fallback.to;
+  const from = searchParams.get("from") ?? fallback.from;
 
   function setPreset(days: number) {
-    const nextTo = todayString();
-    setRange(shiftDate(nextTo, -(days - 1)), nextTo);
+    const next = presetRange(days);
+    setRange(next.from, next.to);
   }
 
   function setRange(nextFrom: string, nextTo: string) {

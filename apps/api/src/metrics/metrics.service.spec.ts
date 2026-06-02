@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { BadRequestException } from "@nestjs/common";
 import { AdStage, Prisma } from "@prisma/client";
-import { MetricsService } from "./metrics.service";
+import { deliveryStatusWhere, MetricsService, parseDeliveryStatusFilter } from "./metrics.service";
 import { toDateOnly } from "../domain/date-number";
 
 describe("MetricsService exchange rate fallback", () => {
@@ -43,6 +44,26 @@ describe("MetricsService exchange rate fallback", () => {
 
     expect(rows[0].marginKrw).toBe(16000);
     expect(rows[0].thresholds?.contributionBeforeAdsKrw).toBe(29000);
+  });
+});
+
+describe("deliveryStatus filter", () => {
+  it("defaults to active and normalizes supported values", () => {
+    expect(parseDeliveryStatusFilter()).toBe("active");
+    expect(parseDeliveryStatusFilter(" Active ")).toBe("active");
+    expect(parseDeliveryStatusFilter("inactive")).toBe("inactive");
+    expect(parseDeliveryStatusFilter("ALL")).toBe("all");
+  });
+
+  it("rejects unknown deliveryStatus values", () => {
+    expect(() => parseDeliveryStatusFilter("paused")).toThrow(BadRequestException);
+  });
+
+  it("builds a case-insensitive Prisma filter except for all", () => {
+    expect(deliveryStatusWhere("all")).toEqual({});
+    expect(deliveryStatusWhere("inactive")).toEqual({
+      deliveryStatus: { equals: "inactive", mode: "insensitive" }
+    });
   });
 });
 

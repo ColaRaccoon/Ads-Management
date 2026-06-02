@@ -1,6 +1,6 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { RefreshCw, Save } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent } from "react";
 import { apiGet, apiPost, rangeQuery } from "@/lib/api";
@@ -22,6 +22,10 @@ export default function MappingsPage() {
   });
   const manualProduct = useMutation({ mutationFn: (body: unknown) => apiPost("/mappings/product/manual", body) });
   const manualStage = useMutation({ mutationFn: (body: unknown) => apiPost("/mappings/stage/manual", body) });
+  const rematch = useMutation({
+    mutationFn: () => apiPost<{ scannedCount: number; rematchedCount: number; stillUnmatchedCount: number }>("/mappings/rematch", range),
+    onSuccess: () => queryClient.invalidateQueries()
+  });
 
   const submitRule = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,7 +46,21 @@ export default function MappingsPage() {
           <h1>Mappings</h1>
           <p>미매칭 광고세트와 제품/SC-CBO-ASC 수동 이력, 자동 매칭 rule을 관리합니다.</p>
         </div>
+        <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
+          <RefreshCw size={16} />
+          {rematch.isPending ? "\uACC4\uC0B0 \uC911" : "\uC790\uB3D9\uB9E4\uD551\uACC4\uC0B0"}
+        </button>
       </div>
+      {rematch.data ? (
+        <div className="warning-strip">
+          <span>{"\uC790\uB3D9\uB9E4\uD551 \uBC18\uC601"} {rematch.data.rematchedCount}{"\uAC74"}</span>
+          <span>{"\uD655\uC778 \uB300\uC0C1"} {rematch.data.scannedCount}{"\uAC74"}</span>
+          <span>{"\uBBF8\uB9E4\uD551 \uC720\uC9C0"} {rematch.data.stillUnmatchedCount}{"\uAC74"}</span>
+        </div>
+      ) : null}
+      {rematch.isError ? (
+        <div className="warning-strip"><span>{"\uC790\uB3D9\uB9E4\uD551 \uACC4\uC0B0 \uC2E4\uD328"}: {String(rematch.error.message)}</span></div>
+      ) : null}
       <div className="grid two">
         <form className="panel" onSubmit={submitRule}>
           <h2>Product Rule Editor</h2>
@@ -74,6 +92,7 @@ export default function MappingsPage() {
         <DataTable rows={unmatched.data ?? []} columns={[
           { key: "date", header: "일자", render: (row) => String(row.metricDate).slice(0, 10) },
           { key: "adset", header: "광고세트", render: (row) => row.adsetName },
+          { key: "externalAdsetId", header: "Meta 광고세트 ID", render: (row) => row.metaAdset?.externalAdsetId ?? "-" },
           { key: "stage", header: "단계", render: (row) => row.stage },
           { key: "spend", header: "Spend USD", render: (row) => row.spendUsd }
         ]} />
@@ -98,6 +117,7 @@ function ManualForm({ products, onProduct, onStage }: { products: Array<Record<s
     const form = new FormData(event.currentTarget);
     const body = {
       adsetName: form.get("adsetName"),
+      externalAdsetId: form.get("externalAdsetId"),
       productId: form.get("productId"),
       stage: form.get("stage"),
       effectiveFrom: form.get("effectiveFrom"),
@@ -109,6 +129,7 @@ function ManualForm({ products, onProduct, onStage }: { products: Array<Record<s
   return (
     <form className="form-grid" onSubmit={submit}>
       <input className="input" name="adsetName" placeholder="광고세트 이름" required />
+      <input className="input" name="externalAdsetId" placeholder="Meta 광고세트 ID(선택)" />
       <select className="select" name="productId">
         <option value="">제품 미지정</option>
         {products.map((product) => <option key={product.id} value={product.id}>{product.displayName}</option>)}

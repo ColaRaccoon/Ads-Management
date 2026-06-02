@@ -2,34 +2,41 @@
 
 import { RefreshCw } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format, subDays } from "date-fns";
-
-const presets = [1, 3, 7, 14];
+import { useEffect } from "react";
+import { defaultRange, presetRange, rangePresets } from "@/lib/date-range";
 
 export function DateRangePicker() {
   const router = useRouter();
   const params = useSearchParams();
-  const from = params.get("from") ?? format(subDays(new Date(), 6), "yyyy-MM-dd");
-  const to = params.get("to") ?? format(new Date(), "yyyy-MM-dd");
+  const searchKey = params.toString();
+  const fallback = defaultRange(7);
+  const from = params.get("from") ?? fallback.from;
+  const to = params.get("to") ?? fallback.to;
+
+  useEffect(() => {
+    window.dispatchEvent(new Event("rangechange"));
+  }, [searchKey]);
 
   const setRange = (nextFrom: string, nextTo: string) => {
     const next = new URLSearchParams(params.toString());
     next.set("from", nextFrom);
     next.set("to", nextTo);
     router.push(`?${next.toString()}`);
-    window.setTimeout(() => window.dispatchEvent(new Event("rangechange")), 0);
   };
 
   return (
     <div className="toolbar">
-      {presets.map((days) => (
+      {rangePresets.map((preset) => (
         <button
-          key={days}
+          key={preset.days}
           className="button"
           type="button"
-          onClick={() => setRange(format(subDays(new Date(), days - 1), "yyyy-MM-dd"), format(new Date(), "yyyy-MM-dd"))}
+          onClick={() => {
+            const next = presetRange(preset.days);
+            setRange(next.from, next.to);
+          }}
         >
-          {days}일
+          {preset.label}
         </button>
       ))}
       <input className="input" type="date" value={from} onChange={(event) => setRange(event.target.value, to)} />

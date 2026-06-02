@@ -8,9 +8,11 @@ import {
   ClipboardList,
   FileSpreadsheet,
   GitBranch,
+  Layers3,
   LayoutDashboard,
   RefreshCw,
   Settings2,
+  Sparkles,
   SlidersHorizontal,
   Table2,
   UploadCloud
@@ -20,7 +22,9 @@ import { DateRangePicker } from "./DateRangePicker";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/uploads", label: "Uploads", icon: UploadCloud },
+  { href: "/campaigns", label: "Campaigns", icon: Layers3 },
   { href: "/adsets", label: "Adsets", icon: Table2 },
+  { href: "/ads", label: "Ads", icon: Sparkles },
   { href: "/products/performance", label: "Products", icon: Boxes },
   { href: "/mappings", label: "Mappings", icon: GitBranch },
   { href: "/settings/products", label: "Product Settings", icon: SlidersHorizontal },

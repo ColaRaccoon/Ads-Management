@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
 import { money, numberFmt } from "@/lib/date-range";
 import { useRange } from "@/lib/use-range";
@@ -9,9 +10,10 @@ import { DataTable } from "@/components/data-table";
 
 export default function ProductsPerformancePage() {
   const range = useRange();
+  const [deliveryStatus, setDeliveryStatus] = useState("active");
   const products = useQuery({
-    queryKey: ["products-performance", range],
-    queryFn: () => apiGet<Array<Record<string, any>>>(`/metrics/products?${rangeQuery(range)}`)
+    queryKey: ["products-performance", range, deliveryStatus],
+    queryFn: () => apiGet<Array<Record<string, any>>>(`/metrics/products?${rangeQuery(range, { deliveryStatus })}`)
   });
   const rows = products.data ?? [];
   return (
@@ -20,6 +22,13 @@ export default function ProductsPerformancePage() {
         <div>
           <h1>Products Performance</h1>
           <p>제품별 손익분기 CPA, 목표 CPA, 중단 후보 CPA와 실제 CPA를 비교합니다.</p>
+        </div>
+        <div className="toolbar">
+          <select className="select" value={deliveryStatus} onChange={(event) => setDeliveryStatus(event.target.value)}>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="all">All</option>
+          </select>
         </div>
       </div>
       <div className="panel">

@@ -4,18 +4,10 @@ import { useEffect, useState } from "react";
 import { defaultRange } from "./date-range";
 
 export function useRange() {
-  const [range, setRange] = useState(defaultRange(7));
+  const [range, setRange] = useState(readRange);
 
   useEffect(() => {
-    const read = () => {
-      const params = new URLSearchParams(window.location.search);
-      const fallback = defaultRange(7);
-      setRange({
-        from: params.get("from") ?? fallback.from,
-        to: params.get("to") ?? fallback.to
-      });
-    };
-    read();
+    const read = () => setRange(readRange());
     window.addEventListener("popstate", read);
     window.addEventListener("rangechange", read);
     return () => {
@@ -25,4 +17,16 @@ export function useRange() {
   }, []);
 
   return range;
+}
+
+function readRange() {
+  const fallback = defaultRange(7);
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+  const params = new URLSearchParams(window.location.search);
+  return {
+    from: params.get("from") ?? fallback.from,
+    to: params.get("to") ?? fallback.to
+  };
 }

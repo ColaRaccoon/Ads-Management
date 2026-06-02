@@ -3,7 +3,7 @@ import { AdStage, DecisionType, Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { parseDateRange } from "../common/date-range";
 import { DecisionClassifier } from "../domain/decision-classifier";
-import { MetricsService } from "../metrics/metrics.service";
+import { MetricsService, parseDeliveryStatusFilter } from "../metrics/metrics.service";
 
 @Injectable()
 export class DecisionsService {
@@ -16,20 +16,23 @@ export class DecisionsService {
 
   async run(body: { from?: string; to?: string; compareType?: string; filters?: Record<string, unknown> }) {
     const range = parseDateRange(body.from, body.to);
+    const requestedDeliveryStatus = typeof body.filters?.deliveryStatus === "string" ? body.filters.deliveryStatus : undefined;
+    const deliveryStatus = parseDeliveryStatusFilter(requestedDeliveryStatus);
+    const filters = { ...(body.filters ?? {}), deliveryStatus };
     const settings = await this.decisionSettings();
     const decisionRun = await this.prisma.decisionRun.create({
       data: {
         periodStart: range.fromDate,
         periodEnd: range.toDate,
         compareType: body.compareType,
-        filters: (body.filters ?? {}) as Prisma.InputJsonObject
+        filters: filters as Prisma.InputJsonObject
       }
     });
 
     const [summary, products, adsets] = await Promise.all([
-      this.metricsService.dashboardSummary(range.from, range.to),
-      this.metricsService.productMetrics(range.from, range.to),
-      this.metricsService.adsetMetrics({ from: range.from, to: range.to })
+      this.metricsService.dashboardSummary(range.from, range.to, undefined, deliveryStatus),
+      this.metricsService.productMetrics(range.from, range.to, deliveryStatus),
+      this.metricsService.adsetMetrics({ from: range.from, to: range.to, deliveryStatus })
     ]);
 
     const logs: Prisma.DecisionLogCreateManyInput[] = [];

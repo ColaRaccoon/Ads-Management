@@ -1,18 +1,18 @@
 "use client";
 
 import { CalendarDays } from "lucide-react";
+import { rangePresets } from "@/lib/date-range";
 import { usePeriod } from "@/lib/usePeriod";
 
 export function DateRangePicker() {
   const { from, to, setPreset, setRange } = usePeriod();
-  const presets = [1, 3, 7, 14];
 
   return (
     <div className="toolbar" aria-label="기간 선택">
       <div className="segmented">
-        {presets.map((days) => (
-          <button key={days} type="button" onClick={() => setPreset(days)}>
-            {days}일
+        {rangePresets.map((preset) => (
+          <button key={preset.days} type="button" onClick={() => setPreset(preset.days)}>
+            {preset.label}
           </button>
         ))}
       </div>

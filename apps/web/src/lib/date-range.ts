@@ -5,11 +5,22 @@ export type DateRange = {
   to: string;
 };
 
+export const rangePresets = [
+  { label: "오늘", days: 1 },
+  { label: "최근 3일", days: 3 },
+  { label: "최근 7일", days: 7 },
+  { label: "최근 14일", days: 14 }
+] as const;
+
 export function defaultRange(days = 7): DateRange {
-  const today = new Date();
+  return presetRange(days);
+}
+
+export function presetRange(days: number): DateRange {
+  const end = subDays(new Date(), 1);
   return {
-    from: format(subDays(today, days - 1), "yyyy-MM-dd"),
-    to: format(today, "yyyy-MM-dd")
+    from: format(subDays(end, days - 1), "yyyy-MM-dd"),
+    to: format(end, "yyyy-MM-dd")
   };
 }
 
