@@ -283,11 +283,11 @@ export class MetricsService {
     });
   }
 
-  async compareAdsByName(adName: string | undefined, from?: string, to?: string) {
+  async compareAdsByName(adName: string | undefined, from?: string, to?: string, deliveryStatus?: string) {
     if (!adName?.trim()) {
       throw new BadRequestException({ code: "AD_NAME_REQUIRED", message: "adName 값이 필요합니다." });
     }
-    return this.adMetrics({ from, to, deliveryStatus: "all" }).then((rows) =>
+    return this.adMetrics({ from, to, deliveryStatus }).then((rows) =>
       rows.filter((row) => row.adName === adName.trim()).sort((a, b) => b.totals.spendUsd - a.totals.spendUsd)
     );
   }

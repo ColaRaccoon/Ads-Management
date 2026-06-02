@@ -50,8 +50,13 @@ export class MetricsController {
   }
 
   @Get("ads/compare-by-name")
-  compareAdsByName(@Query("adName") adName?: string, @Query("from") from?: string, @Query("to") to?: string) {
-    return this.metricsService.compareAdsByName(adName, from, to);
+  compareAdsByName(
+    @Query("adName") adName?: string,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("deliveryStatus") deliveryStatus?: string
+  ) {
+    return this.metricsService.compareAdsByName(adName, from, to, deliveryStatus);
   }
 
   @Get("ads")

@@ -6,7 +6,7 @@ export type DateRange = {
 };
 
 export const rangePresets = [
-  { label: "오늘", days: 1 },
+  { label: "어제", days: 1 },
   { label: "최근 3일", days: 3 },
   { label: "최근 7일", days: 7 },
   { label: "최근 14일", days: 14 }
