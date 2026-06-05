@@ -104,6 +104,28 @@ enum ExchangeRateFallbackType {
   @@map("exchange_rate_fallback_type")
 }
 
+enum CreativeParseStatus {
+  PARSED
+  FALLBACK
+
+  @@map("creative_parse_status")
+}
+
+enum CreativeLogActionType {
+  NOTE
+  TURN_ON
+  TURN_OFF
+  KEEP
+  WATCH
+  SCALE
+  REDUCE
+  CREATIVE_TEST
+  CREATIVE_EXCLUDE
+  OTHER
+
+  @@map("creative_log_action_type")
+}
+
 model AppUser {
   id        String   @id @default(uuid()) @db.Uuid
   email     String?  @unique
@@ -221,6 +243,7 @@ model MetaAdset {
   adDailyMetrics    MetaAdDailyMetric[]
   decisionLogs      DecisionLog[]
   changeLogs        ChangeLog[]
+  creativePlacements CreativePlacement[]
 
   @@index([campaignRefId])
   @@index([platform, externalAdsetId])
@@ -240,6 +263,7 @@ model MetaCampaign {
   adsets             MetaAdset[]
   ads                MetaAd[]
   adDailyMetrics     MetaAdDailyMetric[]
+  creativePlacements CreativePlacement[]
 
   @@unique([platform, externalCampaignId])
   @@index([platform, campaignName])
@@ -251,6 +275,7 @@ model MetaAd {
   platform           String              @default("META")
   campaignRefId      String              @map("campaign_ref_id") @db.Uuid
   metaAdsetRefId     String              @map("meta_adset_ref_id") @db.Uuid
+  creativeId         String?             @map("creative_id") @db.Uuid
   metaCampaignId     String              @map("meta_campaign_id")
   metaAdsetId        String              @map("meta_adset_id")
   externalAdId       String?             @map("meta_ad_id")
@@ -263,14 +288,106 @@ model MetaAd {
   updatedAt          DateTime            @updatedAt @map("updated_at")
   campaign           MetaCampaign        @relation(fields: [campaignRefId], references: [id])
   metaAdset          MetaAdset           @relation(fields: [metaAdsetRefId], references: [id])
+  creative           Creative?           @relation(fields: [creativeId], references: [id])
   dailyMetrics       MetaAdDailyMetric[]
+  placements         CreativePlacement[]
 
   @@unique([platform, metaCampaignId, metaAdsetId, adIdentityKey])
   @@index([platform, externalAdId])
   @@index([campaignRefId])
   @@index([metaAdsetRefId])
+  @@index([creativeId])
   @@index([adName])
   @@map("meta_ads")
+}
+
+model Creative {
+  id             String                @id @default(uuid()) @db.Uuid
+  platform       String                @default("META")
+  creativeKey    String                @map("creative_key")
+  displayName    String                @map("display_name")
+  productName    String?               @map("product_name")
+  materialNo     String?               @map("material_no")
+  firstSeenOn    DateTime?             @map("first_seen_on") @db.Date
+  lastSeenOn     DateTime?             @map("last_seen_on") @db.Date
+  isActive       Boolean               @default(true) @map("is_active")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  aliases        CreativeAlias[]
+  placements     CreativePlacement[]
+  changeLogs     CreativeChangeLog[]
+  ads            MetaAd[]
+  adDailyMetrics MetaAdDailyMetric[]
+
+  @@unique([platform, creativeKey])
+  @@index([displayName])
+  @@map("creatives")
+}
+
+model CreativeAlias {
+  id           String              @id @default(uuid()) @db.Uuid
+  creativeId   String              @map("creative_id") @db.Uuid
+  originalName String              @map("original_name")
+  originalKey  String              @map("original_key")
+  dateCode     String?             @map("date_code")
+  setting      String?
+  parseStatus  CreativeParseStatus @default(PARSED) @map("parse_status")
+  firstSeenOn  DateTime?           @map("first_seen_on") @db.Date
+  lastSeenOn   DateTime?           @map("last_seen_on") @db.Date
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  creative     Creative            @relation(fields: [creativeId], references: [id])
+
+  @@unique([creativeId, originalKey])
+  @@index([originalKey])
+  @@map("creative_aliases")
+}
+
+model CreativePlacement {
+  id             String        @id @default(uuid()) @db.Uuid
+  creativeId     String        @map("creative_id") @db.Uuid
+  metaCampaignId String        @map("meta_campaign_id")
+  metaAdsetId    String        @map("meta_adset_id")
+  metaAdRefId    String?       @map("meta_ad_ref_id") @db.Uuid
+  campaignRefId  String?       @map("campaign_ref_id") @db.Uuid
+  metaAdsetRefId String?       @map("meta_adset_ref_id") @db.Uuid
+  campaignName   String        @map("campaign_name")
+  adsetName      String        @map("adset_name")
+  originalAdName String        @map("original_ad_name")
+  setting        String?
+  firstSeenOn    DateTime?     @map("first_seen_on") @db.Date
+  lastSeenOn     DateTime?     @map("last_seen_on") @db.Date
+  lastStatus     String?       @map("last_status")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  creative       Creative      @relation(fields: [creativeId], references: [id])
+  metaAd         MetaAd?       @relation(fields: [metaAdRefId], references: [id])
+  campaign       MetaCampaign? @relation(fields: [campaignRefId], references: [id])
+  metaAdset      MetaAdset?    @relation(fields: [metaAdsetRefId], references: [id])
+
+  @@unique([creativeId, metaCampaignId, metaAdsetId, originalAdName])
+  @@index([creativeId, lastSeenOn])
+  @@index([metaCampaignId, metaAdsetId])
+  @@map("creative_placements")
+}
+
+model CreativeChangeLog {
+  id              String                @id @default(uuid()) @db.Uuid
+  creativeId      String                @map("creative_id") @db.Uuid
+  actionDate      DateTime              @default(now()) @map("action_date") @db.Date
+  actionType      CreativeLogActionType @default(NOTE) @map("action_type")
+  reason          String
+  memo            String?
+  relatedAdsetIds Json                  @default("[]") @map("related_adset_ids")
+  nextCheckDate   DateTime?             @map("next_check_date") @db.Date
+  createdBy       String?               @map("created_by") @db.Uuid
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+  creative        Creative              @relation(fields: [creativeId], references: [id])
+
+  @@index([creativeId, actionDate])
+  @@index([actionDate, actionType])
+  @@map("creative_change_logs")
 }
 
 model AdsetNameAlias {
@@ -490,6 +607,7 @@ model MetaAdDailyMetric {
   campaignRefId                 String            @map("campaign_ref_id") @db.Uuid
   metaAdsetRefId                String            @map("meta_adset_ref_id") @db.Uuid
   metaAdRefId                   String            @map("meta_ad_ref_id") @db.Uuid
+  creativeId                    String?           @map("creative_id") @db.Uuid
   metricDate                    DateTime          @map("metric_date") @db.Date
   dateStart                     DateTime          @map("date_start") @db.Date
   dateEnd                       DateTime          @map("date_end") @db.Date
@@ -543,6 +661,7 @@ model MetaAdDailyMetric {
   campaign                      MetaCampaign      @relation(fields: [campaignRefId], references: [id])
   metaAdset                     MetaAdset         @relation(fields: [metaAdsetRefId], references: [id])
   metaAd                        MetaAd            @relation(fields: [metaAdRefId], references: [id])
+  creative                      Creative?         @relation(fields: [creativeId], references: [id])
   product                       Product?          @relation(fields: [productId], references: [id])
   productMatchRule              ProductMatchRule? @relation(fields: [productMatchRuleId], references: [id])
 
@@ -551,6 +670,7 @@ model MetaAdDailyMetric {
   @@index([metaCampaignId, metricDate])
   @@index([metaAdsetId, metricDate])
   @@index([adNameSnapshot, metricDate])
+  @@index([creativeId, metricDate])
   @@index([productId, metricDate])
   @@index([stage, metricDate])
   @@map("meta_ad_daily_metrics")

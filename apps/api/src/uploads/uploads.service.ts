@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import {
   AdStage,
   ConflictPolicy,
+  CreativeParseStatus,
   MatchSource,
   Prisma,
   RowValidationStatus,
@@ -15,6 +16,7 @@ import path from "node:path";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { PrismaService } from "../common/prisma.service";
 import { AdsetNameNormalizer } from "../domain/adset-name-normalizer";
+import { CreativeNameParser, CreativeNameParts } from "../domain/creative-name-parser";
 import { CsvHeaderValidator, hashRecord, MetaCsvParser, ParsedMetaAdsetRow } from "../domain/meta-csv";
 import { DuplicatePolicyResolver } from "../domain/duplicate-policy";
 import {
@@ -33,6 +35,7 @@ import { MappingsService } from "../mappings/mappings.service";
 export class UploadsService {
   private readonly csvParser = new MetaCsvParser();
   private readonly adDailyCsvParser = new MetaAdDailyCsvParser();
+  private readonly creativeNameParser = new CreativeNameParser();
   private readonly duplicatePolicyResolver = new DuplicatePolicyResolver();
 
   constructor(
@@ -179,6 +182,7 @@ export class UploadsService {
       let campaignRefId: string | null = null;
       let metaAdsetId: string | null = null;
       let metaAdRefId: string | null = null;
+      let creativeId: string | null = null;
       let productId: string | null = null;
       let productMatchSource: MatchSource = MatchSource.UNMATCHED;
       let productMatchRuleId: string | null = null;
@@ -190,10 +194,21 @@ export class UploadsService {
         reportEnd = maxDate(reportEnd, parsedRow.dateEnd);
         const campaign = await this.upsertCampaign(parsedRow);
         const metaAdset = await this.upsertAdsetFromAdDaily(parsedRow, campaign.id);
-        const metaAd = await this.upsertAd(parsedRow, campaign.id, metaAdset.id);
+        const creativeResult = await this.upsertCreativeFromAdDaily(parsedRow);
+        const metaAd = await this.upsertAd(parsedRow, campaign.id, metaAdset.id, creativeResult.creative.id);
+        await this.upsertCreativeAlias(creativeResult.creative.id, creativeResult.parsedName, parsedRow.metricDate);
+        await this.upsertCreativePlacement({
+          creativeId: creativeResult.creative.id,
+          parsedRow,
+          parsedName: creativeResult.parsedName,
+          campaignRefId: campaign.id,
+          metaAdsetRefId: metaAdset.id,
+          metaAdRefId: metaAd.id
+        });
         campaignRefId = campaign.id;
         metaAdsetId = metaAdset.id;
         metaAdRefId = metaAd.id;
+        creativeId = creativeResult.creative.id;
 
         const productMatch = await this.mappingsService.matchProduct(
           metaAdset.id,
@@ -285,6 +300,7 @@ export class UploadsService {
           campaignRefId,
           metaAdRefId,
           metaAdsetRefId: metaAdsetId,
+          creativeId,
           productId,
           productMatchSource,
           productMatchRuleId,
@@ -900,7 +916,134 @@ export class UploadsService {
     });
   }
 
-  private async upsertAd(parsedRow: ParsedMetaAdDailyRow, campaignRefId: string, metaAdsetRefId: string) {
+  private async upsertCreativeFromAdDaily(parsedRow: ParsedMetaAdDailyRow) {
+    const parsedName = this.creativeNameParser.parse(parsedRow.adName);
+    const existing = await this.prisma.creative.findUnique({
+      where: {
+        platform_creativeKey: {
+          platform: "META",
+          creativeKey: parsedName.creativeKey
+        }
+      }
+    });
+    if (existing) {
+      const creative = await this.prisma.creative.update({
+        where: { id: existing.id },
+        data: {
+          displayName: parsedName.displayName,
+          productName: parsedName.productName,
+          materialNo: parsedName.materialNo,
+          firstSeenOn: minDate(existing.firstSeenOn, parsedRow.metricDate),
+          lastSeenOn: maxDate(existing.lastSeenOn, parsedRow.metricDate),
+          isActive: true
+        }
+      });
+      return { creative, parsedName };
+    }
+    const creative = await this.prisma.creative.create({
+      data: {
+        platform: "META",
+        creativeKey: parsedName.creativeKey,
+        displayName: parsedName.displayName,
+        productName: parsedName.productName,
+        materialNo: parsedName.materialNo,
+        firstSeenOn: parsedRow.metricDate,
+        lastSeenOn: parsedRow.metricDate,
+        isActive: true
+      }
+    });
+    return { creative, parsedName };
+  }
+
+  private async upsertCreativeAlias(creativeId: string, parsedName: CreativeNameParts, seenOn: Date) {
+    const originalKey = creativeOriginalKey(parsedName.originalName);
+    const existing = await this.prisma.creativeAlias.findUnique({
+      where: {
+        creativeId_originalKey: {
+          creativeId,
+          originalKey
+        }
+      }
+    });
+    const data = {
+      originalName: parsedName.originalName,
+      dateCode: parsedName.dateCode,
+      setting: parsedName.setting,
+      parseStatus: parsedName.parseStatus as CreativeParseStatus,
+      lastSeenOn: seenOn
+    };
+    if (existing) {
+      return this.prisma.creativeAlias.update({
+        where: { id: existing.id },
+        data: {
+          ...data,
+          firstSeenOn: minDate(existing.firstSeenOn, seenOn),
+          lastSeenOn: maxDate(existing.lastSeenOn, seenOn)
+        }
+      });
+    }
+    return this.prisma.creativeAlias.create({
+      data: {
+        creativeId,
+        originalKey,
+        firstSeenOn: seenOn,
+        ...data
+      }
+    });
+  }
+
+  private async upsertCreativePlacement(input: {
+    creativeId: string;
+    parsedRow: ParsedMetaAdDailyRow;
+    parsedName: CreativeNameParts;
+    campaignRefId: string;
+    metaAdsetRefId: string;
+    metaAdRefId: string;
+  }) {
+    const existing = await this.prisma.creativePlacement.findUnique({
+      where: {
+        creativeId_metaCampaignId_metaAdsetId_originalAdName: {
+          creativeId: input.creativeId,
+          metaCampaignId: input.parsedRow.metaCampaignId,
+          metaAdsetId: input.parsedRow.metaAdsetExternalId,
+          originalAdName: input.parsedRow.adName
+        }
+      }
+    });
+    const data = {
+      campaignRefId: input.campaignRefId,
+      metaAdsetRefId: input.metaAdsetRefId,
+      metaAdRefId: input.metaAdRefId,
+      campaignName: input.parsedRow.campaignName,
+      adsetName: input.parsedRow.adsetName,
+      setting: input.parsedName.setting,
+      lastSeenOn: input.parsedRow.metricDate,
+      lastStatus: input.parsedRow.adDeliveryStatus
+    };
+    if (existing) {
+      const isLatestObservation = !existing.lastSeenOn || input.parsedRow.metricDate >= existing.lastSeenOn;
+      return this.prisma.creativePlacement.update({
+        where: { id: existing.id },
+        data: {
+          ...(isLatestObservation ? data : {}),
+          firstSeenOn: minDate(existing.firstSeenOn, input.parsedRow.metricDate),
+          lastSeenOn: maxDate(existing.lastSeenOn, input.parsedRow.metricDate)
+        }
+      });
+    }
+    return this.prisma.creativePlacement.create({
+      data: {
+        creativeId: input.creativeId,
+        metaCampaignId: input.parsedRow.metaCampaignId,
+        metaAdsetId: input.parsedRow.metaAdsetExternalId,
+        originalAdName: input.parsedRow.adName,
+        firstSeenOn: input.parsedRow.metricDate,
+        ...data
+      }
+    });
+  }
+
+  private async upsertAd(parsedRow: ParsedMetaAdDailyRow, campaignRefId: string, metaAdsetRefId: string, creativeId: string) {
     const existing = await this.prisma.metaAd.findUnique({
       where: {
         platform_metaCampaignId_metaAdsetId_adIdentityKey: {
@@ -917,11 +1060,12 @@ export class UploadsService {
         data: {
           campaignRefId,
           metaAdsetRefId,
+          creativeId,
           externalAdId: parsedRow.metaAdId,
           syntheticAdKey: parsedRow.syntheticAdKey,
           adName: parsedRow.adName,
-          firstSeenOn: existing.firstSeenOn ?? parsedRow.metricDate,
-          lastSeenOn: parsedRow.metricDate
+          firstSeenOn: minDate(existing.firstSeenOn, parsedRow.metricDate),
+          lastSeenOn: maxDate(existing.lastSeenOn, parsedRow.metricDate)
         }
       });
     }
@@ -930,6 +1074,7 @@ export class UploadsService {
         platform: "META",
         campaignRefId,
         metaAdsetRefId,
+        creativeId,
         metaCampaignId: parsedRow.metaCampaignId,
         metaAdsetId: parsedRow.metaAdsetExternalId,
         externalAdId: parsedRow.metaAdId,
@@ -976,6 +1121,7 @@ export class UploadsService {
           campaignRefId: input.campaignRefId,
           metaAdsetRefId: input.metaAdsetRefId,
           metaAdRefId: input.metaAdRefId,
+          creativeId: input.creativeId,
           metricDate: input.parsedRow.metricDate,
           dateStart: input.parsedRow.dateStart,
           dateEnd: input.parsedRow.dateEnd,
@@ -1401,6 +1547,7 @@ type AdMetricImportInput = {
   campaignRefId: string;
   metaAdsetRefId: string;
   metaAdRefId: string;
+  creativeId: string | null;
   productId: string | null;
   productMatchSource: MatchSource;
   productMatchRuleId: string | null;
@@ -1489,6 +1636,10 @@ function jsonSafeAdParsedRow(parsedRow: ParsedMetaAdDailyRow) {
     dateEnd: formatDateOnly(parsedRow.dateEnd),
     metricDate: formatDateOnly(parsedRow.metricDate)
   };
+}
+
+function creativeOriginalKey(originalName: string) {
+  return originalName.trim();
 }
 
 function errorMessage(error: unknown) {

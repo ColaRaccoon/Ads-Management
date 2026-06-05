@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AdsetNameNormalizer } from "./adset-name-normalizer";
+import { CreativeNameParser } from "./creative-name-parser";
 import { CsvHeaderValidator, META_ADSET_REQUIRED_COLUMNS, MetaCsvParser } from "./meta-csv";
 import { dailyAdMetricKey, MetaAdDailyCsvParser, MetaAdDailyCsvValidator, syntheticAdKey } from "./meta-ad-daily-csv";
 import { parseDateString, parseNumberValue } from "./date-number";
@@ -18,6 +19,35 @@ const SAMPLE_AD_DAILY_CSV =
 describe("AdsetNameNormalizer", () => {
   it("trims, collapses spaces, and lowercases keys", () => {
     expect(AdsetNameNormalizer.toKey("  SC   Burning   Wave  ")).toBe("sc burning wave");
+  });
+});
+
+describe("CreativeNameParser", () => {
+  const parser = new CreativeNameParser();
+
+  it.each([
+    ["버닝슬라이드_1번소재_IG", "버닝슬라이드_1번소재", "IG"],
+    ["버닝슬라이드_1번소재_FB", "버닝슬라이드_1번소재", "FB"],
+    ["버닝슬라이드_6번소재_IG+FB", "버닝슬라이드_6번소재", "IG+FB"],
+    ["260602_버닝웨이브바_02", "버닝웨이브바_02", null],
+    ["버닝웨이브바_02", "버닝웨이브바_02", null],
+    ["260603_플로우라이트_09", "플로우라이트_09", null],
+    ["0527_플로우_인플03", "플로우_인플03", null]
+  ])("parses %s to creative key %s", (adName, creativeKey, setting) => {
+    const result = parser.parse(adName);
+
+    expect(result.creativeKey).toBe(creativeKey);
+    expect(result.displayName).toBe(creativeKey);
+    expect(result.setting).toBe(setting);
+    expect(result.parseStatus).toBe("PARSED");
+  });
+
+  it("falls back without guessing when the name is ambiguous", () => {
+    const result = parser.parse("단일이름");
+
+    expect(result.creativeKey).toBe("단일이름");
+    expect(result.materialNo).toBeNull();
+    expect(result.parseStatus).toBe("FALLBACK");
   });
 });
 
