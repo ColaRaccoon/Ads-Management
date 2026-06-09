@@ -45,6 +45,29 @@ describe("MetricsService exchange rate fallback", () => {
     expect(rows[0].marginKrw).toBe(16000);
     expect(rows[0].thresholds?.contributionBeforeAdsKrw).toBe(29000);
   });
+
+  it("corrects adset purchase totals from ad-level custom conversion results", async () => {
+    const prisma = fakeMetricsPrisma({
+      costRuleFxRateKrwPerUsd: 1300,
+      exchangeRates: [],
+      adMetrics: [
+        {
+          metaAdsetRefId: "adset-1",
+          metricDate: date("2026-05-29"),
+          resultIndicator: "actions:offsite_conversion.custom.1532866761891806",
+          resultCount: 5,
+          purchaseCount: 0
+        }
+      ]
+    });
+    const service = new MetricsService(prisma as never);
+
+    const rows = await service.decoratedMetrics(date("2026-05-29"), date("2026-05-29"));
+    const aggregate = service.aggregate(rows);
+
+    expect(aggregate.totals.purchaseCount).toBe(5);
+    expect(rows[0].marginKrw).toBe(132000);
+  });
 });
 
 describe("deliveryStatus filter", () => {
@@ -67,7 +90,63 @@ describe("deliveryStatus filter", () => {
   });
 });
 
-function fakeMetricsPrisma(input: { costRuleFxRateKrwPerUsd: number; costRuleVatKrw?: number; exchangeRates: unknown[] }) {
+describe("creativeMetrics", () => {
+  it("uses the creative lifetime for dataDays instead of the selected date range", async () => {
+    const prisma = {
+      metaAdDailyMetric: {
+        findMany: async () => [
+          {
+            metricDate: date("2026-06-08"),
+            creativeId: "creative-1",
+            metaCampaignId: "campaign-1",
+            metaAdsetId: "adset-1",
+            adIdentityKey: "ad-1",
+            adNameSnapshot: "260601_버닝웨이브바_04",
+            adDeliveryStatus: "active",
+            spendUsd: new Prisma.Decimal(10),
+            resultIndicator: null,
+            resultCount: 0,
+            purchaseCount: 1,
+            impressions: BigInt(1000),
+            linkClicks: 20,
+            clicksAll: 30,
+            landingPageViews: 5
+          }
+        ]
+      },
+      creative: {
+        findMany: async () => [
+          {
+            creativeKey: "버닝웨이브바_04",
+            firstSeenOn: date("2026-06-01"),
+            lastSeenOn: date("2026-06-08")
+          }
+        ]
+      }
+    };
+    const service = new MetricsService(prisma as never);
+
+    const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
+
+    expect(rows[0].dataDays).toBe(8);
+    expect(rows[0].totals.dataDays).toBe(1);
+    expect(rows[0].firstSeenOn).toBe("2026-06-01");
+    expect(rows[0].lastSeenOn).toBe("2026-06-08");
+  });
+});
+
+function fakeMetricsPrisma(input: {
+  costRuleFxRateKrwPerUsd: number;
+  costRuleVatKrw?: number;
+  exchangeRates: unknown[];
+  adMetrics?: Array<{
+    metaAdsetRefId: string;
+    metricDate: Date;
+    resultIndicator: string | null;
+    resultCount: number;
+    purchaseCount: number;
+  }>;
+}) {
   const metricDate = date("2026-05-29");
   return {
     metaAdsetDailyMetric: {
@@ -89,6 +168,9 @@ function fakeMetricsPrisma(input: { costRuleFxRateKrwPerUsd: number; costRuleVat
           product: { id: "product-1", displayName: "Product" }
         }
       ]
+    },
+    metaAdDailyMetric: {
+      findMany: async () => input.adMetrics ?? []
     },
     productCostRule: {
       findMany: async () => [

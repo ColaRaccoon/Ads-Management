@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { defaultRange } from "./date-range";
+import { defaultRangeForPath, readCachedRange } from "./date-range";
 
 export function useRange() {
   const [range, setRange] = useState(readRange);
@@ -20,10 +20,10 @@ export function useRange() {
 }
 
 function readRange() {
-  const fallback = defaultRange(7);
   if (typeof window === "undefined") {
-    return fallback;
+    return defaultRangeForPath();
   }
+  const fallback = readCachedRange(window.location.pathname) ?? defaultRangeForPath(window.location.pathname);
   const params = new URLSearchParams(window.location.search);
   return {
     from: params.get("from") ?? fallback.from,

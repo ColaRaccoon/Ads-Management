@@ -288,7 +288,7 @@ model MetaAd {
   updatedAt          DateTime            @updatedAt @map("updated_at")
   campaign           MetaCampaign        @relation(fields: [campaignRefId], references: [id])
   metaAdset          MetaAdset           @relation(fields: [metaAdsetRefId], references: [id])
-  creative           Creative?           @relation(fields: [creativeId], references: [id])
+  creative           Creative?           @relation(fields: [creativeId], references: [id], onDelete: SetNull)
   dailyMetrics       MetaAdDailyMetric[]
   placements         CreativePlacement[]
 
@@ -336,7 +336,7 @@ model CreativeAlias {
   lastSeenOn   DateTime?           @map("last_seen_on") @db.Date
   createdAt    DateTime            @default(now()) @map("created_at")
   updatedAt    DateTime            @updatedAt @map("updated_at")
-  creative     Creative            @relation(fields: [creativeId], references: [id])
+  creative     Creative            @relation(fields: [creativeId], references: [id], onDelete: Cascade)
 
   @@unique([creativeId, originalKey])
   @@index([originalKey])
@@ -360,7 +360,7 @@ model CreativePlacement {
   lastStatus     String?       @map("last_status")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
-  creative       Creative      @relation(fields: [creativeId], references: [id])
+  creative       Creative      @relation(fields: [creativeId], references: [id], onDelete: Cascade)
   metaAd         MetaAd?       @relation(fields: [metaAdRefId], references: [id])
   campaign       MetaCampaign? @relation(fields: [campaignRefId], references: [id])
   metaAdset      MetaAdset?    @relation(fields: [metaAdsetRefId], references: [id])
@@ -383,7 +383,7 @@ model CreativeChangeLog {
   createdBy       String?               @map("created_by") @db.Uuid
   createdAt       DateTime              @default(now()) @map("created_at")
   updatedAt       DateTime              @updatedAt @map("updated_at")
-  creative        Creative              @relation(fields: [creativeId], references: [id])
+  creative        Creative              @relation(fields: [creativeId], references: [id], onDelete: Cascade)
 
   @@index([creativeId, actionDate])
   @@index([actionDate, actionType])
@@ -661,7 +661,7 @@ model MetaAdDailyMetric {
   campaign                      MetaCampaign      @relation(fields: [campaignRefId], references: [id])
   metaAdset                     MetaAdset         @relation(fields: [metaAdsetRefId], references: [id])
   metaAd                        MetaAd            @relation(fields: [metaAdRefId], references: [id])
-  creative                      Creative?         @relation(fields: [creativeId], references: [id])
+  creative                      Creative?         @relation(fields: [creativeId], references: [id], onDelete: SetNull)
   product                       Product?          @relation(fields: [productId], references: [id])
   productMatchRule              ProductMatchRule? @relation(fields: [productMatchRuleId], references: [id])
 

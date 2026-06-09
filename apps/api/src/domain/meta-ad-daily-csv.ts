@@ -401,7 +401,11 @@ export function isPurchaseResult(resultIndicator: string | null) {
     return false;
   }
   const normalized = resultIndicator.toLowerCase();
-  return normalized.includes("purchase") || normalized.includes("구매");
+  return (
+    normalized.includes("purchase") ||
+    normalized.includes("구매") ||
+    normalized.includes("offsite_conversion.custom.")
+  );
 }
 
 function textValue(value: string | null | undefined): string | null {

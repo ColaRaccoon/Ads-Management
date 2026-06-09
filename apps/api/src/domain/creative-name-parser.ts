@@ -1,4 +1,5 @@
 const SETTING_SUFFIXES = new Set(["IG", "FB", "IG+FB", "FB+IG"]);
+const METHOD_TOKENS = new Set(["인플연동"]);
 
 export type CreativeNameParts = {
   originalName: string;
@@ -14,13 +15,15 @@ export type CreativeNameParts = {
 export class CreativeNameParser {
   parse(adName: string): CreativeNameParts {
     const originalName = adName.trim();
-    const parts = originalName
+    let parts = originalName
       .split("_")
       .map((part) => part.trim())
       .filter(Boolean);
 
     const dateCode = this.isDatePrefix(parts[0]) ? parts.shift() ?? null : null;
     const setting = this.isSettingSuffix(parts[parts.length - 1]) ? parts.pop()?.toUpperCase() ?? null : null;
+    const method = parts.find((part) => this.isMethodToken(part)) ?? null;
+    parts = parts.filter((part) => !this.isMethodToken(part));
 
     if (parts.length < 2) {
       return {
@@ -28,7 +31,7 @@ export class CreativeNameParser {
         dateCode,
         productName: parts[0] ?? originalName,
         materialNo: null,
-        setting,
+        setting: setting ?? method,
         creativeKey: originalName,
         displayName: originalName,
         parseStatus: "FALLBACK"
@@ -44,7 +47,7 @@ export class CreativeNameParser {
       dateCode,
       productName,
       materialNo,
-      setting,
+      setting: setting ?? method,
       creativeKey,
       displayName: creativeKey,
       parseStatus: "PARSED"
@@ -57,5 +60,9 @@ export class CreativeNameParser {
 
   private isSettingSuffix(value: string | undefined) {
     return Boolean(value && SETTING_SUFFIXES.has(value.toUpperCase()));
+  }
+
+  private isMethodToken(value: string | undefined) {
+    return Boolean(value && METHOD_TOKENS.has(value));
   }
 }

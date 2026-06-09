@@ -670,10 +670,12 @@ export class UploadsService {
         where: { uploadBatchId: id },
         select: {
           id: true,
+          creativeId: true,
           metricDate: true,
           metaCampaignId: true,
           metaAdsetId: true,
-          adIdentityKey: true
+          adIdentityKey: true,
+          adNameSnapshot: true
         }
       });
       const adsetMetrics = await tx.metaAdsetDailyMetric.findMany({
@@ -702,6 +704,7 @@ export class UploadsService {
 
       const restoredAdCurrentCount = await this.restoreCurrentAdMetrics(tx, adMetrics);
       const restoredAdsetCurrentCount = await this.restoreCurrentAdsetMetrics(tx, adsetMetrics);
+      const creativeCleanup = await this.cleanupCreativeDataAfterMetricDelete(tx, adMetrics);
       const deletedErrors = await tx.uploadRowError.deleteMany({ where: { uploadBatchId: id } });
       const deletedRows = await tx.uploadRow.deleteMany({ where: { uploadBatchId: id } });
       await tx.uploadBatch.delete({ where: { id } });
@@ -712,7 +715,8 @@ export class UploadsService {
         deletedRowCount: deletedRows.count,
         deletedErrorCount: deletedErrors.count,
         restoredAdCurrentCount,
-        restoredAdsetCurrentCount
+        restoredAdsetCurrentCount,
+        ...creativeCleanup
       };
     });
 
@@ -809,6 +813,107 @@ export class UploadsService {
       }
     }
     return restoredCount;
+  }
+
+  private async cleanupCreativeDataAfterMetricDelete(tx: Prisma.TransactionClient, metrics: DeletedAdMetricKey[]) {
+    const deletedMetrics = metrics.filter((metric): metric is DeletedAdMetricKey & { creativeId: string } => Boolean(metric.creativeId));
+    const creativeIds = uniqueStrings(deletedMetrics.map((metric) => metric.creativeId));
+    if (creativeIds.length === 0) {
+      return emptyCreativeCleanup();
+    }
+
+    const remainingMetrics = await tx.metaAdDailyMetric.findMany({
+      where: { creativeId: { in: creativeIds } },
+      select: {
+        creativeId: true,
+        metaCampaignId: true,
+        metaAdsetId: true,
+        adNameSnapshot: true,
+        isCurrent: true
+      }
+    });
+    const remainingCreativeIds = new Set(remainingMetrics.map((metric) => metric.creativeId).filter((id): id is string => Boolean(id)));
+    const currentCreativeIds = new Set(
+      remainingMetrics.filter((metric) => metric.isCurrent).map((metric) => metric.creativeId).filter((id): id is string => Boolean(id))
+    );
+    const orphanCreativeIds = creativeIds.filter((creativeId) => !remainingCreativeIds.has(creativeId));
+    const survivingCreativeIds = creativeIds.filter((creativeId) => remainingCreativeIds.has(creativeId));
+
+    const deletedOrphanLogs =
+      orphanCreativeIds.length > 0
+        ? await tx.creativeChangeLog.deleteMany({ where: { creativeId: { in: orphanCreativeIds } } })
+        : { count: 0 };
+    const deletedOrphanPlacements =
+      orphanCreativeIds.length > 0
+        ? await tx.creativePlacement.deleteMany({ where: { creativeId: { in: orphanCreativeIds } } })
+        : { count: 0 };
+    const deletedOrphanAliases =
+      orphanCreativeIds.length > 0
+        ? await tx.creativeAlias.deleteMany({ where: { creativeId: { in: orphanCreativeIds } } })
+        : { count: 0 };
+    const deletedOrphanCreatives =
+      orphanCreativeIds.length > 0 ? await tx.creative.deleteMany({ where: { id: { in: orphanCreativeIds } } }) : { count: 0 };
+
+    const deletedPlacementKeys = new Map<string, CreativePlacementCleanupKey>();
+    const deletedAliasKeysByCreative = new Map<string, Set<string>>();
+    for (const metric of deletedMetrics) {
+      if (orphanCreativeIds.includes(metric.creativeId)) {
+        continue;
+      }
+      const placementKey = creativePlacementCleanupKey(metric);
+      deletedPlacementKeys.set(placementKeyToString(placementKey), placementKey);
+
+      const aliasKey = creativeOriginalKey(this.creativeNameParser.parse(metric.adNameSnapshot).originalName);
+      const aliasKeys = deletedAliasKeysByCreative.get(metric.creativeId) ?? new Set<string>();
+      aliasKeys.add(aliasKey);
+      deletedAliasKeysByCreative.set(metric.creativeId, aliasKeys);
+    }
+
+    const remainingPlacementKeys = new Set(remainingMetrics.map((metric) => placementKeyToString(creativePlacementCleanupKey(metric))));
+    const obsoletePlacementWheres = Array.from(deletedPlacementKeys.values()).filter(
+      (placementKey) => !remainingPlacementKeys.has(placementKeyToString(placementKey))
+    );
+    const deletedStalePlacements =
+      obsoletePlacementWheres.length > 0
+        ? await tx.creativePlacement.deleteMany({
+            where: { OR: obsoletePlacementWheres.map((placementKey) => creativePlacementWhere(placementKey)) }
+          })
+        : { count: 0 };
+
+    const remainingAliasKeysByCreative = new Map<string, Set<string>>();
+    for (const metric of remainingMetrics) {
+      if (!metric.creativeId) {
+        continue;
+      }
+      const aliasKey = creativeOriginalKey(this.creativeNameParser.parse(metric.adNameSnapshot).originalName);
+      const aliasKeys = remainingAliasKeysByCreative.get(metric.creativeId) ?? new Set<string>();
+      aliasKeys.add(aliasKey);
+      remainingAliasKeysByCreative.set(metric.creativeId, aliasKeys);
+    }
+    const obsoleteAliasWheres: Prisma.CreativeAliasWhereInput[] = [];
+    for (const [creativeId, deletedAliasKeys] of deletedAliasKeysByCreative.entries()) {
+      const remainingAliasKeys = remainingAliasKeysByCreative.get(creativeId) ?? new Set<string>();
+      const obsoleteAliasKeys = Array.from(deletedAliasKeys).filter((aliasKey) => !remainingAliasKeys.has(aliasKey));
+      if (obsoleteAliasKeys.length > 0) {
+        obsoleteAliasWheres.push({ creativeId, originalKey: { in: obsoleteAliasKeys } });
+      }
+    }
+    const deletedStaleAliases =
+      obsoleteAliasWheres.length > 0 ? await tx.creativeAlias.deleteMany({ where: { OR: obsoleteAliasWheres } }) : { count: 0 };
+
+    const deactivatedCreativeIds = survivingCreativeIds.filter((creativeId) => !currentCreativeIds.has(creativeId));
+    const deactivatedCreatives =
+      deactivatedCreativeIds.length > 0
+        ? await tx.creative.updateMany({ where: { id: { in: deactivatedCreativeIds } }, data: { isActive: false } })
+        : { count: 0 };
+
+    return {
+      deletedCreativePlacementCount: deletedOrphanPlacements.count + deletedStalePlacements.count,
+      deletedCreativeAliasCount: deletedOrphanAliases.count + deletedStaleAliases.count,
+      deletedCreativeLogCount: deletedOrphanLogs.count,
+      deletedCreativeCount: deletedOrphanCreatives.count,
+      deactivatedCreativeCount: deactivatedCreatives.count
+    };
   }
 
 
@@ -1595,16 +1700,25 @@ type AdsetAggregateInput = {
 
 type DeletedAdMetricKey = {
   id: string;
+  creativeId: string | null;
   metricDate: Date;
   metaCampaignId: string;
   metaAdsetId: string;
   adIdentityKey: string;
+  adNameSnapshot: string;
 };
 
 type DeletedAdsetMetricKey = {
   id: string;
   metricDate: Date;
   metaAdsetId: string;
+};
+
+type CreativePlacementCleanupKey = {
+  creativeId: string;
+  metaCampaignId: string;
+  metaAdsetId: string;
+  originalAdName: string;
 };
 
 function minDate(current: Date | null, next: Date) {
@@ -1640,6 +1754,43 @@ function jsonSafeAdParsedRow(parsedRow: ParsedMetaAdDailyRow) {
 
 function creativeOriginalKey(originalName: string) {
   return originalName.trim();
+}
+
+function creativePlacementCleanupKey(metric: {
+  creativeId: string | null;
+  metaCampaignId: string;
+  metaAdsetId: string;
+  adNameSnapshot: string;
+}): CreativePlacementCleanupKey {
+  return {
+    creativeId: metric.creativeId ?? "",
+    metaCampaignId: metric.metaCampaignId,
+    metaAdsetId: metric.metaAdsetId,
+    originalAdName: metric.adNameSnapshot
+  };
+}
+
+function placementKeyToString(key: CreativePlacementCleanupKey) {
+  return `${key.creativeId}:${key.metaCampaignId}:${key.metaAdsetId}:${key.originalAdName}`;
+}
+
+function creativePlacementWhere(key: CreativePlacementCleanupKey): Prisma.CreativePlacementWhereInput {
+  return {
+    creativeId: key.creativeId,
+    metaCampaignId: key.metaCampaignId,
+    metaAdsetId: key.metaAdsetId,
+    originalAdName: key.originalAdName
+  };
+}
+
+function emptyCreativeCleanup() {
+  return {
+    deletedCreativePlacementCount: 0,
+    deletedCreativeAliasCount: 0,
+    deletedCreativeLogCount: 0,
+    deletedCreativeCount: 0,
+    deactivatedCreativeCount: 0
+  };
 }
 
 function errorMessage(error: unknown) {
@@ -1838,4 +1989,8 @@ function chooseDeliveryStatus(values: Array<string | null>) {
     return "inactive";
   }
   return values.find((value): value is string => Boolean(value)) ?? null;
+}
+
+function uniqueStrings(values: string[]) {
+  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
 }

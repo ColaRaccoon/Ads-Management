@@ -20,7 +20,9 @@ const CREATIVE_ACTION_TYPES = new Set([
 ]);
 
 type MetricRow = Prisma.MetaAdDailyMetricGetPayload<Record<string, never>>;
+type AliasRow = Prisma.CreativeAliasGetPayload<Record<string, never>>;
 type PlacementRow = Prisma.CreativePlacementGetPayload<Record<string, never>>;
+type DateRange = NonNullable<ReturnType<typeof optionalDateRange>>;
 
 @Injectable()
 export class ChangeLogsService {
@@ -62,6 +64,7 @@ export class ChangeLogsService {
   async listCreatives(from?: string, to?: string) {
     const range = optionalDateRange(from, to);
     const creatives = await this.prisma.creative.findMany({
+      where: visibleCreativeWhere(range),
       include: {
         aliases: true,
         placements: true,
@@ -87,9 +90,12 @@ export class ChangeLogsService {
     const metricsByCreative = groupBy(metrics, (metric) => metric.creativeId ?? "");
 
     return creatives.map((creative) => {
-      const placementKeys = new Set(creative.placements.map((placement) => placementKey(placement)));
+      const creativeMetrics = metricsByCreative.get(creative.id) ?? [];
+      const visibleAliases = filterAliasesByMetrics(creative.aliases, creativeMetrics);
+      const visiblePlacements = filterPlacementsByMetrics(creative.placements, creativeMetrics);
+      const placementKeys = new Set(visiblePlacements.map((placement) => placementKey(placement)));
       const activePlacementKeys = new Set(
-        creative.placements.filter((placement) => isActiveStatus(placement.lastStatus)).map((placement) => placementKey(placement))
+        visiblePlacements.filter((placement) => isActiveStatus(placement.lastStatus)).map((placement) => placementKey(placement))
       );
       const latestLog = creative.changeLogs[0] ?? null;
       return {
@@ -98,17 +104,17 @@ export class ChangeLogsService {
         displayName: creative.displayName,
         productName: creative.productName,
         materialNo: creative.materialNo,
-        firstSeenOn: dateOrNull(creative.firstSeenOn),
-        lastSeenOn: dateOrNull(creative.lastSeenOn),
-        aliasCount: creative.aliases.length,
+        firstSeenOn: dateOrNull(minMetricDate(creativeMetrics)),
+        lastSeenOn: dateOrNull(maxMetricDate(creativeMetrics)),
+        aliasCount: visibleAliases.length,
         placementCount: placementKeys.size,
         activePlacementCount: activePlacementKeys.size,
         settings: uniqueStrings([
-          ...creative.aliases.map((alias) => alias.setting),
-          ...creative.placements.map((placement) => placement.setting)
+          ...visibleAliases.map((alias) => alias.setting),
+          ...visiblePlacements.map((placement) => placement.setting)
         ]),
-        originalNames: uniqueStrings(creative.aliases.map((alias) => alias.originalName)),
-        latestMetrics: aggregateLatestMetrics(metricsByCreative.get(creative.id) ?? []),
+        originalNames: uniqueStrings(visibleAliases.map((alias) => alias.originalName)),
+        latestMetrics: aggregateLatestMetrics(creativeMetrics),
         latestLog: latestLog
           ? {
               actionDate: formatDateOnly(latestLog.actionDate),
@@ -122,8 +128,8 @@ export class ChangeLogsService {
 
   async getCreativeDetail(creativeId: string, from?: string, to?: string) {
     const range = optionalDateRange(from, to);
-    const creative = await this.prisma.creative.findUnique({
-      where: { id: creativeId },
+    const creative = await this.prisma.creative.findFirst({
+      where: visibleCreativeWhere(range, creativeId),
       include: {
         aliases: { orderBy: [{ lastSeenOn: "desc" }, { originalName: "asc" }] },
         placements: { orderBy: [{ lastSeenOn: "desc" }, { campaignName: "asc" }, { adsetName: "asc" }] },
@@ -149,10 +155,10 @@ export class ChangeLogsService {
         displayName: creative.displayName,
         productName: creative.productName,
         materialNo: creative.materialNo,
-        firstSeenOn: dateOrNull(creative.firstSeenOn),
-        lastSeenOn: dateOrNull(creative.lastSeenOn)
+        firstSeenOn: dateOrNull(minMetricDate(metrics)),
+        lastSeenOn: dateOrNull(maxMetricDate(metrics))
       },
-      aliases: creative.aliases.map((alias) => ({
+      aliases: filterAliasesByMetrics(creative.aliases, metrics).map((alias) => ({
         originalName: alias.originalName,
         dateCode: alias.dateCode,
         setting: alias.setting,
@@ -160,7 +166,7 @@ export class ChangeLogsService {
         firstSeenOn: dateOrNull(alias.firstSeenOn),
         lastSeenOn: dateOrNull(alias.lastSeenOn)
       })),
-      placements: groupedPlacements(creative.placements),
+      placements: groupedPlacements(filterPlacementsByMetrics(creative.placements, metrics)),
       dailyMetrics: groupedDailyMetrics(metrics),
       logs: creative.changeLogs.map((log) => ({
         id: log.id,
@@ -176,7 +182,7 @@ export class ChangeLogsService {
   }
 
   async createCreativeLog(creativeId: string, body: Record<string, unknown>) {
-    const creative = await this.prisma.creative.findUnique({ where: { id: creativeId }, select: { id: true } });
+    const creative = await this.prisma.creative.findFirst({ where: visibleCreativeWhere(null, creativeId), select: { id: true } });
     if (!creative) {
       throw new NotFoundException({ code: "CREATIVE_NOT_FOUND", message: "creativeId에 해당하는 광고소재를 찾을 수 없습니다." });
     }
@@ -259,6 +265,33 @@ function optionalDateRange(from?: string, to?: string) {
     return null;
   }
   return parseDateRange(from, to);
+}
+
+function visibleCreativeWhere(range: DateRange | null, creativeId?: string): Prisma.CreativeWhereInput {
+  return {
+    ...(creativeId ? { id: creativeId } : {}),
+    isActive: true,
+    adDailyMetrics: {
+      some: currentMetricWhere(range)
+    }
+  };
+}
+
+function currentMetricWhere(range: DateRange | null): Prisma.MetaAdDailyMetricWhereInput {
+  return {
+    isCurrent: true,
+    ...(range ? { metricDate: { gte: range.fromDate, lte: range.toDate } } : {})
+  };
+}
+
+function filterAliasesByMetrics(aliases: AliasRow[], metrics: MetricRow[]) {
+  const originalNames = new Set(metrics.map((metric) => metric.adNameSnapshot.trim()));
+  return aliases.filter((alias) => originalNames.has(alias.originalName));
+}
+
+function filterPlacementsByMetrics(placements: PlacementRow[], metrics: MetricRow[]) {
+  const placementKeys = new Set(metrics.map((metric) => metricOriginalPlacementKey(metric)));
+  return placements.filter((placement) => placementKeys.has(originalPlacementKey(placement)));
 }
 
 function groupedPlacements(placements: PlacementRow[]) {
@@ -349,6 +382,14 @@ function placementKey(placement: Pick<PlacementRow, "metaCampaignId" | "metaAdse
   return `${placement.metaCampaignId}:${placement.metaAdsetId}`;
 }
 
+function originalPlacementKey(placement: Pick<PlacementRow, "metaCampaignId" | "metaAdsetId" | "originalAdName">) {
+  return `${placement.metaCampaignId}:${placement.metaAdsetId}:${placement.originalAdName}`;
+}
+
+function metricOriginalPlacementKey(metric: Pick<MetricRow, "metaCampaignId" | "metaAdsetId" | "adNameSnapshot">) {
+  return `${metric.metaCampaignId}:${metric.metaAdsetId}:${metric.adNameSnapshot}`;
+}
+
 function isActiveStatus(status: string | null) {
   return status?.toLowerCase() === "active";
 }
@@ -403,6 +444,14 @@ function maxDate(current: Date | null, next: Date | null) {
 
 function dateOrNull(value: Date | null) {
   return value ? formatDateOnly(value) : null;
+}
+
+function minMetricDate(metrics: MetricRow[]) {
+  return metrics.reduce<Date | null>((current, metric) => minDate(current, metric.metricDate), null);
+}
+
+function maxMetricDate(metrics: MetricRow[]) {
+  return metrics.reduce<Date | null>((current, metric) => maxDate(current, metric.metricDate), null);
 }
 
 function round2(value: number) {

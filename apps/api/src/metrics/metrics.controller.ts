@@ -59,6 +59,20 @@ export class MetricsController {
     return this.metricsService.compareAdsByName(adName, from, to, deliveryStatus);
   }
 
+  @Get("ads/creatives")
+  creativeAds(
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("campaignId") campaignId?: string,
+    @Query("adsetId") adsetId?: string,
+    @Query("productId") productId?: string,
+    @Query("stage") stage?: string,
+    @Query("deliveryStatus") deliveryStatus?: string,
+    @Query("q") q?: string
+  ) {
+    return this.metricsService.creativeMetrics({ from, to, campaignId, adsetId, productId, stage, deliveryStatus, q });
+  }
+
   @Get("ads")
   ads(
     @Query("from") from?: string,
