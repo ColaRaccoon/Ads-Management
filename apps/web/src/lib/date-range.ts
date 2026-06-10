@@ -6,6 +6,7 @@ export type DateRange = {
 };
 
 export const rangePresets = [
+  { label: "오늘", days: 0 },
   { label: "어제", days: 1 },
   { label: "최근 3일", days: 3 },
   { label: "최근 7일", days: 7 },
@@ -17,10 +18,18 @@ export function defaultRange(days = 7): DateRange {
 }
 
 export function defaultRangeForPath(pathname?: string | null): DateRange {
+  if (pathname === "/change-logs") {
+    const today = todayInputValue();
+    return { from: today, to: today };
+  }
   return defaultRange(pathname === "/ads" ? 1 : 7);
 }
 
 export function presetRange(days: number): DateRange {
+  if (days === 0) {
+    const today = todayInputValue();
+    return { from: today, to: today };
+  }
   const end = subDays(new Date(), 1);
   return {
     from: format(subDays(end, days - 1), "yyyy-MM-dd"),
@@ -29,6 +38,9 @@ export function presetRange(days: number): DateRange {
 }
 
 export function readCachedRange(pathname?: string | null): DateRange | null {
+  if (pathname === "/change-logs") {
+    return null;
+  }
   if (typeof window === "undefined" || !pathname) {
     return null;
   }
@@ -60,6 +72,12 @@ function rangeStorageKey(pathname: string) {
 
 function isIsoDate(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function todayInputValue() {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 10);
 }
 
 export function money(value: number | null | undefined, currency = "KRW") {

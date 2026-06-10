@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import {
   Activity,
   BarChart3,
+  ClipboardList,
   FileDown,
   History,
   Home,
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/campaigns", label: "Campaigns", icon: BarChart3 },
   { href: "/adsets", label: "Adsets", icon: TableProperties },
   { href: "/ads", label: "Ads", icon: Package },
+  { href: "/daily-report", label: "Daily Report", icon: ClipboardList },
   { href: "/products/performance", label: "Products", icon: BarChart3 },
   { href: "/mappings", label: "Mappings", icon: Shuffle },
   { href: "/settings/products", label: "Product Settings", icon: Settings },

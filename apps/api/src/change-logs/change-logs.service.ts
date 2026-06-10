@@ -22,6 +22,9 @@ const CREATIVE_ACTION_TYPES = new Set([
 type MetricRow = Prisma.MetaAdDailyMetricGetPayload<Record<string, never>>;
 type AliasRow = Prisma.CreativeAliasGetPayload<Record<string, never>>;
 type PlacementRow = Prisma.CreativePlacementGetPayload<Record<string, never>>;
+type ProductAdMetricRow = Prisma.MetaAdDailyMetricGetPayload<{
+  include: { creative: { select: { displayName: true } } };
+}>;
 type DateRange = NonNullable<ReturnType<typeof optionalDateRange>>;
 
 @Injectable()
@@ -201,6 +204,194 @@ export class ChangeLogsService {
       }
     });
   }
+
+  async listProducts(dateInput?: string) {
+    const metricDate = parseSingleDate(dateInput, "date");
+    const products = await this.prisma.product.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, displayName: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+    });
+    const productIds = products.map((product) => product.id);
+    const grouped =
+      productIds.length > 0
+        ? await this.prisma.metaAdDailyMetric.groupBy({
+            by: ["productId"],
+            where: {
+              productId: { in: productIds },
+              metricDate,
+              isCurrent: true
+            },
+            _sum: { spendUsd: true }
+          })
+        : [];
+    const spendByProductId = new Map(grouped.map((row) => [row.productId, round2(numberFrom(row._sum.spendUsd))]));
+
+    return products.map((product) => ({
+      id: product.id,
+      productName: displayProductName(product),
+      spendUsd: spendByProductId.get(product.id) ?? 0
+    }));
+  }
+
+  async getProductDetail(productId: string, dateInput?: string) {
+    const metricDate = parseSingleDate(dateInput, "date");
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, name: true, displayName: true }
+    });
+    if (!product) {
+      throw new NotFoundException({ code: "PRODUCT_NOT_FOUND", message: "productId에 해당하는 제품을 찾을 수 없습니다." });
+    }
+
+    const [selectedMetrics, logs] = await Promise.all([
+      this.prisma.metaAdDailyMetric.findMany({
+        where: {
+          productId,
+          metricDate,
+          isCurrent: true
+        },
+        include: { creative: { select: { displayName: true } } },
+        orderBy: [{ spendUsd: "desc" }, { adNameSnapshot: "asc" }]
+      }),
+      this.prisma.productChangeLog.findMany({
+        where: { productId },
+        orderBy: [{ actionDate: "desc" }, { createdAt: "desc" }]
+      })
+    ]);
+    const adsDate =
+      selectedMetrics.length > 0 ? metricDate : await this.findPreviousProductMetricDate(productId, metricDate);
+    const adsMetrics =
+      selectedMetrics.length > 0 || !adsDate
+        ? selectedMetrics
+        : await this.prisma.metaAdDailyMetric.findMany({
+            where: {
+              productId,
+              metricDate: adsDate,
+              isCurrent: true
+            },
+            include: { creative: { select: { displayName: true } } },
+            orderBy: [{ spendUsd: "desc" }, { adNameSnapshot: "asc" }]
+          });
+    const ads = groupProductAds(adsMetrics);
+
+    return {
+      product: {
+        id: product.id,
+        name: displayProductName(product)
+      },
+      date: formatDateOnly(metricDate),
+      adsDate: adsDate ? formatDateOnly(adsDate) : formatDateOnly(metricDate),
+      isPreviousAdsDate: Boolean(adsDate && formatDateOnly(adsDate) !== formatDateOnly(metricDate)),
+      spendUsd: round2(sum(selectedMetrics, (metric) => numberFrom(metric.spendUsd))),
+      activeAdCount: ads.active.length,
+      inactiveAdCount: ads.inactive.length,
+      ads,
+      logs: logs.map((log) => ({
+        id: log.id,
+        actionDate: formatDateOnly(log.actionDate),
+        text: log.text,
+        createdAt: log.createdAt.toISOString()
+      }))
+    };
+  }
+
+  async createProductLog(productId: string, body: Record<string, unknown>) {
+    const product = await this.prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+    if (!product) {
+      throw new NotFoundException({ code: "PRODUCT_NOT_FOUND", message: "productId에 해당하는 제품을 찾을 수 없습니다." });
+    }
+    return this.prisma.productChangeLog.create({
+      data: {
+        productId,
+        actionDate:
+          body.actionDate === undefined || body.actionDate === null || String(body.actionDate).trim() === ""
+            ? asDateOnly(todayInputValue())
+            : parseSingleDate(String(body.actionDate), "actionDate"),
+        text: requiredString(body.text, "text")
+      }
+    });
+  }
+
+  private async findPreviousProductMetricDate(productId: string, metricDate: Date) {
+    const previousMetric = await this.prisma.metaAdDailyMetric.findFirst({
+      where: {
+        productId,
+        metricDate: { lt: metricDate },
+        isCurrent: true
+      },
+      select: { metricDate: true },
+      orderBy: [{ metricDate: "desc" }]
+    });
+    return previousMetric?.metricDate ?? null;
+  }
+}
+
+function parseSingleDate(value: string | undefined, field: string) {
+  if (!value || value.trim() === "") {
+    return asDateOnly(todayInputValue());
+  }
+  const text = requiredString(value, field);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    throw new BadRequestException({ code: "INVALID_DATE", message: `${field} 값은 YYYY-MM-DD 형식이어야 합니다.` });
+  }
+  return asDateOnly(text);
+}
+
+function todayInputValue() {
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  return today.toISOString().slice(0, 10);
+}
+
+function displayProductName(product: { name: string; displayName: string }) {
+  return product.displayName || product.name;
+}
+
+function groupProductAds(metrics: ProductAdMetricRow[]) {
+  const groups = new Map<
+    string,
+    {
+      id: string;
+      creativeName: string;
+      campaignName: string;
+      spendUsd: number;
+      statuses: Array<string | null>;
+    }
+  >();
+
+  for (const metric of metrics) {
+    const id = metric.metaAdRefId;
+    const current = groups.get(id);
+    const spendUsd = numberFrom(metric.spendUsd);
+    if (!current) {
+      groups.set(id, {
+        id,
+        creativeName: metric.creative?.displayName ?? metric.adNameSnapshot,
+        campaignName: metric.campaignNameSnapshot,
+        spendUsd,
+        statuses: [metric.adDeliveryStatus]
+      });
+      continue;
+    }
+    current.spendUsd += spendUsd;
+    current.statuses.push(metric.adDeliveryStatus);
+  }
+
+  const ads = Array.from(groups.values())
+    .map((ad) => ({
+      id: ad.id,
+      creativeName: ad.creativeName,
+      campaignName: ad.campaignName,
+      spendUsd: round2(ad.spendUsd),
+      active: ad.statuses.some((status) => isActiveStatus(status))
+    }))
+    .sort((a, b) => b.spendUsd - a.spendUsd || a.creativeName.localeCompare(b.creativeName, "ko"));
+
+  return {
+    active: ads.filter((ad) => ad.active).map(({ active, ...ad }) => ad),
+    inactive: ads.filter((ad) => !ad.active).map(({ active, ...ad }) => ad)
+  };
 }
 
 function requiredString(value: unknown, field: string): string {

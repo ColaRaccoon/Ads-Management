@@ -26,14 +26,16 @@ export class ProductsService {
       uploadRowCount,
       dailyMetricCount,
       decisionLogCount,
-      changeLogCount
+      changeLogCount,
+      productChangeLogCount
     ] = await Promise.all([
       this.prisma.metaAdset.count({ where: { currentProductId: id } }),
       this.prisma.adsetProductHistory.count({ where: { productId: id } }),
       this.prisma.uploadRow.count({ where: { productId: id } }),
       this.prisma.metaAdsetDailyMetric.count({ where: { productId: id } }),
       this.prisma.decisionLog.count({ where: { productId: id } }),
-      this.prisma.changeLog.count({ where: { productId: id } })
+      this.prisma.changeLog.count({ where: { productId: id } }),
+      this.prisma.productChangeLog.count({ where: { productId: id } })
     ]);
     const hasOperationalData =
       currentAdsetCount +
@@ -41,7 +43,8 @@ export class ProductsService {
         uploadRowCount +
         dailyMetricCount +
         decisionLogCount +
-        changeLogCount >
+        changeLogCount +
+        productChangeLogCount >
       0;
 
     if (hasOperationalData) {

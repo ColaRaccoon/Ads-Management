@@ -15,6 +15,11 @@ type MetricWithRelations = Prisma.MetaAdsetDailyMetricGetPayload<{
 type CostRule = Prisma.ProductCostRuleGetPayload<Record<string, never>>;
 type CpaRule = Prisma.ProductCpaRuleGetPayload<Record<string, never>>;
 type ExchangeRateRow = Prisma.ExchangeRateGetPayload<Record<string, never>>;
+type AdDailyMetricRow = Prisma.MetaAdDailyMetricGetPayload<Record<string, never>>;
+type CreativeFinancialContext = {
+  costRulesByProductId: Map<string, CostRule[]>;
+  exchangeRateByDate: Map<string, ExchangeRateRow>;
+};
 type RuleStatus =
   | "OK"
   | "UNMATCHED"
@@ -298,6 +303,7 @@ export class MetricsService {
     q?: string;
   }) {
     const metrics = await this.currentAdMetrics(query);
+    const financialContext = await this.creativeFinancialContext(metrics);
     const parsedMetrics = metrics.map((row) => ({
       row,
       parsedName: this.creativeNameParser.parse(row.adNameSnapshot)
@@ -309,7 +315,7 @@ export class MetricsService {
     return Array.from(groups.entries())
       .map(([creativeKey, items]) => {
         const rows = items.map((item) => item.row);
-        const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
+        const aggregate = aggregateCreativeDailyRows(this.periodCalculator, rows, financialContext);
         const first = rows[0];
         const last = rows[rows.length - 1];
         const lastParsedName = items[items.length - 1].parsedName;
@@ -369,6 +375,40 @@ export class MetricsService {
       select: { creativeKey: true, firstSeenOn: true, lastSeenOn: true }
     });
     return new Map(creatives.map((creative) => [creative.creativeKey, creative]));
+  }
+
+  private async creativeFinancialContext(metrics: AdDailyMetricRow[]): Promise<CreativeFinancialContext> {
+    if (metrics.length === 0) {
+      return { costRulesByProductId: new Map(), exchangeRateByDate: new Map() };
+    }
+
+    const productIds = Array.from(new Set(metrics.map((metric) => metric.productId).filter(Boolean))) as string[];
+    const metricDates = Array.from(new Set(metrics.map((metric) => formatDateOnly(metric.metricDate))));
+    const rateDates = metricDates.map((date) => toDateOnly(date)).filter((date): date is Date => Boolean(date));
+    const costRulesPromise =
+      productIds.length > 0
+        ? this.prisma.productCostRule.findMany({
+            where: { productId: { in: productIds } },
+            orderBy: { effectiveFrom: "desc" }
+          })
+        : Promise.resolve([] as CostRule[]);
+    const exchangeRatesPromise =
+      rateDates.length > 0
+        ? this.prisma.exchangeRate.findMany({
+            where: {
+              baseCurrency: "USD",
+              quoteCurrency: "KRW",
+              provider: "KOREA_EXIM",
+              rateDate: { in: rateDates }
+            }
+          })
+        : Promise.resolve([] as ExchangeRateRow[]);
+    const [costRules, exchangeRates] = await Promise.all([costRulesPromise, exchangeRatesPromise]);
+
+    return {
+      costRulesByProductId: groupBy(costRules, (rule) => rule.productId),
+      exchangeRateByDate: new Map(exchangeRates.map((rate) => [formatDateOnly(rate.rateDate), rate]))
+    };
   }
 
   async compareAdsByName(adName: string | undefined, from?: string, to?: string, deliveryStatus?: string) {
@@ -830,6 +870,66 @@ function aggregateAdDailyRows(
   return {
     totals: {
       ...totals,
+      cpmUsd: divideOrNull(totals.spendUsd * 1000, totals.impressions)
+    },
+    dataDays: totals.dataDays
+  };
+}
+
+function aggregateCreativeDailyRows(
+  calculator: PeriodMetricCalculator,
+  rows: AdDailyMetricRow[],
+  context: CreativeFinancialContext
+) {
+  const periodRows = rows.map((row) => {
+    const metricDate = formatDateOnly(row.metricDate);
+    const spendUsd = numberFrom(row.spendUsd);
+    const purchaseCount = adPurchaseCount(row);
+    const costRule = row.productId
+      ? findRuleForDate(context.costRulesByProductId.get(row.productId) ?? [], row.metricDate)
+      : null;
+    const exchangeRate = context.exchangeRateByDate.get(metricDate) ?? null;
+    const legacyExchangeRate = costRule ? numberFrom(costRule.fxRateKrwPerUsd) : 0;
+    const exchangeRateKrwPerUsd = exchangeRate
+      ? numberFrom(exchangeRate.rate)
+      : legacyExchangeRate > 0
+        ? legacyExchangeRate
+        : null;
+    const spendKrw = exchangeRateKrwPerUsd === null ? null : spendUsd * exchangeRateKrwPerUsd;
+    const salePriceKrw = costRule ? numberFrom(costRule.salePriceKrw) : null;
+    const revenueKrw =
+      purchaseCount === 0
+        ? 0
+        : salePriceKrw !== null && Number.isFinite(salePriceKrw)
+          ? purchaseCount * salePriceKrw
+          : null;
+
+    return {
+      metricDate,
+      spendUsd,
+      spendKrw,
+      resultCount: purchaseCount,
+      impressions: numberFrom(row.impressions),
+      linkClicks: row.linkClicks,
+      clicksAll: row.clicksAll,
+      landingPageViews: row.landingPageViews,
+      revenueKrw,
+      marginKrw: null
+    };
+  });
+  const totals = calculator.calculate(periodRows);
+  const hasUnknownSpendKrw = periodRows.some((row) => row.spendUsd > 0 && row.spendKrw === null);
+  const hasUnknownRevenueKrw = periodRows.some((row) => row.resultCount > 0 && row.revenueKrw === null);
+  const spendKrw = hasUnknownSpendKrw ? null : totals.spendKrw;
+  const revenueKrw = hasUnknownRevenueKrw ? null : totals.revenueKrw;
+
+  return {
+    totals: {
+      ...totals,
+      spendKrw,
+      revenueKrw,
+      cpaKrw: spendKrw === null ? null : divideOrNull(spendKrw, totals.purchaseCount),
+      roas: spendKrw === null || revenueKrw === null ? null : divideOrNull(revenueKrw, spendKrw),
       cpmUsd: divideOrNull(totals.spendUsd * 1000, totals.impressions)
     },
     dataDays: totals.dataDays

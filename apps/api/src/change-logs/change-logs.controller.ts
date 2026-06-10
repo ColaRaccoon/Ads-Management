@@ -20,6 +20,21 @@ export class ChangeLogsController {
     return this.changeLogsService.createCreativeLog(creativeId, body);
   }
 
+  @Get("products")
+  listProducts(@Query("date") date?: string) {
+    return this.changeLogsService.listProducts(date);
+  }
+
+  @Get("products/:productId")
+  getProductDetail(@Param("productId") productId: string, @Query("date") date?: string) {
+    return this.changeLogsService.getProductDetail(productId, date);
+  }
+
+  @Post("products/:productId/logs")
+  createProductLog(@Param("productId") productId: string, @Body() body: Record<string, unknown>) {
+    return this.changeLogsService.createProductLog(productId, body);
+  }
+
   @Get()
   list(@Query("from") from?: string, @Query("to") to?: string) {
     return this.changeLogsService.list(from, to);

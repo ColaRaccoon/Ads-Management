@@ -157,6 +157,7 @@ model Product {
   adDailyMetrics  MetaAdDailyMetric[]
   decisionLogs    DecisionLog[]
   changeLogs      ChangeLog[]
+  productChangeLogs ProductChangeLog[]
   currentAdsets   MetaAdset[]               @relation("CurrentAdsetProduct")
 
   @@map("products")
@@ -388,6 +389,21 @@ model CreativeChangeLog {
   @@index([creativeId, actionDate])
   @@index([actionDate, actionType])
   @@map("creative_change_logs")
+}
+
+model ProductChangeLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  productId   String   @map("product_id") @db.Uuid
+  actionDate  DateTime @default(now()) @map("action_date") @db.Date
+  text        String   @map("log_text")
+  createdBy   String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, actionDate])
+  @@index([actionDate])
+  @@map("product_change_logs")
 }
 
 model AdsetNameAlias {

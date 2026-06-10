@@ -8,6 +8,7 @@ export function useRange() {
 
   useEffect(() => {
     const read = () => setRange(readRange());
+    read();
     window.addEventListener("popstate", read);
     window.addEventListener("rangechange", read);
     return () => {
