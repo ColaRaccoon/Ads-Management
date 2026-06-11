@@ -4,9 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
-  Boxes,
   ClipboardList,
-  FileSpreadsheet,
   GitBranch,
   Layers3,
   LayoutDashboard,
@@ -25,11 +23,9 @@ const navItems = [
   { href: "/campaigns", label: "Campaigns", icon: Layers3 },
   { href: "/adsets", label: "Adsets", icon: Table2 },
   { href: "/ads", label: "Ads", icon: Sparkles },
-  { href: "/products/performance", label: "Products", icon: Boxes },
   { href: "/mappings", label: "Mappings", icon: GitBranch },
   { href: "/settings/products", label: "Product Settings", icon: SlidersHorizontal },
-  { href: "/change-logs", label: "Change Logs", icon: ClipboardList },
-  { href: "/reports", label: "Reports", icon: FileSpreadsheet }
+  { href: "/change-logs", label: "Change Logs", icon: ClipboardList }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

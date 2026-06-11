@@ -142,6 +142,135 @@ a {
   flex-wrap: wrap;
 }
 
+.date-toolbar {
+  justify-content: flex-end;
+}
+
+.date-picker {
+  position: relative;
+}
+
+.date-trigger {
+  min-width: 228px;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.date-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-trigger.active {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(20, 108, 99, 0.16);
+}
+
+.date-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: min(320px, calc(100vw - 44px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(24, 34, 45, 0.18);
+  padding: 10px;
+}
+
+.calendar-head {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-head strong {
+  text-align: center;
+  font-size: 14px;
+}
+
+.calendar-nav {
+  width: 32px;
+  min-height: 32px;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 34px);
+  justify-content: center;
+  gap: 4px;
+}
+
+.calendar-weekdays {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.calendar-weekdays span {
+  height: 20px;
+  line-height: 20px;
+}
+
+.calendar-grid {
+  margin-top: 4px;
+  user-select: none;
+  touch-action: none;
+}
+
+.calendar-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-day:hover,
+.calendar-day:focus-visible {
+  border-color: var(--brand);
+  background: var(--brand-weak);
+  outline: none;
+}
+
+.calendar-day.outside {
+  color: #9aa5af;
+  font-weight: 600;
+}
+
+.calendar-day.selected {
+  background: #d8ece8;
+  color: var(--brand);
+}
+
+.calendar-day.edge,
+.calendar-day.single {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.calendar-day.edge:hover,
+.calendar-day.edge:focus-visible,
+.calendar-day.single:hover,
+.calendar-day.single:focus-visible {
+  background: #0f5b53;
+  color: #fff;
+}
+
 .button,
 .icon-button {
   display: inline-flex;
@@ -1353,6 +1482,21 @@ th {
     height: auto;
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .date-toolbar,
+  .date-picker,
+  .date-trigger {
+    width: 100%;
+  }
+
+  .date-toolbar {
+    align-items: stretch;
+  }
+
+  .date-popover {
+    left: 0;
+    right: auto;
   }
 
   .creative-log-toolbar,

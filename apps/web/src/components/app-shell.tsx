@@ -7,7 +7,6 @@ import {
   Activity,
   BarChart3,
   ClipboardList,
-  FileDown,
   History,
   Home,
   Package,
@@ -25,11 +24,9 @@ const navItems = [
   { href: "/adsets", label: "Adsets", icon: TableProperties },
   { href: "/ads", label: "Ads", icon: Package },
   { href: "/daily-report", label: "Daily Report", icon: ClipboardList },
-  { href: "/products/performance", label: "Products", icon: BarChart3 },
   { href: "/mappings", label: "Mappings", icon: Shuffle },
   { href: "/settings/products", label: "Product Settings", icon: Settings },
-  { href: "/change-logs", label: "Change Logs", icon: History },
-  { href: "/reports", label: "Reports", icon: FileDown }
+  { href: "/change-logs", label: "Change Logs", icon: History }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
