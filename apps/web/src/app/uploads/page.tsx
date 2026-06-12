@@ -3,7 +3,7 @@
 import { AlertTriangle, Trash2, UploadCloud } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { apiDelete, apiGet, uploadCsv } from "@/lib/api";
+import { apiDelete, apiGet, uploadCafe24Csv, uploadCsv } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
 
 type UploadBatchRow = {
@@ -18,11 +18,29 @@ type UploadBatchRow = {
   fileHashSha256: string;
 };
 
+type Cafe24UploadBatchRow = {
+  id: string;
+  originalFilename: string;
+  status: string;
+  rowCount: number;
+  validRowCount: number;
+  warningCount: number;
+  errorCount: number;
+  orderStart?: string | null;
+  orderEnd?: string | null;
+};
+
 export default function UploadsPage() {
   const [file, setFile] = useState<File | null>(null);
+  const [cafe24File, setCafe24File] = useState<File | null>(null);
   const [conflictPolicy, setConflictPolicy] = useState("SKIP");
+  const [cafe24ConflictPolicy, setCafe24ConflictPolicy] = useState("SKIP");
   const queryClient = useQueryClient();
   const uploads = useQuery({ queryKey: ["uploads"], queryFn: () => apiGet<UploadBatchRow[]>("/uploads") });
+  const cafe24Uploads = useQuery({
+    queryKey: ["cafe24-uploads"],
+    queryFn: () => apiGet<Cafe24UploadBatchRow[]>("/sales/cafe24/uploads")
+  });
   const upload = useMutation({
     mutationFn: async () => {
       if (!file) throw new Error("CSV 파일을 선택하세요.");
@@ -32,8 +50,23 @@ export default function UploadsPage() {
       void queryClient.invalidateQueries();
     }
   });
+  const cafe24Upload = useMutation({
+    mutationFn: async () => {
+      if (!cafe24File) throw new Error("Cafe24 CSV file is required.");
+      return uploadCafe24Csv(cafe24File, cafe24ConflictPolicy);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries();
+    }
+  });
   const deleteUpload = useMutation({
     mutationFn: (id: string) => apiDelete(`/uploads/${id}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries();
+    }
+  });
+  const deleteCafe24Upload = useMutation({
+    mutationFn: (id: string) => apiDelete(`/sales/cafe24/uploads/${id}`),
     onSuccess: () => {
       void queryClient.invalidateQueries();
     }
@@ -46,6 +79,13 @@ export default function UploadsPage() {
       return;
     }
     deleteUpload.mutate(row.id);
+  };
+  const handleCafe24Delete = (row: Cafe24UploadBatchRow) => {
+    const filename = row.originalFilename || row.id;
+    if (!window.confirm(`${filename} Cafe24 업로드와 가져온 주문 데이터를 삭제할까요?`)) {
+      return;
+    }
+    deleteCafe24Upload.mutate(row.id);
   };
 
   return (
@@ -95,6 +135,32 @@ export default function UploadsPage() {
       </div>
 
       <div className="panel" style={{ marginTop: 12 }}>
+        <h2>Cafe24 Order CSV Upload</h2>
+        <div className="dropzone">
+          <input className="input" type="file" accept=".csv,text/csv" onChange={(event) => setCafe24File(event.target.files?.[0] ?? null)} />
+          <select className="select" value={cafe24ConflictPolicy} onChange={(event) => setCafe24ConflictPolicy(event.target.value)}>
+            <option value="SKIP">SKIP</option>
+            <option value="OVERWRITE">OVERWRITE</option>
+            <option value="NEW_VERSION">NEW_VERSION</option>
+          </select>
+          <button className="button primary" type="button" onClick={() => cafe24Upload.mutate()} disabled={!cafe24File || cafe24Upload.isPending}>
+            <UploadCloud size={16} />
+            Upload
+          </button>
+          {cafe24Upload.isError ? <span style={{ color: "#b42318" }}>{String(cafe24Upload.error.message)}</span> : null}
+          {deleteCafe24Upload.isError ? <span style={{ color: "#b42318" }}>{String(deleteCafe24Upload.error.message)}</span> : null}
+          {cafe24Upload.data ? (
+            <div className="warning-strip">
+              <span>Rows {cafe24Upload.data.rowCount}</span>
+              <span>Matched {cafe24Upload.data.matchedCount}</span>
+              <span>Unmatched {cafe24Upload.data.unmatchedCount}</span>
+              <span>Warnings {cafe24Upload.data.warningCount}</span>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 12 }}>
         <h2>Batch History</h2>
         <DataTable
           rows={uploads.data ?? []}
@@ -117,6 +183,37 @@ export default function UploadsPage() {
                   title="삭제"
                   onClick={() => handleDelete(row)}
                   disabled={deleteUpload.isPending}
+                >
+                  <Trash2 size={15} />
+                </button>
+              )
+            }
+          ]}
+        />
+      </div>
+
+      <div className="panel" style={{ marginTop: 12 }}>
+        <h2>Cafe24 Batch History</h2>
+        <DataTable
+          rows={cafe24Uploads.data ?? []}
+          columns={[
+            { key: "file", header: "File", render: (row) => row.originalFilename },
+            { key: "status", header: "Status", render: (row) => row.status },
+            { key: "period", header: "Period", render: (row) => `${row.orderStart ?? "-"} ~ ${row.orderEnd ?? "-"}` },
+            { key: "rows", header: "Rows", render: (row) => row.rowCount },
+            { key: "valid", header: "Valid", render: (row) => row.validRowCount },
+            { key: "warn", header: "Warnings", render: (row) => row.warningCount },
+            { key: "err", header: "Errors", render: (row) => row.errorCount },
+            {
+              key: "actions",
+              header: "",
+              render: (row) => (
+                <button
+                  className="icon-button danger"
+                  type="button"
+                  title="Cafe24 업로드 삭제"
+                  onClick={() => handleCafe24Delete(row)}
+                  disabled={deleteCafe24Upload.isPending}
                 >
                   <Trash2 size={15} />
                 </button>

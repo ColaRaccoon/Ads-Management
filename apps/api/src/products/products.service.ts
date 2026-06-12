@@ -27,7 +27,10 @@ export class ProductsService {
       dailyMetricCount,
       decisionLogCount,
       changeLogCount,
-      productChangeLogCount
+      productChangeLogCount,
+      cafe24OrderLineCount,
+      cafe24ProductRuleCount,
+      cafe24AdCostSourceRuleCount
     ] = await Promise.all([
       this.prisma.metaAdset.count({ where: { currentProductId: id } }),
       this.prisma.adsetProductHistory.count({ where: { productId: id } }),
@@ -35,7 +38,10 @@ export class ProductsService {
       this.prisma.metaAdsetDailyMetric.count({ where: { productId: id } }),
       this.prisma.decisionLog.count({ where: { productId: id } }),
       this.prisma.changeLog.count({ where: { productId: id } }),
-      this.prisma.productChangeLog.count({ where: { productId: id } })
+      this.prisma.productChangeLog.count({ where: { productId: id } }),
+      this.prisma.cafe24OrderLine.count({ where: { productId: id } }),
+      this.prisma.cafe24ProductRule.count({ where: { productId: id } }),
+      this.prisma.cafe24ProductRule.count({ where: { adCostSourceProductId: id } })
     ]);
     const hasOperationalData =
       currentAdsetCount +
@@ -44,13 +50,18 @@ export class ProductsService {
         dailyMetricCount +
         decisionLogCount +
         changeLogCount +
-        productChangeLogCount >
+        productChangeLogCount +
+        cafe24OrderLineCount +
+        cafe24ProductRuleCount +
+        cafe24AdCostSourceRuleCount >
       0;
 
     if (hasOperationalData) {
       const deletedCode = `${product.code}__deleted__${Date.now()}`;
       const updated = await this.prisma.$transaction(async (tx) => {
         await tx.productMatchRule.updateMany({ where: { productId: id }, data: { isActive: false } });
+        await tx.cafe24ProductRule.updateMany({ where: { productId: id }, data: { isActive: false } });
+        await tx.cafe24ProductRule.updateMany({ where: { adCostSourceProductId: id }, data: { adCostSourceProductId: null } });
         await tx.metaAdset.updateMany({ where: { currentProductId: id }, data: { currentProductId: null } });
         return tx.product.update({
           where: { id },
@@ -67,6 +78,8 @@ export class ProductsService {
 
     const deleted = await this.prisma.$transaction(async (tx) => {
       await tx.productMatchRule.deleteMany({ where: { productId: id } });
+      await tx.cafe24ProductRule.deleteMany({ where: { productId: id } });
+      await tx.cafe24ProductRule.updateMany({ where: { adCostSourceProductId: id }, data: { adCostSourceProductId: null } });
       await tx.productCpaRule.deleteMany({ where: { productId: id } });
       await tx.productCostRule.deleteMany({ where: { productId: id } });
       return tx.product.delete({ where: { id } });

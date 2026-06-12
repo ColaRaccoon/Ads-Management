@@ -58,6 +58,20 @@ export async function uploadCsv(file: File, conflictPolicy = "SKIP") {
   return response.json();
 }
 
+export async function uploadCafe24Csv(file: File, conflictPolicy = "SKIP") {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("conflictPolicy", conflictPolicy);
+  const response = await fetch(`${API_BASE}/sales/cafe24/uploads`, {
+    method: "POST",
+    body: formData
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
 export function rangeQuery(range: DateRange, extra?: Record<string, string | undefined>) {
   const params = new URLSearchParams({ from: range.from, to: range.to });
   for (const [key, value] of Object.entries(extra ?? {})) {

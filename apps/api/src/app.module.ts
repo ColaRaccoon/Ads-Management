@@ -8,6 +8,7 @@ import { MetricsModule } from "./metrics/metrics.module";
 import { DecisionsModule } from "./decisions/decisions.module";
 import { ReportsModule } from "./reports/reports.module";
 import { ChangeLogsModule } from "./change-logs/change-logs.module";
+import { SalesModule } from "./sales/sales.module";
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { ChangeLogsModule } from "./change-logs/change-logs.module";
     MetricsModule,
     DecisionsModule,
     ReportsModule,
-    ChangeLogsModule
+    ChangeLogsModule,
+    SalesModule
   ]
 })
 export class AppModule {}

@@ -158,6 +158,9 @@ model Product {
   decisionLogs    DecisionLog[]
   changeLogs      ChangeLog[]
   productChangeLogs ProductChangeLog[]
+  cafe24OrderLines Cafe24OrderLine[]
+  cafe24ProductRules Cafe24ProductRule[] @relation("Cafe24ProductRuleProduct")
+  cafe24AdCostSourceRules Cafe24ProductRule[] @relation("Cafe24AdCostSourceProduct")
   currentAdsets   MetaAdset[]               @relation("CurrentAdsetProduct")
 
   @@map("products")
@@ -557,6 +560,126 @@ model UploadRowError {
 
   @@index([uploadBatchId, severity])
   @@map("upload_row_errors")
+}
+
+model Cafe24UploadBatch {
+  id               String                  @id @default(uuid()) @db.Uuid
+  originalFilename String                  @map("original_filename")
+  storedFilePath   String?                 @map("stored_file_path")
+  fileHashSha256   String                  @unique @map("file_hash_sha256") @db.Char(64)
+  orderStart       DateTime?               @map("order_start") @db.Date
+  orderEnd         DateTime?               @map("order_end") @db.Date
+  columnSchema     Json                    @map("column_schema")
+  rowCount         Int                     @default(0) @map("row_count")
+  validRowCount    Int                     @default(0) @map("valid_row_count")
+  warningCount     Int                     @default(0) @map("warning_count")
+  errorCount       Int                     @default(0) @map("error_count")
+  conflictPolicy   ConflictPolicy          @default(SKIP) @map("conflict_policy")
+  status           UploadStatus            @default(PENDING)
+  uploadedAt       DateTime                @default(now()) @map("uploaded_at")
+  validatedAt      DateTime?               @map("validated_at")
+  importedAt       DateTime?               @map("imported_at")
+  rows             Cafe24OrderLine[]
+  errors           Cafe24UploadRowError[]
+
+  @@index([orderStart, orderEnd])
+  @@map("cafe24_upload_batches")
+}
+
+model Cafe24OrderLine {
+  id                  String              @id @default(uuid()) @db.Uuid
+  uploadBatchId       String              @map("upload_batch_id") @db.Uuid
+  rowNumber           Int                 @map("row_number")
+  sourceRowHash       String              @map("source_row_hash") @db.Char(64)
+  orderLineKey        String              @map("order_line_key")
+  orderNo             String              @map("order_no")
+  lineOrderNo         String              @map("line_order_no")
+  productNo           String              @map("product_no")
+  productName         String              @map("product_name")
+  optionName          String              @map("option_name")
+  quantity            Decimal             @default(0) @db.Decimal(14, 4)
+  salePriceKrw        Decimal             @default(0) @map("sale_price_krw") @db.Decimal(14, 2)
+  totalPaidKrw        Decimal             @default(0) @map("total_paid_krw") @db.Decimal(14, 2)
+  paymentMethod       String?             @map("payment_method")
+  orderedAt           DateTime?           @map("ordered_at")
+  orderDate           DateTime?           @map("order_date") @db.Date
+  productId           String?             @map("product_id") @db.Uuid
+  cafe24ProductRuleId String?             @map("cafe24_product_rule_id") @db.Uuid
+  matchSource         MatchSource         @default(UNMATCHED) @map("match_source")
+  validationStatus    RowValidationStatus @default(VALID) @map("validation_status")
+  validationErrors    Json                @default("[]") @map("validation_errors")
+  importVersion       Int                 @default(1) @map("import_version")
+  isCurrent           Boolean             @default(true) @map("is_current")
+  supersededByOrderLineId String?         @map("superseded_by_order_line_id") @db.Uuid
+  rawRow              Json?               @map("raw_row")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  batch               Cafe24UploadBatch   @relation(fields: [uploadBatchId], references: [id], onDelete: Cascade)
+  product             Product?            @relation(fields: [productId], references: [id])
+  matchRule           Cafe24ProductRule?  @relation(fields: [cafe24ProductRuleId], references: [id])
+  rowErrors           Cafe24UploadRowError[]
+  supersededByOrderLine Cafe24OrderLine?  @relation("Cafe24OrderLineSupersession", fields: [supersededByOrderLineId], references: [id], onDelete: SetNull)
+  supersededOrderLines Cafe24OrderLine[]  @relation("Cafe24OrderLineSupersession")
+
+  @@unique([uploadBatchId, rowNumber])
+  @@index([orderDate])
+  @@index([productId, orderDate])
+  @@index([productNo])
+  @@index([cafe24ProductRuleId])
+  @@index([orderLineKey])
+  @@index([orderLineKey, isCurrent])
+  @@index([isCurrent, orderDate])
+  @@index([supersededByOrderLineId])
+  @@map("cafe24_order_lines")
+}
+
+model Cafe24ProductRule {
+  id                       String             @id @default(uuid()) @db.Uuid
+  productId                String             @map("product_id") @db.Uuid
+  displayName              String             @map("display_name")
+  productNumbers           Json               @default("[]") @map("product_numbers")
+  productNameAliases       Json               @default("[]") @map("product_name_aliases")
+  optionIncludeKeywords    Json               @default("[]") @map("option_include_keywords")
+  optionExcludeKeywords    Json               @default("[]") @map("option_exclude_keywords")
+  adCostSourceProductId    String?            @map("ad_cost_source_product_id") @db.Uuid
+  roasGroup                String?            @map("roas_group")
+  salePriceKrwOverride     Decimal?           @map("sale_price_krw_override") @db.Decimal(14, 2)
+  productCostKrwOverride   Decimal?           @map("product_cost_krw_override") @db.Decimal(14, 2)
+  shippingKrwOverride      Decimal?           @map("shipping_krw_override") @db.Decimal(14, 2)
+  extraCostKrwOverride     Decimal?           @map("extra_cost_krw_override") @db.Decimal(14, 2)
+  priority                 Int                @default(100)
+  isActive                 Boolean            @default(true) @map("is_active")
+  validFrom                DateTime           @default(now()) @map("valid_from") @db.Date
+  validTo                  DateTime?          @map("valid_to") @db.Date
+  note                     String?
+  createdAt                DateTime           @default(now()) @map("created_at")
+  updatedAt                DateTime           @updatedAt @map("updated_at")
+  product                  Product            @relation("Cafe24ProductRuleProduct", fields: [productId], references: [id])
+  adCostSourceProduct      Product?           @relation("Cafe24AdCostSourceProduct", fields: [adCostSourceProductId], references: [id])
+  orderLines               Cafe24OrderLine[]
+
+  @@index([isActive, priority])
+  @@index([productId])
+  @@index([adCostSourceProductId])
+  @@map("cafe24_product_rules")
+}
+
+model Cafe24UploadRowError {
+  id            String            @id @default(uuid()) @db.Uuid
+  uploadBatchId String            @map("upload_batch_id") @db.Uuid
+  orderLineId   String?           @map("order_line_id") @db.Uuid
+  rowNumber     Int?              @map("row_number")
+  columnName    String?           @map("column_name")
+  severity      String            @default("ERROR")
+  errorCode     String            @map("error_code")
+  message       String
+  rawValue      String?           @map("raw_value")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  batch         Cafe24UploadBatch @relation(fields: [uploadBatchId], references: [id], onDelete: Cascade)
+  row           Cafe24OrderLine?  @relation(fields: [orderLineId], references: [id], onDelete: Cascade)
+
+  @@index([uploadBatchId, severity])
+  @@index([orderLineId])
+  @@map("cafe24_upload_row_errors")
 }
 
 model MetaAdsetDailyMetric {

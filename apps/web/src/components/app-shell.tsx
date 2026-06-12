@@ -11,6 +11,7 @@ import {
   Home,
   Package,
   Settings,
+  ShoppingCart,
   Shuffle,
   TableProperties,
   Upload
@@ -20,6 +21,7 @@ import { DateRangePicker } from "./date-range-picker";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/uploads", label: "Uploads", icon: Upload },
+  { href: "/sales", label: "판매", icon: ShoppingCart },
   { href: "/campaigns", label: "Campaigns", icon: BarChart3 },
   { href: "/adsets", label: "Adsets", icon: TableProperties },
   { href: "/ads", label: "Ads", icon: Package },

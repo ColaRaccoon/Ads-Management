@@ -6,7 +6,17 @@ export type Column<T> = {
   render: (row: T) => ReactNode;
 };
 
-export function DataTable<T>({ rows, columns, empty = "데이터가 없습니다." }: { rows: T[]; columns: Column<T>[]; empty?: string }) {
+export function DataTable<T>({
+  rows,
+  columns,
+  empty = "데이터가 없습니다.",
+  footer
+}: {
+  rows: T[];
+  columns: Column<T>[];
+  empty?: string;
+  footer?: ReactNode;
+}) {
   return (
     <div className="table-wrap">
       <table>
@@ -32,6 +42,7 @@ export function DataTable<T>({ rows, columns, empty = "데이터가 없습니다
             ))
           )}
         </tbody>
+        {footer ? <tfoot>{footer}</tfoot> : null}
       </table>
     </div>
   );

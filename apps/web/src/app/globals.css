@@ -448,6 +448,16 @@ th {
   font-weight: 700;
 }
 
+tfoot td {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 0;
+  background: #f8fafb;
+  font-weight: 700;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
