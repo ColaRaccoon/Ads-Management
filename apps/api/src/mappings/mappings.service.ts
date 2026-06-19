@@ -72,7 +72,10 @@ export class MappingsService {
     const metricDates = Array.from(new Map(metrics.map((metric) => [formatDateOnly(metric.metricDate), metric.metricDate])).values());
     const [histories, rules, adMetrics] = await Promise.all([
       this.prisma.adsetProductHistory.findMany({ where: { metaAdsetId: { in: metaAdsetIds } } }),
-      this.prisma.productMatchRule.findMany({ where: { isActive: true }, orderBy: { priority: "asc" } }),
+      this.prisma.productMatchRule.findMany({
+        where: { isActive: true, product: { is: { isActive: true } } },
+        orderBy: { priority: "asc" }
+      }),
       this.prisma.metaAdDailyMetric.findMany({
         where: {
           isCurrent: true,
@@ -435,7 +438,10 @@ export class MappingsService {
     const date = formatDateOnly(metricDate);
     const [histories, rules] = await Promise.all([
       this.prisma.adsetProductHistory.findMany({ where: { metaAdsetId } }),
-      this.prisma.productMatchRule.findMany({ where: { isActive: true }, orderBy: { priority: "asc" } })
+      this.prisma.productMatchRule.findMany({
+        where: { isActive: true, product: { is: { isActive: true } } },
+        orderBy: { priority: "asc" }
+      })
     ]);
     return new AdsetProductMatcher().match(
       adsetName,
@@ -543,6 +549,9 @@ export class MappingsService {
 
   private async ensureProduct(productId: string) {
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
+    if (product && !product.isActive) {
+      throw new BadRequestException({ code: "PRODUCT_INACTIVE", message: "Inactive products cannot be used for mappings." });
+    }
     if (!product) {
       throw new BadRequestException({ code: "PRODUCT_NOT_FOUND", message: "제품을 찾을 수 없습니다." });
     }

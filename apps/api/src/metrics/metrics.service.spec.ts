@@ -98,6 +98,7 @@ describe("creativeMetrics", () => {
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
     expect(rows[0].dataDays).toBe(8);
+    expect(rows[0].productId).toBe("product-1");
     expect(rows[0].totals.dataDays).toBe(1);
     expect(rows[0].firstSeenOn).toBe("2026-06-01");
     expect(rows[0].lastSeenOn).toBe("2026-06-08");
@@ -113,6 +114,20 @@ describe("creativeMetrics", () => {
     expect(rows[0].totals.cpaKrw).toBe(13000);
     expect(rows[0].totals.revenueKrw).toBe(50000);
     expect(rows[0].totals.roas).toBeCloseTo(50000 / 13000, 6);
+  });
+
+  it("returns null productId when one creative group contains multiple productIds", async () => {
+    const prisma = fakeCreativeMetricsPrisma({
+      adMetrics: [
+        creativeAdMetric({ productId: "product-1" }),
+        creativeAdMetric({ adIdentityKey: "ad-2", spendUsd: new Prisma.Decimal(0), purchaseCount: 0, productId: "product-2" })
+      ]
+    });
+    const service = new MetricsService(prisma as never);
+
+    const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
+
+    expect(rows[0].productId).toBeNull();
   });
 
   it("nulls aggregate KRW spend, KRW CPA, and ROAS when any spend row cannot calculate KRW", async () => {

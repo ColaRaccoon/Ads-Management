@@ -6,8 +6,12 @@ export class SalesMetricsController {
   constructor(private readonly salesMetricsService: SalesMetricsService) {}
 
   @Get("product-performance")
-  productPerformance(@Query("from") from?: string, @Query("to") to?: string) {
-    return this.salesMetricsService.productPerformance({ from, to });
+  productPerformance(
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("deliveryStatus") deliveryStatus?: string
+  ) {
+    return this.salesMetricsService.productPerformance({ from, to, deliveryStatus });
   }
 
   @Get("cafe24/unmatched")

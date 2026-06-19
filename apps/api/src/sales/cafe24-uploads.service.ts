@@ -540,7 +540,7 @@ export class Cafe24UploadsService {
 
   private async matcherRules(): Promise<Cafe24RuleInput[]> {
     const rules = await this.prisma.cafe24ProductRule.findMany({
-      where: { isActive: true },
+      where: { isActive: true, product: { is: { isActive: true } } },
       orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
     });
     return rules.map((rule) => ({
@@ -636,6 +636,9 @@ export class Cafe24UploadsService {
 
   private async assertProduct(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
+    if (product && !product.isActive) {
+      throw new BadRequestException({ code: "PRODUCT_INACTIVE", message: "Inactive products cannot be used for Cafe24 rules." });
+    }
     if (!product) {
       throw new NotFoundException({ code: "PRODUCT_NOT_FOUND", message: "Product was not found." });
     }

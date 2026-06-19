@@ -1321,6 +1321,11 @@ tfoot td {
   min-width: 900px;
 }
 
+.daily-product-table-empty {
+  color: var(--muted);
+  text-align: center;
+}
+
 .daily-creative-name {
   display: grid;
   gap: 3px;
@@ -1354,6 +1359,69 @@ tfoot td {
   border-color: #e0aaa5;
   background: #fdeceb;
   color: var(--red);
+}
+
+.daily-sales-margin {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.daily-sales-margin h3 {
+  margin: 0;
+  color: #344555;
+  font-size: 13px;
+}
+
+.daily-sales-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.daily-sales-table {
+  min-width: 860px;
+}
+
+.daily-sales-table th,
+.daily-sales-table td {
+  position: static;
+  padding: 7px 8px;
+  font-size: 12px;
+}
+
+.daily-sales-product-cell {
+  display: grid;
+  gap: 2px;
+  min-width: 140px;
+  white-space: normal;
+}
+
+.daily-sales-product-cell strong {
+  overflow-wrap: anywhere;
+}
+
+.daily-sales-product-cell small,
+.daily-sales-note,
+.daily-sales-empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.daily-sales-note,
+.daily-sales-empty {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.daily-sales-empty {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+  padding: 10px;
 }
 
 .product-change-log {
@@ -1446,14 +1514,21 @@ tfoot td {
     min-width: 0;
   }
 
+  .daily-sales-table {
+    min-width: 0;
+  }
+
   .daily-product-table th,
-  .daily-product-table td {
+  .daily-product-table td,
+  .daily-sales-table th,
+  .daily-sales-table td {
     padding: 6px;
     font-size: 11px;
     white-space: normal;
   }
 
-  .daily-product-table th {
+  .daily-product-table th,
+  .daily-sales-table th {
     position: static;
   }
 

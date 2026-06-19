@@ -191,7 +191,7 @@ function downloadSalesExcel(
       { value: toFiniteNumber(row.adSpendKrw), style: "Krw" },
       { value: toFiniteNumber(row.totalCostKrw), style: "Krw" },
       { value: toFiniteNumber(row.marginKrw), style: "Krw" },
-      { value: toFiniteNumber(row.roas), style: "Ratio" },
+      { value: toFiniteNumber(row.roas), style: "Percent" },
       { value: toFiniteNumber(row.cpaKrw), style: "Krw" }
     ]
   );
@@ -202,7 +202,7 @@ function downloadSalesExcel(
     { value: totals.adSpendKrw, style: "TotalKrw" },
     { value: totals.totalCostKrw, style: "TotalKrw" },
     { value: totals.marginKrw, style: "TotalKrw" },
-    { value: totals.roas, style: "TotalRatio" },
+    { value: totals.roas, style: "TotalPercent" },
     { value: totals.cpaKrw, style: "TotalKrw" }
   ];
   const excelRows: XlsxCell[][] = [

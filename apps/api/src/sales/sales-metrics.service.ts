@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma, RowValidationStatus, UploadStatus } from "@prisma/client";
 import { numberFrom, parseDateRange } from "../common/date-range";
 import { Cafe24SalesCalculator } from "../domain/cafe24-sales-calculator";
@@ -19,6 +19,7 @@ type ProductSnapshot = {
   code?: string;
   name?: string;
   displayName?: string;
+  isActive?: boolean;
 } | null;
 
 type RuleStatus =
@@ -35,14 +36,16 @@ export class SalesMetricsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async productPerformance(query: { from?: string; to?: string }) {
+  async productPerformance(query: { from?: string; to?: string; deliveryStatus?: string }) {
     const range = parseDateRange(query.from, query.to);
+    const deliveryStatus = parseOptionalDeliveryStatusFilter(query.deliveryStatus);
     const [completeCafe24BatchIds, adMetrics] = await Promise.all([
       this.completeCafe24BatchIds(range),
       this.prisma.metaAdsetDailyMetric.findMany({
         where: {
           isCurrent: true,
-          metricDate: { gte: range.fromDate, lte: range.toDate }
+          metricDate: { gte: range.fromDate, lte: range.toDate },
+          ...deliveryStatusWhere(deliveryStatus)
         },
         include: { product: true },
         orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
@@ -63,8 +66,8 @@ export class SalesMetricsService {
         : [];
 
     const productIds = uniqueNonEmpty([
-      ...salesLines.map((line) => line.productId),
-      ...adMetrics.map((metric) => metric.productId)
+      ...salesLines.map(activeLineProductId),
+      ...adMetrics.map(activeMetricProductId)
     ]);
     const metricDates = uniqueNonEmpty(adMetrics.map((metric) => formatDateOnly(metric.metricDate)));
     const [costRules, exchangeRates] = await Promise.all([
@@ -127,7 +130,7 @@ export class SalesMetricsService {
       rows,
       summary: {
         salesLineCount: salesLines.length,
-        salesUnmatchedCount: salesLines.filter((line) => !line.productId).length,
+        salesUnmatchedCount: salesLines.filter((line) => !activeLineProductId(line)).length,
         adMetricCount: adMetrics.length,
         adUnmatchedMetricCount: adSpend.unmatched.metricCount,
         adUnmatchedSpendUsd: adSpend.unmatched.spendUsd,
@@ -181,21 +184,24 @@ export class SalesMetricsService {
   private aggregateSales(lines: Cafe24Line[], costRulesByProductId: Map<string, CostRule[]>, fallbackDate: Date) {
     const groups = new Map<string, SalesAccumulator>();
     for (const line of lines) {
-      if (!line.productId) {
+      const productId = activeLineProductId(line);
+      if (!productId) {
         continue;
       }
-      const accumulator = groups.get(line.productId) ?? emptySalesAccumulator(line.product);
-      const quantity = numberFrom(line.quantity);
+      const accumulator = groups.get(productId) ?? emptySalesAccumulator(line.product);
+      const orderQuantity = numberFrom(line.quantity);
+      const salesQuantity = orderQuantity * salesUnitMultiplier(line.matchRule);
+      const calculationQuantity = isBundleRule(line.matchRule) ? orderQuantity : salesQuantity;
       const lineDate = line.orderDate ?? fallbackDate;
-      const costRule = findRuleForDate(costRulesByProductId.get(line.productId) ?? [], lineDate);
-      accumulator.quantity += quantity;
+      const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], lineDate);
+      accumulator.quantity += salesQuantity;
       accumulator.totalPaidKrw += numberFrom(line.totalPaidKrw);
       accumulator.lineCount += 1;
 
       if (!costRule) {
-        accumulator.revenueKrw += numberFrom(line.salePriceKrw) * quantity;
+        accumulator.revenueKrw += fallbackRevenueKrw(line, orderQuantity, salesQuantity);
         accumulator.missingCostRule = true;
-        groups.set(line.productId, accumulator);
+        groups.set(productId, accumulator);
         continue;
       }
 
@@ -217,17 +223,17 @@ export class SalesMetricsService {
           : null
       );
       const calculated = this.calculator.calculate({
-        quantity,
+        quantity: calculationQuantity,
         adSpendUsd: 0,
         exchangeRateKrwPerUsd: 0,
         cost: resolvedCost
       });
       accumulator.revenueKrw += calculated.revenueKrw;
       accumulator.grossCostKrw += calculated.grossCostKrw;
-      if (Math.abs(numberFrom(line.salePriceKrw) - resolvedCost.salePriceKrw) >= 1) {
+      if (!isBundleRule(line.matchRule) && Math.abs(numberFrom(line.salePriceKrw) - resolvedCost.salePriceKrw) >= 1) {
         accumulator.priceMismatchCount += 1;
       }
-      groups.set(line.productId, accumulator);
+      groups.set(productId, accumulator);
     }
     return groups;
   }
@@ -243,13 +249,14 @@ export class SalesMetricsService {
 
     for (const metric of metrics) {
       const spendUsd = numberFrom(metric.spendUsd);
-      const target = metric.productId ? byProductId.get(metric.productId) ?? emptyAdAccumulator(metric.product) : unmatched;
+      const productId = activeMetricProductId(metric);
+      const target = productId ? byProductId.get(productId) ?? emptyAdAccumulator(metric.product) : unmatched;
       target.spendUsd += spendUsd;
       target.metricCount += 1;
 
       const metricDate = formatDateOnly(metric.metricDate);
       const exchangeRate = exchangeRateByDate.get(metricDate);
-      const costRule = metric.productId ? findRuleForDate(costRulesByProductId.get(metric.productId) ?? [], metric.metricDate) : null;
+      const costRule = productId ? findRuleForDate(costRulesByProductId.get(productId) ?? [], metric.metricDate) : null;
       const legacyExchangeRate = costRule ? numberFrom(costRule.fxRateKrwPerUsd) : 0;
       const exchangeRateKrwPerUsd = exchangeRate ? numberFrom(exchangeRate.rate) : legacyExchangeRate > 0 ? legacyExchangeRate : null;
       if (exchangeRateKrwPerUsd === null && spendUsd > 0) {
@@ -259,8 +266,8 @@ export class SalesMetricsService {
         target.spendKrw += spendUsd * exchangeRateKrwPerUsd;
       }
 
-      if (metric.productId) {
-        byProductId.set(metric.productId, target);
+      if (productId) {
+        byProductId.set(productId, target);
       }
     }
 
@@ -346,23 +353,72 @@ function groupBy<T>(items: T[], keyFn: (item: T) => string) {
 function productMap(lines: Cafe24Line[], metrics: AdMetric[]) {
   const products = new Map<string, ProductSnapshot>();
   for (const line of lines) {
-    if (line.productId) {
-      products.set(line.productId, line.product);
+    const productId = activeLineProductId(line);
+    if (productId) {
+      products.set(productId, line.product);
     }
   }
   for (const metric of metrics) {
-    if (metric.productId) {
-      products.set(metric.productId, metric.product);
+    const productId = activeMetricProductId(metric);
+    if (productId) {
+      products.set(productId, metric.product);
     }
   }
   return products;
+}
+
+function activeLineProductId(line: { productId: string | null; product: ProductSnapshot }) {
+  return line.productId && isActiveProduct(line.product) ? line.productId : null;
+}
+
+function activeMetricProductId(metric: { productId: string | null; product: ProductSnapshot }) {
+  return metric.productId && isActiveProduct(metric.product) ? metric.productId : null;
+}
+
+function isActiveProduct(product: ProductSnapshot | undefined) {
+  return Boolean(product) && product?.isActive !== false;
+}
+
+function salesUnitMultiplier(matchRule: Cafe24Line["matchRule"] | null) {
+  return isBundleRule(matchRule) ? 2 : 1;
+}
+
+function isBundleRule(matchRule: Cafe24Line["matchRule"] | null) {
+  if (!matchRule) {
+    return false;
+  }
+  const labels = [
+    matchRule.displayName,
+    ...stringArrayFromJson(matchRule.optionIncludeKeywords),
+    ...stringArrayFromJson(matchRule.productNameAliases)
+  ].map(normalizeRuleText);
+  return labels.some((label) => label.includes("1+1")) || stringArrayFromJson(matchRule.optionIncludeKeywords).includes("+");
+}
+
+function fallbackRevenueKrw(line: Cafe24Line, orderQuantity: number, salesQuantity: number) {
+  const salePriceOverride = nullableNumber(line.matchRule?.salePriceKrwOverride);
+  if (salePriceOverride !== null) {
+    return salePriceOverride * (isBundleRule(line.matchRule) ? orderQuantity : salesQuantity);
+  }
+  return numberFrom(line.salePriceKrw) * salesQuantity;
+}
+
+function stringArrayFromJson(value: unknown) {
+  return Array.isArray(value) ? value.map((item) => String(item).trim()).filter(Boolean) : [];
+}
+
+function normalizeRuleText(value: string | null | undefined) {
+  return String(value ?? "")
+    .split(/\s+/)
+    .join("")
+    .toLowerCase();
 }
 
 function productLabel(product: ProductSnapshot | undefined) {
   return product?.displayName ?? product?.name ?? product?.code ?? "";
 }
 
-function nullableNumber(value: Prisma.Decimal | number | null): number | null {
+function nullableNumber(value: Prisma.Decimal | number | null | undefined): number | null {
   if (value === null) {
     return null;
   }
@@ -371,4 +427,25 @@ function nullableNumber(value: Prisma.Decimal | number | null): number | null {
 
 function uniqueNonEmpty(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.filter((value): value is string => Boolean(value))));
+}
+
+function parseOptionalDeliveryStatusFilter(value?: string) {
+  if (!value) {
+    return null;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "active" || normalized === "inactive" || normalized === "all") {
+    return normalized;
+  }
+  throw new BadRequestException({
+    code: "INVALID_DELIVERY_STATUS",
+    message: "deliveryStatus must be active, inactive, or all."
+  });
+}
+
+function deliveryStatusWhere(filter: "active" | "inactive" | "all" | null): Prisma.MetaAdsetDailyMetricWhereInput {
+  if (!filter || filter === "all") {
+    return {};
+  }
+  return { deliveryStatus: { equals: filter, mode: "insensitive" } };
 }

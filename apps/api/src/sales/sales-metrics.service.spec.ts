@@ -13,6 +13,7 @@ describe("SalesMetricsService", () => {
     expect(prisma.cafe24OrderLine.findManyCalls[0].where.isCurrent).toBe(true);
     expect(prisma.cafe24OrderLine.findManyCalls[0].where.batch).toBeUndefined();
     expect(prisma.cafe24OrderLine.findManyCalls[0].where.uploadBatchId).toEqual({ in: ["batch-1"] });
+    expect(prisma.metaAdsetDailyMetric.findManyCalls[0].where.deliveryStatus).toBeUndefined();
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0]).toMatchObject({
       productId: "product-wavebar",
@@ -32,11 +33,88 @@ describe("SalesMetricsService", () => {
     expect(result.summary.adUnmatchedSpendUsd).toBe(5);
     expect(result.summary.adUnmatchedSpendKrw).toBe(6500);
   });
+
+  it("optionally filters Meta ad spend by deliveryStatus for daily report reuse", async () => {
+    const prisma = fakePrisma();
+    const service = new SalesMetricsService(prisma as never);
+
+    await service.productPerformance({ from: "2026-06-11", to: "2026-06-11", deliveryStatus: "active" });
+
+    expect(prisma.metaAdsetDailyMetric.findManyCalls[0].where.deliveryStatus).toEqual({
+      equals: "active",
+      mode: "insensitive"
+    });
+
+    await service.productPerformance({ from: "2026-06-11", to: "2026-06-11", deliveryStatus: "all" });
+
+    expect(prisma.metaAdsetDailyMetric.findManyCalls[1].where.deliveryStatus).toBeUndefined();
+  });
+
+  it("does not aggregate sales or ad spend under inactive products", async () => {
+    const inactiveProduct = { ...product(), id: "product-air-stepper-deleted", code: "air-stepper__deleted__", isActive: false };
+    const prisma = fakePrisma({
+      salesLines: [cafe24Line({ productId: inactiveProduct.id, product: inactiveProduct, quantity: new Prisma.Decimal(6) })],
+      adMetrics: [adMetric({ productId: inactiveProduct.id, product: inactiveProduct, spendUsd: new Prisma.Decimal(7) })],
+      costRules: []
+    });
+    const service = new SalesMetricsService(prisma as never);
+
+    const result = await service.productPerformance({ from: "2026-06-11", to: "2026-06-11" });
+
+    expect(result.rows).toHaveLength(0);
+    expect(result.summary.salesUnmatchedCount).toBe(1);
+    expect(result.summary.adUnmatchedMetricCount).toBe(1);
+    expect(result.summary.adUnmatchedSpendUsd).toBe(7);
+    expect(result.summary.adUnmatchedSpendKrw).toBe(9100);
+  });
+
+  it("counts 1+1 Cafe24 orders as two sold units while using bundle override revenue and costs", async () => {
+    const prisma = fakePrisma({
+      salesLines: [
+        cafe24Line({
+          quantity: new Prisma.Decimal(1),
+          salePriceKrw: new Prisma.Decimal(38900),
+          totalPaidKrw: new Prisma.Decimal(67800),
+          matchRule: {
+            id: "rule-wavebar-plus",
+            displayName: "Wavebar 1+1",
+            productNameAliases: ["wavebar"],
+            optionIncludeKeywords: ["+"],
+            salePriceKrwOverride: new Prisma.Decimal(67800),
+            productCostKrwOverride: new Prisma.Decimal(12000),
+            shippingKrwOverride: new Prisma.Decimal(2800),
+            extraCostKrwOverride: new Prisma.Decimal(0)
+          }
+        })
+      ],
+      adMetrics: []
+    });
+    const service = new SalesMetricsService(prisma as never);
+
+    const result = await service.productPerformance({ from: "2026-06-11", to: "2026-06-11" });
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      productId: "product-wavebar",
+      quantity: 2,
+      revenueKrw: 67800,
+      grossCostKrw: 21580,
+      totalCostKrw: 21580,
+      marginKrw: 46220,
+      priceMismatchCount: 0
+    });
+  });
 });
 
-function fakePrisma() {
+function fakePrisma(overrides: {
+  salesLines?: ReturnType<typeof cafe24Line>[];
+  adMetrics?: ReturnType<typeof adMetric>[];
+  costRules?: any[];
+  exchangeRates?: any[];
+} = {}) {
   const cafe24FindManyCalls: any[] = [];
   const cafe24BatchFindManyCalls: any[] = [];
+  const metaAdsetFindManyCalls: any[] = [];
   return {
     cafe24UploadBatch: {
       findManyCalls: cafe24BatchFindManyCalls,
@@ -64,20 +142,24 @@ function fakePrisma() {
       findManyCalls: cafe24FindManyCalls,
       findMany: async (args: unknown) => {
         cafe24FindManyCalls.push(args);
-        return [
+        return overrides.salesLines ?? [
           cafe24Line({ quantity: new Prisma.Decimal(1), totalPaidKrw: new Prisma.Decimal(0) }),
           cafe24Line({ id: "line-2", rowNumber: 3, quantity: new Prisma.Decimal(2), totalPaidKrw: new Prisma.Decimal(100000) })
         ];
       }
     },
     metaAdsetDailyMetric: {
-      findMany: async () => [
-        adMetric({ productId: "product-wavebar", product: product(), spendUsd: new Prisma.Decimal(10) }),
-        adMetric({ id: "metric-unmatched", productId: null, product: null, spendUsd: new Prisma.Decimal(5) })
-      ]
+      findManyCalls: metaAdsetFindManyCalls,
+      findMany: async (args: unknown) => {
+        metaAdsetFindManyCalls.push(args);
+        return overrides.adMetrics ?? [
+          adMetric({ productId: "product-wavebar", product: product(), spendUsd: new Prisma.Decimal(10) }),
+          adMetric({ id: "metric-unmatched", productId: null, product: null, spendUsd: new Prisma.Decimal(5) })
+        ];
+      }
     },
     productCostRule: {
-      findMany: async () => [
+      findMany: async () => overrides.costRules ?? [
         {
           id: "cost-rule",
           productId: "product-wavebar",
@@ -93,7 +175,7 @@ function fakePrisma() {
       ]
     },
     exchangeRate: {
-      findMany: async () => [
+      findMany: async () => overrides.exchangeRates ?? [
         {
           rateDate: date("2026-06-11"),
           rate: new Prisma.Decimal(1300)

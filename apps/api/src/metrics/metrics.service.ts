@@ -332,6 +332,7 @@ export class MetricsService {
           creativeKey,
           displayName: lastParsedName.displayName,
           productName: lastParsedName.productName,
+          productId: singleUniqueNonEmpty(rows.map((row) => row.productId)),
           materialNo: lastParsedName.materialNo,
           dateCodes,
           settings,
@@ -825,6 +826,11 @@ function firstNonNull<T>(values: Array<T | null | undefined>): T | null {
 
 function uniqueNonEmpty(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))));
+}
+
+function singleUniqueNonEmpty(values: Array<string | null | undefined>) {
+  const uniqueValues = uniqueNonEmpty(values);
+  return uniqueValues.length === 1 ? uniqueValues[0] : null;
 }
 
 function summarizeParseStatus(values: Array<"PARSED" | "FALLBACK">) {

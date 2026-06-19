@@ -12,6 +12,7 @@ type CreativePerformanceRow = {
   creativeKey: string;
   displayName: string;
   productName: string | null;
+  productId: string | null;
   materialNo: string | null;
   deliveryStatus: string | null;
   totals: {
@@ -64,8 +65,48 @@ type ProductTotals = {
 
 type ProductGroup = {
   productName: string;
+  productId: string | null;
   rows: CreativePerformanceRow[];
   totals: ProductTotals;
+};
+
+type ReportProductGroup = ProductGroup & {
+  salesRow: SalesProductRow | null;
+  salesOnly: boolean;
+};
+
+type SalesProductPerformance = {
+  rows: SalesProductRow[];
+  summary: {
+    salesLineCount: number;
+    salesUnmatchedCount: number;
+    adUnmatchedMetricCount: number;
+    adUnmatchedSpendKrw: number | null;
+  };
+};
+
+type SalesProductRow = {
+  productId: string;
+  product?: { displayName?: string | null; name?: string | null; code?: string | null } | null;
+  quantity: number;
+  revenueKrw: number;
+  totalPaidKrw: number;
+  adSpendKrw: number | null;
+  grossCostKrw: number | null;
+  totalCostKrw: number | null;
+  marginKrw: number | null;
+  marginRate: number | null;
+  matchedSalesLineCount: number;
+};
+
+type SalesProductIndex = {
+  byProductId: Map<string, SalesProductRow>;
+  byProductName: Map<string, SalesProductNameMatch>;
+};
+
+type SalesProductNameMatch = {
+  row: SalesProductRow;
+  ambiguous: boolean;
 };
 
 type PreviousIndexes = {
@@ -147,18 +188,38 @@ export default function DailyReportPage() {
     enabled: settingsLoaded
   });
 
+  const salesPerformance = useQuery({
+    queryKey: ["daily-report-sales-product-performance", reportDate, apiDeliveryStatus],
+    queryFn: () =>
+      apiGet<SalesProductPerformance>(
+        `/sales/product-performance?${rangeQuery(
+          { from: reportDate, to: reportDate },
+          { deliveryStatus: apiDeliveryStatus }
+        )}`
+      ),
+    enabled: settingsLoaded
+  });
+
   const filteredRows = useMemo(
     () => filterRows(current.data ?? [], deliveryStatus),
     [current.data, deliveryStatus]
   );
   const productGroups = useMemo(() => groupRowsByProduct(filteredRows), [filteredRows]);
+  const salesProductIndex = useMemo(
+    () => buildSalesProductIndex(salesPerformance.data?.rows ?? []),
+    [salesPerformance.data?.rows]
+  );
+  const reportGroups = useMemo(
+    () => buildReportProductGroups(productGroups, salesPerformance.data?.rows ?? [], salesProductIndex, query),
+    [productGroups, query, salesPerformance.data?.rows, salesProductIndex]
+  );
   const reportTotals = useMemo(() => aggregateProductRows(filteredRows), [filteredRows]);
   const previousIndexes = useMemo(() => buildPreviousIndexes(previous.data ?? []), [previous.data]);
   const selectedColumns = useMemo(
     () => DAILY_REPORT_COLUMNS.filter((column) => visibleColumns.includes(column.key)),
     [visibleColumns]
   );
-  const isLoading = current.isLoading || previous.isLoading || !settingsLoaded;
+  const isLoading = current.isLoading || previous.isLoading || salesPerformance.isLoading || !settingsLoaded;
 
   return (
     <section className="page daily-report-page">
@@ -180,27 +241,30 @@ export default function DailyReportPage() {
 
       <DailyReportPrintHeader previousDate={previousDate} reportDate={reportDate} />
 
-      {current.isError || previous.isError ? (
+      {current.isError || previous.isError || salesPerformance.isError ? (
         <div className="warning-strip no-print">
           <span>API 연결 또는 DB 설정을 확인해주세요.</span>
+          {salesPerformance.isError ? <span>카페24 실매출 데이터를 불러오지 못했습니다.</span> : null}
         </div>
       ) : null}
 
-      <DailyReportSummary productCount={productGroups.length} totals={reportTotals} />
+      <DailyReportSummary productCount={reportGroups.length} totals={reportTotals} />
 
       {isLoading ? (
         <div className="daily-report-empty">보고 데이터를 불러오는 중입니다.</div>
-      ) : productGroups.length === 0 ? (
-        <div className="daily-report-empty">조건에 맞는 소재 성과가 없습니다.</div>
+      ) : reportGroups.length === 0 ? (
+        <div className="daily-report-empty">조건에 맞는 소재 또는 카페24 실매출 데이터가 없습니다.</div>
       ) : (
         <div className="daily-product-list">
-          {productGroups.map((group) => (
+          {reportGroups.map((group) => (
             <ProductReportBox
-              key={group.productName}
+              key={group.productId ?? group.productName}
               columns={selectedColumns}
               group={group}
               previousIndexes={previousIndexes}
               reportDate={reportDate}
+              salesIsError={salesPerformance.isError}
+              salesIsLoading={salesPerformance.isLoading}
             />
           ))}
         </div>
@@ -306,17 +370,22 @@ function ProductReportBox({
   columns,
   group,
   previousIndexes,
-  reportDate
+  reportDate,
+  salesIsError,
+  salesIsLoading
 }: {
   columns: ColumnDefinition[];
-  group: ProductGroup;
+  group: ReportProductGroup;
   previousIndexes: PreviousIndexes;
   reportDate: string;
+  salesIsError: boolean;
+  salesIsLoading: boolean;
 }) {
   return (
     <article className="daily-product-box">
       <ProductReportHeader group={group} />
       <ProductCreativeTable columns={columns} previousIndexes={previousIndexes} rows={group.rows} />
+      <ProductSalesMarginSection isError={salesIsError} isLoading={salesIsLoading} row={group.salesRow} />
       <ProductChangeLogSection productName={group.productName} reportDate={reportDate} />
     </article>
   );
@@ -369,7 +438,13 @@ function ProductCreativeTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
+          {rows.length === 0 ? (
+            <tr>
+              <td className="daily-product-table-empty" colSpan={columns.length}>
+                표시할 Meta 소재가 없습니다.
+              </td>
+            </tr>
+          ) : rows.map((row) => {
             const previous = findPreviousRow(row, previousIndexes);
             return (
               <tr key={row.creativeKey || row.displayName}>
@@ -382,6 +457,70 @@ function ProductCreativeTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function ProductSalesMarginSection({
+  isError,
+  isLoading,
+  row
+}: {
+  isError: boolean;
+  isLoading: boolean;
+  row: SalesProductRow | null;
+}) {
+  return (
+    <section className="daily-sales-margin">
+      <h3>카페24 실매출 기반 마진</h3>
+      {isLoading ? (
+        <p className="daily-sales-empty">카페24 실매출 데이터를 불러오는 중입니다.</p>
+      ) : isError ? (
+        <p className="daily-sales-empty">카페24 실매출 데이터를 불러오지 못했습니다.</p>
+      ) : !row ? (
+        <p className="daily-sales-empty">매칭되는 카페24 실매출 데이터가 없습니다.</p>
+      ) : (
+        <>
+          <div className="daily-sales-table-wrap">
+            <table className="daily-sales-table">
+              <thead>
+                <tr>
+                  <th>제품</th>
+                  <th>판매수량</th>
+                  <th>실매출</th>
+                  <th>실결제액</th>
+                  <th>상품 비용</th>
+                  <th>광고비</th>
+                  <th>총비용</th>
+                  <th>실제 마진</th>
+                  <th>마진율</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span className="daily-sales-product-cell">
+                      <strong>{salesProductLabel(row)}</strong>
+                      <small>판매 행 {numberFmt(row.matchedSalesLineCount)}</small>
+                    </span>
+                  </td>
+                  <td>{numberFmt(row.quantity)}</td>
+                  <td>{money(row.revenueKrw, "KRW")}</td>
+                  <td>{money(row.totalPaidKrw, "KRW")}</td>
+                  <td>{money(row.grossCostKrw, "KRW")}</td>
+                  <td>{money(row.adSpendKrw, "KRW")}</td>
+                  <td>{money(row.totalCostKrw, "KRW")}</td>
+                  <td>{money(row.marginKrw, "KRW")}</td>
+                  <td>{formatMarginRate(row.marginRate)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {row.matchedSalesLineCount === 0 ? (
+            <p className="daily-sales-note">해당 기준일에 매칭된 카페24 판매 행이 없어 0 기준으로 표시합니다.</p>
+          ) : null}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -486,13 +625,14 @@ function filterRows(rows: CreativePerformanceRow[], deliveryStatus: DeliveryStat
 function groupRowsByProduct(rows: CreativePerformanceRow[]): ProductGroup[] {
   const groups = new Map<string, CreativePerformanceRow[]>();
   for (const row of rows) {
-    const productName = row.productName?.trim() || "제품명 미파싱";
-    groups.set(productName, [...(groups.get(productName) ?? []), row]);
+    const groupKey = productGroupKey(row);
+    groups.set(groupKey, [...(groups.get(groupKey) ?? []), row]);
   }
 
-  return Array.from(groups.entries())
-    .map(([productName, productRows]) => ({
-      productName,
+  return Array.from(groups.values())
+    .map((productRows) => ({
+      productName: firstNonEmpty(productRows.map((row) => row.productName?.trim())) ?? "제품명 미파싱",
+      productId: firstNonNull(productRows.map((row) => row.productId)),
       rows: sortCreativeRows(productRows),
       totals: aggregateProductRows(productRows)
     }))
@@ -507,6 +647,109 @@ function groupRowsByProduct(rows: CreativePerformanceRow[]): ProductGroup[] {
       }
       return a.productName.localeCompare(b.productName, "ko-KR", { numeric: true, sensitivity: "base" });
     });
+}
+
+function buildSalesProductIndex(rows: SalesProductRow[]): SalesProductIndex {
+  const byProductId = new Map<string, SalesProductRow>();
+  const byProductName = new Map<string, SalesProductNameMatch>();
+
+  for (const row of rows) {
+    byProductId.set(row.productId, row);
+    addSalesProductName(byProductName, row.product?.displayName, row);
+    addSalesProductName(byProductName, row.product?.name, row);
+    addSalesProductName(byProductName, row.product?.code, row);
+  }
+
+  return { byProductId, byProductName };
+}
+
+function buildReportProductGroups(
+  productGroups: ProductGroup[],
+  salesRows: SalesProductRow[],
+  salesProductIndex: SalesProductIndex,
+  query: string
+): ReportProductGroup[] {
+  const matchedSalesProductIds = new Set<string>();
+  const groups = productGroups.map((group) => {
+    const salesRow = findSalesRowForGroup(group, salesProductIndex);
+    if (salesRow) {
+      matchedSalesProductIds.add(salesRow.productId);
+    }
+    return {
+      ...group,
+      salesRow,
+      salesOnly: false
+    };
+  });
+  const normalizedQuery = normalizeLookupText(query);
+  const salesOnlyGroups = salesRows
+    .filter((row) => !matchedSalesProductIds.has(row.productId))
+    .filter((row) => salesRowMatchesQuery(row, normalizedQuery))
+    .sort((a, b) => salesProductLabel(a).localeCompare(salesProductLabel(b), "ko-KR", { numeric: true, sensitivity: "base" }))
+    .map(
+      (row): ReportProductGroup => ({
+        productName: salesProductLabel(row),
+        productId: row.productId,
+        rows: [],
+        totals: emptyProductTotals(),
+        salesRow: row,
+        salesOnly: true
+      })
+    );
+
+  return [...groups, ...salesOnlyGroups];
+}
+
+function findSalesRowForGroup(group: ProductGroup, index: SalesProductIndex) {
+  if (group.productId) {
+    return index.byProductId.get(group.productId) ?? null;
+  }
+  const nameMatch = index.byProductName.get(normalizeLookupText(group.productName));
+  return nameMatch && !nameMatch.ambiguous ? nameMatch.row : null;
+}
+
+function addSalesProductName(index: Map<string, SalesProductNameMatch>, value: string | null | undefined, row: SalesProductRow) {
+  const key = normalizeLookupText(value);
+  if (!key) {
+    return;
+  }
+  const existing = index.get(key);
+  if (!existing) {
+    index.set(key, { row, ambiguous: false });
+    return;
+  }
+  if (existing.row.productId !== row.productId) {
+    index.set(key, { row: existing.row, ambiguous: true });
+  }
+}
+
+function salesRowMatchesQuery(row: SalesProductRow, normalizedQuery: string) {
+  if (!normalizedQuery) {
+    return true;
+  }
+  return [row.product?.displayName, row.product?.name, row.product?.code, row.productId].some((value) =>
+    normalizeLookupText(value).includes(normalizedQuery)
+  );
+}
+
+function emptyProductTotals(): ProductTotals {
+  return {
+    spendUsd: 0,
+    spendKrw: 0,
+    purchaseCount: 0,
+    cpaUsd: null,
+    cpaKrw: null,
+    revenueKrw: 0,
+    roas: null
+  };
+}
+
+function productGroupKey(row: CreativePerformanceRow) {
+  if (row.productId) {
+    return `id:${row.productId}`;
+  }
+  const nameKey = normalizeLookupText(row.productName);
+  return `name:${nameKey || "제품명 미파싱"}`;
 }
 
 function sortCreativeRows(rows: CreativePerformanceRow[]) {
@@ -649,6 +892,17 @@ function isKnownNumber(value: number | null | undefined): value is number {
   return value !== null && value !== undefined && !Number.isNaN(value);
 }
 
+function salesProductLabel(row: SalesProductRow) {
+  return row.product?.displayName ?? row.product?.name ?? row.product?.code ?? row.productId;
+}
+
+function formatMarginRate(value: number | null | undefined) {
+  if (!isKnownNumber(value)) {
+    return "-";
+  }
+  return `${numberFmt(value * 100, 2)}%`;
+}
+
 function formatCpa(totals: { cpaKrw?: number | null; cpaUsd?: number | null }) {
   if (totals.cpaKrw !== null && totals.cpaKrw !== undefined) {
     return money(totals.cpaKrw, "KRW");
@@ -696,6 +950,22 @@ function statusClass(value: string | null) {
 
 function statusRank(value: string | null) {
   return statusClass(value) === "active" ? 0 : 1;
+}
+
+function firstNonNull<T>(values: Array<T | null | undefined>) {
+  return values.find((value): value is T => value !== null && value !== undefined) ?? null;
+}
+
+function firstNonEmpty(values: Array<string | null | undefined>) {
+  return values.find((value): value is string => Boolean(value)) ?? null;
+}
+
+function normalizeLookupText(value: string | null | undefined) {
+  return String(value ?? "")
+    .trim()
+    .split(/\s+/)
+    .join("")
+    .toLowerCase();
 }
 
 function isDeliveryStatus(value: unknown): value is DeliveryStatusFilter {
