@@ -72,6 +72,61 @@ export async function uploadCafe24Csv(file: File, conflictPolicy = "SKIP") {
   return response.json();
 }
 
+export async function uploadCoupangSalesXlsx(file: File, options: { conflictPolicy?: string; reportDate?: string } = {}) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("conflictPolicy", options.conflictPolicy ?? "SKIP");
+  if (options.reportDate) {
+    formData.append("reportDate", options.reportDate);
+  }
+  return uploadFormData("/coupang/uploads/sales", formData);
+}
+
+export async function uploadCoupangAdsXlsx(file: File, conflictPolicy = "SKIP") {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("conflictPolicy", conflictPolicy);
+  return uploadFormData("/coupang/uploads/ads", formData);
+}
+
+export async function uploadCoupangMarginCsv(file: File, options: { conflictPolicy?: string; effectiveFrom?: string } = {}) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("conflictPolicy", options.conflictPolicy ?? "SKIP");
+  if (options.effectiveFrom) {
+    formData.append("effectiveFrom", options.effectiveFrom);
+  }
+  return uploadFormData("/coupang/uploads/margin", formData);
+}
+
+export async function uploadCoupangPriceText(file: File, options: { conflictPolicy?: string; effectiveFrom?: string } = {}) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("conflictPolicy", options.conflictPolicy ?? "SKIP");
+  if (options.effectiveFrom) {
+    formData.append("effectiveFrom", options.effectiveFrom);
+  }
+  return uploadFormData("/coupang/uploads/price-text", formData);
+}
+
+export async function uploadCoupangPromotionXlsx(file: File, options: { conflictPolicy?: string } = {}) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("conflictPolicy", options.conflictPolicy ?? "SKIP");
+  return uploadFormData("/coupang/uploads/promotion", formData);
+}
+
+async function uploadFormData(path: string, formData: FormData) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    body: formData
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return response.json();
+}
+
 export function rangeQuery(range: DateRange, extra?: Record<string, string | undefined>) {
   const params = new URLSearchParams({ from: range.from, to: range.to });
   for (const [key, value] of Object.entries(extra ?? {})) {

@@ -9,6 +9,7 @@ import { DecisionsModule } from "./decisions/decisions.module";
 import { ReportsModule } from "./reports/reports.module";
 import { ChangeLogsModule } from "./change-logs/change-logs.module";
 import { SalesModule } from "./sales/sales.module";
+import { CoupangModule } from "./coupang/coupang.module";
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { SalesModule } from "./sales/sales.module";
     DecisionsModule,
     ReportsModule,
     ChangeLogsModule,
-    SalesModule
+    SalesModule,
+    CoupangModule
   ]
 })
 export class AppModule {}

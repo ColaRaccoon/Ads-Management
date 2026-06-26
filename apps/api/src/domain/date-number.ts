@@ -23,10 +23,11 @@ export function parseDateString(value: string | null | undefined): string | null
   }
 
   const input = value.trim();
+  const compact = input.match(/^(\d{4})(\d{2})(\d{2})$/);
   const dash = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   const slash = input.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
   const dot = input.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?$/);
-  const match = dash ?? slash ?? dot;
+  const match = compact ?? dash ?? slash ?? dot;
 
   if (!match) {
     return null;

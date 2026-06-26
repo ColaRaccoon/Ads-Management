@@ -8,6 +8,7 @@ import {
   GitBranch,
   Layers3,
   LayoutDashboard,
+  Package,
   RefreshCw,
   Settings2,
   Sparkles,
@@ -17,15 +18,32 @@ import {
 } from "lucide-react";
 import { DateRangePicker } from "./DateRangePicker";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/uploads", label: "Uploads", icon: UploadCloud },
-  { href: "/campaigns", label: "Campaigns", icon: Layers3 },
-  { href: "/adsets", label: "Adsets", icon: Table2 },
-  { href: "/ads", label: "Ads", icon: Sparkles },
-  { href: "/mappings", label: "Mappings", icon: GitBranch },
-  { href: "/settings/products", label: "Product Settings", icon: SlidersHorizontal },
-  { href: "/change-logs", label: "Change Logs", icon: ClipboardList }
+const navGroups = [
+  {
+    label: "Meta",
+    items: [
+      { href: "/dashboard", label: "Meta Dashboard", icon: LayoutDashboard },
+      { href: "/uploads", label: "Meta Uploads", icon: UploadCloud },
+      { href: "/campaigns", label: "Meta Campaigns", icon: Layers3 },
+      { href: "/adsets", label: "Meta Adsets", icon: Table2 },
+      { href: "/ads", label: "Meta Ads", icon: Sparkles },
+      { href: "/mappings", label: "Meta Mappings", icon: GitBranch },
+      { href: "/settings/products", label: "Meta Product Settings", icon: SlidersHorizontal },
+      { href: "/change-logs", label: "Meta Change Logs", icon: ClipboardList }
+    ]
+  },
+  {
+    label: "Coupang",
+    items: [
+      { href: "/coupang/dashboard", label: "Coupang Dashboard", icon: LayoutDashboard },
+      { href: "/coupang/uploads", label: "Coupang Uploads", icon: UploadCloud },
+      { href: "/coupang/products", label: "Coupang Product Settings", icon: Package },
+      { href: "/coupang/profit", label: "Coupang Profit Table", icon: Table2 },
+      { href: "/coupang/ads", label: "Coupang Ads Analysis", icon: Sparkles },
+      { href: "/coupang/daily-report", label: "Coupang Daily Report", icon: ClipboardList },
+      { href: "/coupang/unmatched", label: "Coupang Unmatched Review", icon: GitBranch }
+    ]
+  }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -39,16 +57,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span>Meta Ads Performance Hub</span>
         </div>
         <nav className="nav">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link key={item.href} className={active ? "active" : ""} href={item.href}>
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+          {navGroups.map((group) => (
+            <div className="nav-group" key={group.label}>
+              <span className="nav-group-label">{group.label}</span>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link key={item.href} className={active ? "active" : ""} href={item.href}>
+                    <Icon size={18} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </aside>
       <main className="main">

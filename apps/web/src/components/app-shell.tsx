@@ -31,6 +31,36 @@ const navItems = [
   { href: "/change-logs", label: "Change Logs", icon: History }
 ];
 
+const navGroups = [
+  {
+    label: "Meta",
+    items: [
+      { href: "/dashboard", label: "Meta Dashboard", icon: Home },
+      { href: "/uploads", label: "Meta Uploads", icon: Upload },
+      { href: "/sales", label: "Meta/Cafe24 Sales", icon: ShoppingCart },
+      { href: "/campaigns", label: "Meta Campaigns", icon: BarChart3 },
+      { href: "/adsets", label: "Meta Adsets", icon: TableProperties },
+      { href: "/ads", label: "Meta Ads", icon: Package },
+      { href: "/daily-report", label: "Meta Daily Report", icon: ClipboardList },
+      { href: "/mappings", label: "Meta Mappings", icon: Shuffle },
+      { href: "/settings/products", label: "Meta Product Settings", icon: Settings },
+      { href: "/change-logs", label: "Meta Change Logs", icon: History }
+    ]
+  },
+  {
+    label: "Coupang",
+    items: [
+      { href: "/coupang/dashboard", label: "Coupang Dashboard", icon: Home },
+      { href: "/coupang/uploads", label: "Coupang Uploads", icon: Upload },
+      { href: "/coupang/products", label: "Coupang Product Settings", icon: Settings },
+      { href: "/coupang/profit", label: "Coupang Profit Table", icon: TableProperties },
+      { href: "/coupang/ads", label: "Coupang Ads Analysis", icon: Package },
+      { href: "/coupang/daily-report", label: "Coupang Daily Report", icon: ClipboardList },
+      { href: "/coupang/unmatched", label: "Coupang Unmatched Review", icon: Shuffle }
+    ]
+  }
+];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
@@ -41,16 +71,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span>CSV performance operations</span>
         </div>
         <nav className="nav">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link key={item.href} className={active ? "active" : ""} href={item.href}>
-                <Icon size={17} />
-                {item.label}
-              </Link>
-            );
-          })}
+          {navGroups.map((group) => (
+            <div className="nav-group" key={group.label}>
+              <span className="nav-group-label">{group.label}</span>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link key={item.href} className={active ? "active" : ""} href={item.href}>
+                    <Icon size={17} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </aside>
       <main className="main">
