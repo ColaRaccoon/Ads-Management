@@ -33,15 +33,15 @@ const navGroups = [
     ]
   },
   {
-    label: "Coupang",
+    label: "쿠팡",
     items: [
       { href: "/coupang/dashboard", label: "Coupang Dashboard", icon: LayoutDashboard },
       { href: "/coupang/uploads", label: "Coupang Uploads", icon: UploadCloud },
-      { href: "/coupang/products", label: "Coupang Product Settings", icon: Package },
+      { href: "/coupang/products", label: "쿠팡 상품 설정", icon: Package },
       { href: "/coupang/profit", label: "Coupang Profit Table", icon: Table2 },
       { href: "/coupang/ads", label: "Coupang Ads Analysis", icon: Sparkles },
       { href: "/coupang/daily-report", label: "Coupang Daily Report", icon: ClipboardList },
-      { href: "/coupang/unmatched", label: "Coupang Unmatched Review", icon: GitBranch }
+      { href: "/coupang/mappings", label: "쿠팡 매핑관리", icon: GitBranch }
     ]
   }
 ];

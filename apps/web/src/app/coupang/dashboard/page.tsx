@@ -2,13 +2,17 @@
 
 import { AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
 import { useRange } from "@/lib/use-range";
 import { KpiCard } from "@/components/kpi-card";
 import { DataTable } from "@/components/data-table";
 
+type CoupangGroupBy = "product" | "group";
+
 type CoupangDashboard = {
   period: { from: string; to: string };
+  groupBy: CoupangGroupBy;
   summary: {
     netSalesKrw: number;
     totalCostKrw: number;
@@ -26,7 +30,10 @@ type CoupangDashboard = {
 };
 
 type CoupangProfitRow = {
+  rowType?: "PRODUCT" | "GROUP";
   productName: string;
+  groupId?: string | null;
+  groupName?: string | null;
   netSalesKrw: number;
   adSpendKrw: number;
   organicSalesKrw: number;
@@ -37,11 +44,13 @@ type CoupangProfitRow = {
 
 export default function CoupangDashboardPage() {
   const range = useRange();
+  const [groupBy, setGroupBy] = useState<CoupangGroupBy>("product");
   const dashboard = useQuery({
-    queryKey: ["coupang-dashboard", range],
-    queryFn: () => apiGet<CoupangDashboard>(`/coupang/dashboard?${rangeQuery(range)}`)
+    queryKey: ["coupang-dashboard", range, groupBy],
+    queryFn: () => apiGet<CoupangDashboard>(`/coupang/dashboard?${rangeQuery(range, { groupBy })}`)
   });
   const data = dashboard.data;
+  const nameHeader = groupBy === "group" ? "Product Group" : "Product";
 
   return (
     <section className="page">
@@ -81,11 +90,17 @@ export default function CoupangDashboardPage() {
       </div>
 
       <div className="panel" style={{ marginTop: 12 }}>
-        <h2>Product Summary</h2>
+        <div className="toolbar">
+          <h2>Product Summary</h2>
+          <select className="input" value={groupBy} onChange={(event) => setGroupBy(event.target.value as CoupangGroupBy)}>
+            <option value="product">By Option</option>
+            <option value="group">By Product Group</option>
+          </select>
+        </div>
         <DataTable
           rows={data?.rows ?? []}
           columns={[
-            { key: "product", header: "Product", render: (row) => row.productName },
+            { key: "product", header: nameHeader, render: (row) => row.productName },
             { key: "netSales", header: "Net Sales", render: (row) => money(row.netSalesKrw) },
             { key: "adSpend", header: "Ad Spend", render: (row) => money(row.adSpendKrw) },
             { key: "organic", header: "Organic Sales", render: (row) => money(row.organicSalesKrw) },

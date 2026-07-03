@@ -96,24 +96,64 @@ export class CoupangController {
     return this.coupangService.deleteProductSetting(id);
   }
 
+  @Get("product-groups")
+  listProductGroups(@Query("includeInactive") includeInactive?: string) {
+    return this.coupangService.listProductGroups(includeInactive === "true");
+  }
+
+  @Post("product-groups")
+  createProductGroup(@Body() body: Record<string, unknown>) {
+    return this.coupangService.createProductGroup(body);
+  }
+
+  @Patch("product-groups/:id")
+  updateProductGroup(@Param("id") id: string, @Body() body: Record<string, unknown>) {
+    return this.coupangService.updateProductGroup(id, body);
+  }
+
+  @Delete("product-groups/:id")
+  deleteProductGroup(@Param("id") id: string) {
+    return this.coupangService.deleteProductGroup(id);
+  }
+
+  @Get("mapping-rules")
+  listMappingRules(@Query("includeInactive") includeInactive?: string) {
+    return this.coupangService.listMappingRules(includeInactive === "true");
+  }
+
+  @Post("mapping-rules")
+  createMappingRule(@Body() body: Record<string, unknown>) {
+    return this.coupangService.createMappingRule(body);
+  }
+
+  @Patch("mapping-rules/:id")
+  updateMappingRule(@Param("id") id: string, @Body() body: Record<string, unknown>) {
+    return this.coupangService.updateMappingRule(id, body);
+  }
+
+  @Delete("mapping-rules/:id")
+  deleteMappingRule(@Param("id") id: string) {
+    return this.coupangService.deleteMappingRule(id);
+  }
+
   @Post("rematch")
   rematch(@Query("from") from?: string, @Query("to") to?: string, @Query("take") take?: string) {
     return this.coupangService.rematch({ from, to, take });
   }
 
   @Get("dashboard")
-  dashboard(@Query("from") from?: string, @Query("to") to?: string) {
-    return this.coupangService.dashboard({ from, to });
+  dashboard(@Query("from") from?: string, @Query("to") to?: string, @Query("groupBy") groupBy?: string) {
+    return this.coupangService.dashboard({ from, to, groupBy });
   }
 
   @Get("product-profit")
-  productProfit(@Query("from") from?: string, @Query("to") to?: string) {
-    return this.coupangService.productProfit({ from, to });
+  productProfit(@Query("from") from?: string, @Query("to") to?: string, @Query("groupBy") groupBy?: string) {
+    return this.coupangService.productProfit({ from, to, groupBy });
   }
 
   @Get("ads-analysis")
-  adsAnalysis(@Query("from") from?: string, @Query("to") to?: string) {
-    return this.coupangService.adsAnalysis({ from, to });
+  adsAnalysis(@Query("from") from?: string, @Query("to") to?: string, @Query("groupBy") groupBy?: string) {
+    return this.coupangService.adsAnalysis({ from, to, groupBy });
   }
 
   @Get("unmatched")
@@ -121,8 +161,13 @@ export class CoupangController {
     return this.coupangService.unmatched({ from, to, take });
   }
 
+  @Get("mapping-issues")
+  mappingIssues(@Query("from") from?: string, @Query("to") to?: string, @Query("take") take?: string) {
+    return this.coupangService.mappingIssues({ from, to, take });
+  }
+
   @Get("daily-report")
-  dailyReport(@Query("date") date?: string) {
-    return this.coupangService.dailyReport({ date });
+  dailyReport(@Query("date") date?: string, @Query("groupBy") groupBy?: string) {
+    return this.coupangService.dailyReport({ date, groupBy });
   }
 }

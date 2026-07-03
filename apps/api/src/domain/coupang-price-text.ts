@@ -3,6 +3,9 @@ import { parseNumberValue, ParseIssue } from "./date-number";
 
 export const COUPANG_PRICE_TEXT_SCHEMA_VERSION = 1;
 
+const PRICE_TEXT_LINE_PATTERN = /^\s*(.+?)\s*(?:=|,|\t|\s{2,})\s*(?:KRW\s*)?[\u20a9\uffe6$]?\s*([0-9][0-9,.\s]*)(?:\uc6d0)?\s*$/i;
+const LEGACY_PRICE_TEXT_LINE_PATTERN = /^\s*(.+?)\s*(?:=|,|\t|\s{2,})\s*([0-9,.\s]+)\s*$/;
+
 export type ParsedCoupangPriceTextRow = {
   itemName: string;
   salePriceKrw: number;
@@ -31,9 +34,18 @@ export function hashCoupangPriceTextRecord(record: unknown) {
   return createHash("sha256").update(JSON.stringify(record)).digest("hex");
 }
 
+export function legacyCoupangPriceTextItemName(rawLine: string, correctedItemName: string): string | null {
+  const match = rawLine.match(LEGACY_PRICE_TEXT_LINE_PATTERN);
+  const legacyItemName = match?.[1]?.trim();
+  if (!legacyItemName || legacyItemName === correctedItemName.trim()) {
+    return null;
+  }
+  return legacyItemName;
+}
+
 function parseLine(rawLine: string, rowNumber: number): ParsedCoupangPriceTextRowResult {
   const issues: ParseIssue[] = [];
-  const match = rawLine.match(/^\s*(.+?)\s*(?:=|,|\t|\s{2,})\s*([0-9,.\s]+)\s*$/);
+  const match = rawLine.match(PRICE_TEXT_LINE_PATTERN);
   if (!match) {
     return {
       rowNumber,

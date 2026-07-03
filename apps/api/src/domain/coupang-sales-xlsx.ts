@@ -4,7 +4,7 @@ import { formatDateOnly, parseDateString, parseNumberValue, toDateOnly, ParseIss
 
 export const COUPANG_SALES_SCHEMA_VERSION = 1;
 
-export type CoupangCancelAmountMode = "NEGATIVE_ADD" | "POSITIVE_SUBTRACT";
+export type CoupangCancelAmountMode = "SALES_IS_NET" | "NEGATIVE_ADD" | "POSITIVE_SUBTRACT";
 
 export type CoupangSalesColumnKey =
   | "optionId"
@@ -102,7 +102,7 @@ export class CoupangSalesXlsxParser {
         sourceRowHash: hashCoupangSalesRecord(rawRow),
         ...parseRow(rawRow, headerMap, {
           fallbackDate,
-          cancelAmountMode: options.cancelAmountMode ?? "NEGATIVE_ADD"
+          cancelAmountMode: options.cancelAmountMode ?? "SALES_IS_NET"
         })
       });
     });
@@ -165,10 +165,11 @@ function parseRow(
     return { parsedRow: null, issues };
   }
 
-  const netSalesKrw =
-    options.cancelAmountMode === "POSITIVE_SUBTRACT"
-      ? salesKrw - Math.abs(cancelAmountKrw)
-      : salesKrw + cancelAmountKrw;
+  const netSalesKrw = calculateCoupangNetSales({
+    salesKrw,
+    cancelAmountKrw,
+    mode: options.cancelAmountMode
+  });
 
   return {
     parsedRow: {
@@ -191,6 +192,16 @@ function parseRow(
     },
     issues
   };
+}
+
+function calculateCoupangNetSales(input: { salesKrw: number; cancelAmountKrw: number; mode: CoupangCancelAmountMode }) {
+  if (input.mode === "NEGATIVE_ADD") {
+    return input.salesKrw + input.cancelAmountKrw;
+  }
+  if (input.mode === "POSITIVE_SUBTRACT") {
+    return input.salesKrw - Math.abs(input.cancelAmountKrw);
+  }
+  return input.salesKrw;
 }
 
 function requiredText(

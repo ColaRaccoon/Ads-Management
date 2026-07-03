@@ -11,17 +11,28 @@ import { createHash } from "node:crypto";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { asDateOnly, numberFrom, parseDateRange } from "../common/date-range";
 import { PrismaService } from "../common/prisma.service";
-import { CoupangAdsXlsxParser, coupangAdMetricKey, COUPANG_ADS_SCHEMA_VERSION } from "../domain/coupang-ads-xlsx";
+import {
+  CoupangAdsXlsxParser,
+  coupangAdMetricKey,
+  COUPANG_ADS_SCHEMA_VERSION,
+  ParsedCoupangAdRow,
+  ParsedCoupangAdsRowResult
+} from "../domain/coupang-ads-xlsx";
 import { CoupangMarginCsvParser, COUPANG_MARGIN_SCHEMA_VERSION, ParsedCoupangMarginRow } from "../domain/coupang-margin-csv";
 import { isInactivePromotionStatus, resolveCoupangSalePrice } from "../domain/coupang-price-resolver";
 import { CoupangProductMatcher, CoupangRuleInput } from "../domain/coupang-product-matcher";
-import { CoupangPriceTextParser, COUPANG_PRICE_TEXT_SCHEMA_VERSION } from "../domain/coupang-price-text";
+import {
+  CoupangPriceTextParser,
+  COUPANG_PRICE_TEXT_SCHEMA_VERSION,
+  legacyCoupangPriceTextItemName
+} from "../domain/coupang-price-text";
 import { calculateCoupangProfit, CoupangCostInput } from "../domain/coupang-profit-calculator";
 import { CoupangPromotionXlsxParser, COUPANG_PROMOTION_SCHEMA_VERSION } from "../domain/coupang-promotion-xlsx";
 import {
   CoupangSalesXlsxParser,
   coupangSaleLineKey,
   COUPANG_SALES_SCHEMA_VERSION,
+  CoupangCancelAmountMode,
   ParsedCoupangSaleRow
 } from "../domain/coupang-sales-xlsx";
 import { formatDateOnly, ParseIssue, safeDivide, toDateOnly } from "../domain/date-number";
@@ -44,6 +55,31 @@ type CoupangRowImportDecision = {
   skippedDuplicate: boolean;
 };
 
+const COUPANG_TRANSACTION_OPTIONS = {
+  maxWait: 30_000,
+  timeout: 300_000
+};
+
+type CoupangPriceTextAppliedRow = {
+  rowNumber: number;
+  itemName: string;
+  standardName: string;
+  productId: string;
+  costRuleId: string;
+  salePriceKrw: number;
+};
+
+type CoupangMarginAppliedRow = {
+  rowNumber: number;
+  itemName: string;
+  standardName: string;
+  productId: string;
+  productRuleId: string | null;
+  productRuleCreated: boolean;
+  costRuleId: string;
+  salePriceKrw: number;
+};
+
 type CoupangCostRuleSnapshot = Pick<
   Prisma.CoupangCostRuleGetPayload<Record<string, never>>,
   | "salePriceKrw"
@@ -60,9 +96,16 @@ type CoupangCostRuleSnapshot = Pick<
   | "note"
 >;
 
-type ProductProfitRow = {
+type CoupangGroupBy = "product" | "group";
+
+export type ProductProfitRow = {
+  rowType?: "PRODUCT" | "GROUP";
   productId: string;
   productName: string;
+  groupId?: string | null;
+  groupName?: string | null;
+  childProductCount?: number;
+  children?: ProductProfitRow[];
   saleMethod: string | null;
   matchedSalesLineCount: number;
   salesQuantity: number;
@@ -73,7 +116,7 @@ type ProductProfitRow = {
   salePriceKrw: number | null;
   baseSalePriceKrw: number | null;
   promotionPriceKrw: number | null;
-  priceSource: "PROMOTION" | "BASE" | "MISSING" | "CONFLICT";
+  priceSource: "PROMOTION" | "BASE" | "MISSING" | "CONFLICT" | "MIXED";
   priceWarnings: string[];
   productCostKrw: number | null;
   salesFeeKrw: number | null;
@@ -91,6 +134,77 @@ type ProductProfitRow = {
   warnings: string[];
   ruleStatus: "OK" | "MISSING_COST_RULE" | "UNMATCHED";
 };
+
+type CoupangMappingIssueRow = {
+  issueType: "UNMATCHED" | "AMBIGUOUS" | "EXCLUDED";
+  sourceType: "SALES" | "ADS" | "PROMOTION";
+  targetKind: "SALES_PRODUCT" | "ADS_SPEND_PRODUCT" | "ADS_CONVERSION_PRODUCT" | "PROMOTION_PRODUCT";
+  rowNumber: number | null;
+  sourceName: string;
+  productText: string;
+  amountKrw: number | null;
+  reason: string;
+  candidates: string[];
+  date: string | null;
+  rowId: string;
+};
+
+type ParsedValidationIssue = {
+  errorCode: string;
+  message: string;
+  rawValue: string | null;
+  candidates: string[];
+};
+
+type CoupangSaleLineWithBatch = Prisma.CoupangSaleLineGetPayload<{ include: { batch: true } }>;
+type CoupangAdMetricWithBatch = Prisma.CoupangAdMetricGetPayload<{ include: { batch: true } }>;
+type CoupangPromotionPriceWithBatch = Prisma.CoupangPromotionPriceGetPayload<{ include: { batch: true } }>;
+
+type CoupangAdProductMatchResolution = {
+  spendProductId: string | null;
+  spendRuleId: string | null;
+  conversionProductId: string | null;
+  conversionRuleId: string | null;
+  spendMatchSource: MatchSource;
+  conversionMatchSource: MatchSource;
+  warnings: RowIssue[];
+  spendMatched: boolean;
+  conversionMatched: boolean;
+};
+
+type CoupangSpendMatchInput = {
+  matcher: CoupangProductMatcher;
+  rules: CoupangRuleInput[];
+  metricDate: Date;
+  adExecutionProductName: string;
+  adName?: string | null;
+};
+
+type CoupangSpendMatchResolution = {
+  productId: string | null;
+  ruleId: string | null;
+  matchSource: MatchSource;
+  warning: RowIssue | null;
+  matched: boolean;
+};
+
+type CoupangAdsImportRow = Omit<ParsedCoupangAdsRowResult, "rawRow"> & {
+  rawRow: Prisma.InputJsonObject;
+};
+
+type CoupangAdsNumericMetricKey =
+  | "impressions"
+  | "clicks"
+  | "adSpendKrw"
+  | "totalOrders1d"
+  | "directOrders1d"
+  | "indirectOrders1d"
+  | "totalConversionSales1dKrw"
+  | "directConversionSales1dKrw"
+  | "indirectConversionSales1dKrw"
+  | "totalSalesQuantity1d"
+  | "directSalesQuantity1d"
+  | "indirectSalesQuantity1d";
 
 @Injectable()
 export class CoupangService {
@@ -115,7 +229,7 @@ export class CoupangService {
     const parsed = await this.salesParser.parseBuffer(upload.buffer, {
       filename: originalFilename,
       reportDate: optionalString(body.reportDate),
-      cancelAmountMode: optionalString(body.cancelAmountMode) === "POSITIVE_SUBTRACT" ? "POSITIVE_SUBTRACT" : "NEGATIVE_ADD"
+      cancelAmountMode: parseCoupangCancelAmountMode(optionalString(body.cancelAmountMode))
     });
     const batch = await this.createBatch({
       sourceType: CoupangUploadSourceType.SALES,
@@ -259,7 +373,7 @@ export class CoupangService {
           importedAt: validRowCount > 0 ? new Date() : null
         }
       });
-    });
+    }, COUPANG_TRANSACTION_OPTIONS);
 
     return {
       batchId: batch.id,
@@ -286,6 +400,7 @@ export class CoupangService {
     }
 
     const parsed = await this.adsParser.parseBuffer(upload.buffer);
+    const importRows = aggregateCoupangAdsImportRows(parsed.rows);
     const batch = await this.createBatch({
       sourceType: CoupangUploadSourceType.ADS,
       originalFilename,
@@ -294,7 +409,10 @@ export class CoupangService {
       columnSchema: {
         schemaVersion: COUPANG_ADS_SCHEMA_VERSION,
         columns: parsed.headers,
-        missingColumns: parsed.missingColumns
+        missingColumns: parsed.missingColumns,
+        sourceRowCount: parsed.rows.length,
+        aggregatedRowCount: importRows.length,
+        aggregatedDuplicateCount: Math.max(parsed.rows.length - importRows.length, 0)
       },
       rowCount: parsed.rows.length
     });
@@ -313,7 +431,7 @@ export class CoupangService {
     let dataEnd: Date | null = null;
 
     await this.prisma.$transaction(async (tx) => {
-      for (const row of parsed.rows) {
+      for (const row of importRows) {
         const issues = row.issues.map((issue) => rowIssue(issue, "ERROR"));
         const warnings: RowIssue[] = [];
         const parsedRow = row.parsedRow;
@@ -325,25 +443,23 @@ export class CoupangService {
         let conversionMatchSource: MatchSource = MatchSource.UNMATCHED;
 
         if (parsedRow) {
-          const spendMatch = this.matcher.matchText(parsedRow.adExecutionProductName, rules, parsedRow.metricDate);
-          if (spendMatch.reason === "MATCHED") {
-            spendProductId = spendMatch.productId;
-            spendRuleId = spendMatch.matchRuleId;
-            spendMatchSource = MatchSource.RULE;
-            matchedSpendCount += 1;
-          } else {
-            warnings.push(matchIssue(`SPEND_${spendMatch.reason}`, spendMatch.candidates));
-          }
-
-          const conversionMatch = this.matcher.matchText(parsedRow.conversionProductName, rules, parsedRow.metricDate);
-          if (conversionMatch.reason === "MATCHED") {
-            conversionProductId = conversionMatch.productId;
-            conversionRuleId = conversionMatch.matchRuleId;
-            conversionMatchSource = MatchSource.RULE;
-            matchedConversionCount += 1;
-          } else {
-            warnings.push(matchIssue(`CONVERSION_${conversionMatch.reason}`, conversionMatch.candidates));
-          }
+          const productMatches = resolveCoupangAdProductMatches({
+            matcher: this.matcher,
+            rules,
+            metricDate: parsedRow.metricDate,
+            adExecutionProductName: parsedRow.adExecutionProductName,
+            adName: parsedRow.adName,
+            conversionProductName: parsedRow.conversionProductName
+          });
+          spendProductId = productMatches.spendProductId;
+          spendRuleId = productMatches.spendRuleId;
+          conversionProductId = productMatches.conversionProductId;
+          conversionRuleId = productMatches.conversionRuleId;
+          spendMatchSource = productMatches.spendMatchSource;
+          conversionMatchSource = productMatches.conversionMatchSource;
+          warnings.push(...productMatches.warnings);
+          matchedSpendCount += productMatches.spendMatched ? 1 : 0;
+          matchedConversionCount += productMatches.conversionMatched ? 1 : 0;
           dataStart = minDate(dataStart, parsedRow.metricDate);
           dataEnd = maxDate(dataEnd, parsedRow.metricDate);
         }
@@ -394,6 +510,7 @@ export class CoupangService {
             metricDate: parsedRow?.metricDate ?? new Date(0),
             campaignName: parsedRow?.campaignName,
             adGroupName: parsedRow?.adGroupName,
+            adName: parsedRow?.adName,
             adExecutionOptionId: parsedRow?.adExecutionOptionId,
             adExecutionProductName: parsedRow?.adExecutionProductName ?? "",
             conversionOptionId: parsedRow?.conversionOptionId,
@@ -442,7 +559,7 @@ export class CoupangService {
           importedAt: validRowCount > 0 ? new Date() : null
         }
       });
-    });
+    }, COUPANG_TRANSACTION_OPTIONS);
 
     return {
       batchId: batch.id,
@@ -485,6 +602,7 @@ export class CoupangService {
     }
 
     const effectiveFrom = body.effectiveFrom ? asDateOnly(String(body.effectiveFrom)) : new Date();
+    const appliedRows: CoupangMarginAppliedRow[] = [];
     let validRowCount = 0;
     let errorCount = 0;
     await this.prisma.$transaction(async (tx) => {
@@ -515,22 +633,24 @@ export class CoupangService {
             isActive: true
           }
         });
+        let productRuleId: string | null = null;
+        let productRuleCreated = false;
         const existingRule = await tx.coupangProductRule.findFirst({
           where: { coupangProductId: product.id },
           orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
         });
         if (existingRule) {
-          await tx.coupangProductRule.update({
+          const productRule = await tx.coupangProductRule.update({
             where: { id: existingRule.id },
             data: {
               displayName: row.parsedRow.itemName,
-              includeKeywords: [row.parsedRow.itemName],
               adEnabled: row.parsedRow.adEnabled,
               isActive: true
             }
           });
+          productRuleId = productRule.id;
         } else {
-          await tx.coupangProductRule.create({
+          const productRule = await tx.coupangProductRule.create({
             data: {
               coupangProductId: product.id,
               displayName: row.parsedRow.itemName,
@@ -538,21 +658,29 @@ export class CoupangService {
               excludeKeywords: [],
               priority: 100,
               adEnabled: row.parsedRow.adEnabled,
-              validFrom: effectiveFrom
+              validFrom: effectiveFrom,
+              note: "마진 TSV 업로드로 생성된 기본 매핑 규칙"
             }
           });
+          productRuleId = productRule.id;
+          productRuleCreated = true;
         }
-        const latestCostRule = await tx.coupangCostRule.findFirst({
-          where: { coupangProductId: product.id },
-          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
-        });
-        await tx.coupangCostRule.create({
+        const costRule = await tx.coupangCostRule.create({
           data: buildCoupangMarginCostRuleData({
             coupangProductId: product.id,
             parsedRow: row.parsedRow,
-            effectiveFrom,
-            latestCostRule
+            effectiveFrom
           })
+        });
+        appliedRows.push({
+          rowNumber: row.rowNumber,
+          itemName: row.parsedRow.itemName,
+          standardName,
+          productId: product.id,
+          productRuleId,
+          productRuleCreated,
+          costRuleId: costRule.id,
+          salePriceKrw: row.parsedRow.salePriceKrw
         });
       }
       await tx.coupangUploadBatch.update({
@@ -561,11 +689,18 @@ export class CoupangService {
           validRowCount,
           errorCount,
           status: statusFor(validRowCount, errorCount),
+          columnSchema: {
+            schemaVersion: COUPANG_MARGIN_SCHEMA_VERSION,
+            columns: parsed.headers,
+            missingColumns: parsed.missingColumns,
+            effectiveFrom: formatDateOnly(effectiveFrom),
+            appliedRows
+          },
           validatedAt: new Date(),
           importedAt: validRowCount > 0 ? new Date() : null
         }
       });
-    });
+    }, COUPANG_TRANSACTION_OPTIONS);
 
     return {
       batchId: batch.id,
@@ -580,16 +715,14 @@ export class CoupangService {
     const upload = this.assertFile(file, "Coupang price text file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
-    const duplicate = await this.reusableDuplicate(fileHashSha256, CoupangUploadSourceType.PRICE_TEXT, body.conflictPolicy);
-    if (duplicate) {
-      return duplicate;
-    }
+    const conflictPolicy = parseConflictPolicy(body.conflictPolicy);
     const parsed = this.priceTextParser.parseBuffer(upload.buffer);
     const batch = await this.createBatch({
       sourceType: CoupangUploadSourceType.PRICE_TEXT,
       originalFilename,
       fileHashSha256,
-      conflictPolicy: parseConflictPolicy(body.conflictPolicy),
+      conflictPolicy,
+      allowDuplicateFileHash: true,
       columnSchema: {
         schemaVersion: COUPANG_PRICE_TEXT_SCHEMA_VERSION,
         format: "name price"
@@ -597,6 +730,7 @@ export class CoupangService {
       rowCount: parsed.rows.length
     });
     const effectiveFrom = body.effectiveFrom ? asDateOnly(String(body.effectiveFrom)) : new Date();
+    const appliedRows: CoupangPriceTextAppliedRow[] = [];
     let validRowCount = 0;
     let warningCount = 0;
     let errorCount = 0;
@@ -625,30 +759,33 @@ export class CoupangService {
           },
           update: { displayName: row.parsedRow.itemName, isActive: true }
         });
-        const latestCostRule = await tx.coupangCostRule.findFirst({
-          where: { coupangProductId: product.id },
-          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
-        });
+        const latestCostRule =
+          (await this.findLatestCoupangCostRule(tx, product.id)) ??
+          (await this.findLegacyPriceTextCostRule(tx, {
+            rawLine: row.rawLine,
+            itemName: row.parsedRow.itemName,
+            productId: product.id
+          }));
         const costRuleData = buildCoupangPriceTextCostRuleData({
           coupangProductId: product.id,
           salePriceKrw: row.parsedRow.salePriceKrw,
           effectiveFrom,
           latestCostRule
         });
-        if (costRuleData) {
-          await tx.coupangCostRule.create({ data: costRuleData });
-        } else {
-          warningCount += 1;
-          await this.createRowErrors(tx, batch.id, CoupangUploadSourceType.PRICE_TEXT, null, null, row.rowNumber, [
-            {
-              columnName: "price",
-              errorCode: "COUPANG_PRICE_TEXT_MISSING_COST_RULE",
-              message: "Price text updated the product, but no cost rule was created because no existing Coupang cost rule could be copied.",
-              rawValue: row.rawLine,
-              severity: "WARNING"
-            }
-          ]);
-        }
+        const costRule = await tx.coupangCostRule.create({ data: costRuleData });
+        appliedRows.push({
+          rowNumber: row.rowNumber,
+          itemName: row.parsedRow.itemName,
+          standardName,
+          productId: product.id,
+          costRuleId: costRule.id,
+          salePriceKrw: row.parsedRow.salePriceKrw
+        });
+        await this.deleteLegacyPriceTextProductIfUnused(tx, {
+          rawLine: row.rawLine,
+          itemName: row.parsedRow.itemName,
+          productId: product.id
+        });
       }
       await tx.coupangUploadBatch.update({
         where: { id: batch.id },
@@ -657,11 +794,17 @@ export class CoupangService {
           warningCount,
           errorCount,
           status: statusFor(validRowCount, errorCount),
+          columnSchema: {
+            schemaVersion: COUPANG_PRICE_TEXT_SCHEMA_VERSION,
+            format: "name price",
+            effectiveFrom: formatDateOnly(effectiveFrom),
+            appliedRows
+          },
           validatedAt: new Date(),
           importedAt: validRowCount > 0 ? new Date() : null
         }
       });
-    });
+    }, COUPANG_TRANSACTION_OPTIONS);
     return {
       batchId: batch.id,
       schemaVersion: COUPANG_PRICE_TEXT_SCHEMA_VERSION,
@@ -797,7 +940,7 @@ export class CoupangService {
           importedAt: validRowCount > 0 ? new Date() : null
         }
       });
-    });
+    }, COUPANG_TRANSACTION_OPTIONS);
 
     return {
       batchId: batch.id,
@@ -847,12 +990,13 @@ export class CoupangService {
       });
     }
     if (upload.sourceType === CoupangUploadSourceType.ADS) {
-      return this.prisma.coupangAdMetric.findMany({
+      const rows = await this.prisma.coupangAdMetric.findMany({
         where: { uploadBatchId: id },
         take,
         orderBy: { rowNumber: "asc" },
         include: { spendProduct: true, conversionProduct: true, spendRule: true, conversionRule: true }
       });
+      return rows.map((row) => ({ ...row, impressions: row.impressions.toString() }));
     }
     if (upload.sourceType === CoupangUploadSourceType.PROMOTION) {
       return this.prisma.coupangPromotionPrice.findMany({
@@ -874,7 +1018,7 @@ export class CoupangService {
   }
 
   async deleteUpload(id: string) {
-    await this.assertUpload(id);
+    const upload = await this.assertUpload(id);
     return this.prisma.$transaction(async (tx) => {
       const [deletingSaleLines, deletingAdMetrics] = await Promise.all([
         tx.coupangSaleLine.findMany({
@@ -892,46 +1036,189 @@ export class CoupangService {
       await tx.coupangUploadRowError.deleteMany({ where: { uploadBatchId: id } });
       await tx.coupangSaleLine.deleteMany({ where: { uploadBatchId: id } });
       await tx.coupangAdMetric.deleteMany({ where: { uploadBatchId: id } });
+      if (upload.sourceType === CoupangUploadSourceType.PRICE_TEXT) {
+        await this.deletePriceTextUploadEffects(tx, upload.columnSchema);
+      }
+      if (upload.sourceType === CoupangUploadSourceType.MARGIN) {
+        await this.deleteMarginUploadEffects(tx, upload.columnSchema);
+      }
       await this.restoreCurrentCoupangSaleLines(tx, saleLineKeys);
       await this.restoreCurrentCoupangAdMetrics(tx, adMetricKeys);
       return tx.coupangUploadBatch.delete({ where: { id } });
-    });
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  listProductSettings(includeInactive = false) {
-    return this.prisma.coupangProduct.findMany({
+  async listProductSettings(includeInactive = false) {
+    const products = await this.prisma.coupangProduct.findMany({
       where: includeInactive ? {} : { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
       include: {
+        group: true,
         productRules: { orderBy: [{ priority: "asc" }, { createdAt: "asc" }] },
         costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] }
       }
+    });
+    return products.map((product) => ({
+      ...product,
+      costRules: sortCoupangCostRulesForSettings(product.costRules)
+    }));
+  }
+
+  async listProductGroups(includeInactive = false) {
+    return this.prisma.coupangProductGroup.findMany({
+      where: includeInactive ? {} : { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+      include: { products: { orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }] } }
+    });
+  }
+
+  async createProductGroup(body: Record<string, unknown>) {
+    const displayName = requiredString(body.displayName ?? body.standardName, "displayName");
+    const standardName = standardProductName(requiredString(body.standardName ?? displayName, "standardName"));
+    return this.prisma.coupangProductGroup.create({
+      data: {
+        standardName,
+        displayName,
+        sortOrder: numberOrDefault(body.sortOrder, 100),
+        isActive: body.isActive === undefined ? true : Boolean(body.isActive)
+      },
+      include: { products: true }
+    });
+  }
+
+  async updateProductGroup(id: string, body: Record<string, unknown>) {
+    await this.assertProductGroup(id);
+    const data: Prisma.CoupangProductGroupUpdateInput = {};
+    if (body.displayName !== undefined) {
+      data.displayName = requiredString(body.displayName, "displayName");
+    }
+    if (body.standardName !== undefined) {
+      data.standardName = standardProductName(requiredString(body.standardName, "standardName"));
+    }
+    if (body.sortOrder !== undefined) {
+      data.sortOrder = numberOrDefault(body.sortOrder, 100);
+    }
+    if (body.isActive !== undefined) {
+      data.isActive = Boolean(body.isActive);
+    }
+    return this.prisma.coupangProductGroup.update({
+      where: { id },
+      data,
+      include: { products: true }
+    });
+  }
+
+  async deleteProductGroup(id: string) {
+    await this.assertProductGroup(id);
+    return this.prisma.coupangProductGroup.update({
+      where: { id },
+      data: { isActive: false },
+      include: { products: true }
+    });
+  }
+
+  async listMappingRules(includeInactive = false) {
+    return this.prisma.coupangProductRule.findMany({
+      where: includeInactive ? {} : { isActive: true, product: { is: { isActive: true } } },
+      orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
+      include: { product: true }
+    });
+  }
+
+  async createMappingRule(body: Record<string, unknown>) {
+    const coupangProductId = requiredString(body.coupangProductId ?? body.productId, "coupangProductId");
+    const product = await this.assertProduct(coupangProductId);
+    const includeKeywords = requiredStringArray(body.includeKeywords, "includeKeywords");
+    return this.prisma.coupangProductRule.create({
+      data: {
+        coupangProductId,
+        displayName: optionalString(body.displayName) ?? product.displayName,
+        includeKeywords,
+        excludeKeywords: stringArray(body.excludeKeywords) ?? [],
+        priority: numberOrDefault(body.priority, 100),
+        saleMethod: optionalNullableString(body.saleMethod),
+        adEnabled: body.adEnabled === undefined ? true : Boolean(body.adEnabled),
+        isActive: body.isActive === undefined ? true : Boolean(body.isActive),
+        validFrom: body.validFrom ? asDateOnly(String(body.validFrom)) : undefined,
+        validTo: dateOrNullFromBody(body.validTo),
+        note: optionalNullableString(body.note)
+      },
+      include: { product: true }
+    });
+  }
+
+  async updateMappingRule(id: string, body: Record<string, unknown>) {
+    await this.assertMappingRule(id);
+    const data: Prisma.CoupangProductRuleUncheckedUpdateInput = {};
+    const nextProductId = body.coupangProductId ?? body.productId;
+    if (nextProductId !== undefined) {
+      const coupangProductId = requiredString(nextProductId, "coupangProductId");
+      await this.assertProduct(coupangProductId);
+      data.coupangProductId = coupangProductId;
+    }
+    if (body.displayName !== undefined) {
+      data.displayName = requiredString(body.displayName, "displayName");
+    }
+    if (body.includeKeywords !== undefined) {
+      data.includeKeywords = requiredStringArray(body.includeKeywords, "includeKeywords");
+    }
+    if (body.excludeKeywords !== undefined) {
+      data.excludeKeywords = stringArray(body.excludeKeywords) ?? [];
+    }
+    if (body.priority !== undefined) {
+      data.priority = numberOrDefault(body.priority, 100);
+    }
+    if (body.saleMethod !== undefined) {
+      data.saleMethod = optionalNullableString(body.saleMethod);
+    }
+    if (body.adEnabled !== undefined) {
+      data.adEnabled = Boolean(body.adEnabled);
+    }
+    if (body.isActive !== undefined) {
+      data.isActive = Boolean(body.isActive);
+    }
+    if (body.validFrom !== undefined) {
+      data.validFrom = asDateOnly(String(body.validFrom));
+    }
+    if (body.validTo !== undefined) {
+      data.validTo = dateOrNullFromBody(body.validTo);
+    }
+    if (body.note !== undefined) {
+      data.note = optionalNullableString(body.note);
+    }
+    return this.prisma.coupangProductRule.update({
+      where: { id },
+      data,
+      include: { product: true }
+    });
+  }
+
+  async deleteMappingRule(id: string) {
+    await this.assertMappingRule(id);
+    return this.prisma.coupangProductRule.update({
+      where: { id },
+      data: { isActive: false },
+      include: { product: true }
     });
   }
 
   async createProductSetting(body: Record<string, unknown>) {
     const displayName = requiredString(body.displayName ?? body.standardName, "displayName");
     const standardName = standardProductName(requiredString(body.standardName ?? displayName, "standardName"));
+    const groupId = optionalNullableString(body.groupId);
+    if (groupId) {
+      await this.assertProductGroup(groupId);
+    }
     return this.prisma.coupangProduct.create({
       data: {
         standardName,
         displayName,
         sortOrder: numberOrDefault(body.sortOrder, 100),
         isActive: body.isActive === undefined ? true : Boolean(body.isActive),
-        productRules: {
-          create: {
-            displayName,
-            includeKeywords: stringArray(body.includeKeywords) ?? [displayName],
-            excludeKeywords: stringArray(body.excludeKeywords) ?? [],
-            priority: numberOrDefault(body.priority, 100),
-            saleMethod: optionalString(body.saleMethod),
-            adEnabled: body.adEnabled === undefined ? true : Boolean(body.adEnabled),
-            validFrom: body.validFrom ? asDateOnly(String(body.validFrom)) : undefined
-          }
-        },
+        group: groupId ? { connect: { id: groupId } } : undefined,
         costRules: maybeCostRuleCreate(body)
       },
-      include: { productRules: true, costRules: true }
+      include: { group: true, productRules: true, costRules: true }
     });
   }
 
@@ -950,29 +1237,17 @@ export class CoupangService {
     if (body.isActive !== undefined) {
       productData.isActive = Boolean(body.isActive);
     }
+    if (body.groupId !== undefined) {
+      const groupId = optionalNullableString(body.groupId);
+      if (groupId) {
+        await this.assertProductGroup(groupId);
+        productData.group = { connect: { id: groupId } };
+      } else {
+        productData.group = { disconnect: true };
+      }
+    }
     if (Object.keys(productData).length > 0) {
       await this.prisma.coupangProduct.update({ where: { id }, data: productData });
-    }
-
-    const ruleData = maybeRuleUpdate(body);
-    if (ruleData) {
-      const rule = await this.prisma.coupangProductRule.findFirst({
-        where: { coupangProductId: id },
-        orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
-      });
-      if (rule) {
-        await this.prisma.coupangProductRule.update({ where: { id: rule.id }, data: ruleData });
-      } else {
-        await this.prisma.coupangProductRule.create({
-          data: {
-            coupangProductId: id,
-            displayName: optionalString(body.displayName) ?? "Coupang Rule",
-            includeKeywords: stringArray(body.includeKeywords) ?? [],
-            excludeKeywords: stringArray(body.excludeKeywords) ?? [],
-            priority: numberOrDefault(body.priority, 100)
-          }
-        });
-      }
     }
 
     const costRule = maybeCostRuleCreate(body);
@@ -986,16 +1261,13 @@ export class CoupangService {
     }
     return this.prisma.coupangProduct.findUnique({
       where: { id },
-      include: { productRules: true, costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] } }
+      include: { group: true, productRules: true, costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] } }
     });
   }
 
   async deleteProductSetting(id: string) {
     await this.assertProduct(id);
-    return this.prisma.$transaction(async (tx) => {
-      await tx.coupangProductRule.updateMany({ where: { coupangProductId: id }, data: { isActive: false } });
-      return tx.coupangProduct.update({ where: { id }, data: { isActive: false } });
-    });
+    return this.prisma.coupangProduct.update({ where: { id }, data: { isActive: false } });
   }
 
   async rematch(query: { from?: string; to?: string; take?: string }) {
@@ -1050,26 +1322,29 @@ export class CoupangService {
     let matchedSpendCount = 0;
     let matchedConversionCount = 0;
     for (const metric of adMetrics) {
-      const spendMatch = this.matcher.matchText(metric.adExecutionProductName, rules, metric.metricDate);
-      const conversionMatch = this.matcher.matchText(metric.conversionProductName, rules, metric.metricDate);
-      const spendMatched = spendMatch.reason === "MATCHED";
-      const conversionMatched = conversionMatch.reason === "MATCHED";
-      const warnings = [
-        ...(spendMatched ? [] : [matchIssue(`SPEND_${spendMatch.reason}`, spendMatch.candidates)]),
-        ...(conversionMatched ? [] : [matchIssue(`CONVERSION_${conversionMatch.reason}`, conversionMatch.candidates)])
-      ];
-      const spendProductId = spendMatched ? spendMatch.productId : null;
-      const conversionProductId = conversionMatched ? conversionMatch.productId : null;
-      const validationStatus = validationStatusFor([], warnings, spendProductId || conversionProductId);
+      const productMatches = resolveCoupangAdProductMatches({
+        matcher: this.matcher,
+        rules,
+        metricDate: metric.metricDate,
+        adExecutionProductName: metric.adExecutionProductName,
+        adName: metric.adName,
+        conversionProductName: metric.conversionProductName
+      });
+      const warnings = productMatches.warnings;
+      const validationStatus = validationStatusFor(
+        [],
+        warnings,
+        productMatches.spendProductId || productMatches.conversionProductId
+      );
       await this.prisma.coupangAdMetric.update({
         where: { id: metric.id },
         data: {
-          spendProductId,
-          spendProductRuleId: spendMatched ? spendMatch.matchRuleId : null,
-          conversionProductId,
-          conversionProductRuleId: conversionMatched ? conversionMatch.matchRuleId : null,
-          spendMatchSource: spendMatched ? MatchSource.RULE : MatchSource.UNMATCHED,
-          conversionMatchSource: conversionMatched ? MatchSource.RULE : MatchSource.UNMATCHED,
+          spendProductId: productMatches.spendProductId,
+          spendProductRuleId: productMatches.spendRuleId,
+          conversionProductId: productMatches.conversionProductId,
+          conversionProductRuleId: productMatches.conversionRuleId,
+          spendMatchSource: productMatches.spendMatchSource,
+          conversionMatchSource: productMatches.conversionMatchSource,
           validationStatus,
           validationErrors: warnings as unknown as Prisma.InputJsonValue
         }
@@ -1082,8 +1357,8 @@ export class CoupangService {
         rowNumber: metric.rowNumber,
         warnings
       });
-      matchedSpendCount += spendMatched ? 1 : 0;
-      matchedConversionCount += conversionMatched ? 1 : 0;
+      matchedSpendCount += productMatches.spendMatched ? 1 : 0;
+      matchedConversionCount += productMatches.conversionMatched ? 1 : 0;
     }
 
     const promotionPrices = await this.prisma.coupangPromotionPrice.findMany({
@@ -1137,9 +1412,12 @@ export class CoupangService {
     };
   }
 
-  async dashboard(query: { from?: string; to?: string }) {
-    const rows = await this.productProfit(query);
-    const totals = rows.rows.reduce(
+  async dashboard(query: { from?: string; to?: string; groupBy?: string }) {
+    const range = parseDateRange(query.from, query.to);
+    const groupBy = parseCoupangGroupBy(query.groupBy);
+    const productRows = await this.buildProductProfitRows(range);
+    const rows = groupBy === "group" ? await this.groupProductProfitRows(productRows) : productRows;
+    const totals = productRows.reduce(
       (accumulator, row) => ({
         netSalesKrw: accumulator.netSalesKrw + row.netSalesKrw,
         salesQuantity: accumulator.salesQuantity + row.salesQuantity,
@@ -1166,42 +1444,51 @@ export class CoupangService {
       }
     );
     return {
-      period: rows.period,
+      period: { from: range.from, to: range.to },
+      groupBy,
       summary: {
         ...totals,
         marginRate: safeDivide(totals.marginKrw, totals.netSalesKrw),
         roas: safeDivide(totals.adConversionSalesKrw, totals.adSpendKrw),
         adSpendRatio: safeDivide(totals.adSpendKrw, totals.netSalesKrw)
       },
-      rows: rows.rows.slice(0, 20)
+      rows: rows.slice(0, 20)
     };
   }
 
-  async productProfit(query: { from?: string; to?: string }) {
+  async productProfit(query: { from?: string; to?: string; groupBy?: string }) {
     const range = parseDateRange(query.from, query.to);
-    const rows = await this.buildProductProfitRows(range);
-    return { period: { from: range.from, to: range.to }, rows };
+    const groupBy = parseCoupangGroupBy(query.groupBy);
+    const productRows = await this.buildProductProfitRows(range);
+    const rows = groupBy === "group" ? await this.groupProductProfitRows(productRows) : productRows;
+    return { period: { from: range.from, to: range.to }, groupBy, rows };
   }
 
-  async adsAnalysis(query: { from?: string; to?: string }) {
+  async adsAnalysis(query: { from?: string; to?: string; groupBy?: string }) {
     const range = parseDateRange(query.from, query.to);
+    const groupBy = parseCoupangGroupBy(query.groupBy);
     const metrics = await this.prisma.coupangAdMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: range.fromDate, lte: range.toDate },
         validationStatus: { not: RowValidationStatus.ERROR }
       },
-      include: { spendProduct: true, conversionProduct: true },
+      include: { spendProduct: { include: { group: true } }, conversionProduct: true },
       orderBy: [{ metricDate: "asc" }, { campaignName: "asc" }, { adGroupName: "asc" }]
     });
     const groups = new Map<string, AdsAccumulator>();
     for (const metric of metrics) {
-      const key = [metric.spendProductId ?? "unmatched", metric.campaignName ?? "", metric.adGroupName ?? ""].join(":");
+      const spendGroup = groupBy === "group" ? metric.spendProduct?.group : null;
+      const productKey = spendGroup ? `group:${spendGroup.id}` : `product:${metric.spendProductId ?? "unmatched"}`;
+      const key = [productKey, metric.campaignName ?? "", metric.adGroupName ?? ""].join(":");
       const current =
         groups.get(key) ??
         ({
-          productId: metric.spendProductId,
-          productName: metric.spendProduct?.displayName ?? "Unmatched",
+          productId: spendGroup?.id ?? metric.spendProductId,
+          groupId: spendGroup?.id ?? null,
+          groupName: spendGroup?.displayName ?? null,
+          rowType: spendGroup ? "GROUP" : "PRODUCT",
+          productName: spendGroup?.displayName ?? metric.spendProduct?.displayName ?? "Unmatched",
           campaignName: metric.campaignName,
           adGroupName: metric.adGroupName,
           impressions: 0,
@@ -1229,7 +1516,7 @@ export class CoupangService {
       ...row,
       roas: safeDivide(row.totalConversionSales1dKrw, row.adSpendKrw)
     }));
-    return { period: { from: range.from, to: range.to }, rows };
+    return { period: { from: range.from, to: range.to }, groupBy, rows };
   }
 
   async unmatched(query: { from?: string; to?: string; take?: string }) {
@@ -1242,7 +1529,6 @@ export class CoupangService {
           saleDate: { gte: range.fromDate, lte: range.toDate },
           OR: [{ coupangProductId: null }, { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }]
         },
-        take,
         orderBy: [{ saleDate: "desc" }, { rowNumber: "asc" }],
         include: { batch: true }
       }),
@@ -1252,7 +1538,6 @@ export class CoupangService {
           metricDate: { gte: range.fromDate, lte: range.toDate },
           OR: [{ spendProductId: null }, { conversionProductId: null }, { validationStatus: RowValidationStatus.WARNING }]
         },
-        take,
         orderBy: [{ metricDate: "desc" }, { rowNumber: "asc" }],
         include: { batch: true }
       }),
@@ -1299,7 +1584,12 @@ export class CoupangService {
           sourceName: metric.batch.originalFilename,
           productText: `${metric.adExecutionProductName} / ${metric.conversionProductName}`,
           amountKrw: numberFrom(metric.adSpendKrw),
-          reason: !metric.spendProductId ? "SPEND_NO_MATCH" : !metric.conversionProductId ? "CONVERSION_NO_MATCH" : "WARNING",
+          reason:
+            !metric.spendProductId
+              ? "SPEND_NO_MATCH"
+              : !metric.conversionProductId && !isPlaceholderCoupangProductText(metric.conversionProductName)
+                ? "CONVERSION_NO_MATCH"
+                : "WARNING",
           candidates: issueCandidates(metric.validationErrors)
         })),
         ...promotions.map((promotion) => ({
@@ -1324,7 +1614,58 @@ export class CoupangService {
     };
   }
 
-  async dailyReport(query: { date?: string }) {
+  async mappingIssues(query: { from?: string; to?: string; take?: string }) {
+    const range = parseDateRange(query.from, query.to);
+    const take = Math.min(Math.max(Number(query.take ?? 500) || 500, 1), 2000);
+    const [sales, ads, promotions] = await Promise.all([
+      this.prisma.coupangSaleLine.findMany({
+        where: {
+          isCurrent: true,
+          saleDate: { gte: range.fromDate, lte: range.toDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          OR: [{ coupangProductId: null }, { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }]
+        },
+        orderBy: [{ saleDate: "desc" }, { rowNumber: "asc" }],
+        include: { batch: true }
+      }),
+      this.prisma.coupangAdMetric.findMany({
+        where: {
+          isCurrent: true,
+          metricDate: { gte: range.fromDate, lte: range.toDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          OR: [
+            { spendProductId: null },
+            { conversionProductId: null },
+            { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }
+          ]
+        },
+        orderBy: [{ metricDate: "desc" }, { rowNumber: "asc" }],
+        include: { batch: true }
+      }),
+      this.prisma.coupangPromotionPrice.findMany({
+        where: {
+          promotionStartDate: { lte: range.toDate },
+          promotionEndDate: { gte: range.fromDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          OR: [{ coupangProductId: null }, { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }]
+        },
+        orderBy: [{ promotionStartDate: "desc" }, { rowNumber: "asc" }],
+        include: { batch: true }
+      })
+    ]);
+    const allRows = [
+      ...sales.flatMap((line) => salesMappingIssueRows(line)),
+      ...ads.flatMap((metric) => adsMappingIssueRows(metric)),
+      ...promotions.flatMap((promotion) => promotionMappingIssueRows(promotion))
+    ].sort(compareMappingIssues);
+    return {
+      period: { from: range.from, to: range.to },
+      summary: mappingIssueSummary(allRows),
+      rows: allRows.slice(0, take)
+    };
+  }
+
+  async dailyReport(query: { date?: string; groupBy?: string }) {
     if (!query.date) {
       throw new BadRequestException({ code: "DATE_REQUIRED", message: "date is required." });
     }
@@ -1332,9 +1673,12 @@ export class CoupangService {
     if (!date) {
       throw new BadRequestException({ code: "INVALID_DATE", message: "date must be YYYY-MM-DD." });
     }
-    const rows = await this.buildProductProfitRows({ from: query.date, to: query.date, fromDate: date, toDate: date });
+    const groupBy = parseCoupangGroupBy(query.groupBy);
+    const productRows = await this.buildProductProfitRows({ from: query.date, to: query.date, fromDate: date, toDate: date });
+    const rows = groupBy === "group" ? await this.groupProductProfitRows(productRows) : productRows;
     return {
       date: query.date,
+      groupBy,
       rows: rows.map((row) => ({
         productName: row.productName,
         salePriceKrw: row.salePriceKrw,
@@ -1543,6 +1887,18 @@ export class CoupangService {
       .sort((a, b) => b.netSalesKrw - a.netSalesKrw || a.productName.localeCompare(b.productName));
   }
 
+  private async groupProductProfitRows(rows: ProductProfitRow[]): Promise<ProductProfitRow[]> {
+    const productIds = uniqueNonEmpty(rows.map((row) => row.productId));
+    const products =
+      productIds.length > 0
+        ? await this.prisma.coupangProduct.findMany({
+            where: { id: { in: productIds } },
+            include: { group: true }
+          })
+        : [];
+    return aggregateCoupangProductProfitRowsByGroup(rows, products);
+  }
+
   private async matcherRules(): Promise<CoupangRuleInput[]> {
     const rules = await this.prisma.coupangProductRule.findMany({
       where: { isActive: true, product: { is: { isActive: true } } },
@@ -1573,6 +1929,7 @@ export class CoupangService {
     originalFilename: string;
     fileHashSha256: string;
     conflictPolicy: ConflictPolicy;
+    allowDuplicateFileHash?: boolean;
     columnSchema: Prisma.InputJsonValue;
     rowCount: number;
   }) {
@@ -1582,7 +1939,9 @@ export class CoupangService {
         originalFilename: input.originalFilename,
         storedFilePath: null,
         fileHashSha256:
-          input.conflictPolicy === ConflictPolicy.SKIP ? input.fileHashSha256 : duplicateBatchHash(input.fileHashSha256, input.conflictPolicy),
+          input.conflictPolicy === ConflictPolicy.SKIP && !input.allowDuplicateFileHash
+            ? input.fileHashSha256
+            : duplicateBatchHash(input.fileHashSha256, input.conflictPolicy),
         columnSchema: input.columnSchema,
         rowCount: input.rowCount,
         conflictPolicy: input.conflictPolicy,
@@ -1612,6 +1971,124 @@ export class CoupangService {
           errorCount: duplicate.errorCount
         }
       : null;
+  }
+
+  private async findLatestCoupangCostRule(tx: Prisma.TransactionClient, coupangProductId: string): Promise<CoupangCostRuleSnapshot | null> {
+    return tx.coupangCostRule.findFirst({
+      where: { coupangProductId },
+      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+    });
+  }
+
+  private async findLegacyPriceTextCostRule(
+    tx: Prisma.TransactionClient,
+    input: { rawLine: string; itemName: string; productId: string }
+  ): Promise<CoupangCostRuleSnapshot | null> {
+    const legacyItemName = legacyCoupangPriceTextItemName(input.rawLine, input.itemName);
+    if (!legacyItemName) {
+      return null;
+    }
+
+    const legacyStandardName = standardProductName(legacyItemName);
+    if (legacyStandardName === standardProductName(input.itemName)) {
+      return null;
+    }
+
+    const legacyProduct = await tx.coupangProduct.findUnique({
+      where: { standardName: legacyStandardName },
+      select: { id: true }
+    });
+    if (!legacyProduct || legacyProduct.id === input.productId) {
+      return null;
+    }
+
+    return this.findLatestCoupangCostRule(tx, legacyProduct.id);
+  }
+
+  private async deletePriceTextUploadEffects(tx: Prisma.TransactionClient, columnSchema: Prisma.JsonValue) {
+    const appliedRows = priceTextAppliedRows(columnSchema);
+    const costRuleIds = uniqueNonEmpty(appliedRows.map((row) => row.costRuleId));
+    const productIds = uniqueNonEmpty(appliedRows.map((row) => row.productId));
+
+    if (costRuleIds.length > 0) {
+      await tx.coupangCostRule.deleteMany({ where: { id: { in: costRuleIds } } });
+    }
+
+    for (const productId of productIds) {
+      await this.deleteCoupangProductIfUnused(tx, productId);
+    }
+  }
+
+  private async deleteMarginUploadEffects(tx: Prisma.TransactionClient, columnSchema: Prisma.JsonValue) {
+    const appliedRows = marginAppliedRows(columnSchema);
+    const costRuleIds = uniqueNonEmpty(appliedRows.map((row) => row.costRuleId));
+    const createdProductRuleIds = uniqueNonEmpty(
+      appliedRows.filter((row) => row.productRuleCreated).map((row) => row.productRuleId)
+    );
+    const productIds = uniqueNonEmpty(appliedRows.map((row) => row.productId));
+
+    if (costRuleIds.length > 0) {
+      await tx.coupangCostRule.deleteMany({ where: { id: { in: costRuleIds } } });
+    }
+    if (createdProductRuleIds.length > 0) {
+      await tx.coupangProductRule.deleteMany({ where: { id: { in: createdProductRuleIds } } });
+    }
+
+    for (const productId of productIds) {
+      await this.deleteCoupangProductIfUnused(tx, productId);
+    }
+  }
+
+  private async deleteLegacyPriceTextProductIfUnused(
+    tx: Prisma.TransactionClient,
+    input: { rawLine: string; itemName: string; productId: string }
+  ) {
+    const legacyItemName = legacyCoupangPriceTextItemName(input.rawLine, input.itemName);
+    if (!legacyItemName) {
+      return;
+    }
+
+    const legacyStandardName = standardProductName(legacyItemName);
+    if (legacyStandardName === standardProductName(input.itemName)) {
+      return;
+    }
+
+    const legacyProduct = await tx.coupangProduct.findUnique({
+      where: { standardName: legacyStandardName },
+      select: { id: true }
+    });
+    if (!legacyProduct || legacyProduct.id === input.productId) {
+      return;
+    }
+
+    await this.deleteCoupangProductIfUnused(tx, legacyProduct.id);
+  }
+
+  private async deleteCoupangProductIfUnused(tx: Prisma.TransactionClient, productId: string) {
+    const product = await tx.coupangProduct.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        _count: {
+          select: {
+            costRules: true,
+            productRules: true,
+            saleLines: true,
+            promotionPrices: true,
+            spendAdMetrics: true,
+            conversionAdMetrics: true
+          }
+        }
+      }
+    });
+    if (!product) {
+      return;
+    }
+
+    const usageCount = Object.values(product._count).reduce((sum, count) => sum + count, 0);
+    if (usageCount === 0) {
+      await tx.coupangProduct.delete({ where: { id: product.id } });
+    }
   }
 
   private async failMissingColumns(batchId: string, sourceType: CoupangUploadSourceType, missingColumns: string[]) {
@@ -1751,6 +2228,22 @@ export class CoupangService {
     }
     return product;
   }
+
+  private async assertProductGroup(id: string) {
+    const group = await this.prisma.coupangProductGroup.findUnique({ where: { id } });
+    if (!group) {
+      throw new NotFoundException({ code: "COUPANG_PRODUCT_GROUP_NOT_FOUND", message: "Coupang product group was not found." });
+    }
+    return group;
+  }
+
+  private async assertMappingRule(id: string) {
+    const rule = await this.prisma.coupangProductRule.findUnique({ where: { id } });
+    if (!rule) {
+      throw new NotFoundException({ code: "COUPANG_MAPPING_RULE_NOT_FOUND", message: "Coupang mapping rule was not found." });
+    }
+    return rule;
+  }
 }
 
 type SalesAccumulator = {
@@ -1765,8 +2258,11 @@ type SalesAccumulator = {
 };
 
 type AdsAccumulator = {
+  rowType: "PRODUCT" | "GROUP";
   productId: string | null;
   productName: string;
+  groupId: string | null;
+  groupName: string | null;
   campaignName: string | null;
   adGroupName: string | null;
   impressions: number;
@@ -1780,6 +2276,117 @@ type AdsAccumulator = {
   indirectConversionSales1dKrw: number;
 };
 
+export type CoupangProductProfitGroupProduct = {
+  id: string;
+  groupId?: string | null;
+  group?: { id: string; displayName: string } | null;
+};
+
+export function aggregateCoupangProductProfitRowsByGroup(
+  rows: ProductProfitRow[],
+  products: CoupangProductProfitGroupProduct[]
+): ProductProfitRow[] {
+  const productById = new Map(products.map((product) => [product.id, product]));
+  const buckets = new Map<string, { group: { id: string; displayName: string } | null; rows: ProductProfitRow[] }>();
+
+  for (const row of rows) {
+    const group = productById.get(row.productId)?.group ?? null;
+    const key = group ? `group:${group.id}` : `product:${row.productId}`;
+    const bucket = buckets.get(key) ?? { group, rows: [] };
+    bucket.rows.push(row);
+    buckets.set(key, bucket);
+  }
+
+  return Array.from(buckets.values())
+    .map((bucket) => {
+      if (!bucket.group) {
+        const row = bucket.rows[0];
+        return { ...row, rowType: "PRODUCT" as const, childProductCount: 1 };
+      }
+      return aggregateCoupangProductProfitGroup(bucket.group, bucket.rows);
+    })
+    .sort((a, b) => b.netSalesKrw - a.netSalesKrw || a.productName.localeCompare(b.productName));
+}
+
+function aggregateCoupangProductProfitGroup(
+  group: { id: string; displayName: string },
+  rows: ProductProfitRow[]
+): ProductProfitRow {
+  const children = rows.map(({ children: _children, ...row }) => ({ ...row, rowType: "PRODUCT" as const }));
+  const matchedSalesLineCount = sumNumbers(rows.map((row) => row.matchedSalesLineCount));
+  const salesQuantity = sumNumbers(rows.map((row) => row.salesQuantity));
+  const orderCount = sumNumbers(rows.map((row) => row.orderCount));
+  const salesKrw = sumNumbers(rows.map((row) => row.salesKrw));
+  const cancelAmountKrw = sumNumbers(rows.map((row) => row.cancelAmountKrw));
+  const netSalesKrw = sumNumbers(rows.map((row) => row.netSalesKrw));
+  const productCostKrw = sumNullable(rows.map((row) => row.productCostKrw));
+  const salesFeeKrw = sumNullable(rows.map((row) => row.salesFeeKrw));
+  const shippingCostKrw = sumNullable(rows.map((row) => row.shippingCostKrw));
+  const returnCostKrw = sumNullable(rows.map((row) => row.returnCostKrw));
+  const extraCostKrw = sumNullable(rows.map((row) => row.extraCostKrw));
+  const adSpendKrw = sumNumbers(rows.map((row) => row.adSpendKrw));
+  const adConversionSalesKrw = sumNumbers(rows.map((row) => row.adConversionSalesKrw));
+  const adConversionQuantity = sumNumbers(rows.map((row) => row.adConversionQuantity));
+  const organicSalesKrw = sumNumbers(rows.map((row) => row.organicSalesKrw));
+  const totalCostKrw = sumNullable(rows.map((row) => row.totalCostKrw));
+  const marginKrw = sumNullable(rows.map((row) => row.marginKrw));
+  const salePriceKrw = commonNullableNumber(rows.map((row) => row.salePriceKrw));
+  const baseSalePriceKrw = commonNullableNumber(rows.map((row) => row.baseSalePriceKrw));
+  const promotionPriceKrw = commonNullableNumber(rows.map((row) => row.promotionPriceKrw));
+  const priceSources = uniqueNonEmpty(rows.map((row) => row.priceSource));
+  const priceMixed =
+    salePriceKrw === undefined ||
+    baseSalePriceKrw === undefined ||
+    promotionPriceKrw === undefined ||
+    priceSources.length > 1;
+  const saleMethods = uniqueNonEmpty(rows.map((row) => row.saleMethod));
+  const saleMethodMixed = saleMethods.length > 1;
+  const hasMissingCostRule = rows.some((row) => row.ruleStatus === "MISSING_COST_RULE");
+  const hasUnmatched = rows.some((row) => row.ruleStatus === "UNMATCHED");
+  const groupWarnings = [
+    ...(priceMixed ? ["GROUP_MIXED_PRICE"] : []),
+    ...(saleMethodMixed ? ["GROUP_MIXED_SALE_METHOD"] : []),
+    ...(hasMissingCostRule ? ["GROUP_HAS_MISSING_COST_RULE"] : [])
+  ];
+
+  return {
+    rowType: "GROUP",
+    productId: group.id,
+    productName: group.displayName,
+    groupId: group.id,
+    groupName: group.displayName,
+    childProductCount: rows.length,
+    children,
+    saleMethod: saleMethodMixed ? "MIXED" : saleMethods[0] ?? null,
+    matchedSalesLineCount,
+    salesQuantity,
+    orderCount,
+    salesKrw,
+    cancelAmountKrw,
+    netSalesKrw,
+    salePriceKrw: priceMixed ? null : salePriceKrw ?? null,
+    baseSalePriceKrw: priceMixed ? null : baseSalePriceKrw ?? null,
+    promotionPriceKrw: priceMixed ? null : promotionPriceKrw ?? null,
+    priceSource: (priceMixed ? "MIXED" : priceSources[0] ?? "MISSING") as ProductProfitRow["priceSource"],
+    priceWarnings: uniqueNonEmpty([...rows.flatMap((row) => row.priceWarnings), ...(priceMixed ? ["GROUP_MIXED_PRICE"] : [])]),
+    productCostKrw,
+    salesFeeKrw,
+    shippingCostKrw,
+    returnCostKrw,
+    extraCostKrw,
+    adSpendKrw,
+    adConversionSalesKrw,
+    adConversionQuantity,
+    organicSalesKrw,
+    totalCostKrw,
+    marginKrw,
+    marginRate: marginKrw === null ? null : safeDivide(marginKrw, netSalesKrw),
+    roas: safeDivide(adConversionSalesKrw, adSpendKrw),
+    warnings: uniqueNonEmpty([...rows.flatMap((row) => row.warnings), ...groupWarnings]),
+    ruleStatus: hasUnmatched ? "UNMATCHED" : hasMissingCostRule ? "MISSING_COST_RULE" : "OK"
+  };
+}
+
 function rowIssue(issue: ParseIssue, severity: RowIssue["severity"]): RowIssue {
   return { ...issue, columnName: issue.columnName ?? null, severity };
 }
@@ -1792,6 +2399,373 @@ function matchIssue(errorCode: string, candidates: string[]): RowIssue {
     message: "Coupang product did not resolve to exactly one active rule.",
     rawValue: candidates.join(", "),
     candidates
+  };
+}
+
+function aggregateCoupangAdsImportRows(rows: ParsedCoupangAdsRowResult[]): CoupangAdsImportRow[] {
+  const passthroughRows: CoupangAdsImportRow[] = [];
+  const groups = new Map<string, ParsedCoupangAdsRowResult[]>();
+
+  for (const row of rows) {
+    if (!row.parsedRow || row.issues.length > 0) {
+      passthroughRows.push({ ...row, rawRow: row.rawRow as Prisma.InputJsonObject });
+      continue;
+    }
+
+    const adMetricKey = coupangAdMetricKey(row.parsedRow);
+    const group = groups.get(adMetricKey) ?? [];
+    group.push(row);
+    groups.set(adMetricKey, group);
+  }
+
+  return [...passthroughRows, ...Array.from(groups, ([adMetricKey, group]) => aggregateCoupangAdsGroup(adMetricKey, group))].sort(
+    (left, right) => left.rowNumber - right.rowNumber
+  );
+}
+
+function aggregateCoupangAdsGroup(adMetricKey: string, rows: ParsedCoupangAdsRowResult[]): CoupangAdsImportRow {
+  const sourceRows = [...rows].sort((left, right) => left.rowNumber - right.rowNumber);
+  const first = sourceRows[0];
+  if (!first?.parsedRow) {
+    throw new Error("Cannot aggregate Coupang Ads rows without a parsed row.");
+  }
+  const parsedRow = first.parsedRow;
+  const sourceRowNumbers = sourceRows.map((row) => row.rowNumber);
+  const sourceRowHashes = sourceRows.map((row) => row.sourceRowHash);
+
+  return {
+    rowNumber: first.rowNumber,
+    sourceRowHash: hashCoupangAdsAggregateRow(adMetricKey, sourceRowHashes),
+    rawRow: {
+      aggregated: sourceRows.length > 1,
+      adMetricKey,
+      sourceRowNumbers,
+      sourceRowCount: sourceRows.length,
+      sourceRowHashes
+    },
+    parsedRow: {
+      metricDate: parsedRow.metricDate,
+      campaignName: parsedRow.campaignName,
+      adGroupName: parsedRow.adGroupName,
+      adName: parsedRow.adName,
+      adExecutionOptionId: parsedRow.adExecutionOptionId,
+      adExecutionProductName: parsedRow.adExecutionProductName,
+      conversionOptionId: parsedRow.conversionOptionId,
+      conversionProductName: parsedRow.conversionProductName,
+      impressions: sumCoupangAdsMetric(sourceRows, "impressions"),
+      clicks: sumCoupangAdsMetric(sourceRows, "clicks"),
+      adSpendKrw: sumCoupangAdsMetric(sourceRows, "adSpendKrw"),
+      totalOrders1d: sumCoupangAdsMetric(sourceRows, "totalOrders1d"),
+      directOrders1d: sumCoupangAdsMetric(sourceRows, "directOrders1d"),
+      indirectOrders1d: sumCoupangAdsMetric(sourceRows, "indirectOrders1d"),
+      totalConversionSales1dKrw: sumCoupangAdsMetric(sourceRows, "totalConversionSales1dKrw"),
+      directConversionSales1dKrw: sumCoupangAdsMetric(sourceRows, "directConversionSales1dKrw"),
+      indirectConversionSales1dKrw: sumCoupangAdsMetric(sourceRows, "indirectConversionSales1dKrw"),
+      totalSalesQuantity1d: sumCoupangAdsMetric(sourceRows, "totalSalesQuantity1d"),
+      directSalesQuantity1d: sumCoupangAdsMetric(sourceRows, "directSalesQuantity1d"),
+      indirectSalesQuantity1d: sumCoupangAdsMetric(sourceRows, "indirectSalesQuantity1d")
+    },
+    issues: []
+  };
+}
+
+function sumCoupangAdsMetric(rows: ParsedCoupangAdsRowResult[], field: CoupangAdsNumericMetricKey) {
+  return rows.reduce((sum, row) => sum + Number(row.parsedRow?.[field] ?? 0), 0);
+}
+
+function hashCoupangAdsAggregateRow(adMetricKey: string, sourceRowHashes: string[]) {
+  return createHash("sha256")
+    .update(JSON.stringify({ adMetricKey, sourceRowHashes: [...sourceRowHashes].sort() }))
+    .digest("hex");
+}
+
+function resolveCoupangAdProductMatches(input: {
+  matcher: CoupangProductMatcher;
+  rules: CoupangRuleInput[];
+  metricDate: Date;
+  adExecutionProductName: string;
+  adName?: string | null;
+  conversionProductName: string;
+}): CoupangAdProductMatchResolution {
+  const warnings: RowIssue[] = [];
+  const conversionIsPlaceholder = isPlaceholderCoupangProductText(input.conversionProductName);
+  const spendMatch = resolveCoupangAdSpendProductMatch(input);
+  let spendProductId: string | null = spendMatch.productId;
+  let spendRuleId: string | null = spendMatch.ruleId;
+  let conversionProductId: string | null = null;
+  let conversionRuleId: string | null = null;
+  let spendMatchSource: MatchSource = spendMatch.matchSource;
+  let conversionMatchSource: MatchSource = MatchSource.UNMATCHED;
+  let spendMatched = spendMatch.matched;
+  let conversionMatched = false;
+
+  if (spendMatch.warning) {
+    warnings.push(spendMatch.warning);
+  }
+
+  if (conversionIsPlaceholder && spendProductId) {
+    conversionProductId = spendProductId;
+    conversionRuleId = spendRuleId;
+    conversionMatchSource = MatchSource.INFERRED;
+    conversionMatched = true;
+  } else if (!conversionIsPlaceholder) {
+    const conversionMatch = input.matcher.matchText(input.conversionProductName, input.rules, input.metricDate);
+    if (conversionMatch.reason === "MATCHED") {
+      conversionProductId = conversionMatch.productId;
+      conversionRuleId = conversionMatch.matchRuleId;
+      conversionMatchSource = MatchSource.RULE;
+      conversionMatched = true;
+    } else {
+      warnings.push(matchIssue(`CONVERSION_${conversionMatch.reason}`, conversionMatch.candidates));
+    }
+  }
+
+  return {
+    spendProductId,
+    spendRuleId,
+    conversionProductId,
+    conversionRuleId,
+    spendMatchSource,
+    conversionMatchSource,
+    warnings,
+    spendMatched,
+    conversionMatched
+  };
+}
+
+function resolveCoupangAdSpendProductMatch(input: CoupangSpendMatchInput): CoupangSpendMatchResolution {
+  if (!isPlaceholderCoupangProductText(input.adExecutionProductName)) {
+    return matchCoupangAdSpendText(input.adExecutionProductName, input);
+  }
+
+  if (!isPlaceholderCoupangProductText(input.adName)) {
+    return matchCoupangAdSpendText(input.adName!, input);
+  }
+
+  return {
+    productId: null,
+    ruleId: null,
+    matchSource: MatchSource.UNMATCHED,
+    warning: matchIssue("SPEND_NO_MATCH", []),
+    matched: false
+  };
+}
+
+function matchCoupangAdSpendText(text: string, input: CoupangSpendMatchInput): CoupangSpendMatchResolution {
+  const match = input.matcher.matchText(text, input.rules, input.metricDate);
+  if (match.reason === "MATCHED") {
+    return {
+      productId: match.productId,
+      ruleId: match.matchRuleId,
+      matchSource: MatchSource.RULE,
+      warning: null,
+      matched: true
+    };
+  }
+
+  return {
+    productId: null,
+    ruleId: null,
+    matchSource: MatchSource.UNMATCHED,
+    warning: matchIssue(`SPEND_${match.reason}`, match.candidates),
+    matched: false
+  };
+}
+
+function isPlaceholderCoupangProductText(value: string | null | undefined) {
+  const text = String(value ?? "").trim();
+  return !text || text === "-";
+}
+
+function coupangAdSpendDisplayText(metric: {
+  adExecutionProductName: string;
+  adName?: string | null;
+  adGroupName?: string | null;
+  campaignName?: string | null;
+}) {
+  return (
+    [metric.adExecutionProductName, metric.adName, metric.adGroupName, metric.campaignName].find(
+      (value) => !isPlaceholderCoupangProductText(value)
+    ) ?? "-"
+  );
+}
+
+function salesMappingIssueRows(line: CoupangSaleLineWithBatch): CoupangMappingIssueRow[] {
+  const issues = mappingIssuesForTarget(parseValidationIssues(line.validationErrors), "SALES_PRODUCT");
+  const selectedIssues = issues.length > 0 ? issues : line.coupangProductId ? [] : [syntheticMappingIssue("NO_MATCH")];
+  return selectedIssues.flatMap((issue) =>
+    buildMappingIssueRow(issue, {
+      sourceType: "SALES",
+      targetKind: "SALES_PRODUCT",
+      rowId: line.id,
+      rowNumber: line.rowNumber,
+      sourceName: line.batch.originalFilename,
+      productText: `${line.productName} ${line.optionName}`.trim(),
+      amountKrw: numberFrom(line.netSalesKrw),
+      date: line.saleDate ? formatDateOnly(line.saleDate) : null
+    })
+  );
+}
+
+function adsMappingIssueRows(metric: CoupangAdMetricWithBatch): CoupangMappingIssueRow[] {
+  const issues = parseValidationIssues(metric.validationErrors);
+  const conversionIsPlaceholder = isPlaceholderCoupangProductText(metric.conversionProductName);
+  const spendIssues = mappingIssuesForTarget(issues, "ADS_SPEND_PRODUCT");
+  const conversionIssues = conversionIsPlaceholder ? [] : mappingIssuesForTarget(issues, "ADS_CONVERSION_PRODUCT");
+  const selectedSpendIssues =
+    spendIssues.length > 0 ? spendIssues : metric.spendProductId ? [] : [syntheticMappingIssue("SPEND_NO_MATCH")];
+  const selectedConversionIssues =
+    conversionIsPlaceholder
+      ? []
+      : conversionIssues.length > 0
+      ? conversionIssues
+      : metric.conversionProductId
+        ? []
+        : [syntheticMappingIssue("CONVERSION_NO_MATCH")];
+
+  return [
+    ...selectedSpendIssues.flatMap((issue) =>
+      buildMappingIssueRow(issue, {
+        sourceType: "ADS",
+        targetKind: "ADS_SPEND_PRODUCT",
+        rowId: `${metric.id}:spend`,
+        rowNumber: metric.rowNumber,
+        sourceName: metric.batch.originalFilename,
+        productText: coupangAdSpendDisplayText(metric),
+        amountKrw: numberFrom(metric.adSpendKrw),
+        date: formatDateOnly(metric.metricDate)
+      })
+    ),
+    ...selectedConversionIssues.flatMap((issue) =>
+      buildMappingIssueRow(issue, {
+        sourceType: "ADS",
+        targetKind: "ADS_CONVERSION_PRODUCT",
+        rowId: `${metric.id}:conversion`,
+        rowNumber: metric.rowNumber,
+        sourceName: metric.batch.originalFilename,
+        productText: metric.conversionProductName,
+        amountKrw: numberFrom(metric.totalConversionSales1dKrw),
+        date: formatDateOnly(metric.metricDate)
+      })
+    )
+  ];
+}
+
+function promotionMappingIssueRows(promotion: CoupangPromotionPriceWithBatch): CoupangMappingIssueRow[] {
+  const issues = mappingIssuesForTarget(parseValidationIssues(promotion.validationErrors), "PROMOTION_PRODUCT");
+  const selectedIssues = issues.length > 0 ? issues : promotion.coupangProductId ? [] : [syntheticMappingIssue("NO_MATCH")];
+  return selectedIssues.flatMap((issue) =>
+    buildMappingIssueRow(issue, {
+      sourceType: "PROMOTION",
+      targetKind: "PROMOTION_PRODUCT",
+      rowId: promotion.id,
+      rowNumber: promotion.rowNumber,
+      sourceName: promotion.batch.originalFilename,
+      productText: promotion.productText,
+      amountKrw: numberFrom(promotion.promotionPriceKrw),
+      date: formatDateOnly(promotion.promotionStartDate)
+    })
+  );
+}
+
+function buildMappingIssueRow(
+  issue: ParsedValidationIssue,
+  base: Omit<CoupangMappingIssueRow, "issueType" | "reason" | "candidates">
+): CoupangMappingIssueRow[] {
+  const issueType = mappingIssueType(issue.errorCode);
+  if (!issueType) {
+    return [];
+  }
+  return [
+    {
+      ...base,
+      issueType,
+      reason: issue.errorCode,
+      candidates: issue.candidates
+    }
+  ];
+}
+
+function mappingIssuesForTarget(issues: ParsedValidationIssue[], targetKind: CoupangMappingIssueRow["targetKind"]) {
+  return issues.filter((issue) => {
+    const code = issue.errorCode;
+    if (!mappingIssueType(code)) {
+      return false;
+    }
+    if (targetKind === "ADS_SPEND_PRODUCT") {
+      return code.startsWith("SPEND_");
+    }
+    if (targetKind === "ADS_CONVERSION_PRODUCT") {
+      return code.startsWith("CONVERSION_");
+    }
+    return !code.startsWith("SPEND_") && !code.startsWith("CONVERSION_");
+  });
+}
+
+function mappingIssueType(errorCode: string): CoupangMappingIssueRow["issueType"] | null {
+  const code = errorCode.replace(/^SPEND_/, "").replace(/^CONVERSION_/, "");
+  if (code === "NO_MATCH") {
+    return "UNMATCHED";
+  }
+  if (code === "AMBIGUOUS_MATCH") {
+    return "AMBIGUOUS";
+  }
+  if (code === "EXCLUDED_BY_KEYWORD") {
+    return "EXCLUDED";
+  }
+  return null;
+}
+
+function syntheticMappingIssue(errorCode: string): ParsedValidationIssue {
+  return {
+    errorCode,
+    message: "Coupang product did not resolve to exactly one active rule.",
+    rawValue: null,
+    candidates: []
+  };
+}
+
+function parseValidationIssues(value: Prisma.JsonValue): ParsedValidationIssue[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.flatMap((item) => {
+    if (!isJsonObject(item)) {
+      return [];
+    }
+    const errorCode = typeof item.errorCode === "string" ? item.errorCode : "";
+    if (!errorCode) {
+      return [];
+    }
+    return [
+      {
+        errorCode,
+        message: typeof item.message === "string" ? item.message : "",
+        rawValue: typeof item.rawValue === "string" ? item.rawValue : null,
+        candidates: Array.isArray(item.candidates) ? uniqueNonEmpty(item.candidates.map((candidate) => String(candidate))) : []
+      }
+    ];
+  });
+}
+
+function compareMappingIssues(left: CoupangMappingIssueRow, right: CoupangMappingIssueRow) {
+  return (
+    (right.date ?? "").localeCompare(left.date ?? "") ||
+    left.sourceType.localeCompare(right.sourceType) ||
+    left.targetKind.localeCompare(right.targetKind) ||
+    (left.rowNumber ?? 0) - (right.rowNumber ?? 0)
+  );
+}
+
+function mappingIssueSummary(rows: CoupangMappingIssueRow[]) {
+  return {
+    totalCount: rows.length,
+    unmatchedCount: rows.filter((row) => row.issueType === "UNMATCHED").length,
+    ambiguousCount: rows.filter((row) => row.issueType === "AMBIGUOUS").length,
+    excludedCount: rows.filter((row) => row.issueType === "EXCLUDED").length,
+    salesCount: rows.filter((row) => row.sourceType === "SALES").length,
+    adsCount: rows.filter((row) => row.sourceType === "ADS").length,
+    promotionCount: rows.filter((row) => row.sourceType === "PROMOTION").length
   };
 }
 
@@ -1887,25 +2861,23 @@ export function buildCoupangPriceTextCostRuleData(input: {
   salePriceKrw: number;
   effectiveFrom: Date;
   latestCostRule: CoupangCostRuleSnapshot | null;
-}): Prisma.CoupangCostRuleUncheckedCreateInput | null {
-  if (!input.latestCostRule) {
-    return null;
-  }
+}): Prisma.CoupangCostRuleUncheckedCreateInput {
+  const latestCostRule = input.latestCostRule;
   return {
     coupangProductId: input.coupangProductId,
     salePriceKrw: decimal(input.salePriceKrw),
-    supplyPriceKrw: input.latestCostRule.supplyPriceKrw,
-    productCostKrw: input.latestCostRule.productCostKrw,
-    salesFeeRate: input.latestCostRule.salesFeeRate,
-    salesFeeKrw: input.latestCostRule.salesFeeKrw,
-    sellerShippingFeeKrw: input.latestCostRule.sellerShippingFeeKrw,
-    growthInboundFeeKrw: input.latestCostRule.growthInboundFeeKrw,
-    growthShippingFeeKrw: input.latestCostRule.growthShippingFeeKrw,
-    returnRate: input.latestCostRule.returnRate,
-    returnCostPerUnitKrw: input.latestCostRule.returnCostPerUnitKrw,
-    extraCostKrw: input.latestCostRule.extraCostKrw,
+    supplyPriceKrw: latestCostRule?.supplyPriceKrw ?? decimal(0),
+    productCostKrw: latestCostRule?.productCostKrw ?? decimal(0),
+    salesFeeRate: latestCostRule?.salesFeeRate ?? decimal(0),
+    salesFeeKrw: latestCostRule?.salesFeeKrw ?? decimal(0),
+    sellerShippingFeeKrw: latestCostRule?.sellerShippingFeeKrw ?? decimal(0),
+    growthInboundFeeKrw: latestCostRule?.growthInboundFeeKrw ?? decimal(0),
+    growthShippingFeeKrw: latestCostRule?.growthShippingFeeKrw ?? decimal(0),
+    returnRate: latestCostRule?.returnRate ?? decimal(0),
+    returnCostPerUnitKrw: latestCostRule?.returnCostPerUnitKrw ?? decimal(0),
+    extraCostKrw: latestCostRule?.extraCostKrw ?? decimal(0),
     effectiveFrom: input.effectiveFrom,
-    note: input.latestCostRule.note
+    note: latestCostRule?.note
   };
 }
 
@@ -1913,11 +2885,10 @@ export function buildCoupangMarginCostRuleData(input: {
   coupangProductId: string;
   parsedRow: ParsedCoupangMarginRow;
   effectiveFrom: Date;
-  latestCostRule: Pick<Prisma.CoupangCostRuleGetPayload<Record<string, never>>, "salePriceKrw"> | null;
 }): Prisma.CoupangCostRuleUncheckedCreateInput {
   return {
     coupangProductId: input.coupangProductId,
-    salePriceKrw: input.latestCostRule?.salePriceKrw ?? decimal(0),
+    salePriceKrw: decimal(input.parsedRow.salePriceKrw),
     supplyPriceKrw: decimal(input.parsedRow.supplyPriceKrw),
     productCostKrw: decimal(input.parsedRow.productCostKrw),
     salesFeeRate: decimal(input.parsedRow.salesFeeRate),
@@ -1935,7 +2906,7 @@ function decimal(value: number | null | undefined) {
   return new Prisma.Decimal(Number.isFinite(value) ? Number(value) : 0);
 }
 
-function fallbackRowKey(rawRow: Record<string, string>) {
+function fallbackRowKey(rawRow: unknown) {
   return createHash("sha256").update(JSON.stringify(rawRow)).digest("hex");
 }
 
@@ -1963,6 +2934,17 @@ function parseConflictPolicy(value: unknown) {
   throw new BadRequestException({ code: "INVALID_CONFLICT_POLICY", message: "Invalid conflict policy." });
 }
 
+function parseCoupangCancelAmountMode(value: string | undefined): CoupangCancelAmountMode {
+  if (value === "SALES_IS_NET" || value === "NEGATIVE_ADD" || value === "POSITIVE_SUBTRACT") {
+    return value;
+  }
+  return "NEGATIVE_ADD";
+}
+
+function parseCoupangGroupBy(value: unknown): CoupangGroupBy {
+  return value === "group" ? "group" : "product";
+}
+
 function duplicateBatchHash(fileHashSha256: string, conflictPolicy: ConflictPolicy) {
   return createHash("sha256").update(`${fileHashSha256}:${conflictPolicy}:${Date.now()}:${Math.random()}`).digest("hex");
 }
@@ -1986,6 +2968,17 @@ function optionalString(value: unknown): string | undefined {
   return text ? text : undefined;
 }
 
+function optionalNullableString(value: unknown): string | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null) {
+    return null;
+  }
+  const text = String(value).trim();
+  return text ? text : null;
+}
+
 function numberOrDefault(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;
@@ -2004,11 +2997,87 @@ function stringArray(value: unknown): string[] | undefined {
   throw new BadRequestException({ code: "INVALID_ARRAY", message: "Expected an array of strings or comma-separated text." });
 }
 
+function requiredStringArray(value: unknown, field: string): string[] {
+  const values = stringArray(value);
+  if (!values || values.length === 0) {
+    throw new BadRequestException({ code: "FIELD_REQUIRED", message: `${field} is required.` });
+  }
+  return values;
+}
+
+function dateOrNullFromBody(value: unknown): Date | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null || String(value).trim() === "") {
+    return null;
+  }
+  return asDateOnly(String(value));
+}
+
 function jsonStringArray(value: Prisma.JsonValue): string[] {
   if (!Array.isArray(value)) {
     return [];
   }
   return uniqueNonEmpty(value.map((item) => String(item)));
+}
+
+function priceTextAppliedRows(value: Prisma.JsonValue): CoupangPriceTextAppliedRow[] {
+  if (!isJsonObject(value) || !Array.isArray(value.appliedRows)) {
+    return [];
+  }
+  return value.appliedRows.flatMap((item) => {
+    if (!isJsonObject(item)) {
+      return [];
+    }
+    const productId = typeof item.productId === "string" ? item.productId : "";
+    const costRuleId = typeof item.costRuleId === "string" ? item.costRuleId : "";
+    if (!productId || !costRuleId) {
+      return [];
+    }
+    return [
+      {
+        rowNumber: Number(item.rowNumber) || 0,
+        itemName: typeof item.itemName === "string" ? item.itemName : "",
+        standardName: typeof item.standardName === "string" ? item.standardName : "",
+        productId,
+        costRuleId,
+        salePriceKrw: Number(item.salePriceKrw) || 0
+      }
+    ];
+  });
+}
+
+function marginAppliedRows(value: Prisma.JsonValue): CoupangMarginAppliedRow[] {
+  if (!isJsonObject(value) || !Array.isArray(value.appliedRows)) {
+    return [];
+  }
+  return value.appliedRows.flatMap((item) => {
+    if (!isJsonObject(item)) {
+      return [];
+    }
+    const productId = typeof item.productId === "string" ? item.productId : "";
+    const costRuleId = typeof item.costRuleId === "string" ? item.costRuleId : "";
+    if (!productId || !costRuleId) {
+      return [];
+    }
+    return [
+      {
+        rowNumber: Number(item.rowNumber) || 0,
+        itemName: typeof item.itemName === "string" ? item.itemName : "",
+        standardName: typeof item.standardName === "string" ? item.standardName : "",
+        productId,
+        productRuleId: typeof item.productRuleId === "string" ? item.productRuleId : null,
+        productRuleCreated: item.productRuleCreated === true,
+        costRuleId,
+        salePriceKrw: Number(item.salePriceKrw) || 0
+      }
+    ];
+  });
+}
+
+function isJsonObject(value: Prisma.JsonValue): value is Prisma.JsonObject {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function uniqueNonEmpty(values: Array<string | null | undefined>) {
@@ -2025,32 +3094,6 @@ function issueCandidates(value: Prisma.JsonValue) {
     }
     return item.candidates.map((candidate) => String(candidate));
   });
-}
-
-function maybeRuleUpdate(body: Record<string, unknown>): Prisma.CoupangProductRuleUpdateInput | null {
-  const data: Prisma.CoupangProductRuleUpdateInput = {};
-  if (body.displayName !== undefined) {
-    data.displayName = requiredString(body.displayName, "displayName");
-  }
-  if (body.includeKeywords !== undefined) {
-    data.includeKeywords = stringArray(body.includeKeywords) ?? [];
-  }
-  if (body.excludeKeywords !== undefined) {
-    data.excludeKeywords = stringArray(body.excludeKeywords) ?? [];
-  }
-  if (body.priority !== undefined) {
-    data.priority = numberOrDefault(body.priority, 100);
-  }
-  if (body.saleMethod !== undefined) {
-    data.saleMethod = optionalString(body.saleMethod);
-  }
-  if (body.adEnabled !== undefined) {
-    data.adEnabled = Boolean(body.adEnabled);
-  }
-  if (body.isActive !== undefined) {
-    data.isActive = Boolean(body.isActive);
-  }
-  return Object.keys(data).length > 0 ? data : null;
 }
 
 function maybeCostRuleCreate(body: Record<string, unknown>): Prisma.CoupangCostRuleCreateNestedManyWithoutProductInput | undefined {
@@ -2110,12 +3153,78 @@ function groupBy<T>(items: T[], keyFn: (item: T) => string) {
   return groups;
 }
 
-function findRuleForDate<T extends { effectiveFrom: Date; effectiveTo: Date | null }>(rules: T[], date: Date): T | null {
+function sumNumbers(values: number[]) {
+  return values.reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0);
+}
+
+function sumNullable(values: Array<number | null | undefined>) {
+  const numbers = values.filter((value): value is number => Number.isFinite(value));
+  return numbers.length > 0 ? numbers.reduce((sum, value) => sum + value, 0) : null;
+}
+
+function commonNullableNumber(values: Array<number | null | undefined>): number | null | undefined {
+  if (values.every((value) => value === null || value === undefined)) {
+    return null;
+  }
+  const numbers = values.filter((value): value is number => Number.isFinite(value));
+  if (numbers.length !== values.length) {
+    return undefined;
+  }
+  const [first] = numbers;
+  return numbers.every((value) => value === first) ? first : undefined;
+}
+
+type CoupangCostRuleForSelection = Pick<
+  Prisma.CoupangCostRuleGetPayload<Record<string, never>>,
+  | "supplyPriceKrw"
+  | "productCostKrw"
+  | "salesFeeRate"
+  | "salesFeeKrw"
+  | "sellerShippingFeeKrw"
+  | "growthInboundFeeKrw"
+  | "growthShippingFeeKrw"
+  | "returnRate"
+  | "returnCostPerUnitKrw"
+  | "extraCostKrw"
+  | "effectiveFrom"
+  | "effectiveTo"
+  | "createdAt"
+>;
+
+function findRuleForDate<T extends CoupangCostRuleForSelection>(rules: T[], date: Date): T | null {
   return (
     rules
       .filter((rule) => rule.effectiveFrom <= date && (!rule.effectiveTo || rule.effectiveTo >= date))
-      .sort((a, b) => b.effectiveFrom.getTime() - a.effectiveFrom.getTime())[0] ?? null
+      .sort(compareCoupangCostRuleForSelection)[0] ?? null
   );
+}
+
+function sortCoupangCostRulesForSettings<T extends CoupangCostRuleForSelection>(rules: T[]): T[] {
+  return [...rules].sort(compareCoupangCostRuleForSelection);
+}
+
+function compareCoupangCostRuleForSelection(a: CoupangCostRuleForSelection, b: CoupangCostRuleForSelection) {
+  const aHasMarginCosts = hasCoupangMarginCostFields(a);
+  const bHasMarginCosts = hasCoupangMarginCostFields(b);
+  if (aHasMarginCosts !== bHasMarginCosts) {
+    return aHasMarginCosts ? -1 : 1;
+  }
+  return b.effectiveFrom.getTime() - a.effectiveFrom.getTime() || b.createdAt.getTime() - a.createdAt.getTime();
+}
+
+function hasCoupangMarginCostFields(rule: CoupangCostRuleForSelection) {
+  return [
+    rule.supplyPriceKrw,
+    rule.productCostKrw,
+    rule.salesFeeRate,
+    rule.salesFeeKrw,
+    rule.sellerShippingFeeKrw,
+    rule.growthInboundFeeKrw,
+    rule.growthShippingFeeKrw,
+    rule.returnRate,
+    rule.returnCostPerUnitKrw,
+    rule.extraCostKrw
+  ].some((value) => numberFrom(value) !== 0);
 }
 
 function emptySalesAccumulator(productName: string): SalesAccumulator {

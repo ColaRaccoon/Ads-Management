@@ -64,7 +64,7 @@ export function parseNumberValue(
     return options.emptyAs;
   }
 
-  const cleaned = input.replace(/[,%\s$₩원]/g, "");
+  const cleaned = input.replace(/[,%\s$₩￦원]/g, "");
   if (!cleaned) {
     return options.emptyAs;
   }

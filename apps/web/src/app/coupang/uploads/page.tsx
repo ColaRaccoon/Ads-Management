@@ -9,7 +9,6 @@ import {
   apiGet,
   uploadCoupangAdsXlsx,
   uploadCoupangMarginCsv,
-  uploadCoupangPriceText,
   uploadCoupangPromotionXlsx,
   uploadCoupangSalesXlsx
 } from "@/lib/api";
@@ -32,7 +31,6 @@ export default function CoupangUploadsPage() {
   const [salesFile, setSalesFile] = useState<File | null>(null);
   const [adsFile, setAdsFile] = useState<File | null>(null);
   const [marginFile, setMarginFile] = useState<File | null>(null);
-  const [priceFile, setPriceFile] = useState<File | null>(null);
   const [promotionFile, setPromotionFile] = useState<File | null>(null);
   const [reportDate, setReportDate] = useState(todayInputValue());
   const [effectiveFrom, setEffectiveFrom] = useState(todayInputValue());
@@ -58,15 +56,8 @@ export default function CoupangUploadsPage() {
   });
   const marginUpload = useMutation({
     mutationFn: () => {
-      if (!marginFile) throw new Error("Margin CSV file is required.");
+      if (!marginFile) throw new Error("Sale price and margin CSV/TSV file is required.");
       return uploadCoupangMarginCsv(marginFile, { effectiveFrom });
-    },
-    onSuccess: () => void queryClient.invalidateQueries()
-  });
-  const priceUpload = useMutation({
-    mutationFn: () => {
-      if (!priceFile) throw new Error("Price text file is required.");
-      return uploadCoupangPriceText(priceFile, { effectiveFrom });
     },
     onSuccess: () => void queryClient.invalidateQueries()
   });
@@ -87,7 +78,7 @@ export default function CoupangUploadsPage() {
       <div className="page-title">
         <div>
           <h1>Coupang Uploads</h1>
-          <p>Upload sales, ad performance, margin/cost, price text, and promotion files.</p>
+          <p>Upload sales, ad performance, sale price and margin, and promotion files.</p>
         </div>
       </div>
 
@@ -117,9 +108,9 @@ export default function CoupangUploadsPage() {
 
       <div className="grid two" style={{ marginTop: 12 }}>
         <UploadPanel
-          accept=".csv,text/csv"
+          accept=".csv,.tsv,text/csv,text/tab-separated-values"
           file={marginFile}
-          title="Product Margin CSV"
+          title="Sale Price & Product Margin CSV/TSV"
           isPending={marginUpload.isPending}
           onFile={setMarginFile}
           onUpload={() => marginUpload.mutate()}
@@ -127,19 +118,6 @@ export default function CoupangUploadsPage() {
           <input className="input" type="date" value={effectiveFrom} onChange={(event) => setEffectiveFrom(event.target.value)} />
           <MutationMessage mutation={marginUpload} />
         </UploadPanel>
-        <UploadPanel
-          accept=".txt,text/plain"
-          file={priceFile}
-          title="Sale Price Text"
-          isPending={priceUpload.isPending}
-          onFile={setPriceFile}
-          onUpload={() => priceUpload.mutate()}
-        >
-          <MutationMessage mutation={priceUpload} />
-        </UploadPanel>
-      </div>
-
-      <div className="grid two" style={{ marginTop: 12 }}>
         <UploadPanel
           accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           file={promotionFile}

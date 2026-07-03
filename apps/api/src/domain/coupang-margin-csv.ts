@@ -21,7 +21,7 @@ export type CoupangMarginColumnKey =
 
 export type ParsedCoupangMarginRow = {
   itemName: string;
-  ignoredSalePriceKrw: number | null;
+  salePriceKrw: number;
   supplyPriceKrw: number;
   productCostKrw: number;
   salesFeeRate: number;
@@ -59,6 +59,7 @@ export const COUPANG_MARGIN_COLUMN_ALIASES: Record<CoupangMarginColumnKey, strin
 
 export const COUPANG_MARGIN_REQUIRED_COLUMNS: CoupangMarginColumnKey[] = [
   "itemName",
+  "salePriceKrw",
   "productCostKrw",
   "salesFeeRate",
   "sellerShippingFeeKrw",
@@ -69,9 +70,11 @@ export const COUPANG_MARGIN_REQUIRED_COLUMNS: CoupangMarginColumnKey[] = [
 export class CoupangMarginCsvParser {
   parseBuffer(buffer: Buffer) {
     const text = decodeCsvText(buffer);
+    const delimiter = detectDelimiter(text);
     const records = parse(text, {
       bom: true,
       columns: true,
+      delimiter,
       skip_empty_lines: true,
       relax_column_count: true,
       trim: false
@@ -99,7 +102,7 @@ export function hashCoupangMarginRecord(record: unknown) {
 function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangMarginColumnKey, string>) {
   const issues: ParseIssue[] = [];
   const itemName = requiredText(rawRow, headerMap, "itemName", issues);
-  const ignoredSalePriceKrw = optionalNumberOrNull(rawRow, headerMap, "salePriceKrw");
+  const salePriceKrw = requiredNumber(rawRow, headerMap, "salePriceKrw", issues);
   const productCostKrw = requiredNumber(rawRow, headerMap, "productCostKrw", issues);
   const returnCostPerUnitKrw = requiredNumber(rawRow, headerMap, "returnCostPerUnitKrw", issues);
 
@@ -109,7 +112,7 @@ function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangMarginCo
         ? null
         : {
             itemName,
-            ignoredSalePriceKrw,
+            salePriceKrw,
             supplyPriceKrw: optionalNumber(rawRow, headerMap, "supplyPriceKrw"),
             productCostKrw,
             salesFeeRate: optionalRate(rawRow, headerMap, "salesFeeRate"),
@@ -211,8 +214,15 @@ function decodeCsvText(buffer: Buffer) {
 }
 
 function parseHeadersOnly(text: string) {
-  const records = parse(text, { bom: true, to_line: 1, relax_column_count: true }) as string[][];
+  const records = parse(text, { bom: true, delimiter: detectDelimiter(text), to_line: 1, relax_column_count: true }) as string[][];
   return (records[0] ?? []).map((value) => value.replace(/^\uFEFF/, ""));
+}
+
+function detectDelimiter(text: string) {
+  const firstLine = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
+  const tabCount = (firstLine.match(/\t/g) ?? []).length;
+  const commaCount = (firstLine.match(/,/g) ?? []).length;
+  return tabCount > commaCount ? "\t" : ",";
 }
 
 function buildHeaderMap(headers: string[]) {

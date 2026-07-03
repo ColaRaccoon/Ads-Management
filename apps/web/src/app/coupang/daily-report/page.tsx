@@ -7,8 +7,11 @@ import { apiGet } from "@/lib/api";
 import { buildXlsxWorkbook, downloadXlsx, XlsxCell } from "@/lib/xlsx";
 import { DataTable } from "@/components/data-table";
 
+type CoupangGroupBy = "product" | "group";
+
 type CoupangDailyReport = {
   date: string;
+  groupBy: CoupangGroupBy;
   rows: DailyReportRow[];
 };
 
@@ -26,23 +29,15 @@ type DailyReportRow = {
   roas: number | null;
 };
 
-const columns = [
-  "제품명",
-  "판매가",
-  "광고비",
-  "총비용",
-  "오가닉매출",
-  "마진금액",
-  "광고 수익률"
-] as const;
-
 export default function CoupangDailyReportPage() {
   const [date, setDate] = useState(todayInputValue());
+  const [groupBy, setGroupBy] = useState<CoupangGroupBy>("product");
   const report = useQuery({
-    queryKey: ["coupang-daily-report", date],
-    queryFn: () => apiGet<CoupangDailyReport>(`/coupang/daily-report?date=${encodeURIComponent(date)}`)
+    queryKey: ["coupang-daily-report", date, groupBy],
+    queryFn: () => apiGet<CoupangDailyReport>(`/coupang/daily-report?date=${encodeURIComponent(date)}&groupBy=${groupBy}`)
   });
   const rows = report.data?.rows ?? [];
+  const columns = dailyReportColumns(groupBy);
 
   const exportReport = () => {
     const workbook = buildXlsxWorkbook({
@@ -75,6 +70,10 @@ export default function CoupangDailyReportPage() {
         </div>
         <div className="toolbar">
           <input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          <select className="input" value={groupBy} onChange={(event) => setGroupBy(event.target.value as CoupangGroupBy)}>
+            <option value="product">옵션별</option>
+            <option value="group">제품그룹별</option>
+          </select>
           <button className="button primary" type="button" disabled={rows.length === 0} onClick={exportReport}>
             <Download size={16} />
             Export
@@ -103,6 +102,18 @@ function todayInputValue() {
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
   return date.toISOString().slice(0, 10);
+}
+
+function dailyReportColumns(groupBy: CoupangGroupBy) {
+  return [
+    groupBy === "group" ? "제품그룹" : "제품명",
+    "판매가",
+    "광고비",
+    "총비용",
+    "오가닉매출",
+    "마진금액",
+    "광고 수익률"
+  ] as const;
 }
 
 function money(value: number | null | undefined) {

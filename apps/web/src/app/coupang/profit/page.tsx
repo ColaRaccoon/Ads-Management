@@ -1,17 +1,26 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
 
+type CoupangGroupBy = "product" | "group";
+
 type CoupangProductProfit = {
   period: { from: string; to: string };
+  groupBy: CoupangGroupBy;
   rows: ProductProfitRow[];
 };
 
 type ProductProfitRow = {
+  rowType?: "PRODUCT" | "GROUP";
+  productId?: string;
   productName: string;
+  groupId?: string | null;
+  groupName?: string | null;
+  childProductCount?: number;
   saleMethod: string | null;
   matchedSalesLineCount: number;
   salesQuantity: number;
@@ -41,11 +50,13 @@ type ProductProfitRow = {
 
 export default function CoupangProfitPage() {
   const range = useRange();
+  const [groupBy, setGroupBy] = useState<CoupangGroupBy>("product");
   const profit = useQuery({
-    queryKey: ["coupang-product-profit", range],
-    queryFn: () => apiGet<CoupangProductProfit>(`/coupang/product-profit?${rangeQuery(range)}`)
+    queryKey: ["coupang-product-profit", range, groupBy],
+    queryFn: () => apiGet<CoupangProductProfit>(`/coupang/product-profit?${rangeQuery(range, { groupBy })}`)
   });
   const rows = profit.data?.rows ?? [];
+  const nameHeader = groupBy === "group" ? "Product Group" : "Product";
   const totals = rows.reduce(
     (acc, row) => ({
       netSalesKrw: acc.netSalesKrw + row.netSalesKrw,
@@ -66,10 +77,16 @@ export default function CoupangProfitPage() {
         </div>
       </div>
       <div className="panel">
+        <div className="toolbar">
+          <select className="input" value={groupBy} onChange={(event) => setGroupBy(event.target.value as CoupangGroupBy)}>
+            <option value="product">By Option</option>
+            <option value="group">By Product Group</option>
+          </select>
+        </div>
         <DataTable
           rows={rows}
           columns={[
-            { key: "product", header: "Product", render: (row) => row.productName },
+            { key: "product", header: nameHeader, render: (row) => row.productName },
             { key: "price", header: "Sale Price", render: (row) => money(row.salePriceKrw) },
             { key: "priceSource", header: "Price Source", render: (row) => priceLabel(row) },
             { key: "method", header: "Sale Method", render: (row) => row.saleMethod ?? "-" },

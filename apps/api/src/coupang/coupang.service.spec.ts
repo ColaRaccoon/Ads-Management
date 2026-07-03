@@ -1,11 +1,14 @@
 import ExcelJS from "exceljs";
 import { ConflictPolicy, CoupangUploadSourceType, MatchSource, Prisma, RowValidationStatus } from "@prisma/client";
+import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { toDateOnly } from "../domain/date-number";
 import {
+  aggregateCoupangProductProfitRowsByGroup,
   buildCoupangMarginCostRuleData,
   buildCoupangPriceTextCostRuleData,
   CoupangService,
+  type ProductProfitRow,
   resolveCoupangRowImportDecision,
   resolveCoupangRowStoredState
 } from "./coupang.service";
@@ -93,27 +96,66 @@ describe("Coupang price text cost rule copy", () => {
     expect(Number(data?.returnCostPerUnitKrw)).toBe(2500);
   });
 
-  it("does not create a cost rule when there is no previous cost baseline", () => {
-    expect(
-      buildCoupangPriceTextCostRuleData({
-        coupangProductId: "product-1",
-        salePriceKrw: 19900,
-        effectiveFrom: toDateOnly("2026-06-22")!,
-        latestCostRule: null
+  it("creates a sale-price-only cost rule when there is no previous cost baseline", () => {
+    const data = buildCoupangPriceTextCostRuleData({
+      coupangProductId: "product-1",
+      salePriceKrw: 19900,
+      effectiveFrom: toDateOnly("2026-06-22")!,
+      latestCostRule: null
+    });
+
+    expect(data).toMatchObject({
+      coupangProductId: "product-1",
+      effectiveFrom: toDateOnly("2026-06-22")!
+    });
+    expect(Number(data.salePriceKrw)).toBe(19900);
+    expect(Number(data.productCostKrw)).toBe(0);
+    expect(Number(data.sellerShippingFeeKrw)).toBe(0);
+  });
+});
+
+describe("Coupang price text import repair", () => {
+  it("reprocesses the same price text file and copies costs from a legacy misparsed product", async () => {
+    const prisma = fakeCoupangPriceTextRepairPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = Buffer.from("다이어트양말 10개입\t₩69,900", "utf8");
+
+    const result = await service.importPriceText(
+      { originalname: "판매가.txt", buffer } as Express.Multer.File,
+      { effectiveFrom: "2026-06-22" }
+    );
+
+    expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, warningCount: 0, errorCount: 0 });
+    expect(prisma.coupangUploadBatch.findFirst).not.toHaveBeenCalled();
+    expect(prisma.coupangUploadBatch.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        sourceType: CoupangUploadSourceType.PRICE_TEXT,
+        fileHashSha256: expect.not.stringMatching(createHash("sha256").update(buffer).digest("hex"))
       })
-    ).toBeNull();
+    });
+    expect(prisma.coupangProduct.findUnique).toHaveBeenCalledWith({
+      where: { standardName: "다이어트양말 10개입 ₩69" },
+      select: { id: true }
+    });
+    expect(prisma.coupangCostRule.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        coupangProductId: "product-correct",
+        salePriceKrw: new Prisma.Decimal(69900),
+        productCostKrw: new Prisma.Decimal(7000)
+      })
+    });
+    expect(prisma.coupangProduct.delete).toHaveBeenCalledWith({ where: { id: "product-legacy" } });
   });
 });
 
 describe("Coupang margin cost rule import data", () => {
-  it("preserves the latest sale price instead of using Product Margin CSV sale price", () => {
+  it("uses Product Margin CSV/TSV sale price as the base sale price", () => {
     const data = buildCoupangMarginCostRuleData({
       coupangProductId: "product-1",
       effectiveFrom: toDateOnly("2026-06-22")!,
-      latestCostRule: { salePriceKrw: new Prisma.Decimal(25800) },
       parsedRow: {
         itemName: "Zero Bar",
-        ignoredSalePriceKrw: 24050,
+        salePriceKrw: 24050,
         supplyPriceKrw: 0,
         productCostKrw: 7000,
         salesFeeRate: 0.108,
@@ -127,19 +169,18 @@ describe("Coupang margin cost rule import data", () => {
       }
     });
 
-    expect(Number(data.salePriceKrw)).toBe(25800);
+    expect(Number(data.salePriceKrw)).toBe(24050);
     expect(Number(data.productCostKrw)).toBe(7000);
     expect(Number(data.salesFeeRate)).toBe(0.108);
   });
 
-  it("uses zero sale price when there is no previous base sale price", () => {
+  it("does not need a previous base sale price to create a full margin rule", () => {
     const data = buildCoupangMarginCostRuleData({
       coupangProductId: "product-1",
       effectiveFrom: toDateOnly("2026-06-22")!,
-      latestCostRule: null,
       parsedRow: {
         itemName: "Zero Bar",
-        ignoredSalePriceKrw: 24050,
+        salePriceKrw: 24050,
         supplyPriceKrw: 0,
         productCostKrw: 7000,
         salesFeeRate: 0,
@@ -153,11 +194,654 @@ describe("Coupang margin cost rule import data", () => {
       }
     });
 
-    expect(Number(data.salePriceKrw)).toBe(0);
+    expect(Number(data.salePriceKrw)).toBe(24050);
+  });
+});
+
+describe("CoupangService product settings and mapping rules", () => {
+  it("does not create or update mapping rules from product settings", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.createProductSetting({ displayName: "Zero Bar" });
+    await service.createProductSetting({ displayName: "Black Socks", includeKeywords: ["Black", "Socks"], priority: 5 });
+    await service.updateProductSetting("product-1", {
+      displayName: "Black Socks Updated",
+      includeKeywords: ["Should", "Ignore"],
+      excludeKeywords: ["Ignore"],
+      priority: 1,
+      salePriceKrw: 19900
+    });
+
+    expect(prisma.coupangProduct.create).toHaveBeenNthCalledWith(1, {
+      data: expect.objectContaining({
+        displayName: "Zero Bar"
+      }),
+      include: { group: true, productRules: true, costRules: true }
+    });
+    expect(prisma.coupangProduct.create.mock.calls[0][0].data).not.toHaveProperty("productRules");
+    expect(prisma.coupangProduct.create).toHaveBeenNthCalledWith(2, {
+      data: expect.objectContaining({
+        displayName: "Black Socks"
+      }),
+      include: { group: true, productRules: true, costRules: true }
+    });
+    expect(prisma.coupangProduct.create.mock.calls[1][0].data).not.toHaveProperty("productRules");
+    expect(prisma.coupangProduct.update).toHaveBeenCalledWith({
+      where: { id: "product-1" },
+      data: { displayName: "Black Socks Updated" }
+    });
+    expect(prisma.coupangCostRule.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        coupangProductId: "product-1",
+        salePriceKrw: new Prisma.Decimal(19900)
+      })
+    });
+    expect(prisma.coupangProductRule.findFirst).not.toHaveBeenCalled();
+    expect(prisma.coupangProductRule.create).not.toHaveBeenCalled();
+    expect(prisma.coupangProductRule.update).not.toHaveBeenCalled();
+  });
+
+  it("deactivates only the product when deleting product settings", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.deleteProductSetting("product-1");
+
+    expect(prisma.coupangProduct.update).toHaveBeenCalledWith({
+      where: { id: "product-1" },
+      data: { isActive: false }
+    });
+    expect(prisma.coupangProductRule.updateMany).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("creates, updates, and soft deletes Coupang product groups", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.createProductGroup({ displayName: "Gyro Ball", sortOrder: "5" });
+    await service.updateProductGroup("group-1", { displayName: "Gyro Ball Set", sortOrder: "7", isActive: false });
+    await service.deleteProductGroup("group-1");
+
+    expect(prisma.coupangProductGroup.create).toHaveBeenCalledWith({
+      data: {
+        standardName: "gyro ball",
+        displayName: "Gyro Ball",
+        sortOrder: 5,
+        isActive: true
+      },
+      include: { products: true }
+    });
+    expect(prisma.coupangProductGroup.update).toHaveBeenNthCalledWith(1, {
+      where: { id: "group-1" },
+      data: { displayName: "Gyro Ball Set", sortOrder: 7, isActive: false },
+      include: { products: true }
+    });
+    expect(prisma.coupangProductGroup.update).toHaveBeenNthCalledWith(2, {
+      where: { id: "group-1" },
+      data: { isActive: false },
+      include: { products: true }
+    });
+  });
+
+  it("connects and clears product setting groupId without creating mapping rules", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.createProductSetting({ displayName: "Grouped Product", groupId: "group-1" });
+    await service.updateProductSetting("product-1", { groupId: null });
+
+    expect(prisma.coupangProductGroup.findUnique).toHaveBeenCalledWith({ where: { id: "group-1" } });
+    expect(prisma.coupangProduct.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        displayName: "Grouped Product",
+        group: { connect: { id: "group-1" } }
+      }),
+      include: { group: true, productRules: true, costRules: true }
+    });
+    expect(prisma.coupangProduct.update).toHaveBeenCalledWith({
+      where: { id: "product-1" },
+      data: { group: { disconnect: true } }
+    });
+    expect(prisma.coupangProductRule.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects missing product groups on product setting updates", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await expect(service.updateProductSetting("product-1", { groupId: "missing-group" })).rejects.toMatchObject({
+      response: expect.objectContaining({ code: "COUPANG_PRODUCT_GROUP_NOT_FOUND" })
+    });
+  });
+
+  it("creates, updates, and disables Coupang mapping rules", async () => {
+    const prisma = fakeCoupangMappingRulePrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.createMappingRule({
+      coupangProductId: "product-1",
+      includeKeywords: "Zero, Black",
+      excludeKeywords: ["Sample"],
+      validFrom: "2026-06-01"
+    });
+    await service.updateMappingRule("rule-1", {
+      includeKeywords: ["Zero Bar"],
+      excludeKeywords: "Sample, Gift",
+      priority: "5",
+      isActive: false,
+      validTo: null
+    });
+    await service.deleteMappingRule("rule-1");
+
+    expect(prisma.coupangProductRule.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        coupangProductId: "product-1",
+        displayName: "Zero Bar",
+        includeKeywords: ["Zero", "Black"],
+        excludeKeywords: ["Sample"],
+        priority: 100,
+        validFrom: toDateOnly("2026-06-01")
+      }),
+      include: { product: true }
+    });
+    expect(prisma.coupangProductRule.update).toHaveBeenCalledWith({
+      where: { id: "rule-1" },
+      data: expect.objectContaining({
+        includeKeywords: ["Zero Bar"],
+        excludeKeywords: ["Sample", "Gift"],
+        priority: 5,
+        isActive: false,
+        validTo: null
+      }),
+      include: { product: true }
+    });
+    expect(prisma.coupangProductRule.update).toHaveBeenLastCalledWith({
+      where: { id: "rule-1" },
+      data: { isActive: false },
+      include: { product: true }
+    });
+  });
+});
+
+describe("Coupang product group aggregation", () => {
+  it("sums calculated product rows by group and recalculates margin rate and ROAS", () => {
+    const rows = [
+      productProfitRow({
+        productId: "product-medic",
+        productName: "자이로볼 메딕",
+        saleMethod: "로켓그로스",
+        netSalesKrw: 100_000,
+        salesQuantity: 5,
+        productCostKrw: 30_000,
+        salesFeeKrw: 10_000,
+        shippingCostKrw: 5_000,
+        adSpendKrw: 20_000,
+        adConversionSalesKrw: 60_000,
+        totalCostKrw: 65_000,
+        marginKrw: 35_000,
+        marginRate: 0.35,
+        roas: 3,
+        salePriceKrw: 20_000
+      }),
+      productProfitRow({
+        productId: "product-challenge",
+        productName: "자이로볼 챌린지",
+        saleMethod: "판매자배송",
+        netSalesKrw: 200_000,
+        salesQuantity: 8,
+        productCostKrw: 80_000,
+        salesFeeKrw: 20_000,
+        shippingCostKrw: 8_000,
+        adSpendKrw: 30_000,
+        adConversionSalesKrw: 90_000,
+        totalCostKrw: 138_000,
+        marginKrw: 62_000,
+        marginRate: 0.31,
+        roas: 3,
+        salePriceKrw: 25_000
+      }),
+      productProfitRow({
+        productId: "product-solo",
+        productName: "솔로 상품",
+        netSalesKrw: 50_000,
+        marginKrw: 20_000
+      })
+    ];
+
+    const result = aggregateCoupangProductProfitRowsByGroup(rows, [
+      { id: "product-medic", group: { id: "group-gyro", displayName: "자이로볼" } },
+      { id: "product-challenge", group: { id: "group-gyro", displayName: "자이로볼" } },
+      { id: "product-solo", group: null }
+    ]);
+    const groupRow = result.find((row) => row.groupId === "group-gyro");
+    const soloRow = result.find((row) => row.productId === "product-solo");
+
+    expect(groupRow).toMatchObject({
+      rowType: "GROUP",
+      productName: "자이로볼",
+      childProductCount: 2,
+      netSalesKrw: 300_000,
+      salesQuantity: 13,
+      productCostKrw: 110_000,
+      salesFeeKrw: 30_000,
+      shippingCostKrw: 13_000,
+      adSpendKrw: 50_000,
+      adConversionSalesKrw: 150_000,
+      marginKrw: 97_000,
+      salePriceKrw: null,
+      priceSource: "MIXED",
+      saleMethod: "MIXED"
+    });
+    expect(groupRow?.marginRate).toBeCloseTo(97_000 / 300_000);
+    expect(groupRow?.roas).toBeCloseTo(150_000 / 50_000);
+    expect(groupRow?.warnings).toEqual(expect.arrayContaining(["GROUP_MIXED_PRICE", "GROUP_MIXED_SALE_METHOD"]));
+    expect(soloRow).toMatchObject({ rowType: "PRODUCT", productName: "솔로 상품", childProductCount: 1 });
+  });
+
+  it("keeps numeric group totals with a warning when some child cost rules are missing", () => {
+    const result = aggregateCoupangProductProfitRowsByGroup(
+      [
+        productProfitRow({ productId: "product-ok", totalCostKrw: 40_000, marginKrw: 10_000 }),
+        productProfitRow({ productId: "product-missing", totalCostKrw: null, marginKrw: null, ruleStatus: "MISSING_COST_RULE" })
+      ],
+      [
+        { id: "product-ok", group: { id: "group-mixed-cost", displayName: "부분 누락 그룹" } },
+        { id: "product-missing", group: { id: "group-mixed-cost", displayName: "부분 누락 그룹" } }
+      ]
+    );
+
+    expect(result[0]).toMatchObject({
+      productName: "부분 누락 그룹",
+      totalCostKrw: 40_000,
+      marginKrw: 10_000,
+      ruleStatus: "MISSING_COST_RULE"
+    });
+    expect(result[0].warnings).toContain("GROUP_HAS_MISSING_COST_RULE");
+  });
+
+  it("keeps dashboard summary based on product rows while grouping only display rows", async () => {
+    const service = new CoupangService({} as never);
+    const productRows = [
+      productProfitRow({ productId: "product-a", netSalesKrw: 100_000, marginKrw: 40_000 }),
+      productProfitRow({ productId: "product-b", netSalesKrw: 50_000, marginKrw: null, ruleStatus: "MISSING_COST_RULE" })
+    ];
+    const groupedRows = [
+      productProfitRow({ productId: "group-a", productName: "그룹 A", rowType: "GROUP", netSalesKrw: 150_000, marginKrw: 40_000 })
+    ];
+    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
+    vi.spyOn(service as any, "groupProductProfitRows").mockResolvedValue(groupedRows);
+
+    const result = await service.dashboard({ from: "2026-06-01", to: "2026-06-30", groupBy: "group" });
+
+    expect(result.groupBy).toBe("group");
+    expect(result.summary.netSalesKrw).toBe(150_000);
+    expect(result.summary.marginKrw).toBe(40_000);
+    expect(result.summary.missingCostRuleCount).toBe(1);
+    expect(result.rows).toEqual(groupedRows);
+  });
+
+  it("groups ads analysis by spend product group and campaign/ad group", async () => {
+    const prisma = fakeCoupangAdsAnalysisPrisma();
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.adsAnalysis({ from: "2026-06-01", to: "2026-06-30", groupBy: "group" });
+
+    expect(result.groupBy).toBe("group");
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      rowType: "GROUP",
+      productId: "group-gyro",
+      productName: "자이로볼",
+      campaignName: "Campaign",
+      adGroupName: "Ad Group",
+      impressions: 300,
+      clicks: 30,
+      adSpendKrw: 30_000,
+      totalOrders1d: 3,
+      totalConversionSales1dKrw: 90_000
+    });
+    expect(result.rows[0].roas).toBe(3);
+  });
+});
+
+describe("CoupangService margin import mapping rules", () => {
+  it("preserves existing mapping keywords when Product Margin TSV is re-uploaded", async () => {
+    const prisma = fakeCoupangMarginImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = Buffer.from(
+      [
+        "항목\t판매가(VAT포함)\t원가\t판매수수료율\t하나로 배송비\t그로스 입출고비\t그로스 배송비",
+        "다이어트양말 10개입\t₩69,900\t₩20,000\t11.88%\t₩500\t₩1,650\t₩2,200"
+      ].join("\n"),
+      "utf8"
+    );
+
+    const result = await service.importMarginCsv(
+      { originalname: "margin.tsv", buffer } as Express.Multer.File,
+      { effectiveFrom: "2026-06-22" }
+    );
+
+    expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, errorCount: 0 });
+    expect(prisma.coupangProductRule.update).toHaveBeenCalledWith({
+      where: { id: "rule-existing" },
+      data: {
+        displayName: "다이어트양말 10개입",
+        adEnabled: true,
+        isActive: true
+      }
+    });
+    const ruleUpdateData = prisma.coupangProductRule.update.mock.calls[0][0].data;
+    expect(ruleUpdateData).not.toHaveProperty("includeKeywords");
+    expect(ruleUpdateData).not.toHaveProperty("excludeKeywords");
+    expect(ruleUpdateData).not.toHaveProperty("priority");
+    expect(ruleUpdateData).not.toHaveProperty("validFrom");
+    expect(ruleUpdateData).not.toHaveProperty("validTo");
+    expect(prisma.coupangProductRule.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("CoupangService sales import", () => {
+  it.each([
+    ["omitted", {}],
+    ["invalid", { cancelAmountMode: "UNKNOWN_MODE" }]
+  ])("uses NEGATIVE_ADD when cancelAmountMode is %s", async (_label, body) => {
+    const prisma = fakeCoupangSalesImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangSalesHeaderRow(),
+      ["A-1", "Black", "Zero Bar", "seller", "100,000", 3, 4, "120,000", 5, "-10,000", 1, 0]
+    ]);
+
+    const result = await service.importSalesXlsx({ originalname: "sales.xlsx", buffer } as Express.Multer.File, body);
+
+    expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, warningCount: 0, errorCount: 0 });
+    expect(prisma.coupangSaleLine.create).toHaveBeenCalledTimes(1);
+    const data = prisma.coupangSaleLine.create.mock.calls[0][0].data;
+    expect(Number(data.salesKrw)).toBe(100_000);
+    expect(Number(data.totalSalesKrw)).toBe(120_000);
+    expect(Number(data.cancelAmountKrw)).toBe(-10_000);
+    expect(Number(data.netSalesKrw)).toBe(90_000);
   });
 });
 
 describe("CoupangService rematch", () => {
+  it("infers blank and dash conversion products during Ads XLSX import", async () => {
+    const prisma = fakeCoupangAdsImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      [
+        "Date",
+        "Campaign Name",
+        "Ad Group",
+        "Ad Execution Option ID",
+        "Ad Execution Product Name",
+        "Conversion Option ID",
+        "Conversion Product Name",
+        "Impressions",
+        "Clicks",
+        "Ad Spend(KRW)",
+        "Total Orders(1d)",
+        "Direct Orders(1d)",
+        "Indirect Orders(1d)",
+        "Total Conversion Sales(1d)(KRW)",
+        "Direct Conversion Sales(1d)(KRW)",
+        "Indirect Conversion Sales(1d)(KRW)",
+        "Total Sales Quantity(1d)",
+        "Direct Sales Quantity(1d)",
+        "Indirect Sales Quantity(1d)"
+      ],
+      ["2026-06-22", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "", 1000, 50, "12,000", 3, 2, 1, 90000, 60000, 30000, 4, 2, 2],
+      ["2026-06-22", "Campaign", "Group", "E-2", "Spend Product 4-pack", "C-2", "-", 1000, 50, "12,000", 3, 2, 1, 90000, 60000, 30000, 4, 2, 2]
+    ]);
+
+    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+
+    expect(result).toMatchObject({
+      rowCount: 2,
+      validRowCount: 2,
+      warningCount: 0,
+      errorCount: 0,
+      matchedSpendCount: 2,
+      matchedConversionCount: 2
+    });
+    expect(prisma.coupangAdMetric.create).toHaveBeenCalledTimes(2);
+    for (const call of prisma.coupangAdMetric.create.mock.calls) {
+      expect(call[0].data).toMatchObject({
+        spendProductId: "product-spend",
+        spendProductRuleId: "rule-spend",
+        conversionProductId: "product-spend",
+        conversionProductRuleId: "rule-spend",
+        spendMatchSource: MatchSource.RULE,
+        conversionMatchSource: MatchSource.INFERRED,
+        validationStatus: RowValidationStatus.VALID,
+        validationErrors: []
+      });
+    }
+    expect(prisma.coupangUploadRowError.createMany).not.toHaveBeenCalled();
+  });
+
+  it("falls back to ad name only when ad execution product name is a placeholder during Ads XLSX import", async () => {
+    const prisma = fakeCoupangAdsImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangAdsHeaderRowWithAdName(),
+      ["2026-06-22", "Campaign", "Group", "Spend Product 2-pack ad", "E-1", "-", "C-1", "-", 1000, 50, "12,000", 3, 2, 1, 90000, 60000, 30000, 4, 2, 2]
+    ]);
+
+    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+
+    expect(result).toMatchObject({
+      rowCount: 1,
+      validRowCount: 1,
+      warningCount: 0,
+      errorCount: 0,
+      matchedSpendCount: 1,
+      matchedConversionCount: 1
+    });
+    expect(prisma.coupangAdMetric.create).toHaveBeenCalledTimes(1);
+    expect(prisma.coupangAdMetric.create.mock.calls[0][0].data).toMatchObject({
+      adName: "Spend Product 2-pack ad",
+      adExecutionProductName: "-",
+      spendProductId: "product-spend",
+      spendProductRuleId: "rule-spend",
+      conversionProductId: "product-spend",
+      conversionProductRuleId: "rule-spend",
+      spendMatchSource: MatchSource.RULE,
+      conversionMatchSource: MatchSource.INFERRED,
+      validationStatus: RowValidationStatus.VALID,
+      validationErrors: []
+    });
+    expect(prisma.coupangUploadRowError.createMany).not.toHaveBeenCalled();
+  });
+
+  it("does not fall back to ad name when ad execution product name is populated but unmatched", async () => {
+    const prisma = fakeCoupangAdsImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangAdsHeaderRowWithAdName(),
+      ["2026-06-22", "Campaign", "Group", "Spend Product 2-pack ad", "E-1", "Unknown Product", "C-1", "-", 1000, 50, "12,000", 3, 2, 1, 90000, 60000, 30000, 4, 2, 2]
+    ]);
+
+    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+
+    expect(result).toMatchObject({
+      rowCount: 1,
+      validRowCount: 1,
+      warningCount: 1,
+      errorCount: 0,
+      matchedSpendCount: 0,
+      matchedConversionCount: 0
+    });
+    expect(prisma.coupangAdMetric.create.mock.calls[0][0].data).toMatchObject({
+      adName: "Spend Product 2-pack ad",
+      adExecutionProductName: "Unknown Product",
+      spendProductId: null,
+      conversionProductId: null,
+      spendMatchSource: MatchSource.UNMATCHED,
+      conversionMatchSource: MatchSource.UNMATCHED,
+      validationStatus: RowValidationStatus.UNMATCHED,
+      validationErrors: [expect.objectContaining({ errorCode: "SPEND_NO_MATCH" })]
+    });
+  });
+
+  it("aggregates Ads XLSX rows with the same metric key before current duplicate checks", async () => {
+    const prisma = fakeCoupangAdsImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangAdsHeaderRow(),
+      ["2026-06-29", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "-", 10, 1, 1000, 1, 1, 0, 10000, 7000, 3000, 2, 1, 1],
+      ["2026-06-29", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "-", 20, 2, 2000, 2, 1, 1, 20000, 10000, 10000, 3, 2, 1],
+      ["2026-06-29", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "-", 30, 3, 3000, 3, 2, 1, 30000, 20000, 10000, 4, 3, 1]
+    ]);
+
+    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+
+    expect(result).toMatchObject({
+      rowCount: 3,
+      validRowCount: 1,
+      warningCount: 0,
+      errorCount: 0,
+      matchedSpendCount: 1,
+      matchedConversionCount: 1
+    });
+    expect(prisma.coupangAdMetric.findMany).toHaveBeenCalledTimes(1);
+    expect(prisma.coupangAdMetric.create).toHaveBeenCalledTimes(1);
+    const data = prisma.coupangAdMetric.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({
+      rowNumber: 2,
+      adMetricKey: "2026-06-29:Campaign:Group:E-1:Spend Product 2-pack:C-1:-",
+      clicks: 6,
+      totalOrders1d: 6,
+      directOrders1d: 4,
+      indirectOrders1d: 2,
+      isCurrent: true,
+      validationStatus: RowValidationStatus.VALID,
+      validationErrors: [],
+      rawRow: expect.objectContaining({
+        aggregated: true,
+        sourceRowNumbers: [2, 3, 4],
+        sourceRowCount: 3,
+        adMetricKey: "2026-06-29:Campaign:Group:E-1:Spend Product 2-pack:C-1:-"
+      })
+    });
+    expect(data.impressions).toBe(BigInt(60));
+    expect(Number(data.adSpendKrw)).toBe(6000);
+    expect(Number(data.totalConversionSales1dKrw)).toBe(60000);
+    expect(Number(data.directConversionSales1dKrw)).toBe(37000);
+    expect(Number(data.indirectConversionSales1dKrw)).toBe(23000);
+    expect(Number(data.totalSalesQuantity1d)).toBe(9);
+    expect(Number(data.directSalesQuantity1d)).toBe(6);
+    expect(Number(data.indirectSalesQuantity1d)).toBe(3);
+    expect(prisma.coupangUploadRowError.createMany).not.toHaveBeenCalled();
+    expect(prisma.coupangUploadBatch.create.mock.calls[0][0].data.columnSchema).toMatchObject({
+      sourceRowCount: 3,
+      aggregatedRowCount: 1,
+      aggregatedDuplicateCount: 2
+    });
+  });
+
+  it("keeps placeholder ad execution rows with different ad names separate during aggregation", async () => {
+    const prisma = fakeCoupangAdsImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangAdsHeaderRowWithAdName(),
+      ["2026-06-29", "Campaign", "Group", "Spend Product A", "E-1", "-", "C-1", "-", 10, 1, 1000, 1, 1, 0, 10000, 7000, 3000, 2, 1, 1],
+      ["2026-06-29", "Campaign", "Group", "Spend Product B", "E-1", "-", "C-1", "-", 20, 2, 2000, 2, 1, 1, 20000, 10000, 10000, 3, 2, 1]
+    ]);
+
+    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+
+    expect(result).toMatchObject({
+      rowCount: 2,
+      validRowCount: 2,
+      warningCount: 0,
+      errorCount: 0,
+      matchedSpendCount: 2,
+      matchedConversionCount: 2
+    });
+    expect(prisma.coupangAdMetric.findMany).toHaveBeenCalledTimes(2);
+    expect(prisma.coupangAdMetric.create).toHaveBeenCalledTimes(2);
+    expect(prisma.coupangAdMetric.create.mock.calls.map((call) => call[0].data.adMetricKey)).toEqual([
+      "2026-06-29:Campaign:Group:E-1:Spend Product A:C-1:-",
+      "2026-06-29:Campaign:Group:E-1:Spend Product B:C-1:-"
+    ]);
+  });
+
+  it("aggregates placeholder ad execution rows with the same ad name", async () => {
+    const prisma = fakeCoupangAdsImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangAdsHeaderRowWithAdName(),
+      ["2026-06-29", "Campaign", "Group", "Spend Product A", "E-1", "-", "C-1", "-", 10, 1, 1000, 1, 1, 0, 10000, 7000, 3000, 2, 1, 1],
+      ["2026-06-29", "Campaign", "Group", "Spend Product A", "E-1", "-", "C-1", "-", 20, 2, 2000, 2, 1, 1, 20000, 10000, 10000, 3, 2, 1]
+    ]);
+
+    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+
+    expect(result).toMatchObject({
+      rowCount: 2,
+      validRowCount: 1,
+      warningCount: 0,
+      errorCount: 0,
+      matchedSpendCount: 1,
+      matchedConversionCount: 1
+    });
+    expect(prisma.coupangAdMetric.findMany).toHaveBeenCalledTimes(1);
+    expect(prisma.coupangAdMetric.create).toHaveBeenCalledTimes(1);
+    const data = prisma.coupangAdMetric.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({
+      rowNumber: 2,
+      adName: "Spend Product A",
+      adMetricKey: "2026-06-29:Campaign:Group:E-1:Spend Product A:C-1:-",
+      rawRow: expect.objectContaining({
+        aggregated: true,
+        sourceRowNumbers: [2, 3],
+        sourceRowCount: 2,
+        adMetricKey: "2026-06-29:Campaign:Group:E-1:Spend Product A:C-1:-"
+      })
+    });
+    expect(Number(data.adSpendKrw)).toBe(3000);
+  });
+
+  it("keeps duplicate-current warnings for aggregated Ads rows that conflict with existing DB current rows", async () => {
+    const prisma = fakeCoupangAdsImportPrisma({
+      existingAdMetrics: [{ id: "metric-current", importVersion: 2, isCurrent: true }]
+    });
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangAdsHeaderRow(),
+      ["2026-06-29", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "-", 10, 1, 1000, 1, 1, 0, 10000, 7000, 3000, 2, 1, 1],
+      ["2026-06-29", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "-", 20, 2, 2000, 2, 1, 1, 20000, 10000, 10000, 3, 2, 1]
+    ]);
+
+    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+
+    expect(result).toMatchObject({
+      rowCount: 2,
+      validRowCount: 1,
+      warningCount: 1,
+      errorCount: 0
+    });
+    expect(prisma.coupangAdMetric.findMany).toHaveBeenCalledTimes(1);
+    expect(prisma.coupangAdMetric.create).toHaveBeenCalledTimes(1);
+    expect(prisma.coupangAdMetric.create.mock.calls[0][0].data).toMatchObject({
+      importVersion: 2,
+      isCurrent: false,
+      validationStatus: RowValidationStatus.WARNING,
+      validationErrors: [expect.objectContaining({ errorCode: "COUPANG_AD_METRIC_ALREADY_CURRENT" })]
+    });
+    expect(prisma.coupangUploadRowError.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          sourceType: CoupangUploadSourceType.ADS,
+          errorCode: "COUPANG_AD_METRIC_ALREADY_CURRENT"
+        })
+      ]
+    });
+  });
+
   it("rematches ad spend and conversion products with active Coupang rules", async () => {
     const prisma = fakeCoupangRematchPrisma();
     const service = new CoupangService(prisma as never);
@@ -191,6 +875,132 @@ describe("CoupangService rematch", () => {
       })
     });
     expect(prisma.coupangUploadRowError.createMany).not.toHaveBeenCalled();
+  });
+
+  it("infers conversion product from matched ad execution product when conversion text is placeholder", async () => {
+    const prisma = fakeCoupangRematchPrisma({
+      adMetrics: [
+        {
+          id: "metric-placeholder",
+          uploadBatchId: "batch-1",
+          rowNumber: 7,
+          metricDate: toDateOnly("2026-06-22")!,
+          adExecutionProductName: "Spend Product 2-pack",
+          conversionProductName: " - ",
+          validationStatus: RowValidationStatus.UNMATCHED
+        }
+      ]
+    });
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.rematch({ from: "2026-06-22", to: "2026-06-22" });
+
+    expect(result).toMatchObject({
+      scannedAdsCount: 1,
+      matchedSpendCount: 1,
+      matchedConversionCount: 1
+    });
+    expect(prisma.coupangAdMetric.update).toHaveBeenCalledWith({
+      where: { id: "metric-placeholder" },
+      data: expect.objectContaining({
+        spendProductId: "product-spend",
+        spendProductRuleId: "rule-spend",
+        conversionProductId: "product-spend",
+        conversionProductRuleId: "rule-spend",
+        spendMatchSource: MatchSource.RULE,
+        conversionMatchSource: MatchSource.INFERRED,
+        validationStatus: RowValidationStatus.VALID,
+        validationErrors: []
+      })
+    });
+    expect(prisma.coupangUploadRowError.createMany).not.toHaveBeenCalled();
+  });
+
+  it("rematches ad spend by ad name when ad execution product name is a placeholder", async () => {
+    const prisma = fakeCoupangRematchPrisma({
+      adMetrics: [
+        {
+          id: "metric-ad-name-fallback",
+          uploadBatchId: "batch-1",
+          rowNumber: 8,
+          metricDate: toDateOnly("2026-06-22")!,
+          adExecutionProductName: "-",
+          adName: "Spend Product 2-pack ad",
+          conversionProductName: "-",
+          validationStatus: RowValidationStatus.UNMATCHED
+        }
+      ]
+    });
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.rematch({ from: "2026-06-22", to: "2026-06-22" });
+
+    expect(result).toMatchObject({
+      scannedAdsCount: 1,
+      matchedSpendCount: 1,
+      matchedConversionCount: 1
+    });
+    expect(prisma.coupangAdMetric.update).toHaveBeenCalledWith({
+      where: { id: "metric-ad-name-fallback" },
+      data: expect.objectContaining({
+        spendProductId: "product-spend",
+        spendProductRuleId: "rule-spend",
+        conversionProductId: "product-spend",
+        conversionProductRuleId: "rule-spend",
+        spendMatchSource: MatchSource.RULE,
+        conversionMatchSource: MatchSource.INFERRED,
+        validationStatus: RowValidationStatus.VALID,
+        validationErrors: []
+      })
+    });
+    expect(prisma.coupangUploadRowError.createMany).not.toHaveBeenCalled();
+  });
+
+  it("leaves ad rows unmatched when spend and conversion product names are placeholders", async () => {
+    const prisma = fakeCoupangRematchPrisma({
+      adMetrics: [
+        {
+          id: "metric-placeholders",
+          uploadBatchId: "batch-1",
+          rowNumber: 8,
+          metricDate: toDateOnly("2026-06-22")!,
+          adExecutionProductName: "-",
+          conversionProductName: "-",
+          validationStatus: RowValidationStatus.UNMATCHED
+        }
+      ]
+    });
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.rematch({ from: "2026-06-22", to: "2026-06-22" });
+
+    expect(result).toMatchObject({
+      scannedAdsCount: 1,
+      matchedSpendCount: 0,
+      matchedConversionCount: 0
+    });
+    expect(prisma.coupangAdMetric.update).toHaveBeenCalledWith({
+      where: { id: "metric-placeholders" },
+      data: expect.objectContaining({
+        spendProductId: null,
+        spendProductRuleId: null,
+        conversionProductId: null,
+        conversionProductRuleId: null,
+        spendMatchSource: MatchSource.UNMATCHED,
+        conversionMatchSource: MatchSource.UNMATCHED,
+        validationStatus: RowValidationStatus.UNMATCHED,
+        validationErrors: [expect.objectContaining({ errorCode: "SPEND_NO_MATCH" })]
+      })
+    });
+    expect(prisma.coupangUploadRowError.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          sourceType: CoupangUploadSourceType.ADS,
+          adMetricId: "metric-placeholders",
+          errorCode: "SPEND_NO_MATCH"
+        })
+      ]
+    });
   });
 
   it("preserves inactive promotion status warnings while rematching matched promotions", async () => {
@@ -309,6 +1119,46 @@ describe("CoupangService deleteUpload", () => {
     });
     expect(prisma.coupangUploadBatch.delete).toHaveBeenCalledWith({ where: { id: "batch-new" } });
   });
+
+  it("deletes price text cost rules and removes products left with no references", async () => {
+    const prisma = fakeCoupangPriceTextDeletePrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.deleteUpload("batch-price-text");
+
+    expect(prisma.coupangCostRule.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["cost-price-1"] } } });
+    expect(prisma.coupangProduct.delete).toHaveBeenCalledWith({ where: { id: "product-price-only" } });
+    expect(prisma.coupangUploadBatch.delete).toHaveBeenCalledWith({ where: { id: "batch-price-text" } });
+  });
+
+  it("deletes margin cost rules, created product rules, and products left with no references", async () => {
+    const prisma = fakeCoupangMarginDeletePrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.deleteUpload("batch-margin");
+
+    expect(prisma.coupangCostRule.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["cost-margin-1"] } } });
+    expect(prisma.coupangProductRule.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["rule-margin-1"] } } });
+    expect(prisma.coupangProduct.delete).toHaveBeenCalledWith({ where: { id: "product-margin-only" } });
+    expect(prisma.coupangUploadBatch.delete).toHaveBeenCalledWith({ where: { id: "batch-margin" } });
+  });
+});
+
+describe("CoupangService previewUpload", () => {
+  it("serializes Ads BigInt fields for JSON responses", async () => {
+    const prisma = fakeCoupangPreviewPrisma();
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.previewUpload("batch-ads", 1);
+
+    expect(result).toEqual([expect.objectContaining({ id: "metric-1", impressions: "123" })]);
+    expect(prisma.coupangAdMetric.findMany).toHaveBeenCalledWith({
+      where: { uploadBatchId: "batch-ads" },
+      take: 1,
+      orderBy: { rowNumber: "asc" },
+      include: { spendProduct: true, conversionProduct: true, spendRule: true, conversionRule: true }
+    });
+  });
 });
 
 describe("CoupangService unmatched", () => {
@@ -342,7 +1192,423 @@ describe("CoupangService unmatched", () => {
   });
 });
 
-function fakeCoupangRematchPrisma(options: { promotions?: any[] } = {}) {
+describe("CoupangService mappingIssues", () => {
+  it("returns unmatched, ambiguous, and excluded mapping issues with separate ad targets", async () => {
+    const prisma = fakeCoupangMappingIssuesPrisma();
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.mappingIssues({ from: "2026-06-22", to: "2026-06-23", take: "2" });
+
+    expect(result.summary).toMatchObject({
+      totalCount: 4,
+      unmatchedCount: 1,
+      ambiguousCount: 2,
+      excludedCount: 1,
+      adsCount: 2
+    });
+    expect(result.rows).toHaveLength(2);
+    const allIssueTexts = result.rows.map((row) => row.productText);
+    expect(allIssueTexts).not.toContain("Promotion Product");
+    expect(allIssueTexts).not.toContain("Zero Bar Black");
+    expect((prisma.coupangSaleLine.findMany as any).mock.calls[0][0]).not.toHaveProperty("take");
+    expect((prisma.coupangAdMetric.findMany as any).mock.calls[0][0]).not.toHaveProperty("take");
+    expect((prisma.coupangPromotionPrice.findMany as any).mock.calls[0][0]).not.toHaveProperty("take");
+    expect(result.rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          issueType: "AMBIGUOUS",
+          sourceType: "ADS",
+          targetKind: "ADS_CONVERSION_PRODUCT",
+          productText: "Conversion Product",
+          candidates: ["Conversion A", "Conversion B"]
+        }),
+        expect.objectContaining({
+          issueType: "UNMATCHED",
+          sourceType: "ADS",
+          targetKind: "ADS_SPEND_PRODUCT",
+          productText: "Spend Product"
+        })
+      ])
+    );
+    expect(result.rows.some((row) => row.reason === "INVALID_PROMOTION_STATUS")).toBe(false);
+  });
+
+  it("does not return an ad conversion issue when placeholder conversion was inferred", async () => {
+    const batch = { originalFilename: "coupang.xlsx" };
+    const prisma = fakeCoupangMappingIssuesPrisma({
+      saleLines: [],
+      promotionPrices: [],
+      adMetrics: [
+        {
+          id: "metric-inferred",
+          rowNumber: 8,
+          batch,
+          adExecutionProductName: "Spend Product",
+          conversionProductName: "-",
+          adSpendKrw: new Prisma.Decimal(12000),
+          totalConversionSales1dKrw: new Prisma.Decimal(99000),
+          metricDate: toDateOnly("2026-06-22")!,
+          spendProductId: "product-spend",
+          conversionProductId: "product-spend",
+          validationErrors: []
+        }
+      ]
+    });
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.mappingIssues({ from: "2026-06-22", to: "2026-06-22" });
+
+    expect(result.summary.totalCount).toBe(0);
+    expect(result.rows).toHaveLength(0);
+  });
+
+  it("returns only the spend issue when conversion text is a placeholder and spend is unresolved", async () => {
+    const batch = { originalFilename: "coupang.xlsx" };
+    const prisma = fakeCoupangMappingIssuesPrisma({
+      saleLines: [],
+      promotionPrices: [],
+      adMetrics: [
+        {
+          id: "metric-placeholder-unresolved",
+          rowNumber: 9,
+          batch,
+          adExecutionProductName: "-",
+          adName: "Ad name sample",
+          conversionProductName: "-",
+          adSpendKrw: new Prisma.Decimal(500),
+          totalConversionSales1dKrw: new Prisma.Decimal(0),
+          metricDate: toDateOnly("2026-06-22")!,
+          spendProductId: null,
+          conversionProductId: null,
+          validationErrors: [
+            { errorCode: "SPEND_NO_MATCH", message: "no spend match", candidates: [] },
+            { errorCode: "CONVERSION_NO_MATCH", message: "old conversion warning", candidates: [] }
+          ]
+        }
+      ]
+    });
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.mappingIssues({ from: "2026-06-22", to: "2026-06-22" });
+
+    expect(result.summary.totalCount).toBe(1);
+    expect(result.rows).toEqual([
+      expect.objectContaining({
+        sourceType: "ADS",
+        targetKind: "ADS_SPEND_PRODUCT",
+        productText: "Ad name sample",
+        reason: "SPEND_NO_MATCH"
+      })
+    ]);
+  });
+});
+
+function fakeCoupangProductSettingPrisma() {
+  return {
+    $transaction: vi.fn(async () => ({})),
+    coupangProduct: {
+      create: vi.fn(async (args) => ({ id: "product-created", ...args.data, productRules: [], costRules: [] })),
+      findUnique: vi.fn(async (args) =>
+        args.where.id === "product-1" ? { id: "product-1", displayName: "Black Socks", standardName: "black socks" } : null
+      ),
+      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data }))
+    },
+    coupangProductGroup: {
+      findMany: vi.fn(async () => []),
+      findUnique: vi.fn(async (args) =>
+        args.where.id === "group-1" ? { id: "group-1", displayName: "Gyro Ball", standardName: "gyro ball" } : null
+      ),
+      create: vi.fn(async (args) => ({ id: "group-created", ...args.data, products: [] })),
+      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data, products: [] }))
+    },
+    coupangProductRule: {
+      findFirst: vi.fn(async () => null),
+      create: vi.fn(async (args) => ({ id: "rule-created", ...args.data })),
+      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data })),
+      updateMany: vi.fn(async () => ({ count: 0 }))
+    },
+    coupangCostRule: {
+      create: vi.fn(async (args) => ({ id: "cost-created", ...args.data }))
+    },
+    coupangUploadRowError: {
+      createMany: vi.fn(async () => ({}))
+    },
+    coupangUploadBatch: {
+      findUnique: vi.fn(async () => null)
+    }
+  };
+}
+
+function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRow {
+  return {
+    productId: "product",
+    productName: "Product",
+    saleMethod: null,
+    matchedSalesLineCount: 1,
+    salesQuantity: 0,
+    orderCount: 0,
+    salesKrw: overrides.netSalesKrw ?? 0,
+    cancelAmountKrw: 0,
+    netSalesKrw: 0,
+    salePriceKrw: 10_000,
+    baseSalePriceKrw: 10_000,
+    promotionPriceKrw: null,
+    priceSource: "BASE",
+    priceWarnings: [],
+    productCostKrw: 0,
+    salesFeeKrw: 0,
+    shippingCostKrw: 0,
+    returnCostKrw: 0,
+    extraCostKrw: 0,
+    adSpendKrw: 0,
+    adConversionSalesKrw: 0,
+    adConversionQuantity: 0,
+    organicSalesKrw: 0,
+    totalCostKrw: 0,
+    marginKrw: 0,
+    marginRate: null,
+    roas: null,
+    warnings: [],
+    ruleStatus: "OK",
+    ...overrides
+  };
+}
+
+function fakeCoupangAdsAnalysisPrisma() {
+  const group = { id: "group-gyro", displayName: "자이로볼" };
+  return {
+    coupangAdMetric: {
+      findMany: vi.fn(async () => [
+        {
+          spendProductId: "product-medic",
+          spendProduct: { id: "product-medic", displayName: "자이로볼 메딕", group },
+          conversionProduct: null,
+          campaignName: "Campaign",
+          adGroupName: "Ad Group",
+          impressions: BigInt(100),
+          clicks: 10,
+          adSpendKrw: new Prisma.Decimal(10_000),
+          totalOrders1d: 1,
+          directOrders1d: 1,
+          indirectOrders1d: 0,
+          totalConversionSales1dKrw: new Prisma.Decimal(30_000),
+          directConversionSales1dKrw: new Prisma.Decimal(20_000),
+          indirectConversionSales1dKrw: new Prisma.Decimal(10_000)
+        },
+        {
+          spendProductId: "product-challenge",
+          spendProduct: { id: "product-challenge", displayName: "자이로볼 챌린지", group },
+          conversionProduct: null,
+          campaignName: "Campaign",
+          adGroupName: "Ad Group",
+          impressions: BigInt(200),
+          clicks: 20,
+          adSpendKrw: new Prisma.Decimal(20_000),
+          totalOrders1d: 2,
+          directOrders1d: 1,
+          indirectOrders1d: 1,
+          totalConversionSales1dKrw: new Prisma.Decimal(60_000),
+          directConversionSales1dKrw: new Prisma.Decimal(40_000),
+          indirectConversionSales1dKrw: new Prisma.Decimal(20_000)
+        }
+      ])
+    }
+  };
+}
+
+function fakeCoupangMappingRulePrisma() {
+  return {
+    coupangProduct: {
+      findUnique: vi.fn(async (args) =>
+        args.where.id === "product-1" ? { id: "product-1", displayName: "Zero Bar", standardName: "zero bar" } : null
+      )
+    },
+    coupangProductRule: {
+      findUnique: vi.fn(async (args) => (args.where.id === "rule-1" ? { id: "rule-1", coupangProductId: "product-1" } : null)),
+      create: vi.fn(async (args) => ({ id: "rule-created", ...args.data })),
+      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data }))
+    }
+  };
+}
+
+function fakeCoupangMarginImportPrisma() {
+  const prisma = {
+    $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    coupangUploadBatch: {
+      findFirst: vi.fn(async () => null),
+      create: vi.fn(async (args) => ({ id: "batch-margin-import", conflictPolicy: args.data.conflictPolicy, ...args.data })),
+      update: vi.fn(async () => ({}))
+    },
+    coupangProduct: {
+      upsert: vi.fn(async () => ({ id: "product-existing" }))
+    },
+    coupangProductRule: {
+      findFirst: vi.fn(async () => ({
+        id: "rule-existing",
+        includeKeywords: ["사용자", "키워드"],
+        excludeKeywords: ["제외"],
+        priority: 7,
+        validFrom: toDateOnly("2026-01-01")!,
+        validTo: toDateOnly("2026-12-31")!
+      })),
+      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data })),
+      create: vi.fn(async (args) => ({ id: "rule-created", ...args.data }))
+    },
+    coupangCostRule: {
+      create: vi.fn(async (args) => ({ id: "cost-margin-import", ...args.data }))
+    },
+    coupangUploadRowError: {
+      createMany: vi.fn(async () => ({}))
+    }
+  };
+  return prisma;
+}
+
+function fakeCoupangMappingIssuesPrisma(
+  options: { saleLines?: any[]; adMetrics?: any[]; promotionPrices?: any[] } = {}
+) {
+  const batch = { originalFilename: "coupang.xlsx" };
+  return {
+    coupangSaleLine: {
+      findMany: vi.fn(async () => options.saleLines ?? [
+        {
+          id: "sale-1",
+          rowNumber: 3,
+          batch,
+          productName: "Zero Bar",
+          optionName: "Black",
+          netSalesKrw: new Prisma.Decimal(24050),
+          saleDate: toDateOnly("2026-06-22")!,
+          coupangProductId: null,
+          validationErrors: [
+            {
+              errorCode: "AMBIGUOUS_MATCH",
+              message: "ambiguous",
+              candidates: ["Zero Rule", "Black Rule"]
+            }
+          ]
+        }
+      ])
+    },
+    coupangAdMetric: {
+      findMany: vi.fn(async () => options.adMetrics ?? [
+        {
+          id: "metric-1",
+          rowNumber: 4,
+          batch,
+          adExecutionProductName: "Spend Product",
+          conversionProductName: "Conversion Product",
+          adSpendKrw: new Prisma.Decimal(12000),
+          totalConversionSales1dKrw: new Prisma.Decimal(99000),
+          metricDate: toDateOnly("2026-06-22")!,
+          spendProductId: null,
+          conversionProductId: null,
+          validationErrors: [
+            { errorCode: "SPEND_NO_MATCH", message: "no spend match", candidates: [] },
+            {
+              errorCode: "CONVERSION_AMBIGUOUS_MATCH",
+              message: "ambiguous conversion",
+              candidates: ["Conversion A", "Conversion B"]
+            },
+            { errorCode: "INVALID_PROMOTION_STATUS", message: "ignored", candidates: [] }
+          ]
+        }
+      ])
+    },
+    coupangPromotionPrice: {
+      findMany: vi.fn(async () => options.promotionPrices ?? [
+        {
+          id: "promotion-1",
+          rowNumber: 5,
+          batch,
+          productText: "Promotion Product",
+          promotionPriceKrw: new Prisma.Decimal(19000),
+          promotionStartDate: toDateOnly("2026-06-22")!,
+          coupangProductId: null,
+          validationErrors: [
+            {
+              errorCode: "EXCLUDED_BY_KEYWORD",
+              message: "excluded",
+              candidates: ["Promotion Rule"]
+            }
+          ]
+        }
+      ])
+    }
+  };
+}
+
+function fakeCoupangSalesImportPrisma() {
+  const prisma = {
+    $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    coupangUploadBatch: {
+      findFirst: vi.fn(async () => null),
+      create: vi.fn(async (args) => ({ id: "batch-sales-import", conflictPolicy: args.data.conflictPolicy, ...args.data })),
+      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data }))
+    },
+    coupangProductRule: {
+      findMany: vi.fn(async () => [
+        {
+          id: "rule-zero",
+          coupangProductId: "product-zero",
+          displayName: "Zero Bar",
+          includeKeywords: ["Zero Bar"],
+          excludeKeywords: [],
+          priority: 10,
+          validFrom: toDateOnly("2026-01-01")!,
+          validTo: null,
+          isActive: true
+        }
+      ])
+    },
+    coupangSaleLine: {
+      findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+      create: vi.fn(async (args) => ({ id: "sale-line-1", ...args.data }))
+    },
+    coupangUploadRowError: {
+      createMany: vi.fn(async () => ({}))
+    }
+  };
+  return prisma;
+}
+
+function fakeCoupangAdsImportPrisma(options: { existingAdMetrics?: any[] } = {}) {
+  const prisma = {
+    $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    coupangUploadBatch: {
+      findFirst: vi.fn(async () => null),
+      create: vi.fn(async (args) => ({ id: "batch-ads-import", conflictPolicy: args.data.conflictPolicy, ...args.data })),
+      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data }))
+    },
+    coupangProductRule: {
+      findMany: vi.fn(async () => [
+        {
+          id: "rule-spend",
+          coupangProductId: "product-spend",
+          displayName: "Spend Product",
+          includeKeywords: ["Spend"],
+          excludeKeywords: [],
+          priority: 10,
+          validFrom: toDateOnly("2026-01-01")!,
+          validTo: null,
+          isActive: true
+        }
+      ])
+    },
+    coupangAdMetric: {
+      findMany: vi.fn(async () => options.existingAdMetrics ?? []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+      create: vi.fn(async (args) => ({ id: `metric-${args.data.rowNumber}`, ...args.data }))
+    },
+    coupangUploadRowError: {
+      createMany: vi.fn(async () => ({}))
+    }
+  };
+  return prisma;
+}
+
+function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any[] } = {}) {
   return {
     coupangProductRule: {
       findMany: vi.fn(async () => [
@@ -374,7 +1640,7 @@ function fakeCoupangRematchPrisma(options: { promotions?: any[] } = {}) {
       findMany: vi.fn(async () => [])
     },
     coupangAdMetric: {
-      findMany: vi.fn(async () => [
+      findMany: vi.fn(async () => options.adMetrics ?? [
         {
           id: "metric-1",
           uploadBatchId: "batch-1",
@@ -431,6 +1697,62 @@ function fakeCoupangPromotionImportPrisma() {
   return prisma;
 }
 
+function fakeCoupangPriceTextRepairPrisma() {
+  const legacyCostRule = {
+    salePriceKrw: new Prisma.Decimal(900),
+    supplyPriceKrw: new Prisma.Decimal(12000),
+    productCostKrw: new Prisma.Decimal(7000),
+    salesFeeRate: new Prisma.Decimal("0.108"),
+    salesFeeKrw: new Prisma.Decimal(1800),
+    sellerShippingFeeKrw: new Prisma.Decimal(3000),
+    growthInboundFeeKrw: new Prisma.Decimal(500),
+    growthShippingFeeKrw: new Prisma.Decimal(1200),
+    returnRate: new Prisma.Decimal("0.04"),
+    returnCostPerUnitKrw: new Prisma.Decimal(2500),
+    extraCostKrw: new Prisma.Decimal(300),
+    note: "legacy malformed price text product"
+  };
+  const prisma = {
+    $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    coupangUploadBatch: {
+      findFirst: vi.fn(async () => ({ id: "old-batch" })),
+      create: vi.fn(async (args) => ({ id: "batch-price-text", conflictPolicy: args.data.conflictPolicy, ...args.data })),
+      update: vi.fn(async () => ({}))
+    },
+    coupangProduct: {
+      upsert: vi.fn(async () => ({ id: "product-correct" })),
+      findUnique: vi.fn(async (args) => {
+        if (args.where.standardName === "다이어트양말 10개입 ₩69") {
+          return { id: "product-legacy" };
+        }
+        if (args.where.id === "product-legacy" && args.select?._count) {
+          return {
+            id: "product-legacy",
+            _count: {
+              costRules: 0,
+              productRules: 0,
+              saleLines: 0,
+              promotionPrices: 0,
+              spendAdMetrics: 0,
+              conversionAdMetrics: 0
+            }
+          };
+        }
+        return null;
+      }),
+      delete: vi.fn(async (args) => ({ id: args.where.id }))
+    },
+    coupangCostRule: {
+      findFirst: vi.fn(async (args) => (args.where.coupangProductId === "product-legacy" ? legacyCostRule : null)),
+      create: vi.fn(async (args) => ({ id: "cost-rule-fixed", ...args.data }))
+    },
+    coupangUploadRowError: {
+      createMany: vi.fn(async () => ({}))
+    }
+  };
+  return prisma;
+}
+
 function fakeCoupangDeletePrisma() {
   const prisma = {
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
@@ -461,6 +1783,210 @@ function fakeCoupangDeletePrisma() {
     }
   };
   return prisma;
+}
+
+function fakeCoupangPriceTextDeletePrisma() {
+  const prisma = {
+    $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    coupangUploadBatch: {
+      findUnique: vi.fn(async () => ({
+        id: "batch-price-text",
+        sourceType: CoupangUploadSourceType.PRICE_TEXT,
+        columnSchema: {
+          schemaVersion: 1,
+          format: "name price",
+          effectiveFrom: "2026-01-01",
+          appliedRows: [
+            {
+              rowNumber: 1,
+              itemName: "다이어트양말",
+              standardName: "다이어트양말",
+              productId: "product-price-only",
+              costRuleId: "cost-price-1",
+              salePriceKrw: 9900
+            }
+          ]
+        }
+      })),
+      delete: vi.fn(async () => ({ id: "batch-price-text" }))
+    },
+    coupangUploadRowError: {
+      deleteMany: vi.fn(async () => ({}))
+    },
+    coupangSaleLine: {
+      findMany: vi.fn(async () => []),
+      deleteMany: vi.fn(async () => ({}))
+    },
+    coupangAdMetric: {
+      findMany: vi.fn(async () => []),
+      deleteMany: vi.fn(async () => ({}))
+    },
+    coupangCostRule: {
+      deleteMany: vi.fn(async () => ({ count: 1 }))
+    },
+    coupangProduct: {
+      findUnique: vi.fn(async (args) =>
+        args.where.id === "product-price-only"
+          ? {
+              id: "product-price-only",
+              _count: {
+                costRules: 0,
+                productRules: 0,
+                saleLines: 0,
+                promotionPrices: 0,
+                spendAdMetrics: 0,
+                conversionAdMetrics: 0
+              }
+            }
+          : null
+      ),
+      delete: vi.fn(async (args) => ({ id: args.where.id }))
+    }
+  };
+  return prisma;
+}
+
+function fakeCoupangMarginDeletePrisma() {
+  const prisma = {
+    $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    coupangUploadBatch: {
+      findUnique: vi.fn(async () => ({
+        id: "batch-margin",
+        sourceType: CoupangUploadSourceType.MARGIN,
+        columnSchema: {
+          schemaVersion: 1,
+          columns: ["항목", "원가", "판매수수료율", "하나로 배송비", "그로스 입출고비", "그로스 배송비"],
+          missingColumns: [],
+          effectiveFrom: "2026-01-01",
+          appliedRows: [
+            {
+              rowNumber: 2,
+              itemName: "다이어트양말",
+              standardName: "다이어트양말",
+              productId: "product-margin-only",
+              productRuleId: "rule-margin-1",
+              productRuleCreated: true,
+              costRuleId: "cost-margin-1"
+            }
+          ]
+        }
+      })),
+      delete: vi.fn(async () => ({ id: "batch-margin" }))
+    },
+    coupangUploadRowError: {
+      deleteMany: vi.fn(async () => ({}))
+    },
+    coupangSaleLine: {
+      findMany: vi.fn(async () => []),
+      deleteMany: vi.fn(async () => ({}))
+    },
+    coupangAdMetric: {
+      findMany: vi.fn(async () => []),
+      deleteMany: vi.fn(async () => ({}))
+    },
+    coupangCostRule: {
+      deleteMany: vi.fn(async () => ({ count: 1 }))
+    },
+    coupangProductRule: {
+      deleteMany: vi.fn(async () => ({ count: 1 }))
+    },
+    coupangProduct: {
+      findUnique: vi.fn(async (args) =>
+        args.where.id === "product-margin-only"
+          ? {
+              id: "product-margin-only",
+              _count: {
+                costRules: 0,
+                productRules: 0,
+                saleLines: 0,
+                promotionPrices: 0,
+                spendAdMetrics: 0,
+                conversionAdMetrics: 0
+              }
+            }
+          : null
+      ),
+      delete: vi.fn(async (args) => ({ id: args.where.id }))
+    }
+  };
+  return prisma;
+}
+
+function fakeCoupangPreviewPrisma() {
+  return {
+    coupangUploadBatch: {
+      findUnique: vi.fn(async () => ({ id: "batch-ads", sourceType: CoupangUploadSourceType.ADS }))
+    },
+    coupangAdMetric: {
+      findMany: vi.fn(async () => [{ id: "metric-1", rowNumber: 2, impressions: BigInt(123) }])
+    }
+  };
+}
+
+function coupangAdsHeaderRow() {
+  return [
+    "Date",
+    "Campaign Name",
+    "Ad Group",
+    "Ad Execution Option ID",
+    "Ad Execution Product Name",
+    "Conversion Option ID",
+    "Conversion Product Name",
+    "Impressions",
+    "Clicks",
+    "Ad Spend(KRW)",
+    "Total Orders(1d)",
+    "Direct Orders(1d)",
+    "Indirect Orders(1d)",
+    "Total Conversion Sales(1d)(KRW)",
+    "Direct Conversion Sales(1d)(KRW)",
+    "Indirect Conversion Sales(1d)(KRW)",
+    "Total Sales Quantity(1d)",
+    "Direct Sales Quantity(1d)",
+    "Indirect Sales Quantity(1d)"
+  ];
+}
+
+function coupangAdsHeaderRowWithAdName() {
+  return [
+    "Date",
+    "Campaign Name",
+    "Ad Group",
+    "Ad Name",
+    "Ad Execution Option ID",
+    "Ad Execution Product Name",
+    "Conversion Option ID",
+    "Conversion Product Name",
+    "Impressions",
+    "Clicks",
+    "Ad Spend(KRW)",
+    "Total Orders(1d)",
+    "Direct Orders(1d)",
+    "Indirect Orders(1d)",
+    "Total Conversion Sales(1d)(KRW)",
+    "Direct Conversion Sales(1d)(KRW)",
+    "Indirect Conversion Sales(1d)(KRW)",
+    "Total Sales Quantity(1d)",
+    "Direct Sales Quantity(1d)",
+    "Indirect Sales Quantity(1d)"
+  ];
+}
+
+function coupangSalesHeaderRow() {
+  return [
+    "Option ID",
+    "Option Name",
+    "Product Name",
+    "Sale Method",
+    "Sales(KRW)",
+    "Orders",
+    "Sales Quantity",
+    "Total Sales(KRW)",
+    "Total Sales Quantity",
+    "Cancel Amount(KRW)",
+    "Cancel Quantity",
+    "Instant Cancel Quantity"
+  ];
 }
 
 async function workbookBuffer(rows: unknown[][]) {

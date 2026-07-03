@@ -8,6 +8,7 @@ export type CoupangAdsColumnKey =
   | "metricDate"
   | "campaignName"
   | "adGroupName"
+  | "adName"
   | "adExecutionOptionId"
   | "adExecutionProductName"
   | "conversionOptionId"
@@ -29,6 +30,7 @@ export type ParsedCoupangAdRow = {
   metricDate: Date;
   campaignName: string | null;
   adGroupName: string | null;
+  adName: string | null;
   adExecutionOptionId: string | null;
   adExecutionProductName: string;
   conversionOptionId: string | null;
@@ -59,6 +61,7 @@ export const COUPANG_ADS_COLUMN_ALIASES: Record<CoupangAdsColumnKey, string[]> =
   metricDate: ["날짜", "Date", "metricDate"],
   campaignName: ["캠페인 이름", "Campaign Name", "campaignName"],
   adGroupName: ["광고그룹", "Ad Group", "adGroupName"],
+  adName: ["광고명", "광고 이름", "Ad Name", "adName"],
   adExecutionOptionId: ["광고 집행 옵션 ID", "Ad Execution Option ID", "adExecutionOptionId"],
   adExecutionProductName: ["광고집행 상품명", "Ad Execution Product Name", "adExecutionProductName"],
   conversionOptionId: ["광고 전환 매출 발생 옵션 ID", "Conversion Option ID", "conversionOptionId"],
@@ -136,7 +139,7 @@ export function coupangAdMetricKey(row: ParsedCoupangAdRow) {
     row.campaignName ?? "",
     row.adGroupName ?? "",
     row.adExecutionOptionId ?? "",
-    row.adExecutionProductName,
+    isPlaceholderCoupangAdsText(row.adExecutionProductName) ? row.adName ?? "" : row.adExecutionProductName,
     row.conversionOptionId ?? "",
     row.conversionProductName
   ]
@@ -148,11 +151,16 @@ export function hashCoupangAdsRecord(record: unknown) {
   return createHash("sha256").update(JSON.stringify(record)).digest("hex");
 }
 
+function isPlaceholderCoupangAdsText(value: string | null | undefined) {
+  const text = String(value ?? "").trim();
+  return !text || text === "-";
+}
+
 function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangAdsColumnKey, string>) {
   const issues: ParseIssue[] = [];
   const metricDate = requiredDate(rawRow, headerMap, "metricDate", issues);
-  const adExecutionProductName = requiredText(rawRow, headerMap, "adExecutionProductName", issues);
-  const conversionProductName = requiredText(rawRow, headerMap, "conversionProductName", issues);
+  const adExecutionProductName = optionalText(rawRow, headerMap, "adExecutionProductName") ?? "";
+  const conversionProductName = optionalText(rawRow, headerMap, "conversionProductName") ?? "";
 
   const parsedRow =
     issues.length > 0 || !metricDate
@@ -161,6 +169,7 @@ function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangAdsColum
           metricDate,
           campaignName: optionalText(rawRow, headerMap, "campaignName"),
           adGroupName: optionalText(rawRow, headerMap, "adGroupName"),
+          adName: optionalText(rawRow, headerMap, "adName"),
           adExecutionOptionId: optionalText(rawRow, headerMap, "adExecutionOptionId"),
           adExecutionProductName,
           conversionOptionId: optionalText(rawRow, headerMap, "conversionOptionId"),
@@ -180,24 +189,6 @@ function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangAdsColum
         };
 
   return { parsedRow: issues.length > 0 ? null : parsedRow, issues };
-}
-
-function requiredText(
-  rawRow: Record<string, string>,
-  headerMap: Map<CoupangAdsColumnKey, string>,
-  key: CoupangAdsColumnKey,
-  issues: ParseIssue[]
-) {
-  const value = optionalText(rawRow, headerMap, key);
-  if (!value) {
-    issues.push({
-      columnName: COUPANG_ADS_COLUMN_ALIASES[key][0],
-      errorCode: "REQUIRED",
-      message: `${COUPANG_ADS_COLUMN_ALIASES[key][0]} is required.`,
-      rawValue: readRaw(rawRow, headerMap, key)
-    });
-  }
-  return value ?? "";
 }
 
 function requiredDate(
