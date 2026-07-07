@@ -1224,28 +1224,7 @@ export class CoupangService {
 
   async updateProductSetting(id: string, body: Record<string, unknown>) {
     await this.assertProduct(id);
-    const productData: Prisma.CoupangProductUpdateInput = {};
-    if (body.displayName !== undefined) {
-      productData.displayName = requiredString(body.displayName, "displayName");
-    }
-    if (body.standardName !== undefined) {
-      productData.standardName = standardProductName(requiredString(body.standardName, "standardName"));
-    }
-    if (body.sortOrder !== undefined) {
-      productData.sortOrder = numberOrDefault(body.sortOrder, 100);
-    }
-    if (body.isActive !== undefined) {
-      productData.isActive = Boolean(body.isActive);
-    }
-    if (body.groupId !== undefined) {
-      const groupId = optionalNullableString(body.groupId);
-      if (groupId) {
-        await this.assertProductGroup(groupId);
-        productData.group = { connect: { id: groupId } };
-      } else {
-        productData.group = { disconnect: true };
-      }
-    }
+    const productData = await this.buildCoupangProductSettingUpdateData(this.prisma, body);
     if (Object.keys(productData).length > 0) {
       await this.prisma.coupangProduct.update({ where: { id }, data: productData });
     }
@@ -1263,6 +1242,42 @@ export class CoupangService {
       where: { id },
       include: { group: true, productRules: true, costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] } }
     });
+  }
+
+  async updateProductConfiguration(id: string, body: Record<string, unknown>) {
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.coupangProduct.findUnique({ where: { id } });
+      if (!product) {
+        throw new NotFoundException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
+      }
+
+      const productData = await this.buildCoupangProductSettingUpdateData(tx, body);
+      if (Object.keys(productData).length > 0) {
+        await tx.coupangProduct.update({ where: { id }, data: productData });
+      }
+
+      const costRule = maybeCostRuleCreate(body);
+      if (costRule?.create) {
+        await tx.coupangCostRule.create({
+          data: {
+            ...costRule.create,
+            coupangProductId: id
+          }
+        });
+      }
+
+      await this.upsertPrimaryCoupangProductRule(tx, id, body);
+
+      const updated = await tx.coupangProduct.findUnique({
+        where: { id },
+        include: {
+          group: true,
+          productRules: { orderBy: [{ priority: "asc" }, { createdAt: "asc" }] },
+          costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] }
+        }
+      });
+      return updated ? { ...updated, costRules: sortCoupangCostRulesForSettings(updated.costRules) } : updated;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
   async deleteProductSetting(id: string) {
@@ -1452,7 +1467,7 @@ export class CoupangService {
         roas: safeDivide(totals.adConversionSalesKrw, totals.adSpendKrw),
         adSpendRatio: safeDivide(totals.adSpendKrw, totals.netSalesKrw)
       },
-      rows: rows.slice(0, 20)
+      rows
     };
   }
 
@@ -2211,6 +2226,99 @@ export class CoupangService {
         });
       }
     }
+  }
+
+  private async buildCoupangProductSettingUpdateData(
+    client: Pick<Prisma.TransactionClient, "coupangProductGroup">,
+    body: Record<string, unknown>
+  ): Promise<Prisma.CoupangProductUpdateInput> {
+    const productData: Prisma.CoupangProductUpdateInput = {};
+    if (body.displayName !== undefined) {
+      productData.displayName = requiredString(body.displayName, "displayName");
+    }
+    if (body.standardName !== undefined) {
+      productData.standardName = standardProductName(requiredString(body.standardName, "standardName"));
+    }
+    if (body.sortOrder !== undefined) {
+      productData.sortOrder = numberOrDefault(body.sortOrder, 100);
+    }
+    if (body.isActive !== undefined) {
+      productData.isActive = Boolean(body.isActive);
+    }
+    if (body.groupId !== undefined) {
+      const groupId = optionalNullableString(body.groupId);
+      if (groupId) {
+        const group = await client.coupangProductGroup.findUnique({ where: { id: groupId } });
+        if (!group) {
+          throw new NotFoundException({ code: "COUPANG_PRODUCT_GROUP_NOT_FOUND", message: "Coupang product group was not found." });
+        }
+        productData.group = { connect: { id: groupId } };
+      } else {
+        productData.group = { disconnect: true };
+      }
+    }
+    return productData;
+  }
+
+  private async upsertPrimaryCoupangProductRule(tx: Prisma.TransactionClient, productId: string, body: Record<string, unknown>) {
+    const hasRuleFields =
+      body.mappingRuleId !== undefined ||
+      body.includeKeywords !== undefined ||
+      body.excludeKeywords !== undefined ||
+      body.priority !== undefined;
+    if (!hasRuleFields) {
+      return;
+    }
+
+    const includeKeywords =
+      body.includeKeywords !== undefined ? requiredStringArray(body.includeKeywords, "includeKeywords") : undefined;
+    const ruleId = optionalString(body.mappingRuleId);
+    const existing = ruleId
+      ? await tx.coupangProductRule.findUnique({ where: { id: ruleId } })
+      : await tx.coupangProductRule.findFirst({
+          where: { coupangProductId: productId, isActive: true },
+          orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
+        });
+
+    if (ruleId && !existing) {
+      throw new NotFoundException({ code: "COUPANG_MAPPING_RULE_NOT_FOUND", message: "Coupang mapping rule was not found." });
+    }
+    if (existing && existing.coupangProductId !== productId) {
+      throw new BadRequestException({
+        code: "COUPANG_RULE_PRODUCT_MISMATCH",
+        message: "Mapping rule belongs to another product."
+      });
+    }
+
+    if (existing) {
+      await tx.coupangProductRule.update({
+        where: { id: existing.id },
+        data: {
+          displayName: body.displayName !== undefined ? requiredString(body.displayName, "displayName") : undefined,
+          includeKeywords,
+          excludeKeywords: body.excludeKeywords !== undefined ? stringArray(body.excludeKeywords) ?? [] : undefined,
+          priority: body.priority !== undefined ? numberOrDefault(body.priority, 100) : undefined,
+          isActive: true
+        }
+      });
+      return;
+    }
+
+    if (!includeKeywords || includeKeywords.length === 0) {
+      return;
+    }
+
+    await tx.coupangProductRule.create({
+      data: {
+        coupangProductId: productId,
+        displayName: optionalString(body.displayName) ?? "매칭 규칙",
+        includeKeywords,
+        excludeKeywords: stringArray(body.excludeKeywords) ?? [],
+        priority: numberOrDefault(body.priority, 100),
+        adEnabled: true,
+        isActive: true
+      }
+    });
   }
 
   private async assertUpload(id: string) {

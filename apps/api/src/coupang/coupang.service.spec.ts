@@ -316,6 +316,119 @@ describe("CoupangService product settings and mapping rules", () => {
     });
   });
 
+  it("updates product configuration and creates a new cost rule", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.updateProductConfiguration("product-1", {
+      displayName: "Black Socks Updated",
+      standardName: "Black Socks Updated",
+      groupId: "group-1",
+      salePriceKrw: 24900,
+      supplyPriceKrw: 12000,
+      productCostKrw: 7000,
+      salesFeeRate: 0.12,
+      salesFeeKrw: 2200,
+      effectiveFrom: "2026-07-06"
+    });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(prisma.coupangProduct.update).toHaveBeenCalledWith({
+      where: { id: "product-1" },
+      data: {
+        displayName: "Black Socks Updated",
+        standardName: "black socks updated",
+        group: { connect: { id: "group-1" } }
+      }
+    });
+    expect(prisma.coupangCostRule.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        coupangProductId: "product-1",
+        salePriceKrw: new Prisma.Decimal(24900),
+        supplyPriceKrw: new Prisma.Decimal(12000),
+        productCostKrw: new Prisma.Decimal(7000),
+        salesFeeRate: new Prisma.Decimal(0.12),
+        salesFeeKrw: new Prisma.Decimal(2200),
+        effectiveFrom: toDateOnly("2026-07-06")
+      })
+    });
+  });
+
+  it("does not create a cost rule when configuration has no cost fields", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    vi.mocked(prisma.coupangProductRule.findFirst).mockResolvedValueOnce({ id: "rule-primary", coupangProductId: "product-1" });
+    const service = new CoupangService(prisma as never);
+
+    await service.updateProductConfiguration("product-1", {
+      displayName: "Black Socks Renamed",
+      includeKeywords: ["Black Socks"],
+      excludeKeywords: ["Gift"],
+      priority: "3"
+    });
+
+    expect(prisma.coupangCostRule.create).not.toHaveBeenCalled();
+    expect(prisma.coupangProductRule.update).toHaveBeenCalledWith({
+      where: { id: "rule-primary" },
+      data: {
+        displayName: "Black Socks Renamed",
+        includeKeywords: ["Black Socks"],
+        excludeKeywords: ["Gift"],
+        priority: 3,
+        isActive: true
+      }
+    });
+  });
+
+  it("creates a primary mapping rule when none exists and include keywords are provided", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.updateProductConfiguration("product-1", {
+      displayName: "Black Socks",
+      includeKeywords: "Black, Socks",
+      excludeKeywords: "Gift, Sample",
+      priority: "5"
+    });
+
+    expect(prisma.coupangProductRule.create).toHaveBeenCalledWith({
+      data: {
+        coupangProductId: "product-1",
+        displayName: "Black Socks",
+        includeKeywords: ["Black", "Socks"],
+        excludeKeywords: ["Gift", "Sample"],
+        priority: 5,
+        adEnabled: true,
+        isActive: true
+      }
+    });
+  });
+
+  it("rejects configuration updates for a mapping rule owned by another product", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await expect(
+      service.updateProductConfiguration("product-1", {
+        mappingRuleId: "other-rule",
+        includeKeywords: ["Other"]
+      })
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({ code: "COUPANG_RULE_PRODUCT_MISMATCH" })
+    });
+    expect(prisma.coupangProductRule.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects empty include keywords on configuration mapping updates", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await expect(service.updateProductConfiguration("product-1", { includeKeywords: [] })).rejects.toMatchObject({
+      response: expect.objectContaining({ code: "FIELD_REQUIRED" })
+    });
+    expect(prisma.coupangProductRule.update).not.toHaveBeenCalled();
+    expect(prisma.coupangProductRule.create).not.toHaveBeenCalled();
+  });
+
   it("creates, updates, and disables Coupang mapping rules", async () => {
     const prisma = fakeCoupangMappingRulePrisma();
     const service = new CoupangService(prisma as never);
@@ -480,6 +593,23 @@ describe("Coupang product group aggregation", () => {
     expect(result.summary.marginKrw).toBe(40_000);
     expect(result.summary.missingCostRuleCount).toBe(1);
     expect(result.rows).toEqual(groupedRows);
+  });
+
+  it("returns every dashboard product row instead of truncating the product summary", async () => {
+    const service = new CoupangService({} as never);
+    const productRows = Array.from({ length: 25 }, (_, index) =>
+      productProfitRow({
+        productId: `product-${index + 1}`,
+        productName: `Product ${index + 1}`,
+        netSalesKrw: index + 1
+      })
+    );
+    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
+
+    const result = await service.dashboard({ from: "2026-06-01", to: "2026-06-30" });
+
+    expect(result.rows).toHaveLength(25);
+    expect(result.rows).toEqual(productRows);
   });
 
   it("groups ads analysis by spend product group and campaign/ad group", async () => {
@@ -1304,12 +1434,21 @@ describe("CoupangService mappingIssues", () => {
 });
 
 function fakeCoupangProductSettingPrisma() {
-  return {
-    $transaction: vi.fn(async () => ({})),
+  const prisma = {
+    $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
     coupangProduct: {
       create: vi.fn(async (args) => ({ id: "product-created", ...args.data, productRules: [], costRules: [] })),
       findUnique: vi.fn(async (args) =>
-        args.where.id === "product-1" ? { id: "product-1", displayName: "Black Socks", standardName: "black socks" } : null
+        args.where.id === "product-1"
+          ? {
+              id: "product-1",
+              groupId: null,
+              displayName: "Black Socks",
+              standardName: "black socks",
+              productRules: [],
+              costRules: []
+            }
+          : null
       ),
       update: vi.fn(async (args) => ({ id: args.where.id, ...args.data }))
     },
@@ -1322,7 +1461,16 @@ function fakeCoupangProductSettingPrisma() {
       update: vi.fn(async (args) => ({ id: args.where.id, ...args.data, products: [] }))
     },
     coupangProductRule: {
-      findFirst: vi.fn(async () => null),
+      findFirst: vi.fn(async (): Promise<{ id: string; coupangProductId: string } | null> => null),
+      findUnique: vi.fn(async (args) => {
+        if (args.where.id === "rule-1") {
+          return { id: "rule-1", coupangProductId: "product-1", displayName: "Black Socks", includeKeywords: ["Black"], priority: 10 };
+        }
+        if (args.where.id === "other-rule") {
+          return { id: "other-rule", coupangProductId: "product-2", displayName: "Other Product", includeKeywords: ["Other"], priority: 10 };
+        }
+        return null;
+      }),
       create: vi.fn(async (args) => ({ id: "rule-created", ...args.data })),
       update: vi.fn(async (args) => ({ id: args.where.id, ...args.data })),
       updateMany: vi.fn(async () => ({ count: 0 }))
@@ -1337,6 +1485,7 @@ function fakeCoupangProductSettingPrisma() {
       findUnique: vi.fn(async () => null)
     }
   };
+  return prisma;
 }
 
 function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRow {

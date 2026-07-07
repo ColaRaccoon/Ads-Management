@@ -86,6 +86,11 @@ export class CoupangController {
     return this.coupangService.createProductSetting(body);
   }
 
+  @Patch("product-settings/:id/configuration")
+  updateProductConfiguration(@Param("id") id: string, @Body() body: Record<string, unknown>) {
+    return this.coupangService.updateProductConfiguration(id, body);
+  }
+
   @Patch("product-settings/:id")
   updateProductSetting(@Param("id") id: string, @Body() body: Record<string, unknown>) {
     return this.coupangService.updateProductSetting(id, body);

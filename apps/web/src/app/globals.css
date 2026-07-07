@@ -394,6 +394,41 @@ p.muted {
   font-size: 15px;
 }
 
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.collapse-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 0;
+  cursor: pointer;
+}
+
+.collapse-trigger h2 {
+  margin: 0;
+}
+
+.collapse-trigger:hover,
+.collapse-trigger:focus-visible {
+  color: var(--brand);
+  outline: none;
+}
+
+.collapsible-body {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .kpi-card {
   padding: 13px;
   min-height: 94px;
@@ -478,6 +513,20 @@ tfoot td {
   font-weight: 700;
 }
 
+tr.clickable-row {
+  cursor: pointer;
+}
+
+tr.clickable-row:hover td,
+tr.clickable-row.active td {
+  background: var(--brand-weak);
+}
+
+tr.clickable-row:focus-visible td {
+  outline: 2px solid color-mix(in srgb, var(--brand) 35%, transparent);
+  outline-offset: -2px;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -538,6 +587,13 @@ tfoot td {
 .form-grid > .select,
 .form-grid > .textarea {
   width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .rule-editor {
