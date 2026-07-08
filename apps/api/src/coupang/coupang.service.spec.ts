@@ -612,6 +612,43 @@ describe("Coupang product group aggregation", () => {
     expect(result.rows).toEqual(productRows);
   });
 
+  it("omits products with no sales or ad activity from the daily report", async () => {
+    const service = new CoupangService({} as never);
+    const productRows = [
+      productProfitRow({
+        productId: "zero-row",
+        productName: "Zero Product",
+        matchedSalesLineCount: 3,
+        netSalesKrw: 0,
+        salesQuantity: 0,
+        orderCount: 0,
+        adSpendKrw: 0,
+        adConversionSalesKrw: 0,
+        adConversionQuantity: 0
+      }),
+      productProfitRow({
+        productId: "sales-row",
+        productName: "Sales Product",
+        netSalesKrw: 10_000,
+        salesQuantity: 1,
+        orderCount: 1
+      }),
+      productProfitRow({
+        productId: "ad-row",
+        productName: "Ad Product",
+        netSalesKrw: 0,
+        salesQuantity: 0,
+        orderCount: 0,
+        adSpendKrw: 500
+      })
+    ];
+    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
+
+    const result = await service.dailyReport({ date: "2026-07-02", groupBy: "product" });
+
+    expect(result.rows.map((row) => row.productName)).toEqual(["Sales Product", "Ad Product"]);
+  });
+
   it("groups ads analysis by spend product group and campaign/ad group", async () => {
     const prisma = fakeCoupangAdsAnalysisPrisma();
     const service = new CoupangService(prisma as never);

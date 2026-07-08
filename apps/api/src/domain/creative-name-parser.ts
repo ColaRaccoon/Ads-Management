@@ -21,9 +21,19 @@ export class CreativeNameParser {
       .filter(Boolean);
 
     const dateCode = this.isDatePrefix(parts[0]) ? parts.shift() ?? null : null;
-    const setting = this.isSettingSuffix(parts[parts.length - 1]) ? parts.pop()?.toUpperCase() ?? null : null;
+    let setting = this.isSettingSuffix(parts[parts.length - 1]) ? parts.pop()?.toUpperCase() ?? null : null;
     const method = parts.find((part) => this.isMethodToken(part)) ?? null;
     parts = parts.filter((part) => !this.isMethodToken(part));
+
+    if (
+      !setting &&
+      dateCode &&
+      parts.length >= 3 &&
+      this.isMaterialNo(parts[parts.length - 2]) &&
+      !this.isMaterialNo(parts[parts.length - 1])
+    ) {
+      setting = parts.pop() ?? null;
+    }
 
     if (parts.length < 2) {
       return {
@@ -64,5 +74,9 @@ export class CreativeNameParser {
 
   private isMethodToken(value: string | undefined) {
     return Boolean(value && METHOD_TOKENS.has(value));
+  }
+
+  private isMaterialNo(value: string | undefined) {
+    return Boolean(value && (/^[A-Z]?\d+$/i.test(value) || /^\d+번소재$/i.test(value)));
   }
 }

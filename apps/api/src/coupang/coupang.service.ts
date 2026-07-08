@@ -1691,10 +1691,11 @@ export class CoupangService {
     const groupBy = parseCoupangGroupBy(query.groupBy);
     const productRows = await this.buildProductProfitRows({ from: query.date, to: query.date, fromDate: date, toDate: date });
     const rows = groupBy === "group" ? await this.groupProductProfitRows(productRows) : productRows;
+    const reportRows = rows.filter(hasDailyReportActivity);
     return {
       date: query.date,
       groupBy,
-      rows: rows.map((row) => ({
+      rows: reportRows.map((row) => ({
         productName: row.productName,
         salePriceKrw: row.salePriceKrw,
         baseSalePriceKrw: row.baseSalePriceKrw,
@@ -2414,6 +2415,17 @@ export function aggregateCoupangProductProfitRowsByGroup(
       return aggregateCoupangProductProfitGroup(bucket.group, bucket.rows);
     })
     .sort((a, b) => b.netSalesKrw - a.netSalesKrw || a.productName.localeCompare(b.productName));
+}
+
+function hasDailyReportActivity(row: ProductProfitRow) {
+  return (
+    row.netSalesKrw !== 0 ||
+    row.salesQuantity !== 0 ||
+    row.orderCount !== 0 ||
+    row.adSpendKrw !== 0 ||
+    row.adConversionSalesKrw !== 0 ||
+    row.adConversionQuantity !== 0
+  );
 }
 
 function aggregateCoupangProductProfitGroup(

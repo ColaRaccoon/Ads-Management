@@ -91,6 +91,7 @@ type SalesProductRow = {
   quantity: number;
   revenueKrw: number;
   totalPaidKrw: number;
+  adSpendUsd?: number | null;
   adSpendKrw: number | null;
   grossCostKrw: number | null;
   totalCostKrw: number | null;
@@ -697,7 +698,30 @@ function buildReportProductGroups(
       })
     );
 
-  return [...groups, ...salesOnlyGroups];
+  return [...groups, ...salesOnlyGroups].filter(reportGroupHasActivity);
+}
+
+function reportGroupHasActivity(group: ReportProductGroup) {
+  return (
+    hasNonZeroNumber(group.totals.spendUsd) ||
+    hasNonZeroNumber(group.totals.spendKrw) ||
+    hasNonZeroNumber(group.totals.purchaseCount) ||
+    hasNonZeroNumber(group.totals.revenueKrw) ||
+    salesRowHasActivity(group.salesRow)
+  );
+}
+
+function salesRowHasActivity(row: SalesProductRow | null) {
+  if (!row) {
+    return false;
+  }
+  return (
+    hasNonZeroNumber(row.quantity) ||
+    hasNonZeroNumber(row.revenueKrw) ||
+    hasNonZeroNumber(row.totalPaidKrw) ||
+    hasNonZeroNumber(row.adSpendUsd) ||
+    hasNonZeroNumber(row.adSpendKrw)
+  );
 }
 
 function findSalesRowForGroup(group: ProductGroup, index: SalesProductIndex) {
@@ -890,6 +914,10 @@ function sum(values: Array<number | null | undefined>): number {
 
 function isKnownNumber(value: number | null | undefined): value is number {
   return value !== null && value !== undefined && !Number.isNaN(value);
+}
+
+function hasNonZeroNumber(value: number | null | undefined) {
+  return isKnownNumber(value) && Math.abs(value) > 0;
 }
 
 function salesProductLabel(row: SalesProductRow) {
