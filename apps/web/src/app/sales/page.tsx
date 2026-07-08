@@ -25,6 +25,7 @@ type SalesProductRow = {
   product?: { displayName?: string | null; name?: string | null; code?: string | null } | null;
   quantity: number;
   revenueKrw: number;
+  totalPaidKrw?: number | null;
   adSpendUsd: number;
   adSpendKrw: number | null;
   grossCostKrw: number | null;
@@ -72,7 +73,7 @@ export default function SalesPage() {
   });
 
   const summary = performance.data?.summary;
-  const productRows = performance.data?.rows ?? [];
+  const productRows = useMemo(() => (performance.data?.rows ?? []).filter(hasSalesOrAdActivity), [performance.data?.rows]);
   const productTotals = useMemo(() => summarizeSalesRows(productRows), [productRows]);
 
   return (
@@ -173,6 +174,16 @@ function summarizeSalesRows(rows: SalesProductRow[]): SalesProductTotals {
     roas: divideOrNull(revenueKrw, adSpendKrw),
     cpaKrw: divideOrNull(adSpendKrw, quantity)
   };
+}
+
+function hasSalesOrAdActivity(row: SalesProductRow) {
+  return (
+    hasNonZeroNumber(row.quantity) ||
+    hasNonZeroNumber(row.revenueKrw) ||
+    hasNonZeroNumber(row.totalPaidKrw) ||
+    hasNonZeroNumber(row.adSpendUsd) ||
+    hasNonZeroNumber(row.adSpendKrw)
+  );
 }
 
 function downloadSalesExcel(
@@ -276,6 +287,11 @@ function toFiniteNumber(value: unknown) {
   }
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function hasNonZeroNumber(value: unknown) {
+  const parsed = toFiniteNumber(value);
+  return parsed !== null && Math.abs(parsed) > 0;
 }
 
 function productLabel(row: SalesProductRow) {
