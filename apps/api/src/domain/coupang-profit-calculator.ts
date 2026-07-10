@@ -50,6 +50,23 @@ export type CoupangProfitResult = {
   warnings: string[];
 };
 
+export type CoupangManualPurchaseCostInput = {
+  quantity: number;
+  vendorFeePerUnitKrw: number;
+  saleMethod?: string | null;
+  salePriceKrw?: number | null;
+  cost: CoupangCostInput;
+  feeMode?: CoupangFeeMode;
+  useGrowthCost?: boolean;
+};
+
+export type CoupangManualPurchaseCostResult = {
+  vendorFeeTotalKrw: number;
+  coupangSalesFeeKrw: number;
+  shippingCostKrw: number;
+  totalCostKrw: number;
+};
+
 export function calculateCoupangProfit(
   sales: CoupangSalesInput,
   cost: CoupangCostInput,
@@ -89,6 +106,26 @@ export function calculateCoupangProfit(
     roas: safeDivide(finiteNumber(ads.adConversionSalesKrw), adSpendKrw),
     organicSalesKrw,
     warnings
+  };
+}
+
+export function calculateCoupangManualPurchaseCost(input: CoupangManualPurchaseCostInput): CoupangManualPurchaseCostResult {
+  const quantity = Math.max(0, Math.trunc(finiteNumber(input.quantity)));
+  const vendorFeeTotalKrw = finiteNumber(input.vendorFeePerUnitKrw) * quantity;
+  const feeMode = input.feeMode ?? (finiteNumber(input.cost.salesFeeRate) > 0 ? "RATE" : "PER_UNIT");
+  const coupangSalesFeeKrw =
+    feeMode === "RATE"
+      ? finiteNumber(input.salePriceKrw) * finiteNumber(input.cost.salesFeeRate) * quantity
+      : finiteNumber(input.cost.salesFeeKrw) * quantity;
+  const shippingCostKrw = shippingCost(input.saleMethod, input.cost, quantity, {
+    useGrowthCost: input.useGrowthCost ?? true
+  });
+
+  return {
+    vendorFeeTotalKrw,
+    coupangSalesFeeKrw,
+    shippingCostKrw,
+    totalCostKrw: vendorFeeTotalKrw + coupangSalesFeeKrw + shippingCostKrw
   };
 }
 

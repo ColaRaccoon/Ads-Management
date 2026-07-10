@@ -394,6 +394,105 @@ p.muted {
   font-size: 15px;
 }
 
+.manual-purchase-fee {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.manual-purchase-fee .field {
+  width: min(220px, 100%);
+}
+
+.manual-purchase-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(145px, 100%), 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.manual-purchase-metric {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fbfa;
+}
+
+.manual-purchase-metric span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.manual-purchase-metric strong {
+  font-size: 15px;
+}
+
+.manual-purchase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.manual-purchase-card {
+  min-width: 0;
+  min-height: 94px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+.manual-purchase-card.active {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand);
+}
+
+.manual-purchase-card.disabled {
+  background: #fbf7f5;
+}
+
+.manual-purchase-card-main {
+  display: grid;
+  width: 100%;
+  gap: 3px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.manual-purchase-card-main strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.manual-purchase-card-main span,
+.manual-purchase-warning {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.manual-purchase-warning {
+  margin: 6px 0 0;
+  color: var(--red);
+}
+
+.manual-purchase-controls {
+  display: grid;
+  grid-template-columns: minmax(68px, 0.5fr) minmax(0, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .collapsible-header {
   display: flex;
   align-items: center;

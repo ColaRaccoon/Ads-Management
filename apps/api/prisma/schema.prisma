@@ -717,12 +717,13 @@ model CoupangProduct {
   createdAt    DateTime             @default(now()) @map("created_at")
   updatedAt    DateTime             @updatedAt @map("updated_at")
   group        CoupangProductGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  productRules CoupangProductRule[]
-  costRules    CoupangCostRule[]
-  saleLines    CoupangSaleLine[]
-  promotionPrices CoupangPromotionPrice[]
-  spendAdMetrics CoupangAdMetric[]  @relation("CoupangAdSpendProduct")
-  conversionAdMetrics CoupangAdMetric[] @relation("CoupangAdConversionProduct")
+  productRules      CoupangProductRule[]
+  costRules         CoupangCostRule[]
+  saleLines         CoupangSaleLine[]
+  manualPurchases   CoupangManualPurchase[]
+  promotionPrices   CoupangPromotionPrice[]
+  spendAdMetrics    CoupangAdMetric[]        @relation("CoupangAdSpendProduct")
+  conversionAdMetrics CoupangAdMetric[]      @relation("CoupangAdConversionProduct")
 
   @@index([isActive, sortOrder])
   @@index([groupId])
@@ -746,9 +747,10 @@ model CoupangProductRule {
   updatedAt        DateTime            @updatedAt @map("updated_at")
   product          CoupangProduct      @relation(fields: [coupangProductId], references: [id], onDelete: Cascade)
   saleLines        CoupangSaleLine[]
+  manualPurchases  CoupangManualPurchase[]
   promotionPrices  CoupangPromotionPrice[]
-  spendAdMetrics   CoupangAdMetric[]   @relation("CoupangAdSpendRule")
-  conversionAdMetrics CoupangAdMetric[] @relation("CoupangAdConversionRule")
+  spendAdMetrics   CoupangAdMetric[]        @relation("CoupangAdSpendRule")
+  conversionAdMetrics CoupangAdMetric[]     @relation("CoupangAdConversionRule")
 
   @@index([isActive, priority])
   @@index([coupangProductId])
@@ -778,6 +780,37 @@ model CoupangCostRule {
 
   @@index([coupangProductId, effectiveFrom, effectiveTo])
   @@map("coupang_cost_rules")
+}
+
+model CoupangManualPurchase {
+  id                    String              @id @default(uuid()) @db.Uuid
+  purchaseDate          DateTime            @map("purchase_date") @db.Date
+  coupangProductId      String              @map("coupang_product_id") @db.Uuid
+  coupangProductRuleId  String?             @map("coupang_product_rule_id") @db.Uuid
+  productDisplayName    String              @map("product_display_name")
+  ruleDisplayName       String?             @map("rule_display_name")
+  saleMethod            String?             @map("sale_method")
+  quantity              Int
+  vendorFeePerUnitKrw   Decimal             @map("vendor_fee_per_unit_krw") @db.Decimal(14, 2)
+  vendorFeeTotalKrw     Decimal             @map("vendor_fee_total_krw") @db.Decimal(14, 2)
+  salePriceKrw          Decimal?            @map("sale_price_krw") @db.Decimal(14, 2)
+  baseSalePriceKrw      Decimal?            @map("base_sale_price_krw") @db.Decimal(14, 2)
+  promotionPriceKrw     Decimal?            @map("promotion_price_krw") @db.Decimal(14, 2)
+  priceSource           String?             @map("price_source") @db.VarChar(32)
+  coupangSalesFeeKrw    Decimal             @map("coupang_sales_fee_krw") @db.Decimal(14, 2)
+  shippingCostKrw       Decimal             @map("shipping_cost_krw") @db.Decimal(14, 2)
+  totalCostKrw          Decimal             @map("total_cost_krw") @db.Decimal(14, 2)
+  memo                  String?
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+  product               CoupangProduct      @relation(fields: [coupangProductId], references: [id], onDelete: Restrict)
+  productRule           CoupangProductRule? @relation(fields: [coupangProductRuleId], references: [id], onDelete: SetNull)
+
+  @@unique([purchaseDate, coupangProductId])
+  @@index([purchaseDate])
+  @@index([coupangProductId, purchaseDate])
+  @@index([coupangProductRuleId])
+  @@map("coupang_manual_purchases")
 }
 
 model CoupangUploadBatch {

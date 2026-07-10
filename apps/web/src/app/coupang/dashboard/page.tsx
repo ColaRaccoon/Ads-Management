@@ -21,6 +21,8 @@ type CoupangDashboard = {
     adConversionSalesKrw: number;
     organicSalesKrw: number;
     returnCostKrw: number;
+    manualPurchaseQuantity: number;
+    manualPurchaseTotalCostKrw: number;
     marginRate: number | null;
     roas: number | null;
     missingCostRuleCount: number;
@@ -37,6 +39,7 @@ type CoupangProfitRow = {
   netSalesKrw: number;
   adSpendKrw: number;
   organicSalesKrw: number;
+  manualPurchaseTotalCostKrw: number;
   marginKrw: number | null;
   roas: number | null;
   ruleStatus: string;
@@ -85,6 +88,8 @@ export default function CoupangDashboardPage() {
         <KpiCard label="Net Sales" value={money(data?.summary.netSalesKrw)} />
         <KpiCard label="Ad Spend" value={money(data?.summary.adSpendKrw)} />
         <KpiCard label="Organic Sales" value={money(data?.summary.organicSalesKrw)} />
+        <KpiCard label="가구매 수량" value={numberFmt(data?.summary.manualPurchaseQuantity)} />
+        <KpiCard label="가구매 비용" value={money(data?.summary.manualPurchaseTotalCostKrw)} />
         <KpiCard label="Margin" value={money(data?.summary.marginKrw)} helper={percent(data?.summary.marginRate)} />
         <KpiCard label="ROAS" value={ratio(data?.summary.roas)} />
       </div>
@@ -103,6 +108,7 @@ export default function CoupangDashboardPage() {
             { key: "product", header: nameHeader, render: (row) => row.productName },
             { key: "netSales", header: "Net Sales", render: (row) => money(row.netSalesKrw) },
             { key: "adSpend", header: "Ad Spend", render: (row) => money(row.adSpendKrw) },
+            { key: "manualPurchase", header: "가구매 비용", render: (row) => money(row.manualPurchaseTotalCostKrw) },
             { key: "organic", header: "Organic Sales", render: (row) => money(row.organicSalesKrw) },
             { key: "margin", header: "Margin", render: (row) => money(row.marginKrw) },
             { key: "roas", header: "ROAS", render: (row) => ratio(row.roas) },
@@ -116,6 +122,10 @@ export default function CoupangDashboardPage() {
 
 function money(value: number | null | undefined) {
   return value === null || value === undefined || Number.isNaN(value) ? "-" : `${Math.round(value).toLocaleString("ko-KR")}원`;
+}
+
+function numberFmt(value: number | null | undefined) {
+  return value === null || value === undefined || Number.isNaN(value) ? "-" : value.toLocaleString("ko-KR");
 }
 
 function percent(value: number | null | undefined) {

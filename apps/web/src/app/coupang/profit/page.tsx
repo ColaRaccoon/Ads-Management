@@ -36,6 +36,11 @@ type ProductProfitRow = {
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
   returnCostKrw: number | null;
+  manualPurchaseQuantity: number;
+  manualPurchaseVendorFeeKrw: number;
+  manualPurchaseCoupangSalesFeeKrw: number;
+  manualPurchaseShippingCostKrw: number;
+  manualPurchaseTotalCostKrw: number;
   adSpendKrw: number;
   adConversionSalesKrw: number;
   adConversionQuantity: number;
@@ -62,10 +67,26 @@ export default function CoupangProfitPage() {
       netSalesKrw: acc.netSalesKrw + row.netSalesKrw,
       totalCostKrw: acc.totalCostKrw + (row.totalCostKrw ?? 0),
       marginKrw: acc.marginKrw + (row.marginKrw ?? 0),
+      manualPurchaseQuantity: acc.manualPurchaseQuantity + row.manualPurchaseQuantity,
+      manualPurchaseVendorFeeKrw: acc.manualPurchaseVendorFeeKrw + row.manualPurchaseVendorFeeKrw,
+      manualPurchaseCoupangSalesFeeKrw: acc.manualPurchaseCoupangSalesFeeKrw + row.manualPurchaseCoupangSalesFeeKrw,
+      manualPurchaseShippingCostKrw: acc.manualPurchaseShippingCostKrw + row.manualPurchaseShippingCostKrw,
+      manualPurchaseTotalCostKrw: acc.manualPurchaseTotalCostKrw + row.manualPurchaseTotalCostKrw,
       adSpendKrw: acc.adSpendKrw + row.adSpendKrw,
       adConversionSalesKrw: acc.adConversionSalesKrw + row.adConversionSalesKrw
     }),
-    { netSalesKrw: 0, totalCostKrw: 0, marginKrw: 0, adSpendKrw: 0, adConversionSalesKrw: 0 }
+    {
+      netSalesKrw: 0,
+      totalCostKrw: 0,
+      marginKrw: 0,
+      manualPurchaseQuantity: 0,
+      manualPurchaseVendorFeeKrw: 0,
+      manualPurchaseCoupangSalesFeeKrw: 0,
+      manualPurchaseShippingCostKrw: 0,
+      manualPurchaseTotalCostKrw: 0,
+      adSpendKrw: 0,
+      adConversionSalesKrw: 0
+    }
   );
 
   return (
@@ -97,6 +118,11 @@ export default function CoupangProfitPage() {
             { key: "fee", header: "Sales Fee", render: (row) => money(row.salesFeeKrw) },
             { key: "ship", header: "Shipping/Growth", render: (row) => money(row.shippingCostKrw) },
             { key: "return", header: "Return Cost", render: (row) => money(row.returnCostKrw) },
+            { key: "manualQty", header: "가구매 수량", render: (row) => numberFmt(row.manualPurchaseQuantity) },
+            { key: "manualVendor", header: "가구매 업체수수료", render: (row) => money(row.manualPurchaseVendorFeeKrw) },
+            { key: "manualFee", header: "가구매 쿠팡수수료", render: (row) => money(row.manualPurchaseCoupangSalesFeeKrw) },
+            { key: "manualShip", header: "가구매 배송비", render: (row) => money(row.manualPurchaseShippingCostKrw) },
+            { key: "manualTotal", header: "가구매 총비용", render: (row) => money(row.manualPurchaseTotalCostKrw) },
             { key: "ad", header: "Ad Spend", render: (row) => money(row.adSpendKrw) },
             { key: "conv", header: "Ad Conv Sales", render: (row) => money(row.adConversionSalesKrw) },
             { key: "organic", header: "Organic Sales", render: (row) => money(row.organicSalesKrw) },
@@ -109,9 +135,24 @@ export default function CoupangProfitPage() {
           footer={
             <tr>
               <td>Total</td>
-              <td colSpan={5} />
+              <td />
+              <td />
+              <td />
+              <td />
+              <td />
               <td>{money(totals.netSalesKrw)}</td>
-              <td colSpan={7} />
+              <td />
+              <td />
+              <td />
+              <td />
+              <td>{numberFmt(totals.manualPurchaseQuantity)}</td>
+              <td>{money(totals.manualPurchaseVendorFeeKrw)}</td>
+              <td>{money(totals.manualPurchaseCoupangSalesFeeKrw)}</td>
+              <td>{money(totals.manualPurchaseShippingCostKrw)}</td>
+              <td>{money(totals.manualPurchaseTotalCostKrw)}</td>
+              <td>{money(totals.adSpendKrw)}</td>
+              <td>{money(totals.adConversionSalesKrw)}</td>
+              <td />
               <td>{money(totals.totalCostKrw)}</td>
               <td>{money(totals.marginKrw)}</td>
               <td>{percent(totals.marginKrw / totals.netSalesKrw)}</td>

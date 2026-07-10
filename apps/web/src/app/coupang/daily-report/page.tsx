@@ -23,6 +23,8 @@ type DailyReportRow = {
   priceSource: string;
   priceWarnings: string[];
   adSpendKrw: number;
+  manualPurchaseQuantity: number;
+  manualPurchaseTotalCostKrw: number;
   totalCostKrw: number | null;
   organicSalesKrw: number;
   marginKrw: number | null;
@@ -42,7 +44,17 @@ export default function CoupangDailyReportPage() {
   const exportReport = () => {
     const workbook = buildXlsxWorkbook({
       sheetName: "Coupang Daily Report",
-      columns: [{ width: 28 }, { width: 14 }, { width: 14 }, { width: 14 }, { width: 16 }, { width: 14 }, { width: 14 }],
+      columns: [
+        { width: 28 },
+        { width: 14 },
+        { width: 14 },
+        { width: 14 },
+        { width: 14 },
+        { width: 14 },
+        { width: 16 },
+        { width: 14 },
+        { width: 14 }
+      ],
       freezeRow: 1,
       autoFilter: { fromRow: 1 },
       rows: [
@@ -51,6 +63,8 @@ export default function CoupangDailyReportPage() {
           { value: row.productName, style: "Text" },
           { value: row.salePriceKrw, style: "Krw" },
           { value: row.adSpendKrw, style: "Krw" },
+          { value: row.manualPurchaseQuantity, style: "Number" },
+          { value: row.manualPurchaseTotalCostKrw, style: "Krw" },
           { value: row.totalCostKrw, style: "Krw" },
           { value: row.organicSalesKrw, style: "Krw" },
           { value: row.marginKrw, style: "Krw" },
@@ -87,10 +101,12 @@ export default function CoupangDailyReportPage() {
             { key: "product", header: columns[0], render: (row) => row.productName },
             { key: "price", header: columns[1], render: (row) => money(row.salePriceKrw) },
             { key: "ad", header: columns[2], render: (row) => money(row.adSpendKrw) },
-            { key: "total", header: columns[3], render: (row) => money(row.totalCostKrw) },
-            { key: "organic", header: columns[4], render: (row) => money(row.organicSalesKrw) },
-            { key: "margin", header: columns[5], render: (row) => money(row.marginKrw) },
-            { key: "roas", header: columns[6], render: (row) => ratio(row.roas) }
+            { key: "manualQty", header: columns[3], render: (row) => numberFmt(row.manualPurchaseQuantity) },
+            { key: "manualCost", header: columns[4], render: (row) => money(row.manualPurchaseTotalCostKrw) },
+            { key: "total", header: columns[5], render: (row) => money(row.totalCostKrw) },
+            { key: "organic", header: columns[6], render: (row) => money(row.organicSalesKrw) },
+            { key: "margin", header: columns[7], render: (row) => money(row.marginKrw) },
+            { key: "roas", header: columns[8], render: (row) => ratio(row.roas) }
           ]}
         />
       </div>
@@ -109,6 +125,8 @@ function dailyReportColumns(groupBy: CoupangGroupBy) {
     groupBy === "group" ? "제품그룹" : "제품명",
     "판매가",
     "광고비",
+    "가구매수량",
+    "가구매비용",
     "총비용",
     "오가닉매출",
     "마진금액",
@@ -118,6 +136,10 @@ function dailyReportColumns(groupBy: CoupangGroupBy) {
 
 function money(value: number | null | undefined) {
   return value === null || value === undefined || Number.isNaN(value) ? "-" : `${Math.round(value).toLocaleString("ko-KR")}원`;
+}
+
+function numberFmt(value: number | null | undefined) {
+  return value === null || value === undefined || Number.isNaN(value) ? "-" : value.toLocaleString("ko-KR");
 }
 
 function ratio(value: number | null | undefined) {

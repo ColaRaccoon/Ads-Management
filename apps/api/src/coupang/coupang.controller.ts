@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { FileFieldsInterceptor, FileInterceptor } from "@nestjs/platform-express";
 import { CoupangService } from "./coupang.service";
 
@@ -139,6 +139,26 @@ export class CoupangController {
   @Delete("mapping-rules/:id")
   deleteMappingRule(@Param("id") id: string) {
     return this.coupangService.deleteMappingRule(id);
+  }
+
+  @Get("manual-purchases/options")
+  manualPurchaseOptions(@Query("date") date?: string) {
+    return this.coupangService.manualPurchaseOptions({ date });
+  }
+
+  @Get("manual-purchases")
+  listManualPurchases(@Query("from") from?: string, @Query("to") to?: string) {
+    return this.coupangService.listManualPurchases({ from, to });
+  }
+
+  @Put("manual-purchases/:date")
+  replaceManualPurchasesForDate(@Param("date") date: string, @Body() body: Record<string, unknown>) {
+    return this.coupangService.replaceManualPurchasesForDate(date, body);
+  }
+
+  @Delete("manual-purchases/:id")
+  deleteManualPurchase(@Param("id") id: string) {
+    return this.coupangService.deleteManualPurchase(id);
   }
 
   @Post("rematch")

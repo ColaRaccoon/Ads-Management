@@ -490,6 +490,11 @@ describe("Coupang product group aggregation", () => {
         productCostKrw: 30_000,
         salesFeeKrw: 10_000,
         shippingCostKrw: 5_000,
+        manualPurchaseQuantity: 2,
+        manualPurchaseVendorFeeKrw: 6_364,
+        manualPurchaseCoupangSalesFeeKrw: 5_280,
+        manualPurchaseShippingCostKrw: 6_000,
+        manualPurchaseTotalCostKrw: 17_644,
         adSpendKrw: 20_000,
         adConversionSalesKrw: 60_000,
         totalCostKrw: 65_000,
@@ -507,6 +512,11 @@ describe("Coupang product group aggregation", () => {
         productCostKrw: 80_000,
         salesFeeKrw: 20_000,
         shippingCostKrw: 8_000,
+        manualPurchaseQuantity: 1,
+        manualPurchaseVendorFeeKrw: 3_182,
+        manualPurchaseCoupangSalesFeeKrw: 2_000,
+        manualPurchaseShippingCostKrw: 3_000,
+        manualPurchaseTotalCostKrw: 8_182,
         adSpendKrw: 30_000,
         adConversionSalesKrw: 90_000,
         totalCostKrw: 138_000,
@@ -540,6 +550,11 @@ describe("Coupang product group aggregation", () => {
       productCostKrw: 110_000,
       salesFeeKrw: 30_000,
       shippingCostKrw: 13_000,
+      manualPurchaseQuantity: 3,
+      manualPurchaseVendorFeeKrw: 9_546,
+      manualPurchaseCoupangSalesFeeKrw: 7_280,
+      manualPurchaseShippingCostKrw: 9_000,
+      manualPurchaseTotalCostKrw: 25_826,
       adSpendKrw: 50_000,
       adConversionSalesKrw: 150_000,
       marginKrw: 97_000,
@@ -612,7 +627,7 @@ describe("Coupang product group aggregation", () => {
     expect(result.rows).toEqual(productRows);
   });
 
-  it("omits products with no sales or ad activity from the daily report", async () => {
+  it("omits products with no activity but keeps manual-purchase-only rows in the daily report", async () => {
     const service = new CoupangService({} as never);
     const productRows = [
       productProfitRow({
@@ -640,13 +655,24 @@ describe("Coupang product group aggregation", () => {
         salesQuantity: 0,
         orderCount: 0,
         adSpendKrw: 500
+      }),
+      productProfitRow({
+        productId: "manual-row",
+        productName: "Manual Product",
+        netSalesKrw: 0,
+        salesQuantity: 0,
+        orderCount: 0,
+        manualPurchaseQuantity: 2,
+        manualPurchaseTotalCostKrw: 10_000,
+        totalCostKrw: 10_000,
+        marginKrw: -10_000
       })
     ];
     vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
 
     const result = await service.dailyReport({ date: "2026-07-02", groupBy: "product" });
 
-    expect(result.rows.map((row) => row.productName)).toEqual(["Sales Product", "Ad Product"]);
+    expect(result.rows.map((row) => row.productName)).toEqual(["Sales Product", "Ad Product", "Manual Product"]);
   });
 
   it("groups ads analysis by spend product group and campaign/ad group", async () => {
@@ -1546,6 +1572,11 @@ function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRo
     shippingCostKrw: 0,
     returnCostKrw: 0,
     extraCostKrw: 0,
+    manualPurchaseQuantity: 0,
+    manualPurchaseVendorFeeKrw: 0,
+    manualPurchaseCoupangSalesFeeKrw: 0,
+    manualPurchaseShippingCostKrw: 0,
+    manualPurchaseTotalCostKrw: 0,
     adSpendKrw: 0,
     adConversionSalesKrw: 0,
     adConversionQuantity: 0,
@@ -1918,6 +1949,7 @@ function fakeCoupangPriceTextRepairPrisma() {
               costRules: 0,
               productRules: 0,
               saleLines: 0,
+              manualPurchases: 0,
               promotionPrices: 0,
               spendAdMetrics: 0,
               conversionAdMetrics: 0
@@ -2019,6 +2051,7 @@ function fakeCoupangPriceTextDeletePrisma() {
                 costRules: 0,
                 productRules: 0,
                 saleLines: 0,
+                manualPurchases: 0,
                 promotionPrices: 0,
                 spendAdMetrics: 0,
                 conversionAdMetrics: 0
@@ -2074,7 +2107,11 @@ function fakeCoupangMarginDeletePrisma() {
       deleteMany: vi.fn(async () => ({ count: 1 }))
     },
     coupangProductRule: {
-      deleteMany: vi.fn(async () => ({ count: 1 }))
+      deleteMany: vi.fn(async () => ({ count: 1 })),
+      updateMany: vi.fn(async () => ({ count: 0 }))
+    },
+    coupangManualPurchase: {
+      findMany: vi.fn(async () => [])
     },
     coupangProduct: {
       findUnique: vi.fn(async (args) =>
@@ -2085,6 +2122,7 @@ function fakeCoupangMarginDeletePrisma() {
                 costRules: 0,
                 productRules: 0,
                 saleLines: 0,
+                manualPurchases: 0,
                 promotionPrices: 0,
                 spendAdMetrics: 0,
                 conversionAdMetrics: 0

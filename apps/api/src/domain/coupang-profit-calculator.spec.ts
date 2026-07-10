@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateCoupangProfit } from "./coupang-profit-calculator";
+import { calculateCoupangManualPurchaseCost, calculateCoupangProfit } from "./coupang-profit-calculator";
 
 describe("calculateCoupangProfit", () => {
   it("includes return-rate cost and ad spend in total cost", () => {
@@ -80,5 +80,72 @@ describe("calculateCoupangProfit", () => {
     );
 
     expect(result.salesFeeKrw).toBe(2_000);
+  });
+});
+
+describe("calculateCoupangManualPurchaseCost", () => {
+  it("calculates rate sales fee and excludes product cost", () => {
+    const result = calculateCoupangManualPurchaseCost({
+      quantity: 2,
+      vendorFeePerUnitKrw: 3_182,
+      saleMethod: "seller",
+      salePriceKrw: 24_000,
+      feeMode: "RATE",
+      cost: {
+        salePriceKrw: 24_000,
+        productCostKrw: 10_000,
+        salesFeeRate: 0.11,
+        salesFeeKrw: 9_999,
+        sellerShippingFeeKrw: 3_000
+      }
+    });
+
+    expect(result.vendorFeeTotalKrw).toBe(6_364);
+    expect(result.coupangSalesFeeKrw).toBe(5_280);
+    expect(result.shippingCostKrw).toBe(6_000);
+    expect(result.totalCostKrw).toBe(17_644);
+  });
+
+  it("uses per-unit sales fee when rate mode is not selected", () => {
+    const result = calculateCoupangManualPurchaseCost({
+      quantity: 3,
+      vendorFeePerUnitKrw: 3_182,
+      saleMethod: "seller",
+      salePriceKrw: 24_000,
+      feeMode: "PER_UNIT",
+      cost: {
+        salePriceKrw: 24_000,
+        productCostKrw: 10_000,
+        salesFeeRate: 0,
+        salesFeeKrw: 2_000,
+        sellerShippingFeeKrw: 3_000
+      }
+    });
+
+    expect(result.coupangSalesFeeKrw).toBe(6_000);
+    expect(result.shippingCostKrw).toBe(9_000);
+    expect(result.totalCostKrw).toBe(24_546);
+  });
+
+  it("uses growth inbound and shipping fees for rocket growth sale methods", () => {
+    const result = calculateCoupangManualPurchaseCost({
+      quantity: 2,
+      vendorFeePerUnitKrw: 3_182,
+      saleMethod: "로켓그로스",
+      salePriceKrw: 20_000,
+      cost: {
+        salePriceKrw: 20_000,
+        productCostKrw: 10_000,
+        salesFeeRate: 0,
+        salesFeeKrw: 1_000,
+        sellerShippingFeeKrw: 9_999,
+        growthInboundFeeKrw: 700,
+        growthShippingFeeKrw: 1_300
+      }
+    });
+
+    expect(result.coupangSalesFeeKrw).toBe(2_000);
+    expect(result.shippingCostKrw).toBe(4_000);
+    expect(result.totalCostKrw).toBe(12_364);
   });
 });
