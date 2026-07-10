@@ -8,6 +8,8 @@ export type CoupangProfitOptions = {
   useGrowthCost?: boolean;
 };
 
+const VAT_INCLUDED_DIVISOR = 11;
+
 export type CoupangCostInput = {
   salePriceKrw: number;
   supplyPriceKrw?: number;
@@ -41,6 +43,7 @@ export type CoupangProfitResult = {
   shippingCostKrw: number;
   returnCostKrw: number;
   extraCostKrw: number;
+  vatKrw: number;
   adSpendKrw: number;
   totalCostKrw: number;
   marginKrw: number;
@@ -64,6 +67,7 @@ export type CoupangManualPurchaseCostResult = {
   vendorFeeTotalKrw: number;
   coupangSalesFeeKrw: number;
   shippingCostKrw: number;
+  vatKrw: number;
   totalCostKrw: number;
 };
 
@@ -86,8 +90,9 @@ export function calculateCoupangProfit(
       ? 0
       : quantity * finiteNumber(cost.returnRate) * finiteNumber(cost.returnCostPerUnitKrw);
   const extraCostKrw = finiteNumber(cost.extraCostKrw) * quantity;
+  const vatKrw = vatFromVatIncludedAmount(netSalesKrw);
   const adSpendKrw = finiteNumber(ads.adSpendKrw);
-  const totalCostKrw = productCostKrw + salesFeeKrw + shippingCostKrw + returnCostKrw + extraCostKrw + adSpendKrw;
+  const totalCostKrw = productCostKrw + salesFeeKrw + shippingCostKrw + returnCostKrw + extraCostKrw + vatKrw + adSpendKrw;
   const marginKrw = netSalesKrw - totalCostKrw;
   const organicSalesKrw = netSalesKrw - finiteNumber(ads.adConversionSalesKrw);
   const warnings = organicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : [];
@@ -99,6 +104,7 @@ export function calculateCoupangProfit(
     shippingCostKrw,
     returnCostKrw,
     extraCostKrw,
+    vatKrw,
     adSpendKrw,
     totalCostKrw,
     marginKrw,
@@ -120,12 +126,14 @@ export function calculateCoupangManualPurchaseCost(input: CoupangManualPurchaseC
   const shippingCostKrw = shippingCost(input.saleMethod, input.cost, quantity, {
     useGrowthCost: input.useGrowthCost ?? true
   });
+  const vatKrw = vatFromVatIncludedAmount(finiteNumber(input.salePriceKrw) * quantity);
 
   return {
     vendorFeeTotalKrw,
     coupangSalesFeeKrw,
     shippingCostKrw,
-    totalCostKrw: vendorFeeTotalKrw + coupangSalesFeeKrw + shippingCostKrw
+    vatKrw,
+    totalCostKrw: vendorFeeTotalKrw + coupangSalesFeeKrw + shippingCostKrw + vatKrw
   };
 }
 
@@ -151,4 +159,8 @@ function isGrowthSaleMethod(value: string | null | undefined) {
 
 function finiteNumber(value: number | null | undefined) {
   return Number.isFinite(value) ? Number(value) : 0;
+}
+
+function vatFromVatIncludedAmount(amountKrw: number) {
+  return finiteNumber(amountKrw) / VAT_INCLUDED_DIVISOR;
 }

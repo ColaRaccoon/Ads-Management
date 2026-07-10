@@ -799,6 +799,7 @@ model CoupangManualPurchase {
   priceSource           String?             @map("price_source") @db.VarChar(32)
   coupangSalesFeeKrw    Decimal             @map("coupang_sales_fee_krw") @db.Decimal(14, 2)
   shippingCostKrw       Decimal             @map("shipping_cost_krw") @db.Decimal(14, 2)
+  vatKrw                Decimal             @default(0) @map("vat_krw") @db.Decimal(14, 2)
   totalCostKrw          Decimal             @map("total_cost_krw") @db.Decimal(14, 2)
   memo                  String?
   createdAt             DateTime            @default(now()) @map("created_at")

@@ -19,8 +19,9 @@ describe("calculateCoupangProfit", () => {
     );
 
     expect(result.returnCostKrw).toBe(2_000);
-    expect(result.totalCostKrw).toBe(56_000);
-    expect(result.marginKrw).toBe(44_000);
+    expect(result.vatKrw).toBeCloseTo(100_000 / 11);
+    expect(result.totalCostKrw).toBeCloseTo(56_000 + 100_000 / 11);
+    expect(result.marginKrw).toBeCloseTo(44_000 - 100_000 / 11);
     expect(result.roas).toBe(7.5);
   });
 
@@ -40,6 +41,7 @@ describe("calculateCoupangProfit", () => {
     );
 
     expect(result.shippingCostKrw).toBe(5_000);
+    expect(result.vatKrw).toBeCloseTo(50_000 / 11);
     expect(result.organicSalesKrw).toBe(-20_000);
     expect(result.warnings).toContain("AD_CONVERSION_EXCEEDS_NET_SALES");
   });
@@ -103,7 +105,8 @@ describe("calculateCoupangManualPurchaseCost", () => {
     expect(result.vendorFeeTotalKrw).toBe(6_364);
     expect(result.coupangSalesFeeKrw).toBe(5_280);
     expect(result.shippingCostKrw).toBe(6_000);
-    expect(result.totalCostKrw).toBe(17_644);
+    expect(result.vatKrw).toBeCloseTo(48_000 / 11);
+    expect(result.totalCostKrw).toBeCloseTo(17_644 + 48_000 / 11);
   });
 
   it("uses per-unit sales fee when rate mode is not selected", () => {
@@ -124,7 +127,8 @@ describe("calculateCoupangManualPurchaseCost", () => {
 
     expect(result.coupangSalesFeeKrw).toBe(6_000);
     expect(result.shippingCostKrw).toBe(9_000);
-    expect(result.totalCostKrw).toBe(24_546);
+    expect(result.vatKrw).toBeCloseTo(72_000 / 11);
+    expect(result.totalCostKrw).toBeCloseTo(24_546 + 72_000 / 11);
   });
 
   it("uses growth inbound and shipping fees for rocket growth sale methods", () => {
@@ -146,6 +150,7 @@ describe("calculateCoupangManualPurchaseCost", () => {
 
     expect(result.coupangSalesFeeKrw).toBe(2_000);
     expect(result.shippingCostKrw).toBe(4_000);
-    expect(result.totalCostKrw).toBe(12_364);
+    expect(result.vatKrw).toBeCloseTo(40_000 / 11);
+    expect(result.totalCostKrw).toBeCloseTo(12_364 + 40_000 / 11);
   });
 });

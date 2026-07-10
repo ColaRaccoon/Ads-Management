@@ -36,10 +36,12 @@ type ProductProfitRow = {
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
   returnCostKrw: number | null;
+  vatKrw: number | null;
   manualPurchaseQuantity: number;
   manualPurchaseVendorFeeKrw: number;
   manualPurchaseCoupangSalesFeeKrw: number;
   manualPurchaseShippingCostKrw: number;
+  manualPurchaseVatKrw: number;
   manualPurchaseTotalCostKrw: number;
   adSpendKrw: number;
   adConversionSalesKrw: number;
@@ -65,24 +67,28 @@ export default function CoupangProfitPage() {
   const totals = rows.reduce(
     (acc, row) => ({
       netSalesKrw: acc.netSalesKrw + row.netSalesKrw,
+      vatKrw: acc.vatKrw + (row.vatKrw ?? 0),
       totalCostKrw: acc.totalCostKrw + (row.totalCostKrw ?? 0),
       marginKrw: acc.marginKrw + (row.marginKrw ?? 0),
       manualPurchaseQuantity: acc.manualPurchaseQuantity + row.manualPurchaseQuantity,
       manualPurchaseVendorFeeKrw: acc.manualPurchaseVendorFeeKrw + row.manualPurchaseVendorFeeKrw,
       manualPurchaseCoupangSalesFeeKrw: acc.manualPurchaseCoupangSalesFeeKrw + row.manualPurchaseCoupangSalesFeeKrw,
       manualPurchaseShippingCostKrw: acc.manualPurchaseShippingCostKrw + row.manualPurchaseShippingCostKrw,
+      manualPurchaseVatKrw: acc.manualPurchaseVatKrw + row.manualPurchaseVatKrw,
       manualPurchaseTotalCostKrw: acc.manualPurchaseTotalCostKrw + row.manualPurchaseTotalCostKrw,
       adSpendKrw: acc.adSpendKrw + row.adSpendKrw,
       adConversionSalesKrw: acc.adConversionSalesKrw + row.adConversionSalesKrw
     }),
     {
       netSalesKrw: 0,
+      vatKrw: 0,
       totalCostKrw: 0,
       marginKrw: 0,
       manualPurchaseQuantity: 0,
       manualPurchaseVendorFeeKrw: 0,
       manualPurchaseCoupangSalesFeeKrw: 0,
       manualPurchaseShippingCostKrw: 0,
+      manualPurchaseVatKrw: 0,
       manualPurchaseTotalCostKrw: 0,
       adSpendKrw: 0,
       adConversionSalesKrw: 0
@@ -114,6 +120,7 @@ export default function CoupangProfitPage() {
             { key: "lines", header: "Sales Rows", render: (row) => row.matchedSalesLineCount },
             { key: "qty", header: "Qty", render: (row) => numberFmt(row.salesQuantity) },
             { key: "netSales", header: "Net Sales", render: (row) => money(row.netSalesKrw) },
+            { key: "vat", header: "VAT", render: (row) => money(row.vatKrw) },
             { key: "productCost", header: "Product Cost", render: (row) => money(row.productCostKrw) },
             { key: "fee", header: "Sales Fee", render: (row) => money(row.salesFeeKrw) },
             { key: "ship", header: "Shipping/Growth", render: (row) => money(row.shippingCostKrw) },
@@ -122,6 +129,7 @@ export default function CoupangProfitPage() {
             { key: "manualVendor", header: "가구매 업체수수료", render: (row) => money(row.manualPurchaseVendorFeeKrw) },
             { key: "manualFee", header: "가구매 쿠팡수수료", render: (row) => money(row.manualPurchaseCoupangSalesFeeKrw) },
             { key: "manualShip", header: "가구매 배송비", render: (row) => money(row.manualPurchaseShippingCostKrw) },
+            { key: "manualVat", header: "가구매 VAT", render: (row) => money(row.manualPurchaseVatKrw) },
             { key: "manualTotal", header: "가구매 총비용", render: (row) => money(row.manualPurchaseTotalCostKrw) },
             { key: "ad", header: "Ad Spend", render: (row) => money(row.adSpendKrw) },
             { key: "conv", header: "Ad Conv Sales", render: (row) => money(row.adConversionSalesKrw) },
@@ -141,6 +149,7 @@ export default function CoupangProfitPage() {
               <td />
               <td />
               <td>{money(totals.netSalesKrw)}</td>
+              <td>{money(totals.vatKrw)}</td>
               <td />
               <td />
               <td />
@@ -149,6 +158,7 @@ export default function CoupangProfitPage() {
               <td>{money(totals.manualPurchaseVendorFeeKrw)}</td>
               <td>{money(totals.manualPurchaseCoupangSalesFeeKrw)}</td>
               <td>{money(totals.manualPurchaseShippingCostKrw)}</td>
+              <td>{money(totals.manualPurchaseVatKrw)}</td>
               <td>{money(totals.manualPurchaseTotalCostKrw)}</td>
               <td>{money(totals.adSpendKrw)}</td>
               <td>{money(totals.adConversionSalesKrw)}</td>

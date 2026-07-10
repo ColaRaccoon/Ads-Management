@@ -41,6 +41,7 @@ type ManualPurchaseOption = {
   unitVendorFeeKrw: number;
   unitCoupangSalesFeeKrw: number;
   unitShippingCostKrw: number;
+  unitVatKrw: number;
   unitTotalCostKrw: number;
   existingQuantity: number;
   existingMemo: string;
@@ -362,6 +363,7 @@ export default function CoupangUploadsPage() {
                   <strong>{option.productName}</strong>
                   <span>{option.groupName ?? "미분류"}</span>
                   <span>{option.ruleDisplayName ?? "-"}</span>
+                  <span>VAT {money(option.unitVatKrw)} / 개</span>
                   <span>{money(option.unitTotalCostKrw)} / 개</span>
                 </button>
                 {option.warnings.length > 0 ? <p className="manual-purchase-warning">{option.warnings[0]}</p> : null}

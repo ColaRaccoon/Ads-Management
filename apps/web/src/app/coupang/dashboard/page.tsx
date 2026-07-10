@@ -21,7 +21,9 @@ type CoupangDashboard = {
     adConversionSalesKrw: number;
     organicSalesKrw: number;
     returnCostKrw: number;
+    vatKrw: number;
     manualPurchaseQuantity: number;
+    manualPurchaseVatKrw: number;
     manualPurchaseTotalCostKrw: number;
     marginRate: number | null;
     roas: number | null;
@@ -37,8 +39,10 @@ type CoupangProfitRow = {
   groupId?: string | null;
   groupName?: string | null;
   netSalesKrw: number;
+  vatKrw: number | null;
   adSpendKrw: number;
   organicSalesKrw: number;
+  manualPurchaseVatKrw: number;
   manualPurchaseTotalCostKrw: number;
   marginKrw: number | null;
   roas: number | null;
@@ -86,6 +90,7 @@ export default function CoupangDashboardPage() {
 
       <div className="grid kpi">
         <KpiCard label="Net Sales" value={money(data?.summary.netSalesKrw)} />
+        <KpiCard label="VAT" value={money(data?.summary.vatKrw)} />
         <KpiCard label="Ad Spend" value={money(data?.summary.adSpendKrw)} />
         <KpiCard label="Organic Sales" value={money(data?.summary.organicSalesKrw)} />
         <KpiCard label="가구매 수량" value={numberFmt(data?.summary.manualPurchaseQuantity)} />
@@ -107,8 +112,10 @@ export default function CoupangDashboardPage() {
           columns={[
             { key: "product", header: nameHeader, render: (row) => row.productName },
             { key: "netSales", header: "Net Sales", render: (row) => money(row.netSalesKrw) },
+            { key: "vat", header: "VAT", render: (row) => money(row.vatKrw) },
             { key: "adSpend", header: "Ad Spend", render: (row) => money(row.adSpendKrw) },
             { key: "manualPurchase", header: "가구매 비용", render: (row) => money(row.manualPurchaseTotalCostKrw) },
+            { key: "manualPurchaseVat", header: "가구매 VAT", render: (row) => money(row.manualPurchaseVatKrw) },
             { key: "organic", header: "Organic Sales", render: (row) => money(row.organicSalesKrw) },
             { key: "margin", header: "Margin", render: (row) => money(row.marginKrw) },
             { key: "roas", header: "ROAS", render: (row) => ratio(row.roas) },

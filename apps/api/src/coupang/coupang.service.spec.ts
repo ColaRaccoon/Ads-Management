@@ -490,15 +490,17 @@ describe("Coupang product group aggregation", () => {
         productCostKrw: 30_000,
         salesFeeKrw: 10_000,
         shippingCostKrw: 5_000,
+        vatKrw: 100_000 / 11,
         manualPurchaseQuantity: 2,
         manualPurchaseVendorFeeKrw: 6_364,
         manualPurchaseCoupangSalesFeeKrw: 5_280,
         manualPurchaseShippingCostKrw: 6_000,
-        manualPurchaseTotalCostKrw: 17_644,
+        manualPurchaseVatKrw: 48_000 / 11,
+        manualPurchaseTotalCostKrw: 17_644 + 48_000 / 11,
         adSpendKrw: 20_000,
         adConversionSalesKrw: 60_000,
-        totalCostKrw: 65_000,
-        marginKrw: 35_000,
+        totalCostKrw: 65_000 + 100_000 / 11 + 48_000 / 11,
+        marginKrw: 35_000 - 100_000 / 11 - 48_000 / 11,
         marginRate: 0.35,
         roas: 3,
         salePriceKrw: 20_000
@@ -512,15 +514,17 @@ describe("Coupang product group aggregation", () => {
         productCostKrw: 80_000,
         salesFeeKrw: 20_000,
         shippingCostKrw: 8_000,
+        vatKrw: 200_000 / 11,
         manualPurchaseQuantity: 1,
         manualPurchaseVendorFeeKrw: 3_182,
         manualPurchaseCoupangSalesFeeKrw: 2_000,
         manualPurchaseShippingCostKrw: 3_000,
-        manualPurchaseTotalCostKrw: 8_182,
+        manualPurchaseVatKrw: 25_000 / 11,
+        manualPurchaseTotalCostKrw: 8_182 + 25_000 / 11,
         adSpendKrw: 30_000,
         adConversionSalesKrw: 90_000,
-        totalCostKrw: 138_000,
-        marginKrw: 62_000,
+        totalCostKrw: 138_000 + 200_000 / 11 + 25_000 / 11,
+        marginKrw: 62_000 - 200_000 / 11 - 25_000 / 11,
         marginRate: 0.31,
         roas: 3,
         salePriceKrw: 25_000
@@ -554,15 +558,18 @@ describe("Coupang product group aggregation", () => {
       manualPurchaseVendorFeeKrw: 9_546,
       manualPurchaseCoupangSalesFeeKrw: 7_280,
       manualPurchaseShippingCostKrw: 9_000,
-      manualPurchaseTotalCostKrw: 25_826,
       adSpendKrw: 50_000,
       adConversionSalesKrw: 150_000,
-      marginKrw: 97_000,
       salePriceKrw: null,
       priceSource: "MIXED",
       saleMethod: "MIXED"
     });
-    expect(groupRow?.marginRate).toBeCloseTo(97_000 / 300_000);
+    expect(groupRow?.vatKrw).toBeCloseTo(300_000 / 11);
+    expect(groupRow?.manualPurchaseVatKrw).toBeCloseTo(73_000 / 11);
+    expect(groupRow?.manualPurchaseTotalCostKrw).toBeCloseTo(25_826 + 73_000 / 11);
+    expect(groupRow?.totalCostKrw).toBeCloseTo(203_000 + 300_000 / 11 + 73_000 / 11);
+    expect(groupRow?.marginKrw).toBeCloseTo(97_000 - 300_000 / 11 - 73_000 / 11);
+    expect(groupRow?.marginRate).toBeCloseTo((97_000 - 300_000 / 11 - 73_000 / 11) / 300_000);
     expect(groupRow?.roas).toBeCloseTo(150_000 / 50_000);
     expect(groupRow?.warnings).toEqual(expect.arrayContaining(["GROUP_MIXED_PRICE", "GROUP_MIXED_SALE_METHOD"]));
     expect(soloRow).toMatchObject({ rowType: "PRODUCT", productName: "솔로 상품", childProductCount: 1 });
@@ -592,8 +599,15 @@ describe("Coupang product group aggregation", () => {
   it("keeps dashboard summary based on product rows while grouping only display rows", async () => {
     const service = new CoupangService({} as never);
     const productRows = [
-      productProfitRow({ productId: "product-a", netSalesKrw: 100_000, marginKrw: 40_000 }),
-      productProfitRow({ productId: "product-b", netSalesKrw: 50_000, marginKrw: null, ruleStatus: "MISSING_COST_RULE" })
+      productProfitRow({ productId: "product-a", netSalesKrw: 100_000, marginKrw: 40_000, vatKrw: 1_000, manualPurchaseVatKrw: 200 }),
+      productProfitRow({
+        productId: "product-b",
+        netSalesKrw: 50_000,
+        marginKrw: null,
+        vatKrw: null,
+        manualPurchaseVatKrw: 300,
+        ruleStatus: "MISSING_COST_RULE"
+      })
     ];
     const groupedRows = [
       productProfitRow({ productId: "group-a", productName: "그룹 A", rowType: "GROUP", netSalesKrw: 150_000, marginKrw: 40_000 })
@@ -606,6 +620,8 @@ describe("Coupang product group aggregation", () => {
     expect(result.groupBy).toBe("group");
     expect(result.summary.netSalesKrw).toBe(150_000);
     expect(result.summary.marginKrw).toBe(40_000);
+    expect(result.summary.vatKrw).toBe(1_000);
+    expect(result.summary.manualPurchaseVatKrw).toBe(500);
     expect(result.summary.missingCostRuleCount).toBe(1);
     expect(result.rows).toEqual(groupedRows);
   });
@@ -663,6 +679,7 @@ describe("Coupang product group aggregation", () => {
         salesQuantity: 0,
         orderCount: 0,
         manualPurchaseQuantity: 2,
+        manualPurchaseVatKrw: 1_000,
         manualPurchaseTotalCostKrw: 10_000,
         totalCostKrw: 10_000,
         marginKrw: -10_000
@@ -673,6 +690,7 @@ describe("Coupang product group aggregation", () => {
     const result = await service.dailyReport({ date: "2026-07-02", groupBy: "product" });
 
     expect(result.rows.map((row) => row.productName)).toEqual(["Sales Product", "Ad Product", "Manual Product"]);
+    expect(result.rows.find((row) => row.productName === "Manual Product")).toMatchObject({ manualPurchaseVatKrw: 1_000 });
   });
 
   it("groups ads analysis by spend product group and campaign/ad group", async () => {
@@ -1594,10 +1612,12 @@ function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRo
     shippingCostKrw: 0,
     returnCostKrw: 0,
     extraCostKrw: 0,
+    vatKrw: 0,
     manualPurchaseQuantity: 0,
     manualPurchaseVendorFeeKrw: 0,
     manualPurchaseCoupangSalesFeeKrw: 0,
     manualPurchaseShippingCostKrw: 0,
+    manualPurchaseVatKrw: 0,
     manualPurchaseTotalCostKrw: 0,
     adSpendKrw: 0,
     adConversionSalesKrw: 0,

@@ -110,6 +110,7 @@ type ManualPurchaseAccumulator = {
   vendorFeeKrw: number;
   coupangSalesFeeKrw: number;
   shippingCostKrw: number;
+  vatKrw: number;
   totalCostKrw: number;
   saleMethods: Set<string>;
 };
@@ -141,10 +142,12 @@ export type ProductProfitRow = {
   shippingCostKrw: number | null;
   returnCostKrw: number | null;
   extraCostKrw: number | null;
+  vatKrw: number | null;
   manualPurchaseQuantity: number;
   manualPurchaseVendorFeeKrw: number;
   manualPurchaseCoupangSalesFeeKrw: number;
   manualPurchaseShippingCostKrw: number;
+  manualPurchaseVatKrw: number;
   manualPurchaseTotalCostKrw: number;
   adSpendKrw: number;
   adConversionSalesKrw: number;
@@ -1380,6 +1383,7 @@ export class CoupangService {
         const warnings = [...resolvedPrice.priceWarnings];
         let unitCoupangSalesFeeKrw = 0;
         let unitShippingCostKrw = 0;
+        let unitVatKrw = 0;
         let unitTotalCostKrw = 0;
         let isCalculable = true;
         if (!costRule) {
@@ -1402,6 +1406,7 @@ export class CoupangService {
             });
             unitCoupangSalesFeeKrw = calculated.coupangSalesFeeKrw;
             unitShippingCostKrw = calculated.shippingCostKrw;
+            unitVatKrw = calculated.vatKrw;
             unitTotalCostKrw = calculated.totalCostKrw;
           }
         }
@@ -1435,6 +1440,7 @@ export class CoupangService {
           unitVendorFeeKrw: vendorFeePerUnitKrw,
           unitCoupangSalesFeeKrw,
           unitShippingCostKrw,
+          unitVatKrw,
           unitTotalCostKrw,
           existingId: existing?.id ?? null,
           existingQuantity: existing?.quantity ?? 0,
@@ -1577,6 +1583,7 @@ export class CoupangService {
         priceSource: resolvedPrice.priceSource,
         coupangSalesFeeKrw: decimal(calculated.coupangSalesFeeKrw),
         shippingCostKrw: decimal(calculated.shippingCostKrw),
+        vatKrw: decimal(calculated.vatKrw),
         totalCostKrw: decimal(calculated.totalCostKrw),
         memo: entry.memo
       });
@@ -1775,7 +1782,9 @@ export class CoupangService {
         adConversionSalesKrw: accumulator.adConversionSalesKrw + row.adConversionSalesKrw,
         organicSalesKrw: accumulator.organicSalesKrw + row.organicSalesKrw,
         returnCostKrw: accumulator.returnCostKrw + (row.returnCostKrw ?? 0),
+        vatKrw: accumulator.vatKrw + (row.vatKrw ?? 0),
         manualPurchaseQuantity: accumulator.manualPurchaseQuantity + row.manualPurchaseQuantity,
+        manualPurchaseVatKrw: accumulator.manualPurchaseVatKrw + row.manualPurchaseVatKrw,
         manualPurchaseTotalCostKrw: accumulator.manualPurchaseTotalCostKrw + row.manualPurchaseTotalCostKrw,
         missingCostRuleCount: accumulator.missingCostRuleCount + (row.ruleStatus === "MISSING_COST_RULE" ? 1 : 0),
         warningCount: accumulator.warningCount + row.warnings.length
@@ -1789,7 +1798,9 @@ export class CoupangService {
         adConversionSalesKrw: 0,
         organicSalesKrw: 0,
         returnCostKrw: 0,
+        vatKrw: 0,
         manualPurchaseQuantity: 0,
+        manualPurchaseVatKrw: 0,
         manualPurchaseTotalCostKrw: 0,
         missingCostRuleCount: 0,
         warningCount: 0
@@ -2044,7 +2055,9 @@ export class CoupangService {
         manualPurchaseVendorFeeKrw: row.manualPurchaseVendorFeeKrw,
         manualPurchaseCoupangSalesFeeKrw: row.manualPurchaseCoupangSalesFeeKrw,
         manualPurchaseShippingCostKrw: row.manualPurchaseShippingCostKrw,
+        manualPurchaseVatKrw: row.manualPurchaseVatKrw,
         manualPurchaseTotalCostKrw: row.manualPurchaseTotalCostKrw,
+        vatKrw: row.vatKrw,
         totalCostKrw: row.totalCostKrw,
         organicSalesKrw: row.organicSalesKrw,
         marginKrw: row.marginKrw,
@@ -2154,6 +2167,7 @@ export class CoupangService {
           vendorFeeKrw: 0,
           coupangSalesFeeKrw: 0,
           shippingCostKrw: 0,
+          vatKrw: 0,
           totalCostKrw: 0,
           saleMethods: new Set<string>()
         } satisfies ManualPurchaseAccumulator);
@@ -2161,6 +2175,7 @@ export class CoupangService {
       current.vendorFeeKrw += numberFrom(row.vendorFeeTotalKrw);
       current.coupangSalesFeeKrw += numberFrom(row.coupangSalesFeeKrw);
       current.shippingCostKrw += numberFrom(row.shippingCostKrw);
+      current.vatKrw += numberFrom(row.vatKrw);
       current.totalCostKrw += numberFrom(row.totalCostKrw);
       if (row.saleMethod) {
         current.saleMethods.add(row.saleMethod);
@@ -2223,10 +2238,12 @@ export class CoupangService {
             shippingCostKrw: null,
             returnCostKrw: null,
             extraCostKrw: null,
+            vatKrw: null,
             manualPurchaseQuantity: manual.quantity,
             manualPurchaseVendorFeeKrw: manual.vendorFeeKrw,
             manualPurchaseCoupangSalesFeeKrw: manual.coupangSalesFeeKrw,
             manualPurchaseShippingCostKrw: manual.shippingCostKrw,
+            manualPurchaseVatKrw: manual.vatKrw,
             manualPurchaseTotalCostKrw: manual.totalCostKrw,
             adSpendKrw,
             adConversionSalesKrw: conversion.salesKrw,
@@ -2281,10 +2298,12 @@ export class CoupangService {
           shippingCostKrw: calculated.shippingCostKrw,
           returnCostKrw: calculated.returnCostKrw,
           extraCostKrw: calculated.extraCostKrw,
+          vatKrw: calculated.vatKrw,
           manualPurchaseQuantity: manual.quantity,
           manualPurchaseVendorFeeKrw: manual.vendorFeeKrw,
           manualPurchaseCoupangSalesFeeKrw: manual.coupangSalesFeeKrw,
           manualPurchaseShippingCostKrw: manual.shippingCostKrw,
+          manualPurchaseVatKrw: manual.vatKrw,
           manualPurchaseTotalCostKrw: manual.totalCostKrw,
           adSpendKrw,
           adConversionSalesKrw: conversion.salesKrw,
@@ -2857,10 +2876,12 @@ function aggregateCoupangProductProfitGroup(
   const shippingCostKrw = sumNullable(rows.map((row) => row.shippingCostKrw));
   const returnCostKrw = sumNullable(rows.map((row) => row.returnCostKrw));
   const extraCostKrw = sumNullable(rows.map((row) => row.extraCostKrw));
+  const vatKrw = sumNullable(rows.map((row) => row.vatKrw));
   const manualPurchaseQuantity = sumNumbers(rows.map((row) => row.manualPurchaseQuantity));
   const manualPurchaseVendorFeeKrw = sumNumbers(rows.map((row) => row.manualPurchaseVendorFeeKrw));
   const manualPurchaseCoupangSalesFeeKrw = sumNumbers(rows.map((row) => row.manualPurchaseCoupangSalesFeeKrw));
   const manualPurchaseShippingCostKrw = sumNumbers(rows.map((row) => row.manualPurchaseShippingCostKrw));
+  const manualPurchaseVatKrw = sumNumbers(rows.map((row) => row.manualPurchaseVatKrw));
   const manualPurchaseTotalCostKrw = sumNumbers(rows.map((row) => row.manualPurchaseTotalCostKrw));
   const adSpendKrw = sumNumbers(rows.map((row) => row.adSpendKrw));
   const adConversionSalesKrw = sumNumbers(rows.map((row) => row.adConversionSalesKrw));
@@ -2912,10 +2933,12 @@ function aggregateCoupangProductProfitGroup(
     shippingCostKrw,
     returnCostKrw,
     extraCostKrw,
+    vatKrw,
     manualPurchaseQuantity,
     manualPurchaseVendorFeeKrw,
     manualPurchaseCoupangSalesFeeKrw,
     manualPurchaseShippingCostKrw,
+    manualPurchaseVatKrw,
     manualPurchaseTotalCostKrw,
     adSpendKrw,
     adConversionSalesKrw,
@@ -3509,6 +3532,7 @@ function serializeManualPurchaseRow(row: {
   priceSource: string | null;
   coupangSalesFeeKrw: unknown;
   shippingCostKrw: unknown;
+  vatKrw: unknown;
   totalCostKrw: unknown;
   memo: string | null;
   product?: { group?: { id: string; displayName: string } | null } | null;
@@ -3532,6 +3556,7 @@ function serializeManualPurchaseRow(row: {
     priceSource: row.priceSource,
     coupangSalesFeeKrw: numberFrom(row.coupangSalesFeeKrw),
     shippingCostKrw: numberFrom(row.shippingCostKrw),
+    vatKrw: numberFrom(row.vatKrw),
     totalCostKrw: numberFrom(row.totalCostKrw),
     memo: row.memo ?? ""
   };
@@ -3877,6 +3902,7 @@ function emptyManualPurchaseAccumulator(): ManualPurchaseAccumulator {
     vendorFeeKrw: 0,
     coupangSalesFeeKrw: 0,
     shippingCostKrw: 0,
+    vatKrw: 0,
     totalCostKrw: 0,
     saleMethods: new Set<string>()
   };
