@@ -739,12 +739,35 @@ describe("CoupangService sales import", () => {
   it.each([
     ["omitted", {}],
     ["invalid", { cancelAmountMode: "UNKNOWN_MODE" }]
-  ])("uses NEGATIVE_ADD when cancelAmountMode is %s", async (_label, body) => {
+  ])("uses SALES_IS_NET when cancelAmountMode is %s", async (_label, body) => {
     const prisma = fakeCoupangSalesImportPrisma();
     const service = new CoupangService(prisma as never);
     const buffer = await workbookBuffer([
       coupangSalesHeaderRow(),
-      ["A-1", "Black", "Zero Bar", "seller", "100,000", 3, 4, "120,000", 5, "-10,000", 1, 0]
+      ["A-1", "Black", "Zero Bar", "seller", "3,295,600", 106, 107, "3,757,600", 122, "-462,000", 15, 0]
+    ]);
+
+    const result = await service.importSalesXlsx({ originalname: "sales.xlsx", buffer } as Express.Multer.File, body);
+
+    expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, warningCount: 0, errorCount: 0 });
+    expect(prisma.coupangSaleLine.create).toHaveBeenCalledTimes(1);
+    const data = prisma.coupangSaleLine.create.mock.calls[0][0].data;
+    expect(Number(data.salesKrw)).toBe(3_295_600);
+    expect(Number(data.totalSalesKrw)).toBe(3_757_600);
+    expect(Number(data.cancelAmountKrw)).toBe(-462_000);
+    expect(Number(data.netSalesKrw)).toBe(3_295_600);
+  });
+
+  it.each([
+    ["NEGATIVE_ADD", { cancelAmountMode: "NEGATIVE_ADD" }, "-10,000", -10_000, 90_000],
+    ["POSITIVE_SUBTRACT", { cancelAmountMode: "POSITIVE_SUBTRACT" }, "10,000", 10_000, 90_000],
+    ["SALES_IS_NET", { cancelAmountMode: "SALES_IS_NET" }, "-10,000", -10_000, 100_000]
+  ])("preserves explicit %s cancel amount mode", async (_mode, body, cancelAmountKrw, expectedCancelAmountKrw, expectedNetSalesKrw) => {
+    const prisma = fakeCoupangSalesImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = await workbookBuffer([
+      coupangSalesHeaderRow(),
+      ["A-1", "Black", "Zero Bar", "seller", "100,000", 3, 4, "120,000", 5, cancelAmountKrw, 1, 0]
     ]);
 
     const result = await service.importSalesXlsx({ originalname: "sales.xlsx", buffer } as Express.Multer.File, body);
@@ -753,9 +776,8 @@ describe("CoupangService sales import", () => {
     expect(prisma.coupangSaleLine.create).toHaveBeenCalledTimes(1);
     const data = prisma.coupangSaleLine.create.mock.calls[0][0].data;
     expect(Number(data.salesKrw)).toBe(100_000);
-    expect(Number(data.totalSalesKrw)).toBe(120_000);
-    expect(Number(data.cancelAmountKrw)).toBe(-10_000);
-    expect(Number(data.netSalesKrw)).toBe(90_000);
+    expect(Number(data.cancelAmountKrw)).toBe(expectedCancelAmountKrw);
+    expect(Number(data.netSalesKrw)).toBe(expectedNetSalesKrw);
   });
 });
 

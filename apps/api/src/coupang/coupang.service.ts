@@ -3569,7 +3569,7 @@ function parseCoupangCancelAmountMode(value: string | undefined): CoupangCancelA
   if (value === "SALES_IS_NET" || value === "NEGATIVE_ADD" || value === "POSITIVE_SUBTRACT") {
     return value;
   }
-  return "NEGATIVE_ADD";
+  return "SALES_IS_NET";
 }
 
 function parseCoupangGroupBy(value: unknown): CoupangGroupBy {
