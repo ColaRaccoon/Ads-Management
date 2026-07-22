@@ -26,7 +26,22 @@ import {
   COUPANG_PRICE_TEXT_SCHEMA_VERSION,
   legacyCoupangPriceTextItemName
 } from "../domain/coupang-price-text";
-import { calculateCoupangManualPurchaseCost, calculateCoupangProfit, CoupangCostInput } from "../domain/coupang-profit-calculator";
+import {
+  calculateCoupangManualPurchaseCost,
+  CoupangCostInput
+} from "../domain/coupang-profit-calculator";
+import {
+  adjustReportedSalesForManualPurchase,
+  aggregateManualPurchasesByProductDate,
+  aggregateReportedSalesByProductDate,
+  calculateManualPurchaseProfitAdjustment,
+  calculateNormalCoupangProfit,
+  combineCoupangProfitParts,
+  emptyReportedSalesFacts,
+  productDateKey,
+  resolveManualPurchaseSalesAmount,
+  type CoupangCalculationPartStatus
+} from "../domain/coupang-profit-pipeline";
 import { CoupangPromotionXlsxParser, COUPANG_PROMOTION_SCHEMA_VERSION } from "../domain/coupang-promotion-xlsx";
 import {
   CoupangSalesXlsxParser,
@@ -61,6 +76,7 @@ const COUPANG_TRANSACTION_OPTIONS = {
 };
 const COUPANG_MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY = "coupang_manual_purchase_vendor_fee_per_unit_krw";
 const DEFAULT_COUPANG_MANUAL_PURCHASE_VENDOR_FEE_KRW = 3182;
+const MAX_COUPANG_MANUAL_PURCHASE_MONEY_KRW = 999_999_999_999.99;
 
 type CoupangPriceTextAppliedRow = {
   rowNumber: number;
@@ -105,16 +121,6 @@ type ManualPurchaseEntryInput = {
   memo?: string;
 };
 
-type ManualPurchaseAccumulator = {
-  quantity: number;
-  vendorFeeKrw: number;
-  coupangSalesFeeKrw: number;
-  shippingCostKrw: number;
-  vatKrw: number;
-  totalCostKrw: number;
-  saleMethods: Set<string>;
-};
-
 type CoupangGroupBy = "product" | "group";
 
 export type ProductProfitRow = {
@@ -127,11 +133,15 @@ export type ProductProfitRow = {
   children?: ProductProfitRow[];
   saleMethod: string | null;
   matchedSalesLineCount: number;
-  salesQuantity: number;
+  reportedSalesQuantity: number;
+  reportedOrderCount: number;
+  reportedSalesKrw: number;
+  reportedNetSalesKrw: number;
+  salesQuantity: number | null;
   orderCount: number;
-  salesKrw: number;
+  salesKrw: number | null;
   cancelAmountKrw: number;
-  netSalesKrw: number;
+  netSalesKrw: number | null;
   salePriceKrw: number | null;
   baseSalePriceKrw: number | null;
   promotionPriceKrw: number | null;
@@ -143,18 +153,38 @@ export type ProductProfitRow = {
   returnCostKrw: number | null;
   extraCostKrw: number | null;
   vatKrw: number | null;
+  manualPurchaseSalesKrw: number | null;
   manualPurchaseQuantity: number;
-  manualPurchaseVendorFeeKrw: number;
-  manualPurchaseCoupangSalesFeeKrw: number;
-  manualPurchaseShippingCostKrw: number;
-  manualPurchaseVatKrw: number;
-  manualPurchaseTotalCostKrw: number;
+  manualPurchaseProductCostKrw: number | null;
+  manualPurchaseVendorFeeKrw: number | null;
+  manualPurchaseCoupangSalesFeeKrw: number | null;
+  manualPurchaseShippingCostKrw: number | null;
+  manualPurchaseVatKrw: number | null;
+  manualPurchaseOtherCostKrw: number | null;
+  manualPurchaseTotalCostKrw: number | null;
+  actualSalesKrw: number | null;
+  actualNetSalesKrw: number | null;
+  actualSalesQuantity: number | null;
+  normalCalculationStatus: CoupangCalculationPartStatus;
+  manualCalculationStatus: CoupangCalculationPartStatus;
+  calculationStatus: "COMPLETE" | "INCOMPLETE";
   adSpendKrw: number;
   adConversionSalesKrw: number;
   adConversionQuantity: number;
-  organicSalesKrw: number;
+  organicSalesKrw: number | null;
+  reportedOrganicSalesKrw: number;
+  actualOrganicSalesKrw: number | null;
+  normalMarginKrw: number | null;
   totalCostKrw: number | null;
   marginKrw: number | null;
+  knownTotalCostKrw: number;
+  knownMarginKrw: number;
+  completeProductCount: number;
+  incompleteProductCount: number;
+  excludedNetSalesKrw: number;
+  excludedSalesQuantity: number;
+  incompleteNormalCount: number;
+  incompleteManualCount: number;
   marginRate: number | null;
   roas: number | null;
   warnings: string[];
@@ -1314,17 +1344,22 @@ export class CoupangService {
   async manualPurchaseOptions(query: { date?: string }) {
     const date = query.date ? asDateOnly(query.date) : asDateOnly(formatDateOnly(new Date()));
     const dateText = formatDateOnly(date);
-    const [vendorFeePerUnitKrw, activeRules, existingRows] = await Promise.all([
+    const [vendorFeePerUnitKrw, activeProducts, existingRows] = await Promise.all([
       this.manualPurchaseVendorFeePerUnitKrw(),
-      this.prisma.coupangProductRule.findMany({
-        where: {
-          isActive: true,
-          validFrom: { lte: date },
-          OR: [{ validTo: null }, { validTo: { gte: date } }],
-          product: { is: { isActive: true } }
+      this.prisma.coupangProduct.findMany({
+        where: { isActive: true },
+        include: {
+          group: true,
+          productRules: {
+            where: {
+              isActive: true,
+              validFrom: { lte: date },
+              OR: [{ validTo: null }, { validTo: { gte: date } }]
+            },
+            orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
+          }
         },
-        include: { product: { include: { group: true } } },
-        orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
+        orderBy: [{ displayName: "asc" }]
       }),
       this.prisma.coupangManualPurchase.findMany({
         where: { purchaseDate: date },
@@ -1333,17 +1368,17 @@ export class CoupangService {
       })
     ]);
 
-    const activeRulesByProductId = groupBy(activeRules, (rule) => rule.coupangProductId);
+    const activeProductById = new Map(activeProducts.map((product) => [product.id, product]));
     const existingByProductId = new Map(existingRows.map((row) => [row.coupangProductId, row]));
-    const productIds = uniqueNonEmpty([...activeRules.map((rule) => rule.coupangProductId), ...existingRows.map((row) => row.coupangProductId)]);
+    const productIds = uniqueNonEmpty([...activeProducts.map((product) => product.id), ...existingRows.map((row) => row.coupangProductId)]);
     const [costRules, promotionPrices] = await Promise.all([
-      productIds.length > 0
+      productIds.length
         ? this.prisma.coupangCostRule.findMany({
             where: { coupangProductId: { in: productIds } },
             orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
           })
         : [],
-      productIds.length > 0
+      productIds.length
         ? this.prisma.coupangPromotionPrice.findMany({
             where: {
               coupangProductId: { in: productIds },
@@ -1360,10 +1395,11 @@ export class CoupangService {
 
     const options = productIds
       .map((productId) => {
-        const rules = activeRulesByProductId.get(productId) ?? [];
+        const activeProduct = activeProductById.get(productId);
+        const rules = activeProduct?.productRules ?? [];
         const existing = existingByProductId.get(productId) ?? null;
         const representativeRule = rules[0] ?? existing?.productRule ?? null;
-        const product = rules[0]?.product ?? existing?.product ?? null;
+        const product = activeProduct ?? existing?.product ?? null;
         const productName = product?.displayName ?? existing?.productDisplayName ?? "Coupang Product";
         const groupId = product?.group?.id ?? null;
         const groupName = product?.group?.displayName ?? null;
@@ -1381,17 +1417,20 @@ export class CoupangService {
           date
         });
         const warnings = [...resolvedPrice.priceWarnings];
-        let unitCoupangSalesFeeKrw = 0;
-        let unitShippingCostKrw = 0;
-        let unitVatKrw = 0;
-        let unitTotalCostKrw = 0;
+        let unitCoupangSalesFeeKrw: number | null = null;
+        let unitSalesAmountKrw: number | null = null;
+        let unitProductCostKrw: number | null = null;
+        let unitShippingCostKrw: number | null = null;
+        let unitVatKrw: number | null = null;
+        let unitOtherCostKrw: number | null = null;
+        let unitTotalCostKrw: number | null = null;
         let isCalculable = true;
         if (!costRule) {
           warnings.push("COUPANG_COST_RULE_MISSING");
           isCalculable = false;
         } else {
           const feeMode = numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT";
-          if (feeMode === "RATE" && resolvedPrice.salePriceKrw === null) {
+          if (resolvedPrice.salePriceKrw === null || resolvedPrice.salePriceKrw <= 0) {
             warnings.push("COUPANG_SALE_PRICE_REQUIRED");
             isCalculable = false;
           } else {
@@ -1404,9 +1443,12 @@ export class CoupangService {
               feeMode,
               useGrowthCost: true
             });
+            unitProductCostKrw = calculated.productCostKrw;
+            unitSalesAmountKrw = resolvedPrice.salePriceKrw;
             unitCoupangSalesFeeKrw = calculated.coupangSalesFeeKrw;
             unitShippingCostKrw = calculated.shippingCostKrw;
             unitVatKrw = calculated.vatKrw;
+            unitOtherCostKrw = calculated.otherCostKrw;
             unitTotalCostKrw = calculated.totalCostKrw;
           }
         }
@@ -1437,10 +1479,13 @@ export class CoupangService {
           promotionPriceKrw: resolvedPrice.promotionPriceKrw,
           priceSource: resolvedPrice.priceSource,
           priceWarnings: resolvedPrice.priceWarnings,
+          unitSalesAmountKrw,
           unitVendorFeeKrw: vendorFeePerUnitKrw,
+          unitProductCostKrw,
           unitCoupangSalesFeeKrw,
           unitShippingCostKrw,
           unitVatKrw,
+          unitOtherCostKrw,
           unitTotalCostKrw,
           existingId: existing?.id ?? null,
           existingQuantity: existing?.quantity ?? 0,
@@ -1469,7 +1514,7 @@ export class CoupangService {
       include: { product: { include: { group: true } }, productRule: true },
       orderBy: [{ purchaseDate: "desc" }, { productDisplayName: "asc" }]
     });
-    return { period: { from: range.from, to: range.to }, rows: rows.map(serializeManualPurchaseRow) };
+    return { period: { from: range.from, to: range.to }, rows: rows.map((row) => serializeManualPurchaseRow(row)) };
   }
 
   async replaceManualPurchasesForDate(dateText: string, body: Record<string, unknown>) {
@@ -1477,17 +1522,14 @@ export class CoupangService {
     const normalizedDate = formatDateOnly(purchaseDate);
     const vendorFeePerUnitKrw = manualPurchaseVendorFeeFromBody(body.vendorFeePerUnitKrw) ?? (await this.manualPurchaseVendorFeePerUnitKrw());
     const entries = parseManualPurchaseEntries(body.entries);
-    const dedupedEntries = Array.from(new Map(entries.map((entry) => [entry.coupangProductId, entry])).values()).filter(
-      (entry) => entry.quantity > 0
-    );
-    const productIds = uniqueNonEmpty(dedupedEntries.map((entry) => entry.coupangProductId));
+    const productIds = uniqueNonEmpty(entries.map((entry) => entry.coupangProductId));
 
-    if (dedupedEntries.length === 0) {
+    if (entries.length === 0) {
       await this.prisma.coupangManualPurchase.deleteMany({ where: { purchaseDate } });
-      return { date: normalizedDate, selectedOptionCount: 0, totalQuantity: 0, totalCostKrw: 0, rows: [] };
+      return { date: normalizedDate, selectedOptionCount: 0, totalQuantity: 0, totalSalesAmountKrw: 0, totalCostKrw: 0, rows: [] };
     }
 
-    const requestedRuleIds = uniqueNonEmpty(dedupedEntries.map((entry) => entry.coupangProductRuleId ?? undefined));
+    const requestedRuleIds = uniqueNonEmpty(entries.map((entry) => entry.coupangProductRuleId ?? undefined));
     const [products, requestedRules, costRules, promotionPrices] = await Promise.all([
       this.prisma.coupangProduct.findMany({
         where: { id: { in: productIds } },
@@ -1526,7 +1568,7 @@ export class CoupangService {
     const promotionPricesByProductId = groupBy(promotionPrices, (promotion) => promotion.coupangProductId ?? "");
     const data: Prisma.CoupangManualPurchaseCreateManyInput[] = [];
 
-    for (const entry of dedupedEntries) {
+    for (const entry of entries) {
       const product = productById.get(entry.coupangProductId);
       if (!product) {
         throw new BadRequestException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
@@ -1555,7 +1597,7 @@ export class CoupangService {
         date: purchaseDate
       });
       const feeMode = numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT";
-      if (feeMode === "RATE" && resolvedPrice.salePriceKrw === null) {
+      if (resolvedPrice.salePriceKrw === null || resolvedPrice.salePriceKrw <= 0) {
         throw new BadRequestException({ code: "COUPANG_SALE_PRICE_REQUIRED", message: `${product.displayName} sale price is required.` });
       }
       const calculated = calculateCoupangManualPurchaseCost({
@@ -1567,6 +1609,20 @@ export class CoupangService {
         feeMode,
         useGrowthCost: true
       });
+      const salesAmountKrw = resolvedPrice.salePriceKrw * entry.quantity;
+      for (const [field, amount] of [
+        ["salesAmountKrw", salesAmountKrw],
+        ["productCostKrw", calculated.productCostKrw],
+        ["vendorFeePerUnitKrw", vendorFeePerUnitKrw],
+        ["vendorFeeTotalKrw", calculated.vendorFeeTotalKrw],
+        ["coupangSalesFeeKrw", calculated.coupangSalesFeeKrw],
+        ["shippingCostKrw", calculated.shippingCostKrw],
+        ["vatKrw", calculated.vatKrw],
+        ["otherCostKrw", calculated.otherCostKrw],
+        ["totalCostKrw", calculated.totalCostKrw]
+      ] as const) {
+        assertManualPurchaseStoredAmount(amount, product.id, field);
+      }
       data.push({
         purchaseDate,
         coupangProductId: product.id,
@@ -1575,6 +1631,8 @@ export class CoupangService {
         ruleDisplayName: representativeRule?.displayName ?? null,
         saleMethod: representativeRule?.saleMethod ?? null,
         quantity: entry.quantity,
+        salesAmountKrw: decimal(salesAmountKrw),
+        productCostKrw: decimal(calculated.productCostKrw),
         vendorFeePerUnitKrw: decimal(vendorFeePerUnitKrw),
         vendorFeeTotalKrw: decimal(calculated.vendorFeeTotalKrw),
         salePriceKrw: nullableDecimal(resolvedPrice.salePriceKrw),
@@ -1584,6 +1642,7 @@ export class CoupangService {
         coupangSalesFeeKrw: decimal(calculated.coupangSalesFeeKrw),
         shippingCostKrw: decimal(calculated.shippingCostKrw),
         vatKrw: decimal(calculated.vatKrw),
+        otherCostKrw: decimal(calculated.otherCostKrw),
         totalCostKrw: decimal(calculated.totalCostKrw),
         memo: entry.memo
       });
@@ -1605,8 +1664,9 @@ export class CoupangService {
       date: normalizedDate,
       selectedOptionCount: rows.length,
       totalQuantity: rows.reduce((sum, row) => sum + row.quantity, 0),
+      totalSalesAmountKrw: rows.reduce((sum, row) => sum + numberFrom(row.salesAmountKrw), 0),
       totalCostKrw: rows.reduce((sum, row) => sum + numberFrom(row.totalCostKrw), 0),
-      rows: rows.map(serializeManualPurchaseRow)
+      rows: rows.map((row) => serializeManualPurchaseRow(row))
     };
   }
 
@@ -1772,49 +1832,10 @@ export class CoupangService {
     const groupBy = parseCoupangGroupBy(query.groupBy);
     const productRows = await this.buildProductProfitRows(range);
     const rows = groupBy === "group" ? await this.groupProductProfitRows(productRows) : productRows;
-    const totals = productRows.reduce(
-      (accumulator, row) => ({
-        netSalesKrw: accumulator.netSalesKrw + row.netSalesKrw,
-        salesQuantity: accumulator.salesQuantity + row.salesQuantity,
-        totalCostKrw: accumulator.totalCostKrw + (row.totalCostKrw ?? 0),
-        marginKrw: accumulator.marginKrw + (row.marginKrw ?? 0),
-        adSpendKrw: accumulator.adSpendKrw + row.adSpendKrw,
-        adConversionSalesKrw: accumulator.adConversionSalesKrw + row.adConversionSalesKrw,
-        organicSalesKrw: accumulator.organicSalesKrw + row.organicSalesKrw,
-        returnCostKrw: accumulator.returnCostKrw + (row.returnCostKrw ?? 0),
-        vatKrw: accumulator.vatKrw + (row.vatKrw ?? 0),
-        manualPurchaseQuantity: accumulator.manualPurchaseQuantity + row.manualPurchaseQuantity,
-        manualPurchaseVatKrw: accumulator.manualPurchaseVatKrw + row.manualPurchaseVatKrw,
-        manualPurchaseTotalCostKrw: accumulator.manualPurchaseTotalCostKrw + row.manualPurchaseTotalCostKrw,
-        missingCostRuleCount: accumulator.missingCostRuleCount + (row.ruleStatus === "MISSING_COST_RULE" ? 1 : 0),
-        warningCount: accumulator.warningCount + row.warnings.length
-      }),
-      {
-        netSalesKrw: 0,
-        salesQuantity: 0,
-        totalCostKrw: 0,
-        marginKrw: 0,
-        adSpendKrw: 0,
-        adConversionSalesKrw: 0,
-        organicSalesKrw: 0,
-        returnCostKrw: 0,
-        vatKrw: 0,
-        manualPurchaseQuantity: 0,
-        manualPurchaseVatKrw: 0,
-        manualPurchaseTotalCostKrw: 0,
-        missingCostRuleCount: 0,
-        warningCount: 0
-      }
-    );
     return {
       period: { from: range.from, to: range.to },
       groupBy,
-      summary: {
-        ...totals,
-        marginRate: safeDivide(totals.marginKrw, totals.netSalesKrw),
-        roas: safeDivide(totals.adConversionSalesKrw, totals.adSpendKrw),
-        adSpendRatio: safeDivide(totals.adSpendKrw, totals.netSalesKrw)
-      },
+      summary: summarizeCoupangProductProfitRows(productRows),
       rows
     };
   }
@@ -1824,7 +1845,7 @@ export class CoupangService {
     const groupBy = parseCoupangGroupBy(query.groupBy);
     const productRows = await this.buildProductProfitRows(range);
     const rows = groupBy === "group" ? await this.groupProductProfitRows(productRows) : productRows;
-    return { period: { from: range.from, to: range.to }, groupBy, rows };
+    return { period: { from: range.from, to: range.to }, groupBy, summary: summarizeCoupangProductProfitRows(productRows), rows };
   }
 
   async adsAnalysis(query: { from?: string; to?: string; groupBy?: string }) {
@@ -2043,25 +2064,53 @@ export class CoupangService {
     return {
       date: query.date,
       groupBy,
+      summary: summarizeCoupangProductProfitRows(productRows),
       rows: reportRows.map((row) => ({
         productName: row.productName,
+        reportedSalesKrw: row.reportedSalesKrw,
+        reportedNetSalesKrw: row.reportedNetSalesKrw,
+        reportedSalesQuantity: row.reportedSalesQuantity,
+        reportedOrderCount: row.reportedOrderCount,
+        cancelAmountKrw: row.cancelAmountKrw,
+        manualPurchaseSalesKrw: row.manualPurchaseSalesKrw,
+        manualPurchaseQuantity: row.manualPurchaseQuantity,
+        manualPurchaseProductCostKrw: row.manualPurchaseProductCostKrw,
+        manualPurchaseVendorFeeKrw: row.manualPurchaseVendorFeeKrw,
+        manualPurchaseCoupangSalesFeeKrw: row.manualPurchaseCoupangSalesFeeKrw,
+        manualPurchaseShippingCostKrw: row.manualPurchaseShippingCostKrw,
+        manualPurchaseVatKrw: row.manualPurchaseVatKrw,
+        manualPurchaseOtherCostKrw: row.manualPurchaseOtherCostKrw,
+        manualPurchaseTotalCostKrw: row.manualPurchaseTotalCostKrw,
+        actualSalesKrw: row.actualSalesKrw,
+        actualNetSalesKrw: row.actualNetSalesKrw,
+        actualSalesQuantity: row.actualSalesQuantity,
         salePriceKrw: row.salePriceKrw,
         baseSalePriceKrw: row.baseSalePriceKrw,
         promotionPriceKrw: row.promotionPriceKrw,
         priceSource: row.priceSource,
         priceWarnings: row.priceWarnings,
         adSpendKrw: row.adSpendKrw,
-        manualPurchaseQuantity: row.manualPurchaseQuantity,
-        manualPurchaseVendorFeeKrw: row.manualPurchaseVendorFeeKrw,
-        manualPurchaseCoupangSalesFeeKrw: row.manualPurchaseCoupangSalesFeeKrw,
-        manualPurchaseShippingCostKrw: row.manualPurchaseShippingCostKrw,
-        manualPurchaseVatKrw: row.manualPurchaseVatKrw,
-        manualPurchaseTotalCostKrw: row.manualPurchaseTotalCostKrw,
+        productCostKrw: row.productCostKrw,
+        salesFeeKrw: row.salesFeeKrw,
+        shippingCostKrw: row.shippingCostKrw,
+        returnCostKrw: row.returnCostKrw,
+        extraCostKrw: row.extraCostKrw,
         vatKrw: row.vatKrw,
         totalCostKrw: row.totalCostKrw,
         organicSalesKrw: row.organicSalesKrw,
+        reportedOrganicSalesKrw: row.reportedOrganicSalesKrw,
+        actualOrganicSalesKrw: row.actualOrganicSalesKrw,
+        normalMarginKrw: row.normalMarginKrw,
         marginKrw: row.marginKrw,
-        roas: row.roas
+        marginRate: row.marginRate,
+        roas: row.roas,
+        normalCalculationStatus: row.normalCalculationStatus,
+        manualCalculationStatus: row.manualCalculationStatus,
+        calculationStatus: row.calculationStatus,
+        incompleteProductNames: (row.children ?? [])
+          .filter((child) => child.calculationStatus === "INCOMPLETE")
+          .map((child) => child.productName),
+        warnings: row.warnings
       }))
     };
   }
@@ -2116,7 +2165,7 @@ export class CoupangService {
             where: {
               coupangProductId: { in: productIds },
               promotionStartDate: { lte: range.toDate },
-              promotionEndDate: { gte: range.toDate },
+              promotionEndDate: { gte: range.fromDate },
               validationStatus: { not: RowValidationStatus.ERROR }
             },
             include: { batch: { select: { uploadedAt: true } } },
@@ -2126,76 +2175,78 @@ export class CoupangService {
     const productById = new Map(products.map((product) => [product.id, product]));
     const costRulesByProductId = groupBy(costRules, (rule) => rule.coupangProductId);
     const promotionPricesByProductId = groupBy(promotionPrices, (promotion) => promotion.coupangProductId ?? "");
-    const salesByProductId = new Map<string, SalesAccumulator>();
-    for (const line of saleLines) {
-      if (!line.coupangProductId) {
-        continue;
-      }
-      const current = salesByProductId.get(line.coupangProductId) ?? emptySalesAccumulator(line.product?.displayName ?? line.productName);
-      current.salesKrw += numberFrom(line.salesKrw);
-      current.cancelAmountKrw += numberFrom(line.cancelAmountKrw);
-      current.netSalesKrw += numberFrom(line.netSalesKrw);
-      current.salesQuantity += numberFrom(line.salesQuantity);
-      current.orderCount += line.orderCount;
-      current.lineCount += 1;
-      if (line.saleMethod) {
-        current.saleMethods.add(line.saleMethod);
-      }
-      salesByProductId.set(line.coupangProductId, current);
-    }
+    const reportedByProductDate = aggregateReportedSalesByProductDate(
+      saleLines.flatMap((line) => line.coupangProductId ? [{
+        productId: line.coupangProductId,
+        productName: line.product?.displayName ?? line.productName,
+        date: formatDateOnly(line.saleDate ?? range.toDate),
+        salesKrw: numberFrom(line.salesKrw),
+        cancelAmountKrw: numberFrom(line.cancelAmountKrw),
+        netSalesKrw: numberFrom(line.netSalesKrw),
+        salesQuantity: numberFrom(line.salesQuantity),
+        orderCount: line.orderCount,
+        saleMethod: line.saleMethod,
+        lineCount: 1
+      }] : [])
+    );
+    const manualByProductDate = aggregateManualPurchasesByProductDate(
+      manualPurchases.map((row) => ({
+        productId: row.coupangProductId,
+        date: formatDateOnly(row.purchaseDate ?? range.toDate),
+        quantity: row.quantity,
+        salesAmountKrw: nullableNumberFrom(row.salesAmountKrw),
+        salePriceKrw: nullableNumberFrom(row.salePriceKrw),
+        promotionPriceKrw: nullableNumberFrom(row.promotionPriceKrw),
+        baseSalePriceKrw: nullableNumberFrom(row.baseSalePriceKrw),
+        productCostKrw: nullableNumberFrom(row.productCostKrw),
+        vendorFeeKrw: nullableNumberFrom(row.vendorFeeTotalKrw),
+        coupangSalesFeeKrw: nullableNumberFrom(row.coupangSalesFeeKrw),
+        shippingCostKrw: nullableNumberFrom(row.shippingCostKrw),
+        vatKrw: nullableNumberFrom(row.vatKrw),
+        otherCostKrw: nullableNumberFrom(row.otherCostKrw),
+        totalCostKrw: nullableNumberFrom(row.totalCostKrw),
+        saleMethod: row.saleMethod
+      }))
+    );
 
-    const spendByProductId = new Map<string, number>();
-    const conversionByProductId = new Map<string, { salesKrw: number; quantity: number }>();
+    const spendByProductDate = new Map<string, { productId: string; date: string; amount: number }>();
+    const conversionByProductDate = new Map<string, { productId: string; date: string; salesKrw: number; quantity: number }>();
     for (const metric of adMetrics) {
+      const date = formatDateOnly(metric.metricDate ?? range.toDate);
       if (metric.spendProductId) {
-        spendByProductId.set(metric.spendProductId, (spendByProductId.get(metric.spendProductId) ?? 0) + numberFrom(metric.adSpendKrw));
+        const key = productDateKey(metric.spendProductId, date);
+        const current = spendByProductDate.get(key) ?? { productId: metric.spendProductId, date, amount: 0 };
+        current.amount += numberFrom(metric.adSpendKrw);
+        spendByProductDate.set(key, current);
       }
       if (metric.conversionProductId) {
-        const current = conversionByProductId.get(metric.conversionProductId) ?? { salesKrw: 0, quantity: 0 };
+        const key = productDateKey(metric.conversionProductId, date);
+        const current = conversionByProductDate.get(key) ?? { productId: metric.conversionProductId, date, salesKrw: 0, quantity: 0 };
         current.salesKrw += numberFrom(metric.totalConversionSales1dKrw);
         current.quantity += numberFrom(metric.totalSalesQuantity1d);
-        conversionByProductId.set(metric.conversionProductId, current);
+        conversionByProductDate.set(key, current);
       }
     }
 
-    const manualPurchasesByProductId = new Map<string, ManualPurchaseAccumulator>();
-    for (const row of manualPurchases) {
-      const current =
-        manualPurchasesByProductId.get(row.coupangProductId) ??
-        ({
-          quantity: 0,
-          vendorFeeKrw: 0,
-          coupangSalesFeeKrw: 0,
-          shippingCostKrw: 0,
-          vatKrw: 0,
-          totalCostKrw: 0,
-          saleMethods: new Set<string>()
-        } satisfies ManualPurchaseAccumulator);
-      current.quantity += row.quantity;
-      current.vendorFeeKrw += numberFrom(row.vendorFeeTotalKrw);
-      current.coupangSalesFeeKrw += numberFrom(row.coupangSalesFeeKrw);
-      current.shippingCostKrw += numberFrom(row.shippingCostKrw);
-      current.vatKrw += numberFrom(row.vatKrw);
-      current.totalCostKrw += numberFrom(row.totalCostKrw);
-      if (row.saleMethod) {
-        current.saleMethods.add(row.saleMethod);
-      }
-      manualPurchasesByProductId.set(row.coupangProductId, current);
-    }
-
-    const allProductIds = Array.from(
-      new Set([...salesByProductId.keys(), ...spendByProductId.keys(), ...conversionByProductId.keys(), ...manualPurchasesByProductId.keys()])
-    );
-    return allProductIds
-      .map((productId) => {
-        const sales = salesByProductId.get(productId) ?? emptySalesAccumulator(productById.get(productId)?.displayName ?? "Coupang Product");
-        const conversion = conversionByProductId.get(productId) ?? { salesKrw: 0, quantity: 0 };
-        const manual = manualPurchasesByProductId.get(productId) ?? emptyManualPurchaseAccumulator();
-        const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], range.toDate);
-        const adSpendKrw = spendByProductId.get(productId) ?? 0;
-        const productName = productById.get(productId)?.displayName ?? sales.productName;
-        const salesSaleMethod = firstSetValue(sales.saleMethods);
-        const displaySaleMethod = salesSaleMethod ?? firstSetValue(manual.saleMethods);
+    const allProductDateKeys = new Set([
+      ...reportedByProductDate.keys(),
+      ...manualByProductDate.keys(),
+      ...spendByProductDate.keys(),
+      ...conversionByProductDate.keys()
+    ]);
+    const dailyRows: ProductProfitRow[] = Array.from(allProductDateKeys).map((key) => {
+        const reportedEntry = reportedByProductDate.get(key);
+        const manual = manualByProductDate.get(key) ?? null;
+        const spendEntry = spendByProductDate.get(key);
+        const conversionEntry = conversionByProductDate.get(key);
+        const productId = reportedEntry?.productId ?? manual?.productId ?? spendEntry?.productId ?? conversionEntry?.productId ?? "";
+        const dateText = reportedEntry?.date ?? manual?.date ?? spendEntry?.date ?? conversionEntry?.date ?? range.to;
+        const date = asDateOnly(dateText);
+        const productName = productById.get(productId)?.displayName ?? reportedEntry?.productName ?? "Coupang Product";
+        const reported = reportedEntry ?? emptyReportedSalesFacts(productId, dateText, productName);
+        const conversion = conversionEntry ?? { productId, date: dateText, salesKrw: 0, quantity: 0 };
+        const adSpendKrw = spendEntry?.amount ?? 0;
+        const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], date);
         const resolvedPrice = resolveCoupangSalePrice({
           baseSalePriceKrw: costRule ? numberFrom(costRule.salePriceKrw) : null,
           promotions: (promotionPricesByProductId.get(productId) ?? []).map((promotion) => ({
@@ -2205,119 +2256,133 @@ export class CoupangService {
             promotionStatus: promotion.promotionStatus,
             validationErrors: promotion.validationErrors
           })),
-          date: range.toDate
+          date
         });
-        if (!costRule) {
-          const organicSalesKrw = sales.netSalesKrw - conversion.salesKrw;
-          const hasSalesOrAdActivity =
-            sales.lineCount !== 0 ||
-            sales.netSalesKrw !== 0 ||
-            sales.salesQuantity !== 0 ||
-            sales.orderCount !== 0 ||
-            adSpendKrw !== 0 ||
-            conversion.salesKrw !== 0 ||
-            conversion.quantity !== 0;
-          const manualOnly = !hasSalesOrAdActivity && manual.totalCostKrw !== 0;
-          return {
-            productId,
-            productName,
-            saleMethod: displaySaleMethod,
-            matchedSalesLineCount: sales.lineCount,
-            salesQuantity: sales.salesQuantity,
-            orderCount: sales.orderCount,
-            salesKrw: sales.salesKrw,
-            cancelAmountKrw: sales.cancelAmountKrw,
-            netSalesKrw: sales.netSalesKrw,
-            salePriceKrw: resolvedPrice.salePriceKrw,
-            baseSalePriceKrw: resolvedPrice.baseSalePriceKrw,
-            promotionPriceKrw: resolvedPrice.promotionPriceKrw,
-            priceSource: resolvedPrice.priceSource,
-            priceWarnings: resolvedPrice.priceWarnings,
-            productCostKrw: null,
-            salesFeeKrw: null,
-            shippingCostKrw: null,
-            returnCostKrw: null,
-            extraCostKrw: null,
-            vatKrw: null,
-            manualPurchaseQuantity: manual.quantity,
-            manualPurchaseVendorFeeKrw: manual.vendorFeeKrw,
-            manualPurchaseCoupangSalesFeeKrw: manual.coupangSalesFeeKrw,
-            manualPurchaseShippingCostKrw: manual.shippingCostKrw,
-            manualPurchaseVatKrw: manual.vatKrw,
-            manualPurchaseTotalCostKrw: manual.totalCostKrw,
-            adSpendKrw,
-            adConversionSalesKrw: conversion.salesKrw,
-            adConversionQuantity: conversion.quantity,
-            organicSalesKrw,
-            totalCostKrw: manualOnly ? manual.totalCostKrw : null,
-            marginKrw: manualOnly ? -manual.totalCostKrw : null,
-            marginRate: null,
-            roas: safeDivide(conversion.salesKrw, adSpendKrw),
-            warnings: [...(organicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : []), ...resolvedPrice.priceWarnings],
-            ruleStatus: "MISSING_COST_RULE" as const
-          };
-        }
-        const feeMode = numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT";
-        const calculated = calculateCoupangProfit(
-          {
-            saleMethod: salesSaleMethod,
-            netSalesKrw: sales.netSalesKrw,
-            salesQuantity: sales.salesQuantity
-          },
-          costInput(costRule),
-          {
+        const actual = adjustReportedSalesForManualPurchase(reported, manual);
+        const normalAttempt = calculateNormalCoupangProfit({
+          reported,
+          actual,
+          cost: costRule ? costInput(costRule) : null,
+          ads: {
             adSpendKrw,
             adConversionSalesKrw: conversion.salesKrw,
             adConversionQuantity: conversion.quantity
           },
-          {
-            feeMode,
-            includeReturnCost: true,
-            useGrowthCost: true
-          }
-        );
-        const totalCostKrw = calculated.totalCostKrw + manual.totalCostKrw;
-        const marginKrw = calculated.netSalesKrw - totalCostKrw;
+          feeMode: costRule && numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT"
+        });
+        const normalReference = actual.isValid
+          ? normalAttempt
+          : calculateNormalCoupangProfit({
+              reported,
+              actual: {
+                salesKrw: reported.salesKrw,
+                netSalesKrw: reported.netSalesKrw,
+                salesQuantity: reported.salesQuantity,
+                orderCount: reported.orderCount,
+                warnings: [],
+                isValid: true,
+                isManualOnly: false
+              },
+              cost: costRule ? costInput(costRule) : null,
+              ads: {
+                adSpendKrw,
+                adConversionSalesKrw: conversion.salesKrw,
+                adConversionQuantity: conversion.quantity
+              },
+              feeMode: costRule && numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT"
+            });
+        const normal = actual.isValid
+          ? normalAttempt
+          : { ...normalReference, calculated: null };
+        const initialManualPart = calculateManualPurchaseProfitAdjustment(manual);
+        const manualPart = manual && !actual.isValid
+          ? { ...initialManualPart, status: "INCOMPLETE" as const, marginAdjustmentKrw: null }
+          : initialManualPart;
+        const combined = combineCoupangProfitParts({ normal, manual: manualPart });
+        const actualOrganicSalesKrw = actual.netSalesKrw === null ? null : actual.netSalesKrw - conversion.salesKrw;
+        const reportedOrganicSalesKrw = reported.netSalesKrw - conversion.salesKrw;
+        const displaySaleMethods = uniqueNonEmpty([...reported.saleMethods, ...(manual?.saleMethods ?? [])]);
+        const requiresNormalCostRule = actual.netSalesKrw === null
+          ? reported.netSalesKrw !== 0 || reported.salesQuantity !== 0
+          : actual.netSalesKrw !== 0 || actual.salesQuantity !== 0;
+        const dailyComplete = combined.calculationStatus === "COMPLETE";
         return {
           productId,
           productName,
-          saleMethod: displaySaleMethod,
-          matchedSalesLineCount: sales.lineCount,
-          salesQuantity: sales.salesQuantity,
-          orderCount: sales.orderCount,
-          salesKrw: sales.salesKrw,
-          cancelAmountKrw: sales.cancelAmountKrw,
-          netSalesKrw: sales.netSalesKrw,
+          saleMethod: displaySaleMethods.length > 1 ? "MIXED" : displaySaleMethods[0] ?? null,
+          matchedSalesLineCount: reported.lineCount,
+          reportedSalesQuantity: reported.salesQuantity,
+          reportedOrderCount: reported.orderCount,
+          reportedSalesKrw: reported.salesKrw,
+          reportedNetSalesKrw: reported.netSalesKrw,
+          salesQuantity: actual.salesQuantity,
+          orderCount: actual.orderCount,
+          salesKrw: actual.salesKrw,
+          cancelAmountKrw: reported.cancelAmountKrw,
+          netSalesKrw: actual.netSalesKrw,
           salePriceKrw: resolvedPrice.salePriceKrw,
           baseSalePriceKrw: resolvedPrice.baseSalePriceKrw,
           promotionPriceKrw: resolvedPrice.promotionPriceKrw,
           priceSource: resolvedPrice.priceSource,
           priceWarnings: resolvedPrice.priceWarnings,
-          productCostKrw: calculated.productCostKrw,
-          salesFeeKrw: calculated.salesFeeKrw,
-          shippingCostKrw: calculated.shippingCostKrw,
-          returnCostKrw: calculated.returnCostKrw,
-          extraCostKrw: calculated.extraCostKrw,
-          vatKrw: calculated.vatKrw,
-          manualPurchaseQuantity: manual.quantity,
-          manualPurchaseVendorFeeKrw: manual.vendorFeeKrw,
-          manualPurchaseCoupangSalesFeeKrw: manual.coupangSalesFeeKrw,
-          manualPurchaseShippingCostKrw: manual.shippingCostKrw,
-          manualPurchaseVatKrw: manual.vatKrw,
-          manualPurchaseTotalCostKrw: manual.totalCostKrw,
+          productCostKrw: normal.calculated?.productCostKrw ?? null,
+          salesFeeKrw: normal.calculated?.salesFeeKrw ?? null,
+          shippingCostKrw: normal.calculated?.shippingCostKrw ?? null,
+          returnCostKrw: normal.calculated?.returnCostKrw ?? null,
+          extraCostKrw: normal.calculated?.extraCostKrw ?? null,
+          vatKrw: normal.calculated?.vatKrw ?? null,
+          manualPurchaseSalesKrw: manual ? manual.salesAmountKrw : 0,
+          manualPurchaseQuantity: manual?.quantity ?? 0,
+          manualPurchaseProductCostKrw: manual ? manual.productCostKrw : 0,
+          manualPurchaseVendorFeeKrw: manual ? manual.vendorFeeKrw : 0,
+          manualPurchaseCoupangSalesFeeKrw: manual ? manual.coupangSalesFeeKrw : 0,
+          manualPurchaseShippingCostKrw: manual ? manual.shippingCostKrw : 0,
+          manualPurchaseVatKrw: manual ? manual.vatKrw : 0,
+          manualPurchaseOtherCostKrw: manual ? manual.otherCostKrw : 0,
+          manualPurchaseTotalCostKrw: manual ? manual.totalCostKrw : 0,
+          actualSalesKrw: actual.salesKrw,
+          actualNetSalesKrw: actual.netSalesKrw,
+          actualSalesQuantity: actual.salesQuantity,
+          normalCalculationStatus: normal.status,
+          manualCalculationStatus: manualPart.status,
+          calculationStatus: combined.calculationStatus,
           adSpendKrw,
           adConversionSalesKrw: conversion.salesKrw,
           adConversionQuantity: conversion.quantity,
-          organicSalesKrw: calculated.organicSalesKrw,
-          totalCostKrw,
-          marginKrw,
-          marginRate: safeDivide(marginKrw, calculated.netSalesKrw),
-          roas: calculated.roas,
-          warnings: [...calculated.warnings, ...resolvedPrice.priceWarnings],
-          ruleStatus: "OK" as const
+          organicSalesKrw: actualOrganicSalesKrw,
+          reportedOrganicSalesKrw,
+          actualOrganicSalesKrw,
+          normalMarginKrw: normalAttempt.calculated?.marginKrw ?? normalReference.calculated?.marginKrw ?? null,
+          totalCostKrw: combined.totalCostKrw,
+          marginKrw: combined.marginKrw,
+          knownTotalCostKrw: dailyComplete ? combined.totalCostKrw ?? 0 : 0,
+          knownMarginKrw: dailyComplete ? combined.marginKrw ?? 0 : 0,
+          completeProductCount: dailyComplete ? 1 : 0,
+          incompleteProductCount: dailyComplete ? 0 : 1,
+          excludedNetSalesKrw: dailyComplete
+            ? 0
+            : (actual.isValid ? actual.netSalesKrw ?? reported.netSalesKrw : reported.netSalesKrw),
+          excludedSalesQuantity: dailyComplete
+            ? 0
+            : (actual.isValid ? actual.salesQuantity ?? reported.salesQuantity : reported.salesQuantity),
+          incompleteNormalCount: normal.status === "INCOMPLETE" ? 1 : 0,
+          incompleteManualCount: manualPart.status === "INCOMPLETE" ? 1 : 0,
+          marginRate: combined.marginKrw === null || actual.netSalesKrw === null ? null : safeDivide(combined.marginKrw, actual.netSalesKrw),
+          roas: safeDivide(conversion.salesKrw, adSpendKrw),
+          warnings: uniqueNonEmpty([
+            ...actual.warnings,
+            ...normal.warnings,
+            ...manualPart.warnings,
+            ...resolvedPrice.priceWarnings,
+            ...(actualOrganicSalesKrw !== null && actualOrganicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : [])
+          ]),
+          ruleStatus: !costRule && requiresNormalCostRule ? "MISSING_COST_RULE" as const : "OK" as const
         };
-      })
-      .sort((a, b) => b.netSalesKrw - a.netSalesKrw || a.productName.localeCompare(b.productName));
+      });
+    const dailyRowsByProductId = groupBy(dailyRows, (row) => row.productId);
+    return Array.from(dailyRowsByProductId.values())
+      .map(aggregateCoupangProductDateRows)
+      .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName));
   }
 
   private async groupProductProfitRows(rows: ProductProfitRow[]): Promise<ProductProfitRow[]> {
@@ -2785,17 +2850,6 @@ export class CoupangService {
   }
 }
 
-type SalesAccumulator = {
-  productName: string;
-  salesKrw: number;
-  cancelAmountKrw: number;
-  netSalesKrw: number;
-  salesQuantity: number;
-  orderCount: number;
-  lineCount: number;
-  saleMethods: Set<string>;
-};
-
 type AdsAccumulator = {
   rowType: "PRODUCT" | "GROUP";
   productId: string | null;
@@ -2844,19 +2898,29 @@ export function aggregateCoupangProductProfitRowsByGroup(
       }
       return aggregateCoupangProductProfitGroup(bucket.group, bucket.rows);
     })
-    .sort((a, b) => b.netSalesKrw - a.netSalesKrw || a.productName.localeCompare(b.productName));
+    .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName));
 }
 
-function hasDailyReportActivity(row: ProductProfitRow) {
+export function hasDailyReportActivity(row: ProductProfitRow) {
   return (
-    row.netSalesKrw !== 0 ||
+    row.reportedSalesKrw !== 0 ||
+    row.reportedNetSalesKrw !== 0 ||
+    row.reportedSalesQuantity !== 0 ||
+    row.reportedOrderCount !== 0 ||
+    row.cancelAmountKrw !== 0 ||
+    (row.actualSalesKrw !== null && row.actualSalesKrw !== 0) ||
+    (row.actualNetSalesKrw !== null && row.actualNetSalesKrw !== 0) ||
+    row.actualSalesQuantity !== 0 ||
     row.salesQuantity !== 0 ||
     row.orderCount !== 0 ||
     row.adSpendKrw !== 0 ||
     row.adConversionSalesKrw !== 0 ||
     row.adConversionQuantity !== 0 ||
     row.manualPurchaseQuantity !== 0 ||
-    row.manualPurchaseTotalCostKrw !== 0
+    row.manualPurchaseSalesKrw !== 0 ||
+    row.manualPurchaseTotalCostKrw !== 0 ||
+    row.calculationStatus === "INCOMPLETE" ||
+    row.warnings.length > 0
   );
 }
 
@@ -2866,29 +2930,50 @@ function aggregateCoupangProductProfitGroup(
 ): ProductProfitRow {
   const children = rows.map(({ children: _children, ...row }) => ({ ...row, rowType: "PRODUCT" as const }));
   const matchedSalesLineCount = sumNumbers(rows.map((row) => row.matchedSalesLineCount));
-  const salesQuantity = sumNumbers(rows.map((row) => row.salesQuantity));
+  const reportedSalesQuantity = sumNumbers(rows.map((row) => row.reportedSalesQuantity));
+  const reportedOrderCount = sumNumbers(rows.map((row) => row.reportedOrderCount));
+  const reportedSalesKrw = sumNumbers(rows.map((row) => row.reportedSalesKrw));
+  const reportedNetSalesKrw = sumNumbers(rows.map((row) => row.reportedNetSalesKrw));
+  const actualSalesQuantity = strictSumNullable(rows.map((row) => row.actualSalesQuantity));
+  const actualSalesKrw = strictSumNullable(rows.map((row) => row.actualSalesKrw));
+  const actualNetSalesKrw = strictSumNullable(rows.map((row) => row.actualNetSalesKrw));
   const orderCount = sumNumbers(rows.map((row) => row.orderCount));
-  const salesKrw = sumNumbers(rows.map((row) => row.salesKrw));
   const cancelAmountKrw = sumNumbers(rows.map((row) => row.cancelAmountKrw));
-  const netSalesKrw = sumNumbers(rows.map((row) => row.netSalesKrw));
-  const productCostKrw = sumNullable(rows.map((row) => row.productCostKrw));
-  const salesFeeKrw = sumNullable(rows.map((row) => row.salesFeeKrw));
-  const shippingCostKrw = sumNullable(rows.map((row) => row.shippingCostKrw));
-  const returnCostKrw = sumNullable(rows.map((row) => row.returnCostKrw));
-  const extraCostKrw = sumNullable(rows.map((row) => row.extraCostKrw));
-  const vatKrw = sumNullable(rows.map((row) => row.vatKrw));
+  const productCostKrw = strictSumNullable(rows.map((row) => row.productCostKrw));
+  const salesFeeKrw = strictSumNullable(rows.map((row) => row.salesFeeKrw));
+  const shippingCostKrw = strictSumNullable(rows.map((row) => row.shippingCostKrw));
+  const returnCostKrw = strictSumNullable(rows.map((row) => row.returnCostKrw));
+  const extraCostKrw = strictSumNullable(rows.map((row) => row.extraCostKrw));
+  const vatKrw = strictSumNullable(rows.map((row) => row.vatKrw));
+  const manualPurchaseSalesKrw = strictSumNullable(rows.map((row) => row.manualPurchaseSalesKrw));
   const manualPurchaseQuantity = sumNumbers(rows.map((row) => row.manualPurchaseQuantity));
-  const manualPurchaseVendorFeeKrw = sumNumbers(rows.map((row) => row.manualPurchaseVendorFeeKrw));
-  const manualPurchaseCoupangSalesFeeKrw = sumNumbers(rows.map((row) => row.manualPurchaseCoupangSalesFeeKrw));
-  const manualPurchaseShippingCostKrw = sumNumbers(rows.map((row) => row.manualPurchaseShippingCostKrw));
-  const manualPurchaseVatKrw = sumNumbers(rows.map((row) => row.manualPurchaseVatKrw));
-  const manualPurchaseTotalCostKrw = sumNumbers(rows.map((row) => row.manualPurchaseTotalCostKrw));
+  const manualPurchaseProductCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseProductCostKrw));
+  const manualPurchaseVendorFeeKrw = strictSumNullable(rows.map((row) => row.manualPurchaseVendorFeeKrw));
+  const manualPurchaseCoupangSalesFeeKrw = strictSumNullable(rows.map((row) => row.manualPurchaseCoupangSalesFeeKrw));
+  const manualPurchaseShippingCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseShippingCostKrw));
+  const manualPurchaseVatKrw = strictSumNullable(rows.map((row) => row.manualPurchaseVatKrw));
+  const manualPurchaseOtherCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseOtherCostKrw));
+  const manualPurchaseTotalCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseTotalCostKrw));
   const adSpendKrw = sumNumbers(rows.map((row) => row.adSpendKrw));
   const adConversionSalesKrw = sumNumbers(rows.map((row) => row.adConversionSalesKrw));
   const adConversionQuantity = sumNumbers(rows.map((row) => row.adConversionQuantity));
-  const organicSalesKrw = sumNumbers(rows.map((row) => row.organicSalesKrw));
-  const totalCostKrw = sumNullable(rows.map((row) => row.totalCostKrw));
-  const marginKrw = sumNullable(rows.map((row) => row.marginKrw));
+  const organicSalesKrw = strictSumNullable(rows.map((row) => row.organicSalesKrw));
+  const reportedOrganicSalesKrw = sumNumbers(rows.map((row) => row.reportedOrganicSalesKrw));
+  const actualOrganicSalesKrw = strictSumNullable(rows.map((row) => row.actualOrganicSalesKrw));
+  const normalMarginKrw = strictSumNullable(rows.map((row) => row.normalMarginKrw));
+  const totalCostKrw = strictSumNullable(rows.map((row) => row.totalCostKrw));
+  const marginKrw = strictSumNullable(rows.map((row) => row.marginKrw));
+  const calculationStatus = rows.every((row) => row.calculationStatus === "COMPLETE") ? "COMPLETE" as const : "INCOMPLETE" as const;
+  const normalCalculationStatus = aggregateCalculationPartStatus(rows.map((row) => row.normalCalculationStatus));
+  const manualCalculationStatus = aggregateCalculationPartStatus(rows.map((row) => row.manualCalculationStatus));
+  const knownTotalCostKrw = sumNumbers(rows.map((row) => row.knownTotalCostKrw));
+  const knownMarginKrw = sumNumbers(rows.map((row) => row.knownMarginKrw));
+  const completeProductCount = sumNumbers(rows.map((row) => row.completeProductCount));
+  const incompleteProductCount = sumNumbers(rows.map((row) => row.incompleteProductCount));
+  const excludedNetSalesKrw = sumNumbers(rows.map((row) => row.excludedNetSalesKrw));
+  const excludedSalesQuantity = sumNumbers(rows.map((row) => row.excludedSalesQuantity));
+  const incompleteNormalCount = sumNumbers(rows.map((row) => row.incompleteNormalCount));
+  const incompleteManualCount = sumNumbers(rows.map((row) => row.incompleteManualCount));
   const salePriceKrw = commonNullableNumber(rows.map((row) => row.salePriceKrw));
   const baseSalePriceKrw = commonNullableNumber(rows.map((row) => row.baseSalePriceKrw));
   const promotionPriceKrw = commonNullableNumber(rows.map((row) => row.promotionPriceKrw));
@@ -2918,11 +3003,15 @@ function aggregateCoupangProductProfitGroup(
     children,
     saleMethod: saleMethodMixed ? "MIXED" : saleMethods[0] ?? null,
     matchedSalesLineCount,
-    salesQuantity,
+    reportedSalesQuantity,
+    reportedOrderCount,
+    reportedSalesKrw,
+    reportedNetSalesKrw,
+    salesQuantity: actualSalesQuantity,
     orderCount,
-    salesKrw,
+    salesKrw: actualSalesKrw,
     cancelAmountKrw,
-    netSalesKrw,
+    netSalesKrw: actualNetSalesKrw,
     salePriceKrw: priceMixed ? null : salePriceKrw ?? null,
     baseSalePriceKrw: priceMixed ? null : baseSalePriceKrw ?? null,
     promotionPriceKrw: priceMixed ? null : promotionPriceKrw ?? null,
@@ -2934,22 +3023,176 @@ function aggregateCoupangProductProfitGroup(
     returnCostKrw,
     extraCostKrw,
     vatKrw,
+    manualPurchaseSalesKrw,
     manualPurchaseQuantity,
+    manualPurchaseProductCostKrw,
     manualPurchaseVendorFeeKrw,
     manualPurchaseCoupangSalesFeeKrw,
     manualPurchaseShippingCostKrw,
     manualPurchaseVatKrw,
+    manualPurchaseOtherCostKrw,
     manualPurchaseTotalCostKrw,
+    actualSalesKrw,
+    actualNetSalesKrw,
+    actualSalesQuantity,
+    normalCalculationStatus,
+    manualCalculationStatus,
+    calculationStatus,
     adSpendKrw,
     adConversionSalesKrw,
     adConversionQuantity,
     organicSalesKrw,
+    reportedOrganicSalesKrw,
+    actualOrganicSalesKrw,
+    normalMarginKrw,
     totalCostKrw,
     marginKrw,
-    marginRate: marginKrw === null ? null : safeDivide(marginKrw, netSalesKrw),
+    knownTotalCostKrw,
+    knownMarginKrw,
+    completeProductCount,
+    incompleteProductCount,
+    excludedNetSalesKrw,
+    excludedSalesQuantity,
+    incompleteNormalCount,
+    incompleteManualCount,
+    marginRate: marginKrw === null || actualNetSalesKrw === null ? null : safeDivide(marginKrw, actualNetSalesKrw),
     roas: safeDivide(adConversionSalesKrw, adSpendKrw),
     warnings: uniqueNonEmpty([...rows.flatMap((row) => row.warnings), ...groupWarnings]),
     ruleStatus: hasUnmatched ? "UNMATCHED" : hasMissingCostRule ? "MISSING_COST_RULE" : "OK"
+  };
+}
+
+function aggregateCoupangProductDateRows(rows: ProductProfitRow[]): ProductProfitRow {
+  if (rows.length === 1) return rows[0];
+  const first = rows[0];
+  const aggregated = aggregateCoupangProductProfitGroup({ id: first.productId, displayName: first.productName }, rows);
+  const isComplete = aggregated.calculationStatus === "COMPLETE";
+  const priceMixed = aggregated.priceSource === "MIXED";
+  return {
+    ...aggregated,
+    rowType: "PRODUCT",
+    productId: first.productId,
+    productName: first.productName,
+    groupId: undefined,
+    groupName: undefined,
+    childProductCount: undefined,
+    children: undefined,
+    priceWarnings: uniqueNonEmpty([
+      ...rows.flatMap((row) => row.priceWarnings),
+      ...(priceMixed ? ["RANGE_MIXED_PRICE"] : [])
+    ]),
+    warnings: uniqueNonEmpty(rows.flatMap((row) => row.warnings)),
+    knownTotalCostKrw: isComplete ? aggregated.totalCostKrw ?? 0 : 0,
+    knownMarginKrw: isComplete ? aggregated.marginKrw ?? 0 : 0,
+    completeProductCount: isComplete ? 1 : 0,
+    incompleteProductCount: isComplete ? 0 : 1,
+    excludedNetSalesKrw: isComplete ? 0 : sumNumbers(rows.map((row) =>
+      row.calculationStatus === "INCOMPLETE"
+        ? row.excludedNetSalesKrw
+        : row.actualNetSalesKrw ?? row.reportedNetSalesKrw
+    )),
+    excludedSalesQuantity: isComplete ? 0 : sumNumbers(rows.map((row) =>
+      row.calculationStatus === "INCOMPLETE"
+        ? row.excludedSalesQuantity
+        : row.actualSalesQuantity ?? row.reportedSalesQuantity
+    )),
+    incompleteNormalCount: aggregated.normalCalculationStatus === "INCOMPLETE" ? 1 : 0,
+    incompleteManualCount: aggregated.manualCalculationStatus === "INCOMPLETE" ? 1 : 0
+  };
+}
+
+function aggregateCalculationPartStatus(statuses: CoupangCalculationPartStatus[]): CoupangCalculationPartStatus {
+  if (statuses.some((status) => status === "INCOMPLETE")) return "INCOMPLETE";
+  if (statuses.some((status) => status === "COMPLETE")) return "COMPLETE";
+  return "NOT_APPLICABLE";
+}
+
+export function summarizeCoupangProductProfitRows(rows: ProductProfitRow[]) {
+  const reportedSalesKrw = sumNumbers(rows.map((row) => row.reportedSalesKrw));
+  const reportedNetSalesKrw = sumNumbers(rows.map((row) => row.reportedNetSalesKrw));
+  const reportedSalesQuantity = sumNumbers(rows.map((row) => row.reportedSalesQuantity));
+  const reportedOrderCount = sumNumbers(rows.map((row) => row.reportedOrderCount));
+  const cancelAmountKrw = sumNumbers(rows.map((row) => row.cancelAmountKrw));
+  const actualSalesKrw = strictSumNullable(rows.map((row) => row.actualSalesKrw));
+  const actualNetSalesKrw = strictSumNullable(rows.map((row) => row.actualNetSalesKrw));
+  const actualSalesQuantity = strictSumNullable(rows.map((row) => row.actualSalesQuantity));
+  const manualPurchaseSalesKrw = strictSumNullable(rows.map((row) => row.manualPurchaseSalesKrw));
+  const productCostKrw = strictSumNullable(rows.map((row) => row.productCostKrw));
+  const salesFeeKrw = strictSumNullable(rows.map((row) => row.salesFeeKrw));
+  const shippingCostKrw = strictSumNullable(rows.map((row) => row.shippingCostKrw));
+  const returnCostKrw = strictSumNullable(rows.map((row) => row.returnCostKrw));
+  const extraCostKrw = strictSumNullable(rows.map((row) => row.extraCostKrw));
+  const vatKrw = strictSumNullable(rows.map((row) => row.vatKrw));
+  const organicSalesKrw = strictSumNullable(rows.map((row) => row.organicSalesKrw));
+  const reportedOrganicSalesKrw = sumNumbers(rows.map((row) => row.reportedOrganicSalesKrw));
+  const actualOrganicSalesKrw = strictSumNullable(rows.map((row) => row.actualOrganicSalesKrw));
+  const normalMarginKrw = strictSumNullable(rows.map((row) => row.normalMarginKrw));
+  const totalCostKrw = strictSumNullable(rows.map((row) => row.totalCostKrw));
+  const marginKrw = strictSumNullable(rows.map((row) => row.marginKrw));
+  const adSpendKrw = sumNumbers(rows.map((row) => row.adSpendKrw));
+  const adConversionSalesKrw = sumNumbers(rows.map((row) => row.adConversionSalesKrw));
+  const completeRows = rows.filter((row) =>
+    row.calculationStatus === "COMPLETE" && Number.isFinite(row.marginKrw) && Number.isFinite(row.totalCostKrw)
+  );
+  const completeRowSet = new Set(completeRows);
+  const incompleteRows = rows.filter((row) => !completeRowSet.has(row));
+  const incompleteCalculationCount = incompleteRows.length;
+  const isComplete = incompleteCalculationCount === 0;
+  const knownMarginKrw = sumNumbers(completeRows.map((row) => Number(row.marginKrw)));
+  const knownTotalCostKrw = sumNumbers(completeRows.map((row) => Number(row.totalCostKrw)));
+  const excludedNetSalesKrw = sumNumbers(incompleteRows.map((row) => row.excludedNetSalesKrw));
+  const excludedSalesQuantity = sumNumbers(incompleteRows.map((row) => row.excludedSalesQuantity));
+
+  return {
+    isComplete,
+    reportedSalesKrw,
+    reportedNetSalesKrw,
+    reportedSalesQuantity,
+    reportedOrderCount,
+    cancelAmountKrw,
+    manualPurchaseSalesKrw,
+    manualPurchaseQuantity: sumNumbers(rows.map((row) => row.manualPurchaseQuantity)),
+    manualPurchaseProductCostKrw: strictSumNullable(rows.map((row) => row.manualPurchaseProductCostKrw)),
+    manualPurchaseVendorFeeKrw: strictSumNullable(rows.map((row) => row.manualPurchaseVendorFeeKrw)),
+    manualPurchaseCoupangSalesFeeKrw: strictSumNullable(rows.map((row) => row.manualPurchaseCoupangSalesFeeKrw)),
+    manualPurchaseShippingCostKrw: strictSumNullable(rows.map((row) => row.manualPurchaseShippingCostKrw)),
+    manualPurchaseVatKrw: strictSumNullable(rows.map((row) => row.manualPurchaseVatKrw)),
+    manualPurchaseOtherCostKrw: strictSumNullable(rows.map((row) => row.manualPurchaseOtherCostKrw)),
+    manualPurchaseTotalCostKrw: strictSumNullable(rows.map((row) => row.manualPurchaseTotalCostKrw)),
+    actualSalesKrw,
+    actualNetSalesKrw,
+    actualSalesQuantity,
+    salesKrw: actualSalesKrw,
+    netSalesKrw: actualNetSalesKrw,
+    salesQuantity: actualSalesQuantity,
+    productCostKrw,
+    salesFeeKrw,
+    shippingCostKrw,
+    returnCostKrw,
+    extraCostKrw,
+    vatKrw,
+    adSpendKrw,
+    adConversionSalesKrw,
+    organicSalesKrw,
+    reportedOrganicSalesKrw,
+    actualOrganicSalesKrw,
+    normalMarginKrw,
+    totalCostKrw,
+    marginKrw,
+    knownMarginKrw,
+    knownTotalCostKrw,
+    completeProductCount: completeRows.length,
+    incompleteProductCount: incompleteRows.length,
+    excludedNetSalesKrw,
+    excludedSalesQuantity,
+    incompleteNormalCount: rows.filter((row) => row.normalCalculationStatus === "INCOMPLETE").length,
+    incompleteManualCount: rows.filter((row) => row.manualCalculationStatus === "INCOMPLETE").length,
+    marginRate: marginKrw === null || actualNetSalesKrw === null ? null : safeDivide(marginKrw, actualNetSalesKrw),
+    roas: safeDivide(adConversionSalesKrw, adSpendKrw),
+    adSpendRatio: actualNetSalesKrw === null ? null : safeDivide(adSpendKrw, actualNetSalesKrw),
+    incompleteCalculationCount,
+    missingCostRuleCount: rows.filter((row) => row.ruleStatus === "MISSING_COST_RULE").length,
+    warningCount: sumNumbers(rows.map((row) => row.warnings.length))
   };
 }
 
@@ -3476,6 +3719,12 @@ function nullableDecimal(value: number | null | undefined) {
   return value === null || value === undefined ? null : decimal(value);
 }
 
+function nullableNumberFrom(value: unknown) {
+  if (value === null || value === undefined) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function manualPurchaseVendorFeeFromBody(value: unknown) {
   if (value === undefined || value === null || String(value).trim() === "") {
     return undefined;
@@ -3491,27 +3740,57 @@ function parseManualPurchaseEntries(value: unknown): ManualPurchaseEntryInput[] 
   if (!Array.isArray(value)) {
     throw new BadRequestException({ code: "INVALID_MANUAL_PURCHASE_ENTRIES", message: "entries must be an array." });
   }
-  return value.flatMap((item) => {
+  const entries = value.map((item) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) {
       throw new BadRequestException({ code: "INVALID_MANUAL_PURCHASE_ENTRY", message: "Each entry must be an object." });
     }
     const entry = item as Record<string, unknown>;
-    const quantity = Math.trunc(Number(entry.quantity));
     const productId = typeof entry.coupangProductId === "string" ? entry.coupangProductId.trim() : "";
-    if (!Number.isFinite(quantity) || quantity < 1) {
-      return productId ? [{ coupangProductId: productId, coupangProductRuleId: optionalNullableString(entry.coupangProductRuleId), quantity: 0 }] : [];
-    }
     if (!productId) {
       throw new BadRequestException({ code: "FIELD_REQUIRED", message: "coupangProductId is required." });
     }
-    return [
-      {
-        coupangProductId: productId,
-        coupangProductRuleId: optionalNullableString(entry.coupangProductRuleId),
-        quantity,
-        memo: optionalString(entry.memo)
-      }
-    ];
+    const quantityNumber = Number(entry.quantity);
+    if (!Number.isInteger(quantityNumber) || quantityNumber < 1 || quantityNumber > 2_147_483_647) {
+      throw manualPurchaseFieldError(productId, "quantity", "must be an integer between 1 and 2147483647");
+    }
+    return {
+      coupangProductId: productId,
+      coupangProductRuleId: optionalNullableString(entry.coupangProductRuleId),
+      quantity: quantityNumber,
+      memo: optionalString(entry.memo)
+    };
+  });
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    if (seen.has(entry.coupangProductId)) {
+      throw new BadRequestException({
+        code: "DUPLICATE_MANUAL_PURCHASE_PRODUCT",
+        message: `Duplicate manual purchase product: ${entry.coupangProductId}.`,
+        productId: entry.coupangProductId
+      });
+    }
+    seen.add(entry.coupangProductId);
+  }
+  return entries;
+}
+
+function assertManualPurchaseStoredAmount(amount: number, productId: string, field: string) {
+  if (!Number.isFinite(amount) || amount < 0 || amount > MAX_COUPANG_MANUAL_PURCHASE_MONEY_KRW) {
+    throw new BadRequestException({
+      code: "MANUAL_PURCHASE_AMOUNT_OUT_OF_RANGE",
+      message: `${field} exceeds Decimal(14,2) range for ${productId}.`,
+      productId,
+      field
+    });
+  }
+}
+
+function manualPurchaseFieldError(productId: string, field: string, expectation: string) {
+  return new BadRequestException({
+    code: "INVALID_MANUAL_PURCHASE_FIELD",
+    message: `${field} ${expectation} for ${productId}.`,
+    productId,
+    field
   });
 }
 
@@ -3524,6 +3803,8 @@ function serializeManualPurchaseRow(row: {
   ruleDisplayName: string | null;
   saleMethod: string | null;
   quantity: number;
+  salesAmountKrw: unknown;
+  productCostKrw: unknown;
   vendorFeePerUnitKrw: unknown;
   vendorFeeTotalKrw: unknown;
   salePriceKrw: unknown;
@@ -3533,10 +3814,19 @@ function serializeManualPurchaseRow(row: {
   coupangSalesFeeKrw: unknown;
   shippingCostKrw: unknown;
   vatKrw: unknown;
+  otherCostKrw: unknown;
   totalCostKrw: unknown;
   memo: string | null;
   product?: { group?: { id: string; displayName: string } | null } | null;
 }) {
+  const resolvedSales = resolveManualPurchaseSalesAmount({
+    quantity: row.quantity,
+    salesAmountKrw: nullableNumberFrom(row.salesAmountKrw),
+    salePriceKrw: nullableNumberFrom(row.salePriceKrw),
+    promotionPriceKrw: nullableNumberFrom(row.promotionPriceKrw),
+    baseSalePriceKrw: nullableNumberFrom(row.baseSalePriceKrw)
+  });
+  const salesAmountKrw = resolvedSales.salesAmountKrw;
   return {
     id: row.id,
     date: formatDateOnly(row.purchaseDate),
@@ -3548,6 +3838,10 @@ function serializeManualPurchaseRow(row: {
     groupName: row.product?.group?.displayName ?? null,
     saleMethod: row.saleMethod,
     quantity: row.quantity,
+    salesAmountKrw,
+    salesAmountSource: resolvedSales.source,
+    actualUnitPriceKrw: salesAmountKrw === null || row.quantity <= 0 ? null : salesAmountKrw / row.quantity,
+    productCostKrw: numberFrom(row.productCostKrw),
     vendorFeePerUnitKrw: numberFrom(row.vendorFeePerUnitKrw),
     vendorFeeTotalKrw: numberFrom(row.vendorFeeTotalKrw),
     salePriceKrw: row.salePriceKrw === null ? null : numberFrom(row.salePriceKrw),
@@ -3557,8 +3851,10 @@ function serializeManualPurchaseRow(row: {
     coupangSalesFeeKrw: numberFrom(row.coupangSalesFeeKrw),
     shippingCostKrw: numberFrom(row.shippingCostKrw),
     vatKrw: numberFrom(row.vatKrw),
+    otherCostKrw: numberFrom(row.otherCostKrw),
     totalCostKrw: numberFrom(row.totalCostKrw),
-    memo: row.memo ?? ""
+    memo: row.memo ?? "",
+    warnings: resolvedSales.warnings
   };
 }
 
@@ -3813,9 +4109,18 @@ function sumNumbers(values: number[]) {
   return values.reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0);
 }
 
-function sumNullable(values: Array<number | null | undefined>) {
-  const numbers = values.filter((value): value is number => Number.isFinite(value));
-  return numbers.length > 0 ? numbers.reduce((sum, value) => sum + value, 0) : null;
+function strictSumNullable(values: Array<number | null | undefined>) {
+  if (values.some((value) => value === null || value === undefined || !Number.isFinite(value))) {
+    return null;
+  }
+  return values.reduce<number>((sum, value) => sum + Number(value), 0);
+}
+
+function compareNullableNumbersDesc(a: number | null, b: number | null) {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return b - a;
 }
 
 function commonNullableNumber(values: Array<number | null | undefined>): number | null | undefined {
@@ -3832,6 +4137,7 @@ function commonNullableNumber(values: Array<number | null | undefined>): number 
 
 type CoupangCostRuleForSelection = Pick<
   Prisma.CoupangCostRuleGetPayload<Record<string, never>>,
+  | "id"
   | "supplyPriceKrw"
   | "productCostKrw"
   | "salesFeeRate"
@@ -3865,7 +4171,11 @@ function compareCoupangCostRuleForSelection(a: CoupangCostRuleForSelection, b: C
   if (aHasMarginCosts !== bHasMarginCosts) {
     return aHasMarginCosts ? -1 : 1;
   }
-  return b.effectiveFrom.getTime() - a.effectiveFrom.getTime() || b.createdAt.getTime() - a.createdAt.getTime();
+  return (
+    b.effectiveFrom.getTime() - a.effectiveFrom.getTime() ||
+    b.createdAt.getTime() - a.createdAt.getTime() ||
+    (a.id === b.id ? 0 : a.id < b.id ? 1 : -1)
+  );
 }
 
 function hasCoupangMarginCostFields(rule: CoupangCostRuleForSelection) {
@@ -3881,35 +4191,6 @@ function hasCoupangMarginCostFields(rule: CoupangCostRuleForSelection) {
     rule.returnCostPerUnitKrw,
     rule.extraCostKrw
   ].some((value) => numberFrom(value) !== 0);
-}
-
-function emptySalesAccumulator(productName: string): SalesAccumulator {
-  return {
-    productName,
-    salesKrw: 0,
-    cancelAmountKrw: 0,
-    netSalesKrw: 0,
-    salesQuantity: 0,
-    orderCount: 0,
-    lineCount: 0,
-    saleMethods: new Set<string>()
-  };
-}
-
-function emptyManualPurchaseAccumulator(): ManualPurchaseAccumulator {
-  return {
-    quantity: 0,
-    vendorFeeKrw: 0,
-    coupangSalesFeeKrw: 0,
-    shippingCostKrw: 0,
-    vatKrw: 0,
-    totalCostKrw: 0,
-    saleMethods: new Set<string>()
-  };
-}
-
-function firstSetValue(values: Set<string>) {
-  return values.values().next().value ?? null;
 }
 
 function costInput(rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>): CoupangCostInput {

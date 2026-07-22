@@ -791,6 +791,8 @@ model CoupangManualPurchase {
   ruleDisplayName       String?             @map("rule_display_name")
   saleMethod            String?             @map("sale_method")
   quantity              Int
+  salesAmountKrw        Decimal?            @map("sales_amount_krw") @db.Decimal(14, 2)
+  productCostKrw        Decimal             @map("product_cost_krw") @db.Decimal(14, 2)
   vendorFeePerUnitKrw   Decimal             @map("vendor_fee_per_unit_krw") @db.Decimal(14, 2)
   vendorFeeTotalKrw     Decimal             @map("vendor_fee_total_krw") @db.Decimal(14, 2)
   salePriceKrw          Decimal?            @map("sale_price_krw") @db.Decimal(14, 2)
@@ -800,6 +802,7 @@ model CoupangManualPurchase {
   coupangSalesFeeKrw    Decimal             @map("coupang_sales_fee_krw") @db.Decimal(14, 2)
   shippingCostKrw       Decimal             @map("shipping_cost_krw") @db.Decimal(14, 2)
   vatKrw                Decimal             @default(0) @map("vat_krw") @db.Decimal(14, 2)
+  otherCostKrw          Decimal             @default(0) @map("other_cost_krw") @db.Decimal(14, 2)
   totalCostKrw          Decimal             @map("total_cost_krw") @db.Decimal(14, 2)
   memo                  String?
   createdAt             DateTime            @default(now()) @map("created_at")

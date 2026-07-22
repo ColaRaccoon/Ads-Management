@@ -86,7 +86,7 @@ describe("calculateCoupangProfit", () => {
 });
 
 describe("calculateCoupangManualPurchaseCost", () => {
-  it("calculates rate sales fee and excludes product cost", () => {
+  it("calculates rate sales fee from quantity and the product cost rule", () => {
     const result = calculateCoupangManualPurchaseCost({
       quantity: 2,
       vendorFeePerUnitKrw: 3_182,
@@ -98,15 +98,18 @@ describe("calculateCoupangManualPurchaseCost", () => {
         productCostKrw: 10_000,
         salesFeeRate: 0.11,
         salesFeeKrw: 9_999,
-        sellerShippingFeeKrw: 3_000
+        sellerShippingFeeKrw: 3_000,
+        extraCostKrw: 250
       }
     });
 
+    expect(result.productCostKrw).toBe(20_000);
     expect(result.vendorFeeTotalKrw).toBe(6_364);
     expect(result.coupangSalesFeeKrw).toBe(5_280);
     expect(result.shippingCostKrw).toBe(6_000);
     expect(result.vatKrw).toBeCloseTo(48_000 / 11);
-    expect(result.totalCostKrw).toBeCloseTo(17_644 + 48_000 / 11);
+    expect(result.otherCostKrw).toBe(500);
+    expect(result.totalCostKrw).toBeCloseTo(38_144 + 48_000 / 11);
   });
 
   it("uses per-unit sales fee when rate mode is not selected", () => {
@@ -128,7 +131,8 @@ describe("calculateCoupangManualPurchaseCost", () => {
     expect(result.coupangSalesFeeKrw).toBe(6_000);
     expect(result.shippingCostKrw).toBe(9_000);
     expect(result.vatKrw).toBeCloseTo(72_000 / 11);
-    expect(result.totalCostKrw).toBeCloseTo(24_546 + 72_000 / 11);
+    expect(result.productCostKrw).toBe(30_000);
+    expect(result.totalCostKrw).toBeCloseTo(54_546 + 72_000 / 11);
   });
 
   it("uses growth inbound and shipping fees for rocket growth sale methods", () => {
@@ -151,6 +155,7 @@ describe("calculateCoupangManualPurchaseCost", () => {
     expect(result.coupangSalesFeeKrw).toBe(2_000);
     expect(result.shippingCostKrw).toBe(4_000);
     expect(result.vatKrw).toBeCloseTo(40_000 / 11);
-    expect(result.totalCostKrw).toBeCloseTo(12_364 + 40_000 / 11);
+    expect(result.productCostKrw).toBe(20_000);
+    expect(result.totalCostKrw).toBeCloseTo(32_364 + 40_000 / 11);
   });
 });

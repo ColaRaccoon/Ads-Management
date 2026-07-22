@@ -15,6 +15,12 @@ import {
   uploadCoupangSalesXlsx
 } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
+import { parseSelectedManualPurchaseQuantity, summarizeManualPurchaseDrafts } from "@/lib/coupang-manual-purchase";
+import type {
+  CoupangManualPurchaseOption,
+  CoupangManualPurchaseOptionsResponse,
+  CoupangManualPurchaseSaveResponse
+} from "@/types/coupang";
 
 type CoupangUploadBatch = {
   id: string;
@@ -29,45 +35,9 @@ type CoupangUploadBatch = {
   dataEnd?: string | null;
 };
 
-type ManualPurchaseOption = {
-  coupangProductId: string;
-  coupangProductRuleId: string | null;
-  productName: string;
-  ruleDisplayName: string | null;
-  groupId: string | null;
-  groupName: string | null;
-  saleMethod: string | null;
-  searchText: string;
-  unitVendorFeeKrw: number;
-  unitCoupangSalesFeeKrw: number;
-  unitShippingCostKrw: number;
-  unitVatKrw: number;
-  unitTotalCostKrw: number;
-  existingQuantity: number;
-  existingMemo: string;
-  isCalculable: boolean;
-  warnings: string[];
-};
-
-type ManualPurchaseOptionsResponse = {
-  date: string;
-  vendorFeePerUnitKrw: number;
-  groups: { id: string; displayName: string }[];
-  options: ManualPurchaseOption[];
-};
-
 type ManualDraft = {
   quantity: string;
   memo: string;
-};
-
-type ManualPurchaseSaveResponse = {
-  date: string;
-  rows: Array<{
-    coupangProductId: string;
-    quantity: number;
-    memo?: string | null;
-  }>;
 };
 
 const MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY = "coupang_manual_purchase_vendor_fee_per_unit_krw";
@@ -93,7 +63,7 @@ export default function CoupangUploadsPage() {
   });
   const manualOptions = useQuery({
     queryKey: ["coupang-manual-purchase-options", manualDate],
-    queryFn: () => apiGet<ManualPurchaseOptionsResponse>(`/coupang/manual-purchases/options?date=${encodeURIComponent(manualDate)}`)
+    queryFn: () => apiGet<CoupangManualPurchaseOptionsResponse>(`/coupang/manual-purchases/options?date=${encodeURIComponent(manualDate)}`)
   });
 
   const salesUpload = useMutation({
@@ -131,11 +101,15 @@ export default function CoupangUploadsPage() {
   const saveManualPurchases = useMutation({
     mutationFn: () => {
       const optionById = new Map((manualOptions.data?.options ?? []).map((option) => [option.coupangProductId, option]));
-      return apiPut<ManualPurchaseSaveResponse>(`/coupang/manual-purchases/${manualDate}`, {
+      return apiPut<CoupangManualPurchaseSaveResponse>(`/coupang/manual-purchases/${manualDate}`, {
         entries: Object.entries(manualDrafts)
           .map(([coupangProductId, draft]) => {
-            const quantity = Number(draft.quantity);
             const option = optionById.get(coupangProductId);
+            const quantity = parseSelectedManualPurchaseQuantity(draft.quantity, option?.productName ?? coupangProductId);
+            if (quantity === null) return null;
+            if (!option?.isCalculable) {
+              throw new Error(`${option?.productName ?? coupangProductId}: ${option?.warnings[0] ?? "가구매 계산 불가"}`);
+            }
             return {
               coupangProductId,
               coupangProductRuleId: option?.coupangProductRuleId ?? null,
@@ -143,7 +117,7 @@ export default function CoupangUploadsPage() {
               memo: draft.memo
             };
           })
-          .filter((entry) => Number.isFinite(entry.quantity) && entry.quantity > 0)
+          .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
       });
     },
     onSuccess: (result) => {
@@ -205,22 +179,7 @@ export default function CoupangUploadsPage() {
   }, [manualGroupId, manualOptions.data?.options, manualSearch]);
 
   const manualSummary = useMemo(() => {
-    const optionById = new Map((manualOptions.data?.options ?? []).map((option) => [option.coupangProductId, option]));
-    return Object.entries(manualDrafts).reduce(
-      (summary, [productId, draft]) => {
-        const quantity = Number(draft.quantity);
-        if (!Number.isFinite(quantity) || quantity <= 0) {
-          return summary;
-        }
-        const option = optionById.get(productId);
-        return {
-          selectedOptionCount: summary.selectedOptionCount + 1,
-          totalQuantity: summary.totalQuantity + quantity,
-          expectedCostKrw: summary.expectedCostKrw + quantity * (option?.unitTotalCostKrw ?? 0)
-        };
-      },
-      { selectedOptionCount: 0, totalQuantity: 0, expectedCostKrw: 0 }
-    );
+    return summarizeManualPurchaseDrafts(manualDrafts, manualOptions.data?.options ?? []);
   }, [manualDrafts, manualOptions.data?.options]);
 
   return (
@@ -339,13 +298,25 @@ export default function CoupangUploadsPage() {
         <div className="manual-purchase-summary">
           <SummaryMetric label="선택 상품" value={`${manualSummary.selectedOptionCount.toLocaleString("ko-KR")}개`} />
           <SummaryMetric label="총 가구매 수량" value={`${manualSummary.totalQuantity.toLocaleString("ko-KR")}개`} />
-          <SummaryMetric label="예상 차감 비용" value={money(manualSummary.expectedCostKrw)} />
+          <SummaryMetric label="예상 가구매 매출 조정" value={money(manualSummary.expectedSalesAmountKrw)} />
+          <SummaryMetric label="예상 가구매 비용" value={money(manualSummary.expectedCostKrw)} />
+        </div>
+
+        {manualSummary.uncalculableCount > 0 ? (
+          <div className="warning-strip">
+            계산 불가 선택 상품 {manualSummary.uncalculableCount.toLocaleString("ko-KR")}개 — {manualSummary.uncalculableReasons.join(", ")}
+          </div>
+        ) : null}
+
+        <div className="warning-strip manual-purchase-notice">
+          <span>상품별 가구매 수량을 입력하면 해당 날짜의 프로모션가/기본가와 원가 규칙을 스냅샷으로 저장합니다.</span>
+          <span>가구매 매출·수량은 쿠팡 원본에서 분리하고 저장 비용은 최종 순이익에서 한 번만 차감합니다.</span>
         </div>
 
         {manualOptions.isError ? <p className="muted">{manualOptions.error.message}</p> : null}
         <div className="manual-purchase-grid">
           {filteredManualOptions.map((option) => {
-            const draft = manualDrafts[option.coupangProductId] ?? { quantity: "", memo: option.existingMemo ?? "" };
+            const draft = manualDrafts[option.coupangProductId] ?? emptyManualDraft(option);
             const quantity = Number(draft.quantity);
             const selected = Number.isFinite(quantity) && quantity > 0;
             const expanded = activeManualProductId === option.coupangProductId || selected;
@@ -363,8 +334,14 @@ export default function CoupangUploadsPage() {
                   <strong>{option.productName}</strong>
                   <span>{option.groupName ?? "미분류"}</span>
                   <span>{option.ruleDisplayName ?? "-"}</span>
+                  <span>매출 조정 {money(option.unitSalesAmountKrw)} / 개</span>
+                  <span>제품 원가 {money(option.unitProductCostKrw)} / 개</span>
+                  <span>업체수수료 {money(option.unitVendorFeeKrw)} / 개</span>
+                  <span>쿠팡수수료 {money(option.unitCoupangSalesFeeKrw)} / 개</span>
+                  <span>배송비 {money(option.unitShippingCostKrw)} / 개</span>
                   <span>VAT {money(option.unitVatKrw)} / 개</span>
-                  <span>{money(option.unitTotalCostKrw)} / 개</span>
+                  <span>기타비용 {money(option.unitOtherCostKrw)} / 개</span>
+                  <span>예상비용 {money(option.unitTotalCostKrw)} / 개</span>
                 </button>
                 {option.warnings.length > 0 ? <p className="manual-purchase-warning">{option.warnings[0]}</p> : null}
                 {expanded ? (
@@ -505,6 +482,13 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function emptyManualDraft(option: CoupangManualPurchaseOption): ManualDraft {
+  return {
+    quantity: "",
+    memo: option.existingMemo ?? ""
+  };
 }
 
 function todayInputValue() {

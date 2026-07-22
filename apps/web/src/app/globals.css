@@ -433,7 +433,7 @@ p.muted {
 
 .manual-purchase-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 8px;
   margin-top: 12px;
 }
@@ -481,6 +481,10 @@ p.muted {
   line-height: 1.35;
 }
 
+.incomplete-row td {
+  background: #fff7ed;
+}
+
 .manual-purchase-warning {
   margin: 6px 0 0;
   color: var(--red);
@@ -488,9 +492,41 @@ p.muted {
 
 .manual-purchase-controls {
   display: grid;
-  grid-template-columns: minmax(68px, 0.5fr) minmax(0, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
+  gap: 8px;
   margin-top: 8px;
+}
+
+.manual-purchase-controls .field {
+  min-width: 0;
+}
+
+.manual-purchase-controls .input-with-unit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.manual-purchase-controls input[readonly] {
+  background: #f4f6f5;
+  color: var(--muted);
+}
+
+.manual-purchase-memo {
+  grid-column: 1 / -1;
+}
+
+.manual-purchase-notice {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+@media (max-width: 560px) {
+  .manual-purchase-grid,
+  .manual-purchase-controls {
+    grid-template-columns: 1fr;
+  }
 }
 
 .collapsible-header {

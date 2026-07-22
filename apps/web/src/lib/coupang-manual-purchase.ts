@@ -1,0 +1,62 @@
+export function parseSelectedManualPurchaseQuantity(value: string, productLabel: string) {
+  const text = value.trim();
+  const quantity = Number(text);
+  if (text === "" || quantity === 0) return null;
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    throw new Error(`${productLabel}: 수량은 1 이상의 정수여야 합니다.`);
+  }
+  return quantity;
+}
+
+type ManualPurchaseDraft = { quantity: string };
+type ManualPurchaseSummaryOption = {
+  coupangProductId: string;
+  unitSalesAmountKrw: number | null;
+  unitTotalCostKrw: number | null;
+  isCalculable: boolean;
+  warnings: string[];
+};
+
+export function summarizeManualPurchaseDrafts(
+  drafts: Record<string, ManualPurchaseDraft>,
+  options: ManualPurchaseSummaryOption[]
+) {
+  const optionById = new Map(options.map((option) => [option.coupangProductId, option]));
+  let selectedOptionCount = 0;
+  let totalQuantity = 0;
+  let expectedSalesAmountKrw: number | null = 0;
+  let expectedCostKrw: number | null = 0;
+  let uncalculableCount = 0;
+  const uncalculableReasons: string[] = [];
+
+  for (const [productId, draft] of Object.entries(drafts)) {
+    const quantity = Number(draft.quantity);
+    if (!Number.isFinite(quantity) || quantity <= 0) continue;
+
+    const option = optionById.get(productId);
+    const hasSalesAmount = Number.isFinite(option?.unitSalesAmountKrw);
+    const hasCost = Number.isFinite(option?.unitTotalCostKrw);
+    selectedOptionCount += 1;
+    totalQuantity += quantity;
+    expectedSalesAmountKrw = expectedSalesAmountKrw === null || !hasSalesAmount
+      ? null
+      : expectedSalesAmountKrw + quantity * Number(option?.unitSalesAmountKrw);
+    expectedCostKrw = expectedCostKrw === null || !hasCost
+      ? null
+      : expectedCostKrw + quantity * Number(option?.unitTotalCostKrw);
+
+    if (!option?.isCalculable || !hasSalesAmount || !hasCost) {
+      uncalculableCount += 1;
+      uncalculableReasons.push(...(option?.warnings.length ? option.warnings : ["가구매 예상 금액 계산 불가"]));
+    }
+  }
+
+  return {
+    selectedOptionCount,
+    totalQuantity,
+    expectedSalesAmountKrw,
+    expectedCostKrw,
+    uncalculableCount,
+    uncalculableReasons: Array.from(new Set(uncalculableReasons))
+  };
+}

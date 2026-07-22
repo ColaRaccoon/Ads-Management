@@ -11,7 +11,7 @@ export type CoupangProfitOptions = {
 const VAT_INCLUDED_DIVISOR = 11;
 
 export type CoupangCostInput = {
-  salePriceKrw: number;
+  salePriceKrw?: number;
   supplyPriceKrw?: number;
   productCostKrw: number;
   salesFeeRate?: number;
@@ -64,10 +64,12 @@ export type CoupangManualPurchaseCostInput = {
 };
 
 export type CoupangManualPurchaseCostResult = {
+  productCostKrw: number;
   vendorFeeTotalKrw: number;
   coupangSalesFeeKrw: number;
   shippingCostKrw: number;
   vatKrw: number;
+  otherCostKrw: number;
   totalCostKrw: number;
 };
 
@@ -116,24 +118,34 @@ export function calculateCoupangProfit(
 }
 
 export function calculateCoupangManualPurchaseCost(input: CoupangManualPurchaseCostInput): CoupangManualPurchaseCostResult {
-  const quantity = Math.max(0, Math.trunc(finiteNumber(input.quantity)));
-  const vendorFeeTotalKrw = finiteNumber(input.vendorFeePerUnitKrw) * quantity;
+  if (!Number.isInteger(input.quantity) || input.quantity < 0) {
+    throw new RangeError("Manual-purchase quantity must be a non-negative integer.");
+  }
+  const quantity = input.quantity;
+  const productCostKrw = roundMoney(finiteNumber(input.cost.productCostKrw) * quantity);
+  const vendorFeeTotalKrw = roundMoney(finiteNumber(input.vendorFeePerUnitKrw) * quantity);
   const feeMode = input.feeMode ?? (finiteNumber(input.cost.salesFeeRate) > 0 ? "RATE" : "PER_UNIT");
-  const coupangSalesFeeKrw =
+  const coupangSalesFeeKrw = roundMoney(
     feeMode === "RATE"
       ? finiteNumber(input.salePriceKrw) * finiteNumber(input.cost.salesFeeRate) * quantity
-      : finiteNumber(input.cost.salesFeeKrw) * quantity;
-  const shippingCostKrw = shippingCost(input.saleMethod, input.cost, quantity, {
-    useGrowthCost: input.useGrowthCost ?? true
-  });
-  const vatKrw = vatFromVatIncludedAmount(finiteNumber(input.salePriceKrw) * quantity);
+      : finiteNumber(input.cost.salesFeeKrw) * quantity
+  );
+  const shippingCostKrw = roundMoney(
+    shippingCost(input.saleMethod, input.cost, quantity, {
+      useGrowthCost: input.useGrowthCost ?? true
+    })
+  );
+  const vatKrw = roundMoney(vatFromVatIncludedAmount(finiteNumber(input.salePriceKrw) * quantity));
+  const otherCostKrw = roundMoney(finiteNumber(input.cost.extraCostKrw) * quantity);
 
   return {
+    productCostKrw,
     vendorFeeTotalKrw,
     coupangSalesFeeKrw,
     shippingCostKrw,
     vatKrw,
-    totalCostKrw: vendorFeeTotalKrw + coupangSalesFeeKrw + shippingCostKrw + vatKrw
+    otherCostKrw,
+    totalCostKrw: roundMoney(productCostKrw + vendorFeeTotalKrw + coupangSalesFeeKrw + shippingCostKrw + vatKrw + otherCostKrw)
   };
 }
 
@@ -163,4 +175,8 @@ function finiteNumber(value: number | null | undefined) {
 
 function vatFromVatIncludedAmount(amountKrw: number) {
   return finiteNumber(amountKrw) / VAT_INCLUDED_DIVISOR;
+}
+
+function roundMoney(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }

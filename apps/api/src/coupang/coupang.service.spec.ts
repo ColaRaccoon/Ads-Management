@@ -10,7 +10,8 @@ import {
   CoupangService,
   type ProductProfitRow,
   resolveCoupangRowImportDecision,
-  resolveCoupangRowStoredState
+  resolveCoupangRowStoredState,
+  summarizeCoupangProductProfitRows
 } from "./coupang.service";
 
 describe("Coupang upload current/version policy", () => {
@@ -478,6 +479,726 @@ describe("CoupangService product settings and mapping rules", () => {
   });
 });
 
+describe("Coupang manual-purchase quantity-based cost flow", () => {
+  it("validates every replacement entry before deleting the date", async () => {
+    const deleteMany = vi.fn();
+    const service = new CoupangService({
+      appSetting: { findUnique: vi.fn(async () => null) },
+      coupangManualPurchase: { deleteMany }
+    } as never);
+
+    await expect(service.replaceManualPurchasesForDate("2026-07-21", {
+      entries: [{ coupangProductId: "product-1", quantity: 1.5 }]
+    })).rejects.toMatchObject({ response: { code: "INVALID_MANUAL_PURCHASE_FIELD", field: "quantity" } });
+    expect(deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate products instead of silently keeping the last entry", async () => {
+    const service = new CoupangService({ appSetting: { findUnique: vi.fn(async () => null) } } as never);
+    const entry = { coupangProductId: "product-1", quantity: 1 };
+    await expect(service.replaceManualPurchasesForDate("2026-07-21", { entries: [entry, entry] }))
+      .rejects.toMatchObject({ response: { code: "DUPLICATE_MANUAL_PURCHASE_PRODUCT" } });
+  });
+
+  it("stores automatically calculated product, fee, shipping, VAT, and other costs from quantity", async () => {
+    let created: any[] = [];
+    const product = { id: "product-1", displayName: "테스트 상품", standardName: "테스트", group: null, productRules: [] };
+    const tx = {
+      coupangManualPurchase: {
+        deleteMany: vi.fn(),
+        createMany: vi.fn(async ({ data }: { data: any[] }) => { created = data; }),
+        findMany: vi.fn(async () => created.map((row, index) => ({
+          ...row,
+          id: `manual-${index}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          product,
+          productRule: null
+        })))
+      }
+    };
+    const prisma = {
+      appSetting: { findUnique: vi.fn(async () => null) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangProductRule: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        coupangProductId: "product-1",
+        salePriceKrw: new Prisma.Decimal(24_000),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(10_000),
+        salesFeeRate: new Prisma.Decimal(0.11),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(3_000),
+        growthInboundFeeKrw: new Prisma.Decimal(0),
+        growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(300),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+        effectiveTo: null,
+        createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
+      $transaction: vi.fn(async (callback: (client: typeof tx) => unknown) => callback(tx))
+    };
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.replaceManualPurchasesForDate("2026-07-21", {
+      entries: [{
+        coupangProductId: "product-1",
+        quantity: 2
+      }]
+    });
+
+    expect(created).toHaveLength(1);
+    expect(Number(created[0].salesAmountKrw)).toBe(48_000);
+    expect(Number(created[0].productCostKrw)).toBe(20_000);
+    expect(Number(created[0].vendorFeeTotalKrw)).toBe(6_364);
+    expect(Number(created[0].coupangSalesFeeKrw)).toBe(5_280);
+    expect(Number(created[0].shippingCostKrw)).toBe(6_000);
+    expect(Number(created[0].vatKrw)).toBeCloseTo(48_000 / 11);
+    expect(Number(created[0].otherCostKrw)).toBe(600);
+    expect(created[0]).toMatchObject({ priceSource: "BASE" });
+    expect(Number(created[0].salePriceKrw)).toBe(24_000);
+    expect(Number(created[0].totalCostKrw)).toBeCloseTo(38_244 + 48_000 / 11);
+    expect(result).toMatchObject({ selectedOptionCount: 1, totalQuantity: 2, totalSalesAmountKrw: 48_000 });
+    expect(result.rows[0].productCostKrw).toBe(20_000);
+    expect(result.rows[0].otherCostKrw).toBe(600);
+  });
+
+  it("rejects derived Decimal totals before the replacement transaction", async () => {
+    const transaction = vi.fn();
+    const product = { id: "product-1", displayName: "테스트 상품", standardName: "테스트", group: null, productRules: [] };
+    const service = new CoupangService({
+      appSetting: { findUnique: vi.fn(async () => null) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangProductRule: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        coupangProductId: "product-1",
+        salePriceKrw: new Prisma.Decimal(1),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(400_000_000_000),
+        salesFeeRate: new Prisma.Decimal(0),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(0),
+        growthInboundFeeKrw: new Prisma.Decimal(0),
+        growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(0),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+        effectiveTo: null,
+        createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
+      $transaction: transaction
+    } as never);
+
+    await expect(service.replaceManualPurchasesForDate("2026-07-21", {
+      vendorFeePerUnitKrw: 600_000_000_000,
+      entries: [{ coupangProductId: "product-1", quantity: 1 }]
+    })).rejects.toMatchObject({ response: { code: "MANUAL_PURCHASE_AMOUNT_OUT_OF_RANGE", field: "totalCostKrw" } });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects an out-of-range manual other-cost snapshot before the replacement transaction", async () => {
+    const transaction = vi.fn();
+    const product = { id: "product-1", displayName: "기타비용 범위 상품", standardName: "기타비용", group: null, productRules: [] };
+    const service = new CoupangService({
+      appSetting: { findUnique: vi.fn(async () => null) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangProductRule: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        coupangProductId: product.id,
+        salePriceKrw: new Prisma.Decimal(1),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(0),
+        salesFeeRate: new Prisma.Decimal(0),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(0),
+        growthInboundFeeKrw: new Prisma.Decimal(0),
+        growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(1_000_000_000_000),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+        effectiveTo: null,
+        createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
+      $transaction: transaction
+    } as never);
+
+    await expect(service.replaceManualPurchasesForDate("2026-07-21", {
+      vendorFeePerUnitKrw: 1,
+      entries: [{ coupangProductId: product.id, quantity: 1 }]
+    })).rejects.toMatchObject({ response: { code: "MANUAL_PURCHASE_AMOUNT_OUT_OF_RANGE", field: "otherCostKrw" } });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["RATE", 0.1, 0],
+    ["PER_UNIT", 0, 1_000]
+  ] as const)("rejects a missing positive sale price for %s VAT calculation before replacement", async (_mode, salesFeeRate, salesFeeKrw) => {
+    const transaction = vi.fn();
+    const product = {
+      id: "product-1",
+      displayName: "가격 누락 상품",
+      standardName: "가격 누락",
+      group: null,
+      productRules: [{
+        id: "rule-1",
+        coupangProductId: "product-1",
+        displayName: "가격 누락 규칙",
+        saleMethod: "판매자배송",
+        includeKeywords: ["가격 누락"],
+        excludeKeywords: []
+      }]
+    };
+    const costRule = {
+      coupangProductId: "product-1",
+      salePriceKrw: new Prisma.Decimal(0),
+      supplyPriceKrw: new Prisma.Decimal(0),
+      productCostKrw: new Prisma.Decimal(2_000),
+      salesFeeRate: new Prisma.Decimal(salesFeeRate),
+      salesFeeKrw: new Prisma.Decimal(salesFeeKrw),
+      sellerShippingFeeKrw: new Prisma.Decimal(1_000),
+      growthInboundFeeKrw: new Prisma.Decimal(0),
+      growthShippingFeeKrw: new Prisma.Decimal(0),
+      returnRate: new Prisma.Decimal(0),
+      returnCostPerUnitKrw: new Prisma.Decimal(0),
+      extraCostKrw: new Prisma.Decimal(0),
+      effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+      effectiveTo: null,
+      createdAt: new Date("2026-01-01T00:00:00.000Z")
+    };
+    const service = new CoupangService({
+      appSetting: { findUnique: vi.fn(async () => null) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangProductRule: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => [costRule]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
+      $transaction: transaction
+    } as never);
+
+    const options = await service.manualPurchaseOptions({ date: "2026-07-21" });
+    expect(options.options[0]).toMatchObject({ isCalculable: false, unitSalesAmountKrw: null, unitVatKrw: null, unitTotalCostKrw: null });
+    expect(options.options[0].warnings).toContain("COUPANG_SALE_PRICE_REQUIRED");
+
+    await expect(service.replaceManualPurchasesForDate("2026-07-21", {
+      entries: [{ coupangProductId: "product-1", quantity: 1 }]
+    })).rejects.toMatchObject({ response: { code: "COUPANG_SALE_PRICE_REQUIRED" } });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("builds quantity options, preserves inactive rows, and resolves exact cost-rule ties by id", async () => {
+    const activeProduct = {
+      id: "active-product",
+      displayName: "활성 상품",
+      standardName: "활성",
+      group: null,
+      productRules: [{
+        id: "active-rule",
+        coupangProductId: "active-product",
+        displayName: "활성 규칙",
+        saleMethod: "판매자배송",
+        includeKeywords: ["활성"],
+        excludeKeywords: []
+      }]
+    };
+    const inactiveProduct = { id: "inactive-product", displayName: "비활성 상품", standardName: "비활성", group: null };
+    const existing = {
+      id: "manual-legacy",
+      coupangProductId: "inactive-product",
+      coupangProductRuleId: null,
+      productDisplayName: "비활성 상품",
+      ruleDisplayName: null,
+      saleMethod: null,
+      quantity: 2,
+      salesAmountKrw: null,
+      vendorFeeTotalKrw: new Prisma.Decimal(100),
+      coupangSalesFeeKrw: new Prisma.Decimal(0),
+      shippingCostKrw: new Prisma.Decimal(0),
+      vatKrw: new Prisma.Decimal(0),
+      otherCostKrw: new Prisma.Decimal(0),
+      totalCostKrw: new Prisma.Decimal(100),
+      memo: "legacy",
+      product: inactiveProduct,
+      productRule: null
+    };
+    const service = new CoupangService({
+      appSetting: { findUnique: vi.fn(async () => null) },
+      coupangProduct: { findMany: vi.fn(async () => [activeProduct]) },
+      coupangManualPurchase: { findMany: vi.fn(async () => [existing]) },
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        id: "00000000-0000-0000-0000-000000000001",
+        coupangProductId: "active-product",
+        salePriceKrw: new Prisma.Decimal(23_000),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(9_000),
+        salesFeeRate: new Prisma.Decimal(0.1),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(3_000),
+        growthInboundFeeKrw: new Prisma.Decimal(0),
+        growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(0),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+        effectiveTo: null,
+        createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }, {
+        id: "00000000-0000-0000-0000-000000000002",
+        coupangProductId: "active-product",
+        salePriceKrw: new Prisma.Decimal(24_000),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(10_000),
+        salesFeeRate: new Prisma.Decimal(0.1),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(3_000),
+        growthInboundFeeKrw: new Prisma.Decimal(0),
+        growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(300),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+        effectiveTo: null,
+        createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const result = await service.manualPurchaseOptions({ date: "2026-07-21" });
+    expect(result.options.map((option) => option.coupangProductId).sort()).toEqual(["active-product", "inactive-product"]);
+    const activeOption = result.options.find((option) => option.coupangProductId === "active-product");
+    const inactiveOption = result.options.find((option) => option.coupangProductId === "inactive-product");
+    expect(activeOption).toMatchObject({
+      salePriceKrw: 24_000,
+      unitProductCostKrw: 10_000,
+      unitVendorFeeKrw: 3_182,
+      unitCoupangSalesFeeKrw: 2_400,
+      unitShippingCostKrw: 3_000,
+      unitOtherCostKrw: 300,
+      isCalculable: true
+    });
+    expect(activeOption?.unitVatKrw).toBeCloseTo(24_000 / 11);
+    expect(activeOption?.unitTotalCostKrw).toBeCloseTo(18_882 + 24_000 / 11);
+    expect(inactiveOption).toMatchObject({ existingQuantity: 2, existingMemo: "legacy", isCalculable: false });
+    expect(inactiveOption?.warnings).toContain("COUPANG_COST_RULE_MISSING");
+  });
+
+  it("separates manual-purchase sales before calculating normal costs and charges snapshots once", async () => {
+    const date = new Date("2026-07-21T00:00:00.000Z");
+    const product = { id: "product-1", displayName: "테스트 상품" };
+    const prisma = {
+      coupangSaleLine: { findMany: vi.fn(async () => [{
+        coupangProductId: "product-1", product, productName: "테스트 상품",
+        salesKrw: new Prisma.Decimal(1_000_000), cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(1_000_000),
+        salesQuantity: new Prisma.Decimal(100), orderCount: 100, saleMethod: "판매자배송"
+      }]) },
+      coupangAdMetric: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => [{
+        coupangProductId: "product-1", product, quantity: 10, salesAmountKrw: new Prisma.Decimal(100_000),
+        productCostKrw: new Prisma.Decimal(30_000),
+        vendorFeeTotalKrw: new Prisma.Decimal(5_000), coupangSalesFeeKrw: new Prisma.Decimal(10_000), shippingCostKrw: new Prisma.Decimal(20_000),
+        vatKrw: new Prisma.Decimal(100_000 / 11), otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(65_000 + 100_000 / 11), saleMethod: "판매자배송"
+      }]) },
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        coupangProductId: "product-1", salePriceKrw: new Prisma.Decimal(0), supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(3_000), salesFeeRate: new Prisma.Decimal(0.1), salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(2_000), growthInboundFeeKrw: new Prisma.Decimal(0), growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0), returnCostPerUnitKrw: new Prisma.Decimal(0), extraCostKrw: new Prisma.Decimal(0),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveTo: null, createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    };
+    const service = new CoupangService(prisma as never);
+    const rows = await (service as any).buildProductProfitRows({ from: "2026-07-21", to: "2026-07-21", fromDate: date, toDate: date });
+
+    expect(rows[0]).toMatchObject({
+      reportedNetSalesKrw: 1_000_000,
+      manualPurchaseSalesKrw: 100_000,
+      manualPurchaseProductCostKrw: 30_000,
+      actualNetSalesKrw: 900_000,
+      actualSalesQuantity: 90,
+      productCostKrw: 270_000,
+      salesFeeKrw: 90_000,
+      shippingCostKrw: 180_000,
+      calculationStatus: "COMPLETE"
+    });
+    expect(rows[0].vatKrw).toBeCloseTo(900_000 / 11);
+    expect(rows[0].manualPurchaseTotalCostKrw).toBeCloseTo(65_000 + 100_000 / 11);
+    expect(rows[0].marginKrw).toBeCloseTo(900_000 - 270_000 - 90_000 - 180_000 - 900_000 / 11 - 65_000 - 100_000 / 11);
+    expect(Math.round(rows[0].marginKrw)).toBe(204_091);
+  });
+
+  it("keeps net sales numeric with no manual rows or legacy rows and calculates manual-only costs", async () => {
+    const date = new Date("2026-07-21T00:00:00.000Z");
+    const product = { id: "product-1", displayName: "테스트 상품" };
+    const basePrisma = {
+      coupangSaleLine: { findMany: vi.fn(async () => [{
+        coupangProductId: "product-1", product, productName: "테스트 상품", salesKrw: new Prisma.Decimal(10_000),
+        cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(10_000), salesQuantity: new Prisma.Decimal(1), orderCount: 1, saleMethod: "판매자배송"
+      }]) },
+      coupangAdMetric: { findMany: vi.fn(async () => [{
+        spendProductId: "product-1", conversionProductId: "product-1", adSpendKrw: new Prisma.Decimal(500),
+        totalConversionSales1dKrw: new Prisma.Decimal(300), totalSalesQuantity1d: new Prisma.Decimal(1)
+      }]) },
+      coupangCostRule: { findMany: vi.fn(async () => []) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    };
+    const range = {
+      from: "2026-07-20",
+      to: "2026-07-21",
+      fromDate: new Date("2026-07-20T00:00:00.000Z"),
+      toDate: date
+    };
+
+    const withoutManualService = new CoupangService({
+      ...basePrisma,
+      coupangManualPurchase: { findMany: vi.fn(async () => []) }
+    } as never);
+    const withoutManualRows = await (withoutManualService as any).buildProductProfitRows(range);
+    expect(withoutManualRows[0]).toMatchObject({
+      reportedNetSalesKrw: 10_000,
+      actualNetSalesKrw: 10_000,
+      netSalesKrw: 10_000,
+      manualPurchaseQuantity: 0
+    });
+
+    const legacyService = new CoupangService({
+      ...basePrisma,
+      coupangManualPurchase: { findMany: vi.fn(async () => [
+        {
+          purchaseDate: new Date("2026-07-20T00:00:00.000Z"),
+          coupangProductId: "product-1", product, quantity: 1, salesAmountKrw: new Prisma.Decimal(5_000), productCostKrw: new Prisma.Decimal(1_000), vendorFeeTotalKrw: new Prisma.Decimal(50),
+          coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(5_000 / 11),
+          otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(1_050 + 5_000 / 11), saleMethod: null
+        },
+        {
+          purchaseDate: new Date("2026-07-21T00:00:00.000Z"),
+          coupangProductId: "product-1", product, quantity: 1, salesAmountKrw: null, productCostKrw: new Prisma.Decimal(2_000), vendorFeeTotalKrw: new Prisma.Decimal(100),
+          coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(0),
+          otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(2_100), saleMethod: null
+        }
+      ]) }
+    } as never);
+    const legacyRows = await (legacyService as any).buildProductProfitRows(range);
+    expect(legacyRows[0]).toMatchObject({
+      actualSalesKrw: null,
+      actualNetSalesKrw: null,
+      netSalesKrw: null,
+      actualSalesQuantity: 0,
+      manualPurchaseProductCostKrw: 3_000,
+      manualCalculationStatus: "INCOMPLETE",
+      calculationStatus: "INCOMPLETE",
+      totalCostKrw: null,
+      marginKrw: null
+    });
+    expect(legacyRows[0].warnings).not.toContain("AD_CONVERSION_EXCEEDS_NET_SALES");
+
+    const manualOnlyService = new CoupangService({
+      ...basePrisma,
+      coupangSaleLine: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => [{
+        purchaseDate: date,
+        coupangProductId: "product-1", product, quantity: 1, salesAmountKrw: new Prisma.Decimal(10_000), productCostKrw: new Prisma.Decimal(2_000), vendorFeeTotalKrw: new Prisma.Decimal(100),
+        coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(10_000 / 11),
+        otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(2_100 + 10_000 / 11), saleMethod: null
+      }]) }
+    } as never);
+    const manualOnlyRows = await (manualOnlyService as any).buildProductProfitRows(range);
+    expect(manualOnlyRows[0].calculationStatus).toBe("COMPLETE");
+    expect(manualOnlyRows[0].normalCalculationStatus).toBe("NOT_APPLICABLE");
+    expect(manualOnlyRows[0].manualCalculationStatus).toBe("COMPLETE");
+    expect(manualOnlyRows[0].warnings).toContain("MANUAL_PURCHASE_WITHOUT_REPORTED_SALES");
+    expect(manualOnlyRows[0].actualNetSalesKrw).toBe(0);
+    expect(manualOnlyRows[0].manualPurchaseProductCostKrw).toBe(2_000);
+    expect(manualOnlyRows[0].totalCostKrw).toBeCloseTo(2_600 + 10_000 / 11);
+    expect(manualOnlyRows[0].marginKrw).toBeCloseTo(-2_600 - 10_000 / 11);
+  });
+
+  it("keeps normal calculations on actual sales when only manual cost snapshots are incomplete", async () => {
+    const date = new Date("2026-07-21T00:00:00.000Z");
+    const product = { id: "product-1", displayName: "비용 누락 가구매 상품" };
+    const manualPurchase = {
+      purchaseDate: date,
+      coupangProductId: product.id,
+      product,
+      quantity: 1,
+      salesAmountKrw: new Prisma.Decimal(25_000),
+      salePriceKrw: new Prisma.Decimal(25_000),
+      promotionPriceKrw: null,
+      baseSalePriceKrw: new Prisma.Decimal(25_000),
+      productCostKrw: new Prisma.Decimal(10_000),
+      vendorFeeTotalKrw: null,
+      coupangSalesFeeKrw: new Prisma.Decimal(0),
+      shippingCostKrw: new Prisma.Decimal(0),
+      vatKrw: new Prisma.Decimal(0),
+      otherCostKrw: new Prisma.Decimal(0),
+      totalCostKrw: new Prisma.Decimal(10_000),
+      saleMethod: "판매자배송"
+    };
+    const costRule = {
+      coupangProductId: product.id,
+      salePriceKrw: new Prisma.Decimal(25_000),
+      supplyPriceKrw: new Prisma.Decimal(0),
+      productCostKrw: new Prisma.Decimal(10_000),
+      salesFeeRate: new Prisma.Decimal(0),
+      salesFeeKrw: new Prisma.Decimal(0),
+      sellerShippingFeeKrw: new Prisma.Decimal(0),
+      growthInboundFeeKrw: new Prisma.Decimal(0),
+      growthShippingFeeKrw: new Prisma.Decimal(0),
+      returnRate: new Prisma.Decimal(0),
+      returnCostPerUnitKrw: new Prisma.Decimal(0),
+      extraCostKrw: new Prisma.Decimal(0),
+      effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+      effectiveTo: null,
+      createdAt: new Date("2026-01-01T00:00:00.000Z")
+    };
+    const basePrisma = {
+      coupangAdMetric: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => [manualPurchase]) },
+      coupangCostRule: { findMany: vi.fn(async () => [costRule]) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    };
+    const range = { from: "2026-07-21", to: "2026-07-21", fromDate: date, toDate: date };
+
+    const withSales = new CoupangService({
+      ...basePrisma,
+      coupangSaleLine: { findMany: vi.fn(async () => [{
+        saleDate: date,
+        coupangProductId: product.id,
+        product,
+        productName: product.displayName,
+        salesKrw: new Prisma.Decimal(100_000),
+        cancelAmountKrw: new Prisma.Decimal(0),
+        netSalesKrw: new Prisma.Decimal(100_000),
+        salesQuantity: new Prisma.Decimal(4),
+        orderCount: 4,
+        saleMethod: "판매자배송"
+      }]) }
+    } as never);
+    const saleRows = await (withSales as any).buildProductProfitRows(range);
+
+    expect(saleRows[0]).toMatchObject({
+      actualSalesKrw: 75_000,
+      actualNetSalesKrw: 75_000,
+      actualSalesQuantity: 3,
+      productCostKrw: 30_000,
+      normalCalculationStatus: "COMPLETE",
+      manualCalculationStatus: "INCOMPLETE",
+      calculationStatus: "INCOMPLETE",
+      totalCostKrw: null,
+      marginKrw: null
+    });
+    expect(saleRows[0].normalMarginKrw).toBeCloseTo(75_000 - 30_000 - 75_000 / 11);
+    expect(saleRows[0].warnings).toContain("MANUAL_PURCHASE_COST_SNAPSHOT_INCOMPLETE");
+
+    const manualOnly = new CoupangService({
+      ...basePrisma,
+      coupangSaleLine: { findMany: vi.fn(async () => []) }
+    } as never);
+    const manualOnlyRows = await (manualOnly as any).buildProductProfitRows(range);
+
+    expect(manualOnlyRows[0]).toMatchObject({
+      actualNetSalesKrw: 0,
+      actualSalesQuantity: 0,
+      normalCalculationStatus: "NOT_APPLICABLE",
+      manualCalculationStatus: "INCOMPLETE",
+      calculationStatus: "INCOMPLETE",
+      normalMarginKrw: 0,
+      totalCostKrw: null,
+      marginKrw: null
+    });
+    expect(manualOnlyRows[0].warnings).toEqual(expect.arrayContaining([
+      "MANUAL_PURCHASE_WITHOUT_REPORTED_SALES",
+      "MANUAL_PURCHASE_COST_SNAPSHOT_INCOMPLETE"
+    ]));
+  });
+
+  it("uses reported exclusion bases for invalid adjustments and actual bases for complete dates in a range", async () => {
+    const firstDate = new Date("2026-07-14T00:00:00.000Z");
+    const secondDate = new Date("2026-07-15T00:00:00.000Z");
+    const quantityProduct = { id: "quantity-invalid", displayName: "수량 초과 상품" };
+    const salesProduct = { id: "sales-invalid", displayName: "매출 초과 상품" };
+    const products = [quantityProduct, salesProduct];
+    const saleLine = (product: typeof quantityProduct, saleDate: Date, salesKrw: number, quantity: number) => ({
+      saleDate,
+      coupangProductId: product.id,
+      product,
+      productName: product.displayName,
+      salesKrw: new Prisma.Decimal(salesKrw),
+      cancelAmountKrw: new Prisma.Decimal(0),
+      netSalesKrw: new Prisma.Decimal(salesKrw),
+      salesQuantity: new Prisma.Decimal(quantity),
+      orderCount: quantity,
+      saleMethod: "판매자배송"
+    });
+    const manualPurchase = (product: typeof quantityProduct, quantity: number, salesAmountKrw: number) => ({
+      purchaseDate: firstDate,
+      coupangProductId: product.id,
+      product,
+      quantity,
+      salesAmountKrw: new Prisma.Decimal(salesAmountKrw),
+      salePriceKrw: new Prisma.Decimal(50_000),
+      promotionPriceKrw: null,
+      baseSalePriceKrw: new Prisma.Decimal(50_000),
+      productCostKrw: new Prisma.Decimal(0),
+      vendorFeeTotalKrw: new Prisma.Decimal(0),
+      coupangSalesFeeKrw: new Prisma.Decimal(0),
+      shippingCostKrw: new Prisma.Decimal(0),
+      vatKrw: new Prisma.Decimal(0),
+      otherCostKrw: new Prisma.Decimal(0),
+      totalCostKrw: new Prisma.Decimal(0),
+      saleMethod: "판매자배송"
+    });
+    const costRule = (product: typeof quantityProduct) => ({
+      coupangProductId: product.id,
+      salePriceKrw: new Prisma.Decimal(50_000),
+      supplyPriceKrw: new Prisma.Decimal(0),
+      productCostKrw: new Prisma.Decimal(0),
+      salesFeeRate: new Prisma.Decimal(0),
+      salesFeeKrw: new Prisma.Decimal(0),
+      sellerShippingFeeKrw: new Prisma.Decimal(0),
+      growthInboundFeeKrw: new Prisma.Decimal(0),
+      growthShippingFeeKrw: new Prisma.Decimal(0),
+      returnRate: new Prisma.Decimal(0),
+      returnCostPerUnitKrw: new Prisma.Decimal(0),
+      extraCostKrw: new Prisma.Decimal(0),
+      effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+      effectiveTo: null,
+      createdAt: new Date("2026-01-01T00:00:00.000Z")
+    });
+    const service = new CoupangService({
+      coupangSaleLine: { findMany: vi.fn(async () => products.flatMap((product) => [
+        saleLine(product, firstDate, 100_000, 2),
+        saleLine(product, secondDate, 200_000, 4)
+      ])) },
+      coupangAdMetric: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => [
+        manualPurchase(quantityProduct, 5, 50_000),
+        manualPurchase(salesProduct, 1, 150_000)
+      ]) },
+      coupangCostRule: { findMany: vi.fn(async () => products.map(costRule)) },
+      coupangProduct: { findMany: vi.fn(async () => products) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows = await (service as any).buildProductProfitRows({
+      from: "2026-07-14", to: "2026-07-15", fromDate: firstDate, toDate: secondDate
+    });
+    const quantityRow = rows.find((row: ProductProfitRow) => row.productId === quantityProduct.id);
+    const salesRow = rows.find((row: ProductProfitRow) => row.productId === salesProduct.id);
+
+    expect(quantityRow).toMatchObject({
+      actualNetSalesKrw: 250_000,
+      actualSalesQuantity: 1,
+      excludedNetSalesKrw: 300_000,
+      excludedSalesQuantity: 6,
+      calculationStatus: "INCOMPLETE"
+    });
+    expect(quantityRow?.warnings).toContain("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED");
+    expect(salesRow).toMatchObject({
+      actualNetSalesKrw: 150_000,
+      actualSalesQuantity: 5,
+      excludedNetSalesKrw: 300_000,
+      excludedSalesQuantity: 6,
+      calculationStatus: "INCOMPLETE"
+    });
+    expect(salesRow?.warnings).toContain("MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED");
+    expect(summarizeCoupangProductProfitRows(rows)).toMatchObject({
+      incompleteProductCount: 2,
+      excludedNetSalesKrw: 600_000,
+      excludedSalesQuantity: 12
+    });
+  });
+
+  it("applies the cost rule effective on each sale date before range aggregation", async () => {
+    const firstDate = new Date("2026-07-14T00:00:00.000Z");
+    const secondDate = new Date("2026-07-15T00:00:00.000Z");
+    const product = { id: "product-1", displayName: "일별 원가 상품" };
+    const costRule = (productCostKrw: number, effectiveFrom: Date, effectiveTo: Date | null) => ({
+      coupangProductId: product.id,
+      salePriceKrw: new Prisma.Decimal(10_000), supplyPriceKrw: new Prisma.Decimal(0),
+      productCostKrw: new Prisma.Decimal(productCostKrw), salesFeeRate: new Prisma.Decimal(0), salesFeeKrw: new Prisma.Decimal(0),
+      sellerShippingFeeKrw: new Prisma.Decimal(0), growthInboundFeeKrw: new Prisma.Decimal(0), growthShippingFeeKrw: new Prisma.Decimal(0),
+      returnRate: new Prisma.Decimal(0), returnCostPerUnitKrw: new Prisma.Decimal(0), extraCostKrw: new Prisma.Decimal(0),
+      effectiveFrom, effectiveTo, createdAt: effectiveFrom
+    });
+    const service = new CoupangService({
+      coupangSaleLine: { findMany: vi.fn(async () => [firstDate, secondDate].map((saleDate) => ({
+        saleDate, coupangProductId: product.id, product, productName: product.displayName,
+        salesKrw: new Prisma.Decimal(10_000), cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(10_000),
+        salesQuantity: new Prisma.Decimal(1), orderCount: 1, saleMethod: "판매자배송"
+      }))) },
+      coupangAdMetric: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => [
+        costRule(3_000, secondDate, null),
+        costRule(1_000, new Date("2026-01-01T00:00:00.000Z"), firstDate)
+      ]) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows = await (service as any).buildProductProfitRows({
+      from: "2026-07-14", to: "2026-07-15", fromDate: firstDate, toDate: secondDate
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].productCostKrw).toBe(4_000);
+    expect(rows[0].vatKrw).toBeCloseTo(20_000 / 11);
+    expect(rows[0].marginKrw).toBeCloseTo(20_000 - 4_000 - 20_000 / 11);
+  });
+
+  it("isolates a missing legacy manual sales snapshot to the manual area and keeps a normal reference margin", async () => {
+    const date = new Date("2026-07-15T00:00:00.000Z");
+    const product = { id: "product-1", displayName: "레거시 가구매 상품" };
+    const service = new CoupangService({
+      coupangSaleLine: { findMany: vi.fn(async () => [{
+        saleDate: date, coupangProductId: product.id, product, productName: product.displayName,
+        salesKrw: new Prisma.Decimal(10_000), cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(10_000),
+        salesQuantity: new Prisma.Decimal(1), orderCount: 1, saleMethod: "판매자배송"
+      }]) },
+      coupangAdMetric: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => [{
+        purchaseDate: date, coupangProductId: product.id, product, quantity: 1, salesAmountKrw: null,
+        salePriceKrw: null, promotionPriceKrw: null, baseSalePriceKrw: null,
+        productCostKrw: new Prisma.Decimal(1_000), vendorFeeTotalKrw: new Prisma.Decimal(0),
+        coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(0),
+        otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(1_000), saleMethod: "판매자배송"
+      }]) },
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        coupangProductId: product.id, salePriceKrw: new Prisma.Decimal(10_000), supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(3_000), salesFeeRate: new Prisma.Decimal(0), salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(0), growthInboundFeeKrw: new Prisma.Decimal(0), growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0), returnCostPerUnitKrw: new Prisma.Decimal(0), extraCostKrw: new Prisma.Decimal(0),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), effectiveTo: null, createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows = await (service as any).buildProductProfitRows({ from: "2026-07-15", to: "2026-07-15", fromDate: date, toDate: date });
+
+    expect(rows[0]).toMatchObject({
+      actualNetSalesKrw: null,
+      normalCalculationStatus: "COMPLETE",
+      manualCalculationStatus: "INCOMPLETE",
+      calculationStatus: "INCOMPLETE",
+      productCostKrw: null,
+      marginKrw: null
+    });
+    expect(rows[0].normalMarginKrw).toBeCloseTo(10_000 - 3_000 - 10_000 / 11);
+    expect(rows[0].warnings).toContain("MANUAL_PURCHASE_SALES_AMOUNT_MISSING");
+  });
+});
+
 describe("Coupang product group aggregation", () => {
   it("sums calculated product rows by group and recalculates margin rate and ROAS", () => {
     const rows = [
@@ -492,15 +1213,16 @@ describe("Coupang product group aggregation", () => {
         shippingCostKrw: 5_000,
         vatKrw: 100_000 / 11,
         manualPurchaseQuantity: 2,
+        manualPurchaseProductCostKrw: 20_000,
         manualPurchaseVendorFeeKrw: 6_364,
         manualPurchaseCoupangSalesFeeKrw: 5_280,
         manualPurchaseShippingCostKrw: 6_000,
         manualPurchaseVatKrw: 48_000 / 11,
-        manualPurchaseTotalCostKrw: 17_644 + 48_000 / 11,
+        manualPurchaseTotalCostKrw: 37_644 + 48_000 / 11,
         adSpendKrw: 20_000,
         adConversionSalesKrw: 60_000,
-        totalCostKrw: 65_000 + 100_000 / 11 + 48_000 / 11,
-        marginKrw: 35_000 - 100_000 / 11 - 48_000 / 11,
+        totalCostKrw: 102_644 + 100_000 / 11 + 48_000 / 11,
+        marginKrw: -2_644 - 100_000 / 11 - 48_000 / 11,
         marginRate: 0.35,
         roas: 3,
         salePriceKrw: 20_000
@@ -516,15 +1238,16 @@ describe("Coupang product group aggregation", () => {
         shippingCostKrw: 8_000,
         vatKrw: 200_000 / 11,
         manualPurchaseQuantity: 1,
+        manualPurchaseProductCostKrw: 10_000,
         manualPurchaseVendorFeeKrw: 3_182,
         manualPurchaseCoupangSalesFeeKrw: 2_000,
         manualPurchaseShippingCostKrw: 3_000,
         manualPurchaseVatKrw: 25_000 / 11,
-        manualPurchaseTotalCostKrw: 8_182 + 25_000 / 11,
+        manualPurchaseTotalCostKrw: 18_182 + 25_000 / 11,
         adSpendKrw: 30_000,
         adConversionSalesKrw: 90_000,
-        totalCostKrw: 138_000 + 200_000 / 11 + 25_000 / 11,
-        marginKrw: 62_000 - 200_000 / 11 - 25_000 / 11,
+        totalCostKrw: 156_182 + 200_000 / 11 + 25_000 / 11,
+        marginKrw: 43_818 - 200_000 / 11 - 25_000 / 11,
         marginRate: 0.31,
         roas: 3,
         salePriceKrw: 25_000
@@ -555,6 +1278,7 @@ describe("Coupang product group aggregation", () => {
       salesFeeKrw: 30_000,
       shippingCostKrw: 13_000,
       manualPurchaseQuantity: 3,
+      manualPurchaseProductCostKrw: 30_000,
       manualPurchaseVendorFeeKrw: 9_546,
       manualPurchaseCoupangSalesFeeKrw: 7_280,
       manualPurchaseShippingCostKrw: 9_000,
@@ -566,20 +1290,20 @@ describe("Coupang product group aggregation", () => {
     });
     expect(groupRow?.vatKrw).toBeCloseTo(300_000 / 11);
     expect(groupRow?.manualPurchaseVatKrw).toBeCloseTo(73_000 / 11);
-    expect(groupRow?.manualPurchaseTotalCostKrw).toBeCloseTo(25_826 + 73_000 / 11);
-    expect(groupRow?.totalCostKrw).toBeCloseTo(203_000 + 300_000 / 11 + 73_000 / 11);
-    expect(groupRow?.marginKrw).toBeCloseTo(97_000 - 300_000 / 11 - 73_000 / 11);
-    expect(groupRow?.marginRate).toBeCloseTo((97_000 - 300_000 / 11 - 73_000 / 11) / 300_000);
+    expect(groupRow?.manualPurchaseTotalCostKrw).toBeCloseTo(55_826 + 73_000 / 11);
+    expect(groupRow?.totalCostKrw).toBeCloseTo(258_826 + 300_000 / 11 + 73_000 / 11);
+    expect(groupRow?.marginKrw).toBeCloseTo(41_174 - 300_000 / 11 - 73_000 / 11);
+    expect(groupRow?.marginRate).toBeCloseTo((41_174 - 300_000 / 11 - 73_000 / 11) / 300_000);
     expect(groupRow?.roas).toBeCloseTo(150_000 / 50_000);
     expect(groupRow?.warnings).toEqual(expect.arrayContaining(["GROUP_MIXED_PRICE", "GROUP_MIXED_SALE_METHOD"]));
     expect(soloRow).toMatchObject({ rowType: "PRODUCT", productName: "솔로 상품", childProductCount: 1 });
   });
 
-  it("keeps numeric group totals with a warning when some child cost rules are missing", () => {
+  it("propagates incomplete group totals when some child cost rules are missing", () => {
     const result = aggregateCoupangProductProfitRowsByGroup(
       [
-        productProfitRow({ productId: "product-ok", totalCostKrw: 40_000, marginKrw: 10_000 }),
-        productProfitRow({ productId: "product-missing", totalCostKrw: null, marginKrw: null, ruleStatus: "MISSING_COST_RULE" })
+        productProfitRow({ productId: "product-ok", netSalesKrw: 50_000, totalCostKrw: 40_000, marginKrw: 10_000 }),
+        productProfitRow({ productId: "product-missing", netSalesKrw: 20_000, totalCostKrw: null, marginKrw: null, ruleStatus: "MISSING_COST_RULE" })
       ],
       [
         { id: "product-ok", group: { id: "group-mixed-cost", displayName: "부분 누락 그룹" } },
@@ -589,22 +1313,63 @@ describe("Coupang product group aggregation", () => {
 
     expect(result[0]).toMatchObject({
       productName: "부분 누락 그룹",
-      totalCostKrw: 40_000,
-      marginKrw: 10_000,
+      totalCostKrw: null,
+      marginKrw: null,
+      knownMarginKrw: 10_000,
+      knownTotalCostKrw: 40_000,
+      incompleteProductCount: 1,
+      excludedNetSalesKrw: 20_000,
+      calculationStatus: "INCOMPLETE",
       ruleStatus: "MISSING_COST_RULE"
     });
     expect(result[0].warnings).toContain("GROUP_HAS_MISSING_COST_RULE");
   });
 
+  it("keeps a known partial summary without treating incomplete rows as zero", () => {
+    const summary = summarizeCoupangProductProfitRows([
+      productProfitRow({
+        productId: "complete",
+        netSalesKrw: 100_000,
+        totalCostKrw: 60_000,
+        marginKrw: 40_000,
+        reportedOrderCount: 2,
+        cancelAmountKrw: 1_000
+      }),
+      productProfitRow({
+        productId: "incomplete",
+        netSalesKrw: 50_000,
+        totalCostKrw: null,
+        marginKrw: null,
+        reportedOrderCount: 1,
+        cancelAmountKrw: 500,
+        ruleStatus: "MISSING_COST_RULE"
+      })
+    ]);
+
+    expect(summary).toMatchObject({
+      isComplete: false,
+      marginKrw: null,
+      knownMarginKrw: 40_000,
+      knownTotalCostKrw: 60_000,
+      completeProductCount: 1,
+      incompleteProductCount: 1,
+      reportedOrderCount: 3,
+      cancelAmountKrw: 1_500,
+      excludedNetSalesKrw: 50_000,
+      incompleteNormalCount: 1
+    });
+  });
+
   it("keeps dashboard summary based on product rows while grouping only display rows", async () => {
     const service = new CoupangService({} as never);
     const productRows = [
-      productProfitRow({ productId: "product-a", netSalesKrw: 100_000, marginKrw: 40_000, vatKrw: 1_000, manualPurchaseVatKrw: 200 }),
+      productProfitRow({ productId: "product-a", netSalesKrw: 100_000, marginKrw: 40_000, vatKrw: 1_000, manualPurchaseProductCostKrw: 2_000, manualPurchaseVatKrw: 200 }),
       productProfitRow({
         productId: "product-b",
         netSalesKrw: 50_000,
         marginKrw: null,
         vatKrw: null,
+        manualPurchaseProductCostKrw: 3_000,
         manualPurchaseVatKrw: 300,
         ruleStatus: "MISSING_COST_RULE"
       })
@@ -619,9 +1384,11 @@ describe("Coupang product group aggregation", () => {
 
     expect(result.groupBy).toBe("group");
     expect(result.summary.netSalesKrw).toBe(150_000);
-    expect(result.summary.marginKrw).toBe(40_000);
-    expect(result.summary.vatKrw).toBe(1_000);
+    expect(result.summary.actualNetSalesKrw).toBe(150_000);
+    expect(result.summary.marginKrw).toBeNull();
+    expect(result.summary.vatKrw).toBeNull();
     expect(result.summary.manualPurchaseVatKrw).toBe(500);
+    expect(result.summary.manualPurchaseProductCostKrw).toBe(5_000);
     expect(result.summary.missingCostRuleCount).toBe(1);
     expect(result.rows).toEqual(groupedRows);
   });
@@ -679,18 +1446,81 @@ describe("Coupang product group aggregation", () => {
         salesQuantity: 0,
         orderCount: 0,
         manualPurchaseQuantity: 2,
+        manualPurchaseProductCostKrw: 6_000,
         manualPurchaseVatKrw: 1_000,
         manualPurchaseTotalCostKrw: 10_000,
         totalCostKrw: 10_000,
         marginKrw: -10_000
+      }),
+      productProfitRow({
+        productId: "reported-gross-only",
+        productName: "Reported Gross Only",
+        reportedSalesKrw: 5_000
+      }),
+      productProfitRow({
+        productId: "warning-only",
+        productName: "Warning Only",
+        warnings: ["RECONCILIATION_WARNING"]
+      }),
+      productProfitRow({
+        productId: "incomplete-only",
+        productName: "Incomplete Only",
+        calculationStatus: "INCOMPLETE"
       })
     ];
     vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
 
     const result = await service.dailyReport({ date: "2026-07-02", groupBy: "product" });
 
-    expect(result.rows.map((row) => row.productName)).toEqual(["Sales Product", "Ad Product", "Manual Product"]);
-    expect(result.rows.find((row) => row.productName === "Manual Product")).toMatchObject({ manualPurchaseVatKrw: 1_000 });
+    expect(result.rows.map((row) => row.productName)).toEqual([
+      "Sales Product",
+      "Ad Product",
+      "Manual Product",
+      "Reported Gross Only",
+      "Warning Only",
+      "Incomplete Only"
+    ]);
+    expect(result.rows.find((row) => row.productName === "Manual Product")).toMatchObject({
+      manualPurchaseProductCostKrw: 6_000,
+      manualPurchaseVatKrw: 1_000
+    });
+    expect(result.rows.find((row) => row.productName === "Reported Gross Only")).toMatchObject({
+      reportedSalesKrw: 5_000,
+      reportedNetSalesKrw: 0,
+      actualSalesKrw: 0
+    });
+    expect(result.summary.incompleteCalculationCount).toBe(1);
+  });
+
+  it("projects incomplete child product names into grouped daily reports without duplicating child amounts", async () => {
+    const service = new CoupangService({} as never);
+    const productRows = [
+      productProfitRow({ productId: "complete", productName: "정상 옵션", netSalesKrw: 50_000, totalCostKrw: 30_000, marginKrw: 20_000 }),
+      productProfitRow({
+        productId: "incomplete",
+        productName: "원가 누락 옵션",
+        netSalesKrw: 20_000,
+        totalCostKrw: null,
+        marginKrw: null,
+        ruleStatus: "MISSING_COST_RULE"
+      })
+    ];
+    const groupedRows = aggregateCoupangProductProfitRowsByGroup(productRows, [
+      { id: "complete", group: { id: "group", displayName: "혼합 그룹" } },
+      { id: "incomplete", group: { id: "group", displayName: "혼합 그룹" } }
+    ]);
+    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
+    vi.spyOn(service as any, "groupProductProfitRows").mockResolvedValue(groupedRows);
+
+    const result = await service.dailyReport({ date: "2026-07-02", groupBy: "group" });
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      productName: "혼합 그룹",
+      reportedNetSalesKrw: 70_000,
+      incompleteProductNames: ["원가 누락 옵션"]
+    });
+    expect(result.rows[0]).not.toHaveProperty("children");
   });
 
   it("groups ads analysis by spend product group and campaign/ad group", async () => {
@@ -1592,16 +2422,28 @@ function fakeCoupangProductSettingPrisma() {
 }
 
 function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRow {
+  const actualNetSalesKrw = overrides.actualNetSalesKrw ?? overrides.netSalesKrw ?? 0;
+  const actualSalesKrw = overrides.actualSalesKrw ?? overrides.salesKrw ?? actualNetSalesKrw;
+  const actualSalesQuantity = overrides.actualSalesQuantity ?? overrides.salesQuantity ?? 0;
+  const calculationStatus =
+    overrides.calculationStatus ??
+    (overrides.ruleStatus === "MISSING_COST_RULE" || overrides.totalCostKrw === null || overrides.marginKrw === null
+      ? "INCOMPLETE"
+      : "COMPLETE");
   return {
     productId: "product",
     productName: "Product",
     saleMethod: null,
     matchedSalesLineCount: 1,
-    salesQuantity: 0,
+    reportedSalesQuantity: actualSalesQuantity,
+    reportedOrderCount: 0,
+    reportedSalesKrw: actualSalesKrw,
+    reportedNetSalesKrw: actualNetSalesKrw,
+    salesQuantity: actualSalesQuantity,
     orderCount: 0,
-    salesKrw: overrides.netSalesKrw ?? 0,
+    salesKrw: actualSalesKrw,
     cancelAmountKrw: 0,
-    netSalesKrw: 0,
+    netSalesKrw: actualNetSalesKrw,
     salePriceKrw: 10_000,
     baseSalePriceKrw: 10_000,
     promotionPriceKrw: null,
@@ -1613,18 +2455,38 @@ function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRo
     returnCostKrw: 0,
     extraCostKrw: 0,
     vatKrw: 0,
+    manualPurchaseSalesKrw: 0,
     manualPurchaseQuantity: 0,
+    manualPurchaseProductCostKrw: 0,
     manualPurchaseVendorFeeKrw: 0,
     manualPurchaseCoupangSalesFeeKrw: 0,
     manualPurchaseShippingCostKrw: 0,
     manualPurchaseVatKrw: 0,
+    manualPurchaseOtherCostKrw: 0,
     manualPurchaseTotalCostKrw: 0,
+    actualSalesKrw,
+    actualNetSalesKrw,
+    actualSalesQuantity,
+    normalCalculationStatus: calculationStatus === "COMPLETE" ? "COMPLETE" : "INCOMPLETE",
+    manualCalculationStatus: overrides.manualPurchaseQuantity ? "COMPLETE" : "NOT_APPLICABLE",
+    calculationStatus,
     adSpendKrw: 0,
     adConversionSalesKrw: 0,
     adConversionQuantity: 0,
     organicSalesKrw: 0,
+    reportedOrganicSalesKrw: actualNetSalesKrw,
+    actualOrganicSalesKrw: actualNetSalesKrw,
+    normalMarginKrw: calculationStatus === "COMPLETE" ? overrides.marginKrw ?? 0 : null,
     totalCostKrw: 0,
     marginKrw: 0,
+    knownTotalCostKrw: calculationStatus === "COMPLETE" ? overrides.totalCostKrw ?? 0 : 0,
+    knownMarginKrw: calculationStatus === "COMPLETE" ? overrides.marginKrw ?? 0 : 0,
+    completeProductCount: calculationStatus === "COMPLETE" ? 1 : 0,
+    incompleteProductCount: calculationStatus === "COMPLETE" ? 0 : 1,
+    excludedNetSalesKrw: calculationStatus === "COMPLETE" ? 0 : actualNetSalesKrw,
+    excludedSalesQuantity: calculationStatus === "COMPLETE" ? 0 : actualSalesQuantity,
+    incompleteNormalCount: calculationStatus === "COMPLETE" ? 0 : 1,
+    incompleteManualCount: 0,
     marginRate: null,
     roas: null,
     warnings: [],
