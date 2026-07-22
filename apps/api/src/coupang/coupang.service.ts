@@ -38,6 +38,7 @@ import {
   calculateNormalCoupangProfit,
   combineCoupangProfitParts,
   emptyReportedSalesFacts,
+  hasCoupangSalesSegmentActivity,
   productDateKey,
   resolveManualPurchaseSalesAmount,
   type CoupangCalculationPartStatus
@@ -106,6 +107,7 @@ type CoupangCostRuleSnapshot = Pick<
   | "salesFeeRate"
   | "salesFeeKrw"
   | "sellerShippingFeeKrw"
+  | "hanaroShippingFeeKrw"
   | "growthInboundFeeKrw"
   | "growthShippingFeeKrw"
   | "returnRate"
@@ -150,6 +152,13 @@ export type ProductProfitRow = {
   productCostKrw: number | null;
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
+  sellerSalesQuantity: number;
+  growthSalesQuantity: number;
+  sellerShippingCostKrw: number | null;
+  hanaroShippingCostKrw: number | null;
+  growthInboundCostKrw: number | null;
+  growthShippingCostKrw: number | null;
+  totalLogisticsCostKrw: number | null;
   returnCostKrw: number | null;
   extraCostKrw: number | null;
   vatKrw: number | null;
@@ -721,11 +730,13 @@ export class CoupangService {
           productRuleId = productRule.id;
           productRuleCreated = true;
         }
+        const latestCostRule = await this.findLatestCoupangCostRule(tx, product.id);
         const costRule = await tx.coupangCostRule.create({
           data: buildCoupangMarginCostRuleData({
             coupangProductId: product.id,
             parsedRow: row.parsedRow,
-            effectiveFrom
+            effectiveFrom,
+            latestCostRule
           })
         });
         appliedRows.push({
@@ -1280,12 +1291,16 @@ export class CoupangService {
 
   async updateProductSetting(id: string, body: Record<string, unknown>) {
     await this.assertProduct(id);
+    const latestCostRule = await this.prisma.coupangCostRule.findFirst({
+      where: { coupangProductId: id },
+      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+    });
+    const costRule = maybeCostRuleCreate(body, latestCostRule);
     const productData = await this.buildCoupangProductSettingUpdateData(this.prisma, body);
     if (Object.keys(productData).length > 0) {
       await this.prisma.coupangProduct.update({ where: { id }, data: productData });
     }
 
-    const costRule = maybeCostRuleCreate(body);
     if (costRule?.create) {
       await this.prisma.coupangCostRule.create({
         data: {
@@ -1307,12 +1322,13 @@ export class CoupangService {
         throw new NotFoundException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
       }
 
+      const latestCostRule = await this.findLatestCoupangCostRule(tx, id);
+      const costRule = maybeCostRuleCreate(body, latestCostRule);
       const productData = await this.buildCoupangProductSettingUpdateData(tx, body);
       if (Object.keys(productData).length > 0) {
         await tx.coupangProduct.update({ where: { id }, data: productData });
       }
 
-      const costRule = maybeCostRuleCreate(body);
       if (costRule?.create) {
         await tx.coupangCostRule.create({
           data: {
@@ -2093,6 +2109,13 @@ export class CoupangService {
         productCostKrw: row.productCostKrw,
         salesFeeKrw: row.salesFeeKrw,
         shippingCostKrw: row.shippingCostKrw,
+        sellerSalesQuantity: row.sellerSalesQuantity,
+        growthSalesQuantity: row.growthSalesQuantity,
+        sellerShippingCostKrw: row.sellerShippingCostKrw,
+        hanaroShippingCostKrw: row.hanaroShippingCostKrw,
+        growthInboundCostKrw: row.growthInboundCostKrw,
+        growthShippingCostKrw: row.growthShippingCostKrw,
+        totalLogisticsCostKrw: row.totalLogisticsCostKrw,
         returnCostKrw: row.returnCostKrw,
         extraCostKrw: row.extraCostKrw,
         vatKrw: row.vatKrw,
@@ -2279,6 +2302,7 @@ export class CoupangService {
                 netSalesKrw: reported.netSalesKrw,
                 salesQuantity: reported.salesQuantity,
                 orderCount: reported.orderCount,
+                segments: reported.segments,
                 warnings: [],
                 isValid: true,
                 isManualOnly: false
@@ -2302,9 +2326,7 @@ export class CoupangService {
         const actualOrganicSalesKrw = actual.netSalesKrw === null ? null : actual.netSalesKrw - conversion.salesKrw;
         const reportedOrganicSalesKrw = reported.netSalesKrw - conversion.salesKrw;
         const displaySaleMethods = uniqueNonEmpty([...reported.saleMethods, ...(manual?.saleMethods ?? [])]);
-        const requiresNormalCostRule = actual.netSalesKrw === null
-          ? reported.netSalesKrw !== 0 || reported.salesQuantity !== 0
-          : actual.netSalesKrw !== 0 || actual.salesQuantity !== 0;
+        const requiresNormalCostRule = hasCoupangSalesSegmentActivity(actual.segments);
         const dailyComplete = combined.calculationStatus === "COMPLETE";
         return {
           productId,
@@ -2328,6 +2350,13 @@ export class CoupangService {
           productCostKrw: normal.calculated?.productCostKrw ?? null,
           salesFeeKrw: normal.calculated?.salesFeeKrw ?? null,
           shippingCostKrw: normal.calculated?.shippingCostKrw ?? null,
+          sellerSalesQuantity: actual.segments.find((segment) => segment.fulfillmentMethod === "SELLER")?.salesQuantity ?? 0,
+          growthSalesQuantity: actual.segments.find((segment) => segment.fulfillmentMethod === "GROWTH")?.salesQuantity ?? 0,
+          sellerShippingCostKrw: normal.calculated?.sellerShippingCostKrw ?? null,
+          hanaroShippingCostKrw: normal.calculated?.hanaroShippingCostKrw ?? null,
+          growthInboundCostKrw: normal.calculated?.growthInboundCostKrw ?? null,
+          growthShippingCostKrw: normal.calculated?.growthShippingCostKrw ?? null,
+          totalLogisticsCostKrw: normal.calculated?.totalLogisticsCostKrw ?? null,
           returnCostKrw: normal.calculated?.returnCostKrw ?? null,
           extraCostKrw: normal.calculated?.extraCostKrw ?? null,
           vatKrw: normal.calculated?.vatKrw ?? null,
@@ -2942,6 +2971,13 @@ function aggregateCoupangProductProfitGroup(
   const productCostKrw = strictSumNullable(rows.map((row) => row.productCostKrw));
   const salesFeeKrw = strictSumNullable(rows.map((row) => row.salesFeeKrw));
   const shippingCostKrw = strictSumNullable(rows.map((row) => row.shippingCostKrw));
+  const sellerSalesQuantity = sumNumbers(rows.map((row) => row.sellerSalesQuantity));
+  const growthSalesQuantity = sumNumbers(rows.map((row) => row.growthSalesQuantity));
+  const sellerShippingCostKrw = strictSumNullable(rows.map((row) => row.sellerShippingCostKrw));
+  const hanaroShippingCostKrw = strictSumNullable(rows.map((row) => row.hanaroShippingCostKrw));
+  const growthInboundCostKrw = strictSumNullable(rows.map((row) => row.growthInboundCostKrw));
+  const growthShippingCostKrw = strictSumNullable(rows.map((row) => row.growthShippingCostKrw));
+  const totalLogisticsCostKrw = strictSumNullable(rows.map((row) => row.totalLogisticsCostKrw));
   const returnCostKrw = strictSumNullable(rows.map((row) => row.returnCostKrw));
   const extraCostKrw = strictSumNullable(rows.map((row) => row.extraCostKrw));
   const vatKrw = strictSumNullable(rows.map((row) => row.vatKrw));
@@ -3020,6 +3056,13 @@ function aggregateCoupangProductProfitGroup(
     productCostKrw,
     salesFeeKrw,
     shippingCostKrw,
+    sellerSalesQuantity,
+    growthSalesQuantity,
+    sellerShippingCostKrw,
+    hanaroShippingCostKrw,
+    growthInboundCostKrw,
+    growthShippingCostKrw,
+    totalLogisticsCostKrw,
     returnCostKrw,
     extraCostKrw,
     vatKrw,
@@ -3120,6 +3163,13 @@ export function summarizeCoupangProductProfitRows(rows: ProductProfitRow[]) {
   const productCostKrw = strictSumNullable(rows.map((row) => row.productCostKrw));
   const salesFeeKrw = strictSumNullable(rows.map((row) => row.salesFeeKrw));
   const shippingCostKrw = strictSumNullable(rows.map((row) => row.shippingCostKrw));
+  const sellerSalesQuantity = sumNumbers(rows.map((row) => row.sellerSalesQuantity));
+  const growthSalesQuantity = sumNumbers(rows.map((row) => row.growthSalesQuantity));
+  const sellerShippingCostKrw = strictSumNullable(rows.map((row) => row.sellerShippingCostKrw));
+  const hanaroShippingCostKrw = strictSumNullable(rows.map((row) => row.hanaroShippingCostKrw));
+  const growthInboundCostKrw = strictSumNullable(rows.map((row) => row.growthInboundCostKrw));
+  const growthShippingCostKrw = strictSumNullable(rows.map((row) => row.growthShippingCostKrw));
+  const totalLogisticsCostKrw = strictSumNullable(rows.map((row) => row.totalLogisticsCostKrw));
   const returnCostKrw = strictSumNullable(rows.map((row) => row.returnCostKrw));
   const extraCostKrw = strictSumNullable(rows.map((row) => row.extraCostKrw));
   const vatKrw = strictSumNullable(rows.map((row) => row.vatKrw));
@@ -3168,6 +3218,13 @@ export function summarizeCoupangProductProfitRows(rows: ProductProfitRow[]) {
     productCostKrw,
     salesFeeKrw,
     shippingCostKrw,
+    sellerSalesQuantity,
+    growthSalesQuantity,
+    sellerShippingCostKrw,
+    hanaroShippingCostKrw,
+    growthInboundCostKrw,
+    growthShippingCostKrw,
+    totalLogisticsCostKrw,
     returnCostKrw,
     extraCostKrw,
     vatKrw,
@@ -3679,7 +3736,8 @@ export function buildCoupangPriceTextCostRuleData(input: {
     productCostKrw: latestCostRule?.productCostKrw ?? decimal(0),
     salesFeeRate: latestCostRule?.salesFeeRate ?? decimal(0),
     salesFeeKrw: latestCostRule?.salesFeeKrw ?? decimal(0),
-    sellerShippingFeeKrw: latestCostRule?.sellerShippingFeeKrw ?? decimal(0),
+    sellerShippingFeeKrw: latestCostRule?.sellerShippingFeeKrw ?? null,
+    hanaroShippingFeeKrw: latestCostRule?.hanaroShippingFeeKrw ?? null,
     growthInboundFeeKrw: latestCostRule?.growthInboundFeeKrw ?? decimal(0),
     growthShippingFeeKrw: latestCostRule?.growthShippingFeeKrw ?? decimal(0),
     returnRate: latestCostRule?.returnRate ?? decimal(0),
@@ -3694,6 +3752,7 @@ export function buildCoupangMarginCostRuleData(input: {
   coupangProductId: string;
   parsedRow: ParsedCoupangMarginRow;
   effectiveFrom: Date;
+  latestCostRule?: CoupangCostRuleSnapshot | null;
 }): Prisma.CoupangCostRuleUncheckedCreateInput {
   return {
     coupangProductId: input.coupangProductId,
@@ -3702,7 +3761,10 @@ export function buildCoupangMarginCostRuleData(input: {
     productCostKrw: decimal(input.parsedRow.productCostKrw),
     salesFeeRate: decimal(input.parsedRow.salesFeeRate),
     salesFeeKrw: decimal(input.parsedRow.salesFeeKrw),
-    sellerShippingFeeKrw: decimal(input.parsedRow.sellerShippingFeeKrw),
+    sellerShippingFeeKrw: input.parsedRow.sellerShippingFeeKrw === undefined
+      ? input.latestCostRule?.sellerShippingFeeKrw ?? null
+      : decimal(input.parsedRow.sellerShippingFeeKrw),
+    hanaroShippingFeeKrw: nullableDecimal(input.parsedRow.hanaroShippingFeeKrw),
     growthInboundFeeKrw: decimal(input.parsedRow.growthInboundFeeKrw),
     growthShippingFeeKrw: decimal(input.parsedRow.growthShippingFeeKrw),
     returnRate: decimal(input.parsedRow.returnRate),
@@ -4048,7 +4110,10 @@ function issueCandidates(value: Prisma.JsonValue) {
   });
 }
 
-function maybeCostRuleCreate(body: Record<string, unknown>): Prisma.CoupangCostRuleCreateNestedManyWithoutProductInput | undefined {
+function maybeCostRuleCreate(
+  body: Record<string, unknown>,
+  latestCostRule: CoupangCostRuleSnapshot | null = null
+): Prisma.CoupangCostRuleCreateNestedManyWithoutProductInput | undefined {
   const hasCostField = [
     "salePriceKrw",
     "supplyPriceKrw",
@@ -4056,6 +4121,7 @@ function maybeCostRuleCreate(body: Record<string, unknown>): Prisma.CoupangCostR
     "salesFeeRate",
     "salesFeeKrw",
     "sellerShippingFeeKrw",
+    "hanaroShippingFeeKrw",
     "growthInboundFeeKrw",
     "growthShippingFeeKrw",
     "returnRate",
@@ -4065,22 +4131,31 @@ function maybeCostRuleCreate(body: Record<string, unknown>): Prisma.CoupangCostR
   if (!hasCostField) {
     return undefined;
   }
+  const sellerShippingFeeKrw = Object.prototype.hasOwnProperty.call(body, "sellerShippingFeeKrw")
+    ? nullableNonNegativeCostDecimalFromBody(body.sellerShippingFeeKrw, "sellerShippingFeeKrw")
+    : latestCostRule?.sellerShippingFeeKrw ?? null;
+  const hanaroShippingFeeKrw = Object.prototype.hasOwnProperty.call(body, "hanaroShippingFeeKrw")
+    ? nullableNonNegativeCostDecimalFromBody(body.hanaroShippingFeeKrw, "hanaroShippingFeeKrw")
+    : latestCostRule?.hanaroShippingFeeKrw ?? null;
   return {
     create: {
-      salePriceKrw: decimalFromBody(body.salePriceKrw),
-      supplyPriceKrw: decimalFromBody(body.supplyPriceKrw),
-      productCostKrw: decimalFromBody(body.productCostKrw),
-      salesFeeRate: decimalFromBody(body.salesFeeRate),
-      salesFeeKrw: decimalFromBody(body.salesFeeKrw),
-      sellerShippingFeeKrw: decimalFromBody(body.sellerShippingFeeKrw),
-      growthInboundFeeKrw: decimalFromBody(body.growthInboundFeeKrw),
-      growthShippingFeeKrw: decimalFromBody(body.growthShippingFeeKrw),
-      returnRate: decimalFromBody(body.returnRate),
-      returnCostPerUnitKrw: decimalFromBody(body.returnCostPerUnitKrw),
-      extraCostKrw: decimalFromBody(body.extraCostKrw),
+      salePriceKrw: decimalFromBody(body.salePriceKrw) ?? latestCostRule?.salePriceKrw,
+      supplyPriceKrw: decimalFromBody(body.supplyPriceKrw) ?? latestCostRule?.supplyPriceKrw,
+      productCostKrw: decimalFromBody(body.productCostKrw) ?? latestCostRule?.productCostKrw,
+      salesFeeRate: decimalFromBody(body.salesFeeRate) ?? latestCostRule?.salesFeeRate,
+      salesFeeKrw: decimalFromBody(body.salesFeeKrw) ?? latestCostRule?.salesFeeKrw,
+      sellerShippingFeeKrw,
+      hanaroShippingFeeKrw,
+      growthInboundFeeKrw: nonNegativeCostDecimalFromBody(body.growthInboundFeeKrw, "growthInboundFeeKrw")
+        ?? latestCostRule?.growthInboundFeeKrw,
+      growthShippingFeeKrw: nonNegativeCostDecimalFromBody(body.growthShippingFeeKrw, "growthShippingFeeKrw")
+        ?? latestCostRule?.growthShippingFeeKrw,
+      returnRate: decimalFromBody(body.returnRate) ?? latestCostRule?.returnRate,
+      returnCostPerUnitKrw: decimalFromBody(body.returnCostPerUnitKrw) ?? latestCostRule?.returnCostPerUnitKrw,
+      extraCostKrw: decimalFromBody(body.extraCostKrw) ?? latestCostRule?.extraCostKrw,
       effectiveFrom: body.effectiveFrom ? asDateOnly(String(body.effectiveFrom)) : undefined,
       effectiveTo: body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : undefined,
-      note: optionalString(body.note)
+      note: body.note === undefined ? latestCostRule?.note : optionalString(body.note)
     }
   };
 }
@@ -4094,6 +4169,24 @@ function decimalFromBody(value: unknown) {
     throw new BadRequestException({ code: "INVALID_NUMBER", message: "Expected numeric cost field." });
   }
   return new Prisma.Decimal(parsed);
+}
+
+function nonNegativeCostDecimalFromBody(value: unknown, field: string) {
+  const parsed = decimalFromBody(value);
+  if (parsed !== undefined && (parsed.isNegative() || !parsed.isInteger())) {
+    throw new BadRequestException({
+      code: `INVALID_${field.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase().replace(/_KRW$/, "")}`,
+      message: `${field} must be a non-negative integer.`
+    });
+  }
+  return parsed;
+}
+
+function nullableNonNegativeCostDecimalFromBody(value: unknown, field: string) {
+  if (value === null || value === undefined || String(value).trim() === "") {
+    return null;
+  }
+  return nonNegativeCostDecimalFromBody(value, field) ?? null;
 }
 
 function groupBy<T>(items: T[], keyFn: (item: T) => string) {
@@ -4143,6 +4236,7 @@ type CoupangCostRuleForSelection = Pick<
   | "salesFeeRate"
   | "salesFeeKrw"
   | "sellerShippingFeeKrw"
+  | "hanaroShippingFeeKrw"
   | "growthInboundFeeKrw"
   | "growthShippingFeeKrw"
   | "returnRate"
@@ -4185,6 +4279,7 @@ function hasCoupangMarginCostFields(rule: CoupangCostRuleForSelection) {
     rule.salesFeeRate,
     rule.salesFeeKrw,
     rule.sellerShippingFeeKrw,
+    rule.hanaroShippingFeeKrw,
     rule.growthInboundFeeKrw,
     rule.growthShippingFeeKrw,
     rule.returnRate,
@@ -4200,7 +4295,8 @@ function costInput(rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>
     productCostKrw: numberFrom(rule.productCostKrw),
     salesFeeRate: numberFrom(rule.salesFeeRate),
     salesFeeKrw: numberFrom(rule.salesFeeKrw),
-    sellerShippingFeeKrw: numberFrom(rule.sellerShippingFeeKrw),
+    sellerShippingFeeKrw: nullableNumberFrom(rule.sellerShippingFeeKrw),
+    hanaroShippingFeeKrw: nullableNumberFrom(rule.hanaroShippingFeeKrw),
     growthInboundFeeKrw: numberFrom(rule.growthInboundFeeKrw),
     growthShippingFeeKrw: numberFrom(rule.growthShippingFeeKrw),
     returnRate: numberFrom(rule.returnRate),

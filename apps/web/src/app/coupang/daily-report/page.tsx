@@ -2,8 +2,11 @@
 
 import { Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useState } from "react";
 import { apiGet } from "@/lib/api";
+import { coupangProductSettingsHref } from "@/lib/coupang-product-settings-link";
+import { hasCoupangLogisticsMissingWarning } from "@/lib/coupang-profit-warning";
 import {
   formatCoupangDailyRowStatus,
   formatCoupangDailySummaryExportStatus,
@@ -37,7 +40,18 @@ export default function CoupangDailyReportPage() {
   const tableColumns: Column<CoupangDailyReportRow>[] = columns.map((column) => ({
     key: column.key,
     header: column.header,
-    render: (row) => displayCell(column.value(row), column.style)
+    render: (row) => {
+      const value = displayCell(column.value(row), column.style);
+      if (column.key !== "status" || groupBy !== "product" || !hasCoupangLogisticsMissingWarning(row.warnings)) {
+        return value;
+      }
+      return (
+        <div>
+          <span>{value}</span>{" "}
+          <Link href={coupangProductSettingsHref(row.productId)}>상품 설정 열기</Link>
+        </div>
+      );
+    }
   }));
 
   const exportXlsx = () => {
@@ -95,7 +109,13 @@ function dailyReportColumns(groupBy: CoupangGroupBy): DailyColumn[] {
     { key: "actualQty", header: "실제 판매수량", style: "Number", width: 17, value: (row) => row.actualSalesQuantity },
     { key: "productCost", header: "상품원가", style: "Krw", width: 15, value: (row) => row.productCostKrw },
     { key: "salesFee", header: "판매수수료", style: "Krw", width: 16, value: (row) => row.salesFeeKrw },
-    { key: "shipping", header: "배송비", style: "Krw", width: 14, value: (row) => row.shippingCostKrw },
+    { key: "shipping", header: "물류비 합계", style: "Krw", width: 16, value: (row) => row.totalLogisticsCostKrw ?? row.shippingCostKrw },
+    { key: "sellerQty", header: "판매자배송 수량", style: "Number", width: 17, value: (row) => row.sellerSalesQuantity },
+    { key: "growthQty", header: "로켓그로스 수량", style: "Number", width: 17, value: (row) => row.growthSalesQuantity },
+    { key: "sellerShipping", header: "판매자 배송비", style: "Krw", width: 17, value: (row) => row.sellerShippingCostKrw },
+    { key: "hanaroShipping", header: "하나로 배송비", style: "Krw", width: 17, value: (row) => row.hanaroShippingCostKrw },
+    { key: "growthInbound", header: "그로스 입출고비", style: "Krw", width: 18, value: (row) => row.growthInboundCostKrw },
+    { key: "growthShipping", header: "그로스 배송비", style: "Krw", width: 17, value: (row) => row.growthShippingCostKrw },
     { key: "return", header: "반품예상비", style: "Krw", width: 16, value: (row) => row.returnCostKrw },
     { key: "extra", header: "기타비용", style: "Krw", width: 14, value: (row) => row.extraCostKrw },
     { key: "vat", header: "VAT", style: "Krw", width: 13, value: (row) => row.vatKrw },
@@ -114,6 +134,7 @@ function dailySummaryExportRow(data: CoupangDailyReportResponse): CoupangDailyEx
   const summary = data.summary;
   const partStatuses = summarizeCoupangCalculationPartStatuses(data.rows);
   return {
+    productId: "summary",
     productName: summary.isComplete ? "전체 확정 합계" : "계산 가능한 상품 부분 합계",
     reportedSalesKrw: summary.reportedSalesKrw,
     reportedNetSalesKrw: summary.reportedNetSalesKrw,
@@ -135,6 +156,13 @@ function dailySummaryExportRow(data: CoupangDailyReportResponse): CoupangDailyEx
     productCostKrw: summary.productCostKrw,
     salesFeeKrw: summary.salesFeeKrw,
     shippingCostKrw: summary.shippingCostKrw,
+    sellerSalesQuantity: summary.sellerSalesQuantity,
+    growthSalesQuantity: summary.growthSalesQuantity,
+    sellerShippingCostKrw: summary.sellerShippingCostKrw,
+    hanaroShippingCostKrw: summary.hanaroShippingCostKrw,
+    growthInboundCostKrw: summary.growthInboundCostKrw,
+    growthShippingCostKrw: summary.growthShippingCostKrw,
+    totalLogisticsCostKrw: summary.totalLogisticsCostKrw,
     returnCostKrw: summary.returnCostKrw,
     extraCostKrw: summary.extraCostKrw,
     vatKrw: summary.vatKrw,

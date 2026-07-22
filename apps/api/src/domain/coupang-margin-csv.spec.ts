@@ -17,7 +17,7 @@ describe("CoupangMarginCsvParser", () => {
       itemName: "구름깔창",
       salePriceKrw: 24050,
       productCostKrw: 1300,
-      sellerShippingFeeKrw: 650,
+      hanaroShippingFeeKrw: 650,
       growthInboundFeeKrw: 1050,
       growthShippingFeeKrw: 1950,
       returnCostPerUnitKrw: 0
@@ -28,14 +28,16 @@ describe("CoupangMarginCsvParser", () => {
   it("stores sale price as salePriceKrw when present", () => {
     const parser = new CoupangMarginCsvParser();
     const csv = [
-      "Item,Sale Price,Product Cost,Sales Fee Rate,Seller Shipping Fee,Growth Inbound Fee,Growth Shipping Fee",
-      "Zero Bar,24050,7000,10.8%,3000,500,1200"
+      "Item,Sale Price,Product Cost,Sales Fee Rate,Hanaro Shipping Fee,Seller Shipping Fee,Growth Inbound Fee,Growth Shipping Fee",
+      "Zero Bar,24050,7000,10.8%,650,3000,500,1200"
     ].join("\n");
 
     const parsed = parser.parseBuffer(Buffer.from(csv, "utf8"));
 
     expect(parsed.missingColumns).toEqual([]);
     expect(parsed.rows[0].parsedRow?.salePriceKrw).toBe(24050);
+    expect(parsed.rows[0].parsedRow?.hanaroShippingFeeKrw).toBe(650);
+    expect(parsed.rows[0].parsedRow?.sellerShippingFeeKrw).toBe(3000);
   });
 
   it("parses the current tab-separated margin input sheet", () => {
@@ -53,11 +55,84 @@ describe("CoupangMarginCsvParser", () => {
       itemName: "다이어트양말 10개입",
       salePriceKrw: 69900,
       productCostKrw: 20000,
-      sellerShippingFeeKrw: 500,
+      hanaroShippingFeeKrw: 500,
       growthInboundFeeKrw: 1650,
       growthShippingFeeKrw: 2200,
       returnCostPerUnitKrw: 0
     });
     expect(parsed.rows[0].parsedRow?.salesFeeRate).toBeCloseTo(0.1188);
+    expect(parsed.rows[0].parsedRow?.sellerShippingFeeKrw).toBeUndefined();
+  });
+
+  it("keeps an empty optional seller shipping cell distinct from an explicit zero", () => {
+    const parser = new CoupangMarginCsvParser();
+    const csv = [
+      "항목,판매가,원가,판매수수료율,하나로 배송비,판매자 배송비,그로스 입출고비,그로스 배송비",
+      "빈값,10000,3000,10%,300,,200,900",
+      "명시적0,10000,3000,10%,300,0,200,900"
+    ].join("\n");
+
+    const parsed = parser.parseBuffer(Buffer.from(csv, "utf8"));
+
+    expect(parsed.missingColumns).toEqual([]);
+    expect(parsed.rows[0].parsedRow?.sellerShippingFeeKrw).toBeUndefined();
+    expect(parsed.rows[0].parsedRow?.hanaroShippingFeeKrw).toBe(300);
+    expect(parsed.rows[1].parsedRow?.sellerShippingFeeKrw).toBe(0);
+  });
+
+  it("keeps a blank Hanaro shipping cell as null", () => {
+    const parser = new CoupangMarginCsvParser();
+    const csv = [
+      "Item,Sale Price,Product Cost,Sales Fee Rate,Hanaro Shipping Fee,Growth Inbound Fee,Growth Shipping Fee",
+      "Blank Hanaro,10000,3000,10%,,200,900"
+    ].join("\n");
+
+    const parsed = parser.parseBuffer(Buffer.from(csv, "utf8"));
+
+    expect(parsed.rows[0].issues).toEqual([]);
+    expect(parsed.rows[0].parsedRow?.hanaroShippingFeeKrw).toBeNull();
+  });
+
+  it.each([
+    ["Seller Shipping Fee", "not-a-number"],
+    ["Seller Shipping Fee", "-1"],
+    ["Seller Shipping Fee", "1.5"],
+    ["Seller Shipping Fee", "NaN"],
+    ["Seller Shipping Fee", "Infinity"],
+    ["Hanaro Shipping Fee", "not-a-number"],
+    ["Hanaro Shipping Fee", "-1"],
+    ["Hanaro Shipping Fee", "1.5"],
+    ["Hanaro Shipping Fee", "NaN"],
+    ["Hanaro Shipping Fee", "Infinity"],
+    ["Growth Inbound Fee", "not-a-number"],
+    ["Growth Inbound Fee", "-1"],
+    ["Growth Inbound Fee", "1.5"],
+    ["Growth Inbound Fee", "NaN"],
+    ["Growth Inbound Fee", "Infinity"],
+    ["Growth Shipping Fee", "not-a-number"],
+    ["Growth Shipping Fee", "-1"],
+    ["Growth Shipping Fee", "1.5"],
+    ["Growth Shipping Fee", "NaN"],
+    ["Growth Shipping Fee", "Infinity"]
+  ])("rejects invalid logistics value %s=%s", (column, invalidValue) => {
+    const parser = new CoupangMarginCsvParser();
+    const headers = [
+      "Item",
+      "Sale Price",
+      "Product Cost",
+      "Sales Fee Rate",
+      "Seller Shipping Fee",
+      "Hanaro Shipping Fee",
+      "Growth Inbound Fee",
+      "Growth Shipping Fee"
+    ];
+    const values = ["Invalid Logistics", "10000", "3000", "10%", "300", "400", "200", "900"];
+    values[headers.indexOf(column)] = invalidValue;
+    const parsed = parser.parseBuffer(Buffer.from([headers.join(","), values.join(",")].join("\n"), "utf8"));
+
+    expect(parsed.rows[0].parsedRow).toBeNull();
+    expect(parsed.rows[0].issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ errorCode: "INVALID_NON_NEGATIVE_INTEGER", rawValue: invalidValue })
+    ]));
   });
 });

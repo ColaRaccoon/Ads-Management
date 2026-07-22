@@ -1,9 +1,12 @@
 import {
-  calculateCoupangProfit,
+  calculateCoupangProfitBySegments,
+  normalizeCoupangFulfillmentMethod,
+  parseExplicitCoupangFulfillmentMethod,
   type CoupangAdInput,
   type CoupangCostInput,
   type CoupangFeeMode,
-  type CoupangProfitResult
+  type CoupangFulfillmentMethod,
+  type CoupangSegmentProfitResult
 } from "./coupang-profit-calculator";
 
 export type CoupangCalculationPartStatus = "COMPLETE" | "INCOMPLETE" | "NOT_APPLICABLE";
@@ -21,6 +24,17 @@ export type ReportedSalesFactInput = {
   productName?: string;
 };
 
+export type CoupangSalesSegment = {
+  fulfillmentMethod: CoupangFulfillmentMethod;
+  sourceSaleMethods: string[];
+  salesKrw: number;
+  cancelAmountKrw: number;
+  netSalesKrw: number;
+  salesQuantity: number;
+  orderCount: number;
+  lineCount: number;
+};
+
 export type ReportedSalesFacts = {
   productId: string;
   date: string;
@@ -32,6 +46,7 @@ export type ReportedSalesFacts = {
   orderCount: number;
   lineCount: number;
   saleMethods: string[];
+  segments: CoupangSalesSegment[];
   hasReportedRows: boolean;
 };
 
@@ -76,6 +91,7 @@ export type ActualSalesFacts = {
   netSalesKrw: number | null;
   salesQuantity: number | null;
   orderCount: number;
+  segments: CoupangSalesSegment[];
   warnings: string[];
   isValid: boolean;
   isManualOnly: boolean;
@@ -83,7 +99,7 @@ export type ActualSalesFacts = {
 
 export type NormalCoupangProfitResult = {
   status: CoupangCalculationPartStatus;
-  calculated: CoupangProfitResult | null;
+  calculated: CoupangSegmentProfitResult | null;
   warnings: string[];
 };
 
@@ -96,16 +112,26 @@ export function aggregateReportedSalesByProductDate(rows: ReportedSalesFactInput
   for (const row of rows) {
     const key = productDateKey(row.productId, row.date);
     const current = result.get(key) ?? emptyReportedSalesFacts(row.productId, row.date, row.productName ?? "Coupang Product");
-    current.salesKrw += finiteOrZero(row.salesKrw);
-    current.cancelAmountKrw += finiteOrZero(row.cancelAmountKrw);
-    current.netSalesKrw += finiteOrZero(row.netSalesKrw);
-    current.salesQuantity += finiteOrZero(row.salesQuantity);
-    current.orderCount += finiteOrZero(row.orderCount);
-    current.lineCount += Math.max(0, Math.trunc(finiteOrZero(row.lineCount ?? 1)));
     current.hasReportedRows = true;
     if (row.saleMethod && !current.saleMethods.includes(row.saleMethod)) {
       current.saleMethods.push(row.saleMethod);
     }
+    const fulfillmentMethod = normalizeCoupangFulfillmentMethod(row.saleMethod);
+    let segment = current.segments.find((candidate) => candidate.fulfillmentMethod === fulfillmentMethod);
+    if (!segment) {
+      segment = emptySalesSegment(fulfillmentMethod);
+      current.segments.push(segment);
+    }
+    if (row.saleMethod && !segment.sourceSaleMethods.includes(row.saleMethod)) {
+      segment.sourceSaleMethods.push(row.saleMethod);
+    }
+    segment.salesKrw += finiteOrZero(row.salesKrw);
+    segment.cancelAmountKrw += finiteOrZero(row.cancelAmountKrw);
+    segment.netSalesKrw += finiteOrZero(row.netSalesKrw);
+    segment.salesQuantity += finiteOrZero(row.salesQuantity);
+    segment.orderCount += finiteOrZero(row.orderCount);
+    segment.lineCount += Math.max(0, Math.trunc(finiteOrZero(row.lineCount ?? 1)));
+    syncReportedTotalsFromSegments(current);
     result.set(key, current);
   }
   return result;
@@ -200,12 +226,14 @@ export function adjustReportedSalesForManualPurchase(
   reported: ReportedSalesFacts,
   manual: ManualPurchaseFacts | null
 ): ActualSalesFacts {
+  const reportedSegments = resolvedReportedSegments(reported);
   if (!manual || manual.quantity === 0) {
     return {
       salesKrw: reported.salesKrw,
       netSalesKrw: reported.netSalesKrw,
       salesQuantity: reported.salesQuantity,
       orderCount: reported.orderCount,
+      segments: cloneSalesSegments(reportedSegments),
       warnings: [],
       isValid: true,
       isManualOnly: false
@@ -220,21 +248,61 @@ export function adjustReportedSalesForManualPurchase(
       netSalesKrw: 0,
       salesQuantity: 0,
       orderCount: 0,
+      segments: [],
       warnings: unique(warnings),
       isValid: !hasBlockingManualSalesWarning(warnings),
       isManualOnly: true
     };
   }
 
-  if (manual.quantity > reported.salesQuantity) {
+  const manualSaleMethod = manual.saleMethods.length === 1 ? manual.saleMethods[0] : null;
+  const exactTargetSegment = manualSaleMethod === null
+    ? null
+    : reportedSegments.find((segment) => segment.sourceSaleMethods.some(
+        (sourceSaleMethod) => canonicalSaleMethod(sourceSaleMethod) === canonicalSaleMethod(manualSaleMethod)
+      )) ?? null;
+  const manualFulfillmentMethod = manualSaleMethod === null
+    ? null
+    : parseExplicitCoupangFulfillmentMethod(manualSaleMethod);
+  const targetSegment = reportedSegments.length === 1
+    ? reportedSegments[0]
+    : exactTargetSegment ?? (manualFulfillmentMethod
+        ? reportedSegments.find((segment) => segment.fulfillmentMethod === manualFulfillmentMethod) ?? null
+        : null);
+  if (reportedSegments.length > 1 && !targetSegment) {
+    warnings.push("MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES");
+    return {
+      salesKrw: reported.salesKrw,
+      netSalesKrw: reported.netSalesKrw,
+      salesQuantity: reported.salesQuantity,
+      orderCount: reported.orderCount,
+      segments: cloneSalesSegments(reportedSegments),
+      warnings: unique(warnings),
+      isValid: false,
+      isManualOnly: false
+    };
+  }
+
+  const deductionBase = targetSegment ?? emptySalesSegment(manualFulfillmentMethod ?? "SELLER");
+  if (manual.quantity > deductionBase.salesQuantity) {
     warnings.push("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED");
   }
-  if (manual.salesAmountKrw !== null && manual.salesAmountKrw > reported.salesKrw) {
+  if (manual.salesAmountKrw !== null && manual.salesAmountKrw > deductionBase.salesKrw) {
     warnings.push("MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED");
   }
-  const actualSalesKrw = manual.salesAmountKrw === null ? null : reported.salesKrw - manual.salesAmountKrw;
-  const actualNetSalesKrw = manual.salesAmountKrw === null ? null : reported.netSalesKrw - manual.salesAmountKrw;
-  const actualSalesQuantity = reported.salesQuantity - manual.quantity;
+  const adjustedSegments = cloneSalesSegments(reportedSegments);
+  const adjustedTarget = adjustedSegments.find((segment) => segment.fulfillmentMethod === deductionBase.fulfillmentMethod);
+  if (adjustedTarget) {
+    adjustedTarget.salesQuantity -= manual.quantity;
+    if (manual.salesAmountKrw !== null) {
+      adjustedTarget.salesKrw -= manual.salesAmountKrw;
+      adjustedTarget.netSalesKrw -= manual.salesAmountKrw;
+    }
+  }
+  const segmentTotals = sumCoupangSalesSegments(adjustedSegments);
+  const actualSalesKrw = manual.salesAmountKrw === null ? null : segmentTotals.salesKrw;
+  const actualNetSalesKrw = manual.salesAmountKrw === null ? null : segmentTotals.netSalesKrw;
+  const actualSalesQuantity = segmentTotals.salesQuantity;
   if (actualSalesQuantity < 0 && !warnings.includes("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED")) {
     warnings.push("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED");
   }
@@ -249,6 +317,7 @@ export function adjustReportedSalesForManualPurchase(
     netSalesKrw: actualNetSalesKrw,
     salesQuantity: actualSalesQuantity,
     orderCount: reported.orderCount,
+    segments: adjustedSegments,
     warnings: unique(warnings),
     isValid: !hasBlockingManualSalesWarning(warnings),
     isManualOnly: false
@@ -267,33 +336,31 @@ export function calculateNormalCoupangProfit(input: {
     return { status: "INCOMPLETE", calculated: null, warnings };
   }
 
-  const hasNormalActivity = input.actual.netSalesKrw !== 0 || input.actual.salesQuantity !== 0;
+  const hasNormalActivity = hasCoupangSalesSegmentActivity(input.actual.segments);
   if (!hasNormalActivity) {
-    const calculated = calculateCoupangProfit(
-      { saleMethod: null, netSalesKrw: input.actual.netSalesKrw, salesQuantity: input.actual.salesQuantity },
-      emptyCostInput(),
-      input.ads,
-      { includeReturnCost: false, useGrowthCost: true }
-    );
+    const calculated = calculateCoupangProfitBySegments({
+      segments: input.actual.segments,
+      cost: emptyCostInput(),
+      ads: input.ads,
+      feeMode: input.feeMode,
+      includeReturnCost: false
+    });
     return { status: "NOT_APPLICABLE", calculated, warnings: calculated.warnings };
   }
   if (!input.cost) {
     return { status: "INCOMPLETE", calculated: null, warnings: ["NORMAL_COST_RULE_MISSING"] };
   }
-  if (input.reported.saleMethods.length > 1) {
-    return { status: "INCOMPLETE", calculated: null, warnings: ["NORMAL_SALE_METHOD_CONFLICT"] };
+  const missingLogisticsWarnings = missingCoupangLogisticsCostWarnings(input.actual.segments, input.cost);
+  if (missingLogisticsWarnings.length > 0) {
+    return { status: "INCOMPLETE", calculated: null, warnings: missingLogisticsWarnings };
   }
-
-  const calculated = calculateCoupangProfit(
-    {
-      saleMethod: input.reported.saleMethods[0] ?? null,
-      netSalesKrw: input.actual.netSalesKrw,
-      salesQuantity: input.actual.salesQuantity
-    },
-    input.cost,
-    input.ads,
-    { feeMode: input.feeMode, includeReturnCost: true, useGrowthCost: true }
-  );
+  const calculated = calculateCoupangProfitBySegments({
+    segments: input.actual.segments,
+    cost: input.cost,
+    ads: input.ads,
+    feeMode: input.feeMode,
+    includeReturnCost: true
+  });
   return { status: "COMPLETE", calculated, warnings: calculated.warnings };
 }
 
@@ -348,6 +415,7 @@ export function emptyReportedSalesFacts(productId: string, date: string, product
     orderCount: 0,
     lineCount: 0,
     saleMethods: [],
+    segments: [],
     hasReportedRows: false
   };
 }
@@ -359,7 +427,8 @@ function hasBlockingManualSalesWarning(warnings: string[]) {
     "MANUAL_PURCHASE_SALES_AMOUNT_MISSING",
     "MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED",
     "MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED",
-    "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE"
+    "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE",
+    "MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES"
   ].includes(warning));
 }
 
@@ -372,6 +441,101 @@ function hasBlockingManualWarning(warnings: string[]) {
 
 function emptyCostInput(): CoupangCostInput {
   return { productCostKrw: 0 };
+}
+
+export function sumCoupangSalesSegments(segments: CoupangSalesSegment[]) {
+  return segments.reduce((totals, segment) => ({
+    salesKrw: totals.salesKrw + finiteOrZero(segment.salesKrw),
+    cancelAmountKrw: totals.cancelAmountKrw + finiteOrZero(segment.cancelAmountKrw),
+    netSalesKrw: totals.netSalesKrw + finiteOrZero(segment.netSalesKrw),
+    salesQuantity: totals.salesQuantity + finiteOrZero(segment.salesQuantity),
+    orderCount: totals.orderCount + finiteOrZero(segment.orderCount),
+    lineCount: totals.lineCount + finiteOrZero(segment.lineCount)
+  }), {
+    salesKrw: 0,
+    cancelAmountKrw: 0,
+    netSalesKrw: 0,
+    salesQuantity: 0,
+    orderCount: 0,
+    lineCount: 0
+  });
+}
+
+export function hasCoupangSalesSegmentActivity(segments: CoupangSalesSegment[]) {
+  return segments.some((segment) => segment.netSalesKrw !== 0 || segment.salesQuantity !== 0);
+}
+
+export function missingCoupangLogisticsCostWarnings(
+  segments: CoupangSalesSegment[],
+  cost: CoupangCostInput
+) {
+  const warnings: string[] = [];
+  const hasSellerSales = segments.some(
+    (segment) => segment.fulfillmentMethod === "SELLER" && segment.salesQuantity > 0
+  );
+  const hasGrowthSales = segments.some(
+    (segment) => segment.fulfillmentMethod === "GROWTH" && segment.salesQuantity > 0
+  );
+  if (hasSellerSales && cost.sellerShippingFeeKrw === null) {
+    warnings.push("SELLER_SHIPPING_FEE_MISSING");
+  }
+  if (hasGrowthSales && cost.hanaroShippingFeeKrw === null) {
+    warnings.push("HANARO_SHIPPING_FEE_MISSING");
+  }
+  return warnings;
+}
+
+function emptySalesSegment(fulfillmentMethod: CoupangFulfillmentMethod): CoupangSalesSegment {
+  return {
+    fulfillmentMethod,
+    sourceSaleMethods: [],
+    salesKrw: 0,
+    cancelAmountKrw: 0,
+    netSalesKrw: 0,
+    salesQuantity: 0,
+    orderCount: 0,
+    lineCount: 0
+  };
+}
+
+function cloneSalesSegments(segments: CoupangSalesSegment[]) {
+  return segments.map((segment) => ({
+    ...segment,
+    sourceSaleMethods: [...segment.sourceSaleMethods]
+  }));
+}
+
+function canonicalSaleMethod(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, "");
+}
+
+function resolvedReportedSegments(reported: ReportedSalesFacts) {
+  if (reported.segments?.length) {
+    return reported.segments;
+  }
+  if (!reported.hasReportedRows && reported.salesKrw === 0 && reported.netSalesKrw === 0 && reported.salesQuantity === 0) {
+    return [];
+  }
+  return [{
+    fulfillmentMethod: normalizeCoupangFulfillmentMethod(reported.saleMethods[0]),
+    sourceSaleMethods: [...reported.saleMethods],
+    salesKrw: reported.salesKrw,
+    cancelAmountKrw: reported.cancelAmountKrw,
+    netSalesKrw: reported.netSalesKrw,
+    salesQuantity: reported.salesQuantity,
+    orderCount: reported.orderCount,
+    lineCount: reported.lineCount
+  }];
+}
+
+function syncReportedTotalsFromSegments(reported: ReportedSalesFacts) {
+  const totals = sumCoupangSalesSegments(reported.segments);
+  reported.salesKrw = totals.salesKrw;
+  reported.cancelAmountKrw = totals.cancelAmountKrw;
+  reported.netSalesKrw = totals.netSalesKrw;
+  reported.salesQuantity = totals.salesQuantity;
+  reported.orderCount = totals.orderCount;
+  reported.lineCount = totals.lineCount;
 }
 
 function finiteOrZero(value: number | null | undefined) {

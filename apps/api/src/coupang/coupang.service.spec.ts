@@ -77,6 +77,7 @@ describe("Coupang price text cost rule copy", () => {
         salesFeeKrw: new Prisma.Decimal(1800),
         salePriceKrw: new Prisma.Decimal(25800),
         sellerShippingFeeKrw: new Prisma.Decimal(3000),
+        hanaroShippingFeeKrw: new Prisma.Decimal(650),
         growthInboundFeeKrw: new Prisma.Decimal(500),
         growthShippingFeeKrw: new Prisma.Decimal(1200),
         returnRate: new Prisma.Decimal("0.04"),
@@ -94,6 +95,7 @@ describe("Coupang price text cost rule copy", () => {
     expect(Number(data?.salePriceKrw)).toBe(19900);
     expect(Number(data?.productCostKrw)).toBe(7000);
     expect(Number(data?.sellerShippingFeeKrw)).toBe(3000);
+    expect(Number(data?.hanaroShippingFeeKrw)).toBe(650);
     expect(Number(data?.returnCostPerUnitKrw)).toBe(2500);
   });
 
@@ -111,7 +113,8 @@ describe("Coupang price text cost rule copy", () => {
     });
     expect(Number(data.salePriceKrw)).toBe(19900);
     expect(Number(data.productCostKrw)).toBe(0);
-    expect(Number(data.sellerShippingFeeKrw)).toBe(0);
+    expect(data.sellerShippingFeeKrw).toBeNull();
+    expect(data.hanaroShippingFeeKrw).toBeNull();
   });
 });
 
@@ -162,6 +165,7 @@ describe("Coupang margin cost rule import data", () => {
         salesFeeRate: 0.108,
         salesFeeKrw: 1800,
         sellerShippingFeeKrw: 3000,
+        hanaroShippingFeeKrw: 650,
         growthInboundFeeKrw: 500,
         growthShippingFeeKrw: 1200,
         returnRate: 0.04,
@@ -173,6 +177,8 @@ describe("Coupang margin cost rule import data", () => {
     expect(Number(data.salePriceKrw)).toBe(24050);
     expect(Number(data.productCostKrw)).toBe(7000);
     expect(Number(data.salesFeeRate)).toBe(0.108);
+    expect(Number(data.sellerShippingFeeKrw)).toBe(3000);
+    expect(Number(data.hanaroShippingFeeKrw)).toBe(650);
   });
 
   it("does not need a previous base sale price to create a full margin rule", () => {
@@ -186,7 +192,7 @@ describe("Coupang margin cost rule import data", () => {
         productCostKrw: 7000,
         salesFeeRate: 0,
         salesFeeKrw: 1800,
-        sellerShippingFeeKrw: 3000,
+        hanaroShippingFeeKrw: 650,
         growthInboundFeeKrw: 500,
         growthShippingFeeKrw: 1200,
         returnRate: 0,
@@ -196,6 +202,47 @@ describe("Coupang margin cost rule import data", () => {
     });
 
     expect(Number(data.salePriceKrw)).toBe(24050);
+    expect(data.sellerShippingFeeKrw).toBeNull();
+    expect(Number(data.hanaroShippingFeeKrw)).toBe(650);
+  });
+
+  it("preserves a user-set seller shipping fee when the margin row has no seller column", () => {
+    const data = buildCoupangMarginCostRuleData({
+      coupangProductId: "product-1",
+      effectiveFrom: toDateOnly("2026-07-22")!,
+      latestCostRule: {
+        salePriceKrw: new Prisma.Decimal(24050),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(7000),
+        salesFeeRate: new Prisma.Decimal(0.108),
+        salesFeeKrw: new Prisma.Decimal(1800),
+        sellerShippingFeeKrw: new Prisma.Decimal(3000),
+        hanaroShippingFeeKrw: new Prisma.Decimal(650),
+        growthInboundFeeKrw: new Prisma.Decimal(500),
+        growthShippingFeeKrw: new Prisma.Decimal(1200),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(0),
+        note: null
+      },
+      parsedRow: {
+        itemName: "Zero Bar",
+        salePriceKrw: 25000,
+        supplyPriceKrw: 0,
+        productCostKrw: 7200,
+        salesFeeRate: 0.108,
+        salesFeeKrw: 1900,
+        hanaroShippingFeeKrw: 700,
+        growthInboundFeeKrw: 550,
+        growthShippingFeeKrw: 1250,
+        returnRate: 0,
+        returnCostPerUnitKrw: 0,
+        adEnabled: true
+      }
+    });
+
+    expect(Number(data.sellerShippingFeeKrw)).toBe(3000);
+    expect(Number(data.hanaroShippingFeeKrw)).toBe(700);
   });
 });
 
@@ -353,6 +400,102 @@ describe("CoupangService product settings and mapping rules", () => {
         effectiveFrom: toDateOnly("2026-07-06")
       })
     });
+  });
+
+  it("merges a partial shipping PATCH with the latest cost snapshot", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    vi.mocked(prisma.coupangCostRule.findFirst).mockResolvedValueOnce({
+      salePriceKrw: new Prisma.Decimal(24_000),
+      supplyPriceKrw: new Prisma.Decimal(12_000),
+      productCostKrw: new Prisma.Decimal(7_000),
+      salesFeeRate: new Prisma.Decimal(0.11),
+      salesFeeKrw: new Prisma.Decimal(1_800),
+      sellerShippingFeeKrw: new Prisma.Decimal(3_000),
+      hanaroShippingFeeKrw: new Prisma.Decimal(650),
+      growthInboundFeeKrw: new Prisma.Decimal(500),
+      growthShippingFeeKrw: new Prisma.Decimal(1_200),
+      returnRate: new Prisma.Decimal(0.04),
+      returnCostPerUnitKrw: new Prisma.Decimal(2_500),
+      extraCostKrw: new Prisma.Decimal(300),
+      note: "preserve me"
+    });
+    const service = new CoupangService(prisma as never);
+
+    await service.updateProductConfiguration("product-1", {
+      hanaroShippingFeeKrw: 700,
+      effectiveFrom: "2026-07-22"
+    });
+
+    expect(prisma.coupangCostRule.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        coupangProductId: "product-1",
+        salePriceKrw: new Prisma.Decimal(24_000),
+        productCostKrw: new Prisma.Decimal(7_000),
+        sellerShippingFeeKrw: new Prisma.Decimal(3_000),
+        hanaroShippingFeeKrw: new Prisma.Decimal(700),
+        growthInboundFeeKrw: new Prisma.Decimal(500),
+        growthShippingFeeKrw: new Prisma.Decimal(1_200),
+        note: "preserve me"
+      })
+    });
+  });
+
+  it("persists explicit null shipping fees instead of omitting them", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await service.updateProductConfiguration("product-1", {
+      sellerShippingFeeKrw: null,
+      hanaroShippingFeeKrw: null,
+      effectiveFrom: "2026-07-22"
+    });
+
+    expect(prisma.coupangCostRule.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        sellerShippingFeeKrw: null,
+        hanaroShippingFeeKrw: null
+      })
+    });
+  });
+
+  it.each([
+    ["createProductSetting", (service: CoupangService, field: string, value: unknown) => service.createProductSetting({
+      displayName: "Invalid Shipping Product",
+      [field]: value
+    })],
+    ["updateProductSetting", (service: CoupangService, field: string, value: unknown) => service.updateProductSetting("product-1", {
+      displayName: "Must Not Persist",
+      [field]: value
+    })],
+    ["updateProductConfiguration", (service: CoupangService, field: string, value: unknown) => service.updateProductConfiguration("product-1", {
+      [field]: value,
+      effectiveFrom: "2026-07-22"
+    })]
+  ] as const)("validates every logistics cost through %s", async (_entryPoint, request) => {
+    const fields = [
+      ["sellerShippingFeeKrw", "INVALID_SELLER_SHIPPING_FEE"],
+      ["hanaroShippingFeeKrw", "INVALID_HANARO_SHIPPING_FEE"],
+      ["growthInboundFeeKrw", "INVALID_GROWTH_INBOUND_FEE"],
+      ["growthShippingFeeKrw", "INVALID_GROWTH_SHIPPING_FEE"]
+    ] as const;
+    const invalidValues = [
+      ["not-a-number", "INVALID_NUMBER"],
+      [Number.NaN, "INVALID_NUMBER"],
+      [Number.POSITIVE_INFINITY, "INVALID_NUMBER"],
+      [-1, null],
+      [1.5, null]
+    ] as const;
+
+    for (const [field, fieldCode] of fields) {
+      for (const [value, genericCode] of invalidValues) {
+        const prisma = fakeCoupangProductSettingPrisma();
+        const service = new CoupangService(prisma as never);
+        await expect(request(service, field, value)).rejects.toMatchObject({
+          response: { code: genericCode ?? fieldCode }
+        });
+        expect(prisma.coupangCostRule.create).not.toHaveBeenCalled();
+      }
+    }
   });
 
   it("does not create a cost rule when configuration has no cost fields", async () => {
@@ -1197,6 +1340,154 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(rows[0].normalMarginKrw).toBeCloseTo(10_000 - 3_000 - 10_000 / 11);
     expect(rows[0].warnings).toContain("MANUAL_PURCHASE_SALES_AMOUNT_MISSING");
   });
+
+  it("calculates seller and growth rows together and exposes shipping audit fields", async () => {
+    const date = new Date("2026-07-20T00:00:00.000Z");
+    const product = { id: "mixed-product", displayName: "혼합 판매 상품" };
+    const service = new CoupangService({
+      coupangSaleLine: { findMany: vi.fn(async () => [{
+        saleDate: date,
+        coupangProductId: product.id,
+        product,
+        productName: product.displayName,
+        salesKrw: new Prisma.Decimal(60_000),
+        cancelAmountKrw: new Prisma.Decimal(0),
+        netSalesKrw: new Prisma.Decimal(60_000),
+        salesQuantity: new Prisma.Decimal(3),
+        orderCount: 3,
+        saleMethod: "판매자배송"
+      }, {
+        saleDate: date,
+        coupangProductId: product.id,
+        product,
+        productName: product.displayName,
+        salesKrw: new Prisma.Decimal(40_000),
+        cancelAmountKrw: new Prisma.Decimal(0),
+        netSalesKrw: new Prisma.Decimal(40_000),
+        salesQuantity: new Prisma.Decimal(2),
+        orderCount: 2,
+        saleMethod: "로켓그로스"
+      }]) },
+      coupangAdMetric: { findMany: vi.fn(async () => [{
+        metricDate: date,
+        spendProductId: product.id,
+        conversionProductId: product.id,
+        adSpendKrw: new Prisma.Decimal(10_000),
+        totalConversionSales1dKrw: new Prisma.Decimal(30_000),
+        totalSalesQuantity1d: new Prisma.Decimal(1)
+      }]) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        coupangProductId: product.id,
+        salePriceKrw: new Prisma.Decimal(20_000),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(1_000),
+        salesFeeRate: new Prisma.Decimal(0.1),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(2_500),
+        hanaroShippingFeeKrw: new Prisma.Decimal(300),
+        growthInboundFeeKrw: new Prisma.Decimal(700),
+        growthShippingFeeKrw: new Prisma.Decimal(1_300),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(0),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+        effectiveTo: null,
+        createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows = await (service as any).buildProductProfitRows({
+      from: "2026-07-20",
+      to: "2026-07-20",
+      fromDate: date,
+      toDate: date
+    });
+    const summary = summarizeCoupangProductProfitRows(rows);
+
+    expect(rows[0]).toMatchObject({
+      saleMethod: "MIXED",
+      sellerSalesQuantity: 3,
+      growthSalesQuantity: 2,
+      sellerShippingCostKrw: 7_500,
+      hanaroShippingCostKrw: 600,
+      growthInboundCostKrw: 1_400,
+      growthShippingCostKrw: 2_600,
+      totalLogisticsCostKrw: 12_100,
+      shippingCostKrw: 12_100,
+      adSpendKrw: 10_000,
+      calculationStatus: "COMPLETE"
+    });
+    expect(rows[0].warnings).not.toContain("NORMAL_SALE_METHOD_CONFLICT");
+    expect(rows[0].totalCostKrw).toBeCloseTo(37_100 + 100_000 / 11);
+    expect(summary).toMatchObject({
+      sellerSalesQuantity: 3,
+      growthSalesQuantity: 2,
+      sellerShippingCostKrw: 7_500,
+      hanaroShippingCostKrw: 600,
+      growthInboundCostKrw: 1_400,
+      growthShippingCostKrw: 2_600,
+      totalLogisticsCostKrw: 12_100,
+      shippingCostKrw: 12_100
+    });
+  });
+
+  it("requires a cost rule for offsetting mixed segments with zero aggregate sales", async () => {
+    const date = new Date("2026-07-20T00:00:00.000Z");
+    const product = { id: "offset-product", displayName: "상쇄 혼합 상품" };
+    const service = new CoupangService({
+      coupangSaleLine: { findMany: vi.fn(async () => [{
+        saleDate: date,
+        coupangProductId: product.id,
+        product,
+        productName: product.displayName,
+        salesKrw: new Prisma.Decimal(12_800),
+        cancelAmountKrw: new Prisma.Decimal(0),
+        netSalesKrw: new Prisma.Decimal(12_800),
+        salesQuantity: new Prisma.Decimal(1),
+        orderCount: 1,
+        saleMethod: "판매자배송"
+      }, {
+        saleDate: date,
+        coupangProductId: product.id,
+        product,
+        productName: product.displayName,
+        salesKrw: new Prisma.Decimal(-12_800),
+        cancelAmountKrw: new Prisma.Decimal(0),
+        netSalesKrw: new Prisma.Decimal(-12_800),
+        salesQuantity: new Prisma.Decimal(-1),
+        orderCount: 1,
+        saleMethod: "로켓그로스"
+      }]) },
+      coupangAdMetric: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => []) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows = await (service as any).buildProductProfitRows({
+      from: "2026-07-20",
+      to: "2026-07-20",
+      fromDate: date,
+      toDate: date
+    });
+
+    expect(rows[0]).toMatchObject({
+      actualNetSalesKrw: 0,
+      actualSalesQuantity: 0,
+      sellerSalesQuantity: 1,
+      growthSalesQuantity: -1,
+      normalCalculationStatus: "INCOMPLETE",
+      calculationStatus: "INCOMPLETE",
+      ruleStatus: "MISSING_COST_RULE",
+      sellerShippingCostKrw: null,
+      growthShippingCostKrw: null
+    });
+    expect(rows[0].warnings).toContain("NORMAL_COST_RULE_MISSING");
+  });
 });
 
 describe("Coupang product group aggregation", () => {
@@ -1303,7 +1594,15 @@ describe("Coupang product group aggregation", () => {
     const result = aggregateCoupangProductProfitRowsByGroup(
       [
         productProfitRow({ productId: "product-ok", netSalesKrw: 50_000, totalCostKrw: 40_000, marginKrw: 10_000 }),
-        productProfitRow({ productId: "product-missing", netSalesKrw: 20_000, totalCostKrw: null, marginKrw: null, ruleStatus: "MISSING_COST_RULE" })
+        productProfitRow({
+          productId: "product-missing",
+          netSalesKrw: 20_000,
+          totalCostKrw: null,
+          marginKrw: null,
+          sellerShippingCostKrw: null,
+          growthShippingCostKrw: null,
+          ruleStatus: "MISSING_COST_RULE"
+        })
       ],
       [
         { id: "product-ok", group: { id: "group-mixed-cost", displayName: "부분 누락 그룹" } },
@@ -1319,6 +1618,8 @@ describe("Coupang product group aggregation", () => {
       knownTotalCostKrw: 40_000,
       incompleteProductCount: 1,
       excludedNetSalesKrw: 20_000,
+      sellerShippingCostKrw: null,
+      growthShippingCostKrw: null,
       calculationStatus: "INCOMPLETE",
       ruleStatus: "MISSING_COST_RULE"
     });
@@ -1340,6 +1641,8 @@ describe("Coupang product group aggregation", () => {
         netSalesKrw: 50_000,
         totalCostKrw: null,
         marginKrw: null,
+        sellerShippingCostKrw: null,
+        growthShippingCostKrw: null,
         reportedOrderCount: 1,
         cancelAmountKrw: 500,
         ruleStatus: "MISSING_COST_RULE"
@@ -1353,6 +1656,8 @@ describe("Coupang product group aggregation", () => {
       knownTotalCostKrw: 60_000,
       completeProductCount: 1,
       incompleteProductCount: 1,
+      sellerShippingCostKrw: null,
+      growthShippingCostKrw: null,
       reportedOrderCount: 3,
       cancelAmountKrw: 1_500,
       excludedNetSalesKrw: 50_000,
@@ -1548,6 +1853,25 @@ describe("Coupang product group aggregation", () => {
 });
 
 describe("CoupangService margin import mapping rules", () => {
+  it("rejects an invalid logistics row without creating a cost snapshot", async () => {
+    const prisma = fakeCoupangMarginImportPrisma();
+    const service = new CoupangService(prisma as never);
+    const buffer = Buffer.from([
+      "Item\tSale Price\tProduct Cost\tSales Fee Rate\tSeller Shipping Fee\tHanaro Shipping Fee\tGrowth Inbound Fee\tGrowth Shipping Fee",
+      "Invalid Logistics\t69900\t20000\t11.88%\t1.5\t500\t1650\t2200"
+    ].join("\n"), "utf8");
+
+    const result = await service.importMarginCsv(
+      { originalname: "invalid-margin.tsv", buffer } as Express.Multer.File,
+      { effectiveFrom: "2026-06-22" }
+    );
+
+    expect(result).toMatchObject({ rowCount: 1, validRowCount: 0, errorCount: 1 });
+    expect(prisma.coupangCostRule.create).not.toHaveBeenCalled();
+    expect(prisma.coupangProduct.upsert).not.toHaveBeenCalled();
+    expect(prisma.coupangUploadRowError.createMany).toHaveBeenCalled();
+  });
+
   it("preserves existing mapping keywords when Product Margin TSV is re-uploaded", async () => {
     const prisma = fakeCoupangMarginImportPrisma();
     const service = new CoupangService(prisma as never);
@@ -1580,6 +1904,12 @@ describe("CoupangService margin import mapping rules", () => {
     expect(ruleUpdateData).not.toHaveProperty("validFrom");
     expect(ruleUpdateData).not.toHaveProperty("validTo");
     expect(prisma.coupangProductRule.create).not.toHaveBeenCalled();
+    expect(prisma.coupangCostRule.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        sellerShippingFeeKrw: new Prisma.Decimal(3_000),
+        hanaroShippingFeeKrw: new Prisma.Decimal(500)
+      })
+    });
   });
 });
 
@@ -2409,6 +2739,7 @@ function fakeCoupangProductSettingPrisma() {
       updateMany: vi.fn(async () => ({ count: 0 }))
     },
     coupangCostRule: {
+      findFirst: vi.fn(async (): Promise<Record<string, unknown> | null> => null),
       create: vi.fn(async (args) => ({ id: "cost-created", ...args.data }))
     },
     coupangUploadRowError: {
@@ -2452,6 +2783,13 @@ function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRo
     productCostKrw: 0,
     salesFeeKrw: 0,
     shippingCostKrw: 0,
+    sellerSalesQuantity: actualSalesQuantity,
+    growthSalesQuantity: 0,
+    sellerShippingCostKrw: 0,
+    hanaroShippingCostKrw: 0,
+    growthInboundCostKrw: 0,
+    growthShippingCostKrw: 0,
+    totalLogisticsCostKrw: 0,
     returnCostKrw: 0,
     extraCostKrw: 0,
     vatKrw: 0,
@@ -2576,6 +2914,21 @@ function fakeCoupangMarginImportPrisma() {
       create: vi.fn(async (args) => ({ id: "rule-created", ...args.data }))
     },
     coupangCostRule: {
+      findFirst: vi.fn(async () => ({
+        salePriceKrw: new Prisma.Decimal(69_900),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(20_000),
+        salesFeeRate: new Prisma.Decimal(0.1188),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: new Prisma.Decimal(3_000),
+        hanaroShippingFeeKrw: new Prisma.Decimal(450),
+        growthInboundFeeKrw: new Prisma.Decimal(1_500),
+        growthShippingFeeKrw: new Prisma.Decimal(2_000),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(0),
+        note: null
+      })),
       create: vi.fn(async (args) => ({ id: "cost-margin-import", ...args.data }))
     },
     coupangUploadRowError: {

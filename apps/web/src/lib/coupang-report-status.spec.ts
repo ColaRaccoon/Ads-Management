@@ -45,4 +45,17 @@ describe("Coupang daily export part statuses", () => {
       warnings: ["GROUP_HAS_MISSING_COST_RULE"]
     })).toContain("INCOMPLETE_PRODUCTS:누락 옵션 A, 누락 옵션 B");
   });
+  it("translates shipping warning codes in the table and exported status", () => {
+    const status = formatCoupangDailyRowStatus({
+      calculationStatus: "INCOMPLETE",
+      normalCalculationStatus: "INCOMPLETE",
+      manualCalculationStatus: "NOT_APPLICABLE",
+      incompleteProductNames: [],
+      warnings: ["SELLER_SHIPPING_FEE_MISSING", "HANARO_SHIPPING_FEE_MISSING"]
+    });
+
+    expect(status).toContain("판매자 배송비가 설정되지 않았습니다");
+    expect(status).toContain("하나로 배송비가 설정되지 않았습니다");
+    expect(status).not.toContain("SELLER_SHIPPING_FEE_MISSING");
+  });
 });

@@ -3,7 +3,7 @@ import { decode } from "iconv-lite";
 import { createHash } from "node:crypto";
 import { parseNumberValue, ParseIssue } from "./date-number";
 
-export const COUPANG_MARGIN_SCHEMA_VERSION = 1;
+export const COUPANG_MARGIN_SCHEMA_VERSION = 2;
 
 export type CoupangMarginColumnKey =
   | "itemName"
@@ -13,6 +13,7 @@ export type CoupangMarginColumnKey =
   | "salesFeeRate"
   | "salesFeeKrw"
   | "sellerShippingFeeKrw"
+  | "hanaroShippingFeeKrw"
   | "growthInboundFeeKrw"
   | "growthShippingFeeKrw"
   | "returnRate"
@@ -26,7 +27,8 @@ export type ParsedCoupangMarginRow = {
   productCostKrw: number;
   salesFeeRate: number;
   salesFeeKrw: number;
-  sellerShippingFeeKrw: number;
+  sellerShippingFeeKrw?: number;
+  hanaroShippingFeeKrw: number | null;
   growthInboundFeeKrw: number;
   growthShippingFeeKrw: number;
   returnRate: number;
@@ -49,7 +51,8 @@ export const COUPANG_MARGIN_COLUMN_ALIASES: Record<CoupangMarginColumnKey, strin
   productCostKrw: ["원가", "Product Cost", "productCostKrw"],
   salesFeeRate: ["판매수수료율", "Sales Fee Rate", "salesFeeRate"],
   salesFeeKrw: ["판매수수료", "Sales Fee", "salesFeeKrw"],
-  sellerShippingFeeKrw: ["하나로 배송비", "Seller Shipping Fee", "sellerShippingFeeKrw"],
+  sellerShippingFeeKrw: ["판매자 배송비", "Seller Shipping Fee", "sellerShippingFeeKrw"],
+  hanaroShippingFeeKrw: ["하나로 배송비", "Hanaro Shipping Fee", "hanaroShippingFeeKrw"],
   growthInboundFeeKrw: ["그로스 입출고비", "Growth Inbound Fee", "growthInboundFeeKrw"],
   growthShippingFeeKrw: ["그로스 배송비", "Growth Shipping Fee", "growthShippingFeeKrw"],
   returnRate: ["평균 반품률", "Return Rate", "returnRate"],
@@ -62,7 +65,7 @@ export const COUPANG_MARGIN_REQUIRED_COLUMNS: CoupangMarginColumnKey[] = [
   "salePriceKrw",
   "productCostKrw",
   "salesFeeRate",
-  "sellerShippingFeeKrw",
+  "hanaroShippingFeeKrw",
   "growthInboundFeeKrw",
   "growthShippingFeeKrw"
 ];
@@ -105,6 +108,10 @@ function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangMarginCo
   const salePriceKrw = requiredNumber(rawRow, headerMap, "salePriceKrw", issues);
   const productCostKrw = requiredNumber(rawRow, headerMap, "productCostKrw", issues);
   const returnCostPerUnitKrw = requiredNumber(rawRow, headerMap, "returnCostPerUnitKrw", issues);
+  const sellerShippingFeeKrw = logisticsIntegerValue(rawRow, headerMap, "sellerShippingFeeKrw", issues, undefined);
+  const hanaroShippingFeeKrw = logisticsIntegerValue(rawRow, headerMap, "hanaroShippingFeeKrw", issues, null);
+  const growthInboundFeeKrw = logisticsIntegerValue(rawRow, headerMap, "growthInboundFeeKrw", issues, 0);
+  const growthShippingFeeKrw = logisticsIntegerValue(rawRow, headerMap, "growthShippingFeeKrw", issues, 0);
 
   return {
     parsedRow:
@@ -117,9 +124,10 @@ function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangMarginCo
             productCostKrw,
             salesFeeRate: optionalRate(rawRow, headerMap, "salesFeeRate"),
             salesFeeKrw: optionalNumber(rawRow, headerMap, "salesFeeKrw"),
-            sellerShippingFeeKrw: optionalNumber(rawRow, headerMap, "sellerShippingFeeKrw"),
-            growthInboundFeeKrw: optionalNumber(rawRow, headerMap, "growthInboundFeeKrw"),
-            growthShippingFeeKrw: optionalNumber(rawRow, headerMap, "growthShippingFeeKrw"),
+            sellerShippingFeeKrw,
+            hanaroShippingFeeKrw,
+            growthInboundFeeKrw: growthInboundFeeKrw ?? 0,
+            growthShippingFeeKrw: growthShippingFeeKrw ?? 0,
             returnRate: optionalRate(rawRow, headerMap, "returnRate"),
             returnCostPerUnitKrw,
             adEnabled: parseYn(optionalText(rawRow, headerMap, "adEnabled"))
@@ -170,8 +178,28 @@ function optionalNumber(rawRow: Record<string, string>, headerMap: Map<CoupangMa
   return parseNumberValue(readRaw(rawRow, headerMap, key), { emptyAs: 0 }) ?? 0;
 }
 
-function optionalNumberOrNull(rawRow: Record<string, string>, headerMap: Map<CoupangMarginColumnKey, string>, key: CoupangMarginColumnKey) {
-  return parseNumberValue(readRaw(rawRow, headerMap, key), { emptyAs: null });
+function logisticsIntegerValue<T extends number | null | undefined>(
+  rawRow: Record<string, string>,
+  headerMap: Map<CoupangMarginColumnKey, string>,
+  key: CoupangMarginColumnKey,
+  issues: ParseIssue[],
+  emptyValue: T
+): number | T {
+  const rawValue = readRaw(rawRow, headerMap, key);
+  if (rawValue === undefined || rawValue.trim() === "") {
+    return emptyValue;
+  }
+  const parsed = parseNumberValue(rawValue, { emptyAs: null });
+  if (parsed === null || !Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+    issues.push({
+      columnName: COUPANG_MARGIN_COLUMN_ALIASES[key][0],
+      errorCode: "INVALID_NON_NEGATIVE_INTEGER",
+      message: `${COUPANG_MARGIN_COLUMN_ALIASES[key][0]} must be a non-negative integer.`,
+      rawValue
+    });
+    return emptyValue;
+  }
+  return parsed;
 }
 
 function optionalRate(rawRow: Record<string, string>, headerMap: Map<CoupangMarginColumnKey, string>, key: CoupangMarginColumnKey) {

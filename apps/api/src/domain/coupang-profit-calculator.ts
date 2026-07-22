@@ -2,6 +2,8 @@ import { safeDivide } from "./date-number";
 
 export type CoupangFeeMode = "PER_UNIT" | "RATE";
 
+export type CoupangFulfillmentMethod = "SELLER" | "GROWTH";
+
 export type CoupangProfitOptions = {
   feeMode?: CoupangFeeMode;
   includeReturnCost?: boolean;
@@ -16,7 +18,8 @@ export type CoupangCostInput = {
   productCostKrw: number;
   salesFeeRate?: number;
   salesFeeKrw?: number;
-  sellerShippingFeeKrw?: number;
+  sellerShippingFeeKrw?: number | null;
+  hanaroShippingFeeKrw?: number | null;
   growthInboundFeeKrw?: number;
   growthShippingFeeKrw?: number;
   returnRate?: number;
@@ -26,6 +29,12 @@ export type CoupangCostInput = {
 
 export type CoupangSalesInput = {
   saleMethod?: string | null;
+  netSalesKrw: number;
+  salesQuantity: number;
+};
+
+export type CoupangProfitSegmentInput = {
+  fulfillmentMethod: CoupangFulfillmentMethod;
   netSalesKrw: number;
   salesQuantity: number;
 };
@@ -51,6 +60,16 @@ export type CoupangProfitResult = {
   roas: number | null;
   organicSalesKrw: number;
   warnings: string[];
+};
+
+export type CoupangSegmentProfitResult = CoupangProfitResult & {
+  sellerSalesQuantity: number;
+  growthSalesQuantity: number;
+  sellerShippingCostKrw: number;
+  hanaroShippingCostKrw: number;
+  growthInboundCostKrw: number;
+  growthShippingCostKrw: number;
+  totalLogisticsCostKrw: number;
 };
 
 export type CoupangManualPurchaseCostInput = {
@@ -117,6 +136,78 @@ export function calculateCoupangProfit(
   };
 }
 
+export function calculateCoupangProfitBySegments(input: {
+  segments: CoupangProfitSegmentInput[];
+  cost: CoupangCostInput;
+  ads: CoupangAdInput;
+  feeMode?: CoupangFeeMode;
+  includeReturnCost?: boolean;
+}): CoupangSegmentProfitResult {
+  const segmentResults = input.segments.map((segment) => ({
+    fulfillmentMethod: segment.fulfillmentMethod,
+    calculated: calculateCoupangProfit(
+      {
+        saleMethod: segment.fulfillmentMethod,
+        netSalesKrw: segment.netSalesKrw,
+        salesQuantity: segment.salesQuantity
+      },
+      input.cost,
+      { adSpendKrw: 0, adConversionSalesKrw: 0, adConversionQuantity: 0 },
+      {
+        feeMode: input.feeMode,
+        includeReturnCost: input.includeReturnCost,
+        useGrowthCost: true
+      }
+    )
+  }));
+  const netSalesKrw = sum(segmentResults.map((result) => result.calculated.netSalesKrw));
+  const productCostKrw = sum(segmentResults.map((result) => result.calculated.productCostKrw));
+  const salesFeeKrw = sum(segmentResults.map((result) => result.calculated.salesFeeKrw));
+  const sellerSalesQuantity = sum(input.segments
+    .filter((segment) => segment.fulfillmentMethod === "SELLER")
+    .map((segment) => finiteNumber(segment.salesQuantity)));
+  const growthSalesQuantity = sum(input.segments
+    .filter((segment) => segment.fulfillmentMethod === "GROWTH")
+    .map((segment) => finiteNumber(segment.salesQuantity)));
+  const sellerShippingCostKrw = finiteNumber(input.cost.sellerShippingFeeKrw) * sellerSalesQuantity;
+  const hanaroShippingCostKrw = finiteNumber(input.cost.hanaroShippingFeeKrw) * growthSalesQuantity;
+  const growthInboundCostKrw = finiteNumber(input.cost.growthInboundFeeKrw) * growthSalesQuantity;
+  const growthShippingCostKrw = finiteNumber(input.cost.growthShippingFeeKrw) * growthSalesQuantity;
+  const totalLogisticsCostKrw = sellerShippingCostKrw + hanaroShippingCostKrw + growthInboundCostKrw + growthShippingCostKrw;
+  const shippingCostKrw = totalLogisticsCostKrw;
+  const returnCostKrw = sum(segmentResults.map((result) => result.calculated.returnCostKrw));
+  const extraCostKrw = sum(segmentResults.map((result) => result.calculated.extraCostKrw));
+  const vatKrw = sum(segmentResults.map((result) => result.calculated.vatKrw));
+  const adSpendKrw = finiteNumber(input.ads.adSpendKrw);
+  const totalCostKrw = productCostKrw + salesFeeKrw + shippingCostKrw + returnCostKrw + extraCostKrw + vatKrw + adSpendKrw;
+  const marginKrw = netSalesKrw - totalCostKrw;
+  const organicSalesKrw = netSalesKrw - finiteNumber(input.ads.adConversionSalesKrw);
+
+  return {
+    netSalesKrw,
+    productCostKrw,
+    salesFeeKrw,
+    shippingCostKrw,
+    returnCostKrw,
+    extraCostKrw,
+    vatKrw,
+    adSpendKrw,
+    totalCostKrw,
+    marginKrw,
+    marginRate: safeDivide(marginKrw, netSalesKrw),
+    roas: safeDivide(finiteNumber(input.ads.adConversionSalesKrw), adSpendKrw),
+    organicSalesKrw,
+    warnings: organicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : [],
+    sellerSalesQuantity,
+    growthSalesQuantity,
+    sellerShippingCostKrw,
+    hanaroShippingCostKrw,
+    growthInboundCostKrw,
+    growthShippingCostKrw,
+    totalLogisticsCostKrw
+  };
+}
+
 export function calculateCoupangManualPurchaseCost(input: CoupangManualPurchaseCostInput): CoupangManualPurchaseCostResult {
   if (!Number.isInteger(input.quantity) || input.quantity < 0) {
     throw new RangeError("Manual-purchase quantity must be a non-negative integer.");
@@ -159,14 +250,34 @@ function shippingCost(
     return finiteNumber(cost.sellerShippingFeeKrw) * quantity;
   }
   if (isGrowthSaleMethod(saleMethod)) {
-    return (finiteNumber(cost.growthInboundFeeKrw) + finiteNumber(cost.growthShippingFeeKrw)) * quantity;
+    return (
+      finiteNumber(cost.hanaroShippingFeeKrw) +
+      finiteNumber(cost.growthInboundFeeKrw) +
+      finiteNumber(cost.growthShippingFeeKrw)
+    ) * quantity;
   }
   return finiteNumber(cost.sellerShippingFeeKrw) * quantity;
 }
 
-function isGrowthSaleMethod(value: string | null | undefined) {
+export function normalizeCoupangFulfillmentMethod(value: string | null | undefined): CoupangFulfillmentMethod {
+  return parseExplicitCoupangFulfillmentMethod(value) ?? "SELLER";
+}
+
+export function parseExplicitCoupangFulfillmentMethod(
+  value: string | null | undefined
+): CoupangFulfillmentMethod | null {
   const normalized = String(value ?? "").toLowerCase().replace(/\s+/g, "");
-  return normalized.includes("growth") || normalized.includes("rocket") || normalized.includes("\ub85c\ucf13") || normalized.includes("\uadf8\ub85c\uc2a4");
+  if (normalized.includes("growth") || normalized.includes("rocket") || normalized.includes("\ub85c\ucf13") || normalized.includes("\uadf8\ub85c\uc2a4")) {
+    return "GROWTH";
+  }
+  if (normalized.includes("seller") || normalized.includes("\ud310\ub9e4\uc790")) {
+    return "SELLER";
+  }
+  return null;
+}
+
+function isGrowthSaleMethod(value: string | null | undefined) {
+  return normalizeCoupangFulfillmentMethod(value) === "GROWTH";
 }
 
 function finiteNumber(value: number | null | undefined) {
@@ -179,4 +290,8 @@ function vatFromVatIncludedAmount(amountKrw: number) {
 
 function roundMoney(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function sum(values: number[]) {
+  return values.reduce((total, value) => total + finiteNumber(value), 0);
 }

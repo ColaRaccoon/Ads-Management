@@ -2,8 +2,10 @@
 
 import { ChevronDown, ChevronRight, Pencil, Save, Trash2, X } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
+import { coupangProductIdFromSearch } from "@/lib/coupang-product-settings-link";
+import { coupangShippingFeePayload } from "@/lib/coupang-shipping-payload";
 import { DataTable } from "@/components/data-table";
 
 type CoupangProductGroup = {
@@ -35,6 +37,7 @@ type CoupangCostRule = {
   salesFeeRate?: string | number | null;
   salesFeeKrw?: string | number | null;
   sellerShippingFeeKrw?: string | number | null;
+  hanaroShippingFeeKrw?: string | number | null;
   growthInboundFeeKrw?: string | number | null;
   growthShippingFeeKrw?: string | number | null;
   returnRate?: string | number | null;
@@ -64,6 +67,7 @@ type ProductForm = {
   salesFeeRate: string;
   salesFeeKrw: string;
   sellerShippingFeeKrw: string;
+  hanaroShippingFeeKrw: string;
   growthInboundFeeKrw: string;
   growthShippingFeeKrw: string;
   returnRate: string;
@@ -84,6 +88,7 @@ type CostSnapshot = Pick<
   | "salesFeeRate"
   | "salesFeeKrw"
   | "sellerShippingFeeKrw"
+  | "hanaroShippingFeeKrw"
   | "growthInboundFeeKrw"
   | "growthShippingFeeKrw"
   | "returnRate"
@@ -102,6 +107,7 @@ export default function CoupangProductsPage() {
   const [mappingNotice, setMappingNotice] = useState(false);
   const [isGroupsOpen, setIsGroupsOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+  const openedLinkedProductId = useRef<string | null>(null);
   const queryClient = useQueryClient();
 
   const products = useQuery({
@@ -153,7 +159,7 @@ export default function CoupangProductsPage() {
     setCostDirty(false);
   }
 
-  function editProduct(row: CoupangProductSetting) {
+  const editProduct = useCallback((row: CoupangProductSetting) => {
     const latestCost = row.costRules[0];
     const primaryRule = row.productRules.find((rule) => rule.isActive !== false) ?? row.productRules[0];
     const nextForm: ProductForm = {
@@ -165,6 +171,7 @@ export default function CoupangProductsPage() {
       salesFeeRate: numberInput(latestCost?.salesFeeRate),
       salesFeeKrw: numberInput(latestCost?.salesFeeKrw),
       sellerShippingFeeKrw: numberInput(latestCost?.sellerShippingFeeKrw),
+      hanaroShippingFeeKrw: numberInput(latestCost?.hanaroShippingFeeKrw),
       growthInboundFeeKrw: numberInput(latestCost?.growthInboundFeeKrw),
       growthShippingFeeKrw: numberInput(latestCost?.growthShippingFeeKrw),
       returnRate: numberInput(latestCost?.returnRate),
@@ -182,7 +189,16 @@ export default function CoupangProductsPage() {
     setOriginalCost(costSnapshotFromForm(nextForm));
     setCostDirty(false);
     setMappingNotice(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    const requestedProductId = coupangProductIdFromSearch(window.location.search);
+    if (!requestedProductId || openedLinkedProductId.current === requestedProductId) return;
+    const requestedProduct = products.data?.find((product) => product.id === requestedProductId);
+    if (!requestedProduct) return;
+    openedLinkedProductId.current = requestedProductId;
+    editProduct(requestedProduct);
+  }, [editProduct, products.data]);
 
   function setFormValue(key: keyof ProductForm, value: string) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -265,16 +281,38 @@ export default function CoupangProductsPage() {
             <input className="input" value={form.salesFeeKrw} onChange={(event) => setCostValue("salesFeeKrw", event.target.value)} />
           </label>
           <label className="field">
-            <span className="field-label">판매자 배송비</span>
-            <input className="input" value={form.sellerShippingFeeKrw} onChange={(event) => setCostValue("sellerShippingFeeKrw", event.target.value)} />
+            <span className="field-label">판매자 배송비 설정(개당)</span>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              step="1"
+              value={form.sellerShippingFeeKrw}
+              onChange={(event) => setCostValue("sellerShippingFeeKrw", event.target.value)}
+            />
+            <span className="muted">하나로 창고에서 구매자에게 직접 보내는 택배 비용입니다.</span>
           </label>
           <label className="field">
-            <span className="field-label">그로스 입출고비</span>
-            <input className="input" value={form.growthInboundFeeKrw} onChange={(event) => setCostValue("growthInboundFeeKrw", event.target.value)} />
+            <span className="field-label">하나로 배송비 (개당)</span>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              step="1"
+              value={form.hanaroShippingFeeKrw}
+              onChange={(event) => setCostValue("hanaroShippingFeeKrw", event.target.value)}
+            />
+            <span className="muted">하나로 창고에서 쿠팡 창고로 옮기는 비용입니다.</span>
           </label>
           <label className="field">
-            <span className="field-label">그로스 배송비</span>
-            <input className="input" value={form.growthShippingFeeKrw} onChange={(event) => setCostValue("growthShippingFeeKrw", event.target.value)} />
+            <span className="field-label">그로스 입출고비 (개당)</span>
+            <input className="input" type="number" min="0" step="1" value={form.growthInboundFeeKrw} onChange={(event) => setCostValue("growthInboundFeeKrw", event.target.value)} />
+            <span className="muted">쿠팡 창고의 입출고 처리 비용입니다.</span>
+          </label>
+          <label className="field">
+            <span className="field-label">그로스 배송비 (개당)</span>
+            <input className="input" type="number" min="0" step="1" value={form.growthShippingFeeKrw} onChange={(event) => setCostValue("growthShippingFeeKrw", event.target.value)} />
+            <span className="muted">쿠팡 창고에서 구매자에게 보내는 비용입니다.</span>
           </label>
           <label className="field">
             <span className="field-label">반품률</span>
@@ -380,7 +418,8 @@ export default function CoupangProductsPage() {
                 { key: "cost", header: "상품 원가", render: (row) => money(row.costRules[0]?.productCostKrw) },
                 { key: "feeRate", header: "수수료율", render: (row) => rate(row.costRules[0]?.salesFeeRate) },
                 { key: "fee", header: "판매 수수료", render: (row) => money(row.costRules[0]?.salesFeeKrw) },
-                { key: "sellerShip", header: "판매자 배송비", render: (row) => money(row.costRules[0]?.sellerShippingFeeKrw) },
+                { key: "sellerShip", header: "판매자 배송비 설정(개당)", render: (row) => money(row.costRules[0]?.sellerShippingFeeKrw) },
+                { key: "hanaroShip", header: "하나로 배송비", render: (row) => money(row.costRules[0]?.hanaroShippingFeeKrw) },
                 { key: "growthInbound", header: "그로스 입출고비", render: (row) => money(row.costRules[0]?.growthInboundFeeKrw) },
                 { key: "growthShip", header: "그로스 배송비", render: (row) => money(row.costRules[0]?.growthShippingFeeKrw) },
                 { key: "returnRate", header: "반품률", render: (row) => rate(row.costRules[0]?.returnRate) },
@@ -424,6 +463,7 @@ function createInitialForm(): ProductForm {
     salesFeeRate: "",
     salesFeeKrw: "",
     sellerShippingFeeKrw: "",
+    hanaroShippingFeeKrw: "",
     growthInboundFeeKrw: "",
     growthShippingFeeKrw: "",
     returnRate: "",
@@ -469,7 +509,7 @@ function costPayload(form: ProductForm) {
     productCostKrw: numberOrUndefined(form.productCostKrw),
     salesFeeRate: numberOrUndefined(form.salesFeeRate),
     salesFeeKrw: numberOrUndefined(form.salesFeeKrw),
-    sellerShippingFeeKrw: numberOrUndefined(form.sellerShippingFeeKrw),
+    ...coupangShippingFeePayload(form),
     growthInboundFeeKrw: numberOrUndefined(form.growthInboundFeeKrw),
     growthShippingFeeKrw: numberOrUndefined(form.growthShippingFeeKrw),
     returnRate: numberOrUndefined(form.returnRate),
@@ -491,6 +531,7 @@ function costSnapshotFromForm(form: ProductForm): CostSnapshot {
     salesFeeRate: form.salesFeeRate.trim(),
     salesFeeKrw: form.salesFeeKrw.trim(),
     sellerShippingFeeKrw: form.sellerShippingFeeKrw.trim(),
+    hanaroShippingFeeKrw: form.hanaroShippingFeeKrw.trim(),
     growthInboundFeeKrw: form.growthInboundFeeKrw.trim(),
     growthShippingFeeKrw: form.growthShippingFeeKrw.trim(),
     returnRate: form.returnRate.trim(),

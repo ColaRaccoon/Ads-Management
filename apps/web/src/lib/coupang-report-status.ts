@@ -1,3 +1,5 @@
+import { coupangProfitWarningLabel } from "./coupang-profit-warning";
+
 export type CoupangCalculationPartStatus = "COMPLETE" | "INCOMPLETE" | "NOT_APPLICABLE";
 
 type CalculationPartStatusRow = {
@@ -40,7 +42,7 @@ export function formatCoupangDailyRowStatus(input: {
     `NORMAL:${input.normalCalculationStatus}`,
     `MANUAL:${input.manualCalculationStatus}`,
     ...(input.incompleteProductNames.length > 0 ? [`INCOMPLETE_PRODUCTS:${input.incompleteProductNames.join(", ")}`] : []),
-    ...input.warnings
+    ...input.warnings.map(coupangProfitWarningLabel)
   ].join(" | ");
 }
 

@@ -27,6 +27,13 @@ export type CoupangProductProfitRow = {
   productCostKrw: number | null;
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
+  sellerSalesQuantity: number;
+  growthSalesQuantity: number;
+  sellerShippingCostKrw: number | null;
+  hanaroShippingCostKrw: number | null;
+  growthInboundCostKrw: number | null;
+  growthShippingCostKrw: number | null;
+  totalLogisticsCostKrw: number | null;
   returnCostKrw: number | null;
   extraCostKrw: number | null;
   vatKrw: number | null;
@@ -93,6 +100,13 @@ export type CoupangProfitSummary = {
   productCostKrw: number | null;
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
+  sellerSalesQuantity: number;
+  growthSalesQuantity: number;
+  sellerShippingCostKrw: number | null;
+  hanaroShippingCostKrw: number | null;
+  growthInboundCostKrw: number | null;
+  growthShippingCostKrw: number | null;
+  totalLogisticsCostKrw: number | null;
   returnCostKrw: number | null;
   extraCostKrw: number | null;
   vatKrw: number | null;
@@ -131,6 +145,7 @@ export type CoupangDashboardResponse = CoupangProductProfitResponse;
 
 export type CoupangDailyReportRow = Pick<
   CoupangProductProfitRow,
+  | "productId"
   | "productName"
   | "reportedSalesKrw"
   | "reportedNetSalesKrw"
@@ -152,6 +167,13 @@ export type CoupangDailyReportRow = Pick<
   | "productCostKrw"
   | "salesFeeKrw"
   | "shippingCostKrw"
+  | "sellerSalesQuantity"
+  | "growthSalesQuantity"
+  | "sellerShippingCostKrw"
+  | "hanaroShippingCostKrw"
+  | "growthInboundCostKrw"
+  | "growthShippingCostKrw"
+  | "totalLogisticsCostKrw"
   | "returnCostKrw"
   | "extraCostKrw"
   | "vatKrw"
