@@ -5,10 +5,12 @@ import { describe, expect, it, vi } from "vitest";
 import { toDateOnly } from "../domain/date-number";
 import {
   aggregateCoupangProductProfitRowsByGroup,
+  buildCoupangDailyHierarchy,
   buildCoupangMarginCostRuleData,
   buildCoupangPriceTextCostRuleData,
   CoupangService,
   findSalesFeeRuleForDate,
+  normalizeDailyMemo,
   salesFeeRateFromPercentBody,
   type ProductProfitRow,
   resolveCoupangRowImportDecision,
@@ -1236,6 +1238,69 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(promotionPriceFindMany).not.toHaveBeenCalled();
   });
 
+  it("stores a memo-only row at zero quantity without requiring a cost rule", async () => {
+    let created: any[] = [];
+    const product = {
+      id: "product-1",
+      displayName: "메모 전용 상품",
+      standardName: "메모 전용",
+      group: null,
+      productRules: []
+    };
+    const manualPurchaseDelegate = {
+      deleteMany: vi.fn(),
+      createMany: vi.fn(async ({ data }: { data: any[] }) => { created = data; }),
+      findMany: vi.fn(async () => created.map((row, index) => ({
+        ...row,
+        id: `manual-${index}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        product,
+        productRule: null
+      })))
+    };
+    const { prisma } = manualPurchaseTransactionPrisma({
+      appSetting: { findUnique: vi.fn(async () => null) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangProductRule: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => []) }
+    }, manualPurchaseDelegate);
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.replaceManualPurchasesForDate("2026-07-21", {
+      entries: [{
+        coupangProductId: product.id,
+        quantity: 0,
+        memo: " 리뷰 보강 "
+      }]
+    });
+
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({
+      quantity: 0,
+      memo: "리뷰 보강",
+      salesAmountKrw: new Prisma.Decimal(0),
+      salePriceKrw: null,
+      baseSalePriceKrw: null,
+      priceSource: null,
+      vendorFeeTotalKrw: new Prisma.Decimal(0),
+      totalCostKrw: new Prisma.Decimal(0)
+    });
+    expect(result).toMatchObject({
+      selectedOptionCount: 1,
+      totalQuantity: 0,
+      totalSalesAmountKrw: 0,
+      totalCostKrw: 0
+    });
+    expect(result.rows[0]).toMatchObject({
+      quantity: 0,
+      memo: "리뷰 보강",
+      salesAmountKrw: 0,
+      totalCostKrw: 0,
+      warnings: []
+    });
+  });
+
   it("serializes the vendor fee as the total and warns on a one-cent stored mismatch", async () => {
     const service = new CoupangService({
       coupangManualPurchase: {
@@ -2314,7 +2379,10 @@ describe("Coupang product group aggregation", () => {
   });
 
   it("omits products with no activity but keeps manual-purchase-only rows in the daily report", async () => {
-    const service = new CoupangService({} as never);
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) }
+    } as never);
     const productRows = [
       productProfitRow({
         productId: "zero-row",
@@ -2371,33 +2439,33 @@ describe("Coupang product group aggregation", () => {
         calculationStatus: "INCOMPLETE"
       })
     ];
-    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce(productRows)
+      .mockResolvedValueOnce([]);
 
-    const result = await service.dailyReport({ date: "2026-07-02", groupBy: "product" });
+    const result = await service.dailyReport({ date: "2026-07-02" });
 
     expect(result.rows.map((row) => row.productName)).toEqual([
       "Sales Product",
-      "Ad Product",
-      "Manual Product",
       "Reported Gross Only",
-      "Warning Only",
-      "Incomplete Only"
+      "Ad Product",
+      "Incomplete Only",
+      "Manual Product",
+      "Warning Only"
     ]);
+    expect(result.rows.map((row) => row.productName)).not.toContain("Zero Product");
     expect(result.rows.find((row) => row.productName === "Manual Product")).toMatchObject({
-      manualPurchaseProductCostKrw: 0,
-      manualPurchaseVendorFeeKrw: 9_000,
-      manualPurchaseTotalCostKrw: 9_000
+      manualPurchaseQuantity: 2,
+      marginKrw: -9_000
     });
     expect(result.rows.find((row) => row.productName === "Reported Gross Only")).toMatchObject({
       reportedSalesKrw: 5_000,
-      reportedNetSalesKrw: 0,
-      actualSalesKrw: 0
+      organicSalesKrw: 0
     });
-    expect(result.summary.incompleteCalculationCount).toBe(1);
+    expect(result.summary.current.incompleteProductCount).toBe(1);
   });
 
   it("projects incomplete child product names into grouped daily reports without duplicating child amounts", async () => {
-    const service = new CoupangService({} as never);
     const productRows = [
       productProfitRow({ productId: "complete", productName: "정상 옵션", netSalesKrw: 50_000, totalCostKrw: 30_000, marginKrw: 20_000 }),
       productProfitRow({
@@ -2409,22 +2477,376 @@ describe("Coupang product group aggregation", () => {
         ruleStatus: "MISSING_COST_RULE"
       })
     ];
-    const groupedRows = aggregateCoupangProductProfitRowsByGroup(productRows, [
-      { id: "complete", group: { id: "group", displayName: "혼합 그룹" } },
-      { id: "incomplete", group: { id: "group", displayName: "혼합 그룹" } }
-    ]);
-    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue(productRows);
-    vi.spyOn(service as any, "groupProductProfitRows").mockResolvedValue(groupedRows);
+    const group = { id: "group", displayName: "혼합 그룹" };
+    const products = [
+      dailyCatalogProduct("complete", "정상 옵션", group),
+      dailyCatalogProduct("incomplete", "원가 누락 옵션", group)
+    ];
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => products) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce(productRows)
+      .mockResolvedValueOnce([]);
 
-    const result = await service.dailyReport({ date: "2026-07-02", groupBy: "group" });
+    const result = await service.dailyReport({ date: "2026-07-02" });
 
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0]).toMatchObject({
+      rowType: "GROUP",
       productName: "혼합 그룹",
-      reportedNetSalesKrw: 70_000,
-      incompleteProductNames: ["원가 누락 옵션"]
+      reportedSalesKrw: 70_000,
+      marginKrw: null,
+      calculationStatus: "INCOMPLETE"
     });
-    expect(result.rows[0]).not.toHaveProperty("children");
+    expect(result.rows[0]).toHaveProperty("children");
+  });
+
+  it("keeps the daily-report date errors stable", async () => {
+    const service = new CoupangService({} as never);
+
+    await expect(service.dailyReport({})).rejects.toMatchObject({
+      response: { code: "DATE_REQUIRED" }
+    });
+    await expect(service.dailyReport({ date: "2026-02-30" })).rejects.toMatchObject({
+      response: { code: "INVALID_DATE" }
+    });
+  });
+
+  it.each([
+    {
+      name: "returns null when no prior-day source row exists",
+      previousRows: [] as ProductProfitRow[],
+      expectedMarginKrw: null
+    },
+    {
+      name: "keeps an exact zero from a complete prior-day source row",
+      previousRows: [productProfitRow({
+        productId: "product",
+        totalCostKrw: 0,
+        marginKrw: 0,
+        calculationStatus: "COMPLETE"
+      })],
+      expectedMarginKrw: 0
+    },
+    {
+      name: "keeps null from an incomplete prior-day source row",
+      previousRows: [productProfitRow({
+        productId: "product",
+        totalCostKrw: null,
+        marginKrw: null,
+        calculationStatus: "INCOMPLETE"
+      })],
+      expectedMarginKrw: null
+    }
+  ])("$name", async ({ previousRows, expectedMarginKrw }) => {
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce([productProfitRow({
+        productId: "product",
+        reportedSalesKrw: 100,
+        totalCostKrw: 50,
+        marginKrw: 50
+      })])
+      .mockResolvedValueOnce(previousRows);
+
+    const result = await service.dailyReport({ date: "2026-07-24" });
+
+    expect(result.summary.current.marginKrw).toBe(50);
+    expect(result.summary.previous.marginKrw).toBe(expectedMarginKrw);
+  });
+
+  it("preserves the current empty-summary zero while prior-day absence stays null", async () => {
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const result = await service.dailyReport({ date: "2026-07-24" });
+
+    expect(result.summary.current.marginKrw).toBe(0);
+    expect(result.summary.previous.marginKrw).toBeNull();
+  });
+
+  it("normalizes all blank memo forms without changing internal user text", () => {
+    expect(normalizeDailyMemo(null)).toBeNull();
+    expect(normalizeDailyMemo(undefined)).toBeNull();
+    expect(normalizeDailyMemo("")).toBeNull();
+    expect(normalizeDailyMemo(" \t\r\n ")).toBeNull();
+    expect(normalizeDailyMemo("  keep   internal spacing  ")).toBe("keep   internal spacing");
+  });
+
+  it("promotes memo-only products into the daily hierarchy with zero metrics", () => {
+    const group = { id: "memo-group", displayName: "메모 그룹" };
+    const products = [
+      dailyCatalogProduct("grouped-memo", "그룹 메모 상품", group),
+      dailyCatalogProduct("single-memo", "단일 메모 상품", null)
+    ];
+
+    const rows = buildCoupangDailyHierarchy({
+      currentProductRows: [],
+      previousProductRows: [],
+      products,
+      manualPurchases: [
+        { coupangProductId: "grouped-memo", productDisplayName: "그룹 메모 상품", memo: "그룹 리뷰 보강" },
+        { coupangProductId: "single-memo", productDisplayName: "단일 메모 상품", memo: "단일 리뷰 보강" }
+      ]
+    });
+
+    const groupRow = rows.find((row) => row.rowType === "GROUP");
+    const singleRow = rows.find((row) => row.rowType === "PRODUCT");
+    expect(groupRow).toMatchObject({
+      rowType: "GROUP",
+      groupId: group.id,
+      manualPurchaseQuantity: 0,
+      reportedSalesKrw: 0,
+      marginKrw: 0
+    });
+    if (groupRow?.rowType !== "GROUP") throw new Error("Expected memo-only group row.");
+    expect(groupRow.children.find((child) => child.productId === "grouped-memo")).toMatchObject({
+      memo: "그룹 리뷰 보강",
+      manualPurchaseQuantity: 0
+    });
+    expect(singleRow).toMatchObject({
+      rowType: "PRODUCT",
+      productId: "single-memo",
+      memo: "단일 리뷰 보강",
+      manualPurchaseQuantity: 0,
+      reportedSalesKrw: 0,
+      marginKrw: 0
+    });
+  });
+
+  it("returns the final hierarchy contract with strict totals, weighted ROAS, memos, and prior-day metrics", async () => {
+    const group = { id: "group-a", displayName: "Group A" };
+    const products = [
+      dailyCatalogProduct("option-a", "Option A", group, { sortOrder: 20 }),
+      dailyCatalogProduct("option-b", "Option B", group, { sortOrder: 10 }),
+      dailyCatalogProduct("zero-option", "Zero Option", group, { sortOrder: 30 }),
+      dailyCatalogProduct("prior-option", "Prior Option", group, { sortOrder: 40 }),
+      dailyCatalogProduct("inactive-option", "Inactive Option", group, { isActive: false, sortOrder: 15 }),
+      dailyCatalogProduct("single", "Single Product", null),
+      dailyCatalogProduct("prior-single", "Prior-only Single", null)
+    ];
+    const currentRows = [
+      productProfitRow({
+        productId: "option-a",
+        productName: "Same Name",
+        reportedSalesKrw: 900,
+        reportedSalesQuantity: 9,
+        manualPurchaseQuantity: 1,
+        adSpendKrw: 100,
+        adConversionSalesKrw: 400,
+        roas: 4,
+        actualOrganicSalesKrw: 500,
+        totalCostKrw: 700,
+        marginKrw: 200
+      }),
+      productProfitRow({
+        productId: "option-b",
+        productName: "Same Name",
+        reportedSalesKrw: 100,
+        reportedSalesQuantity: 1,
+        actualSalesQuantity: 1,
+        adSpendKrw: 300,
+        adConversionSalesKrw: 600,
+        roas: 2,
+        actualOrganicSalesKrw: -500,
+        totalCostKrw: null,
+        marginKrw: null,
+        calculationStatus: "INCOMPLETE",
+        warnings: ["MISSING_COST"]
+      }),
+      productProfitRow({
+        productId: "inactive-option",
+        productName: "Inactive Option",
+        reportedSalesKrw: 50,
+        reportedSalesQuantity: 1,
+        actualOrganicSalesKrw: 50,
+        totalCostKrw: 40,
+        marginKrw: 10
+      }),
+      productProfitRow({
+        productId: "single",
+        productName: "Outdated Single Name",
+        reportedSalesKrw: 600,
+        reportedSalesQuantity: 6,
+        actualOrganicSalesKrw: 300,
+        totalCostKrw: 500,
+        marginKrw: 100
+      })
+    ];
+    const previousRows = [
+      productProfitRow({
+        productId: "option-a",
+        productName: "Same Name",
+        reportedSalesKrw: 700,
+        reportedSalesQuantity: 7,
+        adSpendKrw: 100,
+        adConversionSalesKrw: 300,
+        roas: 3,
+        totalCostKrw: 550,
+        marginKrw: 150
+      }),
+      productProfitRow({
+        productId: "prior-option",
+        productName: "Same Name",
+        reportedSalesKrw: 200,
+        reportedSalesQuantity: 2,
+        adSpendKrw: 50,
+        adConversionSalesKrw: 100,
+        roas: 2,
+        totalCostKrw: 160,
+        marginKrw: 40
+      }),
+      productProfitRow({
+        productId: "prior-single",
+        productName: "Prior-only Single",
+        reportedSalesKrw: 1_000,
+        reportedSalesQuantity: 10,
+        marginKrw: 300
+      })
+    ];
+    const findProducts = vi.fn(async () => products);
+    const findManualPurchases = vi.fn(async () => [
+      { coupangProductId: "option-a", productDisplayName: "Wrong Name", memo: "  review boost  " },
+      { coupangProductId: "option-b", productDisplayName: "Option B", memo: " \t\n " },
+      { coupangProductId: "single", productDisplayName: "Single Product", memo: "<b>literal</b>" }
+    ]);
+    const service = new CoupangService({
+      coupangProduct: { findMany: findProducts },
+      coupangManualPurchase: { findMany: findManualPurchases }
+    } as never);
+    const buildRows = vi.spyOn(service as any, "buildProductProfitRows");
+    buildRows.mockResolvedValueOnce(currentRows).mockResolvedValueOnce(previousRows);
+
+    const result = await service.dailyReport({ date: "2026-07-24" });
+
+    expect(result.date).toBe("2026-07-24");
+    expect(result.previousDate).toBe("2026-07-23");
+    expect(buildRows).toHaveBeenNthCalledWith(1, expect.objectContaining({ from: "2026-07-24", to: "2026-07-24" }));
+    expect(buildRows).toHaveBeenNthCalledWith(2, expect.objectContaining({ from: "2026-07-23", to: "2026-07-23" }));
+    expect(findProducts).toHaveBeenCalledWith({ include: { group: true } });
+    expect(findManualPurchases).toHaveBeenCalledWith({
+      where: { purchaseDate: new Date("2026-07-24T00:00:00.000Z") },
+      select: { coupangProductId: true, productDisplayName: true, memo: true }
+    });
+    expect(result).not.toHaveProperty("groupBy");
+    expect(result.rows.map((row) => row.productName)).toEqual(["Group A", "Single Product"]);
+
+    const groupRow = result.rows[0];
+    expect(groupRow.rowType).toBe("GROUP");
+    if (groupRow.rowType !== "GROUP") throw new Error("Expected grouped daily row.");
+    expect(groupRow).toMatchObject({
+      reportedSalesKrw: 1_050,
+      reportedSalesQuantity: 11,
+      manualPurchaseQuantity: 1,
+      adSpendKrw: 400,
+      roas: 2.5,
+      organicSalesKrw: 50,
+      marginKrw: null,
+      calculationStatus: "INCOMPLETE",
+      childProductCount: 5,
+      previous: {
+        reportedSalesQuantity: 9,
+        adSpendKrw: 150,
+        roas: 8 / 3,
+        marginKrw: 190
+      }
+    });
+    expect(groupRow.roas).not.toBe((4 + 2) / 2);
+    expect(groupRow.children.map((child) => child.productName)).toEqual([
+      "Option A",
+      "Option B",
+      "Inactive Option",
+      "Zero Option",
+      "Prior Option"
+    ]);
+    expect(groupRow.children.find((child) => child.productId === "option-a")).toMatchObject({
+      memo: "review boost",
+      previous: { reportedSalesQuantity: 7, adSpendKrw: 100, roas: 3, marginKrw: 150 },
+      organicSalesKrw: 500
+    });
+    expect(groupRow.children.find((child) => child.productId === "option-b")).toMatchObject({
+      memo: null,
+      previous: { reportedSalesQuantity: 0, adSpendKrw: 0, roas: null, marginKrw: null }
+    });
+    expect(groupRow.children.find((child) => child.productId === "zero-option")).toMatchObject({
+      reportedSalesKrw: 0,
+      reportedSalesQuantity: 0,
+      adSpendKrw: 0,
+      roas: null,
+      organicSalesKrw: 0,
+      marginKrw: 0,
+      calculationStatus: "COMPLETE",
+      warnings: []
+    });
+    expect(groupRow.children.find((child) => child.productId === "prior-option")).toMatchObject({
+      reportedSalesKrw: 0,
+      previous: { reportedSalesQuantity: 2, adSpendKrw: 50, roas: 2, marginKrw: 40 }
+    });
+    expect(groupRow.children.find((child) => child.productId === "inactive-option")).toBeDefined();
+
+    const singleRow = result.rows[1];
+    expect(singleRow).toMatchObject({
+      rowType: "PRODUCT",
+      productId: "single",
+      productName: "Single Product",
+      groupId: null,
+      groupName: null,
+      memo: "<b>literal</b>",
+      organicSalesKrw: 300,
+      previous: { reportedSalesQuantity: 0, adSpendKrw: 0, roas: null, marginKrw: null }
+    });
+    expect(result.rows.some((row) => row.productName === "Prior-only Single")).toBe(false);
+    expect(result.summary.current).toEqual({
+      reportedSalesKrw: 1_650,
+      reportedSalesQuantity: 17,
+      manualPurchaseQuantity: 1,
+      adSpendKrw: 400,
+      roas: 2.5,
+      organicSalesKrw: 350,
+      marginKrw: null,
+      isComplete: false,
+      knownMarginKrw: 310,
+      incompleteProductCount: 1,
+      excludedNetSalesKrw: 0,
+      excludedSalesQuantity: 1
+    });
+    expect(result.summary.current.reportedSalesKrw).not.toBe(
+      groupRow.reportedSalesKrw +
+      groupRow.children.reduce((sum, child) => sum + child.reportedSalesKrw, 0) +
+      singleRow.reportedSalesKrw
+    );
+  });
+
+  it("does not promote prior-only products and preserves inactive products with current activity", () => {
+    const products = [
+      dailyCatalogProduct("inactive-current", "Inactive Current", null, { isActive: false }),
+      dailyCatalogProduct("prior-only", "Prior Only", null)
+    ];
+    const rows = buildCoupangDailyHierarchy({
+      currentProductRows: [productProfitRow({
+        productId: "inactive-current",
+        reportedSalesKrw: 10
+      })],
+      previousProductRows: [productProfitRow({
+        productId: "prior-only",
+        reportedSalesKrw: 20
+      })],
+      products,
+      manualPurchases: []
+    });
+
+    expect(rows.map((row) => row.rowType === "PRODUCT" ? row.productId : row.groupId))
+      .toEqual(["inactive-current"]);
   });
 
   it("groups ads analysis by spend product group and campaign/ad group", async () => {
@@ -3539,6 +3961,22 @@ function costRuleJsonSnapshot(rule: ReturnType<typeof costHistoryRule>) {
     returnCostPerUnitKrw: String(rule.returnCostPerUnitKrw), extraCostKrw: String(rule.extraCostKrw),
     effectiveFrom: rule.effectiveFrom.toISOString().slice(0, 10), effectiveTo: rule.effectiveTo?.toISOString().slice(0, 10) ?? null,
     note: rule.note
+  };
+}
+
+function dailyCatalogProduct(
+  id: string,
+  displayName: string,
+  group: { id: string; displayName: string } | null,
+  overrides: Partial<{ sortOrder: number; isActive: boolean }> = {}
+) {
+  return {
+    id,
+    displayName,
+    sortOrder: overrides.sortOrder ?? 100,
+    isActive: overrides.isActive ?? true,
+    groupId: group?.id ?? null,
+    group
   };
 }
 

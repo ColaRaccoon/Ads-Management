@@ -1,10 +1,10 @@
-export function parseSelectedManualPurchaseQuantity(value: string, productLabel: string) {
+export function parseSelectedManualPurchaseQuantity(value: string, productLabel: string, memo = "") {
   const text = value.trim();
-  const quantity = Number(text);
-  if (text === "" || quantity === 0) return null;
-  if (!Number.isInteger(quantity) || quantity < 1) {
-    throw new Error(`${productLabel}: 수량은 1 이상의 정수여야 합니다.`);
+  const quantity = text === "" ? 0 : Number(text);
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    throw new Error(`${productLabel}: 수량은 0 이상의 정수여야 합니다.`);
   }
+  if (quantity === 0 && memo.trim() === "") return null;
   return quantity;
 }
 

@@ -41,6 +41,10 @@ type ManualDraft = {
 };
 
 const MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY = "coupang_manual_purchase_vendor_fee_per_unit_krw";
+const KOREAN_PRODUCT_NAME_COLLATOR = new Intl.Collator("ko-KR", {
+  numeric: true,
+  sensitivity: "base"
+});
 
 export default function CoupangUploadsPage() {
   const [salesFile, setSalesFile] = useState<File | null>(null);
@@ -100,14 +104,32 @@ export default function CoupangUploadsPage() {
   });
   const saveManualPurchases = useMutation({
     mutationFn: () => {
-      const optionById = new Map((manualOptions.data?.options ?? []).map((option) => [option.coupangProductId, option]));
+      const options = manualOptions.data?.options ?? [];
+      const optionById = new Map(options.map((option) => [option.coupangProductId, option]));
+      const draftsForSave: Record<string, ManualDraft> = Object.fromEntries(
+        options
+          .filter((option) => option.existingQuantity > 0 || option.existingMemo)
+          .map((option) => [
+            option.coupangProductId,
+            {
+              quantity: option.existingQuantity > 0 ? String(option.existingQuantity) : "",
+              memo: option.existingMemo ?? ""
+            }
+          ])
+      );
+      Object.assign(draftsForSave, manualDrafts);
+
       return apiPut<CoupangManualPurchaseSaveResponse>(`/coupang/manual-purchases/${manualDate}`, {
-        entries: Object.entries(manualDrafts)
+        entries: Object.entries(draftsForSave)
           .map(([coupangProductId, draft]) => {
             const option = optionById.get(coupangProductId);
-            const quantity = parseSelectedManualPurchaseQuantity(draft.quantity, option?.productName ?? coupangProductId);
+            const quantity = parseSelectedManualPurchaseQuantity(
+              draft.quantity,
+              option?.productName ?? coupangProductId,
+              draft.memo
+            );
             if (quantity === null) return null;
-            if (!option?.isCalculable) {
+            if (quantity > 0 && !option?.isCalculable) {
               throw new Error(`${option?.productName ?? coupangProductId}: ${option?.warnings[0] ?? "가구매 계산 불가"}`);
             }
             return {
@@ -171,11 +193,13 @@ export default function CoupangUploadsPage() {
 
   const filteredManualOptions = useMemo(() => {
     const query = manualSearch.trim().toLowerCase();
-    return (manualOptions.data?.options ?? []).filter((option) => {
-      const matchesGroup = manualGroupId === "ALL" || option.groupId === manualGroupId;
-      const searchable = `${option.productName} ${option.ruleDisplayName ?? ""} ${option.searchText}`.toLowerCase();
-      return matchesGroup && (!query || searchable.includes(query));
-    });
+    return (manualOptions.data?.options ?? [])
+      .filter((option) => {
+        const matchesGroup = manualGroupId === "ALL" || option.groupId === manualGroupId;
+        const searchable = `${option.productName} ${option.ruleDisplayName ?? ""} ${option.searchText}`.toLowerCase();
+        return matchesGroup && (!query || searchable.includes(query));
+      })
+      .sort((left, right) => KOREAN_PRODUCT_NAME_COLLATOR.compare(left.productName, right.productName));
   }, [manualGroupId, manualOptions.data?.options, manualSearch]);
 
   const manualSummary = useMemo(() => {
@@ -320,32 +344,39 @@ export default function CoupangUploadsPage() {
             const draft = manualDrafts[option.coupangProductId] ?? emptyManualDraft(option);
             const quantity = Number(draft.quantity);
             const selected = Number.isFinite(quantity) && quantity > 0;
-            const expanded = activeManualProductId === option.coupangProductId || selected;
+            const hasMemo = draft.memo.trim().length > 0;
+            const expanded = activeManualProductId === option.coupangProductId;
             const canEditQuantity = option.isCalculable || option.existingQuantity > 0;
+            const controlsId = `manual-purchase-controls-${option.coupangProductId}`;
             return (
               <div
                 key={option.coupangProductId}
-                className={`manual-purchase-card${selected ? " active" : ""}${!canEditQuantity ? " disabled" : ""}`}
+                className={`manual-purchase-card${selected || hasMemo ? " active" : ""}${expanded ? " expanded" : ""}${!canEditQuantity ? " disabled" : ""}`}
               >
                 <button
                   type="button"
                   className="manual-purchase-card-main"
-                  onClick={() => setActiveManualProductId(option.coupangProductId)}
+                  aria-controls={controlsId}
+                  aria-expanded={expanded}
+                  aria-label={`${option.productName} 가구매 입력 ${expanded ? "접기" : "열기"}`}
+                  title={option.productName}
+                  onClick={() =>
+                    setActiveManualProductId((current) =>
+                      current === option.coupangProductId ? null : option.coupangProductId
+                    )
+                  }
                 >
                   <strong>{option.productName}</strong>
-                  <span>{option.groupName ?? "미분류"}</span>
-                  <span>{option.ruleDisplayName ?? "-"}</span>
-                  <span>기본판매가 {money(option.baseSalePriceKrw)} / 개</span>
-                  <span>매출 조정 {money(option.unitSalesAmountKrw)} / 개</span>
-                  <span>업체수수료 {money(option.unitVendorFeeKrw)} / 개</span>
                 </button>
-                {option.warnings.length > 0 ? <p className="manual-purchase-warning">{option.warnings[0]}</p> : null}
                 {expanded ? (
-                  <div className="manual-purchase-controls">
+                  <div className="manual-purchase-controls" id={controlsId}>
+                    {option.warnings.length > 0 ? <p className="manual-purchase-warning">{option.warnings[0]}</p> : null}
                     <input
                       className="input"
                       inputMode="numeric"
-                      placeholder="수량"
+                      placeholder="가구매 수량"
+                      aria-label={`${option.productName} 가구매 수량`}
+                      autoFocus={canEditQuantity}
                       value={draft.quantity}
                       disabled={!canEditQuantity}
                       onChange={(event) =>
@@ -360,7 +391,9 @@ export default function CoupangUploadsPage() {
                     />
                     <input
                       className="input"
-                      placeholder="메모"
+                      placeholder="기타사항"
+                      aria-label={`${option.productName} 기타사항`}
+                      autoFocus={!canEditQuantity}
                       value={draft.memo}
                       onChange={(event) =>
                         setManualDrafts((current) => ({

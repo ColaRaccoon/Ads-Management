@@ -221,7 +221,7 @@ export class CoupangController {
   }
 
   @Get("daily-report")
-  dailyReport(@Query("date") date?: string, @Query("groupBy") groupBy?: string) {
-    return this.coupangService.dailyReport({ date, groupBy });
+  dailyReport(@Query("date") date?: string) {
+    return this.coupangService.dailyReport({ date });
   }
 }

@@ -141,65 +141,66 @@ export type CoupangProductProfitResponse = {
 
 export type CoupangDashboardResponse = CoupangProductProfitResponse;
 
-export type CoupangDailyReportRow = Pick<
-  CoupangProductProfitRow,
-  | "productId"
-  | "productName"
-  | "reportedSalesKrw"
-  | "reportedNetSalesKrw"
-  | "reportedSalesQuantity"
-  | "reportedOrderCount"
-  | "cancelAmountKrw"
-  | "manualPurchaseSalesKrw"
-  | "manualPurchaseQuantity"
-  | "manualPurchaseProductCostKrw"
-  | "manualPurchaseVendorFeeKrw"
-  | "manualPurchaseCoupangSalesFeeKrw"
-  | "manualPurchaseShippingCostKrw"
-  | "manualPurchaseOtherCostKrw"
-  | "manualPurchaseTotalCostKrw"
-  | "actualSalesKrw"
-  | "actualNetSalesKrw"
-  | "actualSalesQuantity"
-  | "productCostKrw"
-  | "salesFeeKrw"
-  | "shippingCostKrw"
-  | "sellerSalesQuantity"
-  | "growthSalesQuantity"
-  | "sellerShippingCostKrw"
-  | "hanaroShippingCostKrw"
-  | "growthInboundCostKrw"
-  | "growthShippingCostKrw"
-  | "totalLogisticsCostKrw"
-  | "returnCostKrw"
-  | "extraCostKrw"
-  | "vatKrw"
-  | "adSpendKrw"
-  | "organicSalesKrw"
-  | "reportedOrganicSalesKrw"
-  | "actualOrganicSalesKrw"
-  | "normalMarginKrw"
-  | "totalCostKrw"
-  | "marginKrw"
-  | "marginRate"
-  | "roas"
-  | "normalCalculationStatus"
-  | "manualCalculationStatus"
-  | "calculationStatus"
-  | "warnings"
-> & {
-  incompleteProductNames: string[];
-  salePriceKrw: number | null;
-  baseSalePriceKrw: number | null;
-  promotionPriceKrw: number | null;
-  priceSource: string;
-  priceWarnings: string[];
+export type CoupangDailyPreviousMetrics = {
+  reportedSalesQuantity: number;
+  adSpendKrw: number;
+  roas: number | null;
+  marginKrw: number | null;
+};
+
+export type CoupangDailyVisibleMetrics = {
+  reportedSalesKrw: number;
+  reportedSalesQuantity: number;
+  manualPurchaseQuantity: number;
+  adSpendKrw: number;
+  roas: number | null;
+  organicSalesKrw: number | null;
+  marginKrw: number | null;
+};
+
+export type CoupangDailyProductRow = CoupangDailyVisibleMetrics & {
+  rowType: "PRODUCT";
+  productId: string;
+  productName: string;
+  groupId: string | null;
+  groupName: string | null;
+  memo: string | null;
+  previous: CoupangDailyPreviousMetrics;
+  calculationStatus: "COMPLETE" | "INCOMPLETE";
+  warnings: string[];
+};
+
+export type CoupangDailyGroupRow = CoupangDailyVisibleMetrics & {
+  rowType: "GROUP";
+  groupId: string;
+  groupName: string;
+  productName: string;
+  childProductCount: number;
+  children: CoupangDailyProductRow[];
+  previous: CoupangDailyPreviousMetrics;
+  calculationStatus: "COMPLETE" | "INCOMPLETE";
+  warnings: string[];
+};
+
+export type CoupangDailyReportRow =
+  | CoupangDailyGroupRow
+  | CoupangDailyProductRow;
+
+export type CoupangDailySummary = CoupangDailyVisibleMetrics & {
+  isComplete: boolean;
+  knownMarginKrw: number;
+  incompleteProductCount: number;
+  excludedNetSalesKrw: number;
+  excludedSalesQuantity: number;
 };
 
 export type CoupangDailyReportResponse = {
   date: string;
-  groupBy: CoupangGroupBy;
-  summary: CoupangProfitSummary;
+  previousDate: string;
+  summary: {
+    current: CoupangDailySummary;
+    previous: CoupangDailySummary;
+  };
   rows: CoupangDailyReportRow[];
 };
 

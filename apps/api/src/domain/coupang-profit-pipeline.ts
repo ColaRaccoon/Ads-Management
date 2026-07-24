@@ -146,7 +146,7 @@ export function aggregateManualPurchasesByProductDate(rows: ManualPurchaseFactIn
     const resolvedSales = group.map(resolveManualPurchaseSalesAmount);
     warnings.push(...resolvedSales.flatMap((resolved) => resolved.warnings));
     if (group.length > 1) warnings.push("DUPLICATE_MANUAL_PURCHASE_ROWS");
-    if (group.some((row) => !Number.isInteger(row.quantity) || row.quantity <= 0)) {
+    if (group.some((row) => !Number.isInteger(row.quantity) || row.quantity < 0)) {
       warnings.push("MANUAL_PURCHASE_INVALID_QUANTITY");
     }
 
@@ -185,6 +185,9 @@ export function resolveManualPurchaseSalesAmount(input: Pick<
   ManualPurchaseFactInput,
   "quantity" | "salesAmountKrw" | "salePriceKrw" | "promotionPriceKrw" | "baseSalePriceKrw"
 >) {
+  if (input.quantity === 0) {
+    return { salesAmountKrw: 0, source: "STORED" as const, warnings: [] as string[] };
+  }
   const storedAmount = positiveOrNull(input.salesAmountKrw);
   if (storedAmount !== null) {
     return { salesAmountKrw: storedAmount, source: "STORED" as const, warnings: [] as string[] };

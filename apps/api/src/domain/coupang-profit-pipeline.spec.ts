@@ -248,12 +248,32 @@ describe("Coupang product-date profit pipeline", () => {
   });
 
   it("uses only the legacy base-price snapshot and leaves promotion-only data incomplete", () => {
+    expect(resolveManualPurchaseSalesAmount({ quantity: 0, salesAmountKrw: null, salePriceKrw: null, promotionPriceKrw: null, baseSalePriceKrw: null }))
+      .toEqual({ salesAmountKrw: 0, source: "STORED", warnings: [] });
     expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: 11_000, promotionPriceKrw: 10_000, baseSalePriceKrw: 12_000 }))
       .toMatchObject({ salesAmountKrw: 24_000, source: "BASE_PRICE" });
     expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: 11_000, promotionPriceKrw: 10_000, baseSalePriceKrw: null }))
       .toMatchObject({ salesAmountKrw: null, source: "MISSING", warnings: ["MANUAL_PURCHASE_SALES_AMOUNT_MISSING"] });
     expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: null, promotionPriceKrw: null, baseSalePriceKrw: null }))
       .toMatchObject({ salesAmountKrw: null, source: "MISSING", warnings: ["MANUAL_PURCHASE_SALES_AMOUNT_MISSING"] });
+  });
+
+  it("treats a zero-quantity memo snapshot as a valid zero financial fact", () => {
+    const manual = manualFacts({
+      quantity: 0,
+      salesAmountKrw: 0,
+      vendorFeeKrw: 0,
+      totalCostKrw: 0
+    });
+
+    expect(manual).toMatchObject({
+      quantity: 0,
+      salesAmountKrw: 0,
+      vendorFeeKrw: 0,
+      totalCostKrw: 0,
+      warnings: [],
+      isCostSnapshotComplete: true
+    });
   });
 
   it("aggregates facts by product and date instead of combining a whole range", () => {

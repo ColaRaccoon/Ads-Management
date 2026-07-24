@@ -433,21 +433,27 @@ p.muted {
 
 .manual-purchase-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+  align-items: start;
+  gap: 5px;
   margin-top: 12px;
 }
 
 .manual-purchase-card {
   min-width: 0;
-  min-height: 94px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   background: #fff;
-  padding: 10px;
+  overflow: hidden;
 }
 
 .manual-purchase-card.active {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand);
+}
+
+.manual-purchase-card.expanded {
+  grid-column: span 2;
   border-color: var(--brand);
   box-shadow: 0 0 0 1px var(--brand);
 }
@@ -457,28 +463,33 @@ p.muted {
 }
 
 .manual-purchase-card-main {
-  display: grid;
+  display: block;
   width: 100%;
-  gap: 3px;
+  min-height: 31px;
   border: 0;
-  padding: 0;
+  padding: 6px 8px;
   background: transparent;
   color: var(--text);
   text-align: left;
   cursor: pointer;
 }
 
-.manual-purchase-card-main strong {
-  overflow-wrap: anywhere;
-  font-size: 13px;
-  line-height: 1.35;
+.manual-purchase-card-main:hover {
+  background: var(--brand-weak);
 }
 
-.manual-purchase-card-main span,
-.manual-purchase-warning {
-  color: var(--muted);
+.manual-purchase-card-main:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+.manual-purchase-card-main strong {
+  display: block;
+  overflow: hidden;
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .incomplete-row td {
@@ -486,15 +497,20 @@ p.muted {
 }
 
 .manual-purchase-warning {
-  margin: 6px 0 0;
+  grid-column: 1 / -1;
+  margin: 0;
   color: var(--red);
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .manual-purchase-controls {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
-  gap: 8px;
-  margin-top: 8px;
+  grid-template-columns: minmax(105px, 0.35fr) minmax(150px, 1fr);
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding: 7px;
+  background: #f8fbfa;
 }
 
 .manual-purchase-controls .field {
@@ -526,6 +542,10 @@ p.muted {
   .manual-purchase-grid,
   .manual-purchase-controls {
     grid-template-columns: 1fr;
+  }
+
+  .manual-purchase-card.expanded {
+    grid-column: span 1;
   }
 }
 
@@ -1820,5 +1840,738 @@ tr.clickable-row:focus-visible td {
 
   .daily-product-stat {
     text-align: left;
+  }
+}
+
+.coupang-daily-report-page {
+  page: coupang-daily-report;
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px 20px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.coupang-daily-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 2px;
+}
+
+.coupang-daily-heading h1 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.coupang-daily-eyebrow {
+  margin: 0 0 3px;
+  color: var(--brand);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.coupang-daily-subtitle {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.coupang-daily-actions,
+.coupang-daily-table-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.coupang-daily-action,
+.coupang-daily-date-input {
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.coupang-daily-print-meta {
+  display: none;
+}
+
+.coupang-daily-summary {
+  display: grid;
+  grid-template-columns: minmax(145px, 1fr) repeat(7, minmax(90px, 1fr));
+  min-width: 920px;
+  overflow: hidden;
+  border: 1px solid #cbd9d6;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(23, 54, 49, 0.06);
+}
+
+.coupang-daily-summary-title,
+.coupang-daily-summary-item {
+  min-width: 0;
+  min-height: 54px;
+  padding: 8px 9px;
+}
+
+.coupang-daily-summary-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--brand);
+  color: #fff;
+}
+
+.coupang-daily-summary-title strong {
+  font-size: 12px;
+}
+
+.coupang-daily-summary-title span {
+  margin-top: 3px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coupang-daily-summary-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 1px solid var(--line);
+}
+
+.coupang-daily-summary-item > span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coupang-daily-summary-item > strong {
+  display: block;
+  min-width: 0;
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coupang-daily-summary-item .coupang-daily-metric-inline {
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.coupang-daily-summary-item .coupang-daily-metric-inline small {
+  font-size: 7px;
+}
+
+.coupang-daily-warning {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  border: 1px solid #e7c878;
+  border-radius: 7px;
+  padding: 6px 9px;
+  background: #fff8e5;
+  color: #7a4b00;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.coupang-daily-warning svg {
+  flex: 0 0 auto;
+}
+
+.coupang-daily-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  box-shadow: 0 8px 30px rgba(23, 54, 49, 0.06);
+}
+
+.coupang-daily-table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.coupang-daily-result-copy {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.coupang-daily-result-copy strong {
+  color: var(--text);
+  font-size: 11px;
+}
+
+.coupang-daily-legend-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.coupang-daily-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  width: 205px;
+  min-height: 30px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  padding: 0 8px;
+  background: #fff;
+  color: var(--muted);
+}
+
+.coupang-daily-search:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(20, 108, 99, 0.12);
+}
+
+.coupang-daily-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 10px;
+}
+
+.coupang-daily-search input::placeholder {
+  color: #879590;
+}
+
+.coupang-daily-table-wrap {
+  max-height: calc(100vh - 276px);
+  min-height: 80px;
+  overflow: auto;
+}
+
+.coupang-daily-table {
+  width: 100%;
+  min-width: 1080px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.coupang-daily-table th,
+.coupang-daily-table td {
+  height: 30px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  text-align: right;
+  white-space: nowrap;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.coupang-daily-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 31px;
+  background: #f8faf9;
+  color: #4c5d59;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.coupang-daily-table thead th:first-child,
+.coupang-daily-table tbody th {
+  position: sticky;
+  left: 0;
+  width: 29%;
+  min-width: 255px;
+  text-align: left;
+}
+
+.coupang-daily-table thead th:first-child {
+  z-index: 4;
+}
+
+.coupang-daily-table tbody th {
+  top: auto;
+  z-index: 2;
+  font-weight: 400;
+}
+
+.coupang-daily-product-body:last-child tr:last-child > * {
+  border-bottom: 0;
+}
+
+.coupang-daily-group-row > th,
+.coupang-daily-group-row > td {
+  background: #f4faf8;
+  font-weight: 800;
+}
+
+.coupang-daily-group-row:hover > th,
+.coupang-daily-group-row:hover > td {
+  background: #edf7f4;
+}
+
+.coupang-daily-single-row:hover > th,
+.coupang-daily-single-row:hover > td,
+.coupang-daily-option-row:hover > th,
+.coupang-daily-option-row:hover > td {
+  background: #f8fbfa;
+}
+
+.coupang-daily-product-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.coupang-daily-single-name {
+  padding-left: 27px;
+}
+
+.coupang-daily-product-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.coupang-daily-product-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coupang-daily-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  margin: 0 5px 0 -3px;
+  border: 0;
+  border-radius: 5px;
+  padding: 0;
+  background: transparent;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+.coupang-daily-group-toggle:hover,
+.coupang-daily-group-toggle:focus-visible {
+  background: var(--brand-weak);
+  outline: none;
+}
+
+.coupang-daily-group-toggle svg {
+  transform: rotate(90deg);
+  transition: transform 160ms ease;
+}
+
+.coupang-daily-group-collapsed .coupang-daily-group-toggle svg {
+  transform: rotate(0);
+}
+
+.coupang-daily-option-row > th,
+.coupang-daily-option-row > td {
+  height: 26px;
+  color: #384944;
+  font-size: 10px;
+}
+
+.coupang-daily-option-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 16px;
+  padding-left: 36px;
+  font-weight: 700;
+}
+
+.coupang-daily-option-cell > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coupang-daily-option-cell::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: -7px;
+  width: 14px;
+  height: 18px;
+  border-left: 1px solid #b7ccc7;
+  border-bottom: 1px solid #b7ccc7;
+  border-radius: 0 0 0 5px;
+}
+
+.coupang-daily-detail-row.coupang-daily-collapsed {
+  display: none;
+}
+
+.coupang-daily-search-hidden {
+  display: none;
+}
+
+.coupang-daily-print-notes {
+  display: none;
+}
+
+.coupang-daily-memo-row > td,
+.coupang-daily-memo-row > td:first-child {
+  position: static;
+  width: auto;
+  min-width: 0;
+  height: 21px;
+  padding: 3px 8px 3px 38px;
+  background: #fafcfc;
+  color: #6f7c79;
+  text-align: left;
+  white-space: normal;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.coupang-daily-memo-label {
+  margin-right: 7px;
+  color: #4e5e5a;
+  font-weight: 800;
+}
+
+.coupang-daily-memo-option {
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.coupang-daily-memo-separator {
+  margin: 0 6px;
+  color: #b1bbb8;
+}
+
+.coupang-daily-metric-inline {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.coupang-daily-metric-inline small {
+  color: #8a9793;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.coupang-daily-roas {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.coupang-daily-positive {
+  color: var(--green);
+  font-weight: 800;
+}
+
+.coupang-daily-negative {
+  color: var(--red);
+  font-weight: 800;
+}
+
+.coupang-daily-zero {
+  color: #87948f;
+}
+
+.coupang-daily-incomplete-row > th,
+.coupang-daily-incomplete-row > td {
+  background-image: linear-gradient(rgba(255, 248, 229, 0.58), rgba(255, 248, 229, 0.58));
+}
+
+.coupang-daily-empty {
+  height: 72px !important;
+  color: var(--muted);
+  text-align: center !important;
+  font-size: 11px !important;
+}
+
+.coupang-daily-empty-error {
+  color: var(--red);
+}
+
+.coupang-daily-footnote {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 3px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.coupang-daily-footnote::before {
+  content: "i";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  border: 1px solid #aebdb9;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.coupang-daily-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 1180px) {
+  .coupang-daily-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .coupang-daily-actions {
+    justify-content: flex-start;
+  }
+
+  .coupang-daily-table-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .coupang-daily-table-tools {
+    justify-content: flex-start;
+  }
+}
+
+@media print {
+  @page coupang-daily-report {
+    size: A4 landscape;
+    margin: 6mm;
+  }
+
+  body:has(.coupang-daily-report-page) {
+    min-width: 0;
+    background: #fff;
+    color: #111;
+    font-size: 7pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.coupang-daily-report-page) .sidebar,
+  body:has(.coupang-daily-report-page) .topbar,
+  .coupang-daily-no-print,
+  .coupang-daily-eyebrow,
+  .coupang-daily-subtitle {
+    display: none !important;
+  }
+
+  .app-shell:has(.coupang-daily-report-page) {
+    display: block;
+    min-height: 0;
+  }
+
+  .coupang-daily-report-page {
+    gap: 2.5mm;
+    padding: 0;
+  }
+
+  .coupang-daily-heading {
+    display: flex;
+    align-items: flex-end;
+    margin: 0;
+  }
+
+  .coupang-daily-heading h1 {
+    font-size: 12pt;
+  }
+
+  .coupang-daily-print-meta {
+    display: block;
+    margin-left: auto;
+    color: #555;
+    font-size: 7.5pt;
+  }
+
+  .coupang-daily-summary {
+    grid-template-columns: 1fr repeat(7, 1fr);
+    min-width: 0;
+    border-color: #aaa;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .coupang-daily-summary-title,
+  .coupang-daily-summary-item {
+    min-height: 10mm;
+    padding: 1.5mm 1.5mm;
+  }
+
+  .coupang-daily-summary-title strong,
+  .coupang-daily-summary-item > strong {
+    font-size: 7.5pt;
+  }
+
+  .coupang-daily-summary-title span,
+  .coupang-daily-summary-item > span {
+    font-size: 6pt;
+  }
+
+  .coupang-daily-summary-item .coupang-daily-metric-inline small {
+    font-size: 5.1pt;
+  }
+
+  .coupang-daily-warning {
+    min-height: 0;
+    border-radius: 0;
+    padding: 1mm 1.5mm;
+    font-size: 6.2pt;
+  }
+
+  .coupang-daily-panel,
+  .coupang-daily-table-wrap {
+    max-height: none;
+    overflow: visible;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .coupang-daily-table {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .coupang-daily-table thead {
+    display: table-header-group;
+  }
+
+  .coupang-daily-table th,
+  .coupang-daily-table td,
+  .coupang-daily-table thead th,
+  .coupang-daily-table tbody th,
+  .coupang-daily-option-row > th,
+  .coupang-daily-option-row > td {
+    position: static;
+    height: auto;
+    padding: 1.1mm 1.2mm;
+    border-color: #bbb;
+    font-size: 6.7pt;
+  }
+
+  .coupang-daily-table thead th {
+    font-size: 6.3pt;
+  }
+
+  .coupang-daily-table thead th:first-child,
+  .coupang-daily-table tbody th {
+    width: 28%;
+    min-width: 0;
+  }
+
+  .coupang-daily-product-body {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .coupang-daily-group-toggle {
+    display: none;
+  }
+
+  .coupang-daily-single-name {
+    padding-left: 0;
+  }
+
+  .coupang-daily-option-cell {
+    min-height: 0;
+    padding-left: 5mm;
+  }
+
+  .coupang-daily-option-cell::before {
+    left: 1.5mm;
+    top: -1.3mm;
+    width: 2.8mm;
+    height: 3.8mm;
+  }
+
+  .coupang-daily-detail-row.coupang-daily-collapsed {
+    display: table-row !important;
+  }
+
+  .coupang-daily-product-body.coupang-daily-search-hidden {
+    display: table-row-group !important;
+  }
+
+  .coupang-daily-detail-row.coupang-daily-search-hidden {
+    display: table-row !important;
+  }
+
+  .coupang-daily-screen-notes {
+    display: none;
+  }
+
+  .coupang-daily-print-notes {
+    display: inline;
+  }
+
+  .coupang-daily-memo-row > td,
+  .coupang-daily-memo-row > td:first-child {
+    padding: 0.7mm 1.2mm 0.7mm 4mm;
+    background: #f8f8f8;
+    font-size: 5.8pt;
+  }
+
+  .coupang-daily-metric-inline {
+    gap: 0.8mm;
+  }
+
+  .coupang-daily-metric-inline small {
+    font-size: 5.3pt;
   }
 }
