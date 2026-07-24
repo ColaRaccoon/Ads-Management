@@ -22,7 +22,7 @@ describe("CoupangMarginCsvParser", () => {
       growthShippingFeeKrw: 1950,
       returnCostPerUnitKrw: 0
     });
-    expect(parsed.rows[0].parsedRow?.salesFeeRate).toBeCloseTo(0.1155);
+    expect(parsed.ignoredColumns).toEqual(["판매수수료율"]);
   });
 
   it("stores sale price as salePriceKrw when present", () => {
@@ -60,7 +60,7 @@ describe("CoupangMarginCsvParser", () => {
       growthShippingFeeKrw: 2200,
       returnCostPerUnitKrw: 0
     });
-    expect(parsed.rows[0].parsedRow?.salesFeeRate).toBeCloseTo(0.1188);
+    expect(parsed.ignoredColumns).toEqual(["판매수수료율"]);
     expect(parsed.rows[0].parsedRow?.sellerShippingFeeKrw).toBeUndefined();
   });
 
@@ -91,6 +91,20 @@ describe("CoupangMarginCsvParser", () => {
 
     expect(parsed.rows[0].issues).toEqual([]);
     expect(parsed.rows[0].parsedRow?.hanaroShippingFeeKrw).toBeNull();
+  });
+
+  it("accepts a margin file with no legacy sales-fee columns", () => {
+    const parser = new CoupangMarginCsvParser();
+    const csv = [
+      "Item,Sale Price,Product Cost,Hanaro Shipping Fee,Growth Inbound Fee,Growth Shipping Fee",
+      "Global Fee Product,10000,3000,400,200,900"
+    ].join("\n");
+
+    const parsed = parser.parseBuffer(Buffer.from(csv, "utf8"));
+
+    expect(parsed.missingColumns).toEqual([]);
+    expect(parsed.ignoredColumns).toEqual([]);
+    expect(parsed.rows[0].parsedRow).toMatchObject({ itemName: "Global Fee Product", productCostKrw: 3000 });
   });
 
   it.each([

@@ -1,10 +1,8 @@
 import {
   calculateCoupangProfitBySegments,
   normalizeCoupangFulfillmentMethod,
-  parseExplicitCoupangFulfillmentMethod,
   type CoupangAdInput,
   type CoupangCostInput,
-  type CoupangFeeMode,
   type CoupangFulfillmentMethod,
   type CoupangSegmentProfitResult
 } from "./coupang-profit-calculator";
@@ -62,7 +60,6 @@ export type ManualPurchaseFactInput = {
   vendorFeeKrw?: number | null;
   coupangSalesFeeKrw?: number | null;
   shippingCostKrw?: number | null;
-  vatKrw?: number | null;
   otherCostKrw?: number | null;
   totalCostKrw?: number | null;
   saleMethod?: string | null;
@@ -77,7 +74,6 @@ export type ManualPurchaseFacts = {
   vendorFeeKrw: number | null;
   coupangSalesFeeKrw: number | null;
   shippingCostKrw: number | null;
-  vatKrw: number | null;
   otherCostKrw: number | null;
   totalCostKrw: number | null;
   saleMethods: string[];
@@ -154,18 +150,13 @@ export function aggregateManualPurchasesByProductDate(rows: ManualPurchaseFactIn
       warnings.push("MANUAL_PURCHASE_INVALID_QUANTITY");
     }
 
-    const productCostKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.productCostKrw)));
     const vendorFeeKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.vendorFeeKrw)));
-    const coupangSalesFeeKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.coupangSalesFeeKrw)));
-    const shippingCostKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.shippingCostKrw)));
-    const vatKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.vatKrw)));
-    const otherCostKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.otherCostKrw)));
-    const totalCostKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.totalCostKrw)));
-    const componentTotal = sumNullable([productCostKrw, vendorFeeKrw, coupangSalesFeeKrw, shippingCostKrw, vatKrw, otherCostKrw]);
-    const isCostSnapshotComplete = totalCostKrw !== null && componentTotal !== null;
+    const storedTotalCostKrw = sumNullable(group.map((row) => nonNegativeOrNull(row.totalCostKrw)));
+    const totalCostKrw = vendorFeeKrw === null ? null : roundMoney(vendorFeeKrw);
+    const isCostSnapshotComplete = storedTotalCostKrw !== null && totalCostKrw !== null;
     if (!isCostSnapshotComplete) {
       warnings.push("MANUAL_PURCHASE_COST_SNAPSHOT_INCOMPLETE");
-    } else if (Math.abs(totalCostKrw - componentTotal) > 0.05) {
+    } else if (roundMoney(storedTotalCostKrw) !== totalCostKrw) {
       warnings.push("MANUAL_PURCHASE_TOTAL_COST_MISMATCH");
     }
 
@@ -175,12 +166,11 @@ export function aggregateManualPurchasesByProductDate(rows: ManualPurchaseFactIn
       date: first.date,
       quantity: group.reduce((sum, row) => sum + finiteOrZero(row.quantity), 0),
       salesAmountKrw: sumNullable(resolvedSales.map((resolved) => resolved.salesAmountKrw)),
-      productCostKrw,
+      productCostKrw: 0,
       vendorFeeKrw,
-      coupangSalesFeeKrw,
-      shippingCostKrw,
-      vatKrw,
-      otherCostKrw,
+      coupangSalesFeeKrw: 0,
+      shippingCostKrw: 0,
+      otherCostKrw: 0,
       totalCostKrw,
       saleMethods: unique(group.map((row) => row.saleMethod)),
       rowCount: group.length,
@@ -200,20 +190,13 @@ export function resolveManualPurchaseSalesAmount(input: Pick<
     return { salesAmountKrw: storedAmount, source: "STORED" as const, warnings: [] as string[] };
   }
 
-  const prices = [
-    ["SALE_PRICE", input.salePriceKrw],
-    ["PROMOTION_PRICE", input.promotionPriceKrw],
-    ["BASE_PRICE", input.baseSalePriceKrw]
-  ] as const;
-  for (const [source, value] of prices) {
-    const price = positiveOrNull(value);
-    if (price !== null && Number.isInteger(input.quantity) && input.quantity > 0) {
-      return {
-        salesAmountKrw: price * input.quantity,
-        source,
-        warnings: ["MANUAL_PURCHASE_SALES_AMOUNT_LEGACY_FALLBACK"]
-      };
-    }
+  const baseSalePriceKrw = positiveOrNull(input.baseSalePriceKrw);
+  if (baseSalePriceKrw !== null && Number.isInteger(input.quantity) && input.quantity > 0) {
+    return {
+      salesAmountKrw: baseSalePriceKrw * input.quantity,
+      source: "BASE_PRICE" as const,
+      warnings: ["MANUAL_PURCHASE_SALES_AMOUNT_LEGACY_FALLBACK"]
+    };
   }
   return {
     salesAmountKrw: null,
@@ -255,54 +238,21 @@ export function adjustReportedSalesForManualPurchase(
     };
   }
 
-  const manualSaleMethod = manual.saleMethods.length === 1 ? manual.saleMethods[0] : null;
-  const exactTargetSegment = manualSaleMethod === null
-    ? null
-    : reportedSegments.find((segment) => segment.sourceSaleMethods.some(
-        (sourceSaleMethod) => canonicalSaleMethod(sourceSaleMethod) === canonicalSaleMethod(manualSaleMethod)
-      )) ?? null;
-  const manualFulfillmentMethod = manualSaleMethod === null
-    ? null
-    : parseExplicitCoupangFulfillmentMethod(manualSaleMethod);
-  const targetSegment = reportedSegments.length === 1
-    ? reportedSegments[0]
-    : exactTargetSegment ?? (manualFulfillmentMethod
-        ? reportedSegments.find((segment) => segment.fulfillmentMethod === manualFulfillmentMethod) ?? null
-        : null);
-  if (reportedSegments.length > 1 && !targetSegment) {
-    warnings.push("MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES");
-    return {
-      salesKrw: reported.salesKrw,
-      netSalesKrw: reported.netSalesKrw,
-      salesQuantity: reported.salesQuantity,
-      orderCount: reported.orderCount,
-      segments: cloneSalesSegments(reportedSegments),
-      warnings: unique(warnings),
-      isValid: false,
-      isManualOnly: false
-    };
-  }
-
-  const deductionBase = targetSegment ?? emptySalesSegment(manualFulfillmentMethod ?? "SELLER");
-  if (manual.quantity > deductionBase.salesQuantity) {
+  if (manual.quantity > reported.salesQuantity) {
     warnings.push("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED");
   }
-  if (manual.salesAmountKrw !== null && manual.salesAmountKrw > deductionBase.salesKrw) {
+  if (manual.salesAmountKrw !== null && manual.salesAmountKrw > reported.salesKrw) {
     warnings.push("MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED");
   }
-  const adjustedSegments = cloneSalesSegments(reportedSegments);
-  const adjustedTarget = adjustedSegments.find((segment) => segment.fulfillmentMethod === deductionBase.fulfillmentMethod);
-  if (adjustedTarget) {
-    adjustedTarget.salesQuantity -= manual.quantity;
-    if (manual.salesAmountKrw !== null) {
-      adjustedTarget.salesKrw -= manual.salesAmountKrw;
-      adjustedTarget.netSalesKrw -= manual.salesAmountKrw;
-    }
-  }
+  const adjustedSegments = deductManualPurchaseFromReportedSegments({
+    segments: reportedSegments,
+    quantity: manual.quantity,
+    salesAmountKrw: manual.salesAmountKrw
+  });
   const segmentTotals = sumCoupangSalesSegments(adjustedSegments);
   const actualSalesKrw = manual.salesAmountKrw === null ? null : segmentTotals.salesKrw;
   const actualNetSalesKrw = manual.salesAmountKrw === null ? null : segmentTotals.netSalesKrw;
-  const actualSalesQuantity = segmentTotals.salesQuantity;
+  const actualSalesQuantity = reported.salesQuantity - manual.quantity;
   if (actualSalesQuantity < 0 && !warnings.includes("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED")) {
     warnings.push("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED");
   }
@@ -324,12 +274,85 @@ export function adjustReportedSalesForManualPurchase(
   };
 }
 
+export function deductManualPurchaseFromReportedSegments(input: {
+  segments: CoupangSalesSegment[];
+  quantity: number;
+  salesAmountKrw: number | null;
+}) {
+  const adjusted = cloneSalesSegments(input.segments);
+  const requestedQuantity = finiteOrZero(input.quantity);
+  if (requestedQuantity <= 0 || adjusted.length === 0) return adjusted;
+
+  const deductionTargets = (["SELLER", "GROWTH"] as const)
+    .map((fulfillmentMethod) => adjusted.find((segment) => segment.fulfillmentMethod === fulfillmentMethod))
+    .filter((segment): segment is CoupangSalesSegment => Boolean(segment));
+  let remainingQuantity = requestedQuantity;
+  const quantityDeductions: Array<{ segment: CoupangSalesSegment; quantity: number }> = [];
+
+  deductionTargets.forEach((segment) => {
+    if (remainingQuantity <= 0) return;
+    const availableQuantity = Math.max(0, finiteOrZero(segment.salesQuantity));
+    const deductedQuantity = Math.min(availableQuantity, remainingQuantity);
+    segment.salesQuantity = availableQuantity - deductedQuantity;
+    remainingQuantity -= deductedQuantity;
+    if (deductedQuantity > 0) quantityDeductions.push({ segment, quantity: deductedQuantity });
+  });
+
+  if (input.salesAmountKrw !== null && deductionTargets.length > 0) {
+    const salesDeductions = quantityDeductions.length > 0
+      ? quantityDeductions
+      : [{ segment: deductionTargets[deductionTargets.length - 1], quantity: 1 }];
+    deductManualSalesAmount(salesDeductions, input.salesAmountKrw, "salesKrw");
+    deductManualSalesAmount(salesDeductions, input.salesAmountKrw, "netSalesKrw");
+  }
+  return adjusted;
+}
+
+function deductManualSalesAmount(
+  deductions: Array<{ segment: CoupangSalesSegment; quantity: number }>,
+  requestedSalesAmountKrw: number,
+  field: "salesKrw" | "netSalesKrw"
+) {
+  const deductedQuantity = deductions.reduce((sum, deduction) => sum + deduction.quantity, 0);
+  const totalDeductionKrw = Math.max(0, requestedSalesAmountKrw);
+  const desiredDeductions = deductions.map(({ quantity }) => (
+    totalDeductionKrw * (quantity / deductedQuantity)
+  ));
+  desiredDeductions[desiredDeductions.length - 1] += (
+    totalDeductionKrw - desiredDeductions.reduce((sum, value) => sum + value, 0)
+  );
+  let shortfall = 0;
+
+  for (let index = 0; index < deductions.length; index += 1) {
+    const availableAmountKrw = Math.max(0, finiteOrZero(deductions[index].segment[field]));
+    if (desiredDeductions[index] > availableAmountKrw) {
+      shortfall += desiredDeductions[index] - availableAmountKrw;
+      desiredDeductions[index] = availableAmountKrw;
+    }
+  }
+
+  for (let index = 0; index < deductions.length && shortfall > 0; index += 1) {
+    const availableAmountKrw = Math.max(0, finiteOrZero(deductions[index].segment[field]));
+    const spareAmountKrw = Math.max(0, availableAmountKrw - desiredDeductions[index]);
+    const redistributedAmountKrw = Math.min(spareAmountKrw, shortfall);
+    desiredDeductions[index] += redistributedAmountKrw;
+    shortfall -= redistributedAmountKrw;
+  }
+
+  if (shortfall > 0) {
+    desiredDeductions[desiredDeductions.length - 1] += shortfall;
+  }
+  deductions.forEach(({ segment }, index) => {
+    segment[field] = finiteOrZero(segment[field]) - desiredDeductions[index];
+  });
+}
+
 export function calculateNormalCoupangProfit(input: {
   reported: ReportedSalesFacts;
   actual: ActualSalesFacts;
   cost: CoupangCostInput | null;
   ads: CoupangAdInput;
-  feeMode?: CoupangFeeMode;
+  salesFeeRate: number | null;
 }): NormalCoupangProfitResult {
   const warnings: string[] = [];
   if (!input.actual.isValid || input.actual.netSalesKrw === null || input.actual.salesQuantity === null) {
@@ -337,15 +360,21 @@ export function calculateNormalCoupangProfit(input: {
   }
 
   const hasNormalActivity = hasCoupangSalesSegmentActivity(input.actual.segments);
+  if (input.salesFeeRate === null && !input.actual.isManualOnly) {
+    return { status: "INCOMPLETE", calculated: null, warnings: ["COUPANG_GLOBAL_SALES_FEE_RATE_MISSING"] };
+  }
   if (!hasNormalActivity) {
     const calculated = calculateCoupangProfitBySegments({
       segments: input.actual.segments,
       cost: emptyCostInput(),
       ads: input.ads,
-      feeMode: input.feeMode,
+      salesFeeRate: input.salesFeeRate ?? 0,
       includeReturnCost: false
     });
     return { status: "NOT_APPLICABLE", calculated, warnings: calculated.warnings };
+  }
+  if (input.salesFeeRate === null) {
+    return { status: "INCOMPLETE", calculated: null, warnings: ["COUPANG_GLOBAL_SALES_FEE_RATE_MISSING"] };
   }
   if (!input.cost) {
     return { status: "INCOMPLETE", calculated: null, warnings: ["NORMAL_COST_RULE_MISSING"] };
@@ -358,7 +387,7 @@ export function calculateNormalCoupangProfit(input: {
     segments: input.actual.segments,
     cost: input.cost,
     ads: input.ads,
-    feeMode: input.feeMode,
+    salesFeeRate: input.salesFeeRate,
     includeReturnCost: true
   });
   return { status: "COMPLETE", calculated, warnings: calculated.warnings };
@@ -427,8 +456,7 @@ function hasBlockingManualSalesWarning(warnings: string[]) {
     "MANUAL_PURCHASE_SALES_AMOUNT_MISSING",
     "MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED",
     "MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED",
-    "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE",
-    "MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES"
+    "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE"
   ].includes(warning));
 }
 
@@ -505,10 +533,6 @@ function cloneSalesSegments(segments: CoupangSalesSegment[]) {
   }));
 }
 
-function canonicalSaleMethod(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, "");
-}
-
 function resolvedReportedSegments(reported: ReportedSalesFacts) {
   if (reported.segments?.length) {
     return reported.segments;
@@ -548,6 +572,10 @@ function positiveOrNull(value: number | null | undefined) {
 
 function nonNegativeOrNull(value: number | null | undefined) {
   return Number.isFinite(value) && Number(value) >= 0 ? Number(value) : null;
+}
+
+function roundMoney(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 function sumNullable(values: Array<number | null>) {

@@ -8,11 +8,306 @@ import {
   buildCoupangMarginCostRuleData,
   buildCoupangPriceTextCostRuleData,
   CoupangService,
+  findSalesFeeRuleForDate,
+  salesFeeRateFromPercentBody,
   type ProductProfitRow,
   resolveCoupangRowImportDecision,
   resolveCoupangRowStoredState,
   summarizeCoupangProductProfitRows
 } from "./coupang.service";
+
+describe("global Coupang sales fee snapshots", () => {
+  it("converts UI percentages to bounded decimal rates, including 0%", () => {
+    expect(salesFeeRateFromPercentBody(11.88).toString()).toBe("0.1188");
+    expect(salesFeeRateFromPercentBody(0).toString()).toBe("0");
+    expect(() => salesFeeRateFromPercentBody(-0.01)).toThrow();
+    expect(() => salesFeeRateFromPercentBody(100.01)).toThrow();
+  });
+
+  it("selects the latest effective global rule regardless of input order", () => {
+    const rules = [
+      salesFeeRuleFixture("older", 0.1, "2026-01-01", "2026-06-30"),
+      salesFeeRuleFixture("newer-created", 0.12, "2026-07-01", null, "2026-07-02"),
+      salesFeeRuleFixture("newer", 0.1188, "2026-07-01", null, "2026-07-01")
+    ];
+
+    expect(findSalesFeeRuleForDate(rules, new Date("2026-06-30T00:00:00.000Z"))?.id).toBe("older");
+    expect(findSalesFeeRuleForDate(rules.reverse(), new Date("2026-07-22T00:00:00.000Z"))?.id).toBe("newer-created");
+  });
+
+  it("uses the Asia/Seoul date for current fee and manual options during the UTC-date boundary", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-22T15:30:00.000Z"));
+    try {
+      const salesFeeRule = salesFeeRuleFixture("kst-rule", 0.1188, "2026-07-23", null);
+      const findFirst = vi.fn(async () => salesFeeRule);
+      const service = new CoupangService({
+        appSetting: { findUnique: vi.fn(async () => null) },
+        coupangProduct: { findMany: vi.fn(async () => []) },
+        coupangManualPurchase: { findMany: vi.fn(async () => []) },
+        coupangSalesFeeRule: { findFirst }
+      } as never);
+
+      await service.currentSalesFeeRule();
+      const options = await service.manualPurchaseOptions({});
+
+      const expectedDate = toDateOnly("2026-07-23");
+      expect(findFirst).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        where: expect.objectContaining({ effectiveFrom: { lte: expectedDate } })
+      }));
+      expect(findFirst).toHaveBeenCalledTimes(1);
+      expect(options.date).toBe("2026-07-23");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("Coupang sales fee history corrections", () => {
+  it("updates the selected legacy cost history with an explicit 0% rate and preserves omitted fields", async () => {
+    const existing = {
+      id: "cost-rule-1",
+      coupangProductId: "product-1",
+      salesFeeRate: new Prisma.Decimal(0.1188),
+      salesFeeKrw: new Prisma.Decimal(1_000),
+      productCostKrw: new Prisma.Decimal(7_000),
+      effectiveFrom: new Date("2026-07-01T00:00:00.000Z"),
+      effectiveTo: null
+    };
+    let stored = { ...existing };
+    const update = vi.fn(async ({ data }: { data: Record<string, unknown> }) => (stored = { ...stored, ...data }));
+    const tx = {
+      $queryRaw: vi.fn(async () => []),
+      coupangProduct: { findUnique: vi.fn(async () => ({ id: "product-1" })) },
+      coupangCostRule: {
+        findUnique: vi.fn(async () => stored),
+        findFirst: vi.fn(async () => null),
+        findMany: vi.fn(async () => [stored]),
+        findUniqueOrThrow: vi.fn(async () => stored),
+        update
+      }
+    };
+    const service = new CoupangService({ ...tx, $transaction: vi.fn(async (callback) => callback(tx)) } as never);
+
+    await service.correctProductCostRule("product-1", existing.id, { salesFeeRate: 0 });
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: existing.id },
+      data: { salesFeeRate: new Prisma.Decimal(0) }
+    });
+    expect(update.mock.calls[0]?.[0].data).not.toHaveProperty("productCostKrw");
+    expect(update.mock.calls[0]?.[0].data).not.toHaveProperty("effectiveFrom");
+  });
+
+  it("rejects a cost-history id owned by another product", async () => {
+    const update = vi.fn();
+    const tx = {
+      $queryRaw: vi.fn(async () => []),
+      coupangProduct: { findUnique: vi.fn(async () => ({ id: "product-1" })) },
+      coupangCostRule: {
+        findUnique: vi.fn(async () => ({ id: "cost-rule-2", coupangProductId: "product-2" })),
+        update
+      }
+    };
+    const service = new CoupangService({ ...tx, $transaction: vi.fn(async (callback) => callback(tx)) } as never);
+
+    await expect(service.correctProductCostRule("product-1", "cost-rule-2", { salesFeeRate: 0.1 }))
+      .rejects.toMatchObject({ response: { code: "COUPANG_COST_RULE_PRODUCT_MISMATCH" } });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [11.88, "0.1188"],
+    [0, "0"]
+  ] as const)("stores a global UI percentage of %s and closes the preceding date range", async (salesFeePercent, expectedRate) => {
+    const oldRule = salesFeeRuleFixture("old-rule", 0.1, "2026-01-01", null);
+    const createdRule = salesFeeRuleFixture("new-rule", Number(expectedRate), "2026-07-01", null);
+    const create = vi.fn(async ({ data }: { data: { salesFeeRate: Prisma.Decimal } }) => ({
+      ...createdRule,
+      salesFeeRate: data.salesFeeRate
+    }));
+    const update = vi.fn(async () => ({}));
+    const tx: any = {
+      $queryRaw: vi.fn(async () => []),
+      coupangSalesFeeRule: {
+        findFirst: vi.fn(async () => null),
+        create,
+        findMany: vi.fn(async ({ orderBy }: { orderBy: Array<{ effectiveFrom: string }> }) => (
+          orderBy[0]?.effectiveFrom === "asc" ? [oldRule, createdRule] : [createdRule, oldRule]
+        )),
+        update,
+        findUniqueOrThrow: vi.fn(async () => createdRule)
+      },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) }
+    };
+    const service = new CoupangService({
+      $transaction: vi.fn(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx))
+    } as never);
+
+    await service.createSalesFeeRule({ salesFeePercent, effectiveFrom: "2026-07-01" });
+
+    expect(create.mock.calls[0]?.[0].data.salesFeeRate.toString()).toBe(expectedRate);
+    expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(String((tx.$queryRaw.mock.calls[0]?.[0] as Prisma.Sql).sql))
+      .toContain("pg_advisory_xact_lock(7426894320158627)::text AS lock_result");
+    expect(update).toHaveBeenCalledWith({
+      where: { id: oldRule.id },
+      data: { effectiveTo: new Date("2026-06-30T00:00:00.000Z") }
+    });
+  });
+
+  it("maps the effective-date unique constraint race to the public duplicate-date error", async () => {
+    const service = new CoupangService({
+      $transaction: vi.fn(async () => Promise.reject({ code: "P2002" }))
+    } as never);
+
+    await expect(service.createSalesFeeRule({ salesFeePercent: 11.88, effectiveFrom: "2026-07-01" }))
+      .rejects.toMatchObject({ response: { code: "COUPANG_SALES_FEE_RULE_DATE_EXISTS" } });
+  });
+
+  it("takes the transaction advisory lock for concurrent writes on different effective dates", async () => {
+    const fixture = salesFeeRuleWriteFixture({
+      rules: [salesFeeRuleFixture("old", 0.1, "2026-01-01", null)],
+      purchases: []
+    });
+    const service = new CoupangService(fixture.prisma as never);
+
+    await Promise.all([
+      service.createSalesFeeRule({ salesFeePercent: 11, effectiveFrom: "2026-07-01" }),
+      service.createSalesFeeRule({ salesFeePercent: 12, effectiveFrom: "2026-08-01" })
+    ]);
+
+    expect((fixture.prisma as any).$transaction).toHaveBeenCalledTimes(2);
+    expect(fixture.advisoryLock).toHaveBeenCalledTimes(2);
+    const advisoryQuery = (fixture.advisoryLock as any).mock.calls[0][0] as Prisma.Sql;
+    expect(String(advisoryQuery.sql))
+      .toContain("pg_advisory_xact_lock(7426894320158627)::text AS lock_result");
+    expect(fixture.rule("old").effectiveTo).toEqual(new Date("2026-06-30T00:00:00.000Z"));
+    expect(fixture.ruleByDate("2026-07-01").effectiveTo).toEqual(new Date("2026-07-31T00:00:00.000Z"));
+    expect(fixture.ruleByDate("2026-08-01").effectiveTo).toBeNull();
+  });
+
+  it("does not rewrite manual-purchase snapshots when a global fee rule changes", async () => {
+    const purchase = manualSalesFeeSnapshot("manual", "2026-07-21", 777);
+    const fixture = salesFeeRuleWriteFixture({
+      rules: [salesFeeRuleFixture("old", 0.1, "2026-01-01", null)],
+      purchases: [purchase]
+    });
+    const service = new CoupangService(fixture.prisma as never);
+
+    await service.createSalesFeeRule({ salesFeePercent: 20, effectiveFrom: "2026-07-21" });
+
+    expect(fixture.purchase("manual")).toEqual(purchase);
+  });
+
+  it("keeps a concurrent manual write independent from the global fee lock and snapshot", async () => {
+    const fixture = concurrentManualSalesFeeWriteFixture();
+    const service = new CoupangService(fixture.prisma as never);
+
+    const [manualResult] = await Promise.all([
+      service.replaceManualPurchasesForDate("2026-07-21", {
+        vendorFeePerUnitKrw: 100,
+        entries: [{ coupangProductId: "product-1", quantity: 1 }]
+      }),
+      service.createSalesFeeRule({ salesFeePercent: 20, effectiveFrom: "2026-07-21" })
+    ]);
+
+    expect(manualResult.rows[0]).toMatchObject({
+      priceSource: "BASE",
+      salesAmountKrw: 10_000,
+      salesFeeRateApplied: 0,
+      coupangSalesFeeKrw: 0,
+      productCostKrw: 0,
+      shippingCostKrw: 0,
+      otherCostKrw: 0
+    });
+    expect(fixture.lockEvents).toEqual([
+      "transaction-2:acquired",
+      "transaction-2:released"
+    ]);
+    expect(fixture.purchase()).toMatchObject({
+      salesFeeRateApplied: new Prisma.Decimal(0),
+      coupangSalesFeeKrw: new Prisma.Decimal(0)
+    });
+  });
+
+  it("inserts an intermediate rule and leaves every manual snapshot immutable", async () => {
+    const fixture = salesFeeRuleWriteFixture({
+      rules: [
+        salesFeeRuleFixture("old", 0.1, "2026-01-01", "2026-08-31"),
+        salesFeeRuleFixture("future", 0.2, "2026-09-01", null)
+      ],
+      purchases: [
+        manualSalesFeeSnapshot("june", "2026-06-15", 777),
+        manualSalesFeeSnapshot("july", "2026-07-15", 777),
+        manualSalesFeeSnapshot("september", "2026-09-15", 777)
+      ]
+    });
+    const service = new CoupangService(fixture.prisma as never);
+
+    await service.createSalesFeeRule({
+      salesFeePercent: 11.88,
+      effectiveFrom: "2026-07-01"
+    });
+
+    expect(fixture.rule("old").effectiveTo).toEqual(new Date("2026-06-30T00:00:00.000Z"));
+    expect(fixture.ruleByDate("2026-07-01").effectiveTo).toEqual(new Date("2026-08-31T00:00:00.000Z"));
+    expect(fixture.rule("future").effectiveTo).toBeNull();
+    expect(fixture.purchase("june")).toMatchObject({ coupangSalesFeeKrw: new Prisma.Decimal(777) });
+    expect(fixture.purchase("july")).toMatchObject({
+      salesFeeRateApplied: new Prisma.Decimal(0.0777),
+      coupangSalesFeeKrw: new Prisma.Decimal(777)
+    });
+    expect(fixture.purchase("september")).toMatchObject({
+      salesFeeRateApplied: new Prisma.Decimal(0.0777),
+      coupangSalesFeeKrw: new Prisma.Decimal(777)
+    });
+  });
+
+  it("moves a rule date, repairs neighboring ranges, and leaves manual snapshots immutable", async () => {
+    const fixture = salesFeeRuleWriteFixture({
+      rules: [
+        salesFeeRuleFixture("old", 0.1, "2026-01-01", "2026-06-30"),
+        salesFeeRuleFixture("moving", 0.1188, "2026-07-01", "2026-08-31"),
+        salesFeeRuleFixture("future", 0.2, "2026-09-01", null)
+      ],
+      purchases: [
+        manualSalesFeeSnapshot("june", "2026-06-15", 600),
+        manualSalesFeeSnapshot("july", "2026-07-15", 777),
+        manualSalesFeeSnapshot("august", "2026-08-15", 777)
+      ]
+    });
+    const service = new CoupangService(fixture.prisma as never);
+
+    await service.correctSalesFeeRule("moving", { effectiveFrom: "2026-08-01" });
+
+    expect(fixture.rule("old").effectiveTo).toEqual(new Date("2026-07-31T00:00:00.000Z"));
+    expect(fixture.rule("moving").effectiveFrom).toEqual(new Date("2026-08-01T00:00:00.000Z"));
+    expect(fixture.rule("moving").effectiveTo).toEqual(new Date("2026-08-31T00:00:00.000Z"));
+    expect(Number(fixture.purchase("june").coupangSalesFeeKrw)).toBe(600);
+    expect(Number(fixture.purchase("july").salesFeeRateApplied)).toBe(0.0777);
+    expect(Number(fixture.purchase("july").coupangSalesFeeKrw)).toBe(777);
+    expect(Number(fixture.purchase("august").salesFeeRateApplied)).toBe(0.0777);
+    expect(Number(fixture.purchase("august").totalCostKrw)).toBe(4_777);
+  });
+
+  it("moves a rule past its former end without violating the range check", async () => {
+    const fixture = salesFeeRuleWriteFixture({
+      rules: [
+        salesFeeRuleFixture("old", 0.1, "2026-01-01", "2026-06-30"),
+        salesFeeRuleFixture("moving", 0.1188, "2026-07-01", "2026-08-31")
+      ],
+      purchases: []
+    });
+    const service = new CoupangService(fixture.prisma as never);
+
+    await service.correctSalesFeeRule("moving", { effectiveFrom: "2026-09-15" });
+
+    expect(fixture.rule("old").effectiveTo).toEqual(new Date("2026-09-14T00:00:00.000Z"));
+    expect(fixture.rule("moving").effectiveFrom).toEqual(new Date("2026-09-15T00:00:00.000Z"));
+    expect(fixture.rule("moving").effectiveTo).toBeNull();
+  });
+});
 
 describe("Coupang upload current/version policy", () => {
   it("keeps duplicate logical keys non-current on SKIP", () => {
@@ -162,8 +457,6 @@ describe("Coupang margin cost rule import data", () => {
         salePriceKrw: 24050,
         supplyPriceKrw: 0,
         productCostKrw: 7000,
-        salesFeeRate: 0.108,
-        salesFeeKrw: 1800,
         sellerShippingFeeKrw: 3000,
         hanaroShippingFeeKrw: 650,
         growthInboundFeeKrw: 500,
@@ -176,7 +469,8 @@ describe("Coupang margin cost rule import data", () => {
 
     expect(Number(data.salePriceKrw)).toBe(24050);
     expect(Number(data.productCostKrw)).toBe(7000);
-    expect(Number(data.salesFeeRate)).toBe(0.108);
+    expect(Number(data.salesFeeRate)).toBe(0);
+    expect(Number(data.salesFeeKrw)).toBe(0);
     expect(Number(data.sellerShippingFeeKrw)).toBe(3000);
     expect(Number(data.hanaroShippingFeeKrw)).toBe(650);
   });
@@ -190,8 +484,6 @@ describe("Coupang margin cost rule import data", () => {
         salePriceKrw: 24050,
         supplyPriceKrw: 0,
         productCostKrw: 7000,
-        salesFeeRate: 0,
-        salesFeeKrw: 1800,
         hanaroShippingFeeKrw: 650,
         growthInboundFeeKrw: 500,
         growthShippingFeeKrw: 1200,
@@ -230,8 +522,6 @@ describe("Coupang margin cost rule import data", () => {
         salePriceKrw: 25000,
         supplyPriceKrw: 0,
         productCostKrw: 7200,
-        salesFeeRate: 0.108,
-        salesFeeKrw: 1900,
         hanaroShippingFeeKrw: 700,
         growthInboundFeeKrw: 550,
         growthShippingFeeKrw: 1250,
@@ -375,8 +665,6 @@ describe("CoupangService product settings and mapping rules", () => {
       salePriceKrw: 24900,
       supplyPriceKrw: 12000,
       productCostKrw: 7000,
-      salesFeeRate: 0.12,
-      salesFeeKrw: 2200,
       effectiveFrom: "2026-07-06"
     });
 
@@ -395,16 +683,24 @@ describe("CoupangService product settings and mapping rules", () => {
         salePriceKrw: new Prisma.Decimal(24900),
         supplyPriceKrw: new Prisma.Decimal(12000),
         productCostKrw: new Prisma.Decimal(7000),
-        salesFeeRate: new Prisma.Decimal(0.12),
-        salesFeeKrw: new Prisma.Decimal(2200),
+        salesFeeRate: new Prisma.Decimal(0),
+        salesFeeKrw: new Prisma.Decimal(0),
         effectiveFrom: toDateOnly("2026-07-06")
       })
     });
   });
 
+  it("rejects product-level sales fee writes after globalisation", async () => {
+    const service = new CoupangService(fakeCoupangProductSettingPrisma() as never);
+
+    await expect(service.updateProductConfiguration("product-1", { salesFeeRate: 0 })).rejects.toMatchObject({
+      response: expect.objectContaining({ code: "COUPANG_SALES_FEE_IS_GLOBAL" })
+    });
+  });
+
   it("merges a partial shipping PATCH with the latest cost snapshot", async () => {
     const prisma = fakeCoupangProductSettingPrisma();
-    vi.mocked(prisma.coupangCostRule.findFirst).mockResolvedValueOnce({
+    vi.mocked(prisma.coupangCostRule.findFirst).mockImplementationOnce(async () => null).mockResolvedValueOnce({
       salePriceKrw: new Prisma.Decimal(24_000),
       supplyPriceKrw: new Prisma.Decimal(12_000),
       productCostKrw: new Prisma.Decimal(7_000),
@@ -478,24 +774,84 @@ describe("CoupangService product settings and mapping rules", () => {
       ["growthInboundFeeKrw", "INVALID_GROWTH_INBOUND_FEE"],
       ["growthShippingFeeKrw", "INVALID_GROWTH_SHIPPING_FEE"]
     ] as const;
-    const invalidValues = [
-      ["not-a-number", "INVALID_NUMBER"],
-      [Number.NaN, "INVALID_NUMBER"],
-      [Number.POSITIVE_INFINITY, "INVALID_NUMBER"],
-      [-1, null],
-      [1.5, null]
-    ] as const;
+    const invalidValues = ["not-a-number", Number.NaN, Number.POSITIVE_INFINITY, -1, 1.5] as const;
 
     for (const [field, fieldCode] of fields) {
-      for (const [value, genericCode] of invalidValues) {
+      for (const value of invalidValues) {
         const prisma = fakeCoupangProductSettingPrisma();
         const service = new CoupangService(prisma as never);
         await expect(request(service, field, value)).rejects.toMatchObject({
-          response: { code: genericCode ?? fieldCode }
+          response: { code: fieldCode, field, message: expect.stringContaining(field) }
         });
         expect(prisma.coupangCostRule.create).not.toHaveBeenCalled();
       }
     }
+  });
+
+  it.each([
+    ["salePriceKrw", "INVALID_SALE_PRICE"],
+    ["supplyPriceKrw", "INVALID_SUPPLY_PRICE"],
+    ["productCostKrw", "INVALID_PRODUCT_COST"],
+    ["sellerShippingFeeKrw", "INVALID_SELLER_SHIPPING_FEE"],
+    ["hanaroShippingFeeKrw", "INVALID_HANARO_SHIPPING_FEE"],
+    ["growthInboundFeeKrw", "INVALID_GROWTH_INBOUND_FEE"],
+    ["growthShippingFeeKrw", "INVALID_GROWTH_SHIPPING_FEE"],
+    ["returnCostPerUnitKrw", "INVALID_RETURN_COST_PER_UNIT"],
+    ["extraCostKrw", "INVALID_EXTRA_COST"]
+  ] as const)("reports the field and field-specific code for invalid %s", async (field, code) => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await expect(service.createProductSetting({ displayName: "Invalid Money", [field]: true })).rejects.toMatchObject({
+      response: { code, field, message: expect.stringContaining(field) }
+    });
+    expect(prisma.coupangProduct.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects caller-managed effectiveTo when creating a product", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await expect(service.createProductSetting({
+      displayName: "Invalid Range",
+      salePriceKrw: 10_000,
+      effectiveFrom: "2026-07-01",
+      effectiveTo: "2026-07-31"
+    })).rejects.toMatchObject({
+      response: { code: "COUPANG_COST_RULE_EFFECTIVE_TO_MANAGED" }
+    });
+    expect(prisma.coupangProduct.create).not.toHaveBeenCalled();
+  });
+
+  it("uses the explicit Asia/Seoul calendar date for a new product cost snapshot", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-22T15:00:00.000Z"));
+    try {
+      const prisma = fakeCoupangProductSettingPrisma();
+      const service = new CoupangService(prisma as never);
+
+      await service.createProductSetting({ displayName: "KST Product", salePriceKrw: 10_000 });
+
+      expect(prisma.coupangProduct.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+          costRules: { create: expect.objectContaining({ effectiveFrom: toDateOnly("2026-07-23") }) }
+        })
+      }));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("rejects an explicitly supplied blank effectiveFrom on product creation", async () => {
+    const prisma = fakeCoupangProductSettingPrisma();
+    const service = new CoupangService(prisma as never);
+
+    await expect(service.createProductSetting({
+      displayName: "Blank Date",
+      salePriceKrw: 10_000,
+      effectiveFrom: ""
+    })).rejects.toMatchObject({ response: { code: "INVALID_DATE" } });
+    expect(prisma.coupangProduct.create).not.toHaveBeenCalled();
   });
 
   it("does not create a cost rule when configuration has no cost fields", async () => {
@@ -622,7 +978,168 @@ describe("CoupangService product settings and mapping rules", () => {
   });
 });
 
+describe("Coupang product cost history invariants", () => {
+  it("serializes reverse-order bulk imports before taking per-product locks", async () => {
+    const service = new CoupangService({} as never) as any;
+    const trace: string[] = [];
+    let queue = Promise.resolve();
+
+    async function simulatedBulkImport(name: string, productIds: string[]) {
+      const predecessor = queue;
+      let release: () => void = () => {};
+      queue = new Promise<void>((resolve) => { release = resolve; });
+      const tx = {
+        $queryRaw: vi.fn(async (rawQuery: any) => {
+          const query = rawQuery as { values?: unknown[] };
+          if ((query.values?.length ?? 0) === 0) {
+            await predecessor;
+            trace.push(`${name}:bulk`);
+          } else {
+            trace.push(`${name}:${String(query.values?.[0]).replace("coupang-cost-rule:", "")}`);
+          }
+          return [];
+        })
+      };
+      try {
+        await service.lockCoupangCostRuleBulkWrites(tx);
+        for (const productId of productIds) {
+          await service.lockCoupangCostRuleWrites(tx, productId);
+        }
+      } finally {
+        release();
+      }
+    }
+
+    await Promise.all([
+      simulatedBulkImport("first", ["product-b", "product-a"]),
+      simulatedBulkImport("second", ["product-a", "product-b"])
+    ]);
+
+    expect(trace).toEqual([
+      "first:bulk", "first:product-b", "first:product-a",
+      "second:bulk", "second:product-a", "second:product-b"
+    ]);
+  });
+
+  it("returns the zero-valued rule effective on the requested date even when a future rule exists", async () => {
+    const fixture = costHistoryFixture([
+      costHistoryRule("current-zero", "2026-07-01", "2026-07-21", 0),
+      costHistoryRule("future", "2026-07-22", null, 9_000)
+    ]);
+    const [product] = await new CoupangService(fixture.prisma as never).listProductSettings(false, "2026-07-20");
+    expect(product.currentCostRule?.id).toBe("current-zero");
+    expect(Number(product.currentCostRule?.productCostKrw)).toBe(0);
+    expect(product.costRules.map((rule: { id: string }) => rule.id)).toEqual(["future", "current-zero"]);
+  });
+
+  it("inserts an intermediate snapshot from the preceding rule and normalizes adjacent ranges", async () => {
+    const fixture = costHistoryFixture([
+      costHistoryRule("old", "2026-07-01", "2026-07-21", 7_000, { supplyPriceKrw: 12_000 }),
+      costHistoryRule("future", "2026-07-22", null, 9_000, { supplyPriceKrw: 15_000 })
+    ]);
+    const result = await new CoupangService(fixture.prisma as never).updateProductConfiguration("product-1", {
+      productCostKrw: 8_000,
+      effectiveFrom: "2026-07-10"
+    });
+    expect(result.costRuleChange).toMatchObject({ operation: "CREATED", effectiveFrom: "2026-07-10", effectiveTo: "2026-07-21", nextRuleEffectiveFrom: "2026-07-22" });
+    expect(Number(fixture.rule("created-1").supplyPriceKrw)).toBe(12_000);
+    expect(formatRuleRange(fixture.rule("old"))).toEqual(["2026-07-01", "2026-07-09"]);
+    expect(formatRuleRange(fixture.rule("future"))).toEqual(["2026-07-22", null]);
+    expect(String(((fixture.lock as any).mock.calls[0]?.[0] as Prisma.Sql).sql))
+      .toContain(")::text AS lock_result");
+  });
+
+  it("updates a same-date snapshot without creating a duplicate and preserves legacy fee audit fields", async () => {
+    const fixture = costHistoryFixture([costHistoryRule("same", "2026-07-23", null, 7_000, { salesFeeRate: 0.1188, salesFeeKrw: 1_000 })]);
+    const result = await new CoupangService(fixture.prisma as never).updateProductConfiguration("product-1", {
+      supplyPriceKrw: 15_000,
+      productCostKrw: 12_800,
+      effectiveFrom: "2026-07-23"
+    });
+    expect(result.costRuleChange?.operation).toBe("UPDATED_SAME_DATE");
+    expect(fixture.create).not.toHaveBeenCalled();
+    expect(Number(fixture.rule("same").supplyPriceKrw)).toBe(15_000);
+    expect(Number(fixture.rule("same").productCostKrw)).toBe(12_800);
+    expect(Number(fixture.rule("same").salesFeeRate)).toBe(0.1188);
+    expect(Number(fixture.rule("same").salesFeeKrw)).toBe(1_000);
+  });
+
+  it("rejects moving a correction onto another history date", async () => {
+    const fixture = costHistoryFixture([
+      costHistoryRule("old", "2026-07-01", "2026-07-21", 7_000),
+      costHistoryRule("new", "2026-07-22", null, 9_000)
+    ]);
+    await expect(new CoupangService(fixture.prisma as never).correctProductCostRule("product-1", "old", { effectiveFrom: "2026-07-22" }))
+      .rejects.toMatchObject({ response: { code: "COUPANG_COST_RULE_DATE_EXISTS" } });
+  });
+
+  it("moves a cost rule past its former end without violating the range check", async () => {
+    const fixture = costHistoryFixture([
+      costHistoryRule("moving", "2026-07-01", "2026-07-21", 7_000),
+      costHistoryRule("current", "2026-07-22", null, 9_000)
+    ]);
+
+    await new CoupangService(fixture.prisma as never).correctProductCostRule(
+      "product-1",
+      "moving",
+      { effectiveFrom: "2026-08-01" }
+    );
+
+    expect(formatRuleRange(fixture.rule("current"))).toEqual(["2026-07-22", "2026-07-31"]);
+    expect(formatRuleRange(fixture.rule("moving"))).toEqual(["2026-08-01", null]);
+  });
+
+  it("maps Prisma camelCase unique metadata to the public date collision error", async () => {
+    const fixture = costHistoryFixture([]);
+    fixture.create.mockRejectedValueOnce({ code: "P2002", meta: { target: ["coupangProductId", "effectiveFrom"] } });
+    await expect(new CoupangService(fixture.prisma as never).updateProductConfiguration("product-1", {
+      productCostKrw: 7_000,
+      effectiveFrom: "2026-07-23"
+    })).rejects.toMatchObject({ response: { code: "COUPANG_COST_RULE_DATE_EXISTS" } });
+  });
+
+  it("rejects deleting an older upload after a newer cost snapshot and keeps its batch", async () => {
+    const rule = costHistoryRule("shared", "2026-07-23", null, 9_000);
+    const afterOlderUpload = costRuleJsonSnapshot(costHistoryRule("shared", "2026-07-23", null, 7_000));
+    const fixture = costHistoryFixture([rule], {
+      upload: {
+        id: "older-upload",
+        sourceType: CoupangUploadSourceType.PRICE_TEXT,
+        validRowCount: 1,
+        columnSchema: { appliedRows: [{ productId: "product-1", costRuleId: "shared", costRuleOperation: "UPDATED_SAME_DATE", costRuleBefore: afterOlderUpload, costRuleAfter: afterOlderUpload }] }
+      }
+    });
+    await expect(new CoupangService(fixture.prisma as never).deleteUpload("older-upload"))
+      .rejects.toMatchObject({ response: { code: "COUPANG_UPLOAD_ROLLBACK_ORDER_CONFLICT" } });
+    expect(fixture.deleteUpload).not.toHaveBeenCalled();
+    expect(fixture.lock.mock.invocationCallOrder[0]).toBeLessThan(fixture.findUniqueCost.mock.invocationCallOrder[0]);
+    expect(String(((fixture.lock as any).mock.calls[0]?.[0] as Prisma.Sql).sql))
+      .toContain("pg_advisory_xact_lock(7426894320158628)::text AS lock_result");
+  });
+});
+
 describe("Coupang manual-purchase quantity-based cost flow", () => {
+  const manualPurchaseTransactionPrisma = (
+    delegates: Record<string, unknown>,
+    manualPurchaseDelegate: Record<string, unknown> = {}
+  ) => {
+    const transactionClient = {
+      ...delegates,
+      coupangManualPurchase: manualPurchaseDelegate,
+      $queryRaw: vi.fn(async () => [])
+    };
+    const transaction = vi.fn(async (callback: (client: typeof transactionClient) => unknown) => callback(transactionClient));
+    return {
+      prisma: {
+        ...delegates,
+        coupangManualPurchase: manualPurchaseDelegate,
+        $transaction: transaction
+      },
+      transaction,
+      transactionClient
+    };
+  };
+
   it("validates every replacement entry before deleting the date", async () => {
     const deleteMany = vi.fn();
     const service = new CoupangService({
@@ -643,24 +1160,27 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       .rejects.toMatchObject({ response: { code: "DUPLICATE_MANUAL_PURCHASE_PRODUCT" } });
   });
 
-  it("stores automatically calculated product, fee, shipping, VAT, and other costs from quantity", async () => {
+  it("stores base-price sales and only the vendor fee as manual-purchase cost", async () => {
     let created: any[] = [];
+    const promotionPriceFindMany = vi.fn(async () => [{
+      coupangProductId: "product-1",
+      promotionPriceKrw: new Prisma.Decimal(1)
+    }]);
     const product = { id: "product-1", displayName: "테스트 상품", standardName: "테스트", group: null, productRules: [] };
-    const tx = {
-      coupangManualPurchase: {
-        deleteMany: vi.fn(),
-        createMany: vi.fn(async ({ data }: { data: any[] }) => { created = data; }),
-        findMany: vi.fn(async () => created.map((row, index) => ({
-          ...row,
-          id: `manual-${index}`,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          product,
-          productRule: null
-        })))
-      }
+    const manualPurchaseDelegate = {
+      deleteMany: vi.fn(),
+      createMany: vi.fn(async ({ data }: { data: any[] }) => { created = data; }),
+      findMany: vi.fn(async () => created.map((row, index) => ({
+        ...row,
+        id: `manual-${index}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        product,
+        productRule: null
+      })))
     };
-    const prisma = {
+    const delegates = {
+      ...globalSalesFeeRulePrisma(),
       appSetting: { findUnique: vi.fn(async () => null) },
       coupangProduct: { findMany: vi.fn(async () => [product]) },
       coupangProductRule: { findMany: vi.fn(async () => []) },
@@ -681,9 +1201,9 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
         effectiveTo: null,
         createdAt: new Date("2026-01-01T00:00:00.000Z")
       }]) },
-      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
-      $transaction: vi.fn(async (callback: (client: typeof tx) => unknown) => callback(tx))
+      coupangPromotionPrice: { findMany: promotionPriceFindMany }
     };
+    const { prisma } = manualPurchaseTransactionPrisma(delegates, manualPurchaseDelegate);
     const service = new CoupangService(prisma as never);
 
     const result = await service.replaceManualPurchasesForDate("2026-07-21", {
@@ -695,24 +1215,75 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
 
     expect(created).toHaveLength(1);
     expect(Number(created[0].salesAmountKrw)).toBe(48_000);
-    expect(Number(created[0].productCostKrw)).toBe(20_000);
+    expect(Number(created[0].productCostKrw)).toBe(0);
     expect(Number(created[0].vendorFeeTotalKrw)).toBe(6_364);
-    expect(Number(created[0].coupangSalesFeeKrw)).toBe(5_280);
-    expect(Number(created[0].shippingCostKrw)).toBe(6_000);
-    expect(Number(created[0].vatKrw)).toBeCloseTo(48_000 / 11);
-    expect(Number(created[0].otherCostKrw)).toBe(600);
-    expect(created[0]).toMatchObject({ priceSource: "BASE" });
+    expect(Number(created[0].coupangSalesFeeKrw)).toBe(0);
+    expect(Number(created[0].salesFeeRateApplied)).toBe(0);
+    expect(Number(created[0].shippingCostKrw)).toBe(0);
+    expect(created[0]).not.toHaveProperty("vatKrw");
+    expect(Number(created[0].otherCostKrw)).toBe(0);
+    expect(created[0]).toMatchObject({ priceSource: "BASE", promotionPriceKrw: null });
     expect(Number(created[0].salePriceKrw)).toBe(24_000);
-    expect(Number(created[0].totalCostKrw)).toBeCloseTo(38_244 + 48_000 / 11);
+    expect(Number(created[0].totalCostKrw)).toBe(6_364);
     expect(result).toMatchObject({ selectedOptionCount: 1, totalQuantity: 2, totalSalesAmountKrw: 48_000 });
-    expect(result.rows[0].productCostKrw).toBe(20_000);
-    expect(result.rows[0].otherCostKrw).toBe(600);
+    expect(result.totalCostKrw).toBe(6_364);
+    expect(result.rows[0]).toMatchObject({
+      productCostKrw: 0,
+      coupangSalesFeeKrw: 0,
+      shippingCostKrw: 0,
+      otherCostKrw: 0
+    });
+    expect(promotionPriceFindMany).not.toHaveBeenCalled();
   });
 
-  it("rejects derived Decimal totals before the replacement transaction", async () => {
-    const transaction = vi.fn();
-    const product = { id: "product-1", displayName: "테스트 상품", standardName: "테스트", group: null, productRules: [] };
+  it("serializes the vendor fee as the total and warns on a one-cent stored mismatch", async () => {
     const service = new CoupangService({
+      coupangManualPurchase: {
+        findMany: vi.fn(async () => [{
+          id: "manual-mismatch",
+          purchaseDate: new Date("2026-07-21T00:00:00.000Z"),
+          coupangProductId: "product-1",
+          coupangProductRuleId: null,
+          productDisplayName: "합계 불일치 상품",
+          ruleDisplayName: null,
+          saleMethod: null,
+          quantity: 1,
+          salesAmountKrw: new Prisma.Decimal(24_000),
+          productCostKrw: new Prisma.Decimal(0),
+          vendorFeePerUnitKrw: new Prisma.Decimal(3_182),
+          vendorFeeTotalKrw: new Prisma.Decimal(3_182),
+          salePriceKrw: new Prisma.Decimal(24_000),
+          baseSalePriceKrw: new Prisma.Decimal(24_000),
+          promotionPriceKrw: null,
+          priceSource: "BASE",
+          coupangSalesFeeKrw: new Prisma.Decimal(0),
+          salesFeeRateApplied: new Prisma.Decimal(0),
+          shippingCostKrw: new Prisma.Decimal(0),
+          otherCostKrw: new Prisma.Decimal(0),
+          totalCostKrw: new Prisma.Decimal("3181.99"),
+          memo: null,
+          product: { group: null },
+          productRule: null
+        }])
+      }
+    } as never);
+
+    const result = await service.listManualPurchases({ from: "2026-07-21", to: "2026-07-21" });
+
+    expect(result.rows[0]).toMatchObject({
+      vendorFeeTotalKrw: 3_182,
+      totalCostKrw: 3_182
+    });
+    expect(result.rows[0]).not.toHaveProperty("vatKrw");
+    expect(result.rows[0].warnings).toContain("MANUAL_PURCHASE_TOTAL_COST_MISMATCH");
+  });
+
+  it("rejects an out-of-range derived vendor-fee total before replacing rows", async () => {
+    const product = { id: "product-1", displayName: "테스트 상품", standardName: "테스트", group: null, productRules: [] };
+    const deleteMany = vi.fn();
+    const createMany = vi.fn();
+    const { prisma, transaction } = manualPurchaseTransactionPrisma({
+      ...globalSalesFeeRulePrisma(),
       appSetting: { findUnique: vi.fn(async () => null) },
       coupangProduct: { findMany: vi.fn(async () => [product]) },
       coupangProductRule: { findMany: vi.fn(async () => []) },
@@ -733,21 +1304,25 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
         effectiveTo: null,
         createdAt: new Date("2026-01-01T00:00:00.000Z")
       }]) },
-      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
-      $transaction: transaction
-    } as never);
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    }, { deleteMany, createMany, findMany: vi.fn(async () => []) });
+    const service = new CoupangService(prisma as never);
 
     await expect(service.replaceManualPurchasesForDate("2026-07-21", {
-      vendorFeePerUnitKrw: 600_000_000_000,
-      entries: [{ coupangProductId: "product-1", quantity: 1 }]
-    })).rejects.toMatchObject({ response: { code: "MANUAL_PURCHASE_AMOUNT_OUT_OF_RANGE", field: "totalCostKrw" } });
-    expect(transaction).not.toHaveBeenCalled();
+      vendorFeePerUnitKrw: 500_000_000_000,
+      entries: [{ coupangProductId: "product-1", quantity: 2 }]
+    })).rejects.toMatchObject({ response: { code: "MANUAL_PURCHASE_AMOUNT_OUT_OF_RANGE", field: "vendorFeeTotalKrw" } });
+    expect(transaction).toHaveBeenCalledOnce();
+    expect(deleteMany).not.toHaveBeenCalled();
+    expect(createMany).not.toHaveBeenCalled();
   });
 
-  it("rejects an out-of-range manual other-cost snapshot before the replacement transaction", async () => {
-    const transaction = vi.fn();
+  it("ignores unrelated product and other costs even when they exceed manual snapshot range", async () => {
     const product = { id: "product-1", displayName: "기타비용 범위 상품", standardName: "기타비용", group: null, productRules: [] };
-    const service = new CoupangService({
+    const deleteMany = vi.fn();
+    const createMany = vi.fn();
+    const { prisma, transaction } = manualPurchaseTransactionPrisma({
+      ...globalSalesFeeRulePrisma(),
       appSetting: { findUnique: vi.fn(async () => null) },
       coupangProduct: { findMany: vi.fn(async () => [product]) },
       coupangProductRule: { findMany: vi.fn(async () => []) },
@@ -768,22 +1343,25 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
         effectiveTo: null,
         createdAt: new Date("2026-01-01T00:00:00.000Z")
       }]) },
-      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
-      $transaction: transaction
-    } as never);
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    }, { deleteMany, createMany, findMany: vi.fn(async () => []) });
+    const service = new CoupangService(prisma as never);
 
     await expect(service.replaceManualPurchasesForDate("2026-07-21", {
       vendorFeePerUnitKrw: 1,
       entries: [{ coupangProductId: product.id, quantity: 1 }]
-    })).rejects.toMatchObject({ response: { code: "MANUAL_PURCHASE_AMOUNT_OUT_OF_RANGE", field: "otherCostKrw" } });
-    expect(transaction).not.toHaveBeenCalled();
+    })).resolves.toMatchObject({ date: "2026-07-21" });
+    expect(transaction).toHaveBeenCalledOnce();
+    expect(deleteMany).toHaveBeenCalledOnce();
+    expect(createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ productCostKrw: new Prisma.Decimal(0), otherCostKrw: new Prisma.Decimal(0) })]
+    });
   });
 
   it.each([
     ["RATE", 0.1, 0],
     ["PER_UNIT", 0, 1_000]
-  ] as const)("rejects a missing positive sale price for %s VAT calculation before replacement", async (_mode, salesFeeRate, salesFeeKrw) => {
-    const transaction = vi.fn();
+  ] as const)("rejects a missing positive sale price for %s sales adjustment before replacement", async (_mode, salesFeeRate, salesFeeKrw) => {
     const product = {
       id: "product-1",
       displayName: "가격 누락 상품",
@@ -815,24 +1393,29 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       effectiveTo: null,
       createdAt: new Date("2026-01-01T00:00:00.000Z")
     };
-    const service = new CoupangService({
+    const deleteMany = vi.fn();
+    const createMany = vi.fn();
+    const { prisma, transaction } = manualPurchaseTransactionPrisma({
+      ...globalSalesFeeRulePrisma(),
       appSetting: { findUnique: vi.fn(async () => null) },
       coupangProduct: { findMany: vi.fn(async () => [product]) },
       coupangProductRule: { findMany: vi.fn(async () => []) },
-      coupangManualPurchase: { findMany: vi.fn(async () => []) },
       coupangCostRule: { findMany: vi.fn(async () => [costRule]) },
-      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
-      $transaction: transaction
-    } as never);
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    }, { deleteMany, createMany, findMany: vi.fn(async () => []) });
+    const service = new CoupangService(prisma as never);
 
     const options = await service.manualPurchaseOptions({ date: "2026-07-21" });
-    expect(options.options[0]).toMatchObject({ isCalculable: false, unitSalesAmountKrw: null, unitVatKrw: null, unitTotalCostKrw: null });
-    expect(options.options[0].warnings).toContain("COUPANG_SALE_PRICE_REQUIRED");
+    expect(options.options[0]).toMatchObject({ isCalculable: false, unitSalesAmountKrw: null, unitTotalCostKrw: null });
+    expect(options.options[0]).not.toHaveProperty("unitVatKrw");
+    expect(options.options[0].warnings).toContain("COUPANG_BASE_SALE_PRICE_REQUIRED");
 
     await expect(service.replaceManualPurchasesForDate("2026-07-21", {
       entries: [{ coupangProductId: "product-1", quantity: 1 }]
-    })).rejects.toMatchObject({ response: { code: "COUPANG_SALE_PRICE_REQUIRED" } });
-    expect(transaction).not.toHaveBeenCalled();
+    })).rejects.toMatchObject({ response: { code: "COUPANG_BASE_SALE_PRICE_REQUIRED" } });
+    expect(transaction).toHaveBeenCalledOnce();
+    expect(deleteMany).not.toHaveBeenCalled();
+    expect(createMany).not.toHaveBeenCalled();
   });
 
   it("builds quantity options, preserves inactive rows, and resolves exact cost-rule ties by id", async () => {
@@ -863,7 +1446,6 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       vendorFeeTotalKrw: new Prisma.Decimal(100),
       coupangSalesFeeKrw: new Prisma.Decimal(0),
       shippingCostKrw: new Prisma.Decimal(0),
-      vatKrw: new Prisma.Decimal(0),
       otherCostKrw: new Prisma.Decimal(0),
       totalCostKrw: new Prisma.Decimal(100),
       memo: "legacy",
@@ -871,6 +1453,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       productRule: null
     };
     const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(),
       appSetting: { findUnique: vi.fn(async () => null) },
       coupangProduct: { findMany: vi.fn(async () => [activeProduct]) },
       coupangManualPurchase: { findMany: vi.fn(async () => [existing]) },
@@ -918,15 +1501,15 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     const inactiveOption = result.options.find((option) => option.coupangProductId === "inactive-product");
     expect(activeOption).toMatchObject({
       salePriceKrw: 24_000,
-      unitProductCostKrw: 10_000,
+      unitProductCostKrw: 0,
       unitVendorFeeKrw: 3_182,
-      unitCoupangSalesFeeKrw: 2_400,
-      unitShippingCostKrw: 3_000,
-      unitOtherCostKrw: 300,
+      unitCoupangSalesFeeKrw: 0,
+      unitShippingCostKrw: 0,
+      unitOtherCostKrw: 0,
       isCalculable: true
     });
-    expect(activeOption?.unitVatKrw).toBeCloseTo(24_000 / 11);
-    expect(activeOption?.unitTotalCostKrw).toBeCloseTo(18_882 + 24_000 / 11);
+    expect(activeOption).not.toHaveProperty("unitVatKrw");
+    expect(activeOption?.unitTotalCostKrw).toBe(3_182);
     expect(inactiveOption).toMatchObject({ existingQuantity: 2, existingMemo: "legacy", isCalculable: false });
     expect(inactiveOption?.warnings).toContain("COUPANG_COST_RULE_MISSING");
   });
@@ -935,6 +1518,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     const date = new Date("2026-07-21T00:00:00.000Z");
     const product = { id: "product-1", displayName: "테스트 상품" };
     const prisma = {
+      ...globalSalesFeeRulePrisma(),
       coupangSaleLine: { findMany: vi.fn(async () => [{
         coupangProductId: "product-1", product, productName: "테스트 상품",
         salesKrw: new Prisma.Decimal(1_000_000), cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(1_000_000),
@@ -945,7 +1529,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
         coupangProductId: "product-1", product, quantity: 10, salesAmountKrw: new Prisma.Decimal(100_000),
         productCostKrw: new Prisma.Decimal(30_000),
         vendorFeeTotalKrw: new Prisma.Decimal(5_000), coupangSalesFeeKrw: new Prisma.Decimal(10_000), shippingCostKrw: new Prisma.Decimal(20_000),
-        vatKrw: new Prisma.Decimal(100_000 / 11), otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(65_000 + 100_000 / 11), saleMethod: "판매자배송"
+        otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(5_000), saleMethod: "판매자배송"
       }]) },
       coupangCostRule: { findMany: vi.fn(async () => [{
         coupangProductId: "product-1", salePriceKrw: new Prisma.Decimal(0), supplyPriceKrw: new Prisma.Decimal(0),
@@ -963,7 +1547,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(rows[0]).toMatchObject({
       reportedNetSalesKrw: 1_000_000,
       manualPurchaseSalesKrw: 100_000,
-      manualPurchaseProductCostKrw: 30_000,
+      manualPurchaseProductCostKrw: 0,
       actualNetSalesKrw: 900_000,
       actualSalesQuantity: 90,
       productCostKrw: 270_000,
@@ -972,15 +1556,17 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       calculationStatus: "COMPLETE"
     });
     expect(rows[0].vatKrw).toBeCloseTo(900_000 / 11);
-    expect(rows[0].manualPurchaseTotalCostKrw).toBeCloseTo(65_000 + 100_000 / 11);
-    expect(rows[0].marginKrw).toBeCloseTo(900_000 - 270_000 - 90_000 - 180_000 - 900_000 / 11 - 65_000 - 100_000 / 11);
-    expect(Math.round(rows[0].marginKrw)).toBe(204_091);
+    expect(rows[0].manualPurchaseTotalCostKrw).toBe(5_000);
+    expect(rows[0]).not.toHaveProperty("manualPurchaseVatKrw");
+    expect(rows[0].marginKrw).toBeCloseTo(900_000 - 270_000 - 90_000 - 180_000 - 900_000 / 11 - 5_000);
+    expect(Math.round(rows[0].marginKrw)).toBe(273_182);
   });
 
   it("keeps net sales numeric with no manual rows or legacy rows and calculates manual-only costs", async () => {
     const date = new Date("2026-07-21T00:00:00.000Z");
     const product = { id: "product-1", displayName: "테스트 상품" };
     const basePrisma = {
+      ...globalSalesFeeRulePrisma(),
       coupangSaleLine: { findMany: vi.fn(async () => [{
         coupangProductId: "product-1", product, productName: "테스트 상품", salesKrw: new Prisma.Decimal(10_000),
         cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(10_000), salesQuantity: new Prisma.Decimal(1), orderCount: 1, saleMethod: "판매자배송"
@@ -1018,14 +1604,14 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
         {
           purchaseDate: new Date("2026-07-20T00:00:00.000Z"),
           coupangProductId: "product-1", product, quantity: 1, salesAmountKrw: new Prisma.Decimal(5_000), productCostKrw: new Prisma.Decimal(1_000), vendorFeeTotalKrw: new Prisma.Decimal(50),
-          coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(5_000 / 11),
-          otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(1_050 + 5_000 / 11), saleMethod: null
+          coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0),
+          otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(50), saleMethod: null
         },
         {
           purchaseDate: new Date("2026-07-21T00:00:00.000Z"),
           coupangProductId: "product-1", product, quantity: 1, salesAmountKrw: null, productCostKrw: new Prisma.Decimal(2_000), vendorFeeTotalKrw: new Prisma.Decimal(100),
-          coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(0),
-          otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(2_100), saleMethod: null
+          coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0),
+          otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(100), saleMethod: null
         }
       ]) }
     } as never);
@@ -1035,7 +1621,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       actualNetSalesKrw: null,
       netSalesKrw: null,
       actualSalesQuantity: 0,
-      manualPurchaseProductCostKrw: 3_000,
+      manualPurchaseProductCostKrw: 0,
       manualCalculationStatus: "INCOMPLETE",
       calculationStatus: "INCOMPLETE",
       totalCostKrw: null,
@@ -1049,8 +1635,8 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       coupangManualPurchase: { findMany: vi.fn(async () => [{
         purchaseDate: date,
         coupangProductId: "product-1", product, quantity: 1, salesAmountKrw: new Prisma.Decimal(10_000), productCostKrw: new Prisma.Decimal(2_000), vendorFeeTotalKrw: new Prisma.Decimal(100),
-        coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(10_000 / 11),
-        otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(2_100 + 10_000 / 11), saleMethod: null
+        coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0),
+        otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(100), saleMethod: null
       }]) }
     } as never);
     const manualOnlyRows = await (manualOnlyService as any).buildProductProfitRows(range);
@@ -1059,9 +1645,9 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(manualOnlyRows[0].manualCalculationStatus).toBe("COMPLETE");
     expect(manualOnlyRows[0].warnings).toContain("MANUAL_PURCHASE_WITHOUT_REPORTED_SALES");
     expect(manualOnlyRows[0].actualNetSalesKrw).toBe(0);
-    expect(manualOnlyRows[0].manualPurchaseProductCostKrw).toBe(2_000);
-    expect(manualOnlyRows[0].totalCostKrw).toBeCloseTo(2_600 + 10_000 / 11);
-    expect(manualOnlyRows[0].marginKrw).toBeCloseTo(-2_600 - 10_000 / 11);
+    expect(manualOnlyRows[0].manualPurchaseProductCostKrw).toBe(0);
+    expect(manualOnlyRows[0].totalCostKrw).toBe(600);
+    expect(manualOnlyRows[0].marginKrw).toBe(-600);
   });
 
   it("keeps normal calculations on actual sales when only manual cost snapshots are incomplete", async () => {
@@ -1080,7 +1666,6 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       vendorFeeTotalKrw: null,
       coupangSalesFeeKrw: new Prisma.Decimal(0),
       shippingCostKrw: new Prisma.Decimal(0),
-      vatKrw: new Prisma.Decimal(0),
       otherCostKrw: new Prisma.Decimal(0),
       totalCostKrw: new Prisma.Decimal(10_000),
       saleMethod: "판매자배송"
@@ -1103,6 +1688,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       createdAt: new Date("2026-01-01T00:00:00.000Z")
     };
     const basePrisma = {
+      ...globalSalesFeeRulePrisma(),
       coupangAdMetric: { findMany: vi.fn(async () => []) },
       coupangManualPurchase: { findMany: vi.fn(async () => [manualPurchase]) },
       coupangCostRule: { findMany: vi.fn(async () => [costRule]) },
@@ -1139,7 +1725,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       totalCostKrw: null,
       marginKrw: null
     });
-    expect(saleRows[0].normalMarginKrw).toBeCloseTo(75_000 - 30_000 - 75_000 / 11);
+    expect(saleRows[0].normalMarginKrw).toBeCloseTo(75_000 - 30_000 - 7_500 - 75_000 / 11);
     expect(saleRows[0].warnings).toContain("MANUAL_PURCHASE_COST_SNAPSHOT_INCOMPLETE");
 
     const manualOnly = new CoupangService({
@@ -1195,7 +1781,6 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       vendorFeeTotalKrw: new Prisma.Decimal(0),
       coupangSalesFeeKrw: new Prisma.Decimal(0),
       shippingCostKrw: new Prisma.Decimal(0),
-      vatKrw: new Prisma.Decimal(0),
       otherCostKrw: new Prisma.Decimal(0),
       totalCostKrw: new Prisma.Decimal(0),
       saleMethod: "판매자배송"
@@ -1218,6 +1803,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       createdAt: new Date("2026-01-01T00:00:00.000Z")
     });
     const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(),
       coupangSaleLine: { findMany: vi.fn(async () => products.flatMap((product) => [
         saleLine(product, firstDate, 100_000, 2),
         saleLine(product, secondDate, 200_000, 4)
@@ -1274,6 +1860,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       effectiveFrom, effectiveTo, createdAt: effectiveFrom
     });
     const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(),
       coupangSaleLine: { findMany: vi.fn(async () => [firstDate, secondDate].map((saleDate) => ({
         saleDate, coupangProductId: product.id, product, productName: product.displayName,
         salesKrw: new Prisma.Decimal(10_000), cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(10_000),
@@ -1296,13 +1883,14 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].productCostKrw).toBe(4_000);
     expect(rows[0].vatKrw).toBeCloseTo(20_000 / 11);
-    expect(rows[0].marginKrw).toBeCloseTo(20_000 - 4_000 - 20_000 / 11);
+    expect(rows[0].marginKrw).toBeCloseTo(20_000 - 4_000 - 2_000 - 20_000 / 11);
   });
 
   it("isolates a missing legacy manual sales snapshot to the manual area and keeps a normal reference margin", async () => {
     const date = new Date("2026-07-15T00:00:00.000Z");
     const product = { id: "product-1", displayName: "레거시 가구매 상품" };
     const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(),
       coupangSaleLine: { findMany: vi.fn(async () => [{
         saleDate: date, coupangProductId: product.id, product, productName: product.displayName,
         salesKrw: new Prisma.Decimal(10_000), cancelAmountKrw: new Prisma.Decimal(0), netSalesKrw: new Prisma.Decimal(10_000),
@@ -1313,7 +1901,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
         purchaseDate: date, coupangProductId: product.id, product, quantity: 1, salesAmountKrw: null,
         salePriceKrw: null, promotionPriceKrw: null, baseSalePriceKrw: null,
         productCostKrw: new Prisma.Decimal(1_000), vendorFeeTotalKrw: new Prisma.Decimal(0),
-        coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0), vatKrw: new Prisma.Decimal(0),
+        coupangSalesFeeKrw: new Prisma.Decimal(0), shippingCostKrw: new Prisma.Decimal(0),
         otherCostKrw: new Prisma.Decimal(0), totalCostKrw: new Prisma.Decimal(1_000), saleMethod: "판매자배송"
       }]) },
       coupangCostRule: { findMany: vi.fn(async () => [{
@@ -1337,7 +1925,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       productCostKrw: null,
       marginKrw: null
     });
-    expect(rows[0].normalMarginKrw).toBeCloseTo(10_000 - 3_000 - 10_000 / 11);
+    expect(rows[0].normalMarginKrw).toBeCloseTo(10_000 - 3_000 - 1_000 - 10_000 / 11);
     expect(rows[0].warnings).toContain("MANUAL_PURCHASE_SALES_AMOUNT_MISSING");
   });
 
@@ -1345,6 +1933,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     const date = new Date("2026-07-20T00:00:00.000Z");
     const product = { id: "mixed-product", displayName: "혼합 판매 상품" };
     const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(),
       coupangSaleLine: { findMany: vi.fn(async () => [{
         saleDate: date,
         coupangProductId: product.id,
@@ -1438,6 +2027,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     const date = new Date("2026-07-20T00:00:00.000Z");
     const product = { id: "offset-product", displayName: "상쇄 혼합 상품" };
     const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(),
       coupangSaleLine: { findMany: vi.fn(async () => [{
         saleDate: date,
         coupangProductId: product.id,
@@ -1504,16 +2094,15 @@ describe("Coupang product group aggregation", () => {
         shippingCostKrw: 5_000,
         vatKrw: 100_000 / 11,
         manualPurchaseQuantity: 2,
-        manualPurchaseProductCostKrw: 20_000,
+        manualPurchaseProductCostKrw: 0,
         manualPurchaseVendorFeeKrw: 6_364,
-        manualPurchaseCoupangSalesFeeKrw: 5_280,
-        manualPurchaseShippingCostKrw: 6_000,
-        manualPurchaseVatKrw: 48_000 / 11,
-        manualPurchaseTotalCostKrw: 37_644 + 48_000 / 11,
+        manualPurchaseCoupangSalesFeeKrw: 0,
+        manualPurchaseShippingCostKrw: 0,
+        manualPurchaseTotalCostKrw: 6_364,
         adSpendKrw: 20_000,
         adConversionSalesKrw: 60_000,
-        totalCostKrw: 102_644 + 100_000 / 11 + 48_000 / 11,
-        marginKrw: -2_644 - 100_000 / 11 - 48_000 / 11,
+        totalCostKrw: 71_364 + 100_000 / 11,
+        marginKrw: 28_636 - 100_000 / 11,
         marginRate: 0.35,
         roas: 3,
         salePriceKrw: 20_000
@@ -1529,16 +2118,15 @@ describe("Coupang product group aggregation", () => {
         shippingCostKrw: 8_000,
         vatKrw: 200_000 / 11,
         manualPurchaseQuantity: 1,
-        manualPurchaseProductCostKrw: 10_000,
+        manualPurchaseProductCostKrw: 0,
         manualPurchaseVendorFeeKrw: 3_182,
-        manualPurchaseCoupangSalesFeeKrw: 2_000,
-        manualPurchaseShippingCostKrw: 3_000,
-        manualPurchaseVatKrw: 25_000 / 11,
-        manualPurchaseTotalCostKrw: 18_182 + 25_000 / 11,
+        manualPurchaseCoupangSalesFeeKrw: 0,
+        manualPurchaseShippingCostKrw: 0,
+        manualPurchaseTotalCostKrw: 3_182,
         adSpendKrw: 30_000,
         adConversionSalesKrw: 90_000,
-        totalCostKrw: 156_182 + 200_000 / 11 + 25_000 / 11,
-        marginKrw: 43_818 - 200_000 / 11 - 25_000 / 11,
+        totalCostKrw: 141_182 + 200_000 / 11,
+        marginKrw: 58_818 - 200_000 / 11,
         marginRate: 0.31,
         roas: 3,
         salePriceKrw: 25_000
@@ -1569,10 +2157,10 @@ describe("Coupang product group aggregation", () => {
       salesFeeKrw: 30_000,
       shippingCostKrw: 13_000,
       manualPurchaseQuantity: 3,
-      manualPurchaseProductCostKrw: 30_000,
+      manualPurchaseProductCostKrw: 0,
       manualPurchaseVendorFeeKrw: 9_546,
-      manualPurchaseCoupangSalesFeeKrw: 7_280,
-      manualPurchaseShippingCostKrw: 9_000,
+      manualPurchaseCoupangSalesFeeKrw: 0,
+      manualPurchaseShippingCostKrw: 0,
       adSpendKrw: 50_000,
       adConversionSalesKrw: 150_000,
       salePriceKrw: null,
@@ -1580,11 +2168,11 @@ describe("Coupang product group aggregation", () => {
       saleMethod: "MIXED"
     });
     expect(groupRow?.vatKrw).toBeCloseTo(300_000 / 11);
-    expect(groupRow?.manualPurchaseVatKrw).toBeCloseTo(73_000 / 11);
-    expect(groupRow?.manualPurchaseTotalCostKrw).toBeCloseTo(55_826 + 73_000 / 11);
-    expect(groupRow?.totalCostKrw).toBeCloseTo(258_826 + 300_000 / 11 + 73_000 / 11);
-    expect(groupRow?.marginKrw).toBeCloseTo(41_174 - 300_000 / 11 - 73_000 / 11);
-    expect(groupRow?.marginRate).toBeCloseTo((41_174 - 300_000 / 11 - 73_000 / 11) / 300_000);
+    expect(groupRow).not.toHaveProperty("manualPurchaseVatKrw");
+    expect(groupRow?.manualPurchaseTotalCostKrw).toBe(9_546);
+    expect(groupRow?.totalCostKrw).toBeCloseTo(212_546 + 300_000 / 11);
+    expect(groupRow?.marginKrw).toBeCloseTo(87_454 - 300_000 / 11);
+    expect(groupRow?.marginRate).toBeCloseTo((87_454 - 300_000 / 11) / 300_000);
     expect(groupRow?.roas).toBeCloseTo(150_000 / 50_000);
     expect(groupRow?.warnings).toEqual(expect.arrayContaining(["GROUP_MIXED_PRICE", "GROUP_MIXED_SALE_METHOD"]));
     expect(soloRow).toMatchObject({ rowType: "PRODUCT", productName: "솔로 상품", childProductCount: 1 });
@@ -1668,14 +2256,23 @@ describe("Coupang product group aggregation", () => {
   it("keeps dashboard summary based on product rows while grouping only display rows", async () => {
     const service = new CoupangService({} as never);
     const productRows = [
-      productProfitRow({ productId: "product-a", netSalesKrw: 100_000, marginKrw: 40_000, vatKrw: 1_000, manualPurchaseProductCostKrw: 2_000, manualPurchaseVatKrw: 200 }),
+      productProfitRow({
+        productId: "product-a",
+        netSalesKrw: 100_000,
+        marginKrw: 40_000,
+        vatKrw: 1_000,
+        manualPurchaseProductCostKrw: 0,
+        manualPurchaseVendorFeeKrw: 200,
+        manualPurchaseTotalCostKrw: 200
+      }),
       productProfitRow({
         productId: "product-b",
         netSalesKrw: 50_000,
         marginKrw: null,
         vatKrw: null,
-        manualPurchaseProductCostKrw: 3_000,
-        manualPurchaseVatKrw: 300,
+        manualPurchaseProductCostKrw: 0,
+        manualPurchaseVendorFeeKrw: 300,
+        manualPurchaseTotalCostKrw: 300,
         ruleStatus: "MISSING_COST_RULE"
       })
     ];
@@ -1692,8 +2289,9 @@ describe("Coupang product group aggregation", () => {
     expect(result.summary.actualNetSalesKrw).toBe(150_000);
     expect(result.summary.marginKrw).toBeNull();
     expect(result.summary.vatKrw).toBeNull();
-    expect(result.summary.manualPurchaseVatKrw).toBe(500);
-    expect(result.summary.manualPurchaseProductCostKrw).toBe(5_000);
+    expect(result.summary.manualPurchaseVendorFeeKrw).toBe(500);
+    expect(result.summary).not.toHaveProperty("manualPurchaseVatKrw");
+    expect(result.summary.manualPurchaseProductCostKrw).toBe(0);
     expect(result.summary.missingCostRuleCount).toBe(1);
     expect(result.rows).toEqual(groupedRows);
   });
@@ -1751,11 +2349,11 @@ describe("Coupang product group aggregation", () => {
         salesQuantity: 0,
         orderCount: 0,
         manualPurchaseQuantity: 2,
-        manualPurchaseProductCostKrw: 6_000,
-        manualPurchaseVatKrw: 1_000,
-        manualPurchaseTotalCostKrw: 10_000,
-        totalCostKrw: 10_000,
-        marginKrw: -10_000
+        manualPurchaseProductCostKrw: 0,
+        manualPurchaseVendorFeeKrw: 9_000,
+        manualPurchaseTotalCostKrw: 9_000,
+        totalCostKrw: 9_000,
+        marginKrw: -9_000
       }),
       productProfitRow({
         productId: "reported-gross-only",
@@ -1786,8 +2384,9 @@ describe("Coupang product group aggregation", () => {
       "Incomplete Only"
     ]);
     expect(result.rows.find((row) => row.productName === "Manual Product")).toMatchObject({
-      manualPurchaseProductCostKrw: 6_000,
-      manualPurchaseVatKrw: 1_000
+      manualPurchaseProductCostKrw: 0,
+      manualPurchaseVendorFeeKrw: 9_000,
+      manualPurchaseTotalCostKrw: 9_000
     });
     expect(result.rows.find((row) => row.productName === "Reported Gross Only")).toMatchObject({
       reportedSalesKrw: 5_000,
@@ -2519,7 +3118,7 @@ describe("CoupangService deleteUpload", () => {
 
     await service.deleteUpload("batch-price-text");
 
-    expect(prisma.coupangCostRule.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["cost-price-1"] } } });
+    expect(prisma.coupangCostRule.delete).toHaveBeenCalledWith({ where: { id: "cost-price-1" } });
     expect(prisma.coupangProduct.delete).toHaveBeenCalledWith({ where: { id: "product-price-only" } });
     expect(prisma.coupangUploadBatch.delete).toHaveBeenCalledWith({ where: { id: "batch-price-text" } });
   });
@@ -2530,10 +3129,34 @@ describe("CoupangService deleteUpload", () => {
 
     await service.deleteUpload("batch-margin");
 
-    expect(prisma.coupangCostRule.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["cost-margin-1"] } } });
+    expect(prisma.coupangCostRule.delete).toHaveBeenCalledWith({ where: { id: "cost-margin-1" } });
     expect(prisma.coupangProductRule.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["rule-margin-1"] } } });
     expect(prisma.coupangProduct.delete).toHaveBeenCalledWith({ where: { id: "product-margin-only" } });
     expect(prisma.coupangUploadBatch.delete).toHaveBeenCalledWith({ where: { id: "batch-margin" } });
+  });
+
+  it.each([
+    "missing-provenance",
+    "missing-applied-rows",
+    "truncated-applied-rows",
+    "created-without-after",
+    "updated-without-before",
+    "malformed-row-among-complete-rows",
+    "partial-after-snapshot"
+  ] as const)("fails closed before any deletion for %s", async (provenanceMode) => {
+    const prisma = fakeCoupangPriceTextDeletePrisma(provenanceMode);
+    const service = new CoupangService(prisma as never);
+
+    await expect(service.deleteUpload("batch-price-text")).rejects.toMatchObject({
+      response: { code: "COUPANG_UPLOAD_ROLLBACK_PROVENANCE_MISSING" }
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.coupangUploadRowError.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.coupangSaleLine.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.coupangAdMetric.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.coupangCostRule.delete).not.toHaveBeenCalled();
+    expect(prisma.coupangProduct.delete).not.toHaveBeenCalled();
+    expect(prisma.coupangUploadBatch.delete).not.toHaveBeenCalled();
   });
 });
 
@@ -2697,8 +3320,10 @@ describe("CoupangService mappingIssues", () => {
 });
 
 function fakeCoupangProductSettingPrisma() {
+  let savedCostRule: Record<string, any> | null = null;
   const prisma = {
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    $queryRaw: vi.fn(async () => []),
     coupangProduct: {
       create: vi.fn(async (args) => ({ id: "product-created", ...args.data, productRules: [], costRules: [] })),
       findUnique: vi.fn(async (args) =>
@@ -2740,7 +3365,27 @@ function fakeCoupangProductSettingPrisma() {
     },
     coupangCostRule: {
       findFirst: vi.fn(async (): Promise<Record<string, unknown> | null> => null),
-      create: vi.fn(async (args) => ({ id: "cost-created", ...args.data }))
+      findMany: vi.fn(async () => savedCostRule ? [savedCostRule] : []),
+      findUnique: vi.fn(async ({ where }) => savedCostRule?.id === where.id ? savedCostRule : null),
+      findUniqueOrThrow: vi.fn(async ({ where }) => {
+        if (savedCostRule?.id === where.id) return savedCostRule;
+        throw new Error(`Missing cost rule ${where.id}`);
+      }),
+      create: vi.fn(async (args) => {
+        savedCostRule = {
+          id: "cost-created",
+          effectiveTo: null,
+          createdAt: new Date("2026-07-23T00:00:00.000Z"),
+          updatedAt: new Date("2026-07-23T00:00:00.000Z"),
+          ...args.data
+        };
+        return savedCostRule;
+      }),
+      update: vi.fn(async ({ where, data }) => {
+        if (!savedCostRule || savedCostRule.id !== where.id) throw new Error(`Missing cost rule ${where.id}`);
+        savedCostRule = { ...savedCostRule, ...data };
+        return savedCostRule;
+      })
     },
     coupangUploadRowError: {
       createMany: vi.fn(async () => ({}))
@@ -2750,6 +3395,151 @@ function fakeCoupangProductSettingPrisma() {
     }
   };
   return prisma;
+}
+
+function costHistoryRule(
+  id: string,
+  effectiveFrom: string,
+  effectiveTo: string | null,
+  productCostKrw: number,
+  overrides: Record<string, number | string | null> = {}
+) {
+  return {
+    id,
+    coupangProductId: "product-1",
+    salePriceKrw: new Prisma.Decimal(24_000),
+    supplyPriceKrw: new Prisma.Decimal(overrides.supplyPriceKrw ?? 0),
+    productCostKrw: new Prisma.Decimal(productCostKrw),
+    salesFeeRate: new Prisma.Decimal(overrides.salesFeeRate ?? 0),
+    salesFeeKrw: new Prisma.Decimal(overrides.salesFeeKrw ?? 0),
+    sellerShippingFeeKrw: new Prisma.Decimal(2_800),
+    hanaroShippingFeeKrw: new Prisma.Decimal(500),
+    growthInboundFeeKrw: new Prisma.Decimal(1_000),
+    growthShippingFeeKrw: new Prisma.Decimal(2_000),
+    returnRate: new Prisma.Decimal(0),
+    returnCostPerUnitKrw: new Prisma.Decimal(0),
+    extraCostKrw: new Prisma.Decimal(0),
+    effectiveFrom: toDateOnly(effectiveFrom)!,
+    effectiveTo: effectiveTo ? toDateOnly(effectiveTo)! : null,
+    note: null,
+    createdAt: new Date(`${effectiveFrom}T01:00:00.000Z`),
+    updatedAt: new Date(`${effectiveFrom}T01:00:00.000Z`),
+    ...overrides
+  };
+}
+
+function costHistoryFixture(
+  initialRules: ReturnType<typeof costHistoryRule>[],
+  options: {
+    upload?: {
+      id: string;
+      sourceType: CoupangUploadSourceType;
+      validRowCount: number;
+      columnSchema: Record<string, unknown>;
+    };
+  } = {}
+) {
+  const rules = initialRules.map((rule) => ({ ...rule }));
+  let sequence = 0;
+  const lock = vi.fn(async () => []);
+  const findUniqueCost = vi.fn(async ({ where }: any) => rules.find((rule) => rule.id === where.id) ?? null);
+  const create = vi.fn(async ({ data }: any) => {
+    sequence += 1;
+    const rule = {
+      id: `created-${sequence}`,
+      effectiveTo: null,
+      createdAt: new Date(`2026-07-23T02:00:0${sequence}.000Z`),
+      updatedAt: new Date(`2026-07-23T02:00:0${sequence}.000Z`),
+      ...data
+    };
+    rules.push(rule as ReturnType<typeof costHistoryRule>);
+    return rule;
+  });
+  const costRuleDelegate = {
+    findFirst: vi.fn(async ({ where, orderBy }: any) => {
+      let candidates = rules.filter((rule) => rule.coupangProductId === where.coupangProductId);
+      if (where.NOT?.id) candidates = candidates.filter((rule) => rule.id !== where.NOT.id);
+      if (where.effectiveFrom instanceof Date) candidates = candidates.filter((rule) => rule.effectiveFrom.getTime() === where.effectiveFrom.getTime());
+      if (where.effectiveFrom?.lte) candidates = candidates.filter((rule) => rule.effectiveFrom <= where.effectiveFrom.lte);
+      if (where.effectiveFrom?.gt) candidates = candidates.filter((rule) => rule.effectiveFrom > where.effectiveFrom.gt);
+      const direction = orderBy?.[0]?.effectiveFrom ?? "desc";
+      return [...candidates].sort((left, right) => (left.effectiveFrom.getTime() - right.effectiveFrom.getTime()) * (direction === "asc" ? 1 : -1))[0] ?? null;
+    }),
+    findMany: vi.fn(async ({ where, orderBy }: any) => {
+      const candidates = rules.filter((rule) => !where?.coupangProductId || rule.coupangProductId === where.coupangProductId);
+      const direction = orderBy?.[0]?.effectiveFrom ?? "desc";
+      return [...candidates].sort((left, right) => (left.effectiveFrom.getTime() - right.effectiveFrom.getTime()) * (direction === "asc" ? 1 : -1));
+    }),
+    findUnique: findUniqueCost,
+    findUniqueOrThrow: vi.fn(async ({ where }: any) => {
+      const rule = rules.find((candidate) => candidate.id === where.id);
+      if (!rule) throw new Error(`Missing cost rule ${where.id}`);
+      return rule;
+    }),
+    create,
+    update: vi.fn(async ({ where, data }: any) => {
+      const rule = rules.find((candidate) => candidate.id === where.id);
+      if (!rule) throw new Error(`Missing cost rule ${where.id}`);
+      const nextEffectiveFrom = data.effectiveFrom ?? rule.effectiveFrom;
+      const nextEffectiveTo = Object.prototype.hasOwnProperty.call(data, "effectiveTo")
+        ? data.effectiveTo
+        : rule.effectiveTo;
+      if (nextEffectiveTo && nextEffectiveTo < nextEffectiveFrom) {
+        throw new Error("coupang_cost_rules_effective_range_check");
+      }
+      Object.assign(rule, data, { updatedAt: new Date("2026-07-23T03:00:00.000Z") });
+      return rule;
+    }),
+    delete: vi.fn(async ({ where }: any) => {
+      const index = rules.findIndex((candidate) => candidate.id === where.id);
+      if (index >= 0) rules.splice(index, 1);
+      return { id: where.id };
+    }),
+    deleteMany: vi.fn(async ({ where }: any) => {
+      const ids = new Set(where.id.in);
+      const before = rules.length;
+      for (let index = rules.length - 1; index >= 0; index -= 1) if (ids.has(rules[index].id)) rules.splice(index, 1);
+      return { count: before - rules.length };
+    })
+  };
+  const product = () => ({
+    id: "product-1", groupId: null, displayName: "Product", standardName: "product", sortOrder: 1, isActive: true,
+    group: null, productRules: [], costRules: [...rules]
+  });
+  const deleteUpload = vi.fn(async ({ where }: any) => ({ id: where.id }));
+  const prisma: any = {
+    $queryRaw: lock,
+    $transaction: vi.fn(async (callback: (tx: any) => Promise<unknown>) => callback(prisma)),
+    coupangProduct: {
+      findUnique: vi.fn(async ({ where }: any) => where.id === "product-1" ? product() : null),
+      findMany: vi.fn(async () => [product()]),
+      update: vi.fn(async () => product())
+    },
+    coupangProductGroup: { findUnique: vi.fn(async () => null) },
+    coupangProductRule: { findFirst: vi.fn(async () => null), create: vi.fn(), update: vi.fn() },
+    coupangCostRule: costRuleDelegate,
+    coupangUploadBatch: { findUnique: vi.fn(async () => options.upload ?? null), delete: deleteUpload },
+    coupangUploadRowError: { deleteMany: vi.fn(async () => ({ count: 0 })) },
+    coupangSaleLine: { findMany: vi.fn(async () => []), deleteMany: vi.fn(async () => ({ count: 0 })) },
+    coupangAdMetric: { findMany: vi.fn(async () => []), deleteMany: vi.fn(async () => ({ count: 0 })) }
+  };
+  return { prisma, create, lock, findUniqueCost, deleteUpload, rule: (id: string) => rules.find((rule) => rule.id === id)! };
+}
+
+function formatRuleRange(rule: ReturnType<typeof costHistoryRule>) {
+  return [rule.effectiveFrom.toISOString().slice(0, 10), rule.effectiveTo?.toISOString().slice(0, 10) ?? null];
+}
+
+function costRuleJsonSnapshot(rule: ReturnType<typeof costHistoryRule>) {
+  return {
+    salePriceKrw: String(rule.salePriceKrw), supplyPriceKrw: String(rule.supplyPriceKrw), productCostKrw: String(rule.productCostKrw),
+    salesFeeRate: String(rule.salesFeeRate), salesFeeKrw: String(rule.salesFeeKrw), sellerShippingFeeKrw: String(rule.sellerShippingFeeKrw),
+    hanaroShippingFeeKrw: String(rule.hanaroShippingFeeKrw), growthInboundFeeKrw: String(rule.growthInboundFeeKrw),
+    growthShippingFeeKrw: String(rule.growthShippingFeeKrw), returnRate: String(rule.returnRate),
+    returnCostPerUnitKrw: String(rule.returnCostPerUnitKrw), extraCostKrw: String(rule.extraCostKrw),
+    effectiveFrom: rule.effectiveFrom.toISOString().slice(0, 10), effectiveTo: rule.effectiveTo?.toISOString().slice(0, 10) ?? null,
+    note: rule.note
+  };
 }
 
 function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRow {
@@ -2799,7 +3589,6 @@ function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRo
     manualPurchaseVendorFeeKrw: 0,
     manualPurchaseCoupangSalesFeeKrw: 0,
     manualPurchaseShippingCostKrw: 0,
-    manualPurchaseVatKrw: 0,
     manualPurchaseOtherCostKrw: 0,
     manualPurchaseTotalCostKrw: 0,
     actualSalesKrw,
@@ -2891,8 +3680,10 @@ function fakeCoupangMappingRulePrisma() {
 }
 
 function fakeCoupangMarginImportPrisma() {
+  let savedCostRule: Record<string, any> | null = null;
   const prisma = {
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    $queryRaw: vi.fn(async () => []),
     coupangUploadBatch: {
       findFirst: vi.fn(async () => null),
       create: vi.fn(async (args) => ({ id: "batch-margin-import", conflictPolicy: args.data.conflictPolicy, ...args.data })),
@@ -2914,7 +3705,7 @@ function fakeCoupangMarginImportPrisma() {
       create: vi.fn(async (args) => ({ id: "rule-created", ...args.data }))
     },
     coupangCostRule: {
-      findFirst: vi.fn(async () => ({
+      findFirst: vi.fn(async (args) => args.where.effectiveFrom instanceof Date ? null : ({
         salePriceKrw: new Prisma.Decimal(69_900),
         supplyPriceKrw: new Prisma.Decimal(0),
         productCostKrw: new Prisma.Decimal(20_000),
@@ -2929,7 +3720,12 @@ function fakeCoupangMarginImportPrisma() {
         extraCostKrw: new Prisma.Decimal(0),
         note: null
       })),
-      create: vi.fn(async (args) => ({ id: "cost-margin-import", ...args.data }))
+      findMany: vi.fn(async () => savedCostRule ? [savedCostRule] : []),
+      findUniqueOrThrow: vi.fn(async () => savedCostRule),
+      create: vi.fn(async (args) => {
+        savedCostRule = { id: "cost-margin-import", effectiveTo: null, createdAt: new Date(), updatedAt: new Date(), ...args.data };
+        return savedCostRule;
+      })
     },
     coupangUploadRowError: {
       createMany: vi.fn(async () => ({}))
@@ -3188,6 +3984,7 @@ function fakeCoupangPriceTextRepairPrisma() {
   };
   const prisma = {
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    $queryRaw: vi.fn(async () => []),
     coupangUploadBatch: {
       findFirst: vi.fn(async () => ({ id: "old-batch" })),
       create: vi.fn(async (args) => ({ id: "batch-price-text", conflictPolicy: args.data.conflictPolicy, ...args.data })),
@@ -3219,7 +4016,17 @@ function fakeCoupangPriceTextRepairPrisma() {
     },
     coupangCostRule: {
       findFirst: vi.fn(async (args) => (args.where.coupangProductId === "product-legacy" ? legacyCostRule : null)),
-      create: vi.fn(async (args) => ({ id: "cost-rule-fixed", ...args.data }))
+      findMany: vi.fn(async () => []),
+      findUniqueOrThrow: vi.fn(async ({ where }) => ({
+        id: where.id,
+        effectiveTo: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...legacyCostRule,
+        effectiveFrom: toDateOnly("2026-06-22")!,
+        salePriceKrw: new Prisma.Decimal(69900)
+      })),
+      create: vi.fn(async (args) => ({ id: "cost-rule-fixed", effectiveTo: null, createdAt: new Date(), updatedAt: new Date(), ...args.data }))
     },
     coupangUploadRowError: {
       createMany: vi.fn(async () => ({}))
@@ -3260,27 +4067,63 @@ function fakeCoupangDeletePrisma() {
   return prisma;
 }
 
-function fakeCoupangPriceTextDeletePrisma() {
+type PriceTextDeleteProvenanceMode =
+  | "complete"
+  | "missing-provenance"
+  | "missing-applied-rows"
+  | "truncated-applied-rows"
+  | "created-without-after"
+  | "updated-without-before"
+  | "malformed-row-among-complete-rows"
+  | "partial-after-snapshot";
+
+function fakeCoupangPriceTextDeletePrisma(provenanceMode: PriceTextDeleteProvenanceMode = "complete") {
+  const costRule = costHistoryRule("cost-price-1", "2026-01-01", null, 0, {
+    coupangProductId: "product-price-only",
+    salePriceKrw: 9_900
+  });
+  const completeAppliedRow = {
+    rowNumber: 1,
+    itemName: "다이어트양말",
+    standardName: "다이어트양말",
+    productId: "product-price-only",
+    costRuleId: "cost-price-1",
+    salePriceKrw: 9900,
+    costRuleOperation: "CREATED",
+    costRuleBefore: null,
+    costRuleAfter: costRuleJsonSnapshot(costRule)
+  };
+  const appliedRows = provenanceMode === "missing-provenance"
+    ? [{ ...completeAppliedRow, costRuleOperation: undefined, costRuleAfter: undefined }]
+    : provenanceMode === "created-without-after"
+      ? [{ ...completeAppliedRow, costRuleAfter: undefined }]
+      : provenanceMode === "updated-without-before"
+        ? [{ ...completeAppliedRow, costRuleOperation: "UPDATED_SAME_DATE", costRuleBefore: null }]
+        : provenanceMode === "malformed-row-among-complete-rows"
+          ? [completeAppliedRow, { productId: "product-2", costRuleOperation: "CREATED" }]
+          : provenanceMode === "partial-after-snapshot"
+            ? [{
+                ...completeAppliedRow,
+                costRuleAfter: { ...completeAppliedRow.costRuleAfter, sellerShippingFeeKrw: undefined }
+              }]
+            : [completeAppliedRow];
   const prisma = {
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    $queryRaw: vi.fn(async () => []),
     coupangUploadBatch: {
       findUnique: vi.fn(async () => ({
         id: "batch-price-text",
         sourceType: CoupangUploadSourceType.PRICE_TEXT,
-        columnSchema: {
+        validRowCount: provenanceMode === "truncated-applied-rows" ? 2 : 1,
+        columnSchema: provenanceMode === "missing-applied-rows" ? {
+          schemaVersion: 1,
+          format: "name price",
+          effectiveFrom: "2026-01-01"
+        } : {
           schemaVersion: 1,
           format: "name price",
           effectiveFrom: "2026-01-01",
-          appliedRows: [
-            {
-              rowNumber: 1,
-              itemName: "다이어트양말",
-              standardName: "다이어트양말",
-              productId: "product-price-only",
-              costRuleId: "cost-price-1",
-              salePriceKrw: 9900
-            }
-          ]
+          appliedRows
         }
       })),
       delete: vi.fn(async () => ({ id: "batch-price-text" }))
@@ -3297,7 +4140,9 @@ function fakeCoupangPriceTextDeletePrisma() {
       deleteMany: vi.fn(async () => ({}))
     },
     coupangCostRule: {
-      deleteMany: vi.fn(async () => ({ count: 1 }))
+      findUnique: vi.fn(async ({ where }) => where.id === costRule.id ? costRule : null),
+      delete: vi.fn(async () => ({ id: costRule.id })),
+      findMany: vi.fn(async () => [])
     },
     coupangProduct: {
       findUnique: vi.fn(async (args) =>
@@ -3323,12 +4168,17 @@ function fakeCoupangPriceTextDeletePrisma() {
 }
 
 function fakeCoupangMarginDeletePrisma() {
+  const costRule = costHistoryRule("cost-margin-1", "2026-01-01", null, 0, {
+    coupangProductId: "product-margin-only"
+  });
   const prisma = {
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
+    $queryRaw: vi.fn(async () => []),
     coupangUploadBatch: {
       findUnique: vi.fn(async () => ({
         id: "batch-margin",
         sourceType: CoupangUploadSourceType.MARGIN,
+        validRowCount: 1,
         columnSchema: {
           schemaVersion: 1,
           columns: ["항목", "원가", "판매수수료율", "하나로 배송비", "그로스 입출고비", "그로스 배송비"],
@@ -3342,7 +4192,10 @@ function fakeCoupangMarginDeletePrisma() {
               productId: "product-margin-only",
               productRuleId: "rule-margin-1",
               productRuleCreated: true,
-              costRuleId: "cost-margin-1"
+              costRuleId: "cost-margin-1",
+              costRuleOperation: "CREATED",
+              costRuleBefore: null,
+              costRuleAfter: costRuleJsonSnapshot(costRule)
             }
           ]
         }
@@ -3361,7 +4214,9 @@ function fakeCoupangMarginDeletePrisma() {
       deleteMany: vi.fn(async () => ({}))
     },
     coupangCostRule: {
-      deleteMany: vi.fn(async () => ({ count: 1 }))
+      findUnique: vi.fn(async ({ where }) => where.id === costRule.id ? costRule : null),
+      delete: vi.fn(async () => ({ id: costRule.id })),
+      findMany: vi.fn(async () => [])
     },
     coupangProductRule: {
       deleteMany: vi.fn(async () => ({ count: 1 })),
@@ -3492,5 +4347,294 @@ function fakeCoupangUnmatchedPrisma() {
     coupangPromotionPrice: {
       findMany: vi.fn(async () => [])
     }
+  };
+}
+
+function globalSalesFeeRulePrisma(rate = 0.1) {
+  const rule = salesFeeRuleFixture("global-fee-rule", rate, "2000-01-01", null);
+  return {
+    coupangSalesFeeRule: {
+      findFirst: vi.fn(async () => rule),
+      findMany: vi.fn(async () => [rule])
+    }
+  };
+}
+
+function salesFeeRuleFixture(
+  id: string,
+  rate: number,
+  effectiveFrom: string,
+  effectiveTo: string | null,
+  createdAt = effectiveFrom
+) {
+  return {
+    id,
+    salesFeeRate: new Prisma.Decimal(rate),
+    effectiveFrom: new Date(`${effectiveFrom}T00:00:00.000Z`),
+    effectiveTo: effectiveTo ? new Date(`${effectiveTo}T00:00:00.000Z`) : null,
+    note: null,
+    createdAt: new Date(`${createdAt}T00:00:00.000Z`),
+    updatedAt: new Date(`${createdAt}T00:00:00.000Z`)
+  };
+}
+
+function manualSalesFeeSnapshot(id: string, purchaseDate: string, storedFeeKrw: number) {
+  return {
+    id,
+    purchaseDate: new Date(`${purchaseDate}T00:00:00.000Z`),
+    quantity: 1,
+    salesAmountKrw: new Prisma.Decimal(10_000),
+    salePriceKrw: new Prisma.Decimal(10_000),
+    salesFeeRateApplied: new Prisma.Decimal(0.0777),
+    coupangSalesFeeKrw: new Prisma.Decimal(storedFeeKrw),
+    productCostKrw: new Prisma.Decimal(3_000),
+    vendorFeeTotalKrw: new Prisma.Decimal(500),
+    shippingCostKrw: new Prisma.Decimal(400),
+    otherCostKrw: new Prisma.Decimal(100),
+    totalCostKrw: new Prisma.Decimal(4_000 + storedFeeKrw)
+  };
+}
+
+function salesFeeRuleWriteFixture(input: {
+  rules: ReturnType<typeof salesFeeRuleFixture>[];
+  purchases: ReturnType<typeof manualSalesFeeSnapshot>[];
+}) {
+  const rules = input.rules.map((rule) => ({ ...rule }));
+  const purchases = input.purchases.map((purchase) => ({ ...purchase }));
+  let createdSequence = 0;
+  const ruleDelegate = {
+    findFirst: vi.fn(async ({ where, orderBy }: any) => {
+      let candidates = rules.filter((rule) => !where.NOT?.id || rule.id !== where.NOT.id);
+      if (where.effectiveFrom instanceof Date) {
+        candidates = candidates.filter((rule) => rule.effectiveFrom.getTime() === where.effectiveFrom.getTime());
+      }
+      if (where.effectiveFrom?.gt) {
+        candidates = candidates.filter((rule) => rule.effectiveFrom > where.effectiveFrom.gt);
+      }
+      const direction = orderBy?.[0]?.effectiveFrom ?? "asc";
+      return [...candidates].sort((left, right) => (
+        (left.effectiveFrom.getTime() - right.effectiveFrom.getTime()) * (direction === "asc" ? 1 : -1)
+      ))[0] ?? null;
+    }),
+    create: vi.fn(async ({ data }: any) => {
+      createdSequence += 1;
+      const rule = {
+        id: `created-${createdSequence}`,
+        salesFeeRate: data.salesFeeRate,
+        effectiveFrom: data.effectiveFrom,
+        effectiveTo: null,
+        note: data.note ?? null,
+        createdAt: new Date(`2026-07-22T00:00:0${createdSequence}.000Z`),
+        updatedAt: new Date(`2026-07-22T00:00:0${createdSequence}.000Z`)
+      };
+      rules.push(rule);
+      return rule;
+    }),
+    findMany: vi.fn(async ({ orderBy }: any) => {
+      const direction = orderBy[0].effectiveFrom;
+      return [...rules].sort((left, right) => (
+        (left.effectiveFrom.getTime() - right.effectiveFrom.getTime()) * (direction === "asc" ? 1 : -1)
+        || (left.createdAt.getTime() - right.createdAt.getTime()) * (direction === "asc" ? 1 : -1)
+      ));
+    }),
+    update: vi.fn(async ({ where, data }: any) => {
+      const rule = rules.find((candidate) => candidate.id === where.id);
+      if (!rule) throw new Error(`Missing rule ${where.id}`);
+      const nextEffectiveFrom = data.effectiveFrom ?? rule.effectiveFrom;
+      const nextEffectiveTo = Object.prototype.hasOwnProperty.call(data, "effectiveTo")
+        ? data.effectiveTo
+        : rule.effectiveTo;
+      if (nextEffectiveTo && nextEffectiveTo < nextEffectiveFrom) {
+        throw new Error("coupang_sales_fee_rules_effective_range_check");
+      }
+      Object.assign(rule, data);
+      return rule;
+    }),
+    findUnique: vi.fn(async ({ where }: any) => {
+      const rule = rules.find((candidate) => candidate.id === where.id);
+      return rule ? { ...rule } : null;
+    }),
+    findUniqueOrThrow: vi.fn(async ({ where }: any) => {
+      const rule = rules.find((candidate) => candidate.id === where.id);
+      if (!rule) throw new Error(`Missing rule ${where.id}`);
+      return rule;
+    })
+  };
+  const purchaseDelegate = {
+    findMany: vi.fn(async ({ where }: any) => purchases.filter(
+      (purchase) => purchase.purchaseDate >= where.purchaseDate.gte
+    )),
+    update: vi.fn(async ({ where, data }: any) => {
+      const purchase = purchases.find((candidate) => candidate.id === where.id);
+      if (!purchase) throw new Error(`Missing purchase ${where.id}`);
+      Object.assign(purchase, data);
+      return purchase;
+    })
+  };
+  const tx = {
+    $queryRaw: vi.fn(async () => []),
+    coupangSalesFeeRule: ruleDelegate,
+    coupangManualPurchase: purchaseDelegate
+  };
+  return {
+    prisma: {
+      $transaction: vi.fn(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx))
+    },
+    advisoryLock: tx.$queryRaw,
+    rule: (id: string) => rules.find((rule) => rule.id === id)!,
+    ruleByDate: (date: string) => rules.find(
+      (rule) => rule.effectiveFrom.getTime() === new Date(`${date}T00:00:00.000Z`).getTime()
+    )!,
+    purchase: (id: string) => purchases.find((purchase) => purchase.id === id)!
+  };
+}
+
+function concurrentManualSalesFeeWriteFixture() {
+  const product = {
+    id: "product-1",
+    displayName: "Concurrent product",
+    standardName: "Concurrent",
+    group: null,
+    productRules: []
+  };
+  const rules = [salesFeeRuleFixture("old-rule", 0.1, "2026-01-01", null)];
+  const purchases: any[] = [];
+  const lockEvents: string[] = [];
+  let transactionSequence = 0;
+  let createdRuleSequence = 0;
+  let createdPurchaseSequence = 0;
+  let lockTail = Promise.resolve();
+
+  const ruleDelegate = {
+    findFirst: vi.fn(async ({ where }: any) => {
+      if (where.effectiveFrom instanceof Date) {
+        return rules.find((rule) => rule.effectiveFrom.getTime() === where.effectiveFrom.getTime()) ?? null;
+      }
+      const cutoff = where.effectiveFrom?.lte as Date;
+      return [...rules]
+        .filter((rule) => rule.effectiveFrom <= cutoff && (rule.effectiveTo === null || rule.effectiveTo >= cutoff))
+        .sort((left, right) => right.effectiveFrom.getTime() - left.effectiveFrom.getTime())[0] ?? null;
+    }),
+    create: vi.fn(async ({ data }: any) => {
+      createdRuleSequence += 1;
+      const created = {
+        id: `created-rule-${createdRuleSequence}`,
+        salesFeeRate: data.salesFeeRate,
+        effectiveFrom: data.effectiveFrom,
+        effectiveTo: null,
+        note: data.note ?? null,
+        createdAt: new Date(`2026-07-22T00:00:0${createdRuleSequence}.000Z`),
+        updatedAt: new Date(`2026-07-22T00:00:0${createdRuleSequence}.000Z`)
+      };
+      rules.push(created);
+      return created;
+    }),
+    findMany: vi.fn(async ({ orderBy }: any) => {
+      const direction = orderBy[0]?.effectiveFrom ?? "desc";
+      return [...rules].sort((left, right) => (
+        (left.effectiveFrom.getTime() - right.effectiveFrom.getTime()) * (direction === "asc" ? 1 : -1)
+      ));
+    }),
+    update: vi.fn(async ({ where, data }: any) => {
+      const rule = rules.find((candidate) => candidate.id === where.id);
+      if (!rule) throw new Error(`Missing rule ${where.id}`);
+      Object.assign(rule, data);
+      return rule;
+    }),
+    findUniqueOrThrow: vi.fn(async ({ where }: any) => {
+      const rule = rules.find((candidate) => candidate.id === where.id);
+      if (!rule) throw new Error(`Missing rule ${where.id}`);
+      return rule;
+    })
+  };
+  const purchaseDelegate = {
+    deleteMany: vi.fn(async ({ where }: any) => {
+      const purchaseDate = where.purchaseDate as Date;
+      for (let index = purchases.length - 1; index >= 0; index -= 1) {
+        if (purchases[index].purchaseDate.getTime() === purchaseDate.getTime()) purchases.splice(index, 1);
+      }
+    }),
+    createMany: vi.fn(async ({ data }: any) => {
+      for (const input of data) {
+        createdPurchaseSequence += 1;
+        purchases.push({
+          ...input,
+          id: `manual-${createdPurchaseSequence}`,
+          createdAt: new Date("2026-07-22T00:00:00.000Z"),
+          updatedAt: new Date("2026-07-22T00:00:00.000Z"),
+          product,
+          productRule: null
+        });
+      }
+    }),
+    findMany: vi.fn(async ({ where }: any) => {
+      const purchaseDate = where.purchaseDate;
+      if (purchaseDate instanceof Date) {
+        return purchases.filter((purchase) => purchase.purchaseDate.getTime() === purchaseDate.getTime());
+      }
+      return purchases.filter((purchase) => purchase.purchaseDate >= purchaseDate.gte);
+    }),
+    update: vi.fn(async ({ where, data }: any) => {
+      const purchase = purchases.find((candidate) => candidate.id === where.id);
+      if (!purchase) throw new Error(`Missing purchase ${where.id}`);
+      Object.assign(purchase, data);
+      return purchase;
+    })
+  };
+  const sharedDelegates = {
+    appSetting: { findUnique: vi.fn(async () => null) },
+    coupangProduct: { findMany: vi.fn(async () => [product]) },
+    coupangProductRule: { findMany: vi.fn(async () => []) },
+    coupangCostRule: { findMany: vi.fn(async () => [{
+      id: "cost-rule-1",
+      coupangProductId: product.id,
+      salePriceKrw: new Prisma.Decimal(10_000),
+      supplyPriceKrw: new Prisma.Decimal(0),
+      productCostKrw: new Prisma.Decimal(3_000),
+      salesFeeRate: new Prisma.Decimal(0.1),
+      salesFeeKrw: new Prisma.Decimal(0),
+      sellerShippingFeeKrw: new Prisma.Decimal(400),
+      growthInboundFeeKrw: new Prisma.Decimal(0),
+      growthShippingFeeKrw: new Prisma.Decimal(0),
+      returnRate: new Prisma.Decimal(0),
+      returnCostPerUnitKrw: new Prisma.Decimal(0),
+      extraCostKrw: new Prisma.Decimal(100),
+      effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+      effectiveTo: null,
+      createdAt: new Date("2026-01-01T00:00:00.000Z")
+    }]) },
+    coupangPromotionPrice: { findMany: vi.fn(async () => []) },
+    coupangSalesFeeRule: ruleDelegate,
+    coupangManualPurchase: purchaseDelegate
+  };
+  const transaction = vi.fn(async (callback: (client: any) => Promise<unknown>) => {
+    transactionSequence += 1;
+    const transactionId = transactionSequence;
+    const waitForPrevious = lockTail;
+    let releaseCurrent!: () => void;
+    const current = new Promise<void>((resolve) => { releaseCurrent = resolve; });
+    lockTail = waitForPrevious.then(() => current);
+    let acquired = false;
+    const transactionClient = {
+      ...sharedDelegates,
+      $queryRaw: vi.fn(async () => {
+        await waitForPrevious;
+        acquired = true;
+        lockEvents.push(`transaction-${transactionId}:acquired`);
+        return [];
+      })
+    };
+    try {
+      return await callback(transactionClient);
+    } finally {
+      if (acquired) lockEvents.push(`transaction-${transactionId}:released`);
+      releaseCurrent();
+    }
+  });
+
+  return {
+    prisma: { ...sharedDelegates, $transaction: transaction },
+    lockEvents,
+    purchase: () => purchases[0]
   };
 }

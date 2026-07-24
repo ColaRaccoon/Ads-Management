@@ -780,6 +780,7 @@ model CoupangCostRule {
   product               CoupangProduct @relation(fields: [coupangProductId], references: [id], onDelete: Cascade)
 
   @@index([coupangProductId, effectiveFrom, effectiveTo])
+  @@unique([coupangProductId, effectiveFrom])
   @@map("coupang_cost_rules")
 }
 
@@ -801,8 +802,8 @@ model CoupangManualPurchase {
   promotionPriceKrw     Decimal?            @map("promotion_price_krw") @db.Decimal(14, 2)
   priceSource           String?             @map("price_source") @db.VarChar(32)
   coupangSalesFeeKrw    Decimal             @map("coupang_sales_fee_krw") @db.Decimal(14, 2)
+  salesFeeRateApplied   Decimal             @map("sales_fee_rate_applied") @db.Decimal(8, 6)
   shippingCostKrw       Decimal             @map("shipping_cost_krw") @db.Decimal(14, 2)
-  vatKrw                Decimal             @default(0) @map("vat_krw") @db.Decimal(14, 2)
   otherCostKrw          Decimal             @default(0) @map("other_cost_krw") @db.Decimal(14, 2)
   totalCostKrw          Decimal             @map("total_cost_krw") @db.Decimal(14, 2)
   memo                  String?
@@ -816,6 +817,20 @@ model CoupangManualPurchase {
   @@index([coupangProductId, purchaseDate])
   @@index([coupangProductRuleId])
   @@map("coupang_manual_purchases")
+}
+
+model CoupangSalesFeeRule {
+  id            String    @id @default(uuid()) @db.Uuid
+  salesFeeRate  Decimal   @map("sales_fee_rate") @db.Decimal(8, 6)
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  note          String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([effectiveFrom])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("coupang_sales_fee_rules")
 }
 
 model CoupangUploadBatch {

@@ -1,11 +1,9 @@
 import { safeDivide } from "./date-number";
 
-export type CoupangFeeMode = "PER_UNIT" | "RATE";
-
 export type CoupangFulfillmentMethod = "SELLER" | "GROWTH";
 
 export type CoupangProfitOptions = {
-  feeMode?: CoupangFeeMode;
+  salesFeeRate: number;
   includeReturnCost?: boolean;
   useGrowthCost?: boolean;
 };
@@ -16,8 +14,6 @@ export type CoupangCostInput = {
   salePriceKrw?: number;
   supplyPriceKrw?: number;
   productCostKrw: number;
-  salesFeeRate?: number;
-  salesFeeKrw?: number;
   sellerShippingFeeKrw?: number | null;
   hanaroShippingFeeKrw?: number | null;
   growthInboundFeeKrw?: number;
@@ -75,20 +71,14 @@ export type CoupangSegmentProfitResult = CoupangProfitResult & {
 export type CoupangManualPurchaseCostInput = {
   quantity: number;
   vendorFeePerUnitKrw: number;
-  saleMethod?: string | null;
-  salePriceKrw?: number | null;
-  cost: CoupangCostInput;
-  feeMode?: CoupangFeeMode;
-  useGrowthCost?: boolean;
 };
 
 export type CoupangManualPurchaseCostResult = {
-  productCostKrw: number;
+  productCostKrw: 0;
   vendorFeeTotalKrw: number;
-  coupangSalesFeeKrw: number;
-  shippingCostKrw: number;
-  vatKrw: number;
-  otherCostKrw: number;
+  coupangSalesFeeKrw: 0;
+  shippingCostKrw: 0;
+  otherCostKrw: 0;
   totalCostKrw: number;
 };
 
@@ -96,15 +86,12 @@ export function calculateCoupangProfit(
   sales: CoupangSalesInput,
   cost: CoupangCostInput,
   ads: CoupangAdInput,
-  options: CoupangProfitOptions = {}
+  options: CoupangProfitOptions
 ): CoupangProfitResult {
   const quantity = finiteNumber(sales.salesQuantity);
   const netSalesKrw = finiteNumber(sales.netSalesKrw);
   const productCostKrw = finiteNumber(cost.productCostKrw) * quantity;
-  const salesFeeKrw =
-    options.feeMode === "RATE"
-      ? netSalesKrw * finiteNumber(cost.salesFeeRate)
-      : finiteNumber(cost.salesFeeKrw) * quantity;
+  const salesFeeKrw = netSalesKrw * finiteNumber(options.salesFeeRate);
   const shippingCostKrw = shippingCost(sales.saleMethod, cost, quantity, options);
   const returnCostKrw =
     options.includeReturnCost === false
@@ -140,7 +127,7 @@ export function calculateCoupangProfitBySegments(input: {
   segments: CoupangProfitSegmentInput[];
   cost: CoupangCostInput;
   ads: CoupangAdInput;
-  feeMode?: CoupangFeeMode;
+  salesFeeRate: number;
   includeReturnCost?: boolean;
 }): CoupangSegmentProfitResult {
   const segmentResults = input.segments.map((segment) => ({
@@ -154,7 +141,7 @@ export function calculateCoupangProfitBySegments(input: {
       input.cost,
       { adSpendKrw: 0, adConversionSalesKrw: 0, adConversionQuantity: 0 },
       {
-        feeMode: input.feeMode,
+        salesFeeRate: input.salesFeeRate,
         includeReturnCost: input.includeReturnCost,
         useGrowthCost: true
       }
@@ -213,30 +200,15 @@ export function calculateCoupangManualPurchaseCost(input: CoupangManualPurchaseC
     throw new RangeError("Manual-purchase quantity must be a non-negative integer.");
   }
   const quantity = input.quantity;
-  const productCostKrw = roundMoney(finiteNumber(input.cost.productCostKrw) * quantity);
   const vendorFeeTotalKrw = roundMoney(finiteNumber(input.vendorFeePerUnitKrw) * quantity);
-  const feeMode = input.feeMode ?? (finiteNumber(input.cost.salesFeeRate) > 0 ? "RATE" : "PER_UNIT");
-  const coupangSalesFeeKrw = roundMoney(
-    feeMode === "RATE"
-      ? finiteNumber(input.salePriceKrw) * finiteNumber(input.cost.salesFeeRate) * quantity
-      : finiteNumber(input.cost.salesFeeKrw) * quantity
-  );
-  const shippingCostKrw = roundMoney(
-    shippingCost(input.saleMethod, input.cost, quantity, {
-      useGrowthCost: input.useGrowthCost ?? true
-    })
-  );
-  const vatKrw = roundMoney(vatFromVatIncludedAmount(finiteNumber(input.salePriceKrw) * quantity));
-  const otherCostKrw = roundMoney(finiteNumber(input.cost.extraCostKrw) * quantity);
 
   return {
-    productCostKrw,
+    productCostKrw: 0,
     vendorFeeTotalKrw,
-    coupangSalesFeeKrw,
-    shippingCostKrw,
-    vatKrw,
-    otherCostKrw,
-    totalCostKrw: roundMoney(productCostKrw + vendorFeeTotalKrw + coupangSalesFeeKrw + shippingCostKrw + vatKrw + otherCostKrw)
+    coupangSalesFeeKrw: 0,
+    shippingCostKrw: 0,
+    otherCostKrw: 0,
+    totalCostKrw: vendorFeeTotalKrw
   };
 }
 
@@ -244,7 +216,7 @@ function shippingCost(
   saleMethod: string | null | undefined,
   cost: CoupangCostInput,
   quantity: number,
-  options: CoupangProfitOptions
+  options: Pick<CoupangProfitOptions, "useGrowthCost">
 ) {
   if (options.useGrowthCost === false) {
     return finiteNumber(cost.sellerShippingFeeKrw) * quantity;

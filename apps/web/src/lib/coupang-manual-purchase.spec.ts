@@ -20,14 +20,14 @@ describe("Coupang manual-purchase draft", () => {
         {
           coupangProductId: "calculable",
           unitSalesAmountKrw: 20_000,
-          unitTotalCostKrw: 10_000,
+          unitVendorFeeKrw: 3_182,
           isCalculable: true,
           warnings: []
         },
         {
           coupangProductId: "legacy",
           unitSalesAmountKrw: null,
-          unitTotalCostKrw: null,
+          unitVendorFeeKrw: null,
           isCalculable: false,
           warnings: ["COUPANG_COST_RULE_MISSING"]
         }
@@ -38,9 +38,70 @@ describe("Coupang manual-purchase draft", () => {
       selectedOptionCount: 2,
       totalQuantity: 3,
       expectedSalesAmountKrw: null,
+      expectedVendorFeeKrw: null,
       expectedCostKrw: null,
       uncalculableCount: 1,
       uncalculableReasons: ["COUPANG_COST_RULE_MISSING"]
     });
+  });
+
+  it("uses the vendor fee as the entire manual-purchase cost", () => {
+    const summary = summarizeManualPurchaseDrafts(
+      { product: { quantity: "2" } },
+      [{
+        coupangProductId: "product",
+        unitSalesAmountKrw: 24_000,
+        unitVendorFeeKrw: 3_182,
+        isCalculable: true,
+        warnings: []
+      }]
+    );
+
+    expect(summary.expectedSalesAmountKrw).toBe(48_000);
+    expect(summary.expectedVendorFeeKrw).toBe(6_364);
+    expect(summary).not.toHaveProperty("expectedVatKrw");
+    expect(summary.expectedCostKrw).toBe(6_364);
+  });
+
+  it("rounds the vendor fee once per selected row like the save API", () => {
+    const summary = summarizeManualPurchaseDrafts(
+      { product: { quantity: "10" } },
+      [{
+        coupangProductId: "product",
+        unitSalesAmountKrw: 14_320,
+        unitVendorFeeKrw: 3_182,
+        isCalculable: true,
+        warnings: []
+      }]
+    );
+
+    expect(summary.expectedVendorFeeKrw).toBe(31_820);
+    expect(summary.expectedCostKrw).toBe(31_820);
+  });
+
+  it("matches the 2026-07-22 five-product checksum with row-level rounding", () => {
+    const pricesAndQuantities = [
+      ["p1", 9_900, 10],
+      ["p2", 14_320, 10],
+      ["p3", 24_150, 5],
+      ["p4", 38_600, 5],
+      ["p5", 29_800, 10]
+    ] as const;
+    const summary = summarizeManualPurchaseDrafts(
+      Object.fromEntries(pricesAndQuantities.map(([id, , quantity]) => [id, { quantity: String(quantity) }])),
+      pricesAndQuantities.map(([coupangProductId, unitSalesAmountKrw]) => ({
+        coupangProductId,
+        unitSalesAmountKrw,
+        unitVendorFeeKrw: 3_182,
+        isCalculable: true,
+        warnings: []
+      }))
+    );
+
+    expect(summary.totalQuantity).toBe(40);
+    expect(summary.expectedSalesAmountKrw).toBe(853_950);
+    expect(summary.expectedVendorFeeKrw).toBe(127_280);
+    expect(summary).not.toHaveProperty("expectedVatKrw");
+    expect(summary.expectedCostKrw).toBe(127_280);
   });
 });

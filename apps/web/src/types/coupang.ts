@@ -43,7 +43,6 @@ export type CoupangProductProfitRow = {
   manualPurchaseVendorFeeKrw: number | null;
   manualPurchaseCoupangSalesFeeKrw: number | null;
   manualPurchaseShippingCostKrw: number | null;
-  manualPurchaseVatKrw: number | null;
   manualPurchaseOtherCostKrw: number | null;
   manualPurchaseTotalCostKrw: number | null;
   actualSalesKrw: number | null;
@@ -88,7 +87,6 @@ export type CoupangProfitSummary = {
   manualPurchaseVendorFeeKrw: number | null;
   manualPurchaseCoupangSalesFeeKrw: number | null;
   manualPurchaseShippingCostKrw: number | null;
-  manualPurchaseVatKrw: number | null;
   manualPurchaseOtherCostKrw: number | null;
   manualPurchaseTotalCostKrw: number | null;
   actualSalesKrw: number | null;
@@ -158,7 +156,6 @@ export type CoupangDailyReportRow = Pick<
   | "manualPurchaseVendorFeeKrw"
   | "manualPurchaseCoupangSalesFeeKrw"
   | "manualPurchaseShippingCostKrw"
-  | "manualPurchaseVatKrw"
   | "manualPurchaseOtherCostKrw"
   | "manualPurchaseTotalCostKrw"
   | "actualSalesKrw"
@@ -225,7 +222,6 @@ export type CoupangManualPurchaseOption = {
   unitVendorFeeKrw: number;
   unitCoupangSalesFeeKrw: number | null;
   unitShippingCostKrw: number | null;
-  unitVatKrw: number | null;
   unitOtherCostKrw: number | null;
   unitTotalCostKrw: number | null;
   existingQuantity: number;
@@ -249,8 +245,8 @@ export type CoupangManualPurchaseSavedRow = {
   productCostKrw: number;
   vendorFeeTotalKrw: number;
   coupangSalesFeeKrw: number;
+  salesFeeRateApplied: number;
   shippingCostKrw: number;
-  vatKrw: number;
   otherCostKrw: number;
   totalCostKrw: number;
   memo: string;

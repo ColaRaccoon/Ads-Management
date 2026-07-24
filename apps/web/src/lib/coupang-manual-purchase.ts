@@ -12,7 +12,7 @@ type ManualPurchaseDraft = { quantity: string };
 type ManualPurchaseSummaryOption = {
   coupangProductId: string;
   unitSalesAmountKrw: number | null;
-  unitTotalCostKrw: number | null;
+  unitVendorFeeKrw: number | null;
   isCalculable: boolean;
   warnings: string[];
 };
@@ -25,6 +25,7 @@ export function summarizeManualPurchaseDrafts(
   let selectedOptionCount = 0;
   let totalQuantity = 0;
   let expectedSalesAmountKrw: number | null = 0;
+  let expectedVendorFeeKrw: number | null = 0;
   let expectedCostKrw: number | null = 0;
   let uncalculableCount = 0;
   const uncalculableReasons: string[] = [];
@@ -35,15 +36,17 @@ export function summarizeManualPurchaseDrafts(
 
     const option = optionById.get(productId);
     const hasSalesAmount = Number.isFinite(option?.unitSalesAmountKrw);
-    const hasCost = Number.isFinite(option?.unitTotalCostKrw);
+    const hasVendorFee = Number.isFinite(option?.unitVendorFeeKrw);
+    const hasCost = hasVendorFee;
     selectedOptionCount += 1;
     totalQuantity += quantity;
     expectedSalesAmountKrw = expectedSalesAmountKrw === null || !hasSalesAmount
       ? null
       : expectedSalesAmountKrw + quantity * Number(option?.unitSalesAmountKrw);
-    expectedCostKrw = expectedCostKrw === null || !hasCost
+    expectedVendorFeeKrw = expectedVendorFeeKrw === null || !hasVendorFee
       ? null
-      : expectedCostKrw + quantity * Number(option?.unitTotalCostKrw);
+      : expectedVendorFeeKrw + roundMoney(quantity * Number(option?.unitVendorFeeKrw));
+    expectedCostKrw = expectedVendorFeeKrw;
 
     if (!option?.isCalculable || !hasSalesAmount || !hasCost) {
       uncalculableCount += 1;
@@ -55,8 +58,13 @@ export function summarizeManualPurchaseDrafts(
     selectedOptionCount,
     totalQuantity,
     expectedSalesAmountKrw,
+    expectedVendorFeeKrw,
     expectedCostKrw,
     uncalculableCount,
     uncalculableReasons: Array.from(new Set(uncalculableReasons))
   };
+}
+
+function roundMoney(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }

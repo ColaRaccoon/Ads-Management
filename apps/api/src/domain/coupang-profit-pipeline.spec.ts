@@ -22,7 +22,7 @@ describe("Coupang product-date profit pipeline", () => {
       actual,
       cost: costInput(),
       ads: { adSpendKrw: 5_000, adConversionSalesKrw: 30_000 },
-      feeMode: "RATE"
+      salesFeeRate: 0.1
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(null) });
 
@@ -40,7 +40,7 @@ describe("Coupang product-date profit pipeline", () => {
       actual,
       cost: costInput(),
       ads: { adSpendKrw: 5_000, adConversionSalesKrw: 30_000 },
-      feeMode: "RATE"
+      salesFeeRate: 0.1
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(manual) });
 
@@ -50,6 +50,45 @@ describe("Coupang product-date profit pipeline", () => {
     expect(combined.marginKrw).toBeCloseTo(
       65_000 - 30_000 - 6_500 - 3_000 - 65_000 / 11 - 5_000 - 15_000
     );
+  });
+
+  it("calculates normal VAT after removing manual-purchase sales and charges only the vendor fee", () => {
+    const reported = reportedFacts({
+      salesKrw: 110_000,
+      netSalesKrw: 110_000,
+      salesQuantity: 10
+    });
+    const manual = manualFacts({
+      quantity: 1,
+      salesAmountKrw: 11_000,
+      vendorFeeKrw: 3_080,
+      totalCostKrw: 3_080
+    });
+    const actual = adjustReportedSalesForManualPurchase(reported, manual);
+    const normal = calculateNormalCoupangProfit({
+      reported,
+      actual,
+      cost: {
+        productCostKrw: 0,
+        sellerShippingFeeKrw: 0,
+        returnRate: 0,
+        returnCostPerUnitKrw: 0,
+        extraCostKrw: 0
+      },
+      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      salesFeeRate: 0
+    });
+    const combined = combineCoupangProfitParts({
+      normal,
+      manual: calculateManualPurchaseProfitAdjustment(manual)
+    });
+
+    expect(actual.netSalesKrw).toBe(99_000);
+    expect(normal.calculated?.vatKrw).toBe(9_000);
+    expect(normal.calculated?.marginKrw).toBe(90_000);
+    expect(manual.totalCostKrw).toBe(3_080);
+    expect(manual).not.toHaveProperty("vatKrw");
+    expect(combined.marginKrw).toBe(86_920);
   });
 
   it("keeps the actual sales adjustment and normal profit valid when only the manual cost snapshot is incomplete", () => {
@@ -66,7 +105,7 @@ describe("Coupang product-date profit pipeline", () => {
       actual,
       cost: costInput(),
       ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
-      feeMode: "RATE"
+      salesFeeRate: 0.1
     });
     const manualPart = calculateManualPurchaseProfitAdjustment(manual);
     const combined = combineCoupangProfitParts({ normal, manual: manualPart });
@@ -92,7 +131,8 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual,
       cost: null,
-      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 }
+      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 },
+      salesFeeRate: 0.1
     });
     const manualPart = calculateManualPurchaseProfitAdjustment(manual);
 
@@ -110,12 +150,13 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual: adjustReportedSalesForManualPurchase(reported, manual),
       cost: costInput(),
-      ads: { adSpendKrw: 7_000, adConversionSalesKrw: 0 }
+      ads: { adSpendKrw: 7_000, adConversionSalesKrw: 0 },
+      salesFeeRate: 0.1
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(manual) });
 
-    expect(normal.calculated?.totalCostKrw).toBeCloseTo(10_000 + 1_000 + 1_000 + 25_000 / 11 + 7_000);
-    expect(combined.totalCostKrw).toBeCloseTo(10_000 + 1_000 + 1_000 + 25_000 / 11 + 7_000 + 10_000);
+    expect(normal.calculated?.totalCostKrw).toBeCloseTo(10_000 + 2_500 + 1_000 + 25_000 / 11 + 7_000);
+    expect(combined.totalCostKrw).toBeCloseTo(10_000 + 2_500 + 1_000 + 25_000 / 11 + 7_000 + 10_000);
   });
 
   it("calculates a manual-only date from stored cost snapshots and emits an informational warning", () => {
@@ -126,7 +167,8 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual,
       cost: null,
-      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 }
+      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 },
+      salesFeeRate: null
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(manual) });
 
@@ -136,19 +178,65 @@ describe("Coupang product-date profit pipeline", () => {
     expect(combined.marginKrw).toBe(-23_000);
   });
 
+  it("fails closed for an ads-only product-date when no global sales fee rule applies", () => {
+    const reported = emptyReportedSalesFacts("product-1", DATE, "상품");
+    const normal = calculateNormalCoupangProfit({
+      reported,
+      actual: adjustReportedSalesForManualPurchase(reported, null),
+      cost: null,
+      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 },
+      salesFeeRate: null
+    });
+
+    expect(normal).toEqual({
+      status: "INCOMPLETE",
+      calculated: null,
+      warnings: ["COUPANG_GLOBAL_SALES_FEE_RATE_MISSING"]
+    });
+  });
+
   it.each([
-    [5, 2, 20_000, 10_000, "MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED"],
-    [1, 2, 30_000, 20_000, "MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED"]
-  ] as const)("rejects invalid adjustment without clamping", (manualQuantity, reportedQuantity, manualSales, reportedSales, warning) => {
+    [5, 2, 20_000, 10_000, -3, -10_000, "MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED"],
+    [1, 2, 30_000, 20_000, 1, -10_000, "MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED"]
+  ] as const)("rejects invalid adjustment without producing negative segments", (
+    manualQuantity,
+    reportedQuantity,
+    manualSales,
+    reportedSales,
+    expectedQuantity,
+    expectedSales,
+    warning
+  ) => {
     const reported = reportedFacts({ salesKrw: reportedSales, netSalesKrw: reportedSales, salesQuantity: reportedQuantity });
     const manual = manualFacts({ quantity: manualQuantity, salesAmountKrw: manualSales, totalCostKrw: 1_000 });
     const actual = adjustReportedSalesForManualPurchase(reported, manual);
 
     expect(actual.isValid).toBe(false);
     expect(actual.warnings).toContain(warning);
-    expect(actual.salesQuantity).toBe(reportedQuantity - manualQuantity);
-    expect(actual.salesKrw).toBe(reportedSales - manualSales);
+    expect(actual.salesQuantity).toBe(expectedQuantity);
+    expect(actual.salesKrw).toBe(expectedSales);
+    expect(actual.segments.every((segment) => segment.salesQuantity >= 0)).toBe(true);
   });
+
+  it.each([0.01, 0.02, 0.03, 0.04])(
+    "fails closed for a stored total that differs from the vendor fee by %s KRW",
+    (difference) => {
+      const manual = aggregateManualPurchasesByProductDate([manualInput({
+        vendorFeeKrw: 10,
+        totalCostKrw: 10 + difference
+      })]).get(productDateKey("p", DATE))!;
+      const adjustment = calculateManualPurchaseProfitAdjustment(manual);
+
+      expect(manual.totalCostKrw).toBe(10);
+      expect(manual.isCostSnapshotComplete).toBe(false);
+      expect(manual.warnings).toContain("MANUAL_PURCHASE_TOTAL_COST_MISMATCH");
+      expect(adjustment).toMatchObject({
+        status: "INCOMPLETE",
+        totalCostKrw: 10,
+        marginAdjustmentKrw: null
+      });
+    }
+  );
 
   it("does not subtract cancellation twice from adjusted net sales", () => {
     const reported = reportedFacts({ salesKrw: 100_000, netSalesKrw: 90_000, cancelAmountKrw: 10_000, salesQuantity: 4 });
@@ -159,13 +247,11 @@ describe("Coupang product-date profit pipeline", () => {
     expect(actual.netSalesKrw).toBe(65_000);
   });
 
-  it("uses legacy price snapshots in the required order and leaves missing data incomplete", () => {
+  it("uses only the legacy base-price snapshot and leaves promotion-only data incomplete", () => {
     expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: 11_000, promotionPriceKrw: 10_000, baseSalePriceKrw: 12_000 }))
-      .toMatchObject({ salesAmountKrw: 22_000, source: "SALE_PRICE" });
-    expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: null, promotionPriceKrw: 10_000, baseSalePriceKrw: 12_000 }))
-      .toMatchObject({ salesAmountKrw: 20_000, source: "PROMOTION_PRICE" });
-    expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: null, promotionPriceKrw: null, baseSalePriceKrw: 12_000 }))
       .toMatchObject({ salesAmountKrw: 24_000, source: "BASE_PRICE" });
+    expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: 11_000, promotionPriceKrw: 10_000, baseSalePriceKrw: null }))
+      .toMatchObject({ salesAmountKrw: null, source: "MISSING", warnings: ["MANUAL_PURCHASE_SALES_AMOUNT_MISSING"] });
     expect(resolveManualPurchaseSalesAmount({ quantity: 2, salesAmountKrw: null, salePriceKrw: null, promotionPriceKrw: null, baseSalePriceKrw: null }))
       .toMatchObject({ salesAmountKrw: null, source: "MISSING", warnings: ["MANUAL_PURCHASE_SALES_AMOUNT_MISSING"] });
   });
@@ -226,7 +312,7 @@ describe("Coupang product-date profit pipeline", () => {
         growthShippingFeeKrw: 1_300
       },
       ads: { adSpendKrw: 10_000, adConversionSalesKrw: 30_000 },
-      feeMode: "RATE"
+      salesFeeRate: 0.1
     });
 
     expect(normal.status).toBe("COMPLETE");
@@ -255,7 +341,8 @@ describe("Coupang product-date profit pipeline", () => {
         sellerShippingFeeKrw: null,
         hanaroShippingFeeKrw: null
       },
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 }
+      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      salesFeeRate: 0.1
     });
 
     expect(missing).toEqual({
@@ -283,7 +370,8 @@ describe("Coupang product-date profit pipeline", () => {
         sellerShippingFeeKrw: 0,
         hanaroShippingFeeKrw: null
       },
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 }
+      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      salesFeeRate: 0.1
     });
 
     expect(explicitZero.status).toBe("COMPLETE");
@@ -320,7 +408,6 @@ describe("Coupang product-date profit pipeline", () => {
       actual: adjustReportedSalesForManualPurchase(reported, null),
       cost: {
         productCostKrw: 0,
-        salesFeeKrw: 0,
         sellerShippingFeeKrw: 250,
         hanaroShippingFeeKrw: 300,
         growthInboundFeeKrw: 1_000,
@@ -329,7 +416,7 @@ describe("Coupang product-date profit pipeline", () => {
         extraCostKrw: 0
       },
       ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
-      feeMode: "PER_UNIT"
+      salesFeeRate: 0
     });
 
     expect(reported).toMatchObject({ netSalesKrw: 0, salesQuantity: 0 });
@@ -345,7 +432,7 @@ describe("Coupang product-date profit pipeline", () => {
     });
   });
 
-  it("deducts a mixed-sale manual purchase only from its explicit fulfillment segment", () => {
+  it("deducts mixed-sale manual purchases from seller fulfillment first", () => {
     const reported = mixedReportedFacts();
     const manual = {
       ...manualFacts({ quantity: 1, salesAmountKrw: 20_000, totalCostKrw: 10_000 }),
@@ -356,15 +443,16 @@ describe("Coupang product-date profit pipeline", () => {
     expect(actual.isValid).toBe(true);
     expect(actual).toMatchObject({ salesKrw: 80_000, netSalesKrw: 80_000, salesQuantity: 4 });
     expect(actual.segments).toEqual([
-      expect.objectContaining({ fulfillmentMethod: "SELLER", netSalesKrw: 60_000, salesQuantity: 3 }),
-      expect.objectContaining({ fulfillmentMethod: "GROWTH", netSalesKrw: 20_000, salesQuantity: 1 })
+      expect.objectContaining({ fulfillmentMethod: "SELLER", netSalesKrw: 40_000, salesQuantity: 2 }),
+      expect.objectContaining({ fulfillmentMethod: "GROWTH", netSalesKrw: 40_000, salesQuantity: 2 })
     ]);
   });
 
   it.each([
     [[]],
-    [["판매자배송", "로켓그로스"]]
-  ])("blocks a mixed-sale manual purchase when its fulfillment method is missing or ambiguous", (saleMethods) => {
+    [["판매자배송", "로켓그로스"]],
+    [["알수없음"]]
+  ])("does not require a manual sale method for mixed reported sales", (saleMethods) => {
     const reported = mixedReportedFacts();
     const manual = {
       ...manualFacts({ quantity: 1, salesAmountKrw: 20_000, totalCostKrw: 10_000 }),
@@ -372,46 +460,72 @@ describe("Coupang product-date profit pipeline", () => {
     };
     const actual = adjustReportedSalesForManualPurchase(reported, manual);
 
-    expect(actual.isValid).toBe(false);
-    expect(actual.warnings).toContain("MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES");
-    expect(actual.segments).toEqual(reported.segments);
-    expect(actual).toMatchObject({ salesKrw: 100_000, netSalesKrw: 100_000, salesQuantity: 5 });
+    expect(actual.isValid).toBe(true);
+    expect(actual.warnings).not.toContain("MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES");
+    expect(actual).toMatchObject({ salesKrw: 80_000, netSalesKrw: 80_000, salesQuantity: 4 });
   });
 
-  it("blocks an unknown manual sale method instead of attributing it to SELLER in mixed sales", () => {
+  it("continues the deduction in growth after exhausting seller fulfillment", () => {
     const reported = mixedReportedFacts();
-    const manual = {
-      ...manualFacts({ quantity: 1, salesAmountKrw: 20_000, totalCostKrw: 10_000 }),
-      saleMethods: ["알수없음"]
-    };
-    const actual = adjustReportedSalesForManualPurchase(reported, manual);
-
-    expect(actual.isValid).toBe(false);
-    expect(actual.warnings).toContain("MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES");
-    expect(actual.segments).toEqual(reported.segments);
-    expect(actual).toMatchObject({ salesKrw: 100_000, netSalesKrw: 100_000, salesQuantity: 5 });
-  });
-
-  it("attributes an unknown manual sale method when it exactly matches a reported raw method", () => {
-    const reported = mixedReportedFacts("vendor-direct");
-    const manual = {
-      ...manualFacts({ quantity: 1, salesAmountKrw: 20_000, totalCostKrw: 10_000 }),
-      saleMethods: [" VENDOR - DIRECT "]
-    };
+    const manual = manualFacts({ quantity: 4, salesAmountKrw: 80_000, totalCostKrw: 10_000 });
     const actual = adjustReportedSalesForManualPurchase(reported, manual);
 
     expect(actual.isValid).toBe(true);
-    expect(actual.warnings).not.toContain("MANUAL_PURCHASE_SALE_METHOD_REQUIRED_FOR_MIXED_SALES");
     expect(actual.segments).toEqual([
-      expect.objectContaining({
-        fulfillmentMethod: "SELLER",
-        sourceSaleMethods: ["vendor-direct"],
-        netSalesKrw: 40_000,
-        salesQuantity: 2
-      }),
-      expect.objectContaining({ fulfillmentMethod: "GROWTH", netSalesKrw: 40_000, salesQuantity: 2 })
+      expect.objectContaining({ fulfillmentMethod: "SELLER", netSalesKrw: 0, salesQuantity: 0 }),
+      expect.objectContaining({ fulfillmentMethod: "GROWTH", netSalesKrw: 20_000, salesQuantity: 1 })
     ]);
-    expect(actual).toMatchObject({ salesKrw: 80_000, netSalesKrw: 80_000, salesQuantity: 4 });
+    expect(actual).toMatchObject({ salesKrw: 20_000, netSalesKrw: 20_000, salesQuantity: 1 });
+  });
+
+  it("redistributes a seller sales shortfall to growth while deducting the exact manual sales amount", () => {
+    const reported = aggregateReportedSalesByProductDate([
+      {
+        productId: "product-1",
+        productName: "불균등 단가 상품",
+        date: DATE,
+        salesKrw: 10_000,
+        cancelAmountKrw: 0,
+        netSalesKrw: 10_000,
+        salesQuantity: 2,
+        orderCount: 2,
+        saleMethod: "판매자배송"
+      },
+      {
+        productId: "product-1",
+        productName: "불균등 단가 상품",
+        date: DATE,
+        salesKrw: 100_000,
+        cancelAmountKrw: 0,
+        netSalesKrw: 100_000,
+        salesQuantity: 10,
+        orderCount: 10,
+        saleMethod: "로켓그로스"
+      }
+    ]).get(productDateKey("product-1", DATE))!;
+    const actual = adjustReportedSalesForManualPurchase(
+      reported,
+      manualFacts({ quantity: 5, salesAmountKrw: 50_000, totalCostKrw: 10_000 })
+    );
+
+    expect(actual).toMatchObject({ salesKrw: 60_000, netSalesKrw: 60_000, salesQuantity: 7, isValid: true });
+    expect(actual.segments).toEqual([
+      expect.objectContaining({ fulfillmentMethod: "SELLER", salesKrw: 0, netSalesKrw: 0, salesQuantity: 0 }),
+      expect.objectContaining({ fulfillmentMethod: "GROWTH", salesKrw: 60_000, netSalesKrw: 60_000, salesQuantity: 7 })
+    ]);
+  });
+
+  it("keeps seller and growth segments non-negative when manual quantity exceeds all reported quantity", () => {
+    const reported = mixedReportedFacts();
+    const manual = manualFacts({ quantity: 8, salesAmountKrw: 160_000, totalCostKrw: 10_000 });
+    const actual = adjustReportedSalesForManualPurchase(reported, manual);
+
+    expect(actual).toMatchObject({ salesKrw: -60_000, netSalesKrw: -60_000, salesQuantity: -3, isValid: false });
+    expect(actual.warnings).toContain("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED");
+    expect(actual.segments).toEqual([
+      expect.objectContaining({ fulfillmentMethod: "SELLER", salesQuantity: 0 }),
+      expect.objectContaining({ fulfillmentMethod: "GROWTH", salesKrw: -60_000, netSalesKrw: -60_000, salesQuantity: 0 })
+    ]);
   });
 });
 
@@ -464,11 +578,10 @@ function manualInput(overrides: Partial<Parameters<typeof aggregateManualPurchas
     date: DATE,
     quantity: 1,
     salesAmountKrw: 25_000,
-    productCostKrw: totalCostKrw,
-    vendorFeeKrw: 0,
+    productCostKrw: 0,
+    vendorFeeKrw: totalCostKrw,
     coupangSalesFeeKrw: 0,
     shippingCostKrw: 0,
-    vatKrw: 0,
     otherCostKrw: 0,
     totalCostKrw,
     saleMethod: "판매자배송",
@@ -479,8 +592,6 @@ function manualInput(overrides: Partial<Parameters<typeof aggregateManualPurchas
 function costInput() {
   return {
     productCostKrw: 10_000,
-    salesFeeRate: 0.1,
-    salesFeeKrw: 1_000,
     sellerShippingFeeKrw: 1_000,
     returnRate: 0,
     returnCostPerUnitKrw: 0,

@@ -3,7 +3,7 @@ import { decode } from "iconv-lite";
 import { createHash } from "node:crypto";
 import { parseNumberValue, ParseIssue } from "./date-number";
 
-export const COUPANG_MARGIN_SCHEMA_VERSION = 2;
+export const COUPANG_MARGIN_SCHEMA_VERSION = 3;
 
 export type CoupangMarginColumnKey =
   | "itemName"
@@ -25,8 +25,6 @@ export type ParsedCoupangMarginRow = {
   salePriceKrw: number;
   supplyPriceKrw: number;
   productCostKrw: number;
-  salesFeeRate: number;
-  salesFeeKrw: number;
   sellerShippingFeeKrw?: number;
   hanaroShippingFeeKrw: number | null;
   growthInboundFeeKrw: number;
@@ -64,7 +62,6 @@ export const COUPANG_MARGIN_REQUIRED_COLUMNS: CoupangMarginColumnKey[] = [
   "itemName",
   "salePriceKrw",
   "productCostKrw",
-  "salesFeeRate",
   "hanaroShippingFeeKrw",
   "growthInboundFeeKrw",
   "growthShippingFeeKrw"
@@ -84,6 +81,9 @@ export class CoupangMarginCsvParser {
     }) as Record<string, string>[];
     const headers = records.length > 0 ? Object.keys(records[0]) : parseHeadersOnly(text);
     const headerMap = buildHeaderMap(headers);
+    const ignoredColumns = (["salesFeeRate", "salesFeeKrw"] as const)
+      .map((key) => headerMap.get(key))
+      .filter((header): header is string => Boolean(header));
     const missingColumns = COUPANG_MARGIN_REQUIRED_COLUMNS.filter((key) => !headerMap.has(key));
     const rows = records.map((rawRow, index): ParsedCoupangMarginRowResult => {
       const parsed = parseRow(rawRow, headerMap);
@@ -94,7 +94,7 @@ export class CoupangMarginCsvParser {
         ...parsed
       };
     });
-    return { headers, rows, missingColumns };
+    return { headers, rows, missingColumns, ignoredColumns };
   }
 }
 
@@ -122,8 +122,6 @@ function parseRow(rawRow: Record<string, string>, headerMap: Map<CoupangMarginCo
             salePriceKrw,
             supplyPriceKrw: optionalNumber(rawRow, headerMap, "supplyPriceKrw"),
             productCostKrw,
-            salesFeeRate: optionalRate(rawRow, headerMap, "salesFeeRate"),
-            salesFeeKrw: optionalNumber(rawRow, headerMap, "salesFeeKrw"),
             sellerShippingFeeKrw,
             hanaroShippingFeeKrw,
             growthInboundFeeKrw: growthInboundFeeKrw ?? 0,

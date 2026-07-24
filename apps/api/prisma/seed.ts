@@ -20,6 +20,19 @@ const products = [
 ];
 
 async function main() {
+  const existingCoupangSalesFeeRule = await prisma.coupangSalesFeeRule.findFirst({
+    orderBy: [{ effectiveFrom: "asc" }, { createdAt: "asc" }]
+  });
+  if (!existingCoupangSalesFeeRule) {
+    await prisma.coupangSalesFeeRule.create({
+      data: {
+        salesFeeRate: 0.1188,
+        effectiveFrom: new Date("2000-01-01T00:00:00.000Z"),
+        note: "Default global Coupang sales fee rate (11.88%)"
+      }
+    });
+  }
+
   await prisma.appUser.upsert({
     where: { email: "admin@meta-ads-performance.local" },
     update: { name: "Admin" },

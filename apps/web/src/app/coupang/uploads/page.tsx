@@ -225,6 +225,7 @@ export default function CoupangUploadsPage() {
           onUpload={() => marginUpload.mutate()}
         >
           <input className="input" type="date" value={effectiveFrom} onChange={(event) => setEffectiveFrom(event.target.value)} />
+          <p className="muted">판매수수료율/판매수수료 컬럼은 필수가 아니며, 포함되어도 공통 판매 수수료율 설정으로 대체되어 무시됩니다.</p>
           <MutationMessage mutation={marginUpload} />
         </UploadPanel>
         <UploadPanel
@@ -299,7 +300,7 @@ export default function CoupangUploadsPage() {
           <SummaryMetric label="선택 상품" value={`${manualSummary.selectedOptionCount.toLocaleString("ko-KR")}개`} />
           <SummaryMetric label="총 가구매 수량" value={`${manualSummary.totalQuantity.toLocaleString("ko-KR")}개`} />
           <SummaryMetric label="예상 가구매 매출 조정" value={money(manualSummary.expectedSalesAmountKrw)} />
-          <SummaryMetric label="예상 가구매 비용" value={money(manualSummary.expectedCostKrw)} />
+          <SummaryMetric label="예상 업체수수료" value={money(manualSummary.expectedVendorFeeKrw)} />
         </div>
 
         {manualSummary.uncalculableCount > 0 ? (
@@ -309,8 +310,8 @@ export default function CoupangUploadsPage() {
         ) : null}
 
         <div className="warning-strip manual-purchase-notice">
-          <span>상품별 가구매 수량을 입력하면 해당 날짜의 프로모션가/기본가와 원가 규칙을 스냅샷으로 저장합니다.</span>
-          <span>가구매 매출·수량은 쿠팡 원본에서 분리하고 저장 비용은 최종 순이익에서 한 번만 차감합니다.</span>
+          <span>가구매 매출은 해당 날짜 상품의 프로모션 없는 기본판매가 × 수량으로 원본 실적에서 차감합니다.</span>
+          <span>가구매 비용은 실제 업체수수료만 최종 순이익에서 차감합니다. 상품원가·쿠팡수수료·배송비·기타 부가 비용은 추가 차감하지 않습니다.</span>
         </div>
 
         {manualOptions.isError ? <p className="muted">{manualOptions.error.message}</p> : null}
@@ -334,14 +335,9 @@ export default function CoupangUploadsPage() {
                   <strong>{option.productName}</strong>
                   <span>{option.groupName ?? "미분류"}</span>
                   <span>{option.ruleDisplayName ?? "-"}</span>
+                  <span>기본판매가 {money(option.baseSalePriceKrw)} / 개</span>
                   <span>매출 조정 {money(option.unitSalesAmountKrw)} / 개</span>
-                  <span>제품 원가 {money(option.unitProductCostKrw)} / 개</span>
                   <span>업체수수료 {money(option.unitVendorFeeKrw)} / 개</span>
-                  <span>쿠팡수수료 {money(option.unitCoupangSalesFeeKrw)} / 개</span>
-                  <span>배송비 {money(option.unitShippingCostKrw)} / 개</span>
-                  <span>VAT {money(option.unitVatKrw)} / 개</span>
-                  <span>기타비용 {money(option.unitOtherCostKrw)} / 개</span>
-                  <span>예상비용 {money(option.unitTotalCostKrw)} / 개</span>
                 </button>
                 {option.warnings.length > 0 ? <p className="manual-purchase-warning">{option.warnings[0]}</p> : null}
                 {expanded ? (

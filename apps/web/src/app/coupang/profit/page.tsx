@@ -35,7 +35,7 @@ export default function CoupangProfitPage() {
       <div className="page-title">
         <div>
           <h1>Coupang Profit Table</h1>
-          <p>쿠팡 원본에서 가구매 매출·수량을 분리하고, 정상 판매와 가구매 비용을 각각 한 번만 반영합니다.</p>
+          <p>쿠팡 원본에서 가구매 매출·수량을 분리하고, 정상 판매 비용과 가구매 업체수수료를 각각 한 번만 반영합니다.</p>
         </div>
       </div>
       {summary && !summary.isComplete ? (
@@ -49,7 +49,7 @@ export default function CoupangProfitPage() {
         <Summary label="실제 정상 판매 순매출" value={money(summary?.actualNetSalesKrw)} />
         <Summary label="가구매 매출 조정" value={money(summary?.manualPurchaseSalesKrw)} />
         <Summary label="정상 판매 순이익" value={money(summary?.normalMarginKrw)} />
-        <Summary label="가구매 총비용" value={money(summary?.manualPurchaseTotalCostKrw)} />
+        <Summary label="가구매 비용(업체수수료)" value={money(summary?.manualPurchaseTotalCostKrw)} />
         <Summary
           label={summary?.isComplete === false ? "계산 가능한 상품 순이익(부분 합계)" : "최종 순이익"}
           value={money(summary?.isComplete === false ? summary.knownMarginKrw : summary?.marginKrw)}
@@ -88,10 +88,10 @@ function productProfitColumns(groupBy: CoupangGroupBy, showReported: boolean, sh
     { key: "shipping", header: "배송/그로스", render: (row) => money(row.shippingCostKrw) },
     { key: "return", header: "반품예상비", render: (row) => money(row.returnCostKrw) },
     { key: "extra", header: "기타비용", render: (row) => money(row.extraCostKrw) },
-    { key: "vat", header: "VAT", render: (row) => money(row.vatKrw) },
+    { key: "vat", header: "정상판매 VAT", render: (row) => money(row.vatKrw) },
     { key: "manualQty", header: "가구매 수량", render: (row) => numberFmt(row.manualPurchaseQuantity) },
     { key: "manualSales", header: "가구매 매출 조정", render: (row) => money(row.manualPurchaseSalesKrw) },
-    { key: "manualTotal", header: "가구매 총비용", render: (row) => money(row.manualPurchaseTotalCostKrw) },
+    { key: "manualTotal", header: "가구매 비용(업체수수료)", render: (row) => money(row.manualPurchaseTotalCostKrw) },
     { key: "adSpend", header: "광고비", render: (row) => money(row.adSpendKrw) },
     { key: "organic", header: "유기적 매출", render: (row) => money(row.organicSalesKrw) },
     { key: "totalCost", header: "총비용", render: (row) => money(row.totalCostKrw) },
@@ -101,12 +101,7 @@ function productProfitColumns(groupBy: CoupangGroupBy, showReported: boolean, sh
   ];
   if (showManualDetails) {
     columns.splice(11, 0,
-      { key: "manualProductCost", header: "가구매 제품 원가", render: (row) => money(row.manualPurchaseProductCostKrw) },
-      { key: "manualVendor", header: "가구매 업체수수료", render: (row) => money(row.manualPurchaseVendorFeeKrw) },
-      { key: "manualCoupang", header: "가구매 쿠팡수수료", render: (row) => money(row.manualPurchaseCoupangSalesFeeKrw) },
-      { key: "manualShipping", header: "가구매 배송비", render: (row) => money(row.manualPurchaseShippingCostKrw) },
-      { key: "manualVat", header: "가구매 VAT", render: (row) => money(row.manualPurchaseVatKrw) },
-      { key: "manualOther", header: "가구매 기타비용", render: (row) => money(row.manualPurchaseOtherCostKrw) }
+      { key: "manualVendor", header: "가구매 업체수수료", render: (row) => money(row.manualPurchaseVendorFeeKrw) }
     );
   }
   if (showReported) {
@@ -147,7 +142,7 @@ function summaryCell(key: string, summary: CoupangProfitSummary) {
     actualSales: money(summary.actualSalesKrw), actualNet: money(summary.actualNetSalesKrw), actualQty: numberFmt(summary.actualSalesQuantity),
     productCost: money(summary.productCostKrw), salesFee: money(summary.salesFeeKrw), shipping: money(summary.shippingCostKrw), return: money(summary.returnCostKrw), extra: money(summary.extraCostKrw), vat: money(summary.vatKrw),
     manualQty: numberFmt(summary.manualPurchaseQuantity), manualSales: money(summary.manualPurchaseSalesKrw), manualTotal: money(summary.manualPurchaseTotalCostKrw),
-    manualProductCost: money(summary.manualPurchaseProductCostKrw), manualVendor: money(summary.manualPurchaseVendorFeeKrw), manualCoupang: money(summary.manualPurchaseCoupangSalesFeeKrw), manualShipping: money(summary.manualPurchaseShippingCostKrw), manualVat: money(summary.manualPurchaseVatKrw), manualOther: money(summary.manualPurchaseOtherCostKrw),
+    manualVendor: money(summary.manualPurchaseVendorFeeKrw),
     adSpend: money(summary.adSpendKrw), organic: money(summary.organicSalesKrw), totalCost: money(summary.isComplete ? summary.totalCostKrw : summary.knownTotalCostKrw), normalMargin: money(summary.normalMarginKrw), margin: money(summary.isComplete ? summary.marginKrw : summary.knownMarginKrw), marginRate: percent(summary.marginRate),
     adConversion: money(summary.adConversionSalesKrw), roas: percent(summary.roas),
     reportedSales: money(summary.reportedSalesKrw), reportedNet: money(summary.reportedNetSalesKrw), reportedQty: numberFmt(summary.reportedSalesQuantity)

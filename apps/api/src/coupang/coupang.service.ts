@@ -78,6 +78,7 @@ const COUPANG_TRANSACTION_OPTIONS = {
 const COUPANG_MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY = "coupang_manual_purchase_vendor_fee_per_unit_krw";
 const DEFAULT_COUPANG_MANUAL_PURCHASE_VENDOR_FEE_KRW = 3182;
 const MAX_COUPANG_MANUAL_PURCHASE_MONEY_KRW = 999_999_999_999.99;
+const MAX_COUPANG_COST_INTEGER_KRW = 999_999_999_999;
 
 type CoupangPriceTextAppliedRow = {
   rowNumber: number;
@@ -86,6 +87,9 @@ type CoupangPriceTextAppliedRow = {
   productId: string;
   costRuleId: string;
   salePriceKrw: number;
+  costRuleOperation: "CREATED" | "UPDATED_SAME_DATE";
+  costRuleBefore: CoupangCostRuleRollbackSnapshot | null;
+  costRuleAfter: CoupangCostRuleRollbackSnapshot;
 };
 
 type CoupangMarginAppliedRow = {
@@ -97,6 +101,27 @@ type CoupangMarginAppliedRow = {
   productRuleCreated: boolean;
   costRuleId: string;
   salePriceKrw: number;
+  costRuleOperation: "CREATED" | "UPDATED_SAME_DATE";
+  costRuleBefore: CoupangCostRuleRollbackSnapshot | null;
+  costRuleAfter: CoupangCostRuleRollbackSnapshot;
+};
+
+type CoupangCostRuleRollbackSnapshot = {
+  salePriceKrw: string;
+  supplyPriceKrw: string;
+  productCostKrw: string;
+  salesFeeRate: string;
+  salesFeeKrw: string;
+  sellerShippingFeeKrw: string | null;
+  hanaroShippingFeeKrw: string | null;
+  growthInboundFeeKrw: string;
+  growthShippingFeeKrw: string;
+  returnRate: string;
+  returnCostPerUnitKrw: string;
+  extraCostKrw: string;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  note: string | null;
 };
 
 type CoupangCostRuleSnapshot = Pick<
@@ -168,7 +193,6 @@ export type ProductProfitRow = {
   manualPurchaseVendorFeeKrw: number | null;
   manualPurchaseCoupangSalesFeeKrw: number | null;
   manualPurchaseShippingCostKrw: number | null;
-  manualPurchaseVatKrw: number | null;
   manualPurchaseOtherCostKrw: number | null;
   manualPurchaseTotalCostKrw: number | null;
   actualSalesKrw: number | null;
@@ -657,7 +681,8 @@ export class CoupangService {
       columnSchema: {
         schemaVersion: COUPANG_MARGIN_SCHEMA_VERSION,
         columns: parsed.headers,
-        missingColumns: parsed.missingColumns
+        missingColumns: parsed.missingColumns,
+        ignoredColumns: parsed.ignoredColumns
       },
       rowCount: parsed.rows.length
     });
@@ -666,11 +691,15 @@ export class CoupangService {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.MARGIN, parsed.missingColumns);
     }
 
-    const effectiveFrom = body.effectiveFrom ? asDateOnly(String(body.effectiveFrom)) : new Date();
+    const effectiveFrom = body.effectiveFrom
+      ? requiredDateFromBody(body.effectiveFrom, "effectiveFrom")
+      : currentKoreaDateOnly();
     const appliedRows: CoupangMarginAppliedRow[] = [];
     let validRowCount = 0;
+    const warningCount = parsed.ignoredColumns.length > 0 ? 1 : 0;
     let errorCount = 0;
     await this.prisma.$transaction(async (tx) => {
+      await this.lockCoupangCostRuleBulkWrites(tx);
       for (const row of parsed.rows) {
         if (!row.parsedRow) {
           errorCount += 1;
@@ -685,16 +714,17 @@ export class CoupangService {
           );
           continue;
         }
+        const parsedRow = row.parsedRow;
         validRowCount += 1;
-        const standardName = standardProductName(row.parsedRow.itemName);
+        const standardName = standardProductName(parsedRow.itemName);
         const product = await tx.coupangProduct.upsert({
           where: { standardName },
           create: {
             standardName,
-            displayName: row.parsedRow.itemName
+            displayName: parsedRow.itemName
           },
           update: {
-            displayName: row.parsedRow.itemName,
+            displayName: parsedRow.itemName,
             isActive: true
           }
         });
@@ -708,8 +738,8 @@ export class CoupangService {
           const productRule = await tx.coupangProductRule.update({
             where: { id: existingRule.id },
             data: {
-              displayName: row.parsedRow.itemName,
-              adEnabled: row.parsedRow.adEnabled,
+              displayName: parsedRow.itemName,
+              adEnabled: parsedRow.adEnabled,
               isActive: true
             }
           });
@@ -718,11 +748,11 @@ export class CoupangService {
           const productRule = await tx.coupangProductRule.create({
             data: {
               coupangProductId: product.id,
-              displayName: row.parsedRow.itemName,
-              includeKeywords: [row.parsedRow.itemName],
+              displayName: parsedRow.itemName,
+              includeKeywords: [parsedRow.itemName],
               excludeKeywords: [],
               priority: 100,
-              adEnabled: row.parsedRow.adEnabled,
+              adEnabled: parsedRow.adEnabled,
               validFrom: effectiveFrom,
               note: "마진 TSV 업로드로 생성된 기본 매핑 규칙"
             }
@@ -730,36 +760,39 @@ export class CoupangService {
           productRuleId = productRule.id;
           productRuleCreated = true;
         }
-        const latestCostRule = await this.findLatestCoupangCostRule(tx, product.id);
-        const costRule = await tx.coupangCostRule.create({
-          data: buildCoupangMarginCostRuleData({
+        const savedCostRule = await this.upsertImportedCoupangCostRule(tx, product.id, effectiveFrom,
+          (baseCostRule) => buildCoupangMarginCostRuleData({
             coupangProductId: product.id,
-            parsedRow: row.parsedRow,
+            parsedRow,
             effectiveFrom,
-            latestCostRule
-          })
-        });
+            latestCostRule: baseCostRule
+          }));
         appliedRows.push({
           rowNumber: row.rowNumber,
-          itemName: row.parsedRow.itemName,
+          itemName: parsedRow.itemName,
           standardName,
           productId: product.id,
           productRuleId,
           productRuleCreated,
-          costRuleId: costRule.id,
-          salePriceKrw: row.parsedRow.salePriceKrw
+          costRuleId: savedCostRule.rule.id,
+          salePriceKrw: parsedRow.salePriceKrw,
+          costRuleOperation: savedCostRule.operation,
+          costRuleBefore: savedCostRule.before,
+          costRuleAfter: savedCostRule.after
         });
       }
       await tx.coupangUploadBatch.update({
         where: { id: batch.id },
         data: {
           validRowCount,
+          warningCount,
           errorCount,
           status: statusFor(validRowCount, errorCount),
           columnSchema: {
             schemaVersion: COUPANG_MARGIN_SCHEMA_VERSION,
             columns: parsed.headers,
             missingColumns: parsed.missingColumns,
+            ignoredColumns: parsed.ignoredColumns,
             effectiveFrom: formatDateOnly(effectiveFrom),
             appliedRows
           },
@@ -774,7 +807,11 @@ export class CoupangService {
       schemaVersion: COUPANG_MARGIN_SCHEMA_VERSION,
       rowCount: parsed.rows.length,
       validRowCount,
-      errorCount
+      warningCount,
+      errorCount,
+      warnings: parsed.ignoredColumns.length > 0
+        ? ["판매수수료율/판매수수료 컬럼은 공통 설정으로 대체되어 무시됨"]
+        : []
     };
   }
 
@@ -796,12 +833,15 @@ export class CoupangService {
       },
       rowCount: parsed.rows.length
     });
-    const effectiveFrom = body.effectiveFrom ? asDateOnly(String(body.effectiveFrom)) : new Date();
+    const effectiveFrom = body.effectiveFrom
+      ? requiredDateFromBody(body.effectiveFrom, "effectiveFrom")
+      : currentKoreaDateOnly();
     const appliedRows: CoupangPriceTextAppliedRow[] = [];
     let validRowCount = 0;
     let warningCount = 0;
     let errorCount = 0;
     await this.prisma.$transaction(async (tx) => {
+      await this.lockCoupangCostRuleBulkWrites(tx);
       for (const row of parsed.rows) {
         if (!row.parsedRow) {
           errorCount += 1;
@@ -816,41 +856,45 @@ export class CoupangService {
           );
           continue;
         }
+        const parsedRow = row.parsedRow;
         validRowCount += 1;
-        const standardName = standardProductName(row.parsedRow.itemName);
+        const standardName = standardProductName(parsedRow.itemName);
         const product = await tx.coupangProduct.upsert({
           where: { standardName },
           create: {
             standardName,
-            displayName: row.parsedRow.itemName
+            displayName: parsedRow.itemName
           },
-          update: { displayName: row.parsedRow.itemName, isActive: true }
+          update: { displayName: parsedRow.itemName, isActive: true }
         });
-        const latestCostRule =
-          (await this.findLatestCoupangCostRule(tx, product.id)) ??
-          (await this.findLegacyPriceTextCostRule(tx, {
+        const savedCostRule = await this.upsertImportedCoupangCostRule(tx, product.id, effectiveFrom, async (baseCostRule) => {
+          const latestCostRule = baseCostRule ?? await this.findLegacyPriceTextCostRule(tx, {
             rawLine: row.rawLine,
-            itemName: row.parsedRow.itemName,
-            productId: product.id
-          }));
-        const costRuleData = buildCoupangPriceTextCostRuleData({
-          coupangProductId: product.id,
-          salePriceKrw: row.parsedRow.salePriceKrw,
-          effectiveFrom,
-          latestCostRule
+            itemName: parsedRow.itemName,
+            productId: product.id,
+            effectiveFrom
+          });
+          return buildCoupangPriceTextCostRuleData({
+            coupangProductId: product.id,
+            salePriceKrw: parsedRow.salePriceKrw,
+            effectiveFrom,
+            latestCostRule
+          });
         });
-        const costRule = await tx.coupangCostRule.create({ data: costRuleData });
         appliedRows.push({
           rowNumber: row.rowNumber,
-          itemName: row.parsedRow.itemName,
+          itemName: parsedRow.itemName,
           standardName,
           productId: product.id,
-          costRuleId: costRule.id,
-          salePriceKrw: row.parsedRow.salePriceKrw
+          costRuleId: savedCostRule.rule.id,
+          salePriceKrw: parsedRow.salePriceKrw,
+          costRuleOperation: savedCostRule.operation,
+          costRuleBefore: savedCostRule.before,
+          costRuleAfter: savedCostRule.after
         });
         await this.deleteLegacyPriceTextProductIfUnused(tx, {
           rawLine: row.rawLine,
-          itemName: row.parsedRow.itemName,
+          itemName: parsedRow.itemName,
           productId: product.id
         });
       }
@@ -1086,7 +1130,16 @@ export class CoupangService {
 
   async deleteUpload(id: string) {
     const upload = await this.assertUpload(id);
+    const priceTextRows = upload.sourceType === CoupangUploadSourceType.PRICE_TEXT
+      ? priceTextAppliedRows(upload.columnSchema, upload.validRowCount)
+      : null;
+    const marginRows = upload.sourceType === CoupangUploadSourceType.MARGIN
+      ? marginAppliedRows(upload.columnSchema, upload.validRowCount)
+      : null;
     return this.prisma.$transaction(async (tx) => {
+      if (upload.sourceType === CoupangUploadSourceType.PRICE_TEXT || upload.sourceType === CoupangUploadSourceType.MARGIN) {
+        await this.lockCoupangCostRuleBulkWrites(tx);
+      }
       const [deletingSaleLines, deletingAdMetrics] = await Promise.all([
         tx.coupangSaleLine.findMany({
           where: { uploadBatchId: id },
@@ -1103,11 +1156,11 @@ export class CoupangService {
       await tx.coupangUploadRowError.deleteMany({ where: { uploadBatchId: id } });
       await tx.coupangSaleLine.deleteMany({ where: { uploadBatchId: id } });
       await tx.coupangAdMetric.deleteMany({ where: { uploadBatchId: id } });
-      if (upload.sourceType === CoupangUploadSourceType.PRICE_TEXT) {
-        await this.deletePriceTextUploadEffects(tx, upload.columnSchema);
+      if (priceTextRows) {
+        await this.deletePriceTextUploadEffects(tx, priceTextRows);
       }
-      if (upload.sourceType === CoupangUploadSourceType.MARGIN) {
-        await this.deleteMarginUploadEffects(tx, upload.columnSchema);
+      if (marginRows) {
+        await this.deleteMarginUploadEffects(tx, marginRows);
       }
       await this.restoreCurrentCoupangSaleLines(tx, saleLineKeys);
       await this.restoreCurrentCoupangAdMetrics(tx, adMetricKeys);
@@ -1115,20 +1168,21 @@ export class CoupangService {
     }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async listProductSettings(includeInactive = false) {
+  async listProductSettings(includeInactive = false, dateText?: string) {
+    const date = dateText ? requiredDateFromBody(dateText, "date") : currentKoreaDateOnly();
     const products = await this.prisma.coupangProduct.findMany({
       where: includeInactive ? {} : { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
       include: {
         group: true,
         productRules: { orderBy: [{ priority: "asc" }, { createdAt: "asc" }] },
-        costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] }
+        costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }] }
       }
     });
-    return products.map((product) => ({
-      ...product,
-      costRules: sortCoupangCostRulesForSettings(product.costRules)
-    }));
+    return products.map((product) => {
+      const costRules = sortCoupangCostRulesForSettings(product.costRules);
+      return { ...product, costRules, currentCostRule: findRuleForDate(costRules, date) };
+    });
   }
 
   async listProductGroups(includeInactive = false) {
@@ -1270,9 +1324,19 @@ export class CoupangService {
   }
 
   async createProductSetting(body: Record<string, unknown>) {
+    assertGlobalSalesFeeFieldsNotPresent(body);
+    assertCoupangCostEffectiveToNotPresent(body);
     const displayName = requiredString(body.displayName ?? body.standardName, "displayName");
     const standardName = standardProductName(requiredString(body.standardName ?? displayName, "standardName"));
     const groupId = optionalNullableString(body.groupId);
+    const costRuleBody = hasCoupangCostFields(body)
+      ? {
+          ...body,
+          effectiveFrom: formatDateOnly(Object.prototype.hasOwnProperty.call(body, "effectiveFrom")
+            ? requiredDateFromBody(body.effectiveFrom, "effectiveFrom")
+            : currentKoreaDateOnly())
+        }
+      : body;
     if (groupId) {
       await this.assertProductGroup(groupId);
     }
@@ -1283,32 +1347,32 @@ export class CoupangService {
         sortOrder: numberOrDefault(body.sortOrder, 100),
         isActive: body.isActive === undefined ? true : Boolean(body.isActive),
         group: groupId ? { connect: { id: groupId } } : undefined,
-        costRules: maybeCostRuleCreate(body)
+        costRules: maybeCostRuleCreate(costRuleBody)
       },
       include: { group: true, productRules: true, costRules: true }
     });
   }
 
   async updateProductSetting(id: string, body: Record<string, unknown>) {
+    assertGlobalSalesFeeFieldsNotPresent(body);
+    assertCoupangCostEffectiveToNotPresent(body);
+    if (hasCoupangCostFields(body)) {
+      const configurationBody = { ...body };
+      for (const field of ["mappingRuleId", "includeKeywords", "excludeKeywords", "priority"] as const) {
+        delete configurationBody[field];
+      }
+      const result = await this.updateProductConfiguration(id, {
+        ...configurationBody,
+        effectiveFrom: body.effectiveFrom ?? formatDateOnly(currentKoreaDateOnly())
+      });
+      return result.product;
+    }
     await this.assertProduct(id);
-    const latestCostRule = await this.prisma.coupangCostRule.findFirst({
-      where: { coupangProductId: id },
-      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
-    });
-    const costRule = maybeCostRuleCreate(body, latestCostRule);
     const productData = await this.buildCoupangProductSettingUpdateData(this.prisma, body);
     if (Object.keys(productData).length > 0) {
       await this.prisma.coupangProduct.update({ where: { id }, data: productData });
     }
 
-    if (costRule?.create) {
-      await this.prisma.coupangCostRule.create({
-        data: {
-          ...costRule.create,
-          coupangProductId: id
-        }
-      });
-    }
     return this.prisma.coupangProduct.findUnique({
       where: { id },
       include: { group: true, productRules: true, costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] } }
@@ -1316,40 +1380,248 @@ export class CoupangService {
   }
 
   async updateProductConfiguration(id: string, body: Record<string, unknown>) {
-    return this.prisma.$transaction(async (tx) => {
-      const product = await tx.coupangProduct.findUnique({ where: { id } });
-      if (!product) {
-        throw new NotFoundException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
-      }
+    assertGlobalSalesFeeFieldsNotPresent(body);
+    assertCoupangCostEffectiveToNotPresent(body);
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const product = await tx.coupangProduct.findUnique({ where: { id } });
+        if (!product) {
+          throw new NotFoundException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
+        }
 
-      const latestCostRule = await this.findLatestCoupangCostRule(tx, id);
-      const costRule = maybeCostRuleCreate(body, latestCostRule);
-      const productData = await this.buildCoupangProductSettingUpdateData(tx, body);
-      if (Object.keys(productData).length > 0) {
-        await tx.coupangProduct.update({ where: { id }, data: productData });
-      }
+        const productData = await this.buildCoupangProductSettingUpdateData(tx, body);
+        if (Object.keys(productData).length > 0) {
+          await tx.coupangProduct.update({ where: { id }, data: productData });
+        }
 
-      if (costRule?.create) {
-        await tx.coupangCostRule.create({
-          data: {
-            ...costRule.create,
-            coupangProductId: id
+        let costRuleChange: null | {
+          operation: "CREATED" | "UPDATED_SAME_DATE";
+          rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>;
+          effectiveFrom: string;
+          effectiveTo: string | null;
+          nextRuleEffectiveFrom: string | null;
+        } = null;
+        if (hasCoupangCostFields(body)) {
+          const effectiveFrom = requiredDateFromBody(body.effectiveFrom, "effectiveFrom");
+          await this.lockCoupangCostRuleWrites(tx, id);
+          const sameDateRule = await this.findCoupangCostRuleStartingOnDate(tx, id, effectiveFrom);
+          const baseRule = sameDateRule ?? await this.findCoupangCostRuleAtOrBeforeDate(tx, id, effectiveFrom);
+          const costRule = maybeCostRuleCreate(body, baseRule);
+          if (!costRule?.create) {
+            throw new BadRequestException({ code: "COST_RULE_EMPTY", message: "At least one cost field is required." });
+          }
+          const snapshotData = costRule.create as Prisma.CoupangCostRuleUncheckedCreateWithoutProductInput;
+          if (sameDateRule) {
+            snapshotData.salesFeeRate = sameDateRule.salesFeeRate;
+            snapshotData.salesFeeKrw = sameDateRule.salesFeeKrw;
+          }
+          const saved = sameDateRule
+            ? await tx.coupangCostRule.update({ where: { id: sameDateRule.id }, data: snapshotData })
+            : await tx.coupangCostRule.create({ data: { ...snapshotData, coupangProductId: id } });
+          await this.normalizeCoupangCostRuleRanges(tx, id);
+          const [rule, nextRule] = await Promise.all([
+            tx.coupangCostRule.findUniqueOrThrow({ where: { id: saved.id } }),
+            tx.coupangCostRule.findFirst({
+              where: { coupangProductId: id, effectiveFrom: { gt: effectiveFrom } },
+              orderBy: [{ effectiveFrom: "asc" }, { createdAt: "asc" }, { id: "asc" }]
+            })
+          ]);
+          costRuleChange = {
+            operation: sameDateRule ? "UPDATED_SAME_DATE" : "CREATED",
+            rule,
+            effectiveFrom: formatDateOnly(rule.effectiveFrom),
+            effectiveTo: rule.effectiveTo ? formatDateOnly(rule.effectiveTo) : null,
+            nextRuleEffectiveFrom: nextRule ? formatDateOnly(nextRule.effectiveFrom) : null
+          };
+        }
+
+        await this.upsertPrimaryCoupangProductRule(tx, id, body);
+
+        const updated = await tx.coupangProduct.findUnique({
+          where: { id },
+          include: {
+            group: true,
+            productRules: { orderBy: [{ priority: "asc" }, { createdAt: "asc" }] },
+            costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }] }
           }
         });
-      }
-
-      await this.upsertPrimaryCoupangProductRule(tx, id, body);
-
-      const updated = await tx.coupangProduct.findUnique({
-        where: { id },
-        include: {
-          group: true,
-          productRules: { orderBy: [{ priority: "asc" }, { createdAt: "asc" }] },
-          costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] }
+        if (!updated) {
+          throw new NotFoundException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
         }
+        const costRules = sortCoupangCostRulesForSettings(updated.costRules);
+        const productResult = { ...updated, costRules, currentCostRule: findRuleForDate(costRules, currentKoreaDateOnly()) };
+        return { product: productResult, costRuleChange };
+      }, COUPANG_TRANSACTION_OPTIONS);
+    } catch (error) {
+      rethrowCoupangCostRuleWriteError(error);
+    }
+  }
+
+  async correctProductCostRule(productId: string, costRuleId: string, body: Record<string, unknown>) {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const product = await tx.coupangProduct.findUnique({ where: { id: productId } });
+        if (!product) throw new NotFoundException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
+        await this.lockCoupangCostRuleWrites(tx, productId);
+        const existing = await tx.coupangCostRule.findUnique({ where: { id: costRuleId } });
+        if (!existing) throw new NotFoundException({ code: "COUPANG_COST_RULE_NOT_FOUND", message: "Coupang cost rule was not found." });
+        if (existing.coupangProductId !== productId) {
+          throw new BadRequestException({ code: "COUPANG_COST_RULE_PRODUCT_MISMATCH", message: "Cost rule belongs to another Coupang product." });
+        }
+
+        const data: Prisma.CoupangCostRuleUpdateInput = {};
+        const nonNegativeMoneyFields = [
+          "salePriceKrw",
+          "supplyPriceKrw",
+          "productCostKrw",
+          "salesFeeKrw",
+          "growthInboundFeeKrw",
+          "growthShippingFeeKrw",
+          "returnCostPerUnitKrw",
+          "extraCostKrw"
+        ] as const;
+        for (const field of nonNegativeMoneyFields) {
+          if (Object.prototype.hasOwnProperty.call(body, field)) {
+            data[field] = nonNegativeCostDecimalFromBody(body[field], field);
+          }
+        }
+        for (const field of ["sellerShippingFeeKrw", "hanaroShippingFeeKrw"] as const) {
+          if (Object.prototype.hasOwnProperty.call(body, field)) {
+            data[field] = nullableNonNegativeCostDecimalFromBody(body[field], field);
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "salesFeeRate")) {
+          data.salesFeeRate = rateDecimalFromBody(body.salesFeeRate, "salesFeeRate");
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "returnRate")) {
+          data.returnRate = rateDecimalFromBody(body.returnRate, "returnRate");
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "effectiveFrom")) {
+          data.effectiveFrom = requiredDateFromBody(body.effectiveFrom, "effectiveFrom");
+        }
+        assertCoupangCostEffectiveToNotPresent(body);
+        if (Object.prototype.hasOwnProperty.call(body, "note")) {
+          data.note = optionalNullableString(body.note);
+        }
+        const nextFrom = data.effectiveFrom instanceof Date ? data.effectiveFrom : existing.effectiveFrom;
+        const duplicate = await tx.coupangCostRule.findFirst({
+          where: { coupangProductId: productId, effectiveFrom: nextFrom, NOT: { id: costRuleId } }
+        });
+        if (duplicate) throw new BadRequestException({
+          code: "COUPANG_COST_RULE_DATE_EXISTS",
+          message: "A cost rule already starts on this date; correct that history row instead."
+        });
+        if (Object.keys(data).length === 0) throw new BadRequestException({ code: "COST_RULE_CORRECTION_EMPTY", message: "At least one correction field is required." });
+        const changedFields = Object.keys(data);
+        if (data.effectiveFrom instanceof Date) {
+          const followingRule = await tx.coupangCostRule.findFirst({
+            where: { coupangProductId: productId, effectiveFrom: { gt: nextFrom }, NOT: { id: costRuleId } },
+            orderBy: [{ effectiveFrom: "asc" }, { createdAt: "asc" }, { id: "asc" }]
+          });
+          data.effectiveTo = followingRule ? previousDate(followingRule.effectiveFrom) : null;
+        }
+
+        await tx.coupangCostRule.update({ where: { id: costRuleId }, data });
+        await this.normalizeCoupangCostRuleRanges(tx, productId);
+        const normalized = await tx.coupangCostRule.findUniqueOrThrow({ where: { id: costRuleId } });
+        console.info("COUPANG_COST_RULE_CORRECTED", { productId, costRuleId, effectiveFrom: formatDateOnly(normalized.effectiveFrom), changedFields });
+        return normalized;
+      }, COUPANG_TRANSACTION_OPTIONS);
+    } catch (error) {
+      rethrowCoupangCostRuleWriteError(error);
+    }
+  }
+
+  async currentSalesFeeRule(dateText?: string) {
+    const date = dateText ? requiredDateFromBody(dateText, "date") : currentKoreaDateOnly();
+    const rule = await this.prisma.coupangSalesFeeRule.findFirst({
+      where: { effectiveFrom: { lte: date }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: date } }] },
+      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+    });
+    if (!rule) {
+      throw new NotFoundException({
+        code: "COUPANG_GLOBAL_SALES_FEE_RATE_MISSING",
+        message: `No global Coupang sales fee rate applies on ${formatDateOnly(date)}.`
       });
-      return updated ? { ...updated, costRules: sortCoupangCostRulesForSettings(updated.costRules) } : updated;
-    }, COUPANG_TRANSACTION_OPTIONS);
+    }
+    return serializeSalesFeeRule(rule);
+  }
+
+  async listSalesFeeRules() {
+    const rules = await this.prisma.coupangSalesFeeRule.findMany({
+      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+    });
+    return rules.map(serializeSalesFeeRule);
+  }
+
+  async createSalesFeeRule(body: Record<string, unknown>) {
+    const salesFeeRate = salesFeeRateFromPercentBody(body.salesFeePercent);
+    const effectiveFrom = requiredDateFromBody(body.effectiveFrom, "effectiveFrom");
+    const note = optionalNullableString(body.note);
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await this.lockSalesFeeRuleWrites(tx);
+        const duplicate = await tx.coupangSalesFeeRule.findFirst({ where: { effectiveFrom } });
+        if (duplicate) {
+          throw new BadRequestException({
+            code: "COUPANG_SALES_FEE_RULE_DATE_EXISTS",
+            message: "A global sales fee rule already starts on this date; correct that history row instead."
+          });
+        }
+        const created = await tx.coupangSalesFeeRule.create({ data: { salesFeeRate, effectiveFrom, note } });
+        await this.normalizeSalesFeeRuleRanges(tx);
+        const rule = await tx.coupangSalesFeeRule.findUniqueOrThrow({ where: { id: created.id } });
+        return { rule: serializeSalesFeeRule(rule) };
+      }, COUPANG_TRANSACTION_OPTIONS);
+    } catch (error) {
+      rethrowSalesFeeRuleWriteError(error);
+    }
+  }
+
+  async correctSalesFeeRule(id: string, body: Record<string, unknown>) {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await this.lockSalesFeeRuleWrites(tx);
+        const existing = await tx.coupangSalesFeeRule.findUnique({ where: { id } });
+        if (!existing) {
+          throw new NotFoundException({ code: "COUPANG_SALES_FEE_RULE_NOT_FOUND", message: "Global sales fee rule was not found." });
+        }
+        const data: Prisma.CoupangSalesFeeRuleUpdateInput = {};
+        if (Object.prototype.hasOwnProperty.call(body, "salesFeePercent")) {
+          data.salesFeeRate = salesFeeRateFromPercentBody(body.salesFeePercent);
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "effectiveFrom")) {
+          data.effectiveFrom = requiredDateFromBody(body.effectiveFrom, "effectiveFrom");
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "note")) {
+          data.note = optionalNullableString(body.note);
+        }
+        if (Object.keys(data).length === 0) {
+          throw new BadRequestException({ code: "SALES_FEE_RULE_CORRECTION_EMPTY", message: "At least one correction field is required." });
+        }
+        const nextFrom = data.effectiveFrom instanceof Date ? data.effectiveFrom : existing.effectiveFrom;
+        const duplicate = await tx.coupangSalesFeeRule.findFirst({ where: { effectiveFrom: nextFrom, NOT: { id } } });
+        if (duplicate) {
+          throw new BadRequestException({
+            code: "COUPANG_SALES_FEE_RULE_DATE_EXISTS",
+            message: "Another global sales fee rule already starts on this date."
+          });
+        }
+        if (data.effectiveFrom instanceof Date) {
+          const followingRule = await tx.coupangSalesFeeRule.findFirst({
+            where: { effectiveFrom: { gt: nextFrom }, NOT: { id } },
+            orderBy: [{ effectiveFrom: "asc" }, { createdAt: "asc" }, { id: "asc" }]
+          });
+          data.effectiveTo = followingRule ? previousDate(followingRule.effectiveFrom) : null;
+        }
+        await tx.coupangSalesFeeRule.update({ where: { id }, data });
+        await this.normalizeSalesFeeRuleRanges(tx);
+        const rule = await tx.coupangSalesFeeRule.findUniqueOrThrow({ where: { id } });
+        return { rule: serializeSalesFeeRule(rule) };
+      }, COUPANG_TRANSACTION_OPTIONS);
+    } catch (error) {
+      rethrowSalesFeeRuleWriteError(error);
+    }
   }
 
   async deleteProductSetting(id: string) {
@@ -1358,7 +1630,7 @@ export class CoupangService {
   }
 
   async manualPurchaseOptions(query: { date?: string }) {
-    const date = query.date ? asDateOnly(query.date) : asDateOnly(formatDateOnly(new Date()));
+    const date = query.date ? asDateOnly(query.date) : currentKoreaDateOnly();
     const dateText = formatDateOnly(date);
     const [vendorFeePerUnitKrw, activeProducts, existingRows] = await Promise.all([
       this.manualPurchaseVendorFeePerUnitKrw(),
@@ -1387,27 +1659,13 @@ export class CoupangService {
     const activeProductById = new Map(activeProducts.map((product) => [product.id, product]));
     const existingByProductId = new Map(existingRows.map((row) => [row.coupangProductId, row]));
     const productIds = uniqueNonEmpty([...activeProducts.map((product) => product.id), ...existingRows.map((row) => row.coupangProductId)]);
-    const [costRules, promotionPrices] = await Promise.all([
-      productIds.length
-        ? this.prisma.coupangCostRule.findMany({
-            where: { coupangProductId: { in: productIds } },
-            orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
-          })
-        : [],
-      productIds.length
-        ? this.prisma.coupangPromotionPrice.findMany({
-            where: {
-              coupangProductId: { in: productIds },
-              promotionStartDate: { lte: date },
-              promotionEndDate: { gte: date },
-              validationStatus: { not: RowValidationStatus.ERROR }
-            },
-            orderBy: [{ promotionStartDate: "desc" }, { createdAt: "desc" }]
-          })
-        : []
-    ]);
+    const costRules = productIds.length
+      ? await this.prisma.coupangCostRule.findMany({
+          where: { coupangProductId: { in: productIds } },
+          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+        })
+      : [];
     const costRulesByProductId = groupBy(costRules, (rule) => rule.coupangProductId);
-    const promotionPricesByProductId = groupBy(promotionPrices, (promotion) => promotion.coupangProductId ?? "");
 
     const options = productIds
       .map((productId) => {
@@ -1421,52 +1679,24 @@ export class CoupangService {
         const groupName = product?.group?.displayName ?? null;
         const saleMethod = representativeRule?.saleMethod ?? existing?.saleMethod ?? null;
         const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], date);
-        const resolvedPrice = resolveCoupangSalePrice({
-          baseSalePriceKrw: costRule ? numberFrom(costRule.salePriceKrw) : null,
-          promotions: (promotionPricesByProductId.get(productId) ?? []).map((promotion) => ({
-            promotionPriceKrw: numberFrom(promotion.promotionPriceKrw),
-            promotionStartDate: promotion.promotionStartDate,
-            promotionEndDate: promotion.promotionEndDate,
-            promotionStatus: promotion.promotionStatus,
-            validationErrors: promotion.validationErrors
-          })),
-          date
-        });
-        const warnings = [...resolvedPrice.priceWarnings];
-        let unitCoupangSalesFeeKrw: number | null = null;
+        const baseSalePriceKrw = costRule ? numberFrom(costRule.salePriceKrw) : null;
+        const warnings: string[] = [];
         let unitSalesAmountKrw: number | null = null;
-        let unitProductCostKrw: number | null = null;
-        let unitShippingCostKrw: number | null = null;
-        let unitVatKrw: number | null = null;
-        let unitOtherCostKrw: number | null = null;
         let unitTotalCostKrw: number | null = null;
         let isCalculable = true;
         if (!costRule) {
           warnings.push("COUPANG_COST_RULE_MISSING");
           isCalculable = false;
+        } else if (baseSalePriceKrw === null || baseSalePriceKrw <= 0) {
+          warnings.push("COUPANG_BASE_SALE_PRICE_REQUIRED");
+          isCalculable = false;
         } else {
-          const feeMode = numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT";
-          if (resolvedPrice.salePriceKrw === null || resolvedPrice.salePriceKrw <= 0) {
-            warnings.push("COUPANG_SALE_PRICE_REQUIRED");
-            isCalculable = false;
-          } else {
-            const calculated = calculateCoupangManualPurchaseCost({
-              quantity: 1,
-              vendorFeePerUnitKrw,
-              saleMethod,
-              salePriceKrw: resolvedPrice.salePriceKrw,
-              cost: costInput(costRule),
-              feeMode,
-              useGrowthCost: true
-            });
-            unitProductCostKrw = calculated.productCostKrw;
-            unitSalesAmountKrw = resolvedPrice.salePriceKrw;
-            unitCoupangSalesFeeKrw = calculated.coupangSalesFeeKrw;
-            unitShippingCostKrw = calculated.shippingCostKrw;
-            unitVatKrw = calculated.vatKrw;
-            unitOtherCostKrw = calculated.otherCostKrw;
-            unitTotalCostKrw = calculated.totalCostKrw;
-          }
+          const calculated = calculateCoupangManualPurchaseCost({
+            quantity: 1,
+            vendorFeePerUnitKrw
+          });
+          unitSalesAmountKrw = baseSalePriceKrw;
+          unitTotalCostKrw = calculated.totalCostKrw;
         }
         const searchText = uniqueNonEmpty([
           productName,
@@ -1490,18 +1720,17 @@ export class CoupangService {
           groupName,
           saleMethod,
           searchText,
-          salePriceKrw: resolvedPrice.salePriceKrw,
-          baseSalePriceKrw: resolvedPrice.baseSalePriceKrw,
-          promotionPriceKrw: resolvedPrice.promotionPriceKrw,
-          priceSource: resolvedPrice.priceSource,
-          priceWarnings: resolvedPrice.priceWarnings,
+          salePriceKrw: baseSalePriceKrw,
+          baseSalePriceKrw,
+          promotionPriceKrw: null,
+          priceSource: "BASE",
+          priceWarnings: [],
           unitSalesAmountKrw,
           unitVendorFeeKrw: vendorFeePerUnitKrw,
-          unitProductCostKrw,
-          unitCoupangSalesFeeKrw,
-          unitShippingCostKrw,
-          unitVatKrw,
-          unitOtherCostKrw,
+          unitProductCostKrw: 0,
+          unitCoupangSalesFeeKrw: 0,
+          unitShippingCostKrw: 0,
+          unitOtherCostKrw: 0,
           unitTotalCostKrw,
           existingId: existing?.id ?? null,
           existingQuantity: existing?.quantity ?? 0,
@@ -1520,7 +1749,12 @@ export class CoupangService {
       ).values()
     ).sort((a, b) => a.displayName.localeCompare(b.displayName));
 
-    return { date: dateText, vendorFeePerUnitKrw, groups, options };
+    return {
+      date: dateText,
+      vendorFeePerUnitKrw,
+      groups,
+      options
+    };
   }
 
   async listManualPurchases(query: { from?: string; to?: string }) {
@@ -1536,154 +1770,129 @@ export class CoupangService {
   async replaceManualPurchasesForDate(dateText: string, body: Record<string, unknown>) {
     const purchaseDate = asDateOnly(dateText);
     const normalizedDate = formatDateOnly(purchaseDate);
-    const vendorFeePerUnitKrw = manualPurchaseVendorFeeFromBody(body.vendorFeePerUnitKrw) ?? (await this.manualPurchaseVendorFeePerUnitKrw());
     const entries = parseManualPurchaseEntries(body.entries);
     const productIds = uniqueNonEmpty(entries.map((entry) => entry.coupangProductId));
 
-    if (entries.length === 0) {
-      await this.prisma.coupangManualPurchase.deleteMany({ where: { purchaseDate } });
-      return { date: normalizedDate, selectedOptionCount: 0, totalQuantity: 0, totalSalesAmountKrw: 0, totalCostKrw: 0, rows: [] };
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const vendorFeePerUnitKrw = manualPurchaseVendorFeeFromBody(body.vendorFeePerUnitKrw)
+        ?? (await this.manualPurchaseVendorFeePerUnitKrw(tx));
 
-    const requestedRuleIds = uniqueNonEmpty(entries.map((entry) => entry.coupangProductRuleId ?? undefined));
-    const [products, requestedRules, costRules, promotionPrices] = await Promise.all([
-      this.prisma.coupangProduct.findMany({
-        where: { id: { in: productIds } },
-        include: {
-          group: true,
-          productRules: {
-            where: {
-              isActive: true,
-              validFrom: { lte: purchaseDate },
-              OR: [{ validTo: null }, { validTo: { gte: purchaseDate } }]
-            },
-            orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
+      if (entries.length === 0) {
+        await tx.coupangManualPurchase.deleteMany({ where: { purchaseDate } });
+        return { date: normalizedDate, selectedOptionCount: 0, totalQuantity: 0, totalSalesAmountKrw: 0, totalCostKrw: 0, rows: [] };
+      }
+
+      const requestedRuleIds = uniqueNonEmpty(entries.map((entry) => entry.coupangProductRuleId ?? undefined));
+      const [products, requestedRules, costRules] = await Promise.all([
+        tx.coupangProduct.findMany({
+          where: { id: { in: productIds } },
+          include: {
+            group: true,
+            productRules: {
+              where: {
+                isActive: true,
+                validFrom: { lte: purchaseDate },
+                OR: [{ validTo: null }, { validTo: { gte: purchaseDate } }]
+              },
+              orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
+            }
           }
+        }),
+        requestedRuleIds.length > 0
+          ? tx.coupangProductRule.findMany({ where: { id: { in: requestedRuleIds } } })
+          : [],
+        tx.coupangCostRule.findMany({
+          where: { coupangProductId: { in: productIds } },
+          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+        })
+      ]);
+      const productById = new Map(products.map((product) => [product.id, product]));
+      const requestedRuleById = new Map(requestedRules.map((rule) => [rule.id, rule]));
+      const costRulesByProductId = groupBy(costRules, (rule) => rule.coupangProductId);
+      const data: Prisma.CoupangManualPurchaseCreateManyInput[] = [];
+
+      for (const entry of entries) {
+        const product = productById.get(entry.coupangProductId);
+        if (!product) {
+          throw new BadRequestException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
         }
-      }),
-      requestedRuleIds.length > 0
-        ? this.prisma.coupangProductRule.findMany({ where: { id: { in: requestedRuleIds } } })
-        : [],
-      this.prisma.coupangCostRule.findMany({
-        where: { coupangProductId: { in: productIds } },
-        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
-      }),
-      this.prisma.coupangPromotionPrice.findMany({
-        where: {
-          coupangProductId: { in: productIds },
-          promotionStartDate: { lte: purchaseDate },
-          promotionEndDate: { gte: purchaseDate },
-          validationStatus: { not: RowValidationStatus.ERROR }
-        },
-        orderBy: [{ promotionStartDate: "desc" }, { createdAt: "desc" }]
-      })
-    ]);
-    const productById = new Map(products.map((product) => [product.id, product]));
-    const requestedRuleById = new Map(requestedRules.map((rule) => [rule.id, rule]));
-    const costRulesByProductId = groupBy(costRules, (rule) => rule.coupangProductId);
-    const promotionPricesByProductId = groupBy(promotionPrices, (promotion) => promotion.coupangProductId ?? "");
-    const data: Prisma.CoupangManualPurchaseCreateManyInput[] = [];
+        const requestedRule = entry.coupangProductRuleId ? requestedRuleById.get(entry.coupangProductRuleId) : null;
+        if (entry.coupangProductRuleId && !requestedRule) {
+          throw new BadRequestException({ code: "COUPANG_PRODUCT_RULE_NOT_FOUND", message: "Coupang product rule was not found." });
+        }
+        if (requestedRule && requestedRule.coupangProductId !== product.id) {
+          throw new BadRequestException({ code: "COUPANG_RULE_PRODUCT_MISMATCH", message: "Mapping rule belongs to another product." });
+        }
+        const representativeRule = requestedRule ?? product.productRules[0] ?? null;
+        const costRule = findRuleForDate(costRulesByProductId.get(product.id) ?? [], purchaseDate);
+        if (!costRule) {
+          throw new BadRequestException({ code: "COUPANG_COST_RULE_MISSING", message: `${product.displayName} cost rule is required.` });
+        }
+        const baseSalePriceKrw = numberFrom(costRule.salePriceKrw);
+        if (baseSalePriceKrw <= 0) {
+          throw new BadRequestException({ code: "COUPANG_BASE_SALE_PRICE_REQUIRED", message: `${product.displayName} base sale price is required.` });
+        }
+        const calculated = calculateCoupangManualPurchaseCost({
+          quantity: entry.quantity,
+          vendorFeePerUnitKrw
+        });
+        const salesAmountKrw = baseSalePriceKrw * entry.quantity;
+        for (const [field, amount] of [
+          ["salesAmountKrw", salesAmountKrw],
+          ["productCostKrw", calculated.productCostKrw],
+          ["vendorFeePerUnitKrw", vendorFeePerUnitKrw],
+          ["vendorFeeTotalKrw", calculated.vendorFeeTotalKrw],
+          ["coupangSalesFeeKrw", calculated.coupangSalesFeeKrw],
+          ["shippingCostKrw", calculated.shippingCostKrw],
+          ["otherCostKrw", calculated.otherCostKrw],
+          ["totalCostKrw", calculated.totalCostKrw]
+        ] as const) {
+          assertManualPurchaseStoredAmount(amount, product.id, field);
+        }
+        data.push({
+          purchaseDate,
+          coupangProductId: product.id,
+          coupangProductRuleId: representativeRule?.id ?? null,
+          productDisplayName: product.displayName,
+          ruleDisplayName: representativeRule?.displayName ?? null,
+          saleMethod: representativeRule?.saleMethod ?? null,
+          quantity: entry.quantity,
+          salesAmountKrw: decimal(salesAmountKrw),
+          productCostKrw: decimal(calculated.productCostKrw),
+          vendorFeePerUnitKrw: decimal(vendorFeePerUnitKrw),
+          vendorFeeTotalKrw: decimal(calculated.vendorFeeTotalKrw),
+          salePriceKrw: decimal(baseSalePriceKrw),
+          baseSalePriceKrw: decimal(baseSalePriceKrw),
+          promotionPriceKrw: null,
+          priceSource: "BASE",
+          coupangSalesFeeKrw: decimal(0),
+          salesFeeRateApplied: decimal(0),
+          shippingCostKrw: decimal(0),
+          otherCostKrw: decimal(0),
+          totalCostKrw: decimal(calculated.totalCostKrw),
+          memo: entry.memo
+        });
+      }
 
-    for (const entry of entries) {
-      const product = productById.get(entry.coupangProductId);
-      if (!product) {
-        throw new BadRequestException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
-      }
-      const requestedRule = entry.coupangProductRuleId ? requestedRuleById.get(entry.coupangProductRuleId) : null;
-      if (entry.coupangProductRuleId && !requestedRule) {
-        throw new BadRequestException({ code: "COUPANG_PRODUCT_RULE_NOT_FOUND", message: "Coupang product rule was not found." });
-      }
-      if (requestedRule && requestedRule.coupangProductId !== product.id) {
-        throw new BadRequestException({ code: "COUPANG_RULE_PRODUCT_MISMATCH", message: "Mapping rule belongs to another product." });
-      }
-      const representativeRule = requestedRule ?? product.productRules[0] ?? null;
-      const costRule = findRuleForDate(costRulesByProductId.get(product.id) ?? [], purchaseDate);
-      if (!costRule) {
-        throw new BadRequestException({ code: "COUPANG_COST_RULE_MISSING", message: `${product.displayName} cost rule is required.` });
-      }
-      const resolvedPrice = resolveCoupangSalePrice({
-        baseSalePriceKrw: numberFrom(costRule.salePriceKrw),
-        promotions: (promotionPricesByProductId.get(product.id) ?? []).map((promotion) => ({
-          promotionPriceKrw: numberFrom(promotion.promotionPriceKrw),
-          promotionStartDate: promotion.promotionStartDate,
-          promotionEndDate: promotion.promotionEndDate,
-          promotionStatus: promotion.promotionStatus,
-          validationErrors: promotion.validationErrors
-        })),
-        date: purchaseDate
-      });
-      const feeMode = numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT";
-      if (resolvedPrice.salePriceKrw === null || resolvedPrice.salePriceKrw <= 0) {
-        throw new BadRequestException({ code: "COUPANG_SALE_PRICE_REQUIRED", message: `${product.displayName} sale price is required.` });
-      }
-      const calculated = calculateCoupangManualPurchaseCost({
-        quantity: entry.quantity,
-        vendorFeePerUnitKrw,
-        saleMethod: representativeRule?.saleMethod ?? null,
-        salePriceKrw: resolvedPrice.salePriceKrw,
-        cost: costInput(costRule),
-        feeMode,
-        useGrowthCost: true
-      });
-      const salesAmountKrw = resolvedPrice.salePriceKrw * entry.quantity;
-      for (const [field, amount] of [
-        ["salesAmountKrw", salesAmountKrw],
-        ["productCostKrw", calculated.productCostKrw],
-        ["vendorFeePerUnitKrw", vendorFeePerUnitKrw],
-        ["vendorFeeTotalKrw", calculated.vendorFeeTotalKrw],
-        ["coupangSalesFeeKrw", calculated.coupangSalesFeeKrw],
-        ["shippingCostKrw", calculated.shippingCostKrw],
-        ["vatKrw", calculated.vatKrw],
-        ["otherCostKrw", calculated.otherCostKrw],
-        ["totalCostKrw", calculated.totalCostKrw]
-      ] as const) {
-        assertManualPurchaseStoredAmount(amount, product.id, field);
-      }
-      data.push({
-        purchaseDate,
-        coupangProductId: product.id,
-        coupangProductRuleId: representativeRule?.id ?? null,
-        productDisplayName: product.displayName,
-        ruleDisplayName: representativeRule?.displayName ?? null,
-        saleMethod: representativeRule?.saleMethod ?? null,
-        quantity: entry.quantity,
-        salesAmountKrw: decimal(salesAmountKrw),
-        productCostKrw: decimal(calculated.productCostKrw),
-        vendorFeePerUnitKrw: decimal(vendorFeePerUnitKrw),
-        vendorFeeTotalKrw: decimal(calculated.vendorFeeTotalKrw),
-        salePriceKrw: nullableDecimal(resolvedPrice.salePriceKrw),
-        baseSalePriceKrw: nullableDecimal(resolvedPrice.baseSalePriceKrw),
-        promotionPriceKrw: nullableDecimal(resolvedPrice.promotionPriceKrw),
-        priceSource: resolvedPrice.priceSource,
-        coupangSalesFeeKrw: decimal(calculated.coupangSalesFeeKrw),
-        shippingCostKrw: decimal(calculated.shippingCostKrw),
-        vatKrw: decimal(calculated.vatKrw),
-        otherCostKrw: decimal(calculated.otherCostKrw),
-        totalCostKrw: decimal(calculated.totalCostKrw),
-        memo: entry.memo
-      });
-    }
-
-    const rows = await this.prisma.$transaction(async (tx) => {
       await tx.coupangManualPurchase.deleteMany({ where: { purchaseDate } });
       if (data.length > 0) {
         await tx.coupangManualPurchase.createMany({ data });
       }
-      return tx.coupangManualPurchase.findMany({
+      const rows = await tx.coupangManualPurchase.findMany({
         where: { purchaseDate },
         include: { product: { include: { group: true } }, productRule: true },
         orderBy: [{ productDisplayName: "asc" }]
       });
+      const serializedRows = rows.map((row) => serializeManualPurchaseRow(row));
+      return {
+        date: normalizedDate,
+        selectedOptionCount: rows.length,
+        totalQuantity: rows.reduce((sum, row) => sum + row.quantity, 0),
+        totalSalesAmountKrw: rows.reduce((sum, row) => sum + numberFrom(row.salesAmountKrw), 0),
+        totalCostKrw: roundManualPurchaseMoney(serializedRows.reduce((sum, row) => sum + row.totalCostKrw, 0)),
+        rows: serializedRows
+      };
     }, COUPANG_TRANSACTION_OPTIONS);
-
-    return {
-      date: normalizedDate,
-      selectedOptionCount: rows.length,
-      totalQuantity: rows.reduce((sum, row) => sum + row.quantity, 0),
-      totalSalesAmountKrw: rows.reduce((sum, row) => sum + numberFrom(row.salesAmountKrw), 0),
-      totalCostKrw: rows.reduce((sum, row) => sum + numberFrom(row.totalCostKrw), 0),
-      rows: rows.map((row) => serializeManualPurchaseRow(row))
-    };
   }
 
   async deleteManualPurchase(id: string) {
@@ -1695,10 +1904,36 @@ export class CoupangService {
     return { id, date: formatDateOnly(row.purchaseDate), deleted: true };
   }
 
-  private async manualPurchaseVendorFeePerUnitKrw() {
-    const setting = await this.prisma.appSetting.findUnique({ where: { key: COUPANG_MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY } });
+  private async manualPurchaseVendorFeePerUnitKrw(client: Pick<Prisma.TransactionClient, "appSetting"> = this.prisma) {
+    const setting = await client.appSetting.findUnique({ where: { key: COUPANG_MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY } });
     const parsed = Number(setting?.valueJson);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_COUPANG_MANUAL_PURCHASE_VENDOR_FEE_KRW;
+  }
+
+  private async normalizeSalesFeeRuleRanges(tx: Prisma.TransactionClient) {
+    const rules = await tx.coupangSalesFeeRule.findMany({
+      orderBy: [{ effectiveFrom: "asc" }, { createdAt: "asc" }]
+    });
+    for (let index = 0; index < rules.length; index += 1) {
+      const current = rules[index];
+      const next = rules[index + 1];
+      if (next && next.effectiveFrom.getTime() === current.effectiveFrom.getTime()) {
+        throw new BadRequestException({
+          code: "COUPANG_SALES_FEE_RULE_DATE_EXISTS",
+          message: "Global sales fee rules cannot share an effective start date."
+        });
+      }
+      const effectiveTo = next ? previousDate(next.effectiveFrom) : null;
+      if (dateTimesDiffer(current.effectiveTo, effectiveTo)) {
+        await tx.coupangSalesFeeRule.update({ where: { id: current.id }, data: { effectiveTo } });
+      }
+    }
+  }
+
+  private async lockSalesFeeRuleWrites(tx: Prisma.TransactionClient) {
+    await tx.$queryRaw(Prisma.sql`
+      SELECT pg_advisory_xact_lock(7426894320158627)::text AS lock_result
+    `);
   }
 
   async rematch(query: { from?: string; to?: string; take?: string }) {
@@ -2094,7 +2329,6 @@ export class CoupangService {
         manualPurchaseVendorFeeKrw: row.manualPurchaseVendorFeeKrw,
         manualPurchaseCoupangSalesFeeKrw: row.manualPurchaseCoupangSalesFeeKrw,
         manualPurchaseShippingCostKrw: row.manualPurchaseShippingCostKrw,
-        manualPurchaseVatKrw: row.manualPurchaseVatKrw,
         manualPurchaseOtherCostKrw: row.manualPurchaseOtherCostKrw,
         manualPurchaseTotalCostKrw: row.manualPurchaseTotalCostKrw,
         actualSalesKrw: row.actualSalesKrw,
@@ -2139,7 +2373,7 @@ export class CoupangService {
   }
 
   private async buildProductProfitRows(range: ReturnType<typeof parseDateRange>): Promise<ProductProfitRow[]> {
-    const [saleLines, adMetrics, manualPurchases] = await Promise.all([
+    const [saleLines, adMetrics, manualPurchases, salesFeeRules] = await Promise.all([
       this.prisma.coupangSaleLine.findMany({
         where: {
           isCurrent: true,
@@ -2162,6 +2396,13 @@ export class CoupangService {
           purchaseDate: { gte: range.fromDate, lte: range.toDate }
         },
         include: { product: true }
+      }),
+      this.prisma.coupangSalesFeeRule.findMany({
+        where: {
+          effectiveFrom: { lte: range.toDate },
+          OR: [{ effectiveTo: null }, { effectiveTo: { gte: range.fromDate } }]
+        },
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
       })
     ]);
 
@@ -2225,7 +2466,6 @@ export class CoupangService {
         vendorFeeKrw: nullableNumberFrom(row.vendorFeeTotalKrw),
         coupangSalesFeeKrw: nullableNumberFrom(row.coupangSalesFeeKrw),
         shippingCostKrw: nullableNumberFrom(row.shippingCostKrw),
-        vatKrw: nullableNumberFrom(row.vatKrw),
         otherCostKrw: nullableNumberFrom(row.otherCostKrw),
         totalCostKrw: nullableNumberFrom(row.totalCostKrw),
         saleMethod: row.saleMethod
@@ -2270,6 +2510,7 @@ export class CoupangService {
         const conversion = conversionEntry ?? { productId, date: dateText, salesKrw: 0, quantity: 0 };
         const adSpendKrw = spendEntry?.amount ?? 0;
         const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], date);
+        const salesFeeRule = findSalesFeeRuleForDate(salesFeeRules, date);
         const resolvedPrice = resolveCoupangSalePrice({
           baseSalePriceKrw: costRule ? numberFrom(costRule.salePriceKrw) : null,
           promotions: (promotionPricesByProductId.get(productId) ?? []).map((promotion) => ({
@@ -2291,7 +2532,7 @@ export class CoupangService {
             adConversionSalesKrw: conversion.salesKrw,
             adConversionQuantity: conversion.quantity
           },
-          feeMode: costRule && numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT"
+          salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
         });
         const normalReference = actual.isValid
           ? normalAttempt
@@ -2313,7 +2554,7 @@ export class CoupangService {
                 adConversionSalesKrw: conversion.salesKrw,
                 adConversionQuantity: conversion.quantity
               },
-              feeMode: costRule && numberFrom(costRule.salesFeeRate) > 0 ? "RATE" : "PER_UNIT"
+              salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
             });
         const normal = actual.isValid
           ? normalAttempt
@@ -2366,7 +2607,6 @@ export class CoupangService {
           manualPurchaseVendorFeeKrw: manual ? manual.vendorFeeKrw : 0,
           manualPurchaseCoupangSalesFeeKrw: manual ? manual.coupangSalesFeeKrw : 0,
           manualPurchaseShippingCostKrw: manual ? manual.shippingCostKrw : 0,
-          manualPurchaseVatKrw: manual ? manual.vatKrw : 0,
           manualPurchaseOtherCostKrw: manual ? manual.otherCostKrw : 0,
           manualPurchaseTotalCostKrw: manual ? manual.totalCostKrw : 0,
           actualSalesKrw: actual.salesKrw,
@@ -2500,16 +2740,114 @@ export class CoupangService {
       : null;
   }
 
-  private async findLatestCoupangCostRule(tx: Prisma.TransactionClient, coupangProductId: string): Promise<CoupangCostRuleSnapshot | null> {
+  private async findCoupangCostRuleAtOrBeforeDate(tx: Prisma.TransactionClient, coupangProductId: string, date: Date) {
     return tx.coupangCostRule.findFirst({
-      where: { coupangProductId },
-      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+      where: { coupangProductId, effectiveFrom: { lte: date } },
+      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
     });
+  }
+
+  private async findCoupangCostRuleStartingOnDate(tx: Prisma.TransactionClient, coupangProductId: string, date: Date) {
+    return tx.coupangCostRule.findFirst({
+      where: { coupangProductId, effectiveFrom: date },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }]
+    });
+  }
+
+  private async lockCoupangCostRuleWrites(tx: Prisma.TransactionClient, coupangProductId: string) {
+    await tx.$queryRaw(Prisma.sql`
+      SELECT pg_advisory_xact_lock(
+        hashtextextended(${`coupang-cost-rule:${coupangProductId}`}, 0)
+      )::text AS lock_result
+    `);
+  }
+
+  private async lockCoupangCostRuleBulkWrites(tx: Prisma.TransactionClient) {
+    await tx.$queryRaw(Prisma.sql`
+      SELECT pg_advisory_xact_lock(7426894320158628)::text AS lock_result
+    `);
+  }
+
+  private async normalizeCoupangCostRuleRanges(tx: Prisma.TransactionClient, coupangProductId: string) {
+    const rules = await tx.coupangCostRule.findMany({
+      where: { coupangProductId },
+      orderBy: [{ effectiveFrom: "asc" }, { createdAt: "asc" }, { id: "asc" }]
+    });
+    for (let index = 0; index < rules.length; index += 1) {
+      const current = rules[index];
+      const next = rules[index + 1];
+      if (next && next.effectiveFrom.getTime() === current.effectiveFrom.getTime()) {
+        throw new BadRequestException({
+          code: "COUPANG_COST_RULE_DATE_EXISTS",
+          message: "Cost rules for a product cannot share an effective start date."
+        });
+      }
+      const effectiveTo = next ? previousDate(next.effectiveFrom) : null;
+      if (dateTimesDiffer(current.effectiveTo, effectiveTo)) {
+        await tx.coupangCostRule.update({ where: { id: current.id }, data: { effectiveTo } });
+      }
+    }
+  }
+
+  private async upsertImportedCoupangCostRule(
+    tx: Prisma.TransactionClient,
+    coupangProductId: string,
+    effectiveFrom: Date,
+    buildData: (baseRule: CoupangCostRuleSnapshot | null) =>
+      Prisma.CoupangCostRuleUncheckedCreateInput | Promise<Prisma.CoupangCostRuleUncheckedCreateInput>
+  ) {
+    await this.lockCoupangCostRuleWrites(tx, coupangProductId);
+    const existing = await this.findCoupangCostRuleStartingOnDate(tx, coupangProductId, effectiveFrom);
+    const baseRule = existing ?? await this.findCoupangCostRuleAtOrBeforeDate(tx, coupangProductId, effectiveFrom);
+    const data = await buildData(baseRule);
+    const before = existing ? serializeCoupangCostRuleRollbackSnapshot(existing) : null;
+    const saved = existing
+      ? await tx.coupangCostRule.update({ where: { id: existing.id }, data })
+      : await tx.coupangCostRule.create({ data });
+    await this.normalizeCoupangCostRuleRanges(tx, coupangProductId);
+    const rule = await tx.coupangCostRule.findUniqueOrThrow({ where: { id: saved.id } });
+    return {
+      operation: existing ? "UPDATED_SAME_DATE" as const : "CREATED" as const,
+      rule,
+      before,
+      after: serializeCoupangCostRuleRollbackSnapshot(rule)
+    };
+  }
+
+  private async rollbackImportedCoupangCostRules(
+    tx: Prisma.TransactionClient,
+    appliedRows: Array<CoupangPriceTextAppliedRow | CoupangMarginAppliedRow>
+  ) {
+    const productIds = uniqueNonEmpty(appliedRows.map((row) => row.productId)).sort();
+    for (const productId of productIds) await this.lockCoupangCostRuleWrites(tx, productId);
+    for (const applied of [...appliedRows].reverse()) {
+      const current = await tx.coupangCostRule.findUnique({ where: { id: applied.costRuleId } });
+      if (!current || current.coupangProductId !== applied.productId
+        || !sameCoupangCostRuleRollbackSnapshot(current, applied.costRuleAfter)) {
+        throw new BadRequestException({
+          code: "COUPANG_UPLOAD_ROLLBACK_ORDER_CONFLICT",
+          message: "A newer cost change exists. Delete newer uploads or corrections before deleting this upload."
+        });
+      }
+      if (applied.costRuleOperation === "UPDATED_SAME_DATE") {
+        if (!current || !applied.costRuleBefore) throw new BadRequestException({
+          code: "COUPANG_UPLOAD_ROLLBACK_SNAPSHOT_MISSING",
+          message: "The previous cost snapshot required for rollback is missing."
+        });
+        await tx.coupangCostRule.update({
+          where: { id: applied.costRuleId },
+          data: deserializeCoupangCostRuleRollbackSnapshot(applied.costRuleBefore)
+        });
+      } else if (current) {
+        await tx.coupangCostRule.delete({ where: { id: applied.costRuleId } });
+      }
+    }
+    for (const productId of productIds) await this.normalizeCoupangCostRuleRanges(tx, productId);
   }
 
   private async findLegacyPriceTextCostRule(
     tx: Prisma.TransactionClient,
-    input: { rawLine: string; itemName: string; productId: string }
+    input: { rawLine: string; itemName: string; productId: string; effectiveFrom: Date }
   ): Promise<CoupangCostRuleSnapshot | null> {
     const legacyItemName = legacyCoupangPriceTextItemName(input.rawLine, input.itemName);
     if (!legacyItemName) {
@@ -2529,34 +2867,32 @@ export class CoupangService {
       return null;
     }
 
-    return this.findLatestCoupangCostRule(tx, legacyProduct.id);
+    return this.findCoupangCostRuleAtOrBeforeDate(tx, legacyProduct.id, input.effectiveFrom);
   }
 
-  private async deletePriceTextUploadEffects(tx: Prisma.TransactionClient, columnSchema: Prisma.JsonValue) {
-    const appliedRows = priceTextAppliedRows(columnSchema);
-    const costRuleIds = uniqueNonEmpty(appliedRows.map((row) => row.costRuleId));
+  private async deletePriceTextUploadEffects(
+    tx: Prisma.TransactionClient,
+    appliedRows: CoupangPriceTextAppliedRow[]
+  ) {
     const productIds = uniqueNonEmpty(appliedRows.map((row) => row.productId));
 
-    if (costRuleIds.length > 0) {
-      await tx.coupangCostRule.deleteMany({ where: { id: { in: costRuleIds } } });
-    }
+    await this.rollbackImportedCoupangCostRules(tx, appliedRows);
 
     for (const productId of productIds) {
       await this.deleteCoupangProductIfUnused(tx, productId);
     }
   }
 
-  private async deleteMarginUploadEffects(tx: Prisma.TransactionClient, columnSchema: Prisma.JsonValue) {
-    const appliedRows = marginAppliedRows(columnSchema);
-    const costRuleIds = uniqueNonEmpty(appliedRows.map((row) => row.costRuleId));
+  private async deleteMarginUploadEffects(
+    tx: Prisma.TransactionClient,
+    appliedRows: CoupangMarginAppliedRow[]
+  ) {
     const createdProductRuleIds = uniqueNonEmpty(
       appliedRows.filter((row) => row.productRuleCreated).map((row) => row.productRuleId)
     );
     const productIds = uniqueNonEmpty(appliedRows.map((row) => row.productId));
 
-    if (costRuleIds.length > 0) {
-      await tx.coupangCostRule.deleteMany({ where: { id: { in: costRuleIds } } });
-    }
+    await this.rollbackImportedCoupangCostRules(tx, appliedRows);
     if (createdProductRuleIds.length > 0) {
       const referencedManualPurchaseRules = await tx.coupangManualPurchase.findMany({
         where: { coupangProductRuleId: { in: createdProductRuleIds } },
@@ -2987,7 +3323,6 @@ function aggregateCoupangProductProfitGroup(
   const manualPurchaseVendorFeeKrw = strictSumNullable(rows.map((row) => row.manualPurchaseVendorFeeKrw));
   const manualPurchaseCoupangSalesFeeKrw = strictSumNullable(rows.map((row) => row.manualPurchaseCoupangSalesFeeKrw));
   const manualPurchaseShippingCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseShippingCostKrw));
-  const manualPurchaseVatKrw = strictSumNullable(rows.map((row) => row.manualPurchaseVatKrw));
   const manualPurchaseOtherCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseOtherCostKrw));
   const manualPurchaseTotalCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseTotalCostKrw));
   const adSpendKrw = sumNumbers(rows.map((row) => row.adSpendKrw));
@@ -3072,7 +3407,6 @@ function aggregateCoupangProductProfitGroup(
     manualPurchaseVendorFeeKrw,
     manualPurchaseCoupangSalesFeeKrw,
     manualPurchaseShippingCostKrw,
-    manualPurchaseVatKrw,
     manualPurchaseOtherCostKrw,
     manualPurchaseTotalCostKrw,
     actualSalesKrw,
@@ -3206,7 +3540,6 @@ export function summarizeCoupangProductProfitRows(rows: ProductProfitRow[]) {
     manualPurchaseVendorFeeKrw: strictSumNullable(rows.map((row) => row.manualPurchaseVendorFeeKrw)),
     manualPurchaseCoupangSalesFeeKrw: strictSumNullable(rows.map((row) => row.manualPurchaseCoupangSalesFeeKrw)),
     manualPurchaseShippingCostKrw: strictSumNullable(rows.map((row) => row.manualPurchaseShippingCostKrw)),
-    manualPurchaseVatKrw: strictSumNullable(rows.map((row) => row.manualPurchaseVatKrw)),
     manualPurchaseOtherCostKrw: strictSumNullable(rows.map((row) => row.manualPurchaseOtherCostKrw)),
     manualPurchaseTotalCostKrw: strictSumNullable(rows.map((row) => row.manualPurchaseTotalCostKrw)),
     actualSalesKrw,
@@ -3734,8 +4067,8 @@ export function buildCoupangPriceTextCostRuleData(input: {
     salePriceKrw: decimal(input.salePriceKrw),
     supplyPriceKrw: latestCostRule?.supplyPriceKrw ?? decimal(0),
     productCostKrw: latestCostRule?.productCostKrw ?? decimal(0),
-    salesFeeRate: latestCostRule?.salesFeeRate ?? decimal(0),
-    salesFeeKrw: latestCostRule?.salesFeeKrw ?? decimal(0),
+    salesFeeRate: decimal(0),
+    salesFeeKrw: decimal(0),
     sellerShippingFeeKrw: latestCostRule?.sellerShippingFeeKrw ?? null,
     hanaroShippingFeeKrw: latestCostRule?.hanaroShippingFeeKrw ?? null,
     growthInboundFeeKrw: latestCostRule?.growthInboundFeeKrw ?? decimal(0),
@@ -3759,8 +4092,8 @@ export function buildCoupangMarginCostRuleData(input: {
     salePriceKrw: decimal(input.parsedRow.salePriceKrw),
     supplyPriceKrw: decimal(input.parsedRow.supplyPriceKrw),
     productCostKrw: decimal(input.parsedRow.productCostKrw),
-    salesFeeRate: decimal(input.parsedRow.salesFeeRate),
-    salesFeeKrw: decimal(input.parsedRow.salesFeeKrw),
+    salesFeeRate: decimal(0),
+    salesFeeKrw: decimal(0),
     sellerShippingFeeKrw: input.parsedRow.sellerShippingFeeKrw === undefined
       ? input.latestCostRule?.sellerShippingFeeKrw ?? null
       : decimal(input.parsedRow.sellerShippingFeeKrw),
@@ -3874,8 +4207,8 @@ function serializeManualPurchaseRow(row: {
   promotionPriceKrw: unknown;
   priceSource: string | null;
   coupangSalesFeeKrw: unknown;
+  salesFeeRateApplied: unknown;
   shippingCostKrw: unknown;
-  vatKrw: unknown;
   otherCostKrw: unknown;
   totalCostKrw: unknown;
   memo: string | null;
@@ -3889,6 +4222,11 @@ function serializeManualPurchaseRow(row: {
     baseSalePriceKrw: nullableNumberFrom(row.baseSalePriceKrw)
   });
   const salesAmountKrw = resolvedSales.salesAmountKrw;
+  const vendorFeeTotalKrw = numberFrom(row.vendorFeeTotalKrw);
+  const totalCostKrw = roundManualPurchaseMoney(vendorFeeTotalKrw);
+  const costWarnings = roundManualPurchaseMoney(numberFrom(row.totalCostKrw)) === totalCostKrw
+    ? []
+    : ["MANUAL_PURCHASE_TOTAL_COST_MISMATCH"];
   return {
     id: row.id,
     date: formatDateOnly(row.purchaseDate),
@@ -3903,21 +4241,25 @@ function serializeManualPurchaseRow(row: {
     salesAmountKrw,
     salesAmountSource: resolvedSales.source,
     actualUnitPriceKrw: salesAmountKrw === null || row.quantity <= 0 ? null : salesAmountKrw / row.quantity,
-    productCostKrw: numberFrom(row.productCostKrw),
+    productCostKrw: 0,
     vendorFeePerUnitKrw: numberFrom(row.vendorFeePerUnitKrw),
-    vendorFeeTotalKrw: numberFrom(row.vendorFeeTotalKrw),
+    vendorFeeTotalKrw,
     salePriceKrw: row.salePriceKrw === null ? null : numberFrom(row.salePriceKrw),
     baseSalePriceKrw: row.baseSalePriceKrw === null ? null : numberFrom(row.baseSalePriceKrw),
     promotionPriceKrw: row.promotionPriceKrw === null ? null : numberFrom(row.promotionPriceKrw),
     priceSource: row.priceSource,
-    coupangSalesFeeKrw: numberFrom(row.coupangSalesFeeKrw),
-    shippingCostKrw: numberFrom(row.shippingCostKrw),
-    vatKrw: numberFrom(row.vatKrw),
-    otherCostKrw: numberFrom(row.otherCostKrw),
-    totalCostKrw: numberFrom(row.totalCostKrw),
+    coupangSalesFeeKrw: 0,
+    salesFeeRateApplied: 0,
+    shippingCostKrw: 0,
+    otherCostKrw: 0,
+    totalCostKrw,
     memo: row.memo ?? "",
-    warnings: resolvedSales.warnings
+    warnings: uniqueNonEmpty([...resolvedSales.warnings, ...costWarnings])
   };
+}
+
+function roundManualPurchaseMoney(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 function fallbackRowKey(rawRow: unknown) {
@@ -4029,6 +4371,73 @@ function dateOrNullFromBody(value: unknown): Date | null | undefined {
   return asDateOnly(String(value));
 }
 
+function requiredDateFromBody(value: unknown, field: string) {
+  const text = typeof value === "string" ? value.trim() : "";
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(text) ? toDateOnly(text) : null;
+  if (!parsed) {
+    throw new BadRequestException({ code: "INVALID_DATE", message: `${field} must be YYYY-MM-DD.` });
+  }
+  return parsed;
+}
+
+function assertGlobalSalesFeeFieldsNotPresent(body: Record<string, unknown>) {
+  if (["salesFeeRate", "salesFeeKrw", "salesFeePercent"].some((field) => Object.prototype.hasOwnProperty.call(body, field))) {
+    throw new BadRequestException({
+      code: "COUPANG_SALES_FEE_IS_GLOBAL",
+      message: "Sales fee rate is managed by the global Coupang sales fee setting."
+    });
+  }
+}
+
+function assertCoupangCostEffectiveToNotPresent(body: Record<string, unknown>) {
+  if (Object.prototype.hasOwnProperty.call(body, "effectiveTo")) {
+    throw new BadRequestException({
+      code: "COUPANG_COST_RULE_EFFECTIVE_TO_MANAGED",
+      message: "effectiveTo is derived from the next history row and cannot be written directly."
+    });
+  }
+}
+
+function rateDecimalFromBody(value: unknown, field: string) {
+  const parsed = Number(value);
+  if (value === null || value === undefined || String(value).trim() === "" || !Number.isFinite(parsed) || parsed < 0 || parsed > 1) {
+    const code = field === "salesFeeRate" ? "INVALID_SALES_FEE_RATE" : "INVALID_RETURN_RATE";
+    throw new BadRequestException({ code, message: `${field} must be a finite number between 0 and 1.` });
+  }
+  return new Prisma.Decimal(Math.round(parsed * 1_000_000) / 1_000_000);
+}
+
+export function salesFeeRateFromPercentBody(value: unknown) {
+  const parsed = Number(value);
+  if (value === null || value === undefined || String(value).trim() === "" || !Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+    throw new BadRequestException({
+      code: "INVALID_SALES_FEE_PERCENT",
+      message: "salesFeePercent must be a finite number between 0 and 100."
+    });
+  }
+  return new Prisma.Decimal(Math.round((parsed / 100) * 1_000_000) / 1_000_000);
+}
+
+function rethrowSalesFeeRuleWriteError(error: unknown): never {
+  if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+    throw new BadRequestException({
+      code: "COUPANG_SALES_FEE_RULE_DATE_EXISTS",
+      message: "A global sales fee rule already starts on this date; correct that history row instead."
+    });
+  }
+  throw error;
+}
+
+function previousDate(date: Date) {
+  const previous = new Date(date);
+  previous.setUTCDate(previous.getUTCDate() - 1);
+  return previous;
+}
+
+function dateTimesDiffer(left: Date | null, right: Date | null) {
+  return left?.getTime() !== right?.getTime();
+}
+
 function jsonStringArray(value: Prisma.JsonValue): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -4036,62 +4445,173 @@ function jsonStringArray(value: Prisma.JsonValue): string[] {
   return uniqueNonEmpty(value.map((item) => String(item)));
 }
 
-function priceTextAppliedRows(value: Prisma.JsonValue): CoupangPriceTextAppliedRow[] {
-  if (!isJsonObject(value) || !Array.isArray(value.appliedRows)) {
-    return [];
+function priceTextAppliedRows(value: Prisma.JsonValue, expectedRowCount: number): CoupangPriceTextAppliedRow[] {
+  return rollbackAppliedRows(value, expectedRowCount, (item, provenance) => ({
+    rowNumber: Number(item.rowNumber) || 0,
+    itemName: typeof item.itemName === "string" ? item.itemName : "",
+    standardName: typeof item.standardName === "string" ? item.standardName : "",
+    productId: provenance.productId,
+    costRuleId: provenance.costRuleId,
+    salePriceKrw: Number(item.salePriceKrw) || 0,
+    costRuleOperation: provenance.operation,
+    costRuleBefore: provenance.before,
+    costRuleAfter: provenance.after
+  }));
+}
+
+function marginAppliedRows(value: Prisma.JsonValue, expectedRowCount: number): CoupangMarginAppliedRow[] {
+  return rollbackAppliedRows(value, expectedRowCount, (item, provenance) => ({
+    rowNumber: Number(item.rowNumber) || 0,
+    itemName: typeof item.itemName === "string" ? item.itemName : "",
+    standardName: typeof item.standardName === "string" ? item.standardName : "",
+    productId: provenance.productId,
+    productRuleId: typeof item.productRuleId === "string" ? item.productRuleId : null,
+    productRuleCreated: item.productRuleCreated === true,
+    costRuleId: provenance.costRuleId,
+    salePriceKrw: Number(item.salePriceKrw) || 0,
+    costRuleOperation: provenance.operation,
+    costRuleBefore: provenance.before,
+    costRuleAfter: provenance.after
+  }));
+}
+
+function rollbackAppliedRows<T>(
+  value: Prisma.JsonValue,
+  expectedRowCount: number,
+  mapRow: (
+    item: Prisma.JsonObject,
+    provenance: {
+      productId: string;
+      costRuleId: string;
+      operation: "CREATED" | "UPDATED_SAME_DATE";
+      before: CoupangCostRuleRollbackSnapshot | null;
+      after: CoupangCostRuleRollbackSnapshot;
+    }
+  ) => T
+): T[] {
+  if (!Number.isInteger(expectedRowCount) || expectedRowCount < 0
+    || !isJsonObject(value) || !Array.isArray(value.appliedRows)
+    || value.appliedRows.length !== expectedRowCount) {
+    throw missingCoupangUploadRollbackProvenance();
   }
-  return value.appliedRows.flatMap((item) => {
+  return value.appliedRows.map((item) => {
     if (!isJsonObject(item)) {
-      return [];
+      throw missingCoupangUploadRollbackProvenance();
     }
-    const productId = typeof item.productId === "string" ? item.productId : "";
-    const costRuleId = typeof item.costRuleId === "string" ? item.costRuleId : "";
-    if (!productId || !costRuleId) {
-      return [];
+    const productId = typeof item.productId === "string" ? item.productId.trim() : "";
+    const costRuleId = typeof item.costRuleId === "string" ? item.costRuleId.trim() : "";
+    const operation = item.costRuleOperation === "CREATED" || item.costRuleOperation === "UPDATED_SAME_DATE"
+      ? item.costRuleOperation
+      : null;
+    const after = parseCoupangCostRuleRollbackSnapshot(item.costRuleAfter);
+    const before = parseCoupangCostRuleRollbackSnapshot(item.costRuleBefore);
+    if (!productId || !costRuleId || !operation || !after
+      || (operation === "UPDATED_SAME_DATE" && !before)
+      || (operation === "CREATED" && item.costRuleBefore !== null)) {
+      throw missingCoupangUploadRollbackProvenance();
     }
-    return [
-      {
-        rowNumber: Number(item.rowNumber) || 0,
-        itemName: typeof item.itemName === "string" ? item.itemName : "",
-        standardName: typeof item.standardName === "string" ? item.standardName : "",
-        productId,
-        costRuleId,
-        salePriceKrw: Number(item.salePriceKrw) || 0
-      }
-    ];
+    return mapRow(item, { productId, costRuleId, operation, before, after });
   });
 }
 
-function marginAppliedRows(value: Prisma.JsonValue): CoupangMarginAppliedRow[] {
-  if (!isJsonObject(value) || !Array.isArray(value.appliedRows)) {
-    return [];
-  }
-  return value.appliedRows.flatMap((item) => {
-    if (!isJsonObject(item)) {
-      return [];
-    }
-    const productId = typeof item.productId === "string" ? item.productId : "";
-    const costRuleId = typeof item.costRuleId === "string" ? item.costRuleId : "";
-    if (!productId || !costRuleId) {
-      return [];
-    }
-    return [
-      {
-        rowNumber: Number(item.rowNumber) || 0,
-        itemName: typeof item.itemName === "string" ? item.itemName : "",
-        standardName: typeof item.standardName === "string" ? item.standardName : "",
-        productId,
-        productRuleId: typeof item.productRuleId === "string" ? item.productRuleId : null,
-        productRuleCreated: item.productRuleCreated === true,
-        costRuleId,
-        salePriceKrw: Number(item.salePriceKrw) || 0
-      }
-    ];
+function missingCoupangUploadRollbackProvenance() {
+  return new BadRequestException({
+    code: "COUPANG_UPLOAD_ROLLBACK_PROVENANCE_MISSING",
+    message: "This upload has incomplete cost-rule rollback provenance, so its effects cannot be deleted safely."
   });
 }
 
 function isJsonObject(value: Prisma.JsonValue): value is Prisma.JsonObject {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function serializeCoupangCostRuleRollbackSnapshot(rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>): CoupangCostRuleRollbackSnapshot {
+  return {
+    salePriceKrw: String(rule.salePriceKrw),
+    supplyPriceKrw: String(rule.supplyPriceKrw),
+    productCostKrw: String(rule.productCostKrw),
+    salesFeeRate: String(rule.salesFeeRate),
+    salesFeeKrw: String(rule.salesFeeKrw),
+    sellerShippingFeeKrw: rule.sellerShippingFeeKrw === null ? null : String(rule.sellerShippingFeeKrw),
+    hanaroShippingFeeKrw: rule.hanaroShippingFeeKrw === null ? null : String(rule.hanaroShippingFeeKrw),
+    growthInboundFeeKrw: String(rule.growthInboundFeeKrw),
+    growthShippingFeeKrw: String(rule.growthShippingFeeKrw),
+    returnRate: String(rule.returnRate),
+    returnCostPerUnitKrw: String(rule.returnCostPerUnitKrw),
+    extraCostKrw: String(rule.extraCostKrw),
+    effectiveFrom: formatDateOnly(rule.effectiveFrom),
+    effectiveTo: rule.effectiveTo ? formatDateOnly(rule.effectiveTo) : null,
+    note: rule.note
+  };
+}
+
+function deserializeCoupangCostRuleRollbackSnapshot(snapshot: CoupangCostRuleRollbackSnapshot): Prisma.CoupangCostRuleUncheckedUpdateInput {
+  return {
+    salePriceKrw: new Prisma.Decimal(snapshot.salePriceKrw),
+    supplyPriceKrw: new Prisma.Decimal(snapshot.supplyPriceKrw),
+    productCostKrw: new Prisma.Decimal(snapshot.productCostKrw),
+    salesFeeRate: new Prisma.Decimal(snapshot.salesFeeRate),
+    salesFeeKrw: new Prisma.Decimal(snapshot.salesFeeKrw),
+    sellerShippingFeeKrw: snapshot.sellerShippingFeeKrw === null ? null : new Prisma.Decimal(snapshot.sellerShippingFeeKrw),
+    hanaroShippingFeeKrw: snapshot.hanaroShippingFeeKrw === null ? null : new Prisma.Decimal(snapshot.hanaroShippingFeeKrw),
+    growthInboundFeeKrw: new Prisma.Decimal(snapshot.growthInboundFeeKrw),
+    growthShippingFeeKrw: new Prisma.Decimal(snapshot.growthShippingFeeKrw),
+    returnRate: new Prisma.Decimal(snapshot.returnRate),
+    returnCostPerUnitKrw: new Prisma.Decimal(snapshot.returnCostPerUnitKrw),
+    extraCostKrw: new Prisma.Decimal(snapshot.extraCostKrw),
+    effectiveFrom: requiredDateFromBody(snapshot.effectiveFrom, "effectiveFrom"),
+    effectiveTo: snapshot.effectiveTo ? requiredDateFromBody(snapshot.effectiveTo, "effectiveTo") : null,
+    note: snapshot.note
+  };
+}
+
+function sameCoupangCostRuleRollbackSnapshot(rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>, snapshot: CoupangCostRuleRollbackSnapshot) {
+  return JSON.stringify(serializeCoupangCostRuleRollbackSnapshot(rule)) === JSON.stringify(snapshot);
+}
+
+function parseCoupangCostRuleRollbackSnapshot(value: Prisma.JsonValue | undefined): CoupangCostRuleRollbackSnapshot | null {
+  if (!value || !isJsonObject(value)) return null;
+  const decimalFields = [
+    "salePriceKrw", "supplyPriceKrw", "productCostKrw", "salesFeeRate", "salesFeeKrw",
+    "growthInboundFeeKrw", "growthShippingFeeKrw", "returnRate", "returnCostPerUnitKrw",
+    "extraCostKrw"
+  ] as const;
+  if (decimalFields.some((field) => !isFiniteDecimalText(value[field]))) return null;
+  if (!isNullableFiniteDecimalText(value.sellerShippingFeeKrw)
+    || !isNullableFiniteDecimalText(value.hanaroShippingFeeKrw)
+    || !isStrictDateOnlyText(value.effectiveFrom)
+    || !(value.effectiveTo === null || isStrictDateOnlyText(value.effectiveTo))
+    || !(value.note === null || typeof value.note === "string")) {
+    return null;
+  }
+  return {
+    salePriceKrw: String(value.salePriceKrw), supplyPriceKrw: String(value.supplyPriceKrw),
+    productCostKrw: String(value.productCostKrw), salesFeeRate: String(value.salesFeeRate), salesFeeKrw: String(value.salesFeeKrw),
+    sellerShippingFeeKrw: value.sellerShippingFeeKrw,
+    hanaroShippingFeeKrw: value.hanaroShippingFeeKrw,
+    growthInboundFeeKrw: String(value.growthInboundFeeKrw), growthShippingFeeKrw: String(value.growthShippingFeeKrw),
+    returnRate: String(value.returnRate), returnCostPerUnitKrw: String(value.returnCostPerUnitKrw),
+    extraCostKrw: String(value.extraCostKrw), effectiveFrom: String(value.effectiveFrom),
+    effectiveTo: value.effectiveTo,
+    note: value.note
+  };
+}
+
+function isFiniteDecimalText(value: Prisma.JsonValue | undefined): value is string {
+  if (typeof value !== "string" || value.trim() === "") return false;
+  try {
+    return new Prisma.Decimal(value).isFinite();
+  } catch {
+    return false;
+  }
+}
+
+function isNullableFiniteDecimalText(value: Prisma.JsonValue | undefined): value is string | null {
+  return value === null || isFiniteDecimalText(value);
+}
+
+function isStrictDateOnlyText(value: Prisma.JsonValue | undefined): value is string {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && Boolean(toDateOnly(value));
 }
 
 function uniqueNonEmpty(values: Array<string | null | undefined>) {
@@ -4114,21 +4634,7 @@ function maybeCostRuleCreate(
   body: Record<string, unknown>,
   latestCostRule: CoupangCostRuleSnapshot | null = null
 ): Prisma.CoupangCostRuleCreateNestedManyWithoutProductInput | undefined {
-  const hasCostField = [
-    "salePriceKrw",
-    "supplyPriceKrw",
-    "productCostKrw",
-    "salesFeeRate",
-    "salesFeeKrw",
-    "sellerShippingFeeKrw",
-    "hanaroShippingFeeKrw",
-    "growthInboundFeeKrw",
-    "growthShippingFeeKrw",
-    "returnRate",
-    "returnCostPerUnitKrw",
-    "extraCostKrw"
-  ].some((key) => body[key] !== undefined);
-  if (!hasCostField) {
+  if (!hasCoupangCostFields(body)) {
     return undefined;
   }
   const sellerShippingFeeKrw = Object.prototype.hasOwnProperty.call(body, "sellerShippingFeeKrw")
@@ -4139,47 +4645,70 @@ function maybeCostRuleCreate(
     : latestCostRule?.hanaroShippingFeeKrw ?? null;
   return {
     create: {
-      salePriceKrw: decimalFromBody(body.salePriceKrw) ?? latestCostRule?.salePriceKrw,
-      supplyPriceKrw: decimalFromBody(body.supplyPriceKrw) ?? latestCostRule?.supplyPriceKrw,
-      productCostKrw: decimalFromBody(body.productCostKrw) ?? latestCostRule?.productCostKrw,
-      salesFeeRate: decimalFromBody(body.salesFeeRate) ?? latestCostRule?.salesFeeRate,
-      salesFeeKrw: decimalFromBody(body.salesFeeKrw) ?? latestCostRule?.salesFeeKrw,
+      salePriceKrw: nonNegativeCostDecimalFromBody(body.salePriceKrw, "salePriceKrw") ?? latestCostRule?.salePriceKrw,
+      supplyPriceKrw: nonNegativeCostDecimalFromBody(body.supplyPriceKrw, "supplyPriceKrw") ?? latestCostRule?.supplyPriceKrw,
+      productCostKrw: nonNegativeCostDecimalFromBody(body.productCostKrw, "productCostKrw") ?? latestCostRule?.productCostKrw,
+      salesFeeRate: decimal(0),
+      salesFeeKrw: decimal(0),
       sellerShippingFeeKrw,
       hanaroShippingFeeKrw,
       growthInboundFeeKrw: nonNegativeCostDecimalFromBody(body.growthInboundFeeKrw, "growthInboundFeeKrw")
         ?? latestCostRule?.growthInboundFeeKrw,
       growthShippingFeeKrw: nonNegativeCostDecimalFromBody(body.growthShippingFeeKrw, "growthShippingFeeKrw")
         ?? latestCostRule?.growthShippingFeeKrw,
-      returnRate: decimalFromBody(body.returnRate) ?? latestCostRule?.returnRate,
-      returnCostPerUnitKrw: decimalFromBody(body.returnCostPerUnitKrw) ?? latestCostRule?.returnCostPerUnitKrw,
-      extraCostKrw: decimalFromBody(body.extraCostKrw) ?? latestCostRule?.extraCostKrw,
-      effectiveFrom: body.effectiveFrom ? asDateOnly(String(body.effectiveFrom)) : undefined,
-      effectiveTo: body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : undefined,
+      returnRate: body.returnRate === undefined ? latestCostRule?.returnRate : rateDecimalFromBody(body.returnRate, "returnRate"),
+      returnCostPerUnitKrw: nonNegativeCostDecimalFromBody(body.returnCostPerUnitKrw, "returnCostPerUnitKrw") ?? latestCostRule?.returnCostPerUnitKrw,
+      extraCostKrw: nonNegativeCostDecimalFromBody(body.extraCostKrw, "extraCostKrw") ?? latestCostRule?.extraCostKrw,
+      effectiveFrom: body.effectiveFrom ? requiredDateFromBody(body.effectiveFrom, "effectiveFrom") : undefined,
       note: body.note === undefined ? latestCostRule?.note : optionalString(body.note)
     }
   };
 }
 
-function decimalFromBody(value: unknown) {
+const COUPANG_COST_FIELDS = [
+  "salePriceKrw",
+  "supplyPriceKrw",
+  "productCostKrw",
+  "sellerShippingFeeKrw",
+  "hanaroShippingFeeKrw",
+  "growthInboundFeeKrw",
+  "growthShippingFeeKrw",
+  "returnRate",
+  "returnCostPerUnitKrw",
+  "extraCostKrw"
+] as const;
+
+function hasCoupangCostFields(body: Record<string, unknown>) {
+  return COUPANG_COST_FIELDS.some((field) => Object.prototype.hasOwnProperty.call(body, field));
+}
+
+function decimalFromBody(value: unknown, field: string) {
   if (value === undefined || value === null || String(value).trim() === "") {
     return undefined;
   }
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    throw new BadRequestException({ code: "INVALID_NUMBER", message: "Expected numeric cost field." });
+  const text = String(value).trim();
+  const isNumericInput = (typeof value === "number" && Number.isFinite(value))
+    || (typeof value === "string" && /^-?\d+(?:\.\d+)?$/.test(text));
+  if (!isNumericInput) {
+    throw invalidCoupangCostField(field, "must be a numeric value");
   }
-  return new Prisma.Decimal(parsed);
+  return new Prisma.Decimal(text);
 }
 
 function nonNegativeCostDecimalFromBody(value: unknown, field: string) {
-  const parsed = decimalFromBody(value);
-  if (parsed !== undefined && (parsed.isNegative() || !parsed.isInteger())) {
-    throw new BadRequestException({
-      code: `INVALID_${field.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase().replace(/_KRW$/, "")}`,
-      message: `${field} must be a non-negative integer.`
-    });
+  const parsed = decimalFromBody(value, field);
+  if (parsed !== undefined && (parsed.isNegative() || !parsed.isInteger() || parsed.greaterThan(MAX_COUPANG_COST_INTEGER_KRW))) {
+    throw invalidCoupangCostField(field, `must be a non-negative integer no greater than ${MAX_COUPANG_COST_INTEGER_KRW}`);
   }
   return parsed;
+}
+
+function invalidCoupangCostField(field: string, requirement: string) {
+  return new BadRequestException({
+    code: `INVALID_${field.replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase().replace(/_KRW$/, "")}`,
+    field,
+    message: `${field} ${requirement}.`
+  });
 }
 
 function nullableNonNegativeCostDecimalFromBody(value: unknown, field: string) {
@@ -4187,6 +4716,33 @@ function nullableNonNegativeCostDecimalFromBody(value: unknown, field: string) {
     return null;
   }
   return nonNegativeCostDecimalFromBody(value, field) ?? null;
+}
+
+function currentKoreaDateOnly() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return requiredDateFromBody(`${value.year}-${value.month}-${value.day}`, "date");
+}
+
+function rethrowCoupangCostRuleWriteError(error: unknown): never {
+  const target = error && typeof error === "object" && "meta" in error
+    ? String((error.meta as { target?: unknown } | undefined)?.target ?? "")
+    : "";
+  if (error && typeof error === "object" && "code" in error && error.code === "P2002"
+    && ((target.includes("coupang_product_id") && target.includes("effective_from"))
+      || (target.includes("coupangProductId") && target.includes("effectiveFrom"))
+      || target.includes("coupang_cost_rules_coupang_product_id_effective_from_key"))) {
+    throw new BadRequestException({
+      code: "COUPANG_COST_RULE_DATE_EXISTS",
+      message: "A cost rule already starts on this date; retry or correct that history row instead."
+    });
+  }
+  throw error;
 }
 
 function groupBy<T>(items: T[], keyFn: (item: T) => string) {
@@ -4255,16 +4811,42 @@ function findRuleForDate<T extends CoupangCostRuleForSelection>(rules: T[], date
   );
 }
 
+type CoupangSalesFeeRuleForSelection = Pick<
+  Prisma.CoupangSalesFeeRuleGetPayload<Record<string, never>>,
+  "id" | "salesFeeRate" | "effectiveFrom" | "effectiveTo" | "note" | "createdAt" | "updatedAt"
+>;
+
+export function findSalesFeeRuleForDate<T extends CoupangSalesFeeRuleForSelection>(rules: T[], date: Date): T | null {
+  return (
+    rules
+      .filter((rule) => rule.effectiveFrom <= date && (!rule.effectiveTo || rule.effectiveTo >= date))
+      .sort((a, b) => (
+        b.effectiveFrom.getTime() - a.effectiveFrom.getTime()
+        || b.createdAt.getTime() - a.createdAt.getTime()
+        || (a.id === b.id ? 0 : a.id < b.id ? 1 : -1)
+      ))[0] ?? null
+  );
+}
+
+function serializeSalesFeeRule(rule: CoupangSalesFeeRuleForSelection) {
+  const salesFeeRate = numberFrom(rule.salesFeeRate);
+  return {
+    id: rule.id,
+    salesFeeRate,
+    salesFeePercent: Math.round(salesFeeRate * 100_000_000) / 1_000_000,
+    effectiveFrom: formatDateOnly(rule.effectiveFrom),
+    effectiveTo: rule.effectiveTo ? formatDateOnly(rule.effectiveTo) : null,
+    note: rule.note,
+    createdAt: rule.createdAt,
+    updatedAt: rule.updatedAt
+  };
+}
+
 function sortCoupangCostRulesForSettings<T extends CoupangCostRuleForSelection>(rules: T[]): T[] {
   return [...rules].sort(compareCoupangCostRuleForSelection);
 }
 
 function compareCoupangCostRuleForSelection(a: CoupangCostRuleForSelection, b: CoupangCostRuleForSelection) {
-  const aHasMarginCosts = hasCoupangMarginCostFields(a);
-  const bHasMarginCosts = hasCoupangMarginCostFields(b);
-  if (aHasMarginCosts !== bHasMarginCosts) {
-    return aHasMarginCosts ? -1 : 1;
-  }
   return (
     b.effectiveFrom.getTime() - a.effectiveFrom.getTime() ||
     b.createdAt.getTime() - a.createdAt.getTime() ||
@@ -4272,29 +4854,11 @@ function compareCoupangCostRuleForSelection(a: CoupangCostRuleForSelection, b: C
   );
 }
 
-function hasCoupangMarginCostFields(rule: CoupangCostRuleForSelection) {
-  return [
-    rule.supplyPriceKrw,
-    rule.productCostKrw,
-    rule.salesFeeRate,
-    rule.salesFeeKrw,
-    rule.sellerShippingFeeKrw,
-    rule.hanaroShippingFeeKrw,
-    rule.growthInboundFeeKrw,
-    rule.growthShippingFeeKrw,
-    rule.returnRate,
-    rule.returnCostPerUnitKrw,
-    rule.extraCostKrw
-  ].some((value) => numberFrom(value) !== 0);
-}
-
 function costInput(rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>): CoupangCostInput {
   return {
     salePriceKrw: numberFrom(rule.salePriceKrw),
     supplyPriceKrw: numberFrom(rule.supplyPriceKrw),
     productCostKrw: numberFrom(rule.productCostKrw),
-    salesFeeRate: numberFrom(rule.salesFeeRate),
-    salesFeeKrw: numberFrom(rule.salesFeeKrw),
     sellerShippingFeeKrw: nullableNumberFrom(rule.sellerShippingFeeKrw),
     hanaroShippingFeeKrw: nullableNumberFrom(rule.hanaroShippingFeeKrw),
     growthInboundFeeKrw: numberFrom(rule.growthInboundFeeKrw),

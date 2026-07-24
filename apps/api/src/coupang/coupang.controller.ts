@@ -77,8 +77,8 @@ export class CoupangController {
   }
 
   @Get("product-settings")
-  listProductSettings(@Query("includeInactive") includeInactive?: string) {
-    return this.coupangService.listProductSettings(includeInactive === "true");
+  listProductSettings(@Query("includeInactive") includeInactive?: string, @Query("date") date?: string) {
+    return this.coupangService.listProductSettings(includeInactive === "true", date);
   }
 
   @Post("product-settings")
@@ -89,6 +89,35 @@ export class CoupangController {
   @Patch("product-settings/:id/configuration")
   updateProductConfiguration(@Param("id") id: string, @Body() body: Record<string, unknown>) {
     return this.coupangService.updateProductConfiguration(id, body);
+  }
+
+  @Patch("product-settings/:productId/cost-rules/:costRuleId")
+  correctProductCostRule(
+    @Param("productId") productId: string,
+    @Param("costRuleId") costRuleId: string,
+    @Body() body: Record<string, unknown>
+  ) {
+    return this.coupangService.correctProductCostRule(productId, costRuleId, body);
+  }
+
+  @Get("sales-fee-rules/current")
+  currentSalesFeeRule(@Query("date") date?: string) {
+    return this.coupangService.currentSalesFeeRule(date);
+  }
+
+  @Get("sales-fee-rules")
+  listSalesFeeRules() {
+    return this.coupangService.listSalesFeeRules();
+  }
+
+  @Post("sales-fee-rules")
+  createSalesFeeRule(@Body() body: Record<string, unknown>) {
+    return this.coupangService.createSalesFeeRule(body);
+  }
+
+  @Patch("sales-fee-rules/:id")
+  correctSalesFeeRule(@Param("id") id: string, @Body() body: Record<string, unknown>) {
+    return this.coupangService.correctSalesFeeRule(id, body);
   }
 
   @Patch("product-settings/:id")

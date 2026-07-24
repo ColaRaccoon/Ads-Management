@@ -27,7 +27,7 @@ export default function CoupangDashboardPage() {
     { key: "actualNet", header: "순매출", render: (row) => money(row.actualNetSalesKrw) },
     { key: "actualQty", header: "판매수량", render: (row) => numberFmt(row.actualSalesQuantity) },
     { key: "manualSales", header: "가구매 매출 조정", render: (row) => money(row.manualPurchaseSalesKrw) },
-    { key: "manualCost", header: "가구매 총비용", render: (row) => money(row.manualPurchaseTotalCostKrw) },
+    { key: "manualCost", header: "가구매 비용(업체수수료)", render: (row) => money(row.manualPurchaseTotalCostKrw) },
     { key: "adSpend", header: "광고비", render: (row) => money(row.adSpendKrw) },
     { key: "organic", header: "유기적 매출", render: (row) => money(row.organicSalesKrw) },
     { key: "normalMargin", header: "정상 판매 순이익", render: (row) => money(row.normalMarginKrw) },
@@ -44,7 +44,7 @@ export default function CoupangDashboardPage() {
 
   return (
     <section className="page">
-      <div className="page-title"><div><h1>Coupang Dashboard</h1><p>원본 판매와 가구매를 분리한 실제 정상 판매 손익 및 가구매 스냅샷 비용 요약입니다.</p></div></div>
+      <div className="page-title"><div><h1>Coupang Dashboard</h1><p>원본 판매와 가구매를 분리한 정상 판매 손익 및 가구매 업체수수료 요약입니다.</p></div></div>
       {dashboard.isError ? <div className="warning-strip"><AlertTriangle size={15} /> Coupang API or database settings need attention.</div> : null}
       <div className="warning-strip">
         <span><AlertTriangle size={15} /> Missing cost rules {data?.summary.missingCostRuleCount ?? 0}</span>
@@ -64,18 +64,9 @@ export default function CoupangDashboardPage() {
         <KpiCard label="가구매 수량" value={numberFmt(data?.summary.manualPurchaseQuantity)} />
         <KpiCard label="가구매 매출 조정" value={money(data?.summary.manualPurchaseSalesKrw)} />
         <KpiCard label="정상 판매 순이익" value={money(data?.summary.normalMarginKrw)} />
-        <KpiCard label="가구매 총비용" value={money(data?.summary.manualPurchaseTotalCostKrw)} />
+        <KpiCard label="가구매 비용(업체수수료)" value={money(data?.summary.manualPurchaseTotalCostKrw)} />
         <KpiCard label="ROAS" value={percent(data?.summary.roas)} />
       </div>
-      <details className="panel" style={{ marginTop: 12 }}>
-        <summary>가구매 비용 상세 보기</summary>
-        <div className="grid kpi" style={{ marginTop: 12 }}>
-          <KpiCard label="가구매 제품 원가" value={money(data?.summary.manualPurchaseProductCostKrw)} />
-          <KpiCard label="가구매 업체수수료" value={money(data?.summary.manualPurchaseVendorFeeKrw)} />
-          <KpiCard label="가구매 플랫폼 비용" value={money(nullableSum(data?.summary.manualPurchaseCoupangSalesFeeKrw, data?.summary.manualPurchaseVatKrw))} />
-          <KpiCard label="가구매 배송/기타비용" value={money(nullableSum(data?.summary.manualPurchaseShippingCostKrw, data?.summary.manualPurchaseOtherCostKrw))} />
-        </div>
-      </details>
       <div className="panel" style={{ marginTop: 12 }}>
         <div className="toolbar">
           <h2>Product Summary</h2>
@@ -91,4 +82,3 @@ export default function CoupangDashboardPage() {
 function money(value: number | null | undefined) { return value === null || value === undefined || Number.isNaN(value) ? "-" : `${Math.round(value).toLocaleString("ko-KR")}원`; }
 function numberFmt(value: number | null | undefined) { return value === null || value === undefined || Number.isNaN(value) ? "-" : value.toLocaleString("ko-KR"); }
 function percent(value: number | null | undefined) { return value === null || value === undefined || !Number.isFinite(value) ? "-" : `${(value * 100).toFixed(1)}%`; }
-function nullableSum(...values: Array<number | null | undefined>) { return values.some((value) => value === null || value === undefined) ? null : values.reduce<number>((sum, value) => sum + Number(value), 0); }
