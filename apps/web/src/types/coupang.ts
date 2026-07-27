@@ -158,12 +158,30 @@ export type CoupangDailyVisibleMetrics = {
   marginKrw: number | null;
 };
 
+export type CoupangDailyReportCategoryRef = { id: string; displayName: string };
+export type CoupangDailyReportCategorySummary = CoupangDailyReportCategoryRef & {
+  sortOrder: number; isActive: boolean; memberCount: number; activeMemberCount: number; updatedAt: string;
+};
+export type CoupangDailyReportCategory = CoupangDailyReportCategoryRef & {
+  sortOrder: number; isActive: boolean; productIds: string[]; updatedAt: string;
+};
+export type CoupangDailyReportCategoryProductOption = {
+  id: string; displayName: string; sortOrder: number; isActive: boolean;
+  productGroup: { id: string; displayName: string; sortOrder: number } | null;
+  categoryIds: string[];
+};
+export type CoupangDailyReportCategoryCatalogResponse = {
+  categories: CoupangDailyReportCategory[];
+  products: CoupangDailyReportCategoryProductOption[];
+};
+
 export type CoupangDailyProductRow = CoupangDailyVisibleMetrics & {
   rowType: "PRODUCT";
   productId: string;
   productName: string;
   groupId: string | null;
   groupName: string | null;
+  reportCategories: CoupangDailyReportCategoryRef[];
   memo: string | null;
   previous: CoupangDailyPreviousMetrics;
   calculationStatus: "COMPLETE" | "INCOMPLETE";
@@ -175,6 +193,7 @@ export type CoupangDailyGroupRow = CoupangDailyVisibleMetrics & {
   groupId: string;
   groupName: string;
   productName: string;
+  reportCategories: CoupangDailyReportCategoryRef[];
   childProductCount: number;
   children: CoupangDailyProductRow[];
   previous: CoupangDailyPreviousMetrics;
@@ -197,6 +216,15 @@ export type CoupangDailySummary = CoupangDailyVisibleMetrics & {
 export type CoupangDailyReportResponse = {
   date: string;
   previousDate: string;
+  appliedFilter: {
+    mode: "ALL" | "FILTERED";
+    categories: CoupangDailyReportCategoryRef[];
+    includeUncategorized: boolean;
+    query: string | null;
+    matchedCatalogProductCount: number;
+    activityProductCount: number;
+    label: string;
+  };
   summary: {
     current: CoupangDailySummary;
     previous: CoupangDailySummary;

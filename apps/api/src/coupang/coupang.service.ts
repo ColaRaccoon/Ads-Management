@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
   ConflictPolicy,
   CoupangUploadSourceType,
@@ -52,6 +52,15 @@ import {
   ParsedCoupangSaleRow
 } from "../domain/coupang-sales-xlsx";
 import { formatDateOnly, ParseIssue, safeDivide, toDateOnly } from "../domain/date-number";
+import {
+  collectDailyRowCategories,
+  filterProfitRowsByProductIds,
+  normalizeDailySearchQuery,
+  resolveDailyCategoryScope,
+  resolveDailySearchProductIds,
+  type DailyCategoryRef,
+  type DailyCategoryWithMembers
+} from "./coupang-daily-report-filter";
 
 type RowIssue = Omit<ParseIssue, "columnName"> & {
   columnName: string | null;
@@ -247,6 +256,7 @@ export type CoupangDailyProductRow = CoupangDailyVisibleMetrics & {
   productName: string;
   groupId: string | null;
   groupName: string | null;
+  reportCategories: DailyCategoryRef[];
   memo: string | null;
   previous: CoupangDailyPreviousMetrics;
   calculationStatus: "COMPLETE" | "INCOMPLETE";
@@ -258,6 +268,7 @@ export type CoupangDailyGroupRow = CoupangDailyVisibleMetrics & {
   groupId: string;
   groupName: string;
   productName: string;
+  reportCategories: DailyCategoryRef[];
   childProductCount: number;
   children: CoupangDailyProductRow[];
   previous: CoupangDailyPreviousMetrics;
@@ -278,6 +289,15 @@ export type CoupangDailySummary = CoupangDailyVisibleMetrics & {
 export type CoupangDailyReportResponse = {
   date: string;
   previousDate: string;
+  appliedFilter: {
+    mode: "ALL" | "FILTERED";
+    categories: DailyCategoryRef[];
+    includeUncategorized: boolean;
+    query: string | null;
+    matchedCatalogProductCount: number;
+    activityProductCount: number;
+    label: string;
+  };
   summary: {
     current: CoupangDailySummary;
     previous: CoupangDailySummary;
@@ -1315,6 +1335,183 @@ export class CoupangService {
       data: { isActive: false },
       include: { products: true }
     });
+  }
+
+  async listDailyReportCategories(includeInactive = false) {
+    const categories = await this.prisma.coupangDailyReportCategory.findMany({
+      where: includeInactive ? {} : { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+      include: { members: { select: { product: { select: { isActive: true } } } } }
+    });
+    return categories.map((category) => ({
+      id: category.id,
+      displayName: category.displayName,
+      sortOrder: category.sortOrder,
+      isActive: category.isActive,
+      memberCount: category.members.length,
+      activeMemberCount: category.members.filter((member) => member.product.isActive).length,
+      updatedAt: category.updatedAt.toISOString()
+    }));
+  }
+
+  async dailyReportCategoryCatalog(includeInactive = true) {
+    const [categories, products] = await Promise.all([
+      this.prisma.coupangDailyReportCategory.findMany({
+        where: includeInactive ? {} : { isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+        include: { members: { select: { coupangProductId: true } } }
+      }),
+      this.prisma.coupangProduct.findMany({
+        where: includeInactive ? {} : { isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+        include: {
+          group: true,
+          dailyReportCategoryMemberships: { select: { categoryId: true } }
+        }
+      })
+    ]);
+    return {
+      categories: categories.map((category) => ({
+        id: category.id,
+        displayName: category.displayName,
+        sortOrder: category.sortOrder,
+        isActive: category.isActive,
+        productIds: category.members.map((member) => member.coupangProductId),
+        updatedAt: category.updatedAt.toISOString()
+      })),
+      products: products.map((product) => ({
+        id: product.id,
+        displayName: product.displayName,
+        sortOrder: product.sortOrder,
+        isActive: product.isActive,
+        productGroup: product.group ? {
+          id: product.group.id,
+          displayName: product.group.displayName,
+          sortOrder: product.group.sortOrder
+        } : null,
+        categoryIds: product.dailyReportCategoryMemberships.map((member) => member.categoryId)
+      }))
+    };
+  }
+
+  async createDailyReportCategory(body: Record<string, unknown>) {
+    const displayName = dailyCategoryDisplayName(body.displayName);
+    const productIds = dailyCategoryProductIds(body.productIds, false);
+    const sortOrder = dailyCategorySortOrder(body.sortOrder, 100);
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await assertDailyCategoryProductsExist(tx, productIds);
+        const category = await tx.coupangDailyReportCategory.create({
+          data: {
+            displayName,
+            standardName: standardProductName(displayName),
+            sortOrder,
+            members: productIds.length > 0
+              ? { createMany: { data: productIds.map((coupangProductId) => ({ coupangProductId })) } }
+              : undefined
+          },
+          include: { members: { select: { coupangProductId: true } } }
+        });
+        return serializeDailyCategory(category);
+      }, COUPANG_TRANSACTION_OPTIONS);
+    } catch (error) {
+      rethrowDailyCategoryWriteError(error);
+    }
+  }
+
+  async updateDailyReportCategory(id: string, body: Record<string, unknown>) {
+    await this.assertDailyReportCategory(id);
+    const data: Prisma.CoupangDailyReportCategoryUpdateInput = {};
+    if (body.displayName !== undefined) {
+      const displayName = dailyCategoryDisplayName(body.displayName);
+      data.displayName = displayName;
+      data.standardName = standardProductName(displayName);
+    }
+    if (body.sortOrder !== undefined) data.sortOrder = dailyCategorySortOrder(body.sortOrder);
+    if (body.isActive !== undefined) data.isActive = dailyCategoryBoolean(body.isActive, "isActive");
+    try {
+      const category = await this.prisma.coupangDailyReportCategory.update({
+        where: { id },
+        data,
+        include: { members: { select: { coupangProductId: true } } }
+      });
+      return serializeDailyCategory(category);
+    } catch (error) {
+      rethrowDailyCategoryWriteError(error);
+    }
+  }
+
+  async replaceDailyReportCategoryProducts(id: string, body: Record<string, unknown>) {
+    const productIds = dailyCategoryProductIds(body.productIds, true);
+    const expectedUpdatedAt = typeof body.expectedUpdatedAt === "string"
+      ? new Date(body.expectedUpdatedAt)
+      : null;
+    if (!expectedUpdatedAt || Number.isNaN(expectedUpdatedAt.getTime())) {
+      throw new BadRequestException({
+        code: "INVALID_EXPECTED_UPDATED_AT",
+        message: "expectedUpdatedAt must be an ISO timestamp."
+      });
+    }
+    const metadata: Prisma.CoupangDailyReportCategoryUpdateManyMutationInput = {};
+    if (body.displayName !== undefined) {
+      const displayName = dailyCategoryDisplayName(body.displayName);
+      metadata.displayName = displayName;
+      metadata.standardName = standardProductName(displayName);
+    }
+    if (body.sortOrder !== undefined) metadata.sortOrder = dailyCategorySortOrder(body.sortOrder);
+    const nextUpdatedAt = new Date(Math.max(Date.now(), expectedUpdatedAt.getTime() + 1));
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await assertDailyCategoryProductsExist(tx, productIds);
+        const claimed = await tx.coupangDailyReportCategory.updateMany({
+          where: { id, updatedAt: expectedUpdatedAt },
+          data: { ...metadata, updatedAt: nextUpdatedAt }
+        });
+        if (claimed.count !== 1) {
+          const exists = await tx.coupangDailyReportCategory.findUnique({
+            where: { id },
+            select: { id: true }
+          });
+          if (!exists) throw dailyCategoryNotFound();
+          throw new ConflictException({
+            code: "COUPANG_DAILY_CATEGORY_CHANGED",
+            message: "The category changed after it was loaded."
+          });
+        }
+        await tx.coupangDailyReportCategoryProduct.deleteMany({
+          where: { categoryId: id, coupangProductId: { notIn: productIds } }
+        });
+        if (productIds.length > 0) {
+          await tx.coupangDailyReportCategoryProduct.createMany({
+            data: productIds.map((coupangProductId) => ({ categoryId: id, coupangProductId })),
+            skipDuplicates: true
+          });
+        }
+        const updated = await tx.coupangDailyReportCategory.findUniqueOrThrow({
+          where: { id },
+          include: { members: { select: { coupangProductId: true } } }
+        });
+        return serializeDailyCategory(updated);
+      }, COUPANG_TRANSACTION_OPTIONS);
+    } catch (error) {
+      rethrowDailyCategoryWriteError(error);
+    }
+  }
+
+  async deleteDailyReportCategory(id: string) {
+    await this.assertDailyReportCategory(id);
+    const category = await this.prisma.coupangDailyReportCategory.update({
+      where: { id },
+      data: { isActive: false },
+      include: { members: { select: { coupangProductId: true } } }
+    });
+    return serializeDailyCategory(category);
+  }
+
+  private async assertDailyReportCategory(id: string) {
+    const category = await this.prisma.coupangDailyReportCategory.findUnique({ where: { id } });
+    if (!category) throw dailyCategoryNotFound();
+    return category;
   }
 
   async listMappingRules(includeInactive = false) {
@@ -2380,7 +2577,12 @@ export class CoupangService {
     };
   }
 
-  async dailyReport(query: { date?: string }): Promise<CoupangDailyReportResponse> {
+  async dailyReport(query: {
+    date?: string;
+    categoryIds?: string;
+    includeUncategorized?: string;
+    q?: string;
+  }): Promise<CoupangDailyReportResponse> {
     if (!query.date) {
       throw new BadRequestException({ code: "DATE_REQUIRED", message: "date is required." });
     }
@@ -2391,7 +2593,16 @@ export class CoupangService {
     const currentDate = formatDateOnly(date);
     const previous = previousDate(date);
     const previousDateText = formatDateOnly(previous);
-    const [currentProductRows, previousProductRows, products, manualPurchases] = await Promise.all([
+    const selectedCategoryIds = parseDailyCategoryIds(query.categoryIds);
+    const includeUncategorized = parseIncludeUncategorized(query.includeUncategorized);
+    if (typeof query.q === "string" && query.q.trim().length > 100) {
+      throw new BadRequestException({ code: "DAILY_QUERY_TOO_LONG", message: "q must be at most 100 characters." });
+    }
+    const normalizedQuery = normalizeDailySearchQuery(query.q);
+    const categoryDelegate = (this.prisma as PrismaService & {
+      coupangDailyReportCategory?: PrismaService["coupangDailyReportCategory"];
+    }).coupangDailyReportCategory;
+    const [currentProductRows, previousProductRows, products, manualPurchases, allCategories] = await Promise.all([
       this.buildProductProfitRows({ from: currentDate, to: currentDate, fromDate: date, toDate: date }),
       this.buildProductProfitRows({
         from: previousDateText,
@@ -2409,25 +2620,86 @@ export class CoupangService {
           productDisplayName: true,
           memo: true
         }
-      })
+      }),
+      categoryDelegate
+        ? categoryDelegate.findMany({
+            orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+            include: { members: { select: { coupangProductId: true } } }
+          })
+        : Promise.resolve([])
     ]);
+    const categories: DailyCategoryWithMembers[] = allCategories.map((category) => ({
+      id: category.id,
+      displayName: category.displayName,
+      sortOrder: category.sortOrder,
+      isActive: category.isActive,
+      members: category.members
+    }));
+    const categoryById = new Map(categories.map((category) => [category.id, category]));
+    for (const id of selectedCategoryIds) {
+      const category = categoryById.get(id);
+      if (!category) throw dailyCategoryNotFound();
+      if (!category.isActive) {
+        throw new ConflictException({
+          code: "COUPANG_DAILY_CATEGORY_INACTIVE",
+          message: "Inactive categories cannot be used as report filters."
+        });
+      }
+    }
+    const allProductIds = new Set([
+      ...products.map((product) => product.id),
+      ...currentProductRows.map((row) => row.productId),
+      ...previousProductRows.map((row) => row.productId),
+      ...manualPurchases.map((row) => row.coupangProductId)
+    ]);
+    const scopedProductIds = resolveDailyCategoryScope({
+      allProductIds,
+      categories,
+      selectedCategoryIds,
+      includeUncategorized
+    });
+    const finalProductIds = resolveDailySearchProductIds({
+      products,
+      manualPurchases,
+      scopedProductIds,
+      query: normalizedQuery
+    });
+    const filteredCurrentRows = filterProfitRowsByProductIds(currentProductRows, finalProductIds);
+    const filteredPreviousRows = filterProfitRowsByProductIds(previousProductRows, finalProductIds);
+    const filteredManualPurchases = manualPurchases.filter((row) => finalProductIds.has(row.coupangProductId));
+    const rows = buildCoupangDailyHierarchy({
+      currentProductRows: filteredCurrentRows,
+      previousProductRows: filteredPreviousRows,
+      products,
+      manualPurchases: filteredManualPurchases,
+      includedProductIds: finalProductIds,
+      reportCategories: categories
+    });
+    const selectedCategories = categories
+      .filter((category) => selectedCategoryIds.has(category.id))
+      .map(({ id, displayName }) => ({ id, displayName }));
+    const mode = selectedCategoryIds.size || includeUncategorized || normalizedQuery ? "FILTERED" : "ALL";
 
     return {
       date: currentDate,
       previousDate: previousDateText,
+      appliedFilter: {
+        mode,
+        categories: selectedCategories,
+        includeUncategorized,
+        query: normalizedQuery,
+        matchedCatalogProductCount: finalProductIds.size,
+        activityProductCount: rows.reduce((count, row) => count + (row.rowType === "GROUP" ? row.children.length : 1), 0),
+        label: dailyFilterLabel(selectedCategories, includeUncategorized)
+      },
       summary: {
-        current: toCoupangDailySummary(summarizeCoupangProductProfitRows(currentProductRows)),
+        current: toCoupangDailySummary(summarizeCoupangProductProfitRows(filteredCurrentRows)),
         previous: toCoupangDailySummary(
-          summarizeCoupangProductProfitRows(previousProductRows),
-          previousProductRows.length > 0
+          summarizeCoupangProductProfitRows(filteredPreviousRows),
+          filteredPreviousRows.length > 0
         )
       },
-      rows: buildCoupangDailyHierarchy({
-        currentProductRows,
-        previousProductRows,
-        products,
-        manualPurchases
-      })
+      rows
     };
   }
 
@@ -3403,13 +3675,22 @@ type BuildCoupangDailyHierarchyInput = {
   previousProductRows: ProductProfitRow[];
   products: CoupangDailyCatalogProduct[];
   manualPurchases: CoupangDailyMemo[];
+  includedProductIds?: ReadonlySet<string>;
+  reportCategories?: DailyCategoryWithMembers[];
 };
 
 export function buildCoupangDailyHierarchy({
   currentProductRows,
   previousProductRows,
   products,
-  manualPurchases
+  manualPurchases,
+  includedProductIds = new Set([
+    ...products.map((product) => product.id),
+    ...currentProductRows.map((row) => row.productId),
+    ...previousProductRows.map((row) => row.productId),
+    ...manualPurchases.map((row) => row.coupangProductId)
+  ]),
+  reportCategories = []
 }: BuildCoupangDailyHierarchyInput): CoupangDailyReportRow[] {
   const productById = new Map(products.map((product) => [product.id, product]));
   const currentByProductId = new Map(currentProductRows.map((row) => [row.productId, row]));
@@ -3425,7 +3706,7 @@ export function buildCoupangDailyHierarchy({
   );
   const targets = new Map<string, { rowType: "GROUP"; groupId: string } | { rowType: "PRODUCT"; productId: string }>();
 
-  for (const row of currentProductRows.filter(hasDailyReportActivity)) {
+  for (const row of currentProductRows.filter((row) => includedProductIds.has(row.productId) && hasDailyReportActivity(row))) {
     const group = productById.get(row.productId)?.group ?? null;
     if (group) {
       targets.set(`group:${group.id}`, { rowType: "GROUP", groupId: group.id });
@@ -3435,7 +3716,7 @@ export function buildCoupangDailyHierarchy({
   }
 
   for (const [productId, memoEntry] of memoByProductId) {
-    if (!memoEntry.memo) continue;
+    if (!includedProductIds.has(productId) || !memoEntry.memo) continue;
     const group = productById.get(productId)?.group ?? null;
     if (group) {
       targets.set(`group:${group.id}`, { rowType: "GROUP", groupId: group.id });
@@ -3457,11 +3738,14 @@ export function buildCoupangDailyHierarchy({
           productId: target.productId,
           productName: product?.displayName ?? current?.productName ?? memoEntry?.productName ?? "Coupang Product",
           group: null,
-          memo: memoEntry?.memo ?? null
+          memo: memoEntry?.memo ?? null,
+          reportCategories
         });
       }
 
-      const groupProducts = products.filter((product) => product.group?.id === target.groupId);
+      const groupProducts = products.filter((product) => (
+        includedProductIds.has(product.id) && product.group?.id === target.groupId
+      ));
       const group = groupProducts[0]?.group;
       if (!group) return null;
       const currentGroupRows = currentProductRows.filter(
@@ -3481,7 +3765,8 @@ export function buildCoupangDailyHierarchy({
         .filter((product) => (
           product.isActive ||
           currentByProductId.has(product.id) ||
-          previousByProductId.has(product.id)
+          previousByProductId.has(product.id) ||
+          Boolean(memoByProductId.get(product.id)?.memo)
         ))
         .sort((left, right) => (
           (currentByProductId.get(right.id)?.reportedSalesKrw ?? 0) -
@@ -3495,7 +3780,8 @@ export function buildCoupangDailyHierarchy({
         productId: product.id,
         productName: product.displayName,
         group,
-        memo: memoByProductId.get(product.id)?.memo ?? null
+        memo: memoByProductId.get(product.id)?.memo ?? null,
+        reportCategories
       }));
 
       return {
@@ -3503,6 +3789,7 @@ export function buildCoupangDailyHierarchy({
         groupId: group.id,
         groupName: group.displayName,
         productName: group.displayName,
+        reportCategories: collectDailyRowCategories(children.map((child) => child.productId), reportCategories),
         childProductCount: children.length,
         children,
         ...toDailyVisibleMetrics(currentGroup),
@@ -3524,7 +3811,8 @@ function toDailyProductRow({
   productId,
   productName,
   group,
-  memo
+  memo,
+  reportCategories
 }: {
   current: ProductProfitRow | undefined;
   previous: ProductProfitRow | undefined;
@@ -3532,6 +3820,7 @@ function toDailyProductRow({
   productName: string;
   group: { id: string; displayName: string } | null;
   memo: string | null;
+  reportCategories: DailyCategoryWithMembers[];
 }): CoupangDailyProductRow {
   return {
     rowType: "PRODUCT",
@@ -3539,6 +3828,7 @@ function toDailyProductRow({
     productName,
     groupId: group?.id ?? null,
     groupName: group?.displayName ?? null,
+    reportCategories: collectDailyRowCategories([productId], reportCategories),
     memo,
     ...toDailyVisibleMetrics(current),
     previous: toDailyPreviousMetrics(previous),
@@ -4569,6 +4859,141 @@ function duplicateBatchHash(fileHashSha256: string, conflictPolicy: ConflictPoli
 
 function standardProductName(value: string) {
   return value.trim().split(/\s+/).join(" ").toLowerCase();
+}
+
+function dailyCategoryDisplayName(value: unknown) {
+  const displayName = requiredString(value, "displayName").replace(/\s+/g, " ");
+  if (displayName.length > 80) {
+    throw new BadRequestException({
+      code: "INVALID_DAILY_CATEGORY_NAME",
+      message: "displayName must be at most 80 characters."
+    });
+  }
+  return displayName;
+}
+
+function dailyCategoryProductIds(value: unknown, required: boolean): string[] {
+  if (value === undefined && !required) return [];
+  if (!Array.isArray(value) || value.length > 5_000 || value.some((id) => typeof id !== "string" || !UUID_PATTERN.test(id))) {
+    throw new BadRequestException({
+      code: "INVALID_DAILY_CATEGORY_PRODUCT_IDS",
+      message: "productIds must be an array of at most 5000 UUIDs."
+    });
+  }
+  return [...new Set(value as string[])];
+}
+
+function dailyCategorySortOrder(value: unknown, fallback?: number) {
+  if (value === undefined && fallback !== undefined) return fallback;
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < -1_000_000 ||
+    value > 1_000_000
+  ) {
+    throw new BadRequestException({
+      code: "INVALID_DAILY_CATEGORY_SORT_ORDER",
+      message: "sortOrder must be an integer between -1000000 and 1000000."
+    });
+  }
+  return value;
+}
+
+function dailyCategoryBoolean(value: unknown, field: string) {
+  if (typeof value !== "boolean") {
+    throw new BadRequestException({
+      code: "INVALID_DAILY_CATEGORY_BOOLEAN",
+      message: `${field} must be a boolean.`
+    });
+  }
+  return value;
+}
+
+async function assertDailyCategoryProductsExist(
+  tx: Prisma.TransactionClient,
+  productIds: string[]
+) {
+  if (productIds.length === 0) return;
+  const products = await tx.coupangProduct.findMany({
+    where: { id: { in: productIds } },
+    select: { id: true }
+  });
+  if (products.length !== productIds.length) {
+    throw new NotFoundException({
+      code: "COUPANG_PRODUCT_NOT_FOUND",
+      message: "One or more Coupang products do not exist."
+    });
+  }
+}
+
+function serializeDailyCategory(category: {
+  id: string;
+  displayName: string;
+  sortOrder: number;
+  isActive: boolean;
+  updatedAt: Date;
+  members: { coupangProductId: string }[];
+}) {
+  return {
+    id: category.id,
+    displayName: category.displayName,
+    sortOrder: category.sortOrder,
+    isActive: category.isActive,
+    productIds: category.members.map((member) => member.coupangProductId),
+    updatedAt: category.updatedAt.toISOString()
+  };
+}
+
+function rethrowDailyCategoryWriteError(error: unknown): never {
+  if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+    throw new ConflictException({
+      code: "COUPANG_DAILY_CATEGORY_NAME_CONFLICT",
+      message: "A report category with this name already exists."
+    });
+  }
+  throw error;
+}
+
+function dailyCategoryNotFound() {
+  return new NotFoundException({
+    code: "COUPANG_DAILY_CATEGORY_NOT_FOUND",
+    message: "The report category does not exist."
+  });
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function parseDailyCategoryIds(value: string | undefined) {
+  if (!value?.trim()) return new Set<string>();
+  const ids = [...new Set(value.split(",").map((id) => id.trim()).filter(Boolean))];
+  if (ids.length > 50 || ids.some((id) => !UUID_PATTERN.test(id))) {
+    throw new BadRequestException({
+      code: "INVALID_DAILY_CATEGORY_IDS",
+      message: "categoryIds must contain at most 50 UUIDs."
+    });
+  }
+  return new Set(ids);
+}
+
+function parseIncludeUncategorized(value: string | undefined) {
+  if (value === undefined || value === "false") return false;
+  if (value === "true") return true;
+  throw new BadRequestException({
+    code: "INVALID_INCLUDE_UNCATEGORIZED",
+    message: "includeUncategorized must be true or false."
+  });
+}
+
+function dailyFilterLabel(categories: DailyCategoryRef[], includeUncategorized: boolean) {
+  if (categories.length === 0) return includeUncategorized ? "미분류 제품" : "전체 제품";
+  if (includeUncategorized) {
+    return categories.length === 1
+      ? `${categories[0].displayName} + 미분류`
+      : `${categories[0].displayName} 외 ${categories.length - 1}개 + 미분류`;
+  }
+  return categories.length === 1
+    ? categories[0].displayName
+    : `${categories[0].displayName} 외 ${categories.length - 1}개`;
 }
 
 function requiredString(value: unknown, field: string): string {

@@ -221,7 +221,42 @@ export class CoupangController {
   }
 
   @Get("daily-report")
-  dailyReport(@Query("date") date?: string) {
-    return this.coupangService.dailyReport({ date });
+  dailyReport(
+    @Query("date") date?: string,
+    @Query("categoryIds") categoryIds?: string,
+    @Query("includeUncategorized") includeUncategorized?: string,
+    @Query("q") q?: string
+  ) {
+    return this.coupangService.dailyReport({ date, categoryIds, includeUncategorized, q });
+  }
+
+  @Get("daily-report/categories")
+  listDailyReportCategories(@Query("includeInactive") includeInactive?: string) {
+    return this.coupangService.listDailyReportCategories(includeInactive === "true");
+  }
+
+  @Get("daily-report/category-catalog")
+  dailyReportCategoryCatalog(@Query("includeInactive") includeInactive?: string) {
+    return this.coupangService.dailyReportCategoryCatalog(includeInactive === "true");
+  }
+
+  @Post("daily-report/categories")
+  createDailyReportCategory(@Body() body: Record<string, unknown>) {
+    return this.coupangService.createDailyReportCategory(body);
+  }
+
+  @Patch("daily-report/categories/:id")
+  updateDailyReportCategory(@Param("id") id: string, @Body() body: Record<string, unknown>) {
+    return this.coupangService.updateDailyReportCategory(id, body);
+  }
+
+  @Put("daily-report/categories/:id/products")
+  replaceDailyReportCategoryProducts(@Param("id") id: string, @Body() body: Record<string, unknown>) {
+    return this.coupangService.replaceDailyReportCategoryProducts(id, body);
+  }
+
+  @Delete("daily-report/categories/:id")
+  deleteDailyReportCategory(@Param("id") id: string) {
+    return this.coupangService.deleteDailyReportCategory(id);
   }
 }

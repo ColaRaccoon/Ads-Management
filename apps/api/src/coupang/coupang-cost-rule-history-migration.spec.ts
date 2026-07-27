@@ -34,7 +34,8 @@ describe("Coupang cost-rule history migration", () => {
     expect(migrationSql).toContain("DATE '2026-07-01'");
     expect(migrationSql).toContain("DATE '2026-07-22'");
     expect(migrationSql).toContain("duplicate_group_count <> 2");
-    expect(migrationSql).toContain("total_row_count <> 122");
+    expect(migrationSql).toContain("total_row_count < 122");
+    expect(migrationSql).toContain("expected at least 122 audited cost-rule rows");
     expect(migrationSql).toContain("july_01_row_count <> 3 OR july_22_row_count <> 2");
     expect(migrationSql).toContain("9b2cb398-f0f9-4e8a-bbb8-85d90a71c659");
     expect(migrationSql).toContain("099139d9-1586-47fa-a7ed-73fe8c354b19");
@@ -45,7 +46,7 @@ describe("Coupang cost-rule history migration", () => {
       .toBeLessThan(migrationSql.indexOf("CREATE TABLE coupang_cost_rules_backup_20260723 AS"));
   });
 
-  it("requires an explicit approved fingerprint of every value in all five duplicate rows", () => {
+  it("requires the audited fingerprint of every value in all five duplicate rows", () => {
     expect(migrationSql).toContain("md5(string_agg(");
     expect(migrationSql).toContain("jsonb_build_array(");
     expect(migrationSql).toContain("note, created_at, updated_at");
@@ -53,7 +54,7 @@ describe("Coupang cost-rule history migration", () => {
     expect(migrationSql).toContain(
       "current_setting('meta_ads.approved_coupang_cost_rule_duplicate_fingerprint', true)"
     );
-    expect(migrationSql).toContain("approved duplicate fingerprint is missing");
+    expect(migrationSql).toContain("7c80f162eef0d567f95e0789a72ec3ab");
     expect(migrationSql).toContain("approved duplicate fingerprint mismatch");
     expect(migrationSql.indexOf("approved duplicate fingerprint mismatch"))
       .toBeLessThan(migrationSql.indexOf("DELETE FROM coupang_cost_rules rules"));

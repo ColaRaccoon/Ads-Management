@@ -2512,6 +2512,355 @@ describe("Coupang product group aggregation", () => {
     await expect(service.dailyReport({ date: "2026-02-30" })).rejects.toMatchObject({
       response: { code: "INVALID_DATE" }
     });
+    await expect(service.dailyReport({
+      date: "2026-07-24",
+      includeUncategorized: ""
+    })).rejects.toMatchObject({
+      response: { code: "INVALID_INCLUDE_UNCATEGORIZED" }
+    });
+    await expect(service.dailyReport({
+      date: "2026-07-24",
+      categoryIds: "not-a-uuid"
+    })).rejects.toMatchObject({
+      response: { code: "INVALID_DAILY_CATEGORY_IDS" }
+    });
+    const tooManyCategoryIds = Array.from({ length: 51 }, (_, index) => (
+      `00000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`
+    )).join(",");
+    await expect(service.dailyReport({
+      date: "2026-07-24",
+      categoryIds: tooManyCategoryIds
+    })).rejects.toMatchObject({
+      response: { code: "INVALID_DAILY_CATEGORY_IDS" }
+    });
+    await expect(service.dailyReport({
+      date: "2026-07-24",
+      q: "가".repeat(101)
+    })).rejects.toMatchObject({
+      response: { code: "DAILY_QUERY_TOO_LONG" }
+    });
+  });
+
+  it("rejects an inactive category requested directly as a report filter", async () => {
+    const categoryId = "55555555-5555-4555-8555-555555555555";
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangDailyReportCategory: {
+        findMany: vi.fn(async () => [{
+          id: categoryId,
+          displayName: "비활성",
+          sortOrder: 1,
+          isActive: false,
+          members: []
+        }])
+      }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue([]);
+
+    await expect(service.dailyReport({ date: "2026-07-24", categoryIds: categoryId }))
+      .rejects.toMatchObject({ response: { code: "COUPANG_DAILY_CATEGORY_INACTIVE" } });
+  });
+
+  it("rejects a missing category requested directly as a report filter", async () => {
+    const categoryId = "99999999-9999-4999-8999-999999999999";
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangDailyReportCategory: { findMany: vi.fn(async () => []) }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue([]);
+
+    await expect(service.dailyReport({ date: "2026-07-24", categoryIds: categoryId }))
+      .rejects.toMatchObject({ response: { code: "COUPANG_DAILY_CATEGORY_NOT_FOUND" } });
+  });
+
+  it("filters overlapping categories once and rebuilds a partial product-group total from product ids", async () => {
+    const categoryA = "11111111-1111-4111-8111-111111111111";
+    const categoryB = "22222222-2222-4222-8222-222222222222";
+    const productA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const productB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const group = { id: "group-filter", displayName: "필터 그룹" };
+    const products = [
+      dailyCatalogProduct(productA, "옵션 A", group),
+      dailyCatalogProduct(productB, "옵션 B", group)
+    ];
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => products) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangDailyReportCategory: {
+        findMany: vi.fn(async () => [
+          { id: categoryA, displayName: "홈", sortOrder: 20, isActive: true, members: [{ coupangProductId: productA }] },
+          { id: categoryB, displayName: "신제품", sortOrder: 10, isActive: true, members: [{ coupangProductId: productA }] }
+        ])
+      }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce([
+        productProfitRow({ productId: productA, reportedSalesKrw: 100, adSpendKrw: 10, adConversionSalesKrw: 30 }),
+        productProfitRow({ productId: productB, reportedSalesKrw: 900, adSpendKrw: 90, adConversionSalesKrw: 90 })
+      ])
+      .mockResolvedValueOnce([]);
+
+    const result = await service.dailyReport({
+      date: "2026-07-24",
+      categoryIds: `${categoryA},${categoryB}`,
+      q: "옵션 A"
+    });
+
+    expect(result.summary.current).toMatchObject({ reportedSalesKrw: 100, adSpendKrw: 10, roas: 3 });
+    expect(result.appliedFilter).toMatchObject({
+      mode: "FILTERED",
+      matchedCatalogProductCount: 1,
+      activityProductCount: 1,
+      query: "옵션 a"
+    });
+    expect(result.rows[0]).toMatchObject({
+      rowType: "GROUP",
+      reportedSalesKrw: 100,
+      childProductCount: 1,
+      reportCategories: [
+        { id: categoryB, displayName: "신제품" },
+        { id: categoryA, displayName: "홈" }
+      ]
+    });
+  });
+
+  it("limits incomplete warnings and previous-day totals to the same selected product ids", async () => {
+    const categoryId = "33333333-3333-4333-8333-333333333333";
+    const includedId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const excludedId = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+    const products = [
+      dailyCatalogProduct(includedId, "포함 제품", null),
+      dailyCatalogProduct(excludedId, "제외 제품", null)
+    ];
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => products) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangDailyReportCategory: {
+        findMany: vi.fn(async () => [{
+          id: categoryId,
+          displayName: "선택",
+          sortOrder: 1,
+          isActive: true,
+          members: [{ coupangProductId: includedId }]
+        }])
+      }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce([
+        productProfitRow({
+          productId: includedId,
+          reportedSalesKrw: 100,
+          reportedSalesQuantity: 1,
+          calculationStatus: "INCOMPLETE",
+          totalCostKrw: null,
+          marginKrw: null,
+          excludedNetSalesKrw: 100,
+          excludedSalesQuantity: 1
+        }),
+        productProfitRow({ productId: excludedId, reportedSalesKrw: 900, reportedSalesQuantity: 9 })
+      ])
+      .mockResolvedValueOnce([
+        productProfitRow({ productId: includedId, reportedSalesQuantity: 2, marginKrw: 20 }),
+        productProfitRow({ productId: excludedId, reportedSalesQuantity: 8, marginKrw: 80 })
+      ]);
+
+    const result = await service.dailyReport({ date: "2026-07-24", categoryIds: categoryId });
+
+    expect(result.summary.current).toMatchObject({
+      reportedSalesKrw: 100,
+      isComplete: false,
+      incompleteProductCount: 1,
+      excludedNetSalesKrw: 100
+    });
+    expect(result.summary.previous).toMatchObject({ reportedSalesQuantity: 2, marginKrw: 20 });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({ productId: includedId, previous: { reportedSalesQuantity: 2 } });
+  });
+
+  it("does not leak an incomplete product or its warnings into a complete selected category", async () => {
+    const categoryId = "66666666-6666-4666-8666-666666666666";
+    const includedId = "12121212-1212-4212-8212-121212121212";
+    const excludedId = "34343434-3434-4434-8434-343434343434";
+    const products = [
+      dailyCatalogProduct(includedId, "정상 제품", null),
+      dailyCatalogProduct(excludedId, "불완전 제품", null)
+    ];
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => products) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangDailyReportCategory: {
+        findMany: vi.fn(async () => [{
+          id: categoryId,
+          displayName: "정상만",
+          sortOrder: 1,
+          isActive: true,
+          members: [{ coupangProductId: includedId }]
+        }])
+      }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce([
+        productProfitRow({ productId: includedId, reportedSalesKrw: 100, marginKrw: 50, totalCostKrw: 50 }),
+        productProfitRow({
+          productId: excludedId,
+          reportedSalesKrw: 900,
+          calculationStatus: "INCOMPLETE",
+          totalCostKrw: null,
+          marginKrw: null,
+          excludedNetSalesKrw: 900,
+          excludedSalesQuantity: 9,
+          warnings: ["MISSING_COST"]
+        })
+      ])
+      .mockResolvedValueOnce([]);
+
+    const result = await service.dailyReport({ date: "2026-07-24", categoryIds: categoryId });
+
+    expect(result.summary.current).toMatchObject({
+      isComplete: true,
+      incompleteProductCount: 0,
+      excludedNetSalesKrw: 0,
+      excludedSalesQuantity: 0,
+      marginKrw: 50
+    });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0].warnings).not.toContain("MISSING_COST");
+  });
+
+  it("wires selected-day memo search through scope, hierarchy, counts, and row categories", async () => {
+    const categoryId = "77777777-7777-4777-8777-777777777777";
+    const memoId = "56565656-5656-4656-8656-565656565656";
+    const siblingId = "78787878-7878-4878-8878-787878787878";
+    const group = { id: "memo-search-group", displayName: "메모 검색 그룹" };
+    const products = [
+      dailyCatalogProduct(memoId, "메모 옵션", group),
+      dailyCatalogProduct(siblingId, "형제 옵션", group)
+    ];
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => products) },
+      coupangManualPurchase: {
+        findMany: vi.fn(async () => [{
+          coupangProductId: memoId,
+          productDisplayName: "메모 옵션",
+          memo: "집중 리뷰 보강"
+        }])
+      },
+      coupangDailyReportCategory: {
+        findMany: vi.fn(async () => [{
+          id: categoryId,
+          displayName: "메모 분류",
+          sortOrder: 1,
+          isActive: true,
+          members: [{ coupangProductId: memoId }, { coupangProductId: siblingId }]
+        }])
+      }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue([]);
+
+    const result = await service.dailyReport({
+      date: "2026-07-24",
+      categoryIds: categoryId,
+      q: " 리뷰   보강 "
+    });
+
+    expect(result.summary.current).toMatchObject({ reportedSalesKrw: 0, marginKrw: 0 });
+    expect(result.appliedFilter).toMatchObject({
+      query: "리뷰 보강",
+      matchedCatalogProductCount: 1,
+      activityProductCount: 1
+    });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      rowType: "GROUP",
+      childProductCount: 1,
+      reportCategories: [{ id: categoryId, displayName: "메모 분류" }],
+      children: [{
+        productId: memoId,
+        memo: "집중 리뷰 보강",
+        reportCategories: [{ id: categoryId, displayName: "메모 분류" }]
+      }]
+    });
+  });
+
+  it("returns a successful zero summary with filter metadata for an empty selected category", async () => {
+    const categoryId = "44444444-4444-4444-8444-444444444444";
+    const productId = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => [dailyCatalogProduct(productId, "제품", null)]) },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangDailyReportCategory: {
+        findMany: vi.fn(async () => [{
+          id: categoryId,
+          displayName: "빈 카테고리",
+          sortOrder: 1,
+          isActive: true,
+          members: []
+        }])
+      }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce([productProfitRow({ productId, reportedSalesKrw: 100 })])
+      .mockResolvedValueOnce([productProfitRow({ productId, reportedSalesKrw: 90 })]);
+
+    const result = await service.dailyReport({ date: "2026-07-24", categoryIds: categoryId });
+
+    expect(result.rows).toEqual([]);
+    expect(result.summary.current).toMatchObject({
+      reportedSalesKrw: 0,
+      reportedSalesQuantity: 0,
+      marginKrw: 0,
+      isComplete: true
+    });
+    expect(result.summary.previous.marginKrw).toBeNull();
+    expect(result.appliedFilter).toMatchObject({
+      mode: "FILTERED",
+      label: "빈 카테고리",
+      matchedCatalogProductCount: 0,
+      activityProductCount: 0
+    });
+  });
+
+  it("returns a successful zero summary when a normalized search matches no scoped product", async () => {
+    const productId = "abababab-abab-4bab-8bab-abababababab";
+    const service = new CoupangService({
+      coupangProduct: {
+        findMany: vi.fn(async () => [dailyCatalogProduct(productId, "검색 대상 제품", null)])
+      },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangDailyReportCategory: { findMany: vi.fn(async () => []) }
+    } as never);
+    vi.spyOn(service as any, "buildProductProfitRows")
+      .mockResolvedValueOnce([productProfitRow({
+        productId,
+        reportedSalesKrw: 100,
+        reportedSalesQuantity: 1,
+        marginKrw: 50
+      })])
+      .mockResolvedValueOnce([productProfitRow({
+        productId,
+        reportedSalesKrw: 90,
+        reportedSalesQuantity: 1,
+        marginKrw: 40
+      })]);
+
+    const result = await service.dailyReport({ date: "2026-07-24", q: "  없는   검색어  " });
+
+    expect(result.rows).toEqual([]);
+    expect(result.summary.current).toMatchObject({
+      reportedSalesKrw: 0,
+      reportedSalesQuantity: 0,
+      marginKrw: 0,
+      isComplete: true
+    });
+    expect(result.summary.previous.marginKrw).toBeNull();
+    expect(result.appliedFilter).toMatchObject({
+      mode: "FILTERED",
+      query: "없는 검색어",
+      matchedCatalogProductCount: 0,
+      activityProductCount: 0
+    });
   });
 
   it.each([
@@ -2621,6 +2970,31 @@ describe("Coupang product group aggregation", () => {
       manualPurchaseQuantity: 0,
       reportedSalesKrw: 0,
       marginKrw: 0
+    });
+  });
+
+  it("keeps an inactive grouped product as the child when its only selected-day activity is a memo", () => {
+    const group = { id: "inactive-memo-group", displayName: "비활성 메모 그룹" };
+    const products = [
+      dailyCatalogProduct("inactive-memo", "비활성 메모 옵션", group, { isActive: false })
+    ];
+
+    const rows = buildCoupangDailyHierarchy({
+      currentProductRows: [],
+      previousProductRows: [],
+      products,
+      manualPurchases: [{
+        coupangProductId: "inactive-memo",
+        productDisplayName: "비활성 메모 옵션",
+        memo: "선택일 유효 메모"
+      }]
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      rowType: "GROUP",
+      childProductCount: 1,
+      children: [{ productId: "inactive-memo", memo: "선택일 유효 메모" }]
     });
   });
 

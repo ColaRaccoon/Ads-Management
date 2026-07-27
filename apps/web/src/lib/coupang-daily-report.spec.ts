@@ -12,8 +12,6 @@ import type {
 } from "@/types/coupang";
 import {
   dailyRowNotes,
-  filterDailyReportRows,
-  filterDailyReportRowsWithSales,
   flattenDailyReportExportRows,
   formatDailyMoney,
   formatDailyProfit,
@@ -41,6 +39,7 @@ const group: CoupangDailyGroupRow = {
   groupId: "wavebar",
   groupName: "웨이브 밸런스바",
   productName: "웨이브 밸런스바",
+  reportCategories: [],
   childProductCount: 2,
   children: [black, beige],
   ...metrics(),
@@ -80,75 +79,31 @@ const summary: CoupangDailyReportResponse["summary"] = {
   }
 };
 
+function dailyResponse({
+  nextSummary = summary,
+  rows = [group, single]
+}: {
+  nextSummary?: CoupangDailyReportResponse["summary"];
+  rows?: CoupangDailyReportResponse["rows"];
+} = {}): CoupangDailyReportResponse {
+  return {
+    date: "2026-07-24",
+    previousDate: "2026-07-23",
+    appliedFilter: {
+      mode: "ALL",
+      categories: [],
+      includeUncategorized: false,
+      query: null,
+      matchedCatalogProductCount: 3,
+      activityProductCount: 3,
+      label: "전체 제품"
+    },
+    summary: nextSummary,
+    rows
+  };
+}
+
 describe("Coupang daily report helpers", () => {
-  it("hides single products with zero sales on the selected date", () => {
-    const zeroSales = product({
-      productId: "zero",
-      productName: "판매 없음",
-      reportedSalesQuantity: 0
-    });
-
-    expect(filterDailyReportRowsWithSales([zeroSales, single])).toEqual([single]);
-  });
-
-  it("hides zero-sale options and drops groups without any sold options", () => {
-    const zeroSales = product({
-      productId: "zero",
-      productName: "판매 없음",
-      groupId: "wavebar",
-      groupName: "웨이브 밸런스바",
-      reportedSalesQuantity: 0
-    });
-    const filteredGroup = filterDailyReportRowsWithSales([
-      { ...group, children: [black, zeroSales], childProductCount: 2 }
-    ]);
-
-    expect(filteredGroup).toMatchObject([
-      {
-        rowType: "GROUP",
-        groupId: "wavebar",
-        childProductCount: 1,
-        children: [{ productId: "black" }]
-      }
-    ]);
-    expect(filterDailyReportRowsWithSales([
-      { ...group, children: [zeroSales], childProductCount: 1 }
-    ])).toEqual([]);
-  });
-
-  it("keeps the original order and reference for a blank search", () => {
-    const rows = [group, single];
-    expect(filterDailyReportRows(rows, " \n ")).toBe(rows);
-  });
-
-  it("returns a group with every option when the group name matches", () => {
-    const result = filterDailyReportRows([group, single], "웨이브");
-    expect(result).toEqual([group]);
-    expect(result[0]?.rowType === "GROUP" ? result[0].children : []).toEqual([black, beige]);
-  });
-
-  it("returns only the matching option with its parent when an option name matches", () => {
-    const result = filterDailyReportRows([group, single], "베이지");
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
-      rowType: "GROUP",
-      groupId: "wavebar",
-      childProductCount: 1,
-      children: [{ productId: "beige" }]
-    });
-  });
-
-  it("finds group and single-product memos case-insensitively", () => {
-    const groupResult = filterDailyReportRows([group, single], "리뷰");
-    const singleResult = filterDailyReportRows([group, single], "체험단");
-
-    expect(groupResult[0]).toMatchObject({
-      rowType: "GROUP",
-      children: [{ productId: "black" }]
-    });
-    expect(singleResult).toEqual([single]);
-  });
-
   it("collects nonblank group notes in displayed option order", () => {
     const whitespaceMemo = product({
       productId: "white",
@@ -176,7 +131,7 @@ describe("Coupang daily report helpers", () => {
   });
 
   it("flattens hierarchy in summary, group, option, memo, and single order", () => {
-    const result = flattenDailyReportExportRows(summary, [group, single]);
+    const result = flattenDailyReportExportRows(dailyResponse());
     expect(result.map((row) => row.rowKind)).toEqual([
       "전체합계",
       "그룹합계",
@@ -197,13 +152,13 @@ describe("Coupang daily report helpers", () => {
     };
     const noMemoSingle = product({ productId: "no-memo", memo: null });
     expect(
-      flattenDailyReportExportRows(summary, [noMemoGroup, noMemoSingle])
+      flattenDailyReportExportRows(dailyResponse({ rows: [noMemoGroup, noMemoSingle] }))
         .filter((row) => row.rowKind === "기타사항")
     ).toEqual([]);
   });
 
   it("keeps current and previous export metrics as numbers and memo metrics blank", () => {
-    const result = flattenDailyReportExportRows(summary, [group]);
+    const result = flattenDailyReportExportRows(dailyResponse({ rows: [group] }));
     const groupExport = result[1];
     const memoExport = result.at(-1);
 
@@ -219,7 +174,9 @@ describe("Coupang daily report helpers", () => {
       ...summary,
       current: { ...summary.current, isComplete: false, marginKrw: null, knownMarginKrw: 123_000 }
     };
-    const total = flattenDailyReportExportRows(incompleteSummary, [])[0];
+    const total = flattenDailyReportExportRows(
+      dailyResponse({ nextSummary: incompleteSummary, rows: [] })
+    )[0];
     expect(total).toMatchObject({
       rowKind: "전체합계",
       productName: "계산 가능한 상품 부분 합계 (일부 상품 제외)",
@@ -228,7 +185,7 @@ describe("Coupang daily report helpers", () => {
   });
 
   it("labels a complete export summary as a confirmed full total", () => {
-    const total = flattenDailyReportExportRows(summary, [])[0];
+    const total = flattenDailyReportExportRows(dailyResponse({ rows: [] }))[0];
     expect(total).toMatchObject({
       rowKind: "전체합계",
       productName: "전체 합계",
@@ -253,7 +210,9 @@ describe("Coupang daily report helpers", () => {
       expected: 0
     }
   ])("exports $label previous margin without a known-margin fallback", ({ previous, expected }) => {
-    const result = flattenDailyReportExportRows({ ...summary, previous }, []);
+    const result = flattenDailyReportExportRows(
+      dailyResponse({ nextSummary: { ...summary, previous }, rows: [] })
+    );
     expect(result[0]?.previousMarginKrw).toBe(expected);
   });
 
@@ -325,6 +284,7 @@ function product(
     productName: "상품",
     groupId: null,
     groupName: null,
+    reportCategories: [],
     memo: null,
     ...metrics(),
     previous: previous(),
@@ -363,7 +323,7 @@ function renderSingle(row: CoupangDailyProductRow) {
   return renderToStaticMarkup(createElement(
     "table",
     null,
-    createElement(CoupangDailySingleBody, { row, searchHidden: false })
+    createElement(CoupangDailySingleBody, { row })
   ));
 }
 
@@ -373,8 +333,6 @@ function renderGroup(row: CoupangDailyGroupRow, expanded = true) {
     null,
     createElement(CoupangDailyGroupBody, {
       row,
-      visibleRow: row,
-      hasQuery: false,
       expanded,
       onToggle: () => undefined
     })

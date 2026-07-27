@@ -231,6 +231,8 @@ export default function CoupangProductsPage() {
     onSuccess: async (result) => {
       const changedCost = result.kind !== "CONFIGURATION" || Boolean(result.response.costRuleChange);
       await queryClient.invalidateQueries({ queryKey: ["coupang-product-settings"] });
+      await queryClient.invalidateQueries({ queryKey: ["coupang-daily-report-category-catalog"] });
+      await queryClient.invalidateQueries({ queryKey: ["coupang-daily-report"] });
       if (changedCost) {
         for (const queryKey of COUPANG_SALES_FEE_DEPENDENT_QUERY_KEYS) {
           await queryClient.invalidateQueries({ queryKey: [queryKey] });
@@ -569,7 +571,7 @@ export default function CoupangProductsPage() {
             <CostFieldError errors={costValidation.errors} field="effectiveFrom" />
           </label>
           {editingProductId && costHistoryPreview ? (
-            <div className="field" style={{ gridColumn: "1 / -1", border: "1px solid var(--border)", borderRadius: 8, padding: 12 }}>
+            <div className="field" style={{ gridColumn: "1 / -1", border: "1px solid var(--line)", borderRadius: 8, padding: 12 }}>
               <span className="field-label">저장 전 비용 이력 영향</span>
               <span className="muted">현재 적용 이력: {costRuleRangeLabel(costHistoryPreview.currentRule)}</span>
               <span className="muted">

@@ -2,11 +2,9 @@
 
 import { Download, Printer, Search, TriangleAlert } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiGet } from "@/lib/api";
 import {
-  filterDailyReportRows,
-  filterDailyReportRowsWithSales,
   flattenDailyReportExportRows,
   formatDailyMoney,
   formatDailyProfit,
@@ -26,6 +24,16 @@ import type {
   CoupangDailyReportRow,
   CoupangDailySummary
 } from "@/types/coupang";
+import type { CoupangDailyReportCategorySummary } from "@/types/coupang";
+import {
+  buildCoupangDailyReportUrl,
+  canonicalDailyCategoryIds,
+  dailyReportFilenameSlug,
+  normalizeDailyReportQuery,
+  planDailyCategoryDeactivation
+} from "@/lib/coupang-daily-category";
+import { DailyCategoryFilter } from "./category-filter";
+import { DailyCategoryManager } from "./category-manager";
 
 type DailyExportColumn = {
   header: string;
@@ -35,6 +43,10 @@ type DailyExportColumn = {
 };
 
 const exportColumns: DailyExportColumn[] = [
+  { header: "조회일", style: "Text", width: 13, value: (row) => row.date },
+  { header: "선택 필터", style: "Text", width: 22, value: (row) => row.filterLabel },
+  { header: "검색어", style: "Text", width: 18, value: (row) => row.query },
+  { header: "소속 리포트 카테고리", style: "Text", width: 24, value: (row) => row.reportCategories },
   { header: "행구분", style: "Text", width: 13, value: (row) => row.rowKind },
   { header: "제품/옵션", style: "Text", width: 30, value: (row) => row.productName },
   { header: "쿠팡 원본매출", style: "Krw", width: 17, value: (row) => row.reportedSalesKrw },
@@ -54,27 +66,35 @@ export default function CoupangDailyReportPage() {
   const [date, setDate] = useState(todayInputValue());
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const report = useQuery({
-    queryKey: ["coupang-daily-report", date],
-    queryFn: () => apiGet<CoupangDailyReportResponse>(
-      `/coupang/daily-report?date=${encodeURIComponent(date)}`
-    )
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
+  const [includeUncategorized, setIncludeUncategorized] = useState(false);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
+  const categoryManageButtonRef = useRef<HTMLButtonElement>(null);
+  const canonicalIds = canonicalDailyCategoryIds(selectedCategoryIds);
+  const categories = useQuery({
+    queryKey: ["coupang-daily-report-categories"],
+    queryFn: () => apiGet<CoupangDailyReportCategorySummary[]>("/coupang/daily-report/categories")
   });
-  const rows = useMemo(
-    () => filterDailyReportRowsWithSales(report.data?.rows ?? []),
-    [report.data?.rows]
-  );
-  const normalizedSearchQuery = searchQuery.trim();
-  const visibleRows = useMemo(
-    () => filterDailyReportRows(rows, searchQuery),
-    [rows, searchQuery]
-  );
+  useEffect(() => {
+    if (!categories.data) return;
+    const activeIds = new Set(categories.data.map((category) => category.id));
+    setSelectedCategoryIds((current) => {
+      const next = new Set([...current].filter((id) => activeIds.has(id)));
+      return setsEqual(current, next) ? current : next;
+    });
+  }, [categories.data]);
+  useEffect(() => { const timer = window.setTimeout(() => setDebouncedQuery(searchQuery), 300); return () => window.clearTimeout(timer); }, [searchQuery]);
+  const normalizedDebouncedQuery = normalizeDailyReportQuery(debouncedQuery);
+  const report = useQuery({
+    queryKey: ["coupang-daily-report", date, canonicalIds.join(","), includeUncategorized, normalizedDebouncedQuery],
+    queryFn: () => apiGet<CoupangDailyReportResponse>(buildCoupangDailyReportUrl({
+      date, categoryIds: canonicalIds, includeUncategorized, query: normalizedDebouncedQuery
+    }))
+  });
+  const rows = report.data?.rows ?? [];
+  const normalizedSearchQuery = normalizedDebouncedQuery;
   const counts = useMemo(() => reportCounts(rows), [rows]);
-  const visibleCounts = useMemo(() => reportCounts(visibleRows), [visibleRows]);
-  const visibleRowsByKey = useMemo(
-    () => new Map(visibleRows.map((row) => [rowKey(row), row])),
-    [visibleRows]
-  );
   const groupIds = useMemo(
     () => rows.flatMap((row) => row.rowType === "GROUP" ? [row.groupId] : []),
     [rows]
@@ -82,7 +102,7 @@ export default function CoupangDailyReportPage() {
   const allGroupsExpanded = groupIds.every((groupId) => !collapsedGroupIds.has(groupId));
   const exportRows = useMemo(
     () => report.data
-      ? flattenDailyReportExportRows(report.data.summary, report.data.rows)
+      ? flattenDailyReportExportRows(report.data)
       : [],
     [report.data]
   );
@@ -122,14 +142,15 @@ export default function CoupangDailyReportPage() {
         ...exportRows.map((row) =>
           exportColumns.map((column): XlsxCell => ({
             value: column.value(row),
-            style: row.rowKind === "전체합계"
+            style: row.rowKind === "전체합계" || row.rowKind === "선택합계"
               ? totalCellStyle(column.style)
               : column.style
           }))
         )
       ]
     });
-    downloadXlsx(`${date}_쿠팡_데일리리포트.xlsx`, workbook);
+    const slug = dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0);
+    downloadXlsx(`${date}_쿠팡_데일리리포트_${slug}.xlsx`, workbook);
   };
 
   return (
@@ -145,7 +166,7 @@ export default function CoupangDailyReportPage() {
           </p>
         </div>
         <div className="coupang-daily-print-meta" aria-hidden="true">
-          조회일 {report.data?.date ?? date} · 쿠팡 데일리 리포트
+          조회일 {report.data?.date ?? date} · 범위 {report.data?.appliedFilter.label ?? "전체 제품"} · 검색 {report.data?.appliedFilter.query ?? "없음"}
         </div>
         <div className="coupang-daily-actions coupang-daily-no-print">
           <label className="coupang-daily-visually-hidden" htmlFor="coupang-daily-date">
@@ -168,9 +189,9 @@ export default function CoupangDailyReportPage() {
           <button
             className="button coupang-daily-action"
             type="button"
-            disabled={exportRows.length === 0}
+            disabled={!report.data}
             onClick={() =>
-              downloadCsv(`${date}_쿠팡_데일리리포트.csv`, exportColumns, exportRows)
+              downloadCsv(`${date}_쿠팡_데일리리포트_${dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0)}.csv`, exportColumns, exportRows)
             }
           >
             <Download size={14} aria-hidden="true" /> CSV
@@ -178,13 +199,50 @@ export default function CoupangDailyReportPage() {
           <button
             className="button primary coupang-daily-action"
             type="button"
-            disabled={exportRows.length === 0}
+            disabled={!report.data}
             onClick={exportXlsx}
           >
             <Download size={14} aria-hidden="true" /> XLSX
           </button>
         </div>
       </div>
+      <DailyCategoryFilter
+        categories={categories.data ?? []}
+        selected={selectedCategoryIds}
+        includeUncategorized={includeUncategorized}
+        hasQuery={searchQuery.trim().length > 0}
+        loading={categories.isLoading}
+        error={categories.isError}
+        manageButtonRef={categoryManageButtonRef}
+        onSelectedChange={setSelectedCategoryIds}
+        onIncludeUncategorizedChange={setIncludeUncategorized}
+        onReset={() => {
+          setSelectedCategoryIds(new Set());
+          setIncludeUncategorized(false);
+          setSearchQuery("");
+        }}
+        onRetry={() => categories.refetch()}
+        onManage={() => setCategoryManagerOpen(true)}
+      />
+      <DailyCategoryManager
+        open={categoryManagerOpen}
+        onClose={() => setCategoryManagerOpen(false)}
+        returnFocusRef={categoryManageButtonRef}
+        onCategoryDeactivated={(categoryId) => {
+          const plan = planDailyCategoryDeactivation(selectedCategoryIds, categoryId);
+          if (plan.selectionChanged) setSelectedCategoryIds(plan.selected);
+          return { invalidateCurrentReport: plan.invalidateCurrentReport };
+        }}
+      />
+      {categories.isError ? <p className="coupang-daily-warning" role="status">카테고리 목록을 불러오지 못했습니다. 전체 리포트는 계속 사용할 수 있습니다.</p> : null}
+      {report.data ? (
+        <div className="coupang-daily-applied-filter" aria-live="polite">
+          <strong>적용 범위 {report.data.appliedFilter.label}</strong>
+          {report.data.appliedFilter.query ? <span>검색 {report.data.appliedFilter.query}</span> : null}
+          <span>카탈로그 제품 {report.data.appliedFilter.matchedCatalogProductCount}개 · 활동 제품 {report.data.appliedFilter.activityProductCount}개</span>
+          {report.isFetching ? <span>필터 결과 갱신 중…</span> : null}
+        </div>
+      ) : null}
 
       {report.data ? (
         <>
@@ -192,6 +250,7 @@ export default function CoupangDailyReportPage() {
             current={report.data.summary.current}
             previous={report.data.summary.previous}
             counts={counts}
+            filtered={report.data.appliedFilter.mode === "FILTERED"}
           />
           {report.data.summary.current.isComplete ? null : (
             <div className="coupang-daily-warning" role="alert">
@@ -217,16 +276,16 @@ export default function CoupangDailyReportPage() {
 
       <section
         className="coupang-daily-panel"
-        aria-busy={report.isLoading}
+        aria-busy={report.isLoading || report.isFetching}
         aria-label="쿠팡 데일리 리포트 상세"
       >
         <div className="coupang-daily-table-toolbar coupang-daily-no-print">
           <div className="coupang-daily-result-copy" aria-live="polite">
             <span className="coupang-daily-legend-dot" aria-hidden="true" />
-            <strong>제품 {visibleCounts.topLevelCount}개</strong>
+            <strong>제품 {counts.topLevelCount}개</strong>
             <span>
-              그룹 {visibleCounts.groupCount}개 · 단일 {visibleCounts.singleCount}개 · 옵션{" "}
-              {visibleCounts.optionCount}개
+              그룹 {counts.groupCount}개 · 단일 {counts.singleCount}개 · 옵션{" "}
+              {counts.optionCount}개
             </span>
           </div>
           <div className="coupang-daily-table-tools">
@@ -282,13 +341,10 @@ export default function CoupangDailyReportPage() {
             ) : (
               <>
                 {rows.map((row) => {
-                  const visibleRow = visibleRowsByKey.get(rowKey(row));
                   return row.rowType === "GROUP" ? (
                     <CoupangDailyGroupBody
                       key={row.groupId}
                       row={row}
-                      visibleRow={visibleRow?.rowType === "GROUP" ? visibleRow : undefined}
-                      hasQuery={normalizedSearchQuery.length > 0}
                       expanded={isDailyGroupExpanded(
                         row.groupId,
                         collapsedGroupIds,
@@ -300,16 +356,12 @@ export default function CoupangDailyReportPage() {
                     <CoupangDailySingleBody
                       key={row.productId}
                       row={row}
-                      searchHidden={normalizedSearchQuery.length > 0 && !visibleRow}
                     />
                   );
                 })}
-                {visibleRows.length === 0 ? (
+                {rows.length === 0 ? (
                   <TableMessage
-                    printHidden={rows.length > 0}
-                    message={normalizedSearchQuery
-                      ? "검색 결과가 없습니다."
-                      : "선택 날짜에 표시할 실적이 없습니다."}
+                    message="선택한 카테고리와 검색 조건에 해당하는 실적이 없습니다."
                   />
                 ) : null}
               </>
@@ -319,8 +371,7 @@ export default function CoupangDailyReportPage() {
       </section>
 
       <p className="coupang-daily-footnote coupang-daily-no-print">
-        그룹 행은 옵션 합계이며, 검색과 화면의 접힘 상태와 관계없이 인쇄 및 내보내기에는 모든
-        옵션이 포함됩니다.
+        그룹 행은 현재 필터에 남은 옵션의 합계이며, 화면에서 접어도 인쇄 및 내보내기에는 그 옵션이 모두 포함됩니다.
       </p>
     </section>
   );
@@ -329,19 +380,21 @@ export default function CoupangDailyReportPage() {
 function SummaryStrip({
   current,
   previous,
-  counts
+  counts,
+  filtered
 }: {
   current: CoupangDailySummary;
   previous: CoupangDailySummary;
   counts: ReturnType<typeof reportCounts>;
+  filtered: boolean;
 }) {
   const currentMargin = current.isComplete ? current.marginKrw : current.knownMarginKrw;
   const previousMargin = previous.isComplete ? previous.marginKrw : null;
 
   return (
-    <section className="coupang-daily-summary" aria-label="전체 합계">
+    <section className="coupang-daily-summary" aria-label={filtered ? "선택 범위 합계" : "전체 합계"}>
       <div className="coupang-daily-summary-title">
-        <strong>전체 합계</strong>
+        <strong>{filtered ? "선택 범위 합계" : "전체 합계"}</strong>
         <span>
           제품 {counts.topLevelCount}개 · 옵션 {counts.optionCount}개 · 단일 {counts.singleCount}개
         </span>
@@ -403,15 +456,13 @@ function SummaryItem({
 
 function TableMessage({
   message,
-  isError = false,
-  printHidden = false
+  isError = false
 }: {
   message: string;
   isError?: boolean;
-  printHidden?: boolean;
 }) {
   return (
-    <tbody className={printHidden ? "coupang-daily-no-print" : undefined}>
+    <tbody>
       <tr>
         <td
           className={`coupang-daily-empty${isError ? " coupang-daily-empty-error" : ""}`}
@@ -443,10 +494,6 @@ function reportCounts(rows: CoupangDailyReportRow[]) {
     optionCount,
     topLevelCount: groupCount + singleCount
   };
-}
-
-function rowKey(row: CoupangDailyReportRow) {
-  return row.rowType === "GROUP" ? `group:${row.groupId}` : `product:${row.productId}`;
 }
 
 function profitTone(value: number | null): "positive" | "negative" | "zero" | undefined {

@@ -11,23 +11,25 @@ const migrationSql = readFileSync(
 );
 
 describe("Coupang manual-purchase accounting normalization migration", () => {
-  it("fails closed when a positive base sale price snapshot is missing", () => {
+  it("fails closed when a purchased row has no positive base sale price snapshot", () => {
+    expect(migrationSql).toContain('"quantity" > 0');
     expect(migrationSql).toContain('"base_sale_price_krw" IS NULL');
     expect(migrationSql).toContain('"base_sale_price_krw" <= 0');
     expect(migrationSql).toContain("RAISE EXCEPTION");
   });
 
-  it("fails closed before normalization when a row has a non-positive quantity", () => {
-    expect(migrationSql).toContain('OR "quantity" < 1');
-    expect(migrationSql).toContain("positive base sale price snapshot and quantity");
+  it("allows memo-only zero quantities but rejects negative quantities", () => {
+    expect(migrationSql).toContain('WHERE "quantity" < 0');
+    expect(migrationSql).toContain('WHEN "quantity" = 0 THEN 0');
+    expect(migrationSql).toContain("quantity cannot be negative");
   });
 
   it("uses only base sale price for the sales and VAT snapshots", () => {
-    expect(migrationSql).toContain('"sales_amount_krw" = ROUND("base_sale_price_krw" * "quantity", 2)');
+    expect(migrationSql).toContain('ELSE ROUND("base_sale_price_krw" * "quantity", 2)');
     expect(migrationSql).toContain('"sale_price_krw" = "base_sale_price_krw"');
     expect(migrationSql).toContain('"promotion_price_krw" = NULL');
-    expect(migrationSql).toContain('"price_source" = \'BASE\'');
-    expect(migrationSql).toContain('"vat_krw" = ROUND("base_sale_price_krw" * "quantity" / 11, 2)');
+    expect(migrationSql).toContain("WHEN \"base_sale_price_krw\" > 0 THEN 'BASE'");
+    expect(migrationSql).toContain('ELSE ROUND("base_sale_price_krw" * "quantity" / 11, 2)');
   });
 
   it("zeros unrelated costs and totals only vendor fees plus VAT", () => {
@@ -40,8 +42,9 @@ describe("Coupang manual-purchase accounting normalization migration", () => {
     ]) {
       expect(migrationSql).toContain(assignment);
     }
+    expect(migrationSql).toContain('"vendor_fee_total_krw" + CASE');
     expect(migrationSql).toContain(
-      '"vendor_fee_total_krw" + ROUND("base_sale_price_krw" * "quantity" / 11, 2)'
+      'ELSE ROUND("base_sale_price_krw" * "quantity" / 11, 2)'
     );
   });
 

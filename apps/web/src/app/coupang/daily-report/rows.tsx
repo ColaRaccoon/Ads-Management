@@ -16,25 +16,18 @@ import type {
 
 export function CoupangDailyGroupBody({
   row,
-  visibleRow,
-  hasQuery,
   expanded,
   onToggle
 }: {
   row: CoupangDailyGroupRow;
-  visibleRow: CoupangDailyGroupRow | undefined;
-  hasQuery: boolean;
   expanded: boolean;
   onToggle: () => void;
 }) {
   const notes = dailyRowNotes(row);
-  const visibleNotes = visibleRow ? dailyRowNotes(visibleRow) : [];
-  const visibleChildIds = new Set(visibleRow?.children.map((child) => child.productId) ?? []);
   const collapsedClass = expanded ? "" : " coupang-daily-collapsed";
-  const searchHiddenClass = hasQuery && !visibleRow ? " coupang-daily-search-hidden" : "";
 
   return (
-    <tbody className={`coupang-daily-product-body${searchHiddenClass}`}>
+    <tbody className="coupang-daily-product-body">
       <tr
         className={`coupang-daily-group-row${expanded ? "" : " coupang-daily-group-collapsed"}${incompleteClass(row)}`}
         title={rowWarningTitle(row)}
@@ -58,14 +51,12 @@ export function CoupangDailyGroupBody({
       {row.children.map((child) => (
         <tr
           key={child.productId}
-          className={`coupang-daily-detail-row coupang-daily-option-row${collapsedClass}${
-            hasQuery && !visibleChildIds.has(child.productId) ? " coupang-daily-search-hidden" : ""
-          }${incompleteClass(child)}`}
+          className={`coupang-daily-detail-row coupang-daily-option-row${collapsedClass}${incompleteClass(child)}`}
           title={rowWarningTitle(child)}
         >
           <th scope="row">
             <div className="coupang-daily-option-cell">
-              <span title={child.productName}>{child.productName}</span>
+              <span title={rowCategoryTitle(child)}>{child.productName}</span>
             </div>
           </th>
           <MetricCells row={child} />
@@ -73,14 +64,12 @@ export function CoupangDailyGroupBody({
       ))}
       {notes.length > 0 ? (
         <tr
-          className={`coupang-daily-detail-row coupang-daily-memo-row${collapsedClass}${
-            hasQuery && visibleNotes.length === 0 ? " coupang-daily-search-hidden" : ""
-          }`}
+          className={`coupang-daily-detail-row coupang-daily-memo-row${collapsedClass}`}
         >
           <td colSpan={8}>
             <span className="coupang-daily-memo-label">기타사항</span>
             <span className="coupang-daily-screen-notes">
-              <GroupMemoNotes notes={hasQuery ? visibleNotes : notes} />
+              <GroupMemoNotes notes={notes} />
             </span>
             <span className="coupang-daily-print-notes">
               <GroupMemoNotes notes={notes} />
@@ -93,17 +82,13 @@ export function CoupangDailyGroupBody({
 }
 
 export function CoupangDailySingleBody({
-  row,
-  searchHidden
+  row
 }: {
   row: CoupangDailyProductRow;
-  searchHidden: boolean;
 }) {
   const notes = dailyRowNotes(row);
   return (
-    <tbody className={`coupang-daily-product-body${
-      searchHidden ? " coupang-daily-search-hidden" : ""
-    }`}>
+    <tbody className="coupang-daily-product-body">
       <tr
         className={`coupang-daily-single-row${incompleteClass(row)}`}
         title={rowWarningTitle(row)}
@@ -139,10 +124,15 @@ function GroupMemoNotes({ notes }: { notes: DailyNote[] }) {
 
 function ProductName({ row }: { row: CoupangDailyReportRow }) {
   return (
-    <div className="coupang-daily-product-name" title={row.productName}>
+    <div className="coupang-daily-product-name" title={rowCategoryTitle(row)}>
       <span>{row.productName}</span>
     </div>
   );
+}
+
+function rowCategoryTitle(row: CoupangDailyReportRow) {
+  const categoryTitle = row.reportCategories.map((category) => category.displayName).join(" · ");
+  return categoryTitle ? `${row.productName} · ${categoryTitle}` : row.productName;
 }
 
 function MetricCells({ row }: { row: CoupangDailyReportRow }) {

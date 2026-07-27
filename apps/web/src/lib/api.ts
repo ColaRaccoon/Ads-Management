@@ -1,12 +1,30 @@
 import { DateRange } from "./date-range";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4100/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/backend-api";
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: string | null;
+
+  constructor(status: number, message: string, code: string | null = null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+export function apiErrorCode(error: unknown): string | null {
+  return error instanceof ApiError ? error.code : null;
+}
+
+export function apiErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof ApiError ? error.message : fallback;
+}
 
 export async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json() as Promise<T>;
 }
 
@@ -16,9 +34,7 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json() as Promise<T>;
 }
 
@@ -28,9 +44,7 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json() as Promise<T>;
 }
 
@@ -40,9 +54,7 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json() as Promise<T>;
 }
 
@@ -50,9 +62,7 @@ export async function apiDelete<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "DELETE"
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json() as Promise<T>;
 }
 
@@ -78,9 +88,7 @@ export async function uploadCafe24Csv(file: File, conflictPolicy = "SKIP") {
     method: "POST",
     body: formData
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json();
 }
 
@@ -133,10 +141,54 @@ async function uploadFormData(path: string, formData: FormData) {
     method: "POST",
     body: formData
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json();
+}
+
+async function assertApiResponse(response: Response) {
+  if (response.ok) return;
+  const fallback = `요청을 처리하지 못했습니다. (HTTP ${response.status})`;
+  let raw = "";
+  try {
+    raw = await response.text();
+  } catch {
+    throw new ApiError(response.status, fallback);
+  }
+  const parsed = parseApiErrorPayload(raw);
+  throw new ApiError(response.status, parsed.message ?? fallback, parsed.code);
+}
+
+export function parseApiErrorPayload(raw: string): { code: string | null; message: string | null } {
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return { code: null, message: null };
+    }
+    const payload = value as Record<string, unknown>;
+    const details = payload.details && typeof payload.details === "object" && !Array.isArray(payload.details)
+      ? payload.details as Record<string, unknown>
+      : null;
+    const code = safeApiCode(details?.code) ?? safeApiCode(payload.code);
+    return { code, message: safeApiMessage(payload.message) };
+  } catch {
+    return { code: null, message: null };
+  }
+}
+
+function safeApiCode(value: unknown): string | null {
+  return typeof value === "string" && /^[A-Z][A-Z0-9_]{0,99}$/.test(value)
+    ? value
+    : null;
+}
+
+function safeApiMessage(value: unknown): string | null {
+  const source = typeof value === "string"
+    ? value
+    : Array.isArray(value) && value.every((item) => typeof item === "string")
+      ? value.join(" ")
+      : "";
+  const normalized = source.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+  return normalized.length > 0 && normalized.length <= 500 ? normalized : null;
 }
 
 export function rangeQuery(range: DateRange, extra?: Record<string, string | undefined>) {

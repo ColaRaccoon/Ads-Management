@@ -1,5 +1,4 @@
 import type {
-  CoupangDailyProductRow,
   CoupangDailyReportResponse,
   CoupangDailyReportRow
 } from "@/types/coupang";
@@ -11,6 +10,7 @@ export type DailyNote = {
 
 export type CoupangDailyExportRowKind =
   | "전체합계"
+  | "선택합계"
   | "그룹합계"
   | "옵션"
   | "단일제품"
@@ -19,6 +19,10 @@ export type CoupangDailyExportRowKind =
 type DailyExportNumber = number | null | "";
 
 export type CoupangDailyExportRow = {
+  date: string;
+  filterLabel: string;
+  query: string;
+  reportCategories: string;
   rowKind: CoupangDailyExportRowKind;
   productName: string;
   reportedSalesKrw: DailyExportNumber;
@@ -46,65 +50,21 @@ export function dailyRowNotes(row: CoupangDailyReportRow): DailyNote[] {
   });
 }
 
-export function filterDailyReportRowsWithSales(
-  rows: CoupangDailyReportRow[]
-): CoupangDailyReportRow[] {
-  const filteredRows: CoupangDailyReportRow[] = [];
-
-  for (const row of rows) {
-    if (row.rowType === "PRODUCT") {
-      if (row.reportedSalesQuantity !== 0) filteredRows.push(row);
-      continue;
-    }
-
-    const children = row.children.filter((child) => child.reportedSalesQuantity !== 0);
-    if (children.length === 0) continue;
-
-    filteredRows.push(children.length === row.children.length
-      ? row
-      : { ...row, children, childProductCount: children.length });
-  }
-
-  return filteredRows;
-}
-
-export function filterDailyReportRows(
-  rows: CoupangDailyReportRow[],
-  query: string
-): CoupangDailyReportRow[] {
-  const normalizedQuery = normalizeSearchText(query);
-  if (!normalizedQuery) return rows;
-
-  const filteredRows: CoupangDailyReportRow[] = [];
-  for (const row of rows) {
-    if (row.rowType === "PRODUCT") {
-      if (productMatches(row, normalizedQuery)) filteredRows.push(row);
-      continue;
-    }
-
-    if (
-      normalizeSearchText(row.groupName).includes(normalizedQuery)
-      || normalizeSearchText(row.productName).includes(normalizedQuery)
-    ) {
-      filteredRows.push(row);
-      continue;
-    }
-
-    const children = row.children.filter((child) => productMatches(child, normalizedQuery));
-    if (children.length > 0) {
-      filteredRows.push({ ...row, children, childProductCount: children.length });
-    }
-  }
-  return filteredRows;
-}
-
 export function flattenDailyReportExportRows(
-  summary: CoupangDailyReportResponse["summary"],
-  rows: CoupangDailyReportRow[]
+  response: CoupangDailyReportResponse
 ): CoupangDailyExportRow[] {
+  const summary = response.summary;
+  const rows = response.rows;
+  const metadata = {
+    date: response.date,
+    filterLabel: response.appliedFilter.label,
+    query: response.appliedFilter.query ?? ""
+  };
   const exportRows: CoupangDailyExportRow[] = [
     {
-      rowKind: "전체합계",
+      ...metadata,
+      reportCategories: "",
+      rowKind: response.appliedFilter.mode === "FILTERED" ? "선택합계" : "전체합계",
       productName: summary.current.isComplete
         ? "전체 합계"
         : "계산 가능한 상품 부분 합계 (일부 상품 제외)",
@@ -124,17 +84,19 @@ export function flattenDailyReportExportRows(
 
   for (const row of rows) {
     if (row.rowType === "GROUP") {
-      exportRows.push(toExportMetricRow("그룹합계", row.productName, row));
+      exportRows.push(toExportMetricRow("그룹합계", row.productName, row, metadata));
       exportRows.push(
-        ...row.children.map((child) => toExportMetricRow("옵션", child.productName, child))
+        ...row.children.map((child) => toExportMetricRow("옵션", child.productName, child, metadata))
       );
     } else {
-      exportRows.push(toExportMetricRow("단일제품", row.productName, row));
+      exportRows.push(toExportMetricRow("단일제품", row.productName, row, metadata));
     }
 
     const notes = dailyRowNotes(row);
     if (notes.length > 0) {
       exportRows.push({
+        ...metadata,
+        reportCategories: row.reportCategories.map((category) => category.displayName).join(" · "),
         rowKind: "기타사항",
         productName: `기타사항: ${notes
           .map((note) => note.productName ? `${note.productName} ${note.memo}` : note.memo)
@@ -188,11 +150,14 @@ export function formatDailyRatio(value: number | null) {
 }
 
 function toExportMetricRow(
-  rowKind: Exclude<CoupangDailyExportRowKind, "전체합계" | "기타사항">,
+  rowKind: Exclude<CoupangDailyExportRowKind, "전체합계" | "선택합계" | "기타사항">,
   productName: string,
-  row: CoupangDailyReportRow
+  row: CoupangDailyReportRow,
+  metadata: Pick<CoupangDailyExportRow, "date" | "filterLabel" | "query">
 ): CoupangDailyExportRow {
   return {
+    ...metadata,
+    reportCategories: row.reportCategories.map((category) => category.displayName).join(" · "),
     rowKind,
     productName,
     reportedSalesKrw: row.reportedSalesKrw,
@@ -209,11 +174,6 @@ function toExportMetricRow(
   };
 }
 
-function productMatches(row: CoupangDailyProductRow, normalizedQuery: string) {
-  return normalizeSearchText(row.productName).includes(normalizedQuery)
-    || normalizeSearchText(row.memo).includes(normalizedQuery);
-}
-
 function displayedCurrentSummaryMargin(summary: CoupangDailyReportResponse["summary"]["current"]) {
   return summary.isComplete ? summary.marginKrw : summary.knownMarginKrw;
 }
@@ -225,10 +185,6 @@ function confirmedPreviousSummaryMargin(summary: CoupangDailyReportResponse["sum
 function normalizeMemo(value: string | null | undefined) {
   const memo = value?.trim() ?? "";
   return memo.length > 0 ? memo : null;
-}
-
-function normalizeSearchText(value: string | null | undefined) {
-  return value?.trim().toLocaleLowerCase("ko-KR") ?? "";
 }
 
 function isFiniteNumber(value: number | null | undefined): value is number {
