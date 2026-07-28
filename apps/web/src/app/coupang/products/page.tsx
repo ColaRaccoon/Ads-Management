@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
 import { buildCoupangCostPayload, validateCoupangCostForm, type CoupangCostField } from "@/lib/coupang-cost-form";
 import { koreaTodayDateInput, previewCoupangCostHistory } from "@/lib/coupang-cost-history-ui";
+import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { coupangProductIdFromSearch } from "@/lib/coupang-product-settings-link";
 import { percentInputToRate, rateToPercentInput } from "@/lib/percent-input";
 import {
@@ -146,7 +147,7 @@ export default function CoupangProductsPage() {
   const [correctingCostRuleId, setCorrectingCostRuleId] = useState<string | null>(null);
   const [costCorrectionMessage, setCostCorrectionMessage] = useState("");
   const [globalFeePercent, setGlobalFeePercent] = useState("");
-  const [globalFeeEffectiveFrom, setGlobalFeeEffectiveFrom] = useState(() => koreaTodayDateInput());
+  const [globalFeeEffectiveFrom, setGlobalFeeEffectiveFrom] = useState(koreaYesterdayDateInput);
   const [correctingGlobalRuleId, setCorrectingGlobalRuleId] = useState<string | null>(null);
   const [salesFeeSaveMessage, setSalesFeeSaveMessage] = useState("");
   const [isFeeHistoryOpen, setIsFeeHistoryOpen] = useState(false);
@@ -201,7 +202,7 @@ export default function CoupangProductsPage() {
         await queryClient.invalidateQueries({ queryKey: [queryKey] });
       }
       setGlobalFeePercent("");
-      setGlobalFeeEffectiveFrom(koreaTodayDateInput());
+      setGlobalFeeEffectiveFrom(koreaYesterdayDateInput());
       setSalesFeeSaveMessage(result.rule
         ? `저장 완료: ${result.rule.salesFeePercent}% (${result.rule.effectiveFrom}부터 적용)`
         : "공통 판매 수수료율을 저장했습니다.");
@@ -303,7 +304,7 @@ export default function CoupangProductsPage() {
       returnRate: rateToPercentInput(latestCost?.returnRate),
       returnCostPerUnitKrw: numberInput(latestCost?.returnCostPerUnitKrw),
       extraCostKrw: numberInput(latestCost?.extraCostKrw),
-      effectiveFrom: koreaTodayDateInput(),
+      effectiveFrom: koreaYesterdayDateInput(),
       includeKeywords: listText(primaryRule?.includeKeywords),
       excludeKeywords: listText(primaryRule?.excludeKeywords),
       priority: inputText(primaryRule?.priority ?? 100),
@@ -412,7 +413,7 @@ export default function CoupangProductsPage() {
                 onClick={() => {
                   setCorrectingGlobalRuleId(null);
                   setGlobalFeePercent(currentGlobalFeeRule ? rateToPercentInput(currentGlobalFeeRule.salesFeeRate) : "");
-                  setGlobalFeeEffectiveFrom(koreaTodayDateInput());
+                  setGlobalFeeEffectiveFrom(koreaYesterdayDateInput());
                 }}
               >
                 <X size={16} /> 정정 취소
@@ -767,7 +768,7 @@ function createInitialForm(): ProductForm {
     returnRate: "",
     returnCostPerUnitKrw: "",
     extraCostKrw: "",
-    effectiveFrom: koreaTodayDateInput(),
+    effectiveFrom: koreaYesterdayDateInput(),
     includeKeywords: "",
     excludeKeywords: "",
     priority: "100",
@@ -818,7 +819,7 @@ function formFromCostRule(current: ProductForm, rule: CoupangCostRule): ProductF
     returnRate: rateToPercentInput(rule.returnRate),
     returnCostPerUnitKrw: numberInput(rule.returnCostPerUnitKrw),
     extraCostKrw: numberInput(rule.extraCostKrw),
-    effectiveFrom: formatDateInput(rule.effectiveFrom) || koreaTodayDateInput()
+    effectiveFrom: formatDateInput(rule.effectiveFrom) || koreaYesterdayDateInput()
   };
 }
 

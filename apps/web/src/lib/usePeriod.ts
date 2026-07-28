@@ -7,7 +7,7 @@ export function usePeriod() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const fallback = defaultRange(7);
+  const fallback = defaultRange();
   const to = searchParams.get("to") ?? fallback.to;
   const from = searchParams.get("from") ?? fallback.from;
 

@@ -16,6 +16,7 @@ import {
 } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
 import { parseSelectedManualPurchaseQuantity, summarizeManualPurchaseDrafts } from "@/lib/coupang-manual-purchase";
+import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import type {
   CoupangManualPurchaseOption,
   CoupangManualPurchaseOptionsResponse,
@@ -51,9 +52,9 @@ export default function CoupangUploadsPage() {
   const [adsFile, setAdsFile] = useState<File | null>(null);
   const [marginFile, setMarginFile] = useState<File | null>(null);
   const [promotionFile, setPromotionFile] = useState<File | null>(null);
-  const [reportDate, setReportDate] = useState(todayInputValue());
-  const [effectiveFrom, setEffectiveFrom] = useState(todayInputValue());
-  const [manualDate, setManualDate] = useState(todayInputValue());
+  const [reportDate, setReportDate] = useState(koreaYesterdayDateInput);
+  const [effectiveFrom, setEffectiveFrom] = useState(koreaYesterdayDateInput);
+  const [manualDate, setManualDate] = useState(koreaYesterdayDateInput);
   const [manualSearch, setManualSearch] = useState("");
   const [manualGroupId, setManualGroupId] = useState("ALL");
   const [activeManualProductId, setActiveManualProductId] = useState<string | null>(null);
@@ -518,12 +519,6 @@ function emptyManualDraft(option: CoupangManualPurchaseOption): ManualDraft {
     quantity: "",
     memo: option.existingMemo ?? ""
   };
-}
-
-function todayInputValue() {
-  const date = new Date();
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 10);
 }
 
 function formatDate(value?: string | null) {

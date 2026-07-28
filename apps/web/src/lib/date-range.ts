@@ -1,4 +1,4 @@
-import { format, subDays } from "date-fns";
+import { koreaTodayDateInput, koreaYesterdayDateInput } from "./korea-date";
 
 export type DateRange = {
   from: string;
@@ -13,70 +13,29 @@ export const rangePresets = [
   { label: "최근 14일", days: 14 }
 ] as const;
 
-export function defaultRange(days = 7): DateRange {
+export function defaultRange(days = 1): DateRange {
   return presetRange(days);
 }
 
-export function defaultRangeForPath(pathname?: string | null): DateRange {
-  if (pathname === "/change-logs") {
-    const today = todayInputValue();
-    return { from: today, to: today };
-  }
-  return defaultRange(pathname === "/ads" ? 1 : 7);
+export function defaultRangeForPath(_pathname?: string | null): DateRange {
+  return defaultRange();
 }
 
 export function presetRange(days: number): DateRange {
   if (days === 0) {
-    const today = todayInputValue();
+    const today = koreaTodayDateInput();
     return { from: today, to: today };
   }
-  const end = subDays(new Date(), 1);
+  const end = koreaYesterdayDateInput();
   return {
-    from: format(subDays(end, days - 1), "yyyy-MM-dd"),
-    to: format(end, "yyyy-MM-dd")
+    from: shiftDateInput(end, 1 - days),
+    to: end
   };
 }
 
-export function readCachedRange(pathname?: string | null): DateRange | null {
-  if (pathname === "/change-logs") {
-    return null;
-  }
-  if (typeof window === "undefined" || !pathname) {
-    return null;
-  }
-  try {
-    const raw = window.localStorage.getItem(rangeStorageKey(pathname));
-    if (!raw) {
-      return null;
-    }
-    const parsed = JSON.parse(raw) as Partial<DateRange>;
-    if (isIsoDate(parsed.from) && isIsoDate(parsed.to)) {
-      return { from: parsed.from, to: parsed.to };
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-export function writeCachedRange(pathname: string | null | undefined, range: DateRange) {
-  if (typeof window === "undefined" || !pathname) {
-    return;
-  }
-  window.localStorage.setItem(rangeStorageKey(pathname), JSON.stringify(range));
-}
-
-function rangeStorageKey(pathname: string) {
-  return `meta-ads-performance:range:${pathname}`;
-}
-
-function isIsoDate(value: unknown): value is string {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function todayInputValue() {
-  const date = new Date();
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+function shiftDateInput(value: string, days: number) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
 

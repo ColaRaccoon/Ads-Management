@@ -1,3 +1,5 @@
+export { koreaTodayDateInput } from "./korea-date";
+
 export type CoupangCostHistoryRule = {
   id: string;
   effectiveFrom?: string | null;
@@ -14,17 +16,6 @@ export type CoupangCostHistoryPreview = {
   expectedEffectiveTo: string | null;
   currentValueImpact: "CURRENT" | "HISTORICAL" | "FUTURE" | "REJECTED_DATE_COLLISION";
 };
-
-export function koreaTodayDateInput(now = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(now);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
 
 export function previewCoupangCostHistory(
   rules: CoupangCostHistoryRule[],

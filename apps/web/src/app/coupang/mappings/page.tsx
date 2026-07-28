@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost, rangeQuery } from "@/lib/api";
+import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
 
@@ -84,7 +85,7 @@ const defaultDraft = (): RuleDraft => ({
   includeKeywords: "",
   excludeKeywords: "",
   priority: "100",
-  validFrom: todayInput(),
+  validFrom: koreaYesterdayDateInput(),
   validTo: "",
   adEnabled: true,
   isActive: true,
@@ -171,7 +172,7 @@ export default function CoupangMappingsPage() {
       includeKeywords: listText(rule.includeKeywords),
       excludeKeywords: listText(rule.excludeKeywords),
       priority: inputText(rule.priority ?? 100),
-      validFrom: dateInputText(rule.validFrom) || todayInput(),
+      validFrom: dateInputText(rule.validFrom) || koreaYesterdayDateInput(),
       validTo: dateInputText(rule.validTo),
       adEnabled: rule.adEnabled !== false,
       isActive: rule.isActive !== false,
@@ -414,10 +415,6 @@ function dateInputText(value: unknown) {
 function integerValue(value: string) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.trunc(parsed) : undefined;
-}
-
-function todayInput() {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function money(value: number | null | undefined) {

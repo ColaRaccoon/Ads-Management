@@ -13,6 +13,7 @@ import {
   isDailyGroupExpanded,
   type CoupangDailyExportRow
 } from "@/lib/coupang-daily-report";
+import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import {
   CoupangDailyGroupBody,
   CoupangDailySingleBody
@@ -63,7 +64,7 @@ const exportColumns: DailyExportColumn[] = [
 ];
 
 export default function CoupangDailyReportPage() {
-  const [date, setDate] = useState(todayInputValue());
+  const [date, setDate] = useState(koreaYesterdayDateInput);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -524,10 +525,4 @@ function totalCellStyle(style: XlsxCellStyle): XlsxCellStyle {
 
 function setsEqual(left: Set<string>, right: Set<string>) {
   return left.size === right.size && [...left].every((value) => right.has(value));
-}
-
-function todayInputValue() {
-  const date = new Date();
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 10);
 }

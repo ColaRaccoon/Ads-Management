@@ -4,6 +4,7 @@ import { RefreshCw, Save, Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost, rangeQuery } from "@/lib/api";
+import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
 
@@ -94,7 +95,7 @@ export default function MappingsPage() {
             </select>
             <input className="input" name="pattern" placeholder="광고세트명 패턴" required />
             <input className="input" name="priority" type="number" defaultValue={100} />
-            <input className="input" name="validFrom" type="date" required />
+            <input className="input" defaultValue={koreaYesterdayDateInput()} name="validFrom" type="date" required />
             <button className="button primary" type="submit"><Save size={16} />저장</button>
           </div>
         </form>
@@ -169,7 +170,7 @@ function ManualForm({ products, onProduct, onStage }: { products: Array<Record<s
         <option>CBO</option>
         <option>ASC</option>
       </select>
-      <input className="input" name="effectiveFrom" type="date" required />
+      <input className="input" defaultValue={koreaYesterdayDateInput()} name="effectiveFrom" type="date" required />
       <label className="toolbar"><input name="applyCurrentMetrics" type="checkbox" /> 과거 current metric 일괄 재매칭</label>
       <button className="button primary" type="submit"><Save size={16} />수동 지정</button>
     </form>
@@ -392,7 +393,7 @@ function Cafe24RuleForm({
         <input className="input" defaultValue={inputText(rule?.priority ?? 100)} inputMode="numeric" name="priority" type="number" />
       </Field>
       <Field label="적용 시작일" help="이 규칙이 매칭될 첫 주문일">
-        <input className="input" defaultValue={dateInputText(rule?.validFrom)} name="validFrom" required type="date" />
+        <input className="input" defaultValue={dateInputText(rule?.validFrom) || koreaYesterdayDateInput()} name="validFrom" required type="date" />
       </Field>
       <Field label="적용 종료일" help="종료일이 없으면 비워 둡니다">
         <input className="input" defaultValue={dateInputText(rule?.validTo)} name="validTo" type="date" />

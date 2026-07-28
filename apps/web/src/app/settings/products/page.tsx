@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiGet, apiPost } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
 import { money } from "@/lib/date-range";
+import { koreaYesterdayDateInput } from "@/lib/korea-date";
 
 export default function ProductSettingsPage() {
   const queryClient = useQueryClient();
@@ -122,7 +123,7 @@ function RuleForms({ products, onCost, onCpa }: { products: Array<Record<string,
           <AmountInput name="extraCostKrw" defaultValue="0" />
         </Field>
         <Field label="적용 시작일" help="이 날짜부터 업로드 데이터 계산에 적용">
-          <input className="input" name="effectiveFrom" type="date" required />
+          <input className="input" defaultValue={koreaYesterdayDateInput()} name="effectiveFrom" type="date" required />
         </Field>
         <p className="rule-note">부가세는 판매가의 10%로 자동 차감됩니다. 환율은 업로드 날짜 기준 USD/KRW 값으로 자동 적용됩니다.</p>
         <button className="button primary" type="submit"><Save size={16} />원가 Rule 저장</button>
@@ -145,7 +146,7 @@ function RuleForms({ products, onCost, onCpa }: { products: Array<Record<string,
           <RatioInput name="stopRatio" defaultValue="1.25" step="0.0001" />
         </Field>
         <Field label="적용 시작일" help="이 날짜부터 의사결정 기준에 적용">
-          <input className="input" name="effectiveFrom" type="date" required />
+          <input className="input" defaultValue={koreaYesterdayDateInput()} name="effectiveFrom" type="date" required />
         </Field>
         <button className="button primary" type="submit"><Save size={16} />CPA Rule 저장</button>
       </form>

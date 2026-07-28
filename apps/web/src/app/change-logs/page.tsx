@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Save, Search } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost } from "@/lib/api";
+import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
 
 type ProductListItem = {
@@ -46,11 +47,11 @@ type ProductLogItem = {
 
 export default function ChangeLogsPage() {
   const range = useRange();
-  const selectedDate = useMemo(() => range.to || todayInputValue(), [range.to]);
+  const selectedDate = useMemo(() => range.to || koreaYesterdayDateInput(), [range.to]);
   const queryClient = useQueryClient();
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [actionDate, setActionDate] = useState(todayInputValue());
+  const [actionDate, setActionDate] = useState(koreaYesterdayDateInput);
   const [logText, setLogText] = useState("");
 
   const products = useQuery({
@@ -79,7 +80,7 @@ export default function ChangeLogsPage() {
         queryClient.invalidateQueries({ queryKey: ["product-change-log-list"] }),
         queryClient.invalidateQueries({ queryKey: ["product-change-log-detail"] })
       ]);
-      setActionDate(todayInputValue());
+      setActionDate(koreaYesterdayDateInput());
       setLogText("");
     }
   });
@@ -96,7 +97,7 @@ export default function ChangeLogsPage() {
   }, [products.data, selectedProductId]);
 
   useEffect(() => {
-    setActionDate(todayInputValue());
+    setActionDate(koreaYesterdayDateInput());
     setLogText("");
   }, [selectedProductId]);
 
@@ -294,12 +295,6 @@ function AdStatusPanel({
       )}
     </section>
   );
-}
-
-function todayInputValue() {
-  const today = new Date();
-  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  return today.toISOString().slice(0, 10);
 }
 
 function formatUsd(value: number) {
