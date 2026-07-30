@@ -3063,6 +3063,7 @@ describe("Coupang product group aggregation", () => {
         productName: "Same Name",
         reportedSalesKrw: 700,
         reportedSalesQuantity: 7,
+        manualPurchaseQuantity: 2,
         adSpendKrw: 100,
         adConversionSalesKrw: 300,
         roas: 3,
@@ -3074,6 +3075,7 @@ describe("Coupang product group aggregation", () => {
         productName: "Same Name",
         reportedSalesKrw: 200,
         reportedSalesQuantity: 2,
+        manualPurchaseQuantity: 1,
         adSpendKrw: 50,
         adConversionSalesKrw: 100,
         roas: 2,
@@ -3129,7 +3131,9 @@ describe("Coupang product group aggregation", () => {
       calculationStatus: "INCOMPLETE",
       childProductCount: 5,
       previous: {
+        reportedSalesKrw: 900,
         reportedSalesQuantity: 9,
+        manualPurchaseQuantity: 3,
         adSpendKrw: 150,
         roas: 8 / 3,
         marginKrw: 190
@@ -3145,12 +3149,26 @@ describe("Coupang product group aggregation", () => {
     ]);
     expect(groupRow.children.find((child) => child.productId === "option-a")).toMatchObject({
       memo: "review boost",
-      previous: { reportedSalesQuantity: 7, adSpendKrw: 100, roas: 3, marginKrw: 150 },
+      previous: {
+        reportedSalesKrw: 700,
+        reportedSalesQuantity: 7,
+        manualPurchaseQuantity: 2,
+        adSpendKrw: 100,
+        roas: 3,
+        marginKrw: 150
+      },
       organicSalesKrw: 500
     });
     expect(groupRow.children.find((child) => child.productId === "option-b")).toMatchObject({
       memo: null,
-      previous: { reportedSalesQuantity: 0, adSpendKrw: 0, roas: null, marginKrw: null }
+      previous: {
+        reportedSalesKrw: 0,
+        reportedSalesQuantity: 0,
+        manualPurchaseQuantity: 0,
+        adSpendKrw: 0,
+        roas: null,
+        marginKrw: null
+      }
     });
     expect(groupRow.children.find((child) => child.productId === "zero-option")).toMatchObject({
       reportedSalesKrw: 0,
@@ -3164,7 +3182,14 @@ describe("Coupang product group aggregation", () => {
     });
     expect(groupRow.children.find((child) => child.productId === "prior-option")).toMatchObject({
       reportedSalesKrw: 0,
-      previous: { reportedSalesQuantity: 2, adSpendKrw: 50, roas: 2, marginKrw: 40 }
+      previous: {
+        reportedSalesKrw: 200,
+        reportedSalesQuantity: 2,
+        manualPurchaseQuantity: 1,
+        adSpendKrw: 50,
+        roas: 2,
+        marginKrw: 40
+      }
     });
     expect(groupRow.children.find((child) => child.productId === "inactive-option")).toBeDefined();
 
@@ -3177,7 +3202,14 @@ describe("Coupang product group aggregation", () => {
       groupName: null,
       memo: "<b>literal</b>",
       organicSalesKrw: 300,
-      previous: { reportedSalesQuantity: 0, adSpendKrw: 0, roas: null, marginKrw: null }
+      previous: {
+        reportedSalesKrw: 0,
+        reportedSalesQuantity: 0,
+        manualPurchaseQuantity: 0,
+        adSpendKrw: 0,
+        roas: null,
+        marginKrw: null
+      }
     });
     expect(result.rows.some((row) => row.productName === "Prior-only Single")).toBe(false);
     expect(result.summary.current).toEqual({

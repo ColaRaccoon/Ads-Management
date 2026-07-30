@@ -142,7 +142,9 @@ export type CoupangProductProfitResponse = {
 export type CoupangDashboardResponse = CoupangProductProfitResponse;
 
 export type CoupangDailyPreviousMetrics = {
+  reportedSalesKrw: number;
   reportedSalesQuantity: number;
+  manualPurchaseQuantity: number;
   adSpendKrw: number;
   roas: number | null;
   marginKrw: number | null;

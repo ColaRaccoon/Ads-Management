@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>쿠팡 데일리 성과 보고 — 고밀도 발표형 목업</title>
+  <style>
+    :root {
+      --ink: #17211f;
+      --muted: #687773;
+      --line: #dce4e1;
+      --line-strong: #bccbc6;
+      --bg: #eef2f0;
+      --panel: #fff;
+      --brand: #0f6b61;
+      --brand-dark: #0b4f48;
+      --brand-soft: #e7f4f1;
+      --positive: #087443;
+      --positive-soft: #e5f5ec;
+      --negative: #c73e32;
+      --negative-soft: #fff0ed;
+      --warning: #a86908;
+      --warning-soft: #fff5df;
+      --blue: #245eb5;
+      --group: #f2f8f6;
+      --row-height: 29px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-width: 1240px;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    .report {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 44px 40px 71px 31px minmax(0, 1fr) 20px;
+      background: #fff;
+    }
+
+    .report-header {
+      display: grid;
+      grid-template-columns: minmax(360px, auto) minmax(320px, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 0 13px;
+      background: var(--brand-dark);
+      color: #fff;
+    }
+
+    .title-group,
+    .header-actions,
+    .filter-left,
+    .filter-right,
+    .count-line {
+      display: flex;
+      align-items: center;
+    }
+
+    .title-group {
+      min-width: 0;
+      gap: 9px;
+    }
+
+    .brand-mark {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--brand-dark);
+      font-weight: 950;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: -0.035em;
+    }
+
+    .date-compare {
+      margin-left: 2px;
+      color: #b8d0ca;
+      font-size: 10px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .headline {
+      min-width: 0;
+      overflow: hidden;
+      color: #d9e7e3;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 11px;
+      font-weight: 750;
+      text-align: center;
+    }
+
+    .headline strong {
+      color: #fff;
+    }
+
+    .header-actions {
+      justify-content: flex-end;
+      gap: 5px;
+    }
+
+    .top-button {
+      height: 27px;
+      border: 1px solid #55716a;
+      border-radius: 5px;
+      padding: 0 8px;
+      background: #174f49;
+      color: #eaf1ef;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .top-button.primary {
+      border-color: #d7e8e3;
+      background: #fff;
+      color: var(--brand-dark);
+    }
+
+    .top-button.present {
+      border-color: #90c9bd;
+      color: #fff;
+    }
+
+    .top-button:hover,
+    .top-button:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .filterbar {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding: 5px 12px;
+      background: #f8faf9;
+    }
+
+    .filter-left,
+    .filter-right {
+      min-width: 0;
+      gap: 6px;
+    }
+
+    .filter-label {
+      margin-right: 2px;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .control,
+    .search {
+      height: 28px;
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      background: #fff;
+      color: #31413d;
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .control {
+      padding: 0 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .control.active {
+      border-color: #77aea4;
+      background: var(--brand-soft);
+      color: var(--brand);
+    }
+
+    .control:hover,
+    .control:focus-visible,
+    .search:focus-within {
+      border-color: var(--brand);
+      outline: 2px solid rgba(15, 107, 97, 0.1);
+    }
+
+    .range-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 23px;
+      border-radius: 999px;
+      padding: 0 8px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 9px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .catalog-count {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .search {
+      width: 190px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 5px;
+      padding: 0 8px;
+    }
+
+    .search input {
+      min-width: 0;
+      height: 25px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font-size: 10px;
+    }
+
+    .category-menu {
+      position: absolute;
+      top: 35px;
+      left: 78px;
+      width: 270px;
+      display: none;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      padding: 8px;
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(20, 38, 33, 0.16);
+    }
+
+    .category-menu.open {
+      display: block;
+    }
+
+    .category-menu strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 11px;
+    }
+
+    .category-menu label {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      border-bottom: 1px solid #edf1ef;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .category-menu small {
+      color: var(--muted);
+    }
+
+    .category-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: 1.25fr repeat(7, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line-strong);
+      background: #fff;
+    }
+
+    .summary-context,
+    .metric {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid var(--line);
+      padding: 6px 10px;
+    }
+
+    .summary-context {
+      background: #edf6f3;
+    }
+
+    .summary-context strong {
+      color: var(--brand-dark);
+      font-size: 13px;
+    }
+
+    .summary-context span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .complete {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      gap: 4px;
+      margin-top: 4px;
+      border-radius: 999px;
+      padding: 2px 6px;
+      background: var(--positive-soft);
+      color: var(--positive);
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .complete::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--positive);
+    }
+
+    .metric:last-child {
+      border-right: 0;
+    }
+
+    .metric-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .metric-delta {
+      color: var(--positive);
+      font-size: 8px;
+      font-weight: 950;
+    }
+
+    .metric-delta.down {
+      color: var(--negative);
+    }
+
+    .metric-value {
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: -0.035em;
+    }
+
+    .metric-value.roas {
+      color: var(--blue);
+    }
+
+    .metric-value.profit {
+      color: var(--positive);
+    }
+
+    .metric-previous {
+      margin-top: 2px;
+      color: #84918d;
+      font-size: 8px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .insightbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #efd49d;
+      padding: 0 12px;
+      background: var(--warning-soft);
+      color: #67480f;
+      font-size: 10px;
+    }
+
+    .insightbar strong {
+      color: #503500;
+      white-space: nowrap;
+    }
+
+    .insight-copy {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 750;
+    }
+
+    .insight-target {
+      color: var(--warning);
+      font-size: 9px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .table-panel {
+      min-height: 0;
+      overflow: auto;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1200px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    col.product { width: 20%; }
+    col.sales { width: 11%; }
+    col.qty { width: 10%; }
+    col.manual { width: 7%; }
+    col.ad { width: 13%; }
+    col.roas { width: 11%; }
+    col.organic { width: 12%; }
+    col.profit { width: 16%; }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      height: 35px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line-strong);
+      padding: 3px 8px;
+      background: #e9efec;
+      color: #344440;
+      text-align: right;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    thead th:first-child {
+      left: 0;
+      z-index: 4;
+      text-align: left;
+    }
+
+    thead small {
+      display: block;
+      margin-top: 1px;
+      color: #7e8c88;
+      font-size: 7px;
+      font-weight: 750;
+    }
+
+    tbody th,
+    tbody td {
+      height: var(--row-height);
+      border-right: 1px solid #edf0ef;
+      border-bottom: 1px solid #e5eae8;
+      padding: 2px 8px;
+      background: #fff;
+      text-align: right;
+      vertical-align: middle;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    tbody th {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      text-align: left;
+      font-weight: 800;
+    }
+
+    tbody tr.group th,
+    tbody tr.group td {
+      background: var(--group);
+      font-weight: 850;
+    }
+
+    tbody tr:hover th,
+    tbody tr:hover td {
+      background: #fff9e9;
+    }
+
+    .product-cell {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toggle {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 0;
+      border-radius: 4px;
+      padding: 0;
+      background: transparent;
+      color: var(--brand);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .toggle:hover {
+      background: #d9ece7;
+    }
+
+    .toggle.open {
+      transform: rotate(90deg);
+    }
+
+    .single-indent {
+      width: 18px;
+      flex: 0 0 auto;
+    }
+
+    .product-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 11px;
+    }
+
+    .category-tag,
+    .note-tag,
+    .option-count {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 2px 5px;
+      font-size: 7px;
+      font-weight: 900;
+    }
+
+    .category-tag {
+      background: var(--brand-soft);
+      color: var(--brand);
+    }
+
+    .note-tag {
+      background: var(--warning-soft);
+      color: var(--warning);
+      cursor: help;
+    }
+
+    .option-count {
+      color: var(--muted);
+      background: #e7ecea;
+    }
+
+    .value-pair {
+      display: inline-grid;
+      grid-template-columns: auto auto auto;
+      align-items: baseline;
+      justify-content: end;
+      gap: 4px;
+    }
+
+    .value-pair small {
+      color: #8a9793;
+      font-size: 8px;
+      font-weight: 650;
+    }
+
+    .value-pair i {
+      width: 9px;
+      font-size: 7px;
+      font-style: normal;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .value-pair i.up {
+      color: var(--positive);
+    }
+
+    .value-pair i.down {
+      color: var(--negative);
+    }
+
+    .roas-cell {
+      color: var(--blue);
+      font-weight: 850;
+    }
+
+    .profit-positive {
+      color: var(--positive);
+      font-weight: 900;
+    }
+
+    .profit-negative,
+    .organic-negative {
+      color: var(--negative);
+      font-weight: 900;
+    }
+
+    .zero {
+      color: #899490;
+    }
+
+    tr.option {
+      display: none;
+    }
+
+    tr.option.visible {
+      display: table-row;
+    }
+
+    tr.option th,
+    tr.option td {
+      height: 27px;
+      background: #fafcfb;
+      font-size: 10px;
+    }
+
+    tr.option .product-cell {
+      padding-left: 18px;
+      color: #52625e;
+    }
+
+    .option-branch {
+      color: #91a09b;
+      font-size: 10px;
+    }
+
+    .empty {
+      display: none;
+      height: 80px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding: 0 12px;
+      background: #f7f9f8;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .legend span {
+      white-space: nowrap;
+    }
+
+    body.presenting .report-header {
+      grid-template-columns: minmax(360px, auto) 1fr auto;
+    }
+
+    body.presenting .top-button:not(.present),
+    body.presenting .control.manage,
+    body.presenting .footer {
+      display: none;
+    }
+
+    body.presenting .report {
+      grid-template-rows: 44px 40px 71px 31px minmax(0, 1fr);
+    }
+
+    @media (max-height: 850px) {
+      :root {
+        --row-height: 27px;
+      }
+
+      .report {
+        grid-template-rows: 41px 37px 65px 28px minmax(0, 1fr) 18px;
+      }
+
+      .report-header {
+        padding-inline: 10px;
+      }
+
+      .summary-context,
+      .metric {
+        padding-block: 4px;
+      }
+
+      .metric-value {
+        font-size: 14px;
+      }
+
+      thead th {
+        height: 32px;
+      }
+    }
+
+    @media print {
+      body {
+        overflow: visible;
+      }
+
+      .report {
+        display: block;
+        height: auto;
+      }
+
+      .report-header,
+      .filterbar,
+      .insightbar,
+      .footer {
+        display: none;
+      }
+
+      .table-panel {
+        overflow: visible;
+      }
+
+      thead th,
+      tbody th {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="report">
+    <header class="report-header">
+      <div class="title-group">
+        <span class="brand-mark">C</span>
+        <h1>쿠팡 데일리 성과 보고</h1>
+        <span class="date-compare">2026.07.28 (화) │ 전일 07.27 비교</span>
+      </div>
+      <div class="headline">
+        <strong>오늘 결론</strong>　매출 −11.8% 대비 광고비는 −4.6%에 그쳐 ROAS와 순이익이 하락
+      </div>
+      <div class="header-actions">
+        <button class="top-button" type="button" onclick="window.print()">인쇄</button>
+        <button class="top-button" type="button">CSV</button>
+        <button class="top-button primary" type="button">XLSX</button>
+        <button class="top-button present" id="present-button" type="button">▣ 발표 모드</button>
+      </div>
+    </header>
+
+    <section class="filterbar" aria-label="리포트 조건">
+      <div class="filter-left">
+        <span class="filter-label">조회일</span>
+        <input class="control" type="date" value="2026-07-28" aria-label="조회 날짜">
+        <span class="filter-label" style="margin-left:6px">리포트 범위</span>
+        <button class="control active" id="category-button" type="button">전체 제품 ▾</button>
+        <span class="range-chip">주력상품 포함</span>
+        <button class="control" type="button">초기화</button>
+        <button class="control manage" type="button">카테고리 관리</button>
+        <span class="catalog-count">카탈로그 119개 · 활동 105개</span>
+      </div>
+      <div class="filter-right">
+        <span class="count-line"><strong>제품 47</strong>　그룹 28 · 단일 19 · 옵션 86</span>
+        <label class="search">
+          <span aria-hidden="true">⌕</span>
+          <input id="search-input" type="search" placeholder="상품·옵션·메모 검색" aria-label="상품명, 옵션명 또는 메모 검색">
+        </label>
+        <button class="control active" id="collapse-button" type="button">그룹 접힘</button>
+      </div>
+
+      <div class="category-menu" id="category-menu">
+        <strong>리포트 카테고리 선택</strong>
+        <label><input type="checkbox" checked> <span>주력상품</span><small>38</small></label>
+        <label><input type="checkbox"> <span>신제품</span><small>7</small></label>
+        <label><input type="checkbox"> <span>관찰상품</span><small>12</small></label>
+        <label><input type="checkbox"> <span>미분류 제품</span><small>14</small></label>
+        <div class="category-footer"><small>중복 제품은 한 번만 계산</small><button class="control active" type="button">완료</button></div>
+      </div>
+    </section>
+
+    <section class="summary" aria-label="전체 합계">
+      <div class="summary-context">
+        <strong>전체 합계</strong>
+        <span>제품 47개 · 옵션 86개 · 단일 19개</span>
+        <span class="complete">계산 완료 47 / 47</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">쿠팡 원본매출 <i class="metric-delta down">▼ 11.8%</i></span>
+        <strong class="metric-value">20,591,280원</strong>
+        <span class="metric-previous">전일 23,344,140원</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">원본 판매수량 <i class="metric-delta down">▼ 11.7%</i></span>
+        <strong class="metric-value">655개</strong>
+        <span class="metric-previous">전일 742개</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">가구매수량 <i class="metric-delta">― 0.0%</i></span>
+        <strong class="metric-value">40개</strong>
+        <span class="metric-previous">전일 40개</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">광고비 <i class="metric-delta">▼ 4.6%</i></span>
+        <strong class="metric-value">6,343,818원</strong>
+        <span class="metric-previous">전일 6,651,962원</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">광고수익률 <i class="metric-delta down">▼ 18.9%p</i></span>
+        <strong class="metric-value roas">240.6%</strong>
+        <span class="metric-previous">전일 259.5%</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">오가닉 매출 <i class="metric-delta down">▼ 19.3%</i></span>
+        <strong class="metric-value">4,193,720원</strong>
+        <span class="metric-previous">전일 5,199,140원</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">최종 순이익 <i class="metric-delta down">▼ 24.4%</i></span>
+        <strong class="metric-value profit">+1,669,553원</strong>
+        <span class="metric-previous">전일 +2,207,315원</span>
+      </div>
+    </section>
+
+    <section class="insightbar" aria-label="발표 핵심">
+      <strong>발표 포인트</strong>
+      <span class="insight-copy">버닝웨이브바는 순이익 +93.6만원으로 방어했지만, 두줄보호대·실크안대·자이로볼의 순이익 감소가 전체 하락을 주도했습니다.</span>
+      <span class="insight-target">우선 점검: 실크안대 광고효율 · 한줄보호대 손익 · 자이로볼 아이언</span>
+    </section>
+
+    <section class="table-panel" aria-label="상품별 상세 성과">
+      <table>
+        <caption hidden>선택일 및 전일 쿠팡 제품과 옵션별 실적</caption>
+        <colgroup>
+          <col class="product">
+          <col class="sales">
+          <col class="qty">
+          <col class="manual">
+          <col class="ad">
+          <col class="roas">
+          <col class="organic">
+          <col class="profit">
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">제품 / 옵션 <small>카테고리 · 메모 · 옵션수</small></th>
+            <th scope="col">쿠팡 원본매출 <small>현재</small></th>
+            <th scope="col">원본 판매수량 <small>현재 / 전일</small></th>
+            <th scope="col">가구매수량 <small>현재</small></th>
+            <th scope="col">광고비 <small>현재 / 전일</small></th>
+            <th scope="col">광고수익률 <small>현재 / 전일</small></th>
+            <th scope="col" title="가구매 조정 후 실제 순매출에서 광고 전환매출을 차감한 값">오가닉 매출 <small>현재</small></th>
+            <th scope="col">최종 순이익 <small>현재 / 전일</small></th>
+          </tr>
+        </thead>
+        <tbody id="report-body"></tbody>
+        <tbody>
+          <tr id="empty-row" class="empty"><td colspan="8">검색 조건에 맞는 상품이 없습니다.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="footer">
+      <span>그룹 행은 옵션 합계입니다. ▶를 눌러 옵션·메모를 펼칠 수 있으며, 접힌 옵션도 인쇄·CSV·XLSX에 모두 포함됩니다.</span>
+      <span class="legend"><span>파랑 = ROAS</span><span style="color:var(--positive)">초록 = 이익</span><span style="color:var(--negative)">빨강 = 손실/하락</span><span>※ 실제 2026-07-28 데이터 기반 화면 목업</span></span>
+    </footer>
+  </main>
+
+  <script>
+    const products = [
+      {type:"group",name:"두줄보호대",options:2,category:"주력상품",sales:"2,900,800",qty:101,pqty:114,manual:10,ad:"821,399",pad:"843,563",roas:"285.2",proas:"287.7",organic:"366,400",profit:"+184,806",pprofit:"+420,125",
+        children:[
+          {name:"두줄보호대 2개입",sales:"2,464,000",qty:80,pqty:93,manual:0,ad:"793,424",pad:"817,090",roas:"279.5",proas:"269.1",organic:"246,400",profit:"+135,453",pprofit:"+262,729"},
+          {name:"두줄보호대",sales:"436,800",qty:21,pqty:21,manual:10,ad:"27,975",pad:"26,473",roas:"446.1",proas:"864.3",organic:"120,000",profit:"+49,353",pprofit:"+157,396"}
+        ]},
+      {type:"single",name:"풀업바",category:"주력상품",sales:"2,002,000",qty:65,pqty:86,manual:0,ad:"680,490",pad:"794,352",roas:"235.4",proas:"248.2",organic:"400,400",profit:"+8,572",pprofit:"+8,319"},
+      {type:"group",name:"버닝웨이브바",options:2,category:"주력상품",sales:"1,732,630",qty:43,pqty:40,manual:0,ad:"0",pad:"0",roas:"-",proas:"-",organic:"1,732,630",profit:"+935,532",pprofit:"+855,998",
+        children:[
+          {name:"버닝웨이브바 1개입",sales:"1,663,830",qty:42,pqty:40,manual:0,ad:"0",pad:"0",roas:"-",proas:"-",organic:"1,663,830",profit:"+895,960",pprofit:"+855,998"},
+          {name:"버닝웨이브바 2개입",sales:"68,800",qty:1,pqty:0,manual:0,ad:"0",pad:"0",roas:"-",proas:"-",organic:"68,800",profit:"+39,572",pprofit:"0"}
+        ]},
+      {type:"group",name:"실크안대",options:2,category:"주력상품",sales:"1,520,700",qty:63,pqty:99,manual:0,ad:"629,326",pad:"650,218",roas:"200.5",proas:"265.5",organic:"258,700",profit:"+185,244",pprofit:"+468,076"},
+      {type:"group",name:"자이로볼",options:7,category:"주력상품",sales:"1,188,600",qty:42,pqty:58,manual:0,ad:"382,347",pad:"359,462",roas:"255.2",proas:"298.7",organic:"213,000",profit:"+96,008",pprofit:"+191,964"},
+      {type:"group",name:"베놈",options:4,category:"주력상품",sales:"1,074,480",qty:32,pqty:16,manual:10,ad:"287,846",pad:"294,321",roas:"306.8",proas:"253.2",organic:"-56,600",profit:"+52,474",pprofit:"-10,153"},
+      {type:"group",name:"풀업밴드",options:5,category:"주력상품",sales:"916,600",qty:27,pqty:25,manual:0,ad:"395,277",pad:"402,856",roas:"211.0",proas:"175.9",organic:"82,600",profit:"+37,826",pprofit:"+2,078"},
+      {type:"group",name:"한줄보호대",options:3,category:"주력상품",sales:"813,980",qty:27,pqty:29,manual:0,ad:"428,696",pad:"276,218",roas:"170.7",proas:"275.1",organic:"82,400",profit:"-40,010",pprofit:"+100,846"},
+      {type:"single",name:"러닝조끼",category:"주력상품",sales:"751,800",qty:21,pqty:17,manual:0,ad:"264,220",pad:"244,264",roas:"243.9",proas:"293.1",organic:"107,400",profit:"+32,246",pprofit:"-4,268"},
+      {type:"group",name:"스포츠양말",options:5,category:"주력상품",sales:"732,810",qty:29,pqty:18,manual:0,ad:"262,769",pad:"335,144",roas:"197.6",proas:"180.6",organic:"213,510",profit:"+76,324",pprofit:"-100,854"},
+      {type:"single",name:"퍼펙트스케이트",category:"",sales:"724,900",qty:11,pqty:0,manual:10,ad:"55,948",pad:"64,368",roas:"117.8",proas:"0.0",organic:"211,000",profit:"+104,714",pprofit:"-64,368"},
+      {type:"group",name:"케겔",options:3,category:"주력상품",sales:"721,600",qty:25,pqty:13,manual:10,ad:"141,013",pad:"180,088",roas:"368.3",proas:"192.8",organic:"-46,700",profit:"+5,769",pprofit:"+11,975"},
+      {type:"group",name:"퍼펙트슬라이드",options:2,category:"주력상품",sales:"690,000",qty:15,pqty:36,manual:0,ad:"283,186",pad:"443,000",roas:"248.9",proas:"287.4",organic:"-14,800",profit:"-27,752",pprofit:"+173,378"},
+      {type:"single",name:"스트레칭보드",category:"주력상품",sales:"652,800",qty:16,pqty:29,manual:0,ad:"209,033",pad:"286,661",roas:"234.2",proas:"341.6",organic:"163,200",profit:"-38,331",pprofit:"+22,736"},
+      {type:"group",name:"폼롤러",options:4,category:"주력상품",sales:"618,400",qty:23,pqty:38,manual:0,ad:"289,015",pad:"225,207",roas:"264.1",proas:"417.6",organic:"-144,800",profit:"-121,449",pprofit:"-43,371"},
+      {type:"single",name:"페이스&바디롤러",category:"주력상품",sales:"456,000",qty:20,pqty:16,manual:0,ad:"104,207",pad:"143,402",roas:"306.3",proas:"238.5",organic:"136,800",profit:"+118,986",pprofit:"+35,152"},
+      {type:"single",name:"버닝슬라이드",category:"주력상품",sales:"370,300",qty:7,pqty:5,manual:0,ad:"172,669",pad:"152,344",roas:"153.2",proas:"173.6",organic:"105,800",profit:"-30,629",pprofit:"-46,706"},
+      {type:"group",name:"축구양말",options:4,category:"주력상품",sales:"361,200",qty:15,pqty:14,manual:0,ad:"102,656",pad:"145,537",roas:"390.5",proas:"155.8",organic:"-39,700",profit:"+101,322",pprofit:"+30,614"},
+      {type:"group",name:"다이어트양말",options:4,category:"주력상품",sales:"334,100",qty:11,pqty:10,manual:0,ad:"134,952",pad:"119,108",roas:"175.0",proas:"69.9",organic:"97,900",profit:"+13,234",pprofit:"-14,345"},
+      {type:"group",name:"손목보호대",options:4,category:"주력상품",sales:"329,280",qty:18,pqty:13,manual:0,ad:"94,667",pad:"125,124",roas:"221.9",proas:"189.2",organic:"119,180",profit:"+32,560",pprofit:"-27,464"},
+      {type:"single",name:"에어스텝퍼",category:"주력상품",sales:"299,400",qty:3,pqty:9,manual:0,ad:"174,402",pad:"138,293",roas:"114.4",proas:"360.8",organic:"99,800",profit:"-89,889",pprofit:"+112,883"},
+      {type:"single",name:"퍼슬2",category:"",sales:"295,400",qty:5,pqty:8,manual:0,ad:"102,872",pad:"128,334",roas:"228.1",proas:"372.3",organic:"60,800",profit:"-41,670",pprofit:"-17,245"},
+      {type:"single",name:"힙업밴드",category:"",sales:"166,400",qty:8,pqty:3,manual:0,ad:"61,170",pad:"27,585",roas:"272.0",proas:"301.6",organic:"0",profit:"-2,106",pprofit:"-5,436"},
+      {type:"single",name:"nbr요가매트",category:"주력상품",sales:"155,400",qty:6,pqty:1,manual:0,ad:"48,806",pad:"34,842",roas:"212.3",proas:"148.7",organic:"51,800",profit:"-20,045",pprofit:"-30,048"},
+      {type:"single",name:"스탭마스터",category:"",sales:"143,900",qty:1,pqty:0,manual:0,ad:"2,180",pad:"3,778",roas:"6600.9",proas:"0.0",organic:"0",profit:"+75,241",pprofit:"-3,778"},
+      {type:"group",name:"발목보호대",options:4,category:"주력상품",sales:"133,200",qty:4,pqty:9,manual:0,ad:"41,692",pad:"67,850",roas:"393.4",proas:"221.2",organic:"-31,200",profit:"+5,382",pprofit:"+5,641"},
+      {type:"single",name:"플레시 ab슬라이드",category:"",sales:"129,000",qty:5,pqty:18,manual:0,ad:"36,383",pad:"37,081",roas:"283.6",proas:"635.9",organic:"25,800",profit:"+5,127",pprofit:"+82,114"},
+      {type:"group",name:"카프슬리브",options:2,category:"주력상품",sales:"119,400",qty:3,pqty:1,manual:0,ad:"15,504",pad:"8,675",roas:"770.1",proas:"458.8",organic:"0",profit:"+42,819",pprofit:"+14,671"},
+      {type:"single",name:"푸샵바",options:0,category:"",sales:"81,600",qty:2,pqty:4,manual:0,ad:"0",pad:"0",roas:"-",proas:"-",organic:"40,800",profit:"+33,438",pprofit:"+66,875"},
+      {type:"group",name:"실리콘리프팅밴드",options:2,category:"",sales:"59,600",qty:2,pqty:1,manual:0,ad:"11,570",pad:"6,889",roas:"515.1",proas:"161.4",organic:"0",profit:"+19,901",pprofit:"-5,916"},
+      {type:"single",name:"tpe요가매트",options:0,category:"주력상품",sales:"30,900",qty:1,pqty:1,manual:0,ad:"17,436",pad:"11,024",roas:"177.2",proas:"280.3",organic:"0",profit:"-10,241",pprofit:"-1,387"},
+      {type:"group",name:"포론깔창",options:2,category:"",sales:"27,600",qty:1,pqty:2,manual:0,ad:"11,562",pad:"13,008",roas:"463.6",proas:"565.8",organic:"-26,000",profit:"-2,323",pprofit:"+10,438"},
+      {type:"single",name:"쿨토시",options:0,category:"주력상품",sales:"19,900",qty:1,pqty:5,manual:0,ad:"15,350",pad:"21,192",roas:"0.0",proas:"455.5",organic:"19,900",profit:"-5,888",pprofit:"+23,762"},
+      {type:"group",name:"이지드림안대",options:5,category:"",sales:"19,800",qty:1,pqty:0,manual:0,ad:"0",pad:"0",roas:"-",proas:"-",organic:"19,800",profit:"+7,430",pprofit:"0"},
+      {type:"single",name:"풋파일",options:0,category:"",sales:"10,900",qty:1,pqty:0,manual:0,ad:"1,663",pad:"3,070",roas:"655.4",proas:"0.0",organic:"0",profit:"+1,601",pprofit:"-3,070"},
+      {type:"group",name:"스카이스텝",options:2,category:"",sales:"5,900",qty:0,pqty:2,manual:0,ad:"12,997",pad:"7,525",roas:"480.1",proas:"474.4",organic:"-56,500",profit:"-10,409",pprofit:"+8,713"},
+      {type:"group",name:"데일리 깔창",options:2,category:"",sales:"0",qty:0,pqty:0,manual:0,ad:"3,345",pad:"9,854",roas:"0.0",proas:"200.9",organic:"0",profit:"-3,345",pprofit:"-9,854"},
+      {type:"single",name:"러닝모자",options:0,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"14,418",pad:"22,884",roas:"0.0",proas:"0.0",organic:"0",profit:"-14,418",pprofit:"-22,884"},
+      {type:"single",name:"러닝모자+러닝조끼",options:0,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"101",pad:"101",roas:"0.0",proas:"0.0",organic:"0",profit:"-101",pprofit:"-101"},
+      {type:"group",name:"레그워머",options:2,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"1,049",pad:"202",roas:"0.0",proas:"0.0",organic:"0",profit:"-1,049",pprofit:"-202"},
+      {type:"group",name:"마사지양말",options:2,category:"",sales:"0",qty:0,pqty:1,manual:0,ad:"22,429",pad:"11,219",roas:"0.0",proas:"87.4",organic:"0",profit:"-22,429",pprofit:"-8,974"},
+      {type:"group",name:"목도리",options:2,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"534",pad:"0",roas:"0.0",proas:"-",organic:"0",profit:"-534",pprofit:"0"},
+      {type:"group",name:"바라클라바",options:4,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"201",pad:"201",roas:"0.0",proas:"0.0",organic:"0",profit:"-201",pprofit:"-201"},
+      {type:"group",name:"방한마스크",options:2,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"101",pad:"2,630",roas:"0.0",proas:"0.0",organic:"0",profit:"-101",pprofit:"-2,630"},
+      {type:"group",name:"비니",options:2,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"604",pad:"2,129",roas:"0.0",proas:"0.0",organic:"0",profit:"-604",pprofit:"-2,129"},
+      {type:"group",name:"코어브릿지",options:2,category:"",sales:"0",qty:0,pqty:0,manual:0,ad:"1,461",pad:"3,148",roas:"0.0",proas:"0.0",organic:"0",profit:"-1,461",pprofit:"-3,148"},
+      {type:"single",name:"풀업세트",options:0,category:"주력상품",sales:"0",qty:0,pqty:0,manual:0,ad:"6,272",pad:"5,211",roas:"0.0",proas:"0.0",organic:"0",profit:"-6,272",pprofit:"-5,211"}
+    ];
+
+    const body = document.getElementById("report-body");
+    const emptyRow = document.getElementById("empty-row");
+    const searchInput = document.getElementById("search-input");
+    const collapseButton = document.getElementById("collapse-button");
+    const categoryButton = document.getElementById("category-button");
+    const categoryMenu = document.getElementById("category-menu");
+    const presentButton = document.getElementById("present-button");
+    let expanded = new Set();
+
+    function numeric(value) {
+      if (typeof value === "number") return value;
+      const parsed = Number(String(value).replace(/[+,]/g, ""));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function pair(current, previous, unit = "") {
+      const now = numeric(current);
+      const before = numeric(previous);
+      const trend = now === before ? "" : now > before ? "up" : "down";
+      const arrow = trend === "up" ? "▲" : trend === "down" ? "▼" : "―";
+      return `<span class="value-pair"><span>${current}${unit}</span><small>/ ${previous}${unit}</small><i class="${trend}">${arrow}</i></span>`;
+    }
+
+    function metricCells(row) {
+      const organicClass = String(row.organic).startsWith("-") ? "organic-negative" : numeric(row.organic) === 0 ? "zero" : "";
+      const profitClass = String(row.profit).startsWith("-") ? "profit-negative" : numeric(row.profit) === 0 ? "zero" : "profit-positive";
+      return `
+        <td>${row.sales}원</td>
+        <td>${pair(row.qty, row.pqty, "개")}</td>
+        <td class="${row.manual === 0 ? "zero" : ""}">${row.manual}개</td>
+        <td>${pair(row.ad, row.pad, "원")}</td>
+        <td class="roas-cell">${pair(row.roas, row.proas, row.roas === "-" ? "" : "%")}</td>
+        <td class="${organicClass}">${row.organic}원</td>
+        <td class="${profitClass}">${pair(row.profit, row.pprofit, "원")}</td>
+      `;
+    }
+
+    function render() {
+      const query = searchInput.value.trim().toLocaleLowerCase("ko-KR");
+      let shown = 0;
+      let html = "";
+
+      products.forEach((product, index) => {
+        const childText = (product.children || []).map((child) => `${child.name} ${child.note || ""}`).join(" ");
+        const haystack = `${product.name} ${product.category} ${product.note || ""} ${childText}`.toLocaleLowerCase("ko-KR");
+        if (query && !haystack.includes(query)) return;
+        shown += 1;
+        const isGroup = product.type === "group";
+        const isOpen = expanded.has(index) || Boolean(query && product.children?.length);
+        html += `
+          <tr class="${isGroup ? "group" : "single"}" data-name="${product.name}">
+            <th scope="row">
+              <div class="product-cell">
+                ${isGroup
+                  ? `<button class="toggle ${isOpen ? "open" : ""}" type="button" data-index="${index}" aria-label="${product.name} 옵션 ${isOpen ? "접기" : "펼치기"}">▶</button>`
+                  : `<span class="single-indent"></span>`}
+                <span class="product-name">${product.name}</span>
+                ${product.category ? `<span class="category-tag">${product.category}</span>` : ""}
+                ${product.note ? `<span class="note-tag" title="${product.note}">메모</span>` : ""}
+                ${isGroup ? `<span class="option-count">옵션 ${product.options}</span>` : ""}
+              </div>
+            </th>
+            ${metricCells(product)}
+          </tr>
+        `;
+        (product.children || []).forEach((child) => {
+          html += `
+            <tr class="option ${isOpen ? "visible" : ""}" data-parent="${index}">
+              <th scope="row">
+                <div class="product-cell"><span class="option-branch">└</span><span class="product-name">${child.name}</span></div>
+              </th>
+              ${metricCells(child)}
+            </tr>
+          `;
+        });
+      });
+
+      body.innerHTML = html;
+      emptyRow.style.display = shown === 0 ? "table-row" : "none";
+      body.querySelectorAll(".toggle").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.dataset.index);
+          if (expanded.has(index)) expanded.delete(index);
+          else expanded.add(index);
+          render();
+        });
+      });
+    }
+
+    searchInput.addEventListener("input", render);
+
+    collapseButton.addEventListener("click", () => {
+      if (expanded.size > 0) {
+        expanded.clear();
+        collapseButton.textContent = "그룹 접힘";
+        collapseButton.classList.add("active");
+      } else {
+        products.forEach((product, index) => {
+          if (product.children?.length) expanded.add(index);
+        });
+        collapseButton.textContent = "옵션 펼침";
+        collapseButton.classList.remove("active");
+      }
+      render();
+    });
+
+    categoryButton.addEventListener("click", () => categoryMenu.classList.toggle("open"));
+    document.addEventListener("click", (event) => {
+      if (!categoryMenu.contains(event.target) && event.target !== categoryButton) {
+        categoryMenu.classList.remove("open");
+      }
+    });
+
+    presentButton.addEventListener("click", async () => {
+      document.body.classList.toggle("presenting");
+      if (document.body.classList.contains("presenting") && document.documentElement.requestFullscreen) {
+        try { await document.documentElement.requestFullscreen(); } catch (_) {}
+      } else if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) document.body.classList.remove("presenting");
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "/") {
+        event.preventDefault();
+        searchInput.focus();
+      }
+      if (event.key === "Escape") {
+        categoryMenu.classList.remove("open");
+        searchInput.blur();
+      }
+    });
+
+    function formatMoney(value) {
+      if (value === null || value === undefined) return "-";
+      return Math.round(value).toLocaleString("ko-KR");
+    }
+
+    function formatProfit(value) {
+      if (value === null || value === undefined) return "-";
+      return `${value > 0 ? "+" : ""}${formatMoney(value)}`;
+    }
+
+    function formatRoas(value) {
+      return value === null || value === undefined ? "-" : (value * 100).toFixed(1);
+    }
+
+    function mapApiRow(row, type) {
+      return {
+        type,
+        name: row.productName,
+        options: row.children?.length || 0,
+        category: (row.reportCategories || []).map((category) => category.displayName).join("·"),
+        note: type === "group"
+          ? (row.children || []).filter((child) => child.memo).map((child) => `${child.productName}: ${child.memo}`).join(" / ")
+          : row.memo || "",
+        sales: formatMoney(row.reportedSalesKrw),
+        qty: row.reportedSalesQuantity,
+        pqty: row.previous.reportedSalesQuantity,
+        manual: row.manualPurchaseQuantity,
+        ad: formatMoney(row.adSpendKrw),
+        pad: formatMoney(row.previous.adSpendKrw),
+        roas: formatRoas(row.roas),
+        proas: formatRoas(row.previous.roas),
+        organic: formatMoney(row.organicSalesKrw),
+        profit: formatProfit(row.marginKrw),
+        pprofit: formatProfit(row.previous.marginKrw),
+        children: type === "group"
+          ? (row.children || []).map((child) => mapApiRow(child, "option"))
+          : undefined
+      };
+    }
+
+    async function loadActualReport() {
+      try {
+        const response = await fetch("/backend-api/coupang/daily-report?date=2026-07-28", { cache: "no-store" });
+        if (!response.ok) throw new Error("report unavailable");
+        const report = await response.json();
+        const mapped = report.rows.map((row) => mapApiRow(row, row.rowType === "GROUP" ? "group" : "single"));
+        products.splice(0, products.length, ...mapped);
+      } catch (_) {
+        // 정적 목업 데이터로 계속 표시합니다.
+      }
+      render();
+    }
+
+    loadActualReport();
+  </script>
+</body>
+</html>

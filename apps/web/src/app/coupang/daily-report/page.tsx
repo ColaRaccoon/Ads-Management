@@ -5,13 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiGet } from "@/lib/api";
 import {
+  COUPANG_DAILY_CSV_COLUMNS,
   flattenDailyReportExportRows,
   formatDailyMoney,
   formatDailyProfit,
   formatDailyQuantity,
   formatDailyRatio,
-  isDailyGroupExpanded,
-  type CoupangDailyExportRow
+  isDailyGroupExpanded
 } from "@/lib/coupang-daily-report";
 import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import {
@@ -19,7 +19,8 @@ import {
   CoupangDailySingleBody
 } from "./rows";
 import { downloadCsv } from "@/lib/csv";
-import { buildXlsxWorkbook, downloadXlsx, type XlsxCell, type XlsxCellStyle } from "@/lib/xlsx";
+import { buildCoupangDailyXlsxWorkbook } from "@/lib/coupang-daily-xlsx";
+import { downloadXlsx } from "@/lib/xlsx";
 import type {
   CoupangDailyReportResponse,
   CoupangDailyReportRow,
@@ -35,33 +36,6 @@ import {
 } from "@/lib/coupang-daily-category";
 import { DailyCategoryFilter } from "./category-filter";
 import { DailyCategoryManager } from "./category-manager";
-
-type DailyExportColumn = {
-  header: string;
-  style: XlsxCellStyle;
-  width: number;
-  value: (row: CoupangDailyExportRow) => string | number | null | undefined;
-};
-
-const exportColumns: DailyExportColumn[] = [
-  { header: "조회일", style: "Text", width: 13, value: (row) => row.date },
-  { header: "선택 필터", style: "Text", width: 22, value: (row) => row.filterLabel },
-  { header: "검색어", style: "Text", width: 18, value: (row) => row.query },
-  { header: "소속 리포트 카테고리", style: "Text", width: 24, value: (row) => row.reportCategories },
-  { header: "행구분", style: "Text", width: 13, value: (row) => row.rowKind },
-  { header: "제품/옵션", style: "Text", width: 30, value: (row) => row.productName },
-  { header: "쿠팡 원본매출", style: "Krw", width: 17, value: (row) => row.reportedSalesKrw },
-  { header: "원본 판매수량", style: "Number", width: 17, value: (row) => row.reportedSalesQuantity },
-  { header: "전일 원본 판매수량", style: "Number", width: 20, value: (row) => row.previousReportedSalesQuantity },
-  { header: "가구매수량", style: "Number", width: 14, value: (row) => row.manualPurchaseQuantity },
-  { header: "광고비", style: "Krw", width: 15, value: (row) => row.adSpendKrw },
-  { header: "전일 광고비", style: "Krw", width: 16, value: (row) => row.previousAdSpendKrw },
-  { header: "광고수익률", style: "Ratio", width: 16, value: (row) => row.roas },
-  { header: "전일 광고수익률", style: "Ratio", width: 18, value: (row) => row.previousRoas },
-  { header: "오가닉 매출", style: "Krw", width: 16, value: (row) => row.organicSalesKrw },
-  { header: "최종 순이익", style: "Krw", width: 16, value: (row) => row.marginKrw },
-  { header: "전일 최종 순이익", style: "Krw", width: 19, value: (row) => row.previousMarginKrw }
-];
 
 export default function CoupangDailyReportPage() {
   const [date, setDate] = useState(koreaYesterdayDateInput);
@@ -133,23 +107,7 @@ export default function CoupangDailyReportPage() {
   };
 
   const exportXlsx = () => {
-    const workbook = buildXlsxWorkbook({
-      sheetName: "Coupang Daily Report",
-      columns: exportColumns.map((column) => ({ width: column.width })),
-      freezeRow: 1,
-      autoFilter: { fromRow: 1 },
-      rows: [
-        exportColumns.map((column): XlsxCell => ({ value: column.header, style: "Header" })),
-        ...exportRows.map((row) =>
-          exportColumns.map((column): XlsxCell => ({
-            value: column.value(row),
-            style: row.rowKind === "전체합계" || row.rowKind === "선택합계"
-              ? totalCellStyle(column.style)
-              : column.style
-          }))
-        )
-      ]
-    });
+    const workbook = buildCoupangDailyXlsxWorkbook(exportRows);
     const slug = dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0);
     downloadXlsx(`${date}_쿠팡_데일리리포트_${slug}.xlsx`, workbook);
   };
@@ -192,7 +150,7 @@ export default function CoupangDailyReportPage() {
             type="button"
             disabled={!report.data}
             onClick={() =>
-              downloadCsv(`${date}_쿠팡_데일리리포트_${dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0)}.csv`, exportColumns, exportRows)
+              downloadCsv(`${date}_쿠팡_데일리리포트_${dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0)}.csv`, COUPANG_DAILY_CSV_COLUMNS, exportRows)
             }
           >
             <Download size={14} aria-hidden="true" /> CSV
@@ -502,25 +460,6 @@ function profitTone(value: number | null): "positive" | "negative" | "zero" | un
   if (value > 0) return "positive";
   if (value < 0) return "negative";
   return "zero";
-}
-
-function totalCellStyle(style: XlsxCellStyle): XlsxCellStyle {
-  switch (style) {
-    case "Text":
-      return "TotalText";
-    case "Number":
-      return "TotalNumber";
-    case "Krw":
-      return "TotalKrw";
-    case "Ratio":
-      return "TotalRatio";
-    case "Percent":
-      return "TotalPercent";
-    case "Usd":
-      return "TotalUsd";
-    default:
-      return style;
-  }
 }
 
 function setsEqual(left: Set<string>, right: Set<string>) {

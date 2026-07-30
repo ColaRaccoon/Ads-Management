@@ -234,7 +234,9 @@ export type ProductProfitRow = {
 };
 
 export type CoupangDailyPreviousMetrics = {
+  reportedSalesKrw: number;
   reportedSalesQuantity: number;
+  manualPurchaseQuantity: number;
   adSpendKrw: number;
   roas: number | null;
   marginKrw: number | null;
@@ -3629,7 +3631,9 @@ export function normalizeDailyMemo(value: string | null | undefined) {
 
 export function toDailyPreviousMetrics(row: ProductProfitRow | undefined): CoupangDailyPreviousMetrics {
   return {
+    reportedSalesKrw: row?.reportedSalesKrw ?? 0,
     reportedSalesQuantity: row?.reportedSalesQuantity ?? 0,
+    manualPurchaseQuantity: row?.manualPurchaseQuantity ?? 0,
     adSpendKrw: row?.adSpendKrw ?? 0,
     roas: row?.roas ?? null,
     marginKrw: row?.marginKrw ?? null

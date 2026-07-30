@@ -11,6 +11,7 @@ import type {
   CoupangDailyReportResponse
 } from "@/types/coupang";
 import {
+  COUPANG_DAILY_CSV_COLUMNS,
   dailyRowNotes,
   flattenDailyReportExportRows,
   formatDailyMoney,
@@ -19,6 +20,7 @@ import {
   formatDailyRatio,
   isDailyGroupExpanded
 } from "./coupang-daily-report";
+import { serializeCsv } from "./csv";
 
 const black = product({
   productId: "black",
@@ -145,6 +147,84 @@ describe("Coupang daily report helpers", () => {
     expect(result[6]?.productName).toBe("기타사항: 신규 상품 체험단");
   });
 
+  it("preserves prior sales and assigns stable visual metadata by top-level product block", () => {
+    const result = flattenDailyReportExportRows(dailyResponse());
+
+    expect(result.map((row) => ({
+      kind: row.rowKind,
+      previousSales: row.previousReportedSalesKrw,
+      previousManualPurchases: row.previousManualPurchaseQuantity,
+      key: row.visualBlockKey,
+      index: row.visualBlockIndex,
+      indent: row.indentLevel,
+      children: row.visualChildProductCount
+    }))).toEqual([
+      {
+        kind: "전체합계",
+        previousSales: 800_000,
+        previousManualPurchases: 0,
+        key: null,
+        index: null,
+        indent: 0,
+        children: null
+      },
+      {
+        kind: "그룹합계",
+        previousSales: 810_000,
+        previousManualPurchases: 2,
+        key: "group:wavebar",
+        index: 0,
+        indent: 0,
+        children: 2
+      },
+      {
+        kind: "옵션",
+        previousSales: 810_000,
+        previousManualPurchases: 2,
+        key: "group:wavebar",
+        index: 0,
+        indent: 1,
+        children: null
+      },
+      {
+        kind: "옵션",
+        previousSales: 810_000,
+        previousManualPurchases: 2,
+        key: "group:wavebar",
+        index: 0,
+        indent: 1,
+        children: null
+      },
+      {
+        kind: "기타사항",
+        previousSales: "",
+        previousManualPurchases: "",
+        key: "group:wavebar",
+        index: 0,
+        indent: 0,
+        children: null
+      },
+      {
+        kind: "단일제품",
+        previousSales: 810_000,
+        previousManualPurchases: 2,
+        key: "product:mat",
+        index: 1,
+        indent: 0,
+        children: null
+      },
+      {
+        kind: "기타사항",
+        previousSales: "",
+        previousManualPurchases: "",
+        key: "product:mat",
+        index: 1,
+        indent: 0,
+        children: null
+      }
+    ]);
+  });
+
   it("does not create export memo rows for blank notes", () => {
     const noMemoGroup = {
       ...group,
@@ -167,6 +247,37 @@ describe("Coupang daily report helpers", () => {
     expect(typeof groupExport?.roas).toBe("number");
     expect(memoExport?.reportedSalesKrw).toBe("");
     expect(memoExport?.previousMarginKrw).toBe("");
+  });
+
+  it("keeps the existing CSV export contract at seventeen columns without visual metadata", () => {
+    const result = flattenDailyReportExportRows(dailyResponse({ rows: [group] }));
+    const [header, totalRow] = serializeCsv(COUPANG_DAILY_CSV_COLUMNS, result)
+      .replace(/^\uFEFF/, "")
+      .split("\r\n");
+
+    expect(COUPANG_DAILY_CSV_COLUMNS).toHaveLength(17);
+    expect(header).toBe([
+      "조회일",
+      "선택 필터",
+      "검색어",
+      "소속 리포트 카테고리",
+      "행구분",
+      "제품/옵션",
+      "쿠팡 원본매출",
+      "원본 판매수량",
+      "전일 원본 판매수량",
+      "가구매수량",
+      "광고비",
+      "전일 광고비",
+      "광고수익률",
+      "전일 광고수익률",
+      "오가닉 매출",
+      "최종 순이익",
+      "전일 최종 순이익"
+    ].join(","));
+    expect(totalRow?.split(",")).toHaveLength(17);
+    expect(header).not.toContain("visualBlock");
+    expect(header).not.toContain("전일자 매출");
   });
 
   it("exports known summary margin only when the summary is incomplete", () => {
@@ -312,7 +423,9 @@ function metricsBase() {
 
 function previous() {
   return {
+    reportedSalesKrw: 810_000,
     reportedSalesQuantity: 21,
+    manualPurchaseQuantity: 2,
     adSpendKrw: 121_000,
     roas: 5.182,
     marginKrw: 231_800
