@@ -3,7 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
-import { formatCoupangIncompleteReasons } from "@/lib/coupang-profit-warning";
+import {
+  coupangProfitWarningLabel,
+  formatCoupangIncompleteReasons
+} from "@/lib/coupang-profit-warning";
 import { useRange } from "@/lib/use-range";
 import { DataTable, type Column } from "@/components/data-table";
 import type {
@@ -35,7 +38,7 @@ export default function CoupangProfitPage() {
       <div className="page-title">
         <div>
           <h1>Coupang Profit Table</h1>
-          <p>쿠팡 원본에서 가구매 매출·수량을 분리하고, 정상 판매 비용과 가구매 업체수수료를 각각 한 번만 반영합니다.</p>
+          <p>가구매 매출은 회사 매출에서 전액 제외하고, 원본 거래에서 발생한 상품원가·쿠팡 판매수수료·배송/물류비·VAT는 그대로 유지하며, 가구매 업체수수료를 최종 순이익에서 별도로 추가 차감합니다.</p>
           <p title="교차 구매가 있는 경우 판매상품에 광고비를 재배부한 회계이익이 아닙니다.">
             광고비는 광고 집행 상품에 귀속되므로 상품별 순이익은 집행비를 포함한 운영 기여값입니다.
           </p>
@@ -49,10 +52,11 @@ export default function CoupangProfitPage() {
         </div>
       ) : null}
       <div className="manual-purchase-summary">
-        <Summary label="실제 정상 판매 순매출" value={money(summary?.actualNetSalesKrw)} />
-        <Summary label="가구매 매출 조정" value={money(summary?.manualPurchaseSalesKrw)} />
-        <Summary label="정상 판매 순이익" value={money(summary?.normalMarginKrw)} />
-        <Summary label="가구매 비용(업체수수료)" value={money(summary?.manualPurchaseTotalCostKrw)} />
+        <Summary label="쿠팡 원본순매출" value={money(summary?.reportedNetSalesKrw)} />
+        <Summary label="가구매 매출 제외액" value={money(summary?.manualPurchaseSalesKrw)} />
+        <Summary label="가구매 조정 후 순매출" value={money(summary?.actualNetSalesKrw)} />
+        <Summary label="업체수수료 차감 전 순이익" value={money(summary?.normalMarginKrw)} />
+        <Summary label="가구매 업체수수료" value={money(summary?.manualPurchaseTotalCostKrw)} />
         <Summary
           label={summary?.isComplete === false ? "계산 가능한 상품 순이익(부분 합계)" : "최종 순이익"}
           value={money(summary?.isComplete === false ? summary.knownMarginKrw : summary?.marginKrw)}
@@ -66,7 +70,7 @@ export default function CoupangProfitPage() {
           </select>
           <label><input type="checkbox" checked={showReported} onChange={(event) => setShowReported(event.target.checked)} /> 원본값 보기</label>
           <label><input type="checkbox" checked={showReference} onChange={(event) => setShowReference(event.target.checked)} /> 참고값 보기</label>
-          <label><input type="checkbox" checked={showManualDetails} onChange={(event) => setShowManualDetails(event.target.checked)} /> 가구매 비용 상세</label>
+          <label><input type="checkbox" checked={showManualDetails} onChange={(event) => setShowManualDetails(event.target.checked)} /> 가구매 업체수수료 상세</label>
           <label><input type="checkbox" checked={incompleteOnly} onChange={(event) => setIncompleteOnly(event.target.checked)} /> 불완전 상품만</label>
         </div>
         <DataTable
@@ -83,24 +87,24 @@ export default function CoupangProfitPage() {
 function productProfitColumns(groupBy: CoupangGroupBy, showReported: boolean, showReference: boolean, showManualDetails: boolean) {
   const columns: Column<CoupangProductProfitRow>[] = [
     { key: "product", header: groupBy === "group" ? "제품그룹" : "상품", render: (row) => row.productName },
-    { key: "actualSales", header: "매출", render: (row) => money(row.actualSalesKrw) },
-    { key: "actualNet", header: "순매출", render: (row) => money(row.actualNetSalesKrw) },
-    { key: "actualQty", header: "판매수량", render: (row) => numberFmt(row.actualSalesQuantity) },
-    { key: "productCost", header: "상품원가", render: (row) => money(row.productCostKrw) },
-    { key: "salesFee", header: "판매수수료", render: (row) => money(row.salesFeeKrw) },
-    { key: "shipping", header: "배송/그로스", render: (row) => money(row.shippingCostKrw) },
-    { key: "return", header: "반품예상비", render: (row) => money(row.returnCostKrw) },
-    { key: "extra", header: "기타비용", render: (row) => money(row.extraCostKrw) },
-    { key: "vat", header: "정상판매 VAT", render: (row) => money(row.vatKrw) },
+    { key: "actualSales", header: "가구매 조정 후 매출", render: (row) => money(row.actualSalesKrw) },
+    { key: "actualNet", header: "가구매 조정 후 순매출", render: (row) => money(row.actualNetSalesKrw) },
+    { key: "actualQty", header: "가구매 조정 후 판매수량", render: (row) => numberFmt(row.actualSalesQuantity) },
+    { key: "productCost", header: "상품원가(원본 거래 기준)", render: (row) => money(row.productCostKrw) },
+    { key: "salesFee", header: "쿠팡 판매수수료(원본 거래 기준)", render: (row) => money(row.salesFeeKrw) },
+    { key: "shipping", header: "배송/물류비(원본 거래 기준)", render: (row) => money(row.shippingCostKrw) },
+    { key: "return", header: "반품예상비(원본 거래 기준)", render: (row) => money(row.returnCostKrw) },
+    { key: "extra", header: "기타비용(원본 거래 기준)", render: (row) => money(row.extraCostKrw) },
+    { key: "vat", header: "쿠팡 매출 VAT(원본 거래 기준)", render: (row) => money(row.vatKrw) },
     { key: "manualQty", header: "가구매 수량", render: (row) => numberFmt(row.manualPurchaseQuantity) },
-    { key: "manualSales", header: "가구매 매출 조정", render: (row) => money(row.manualPurchaseSalesKrw) },
-    { key: "manualTotal", header: "가구매 비용(업체수수료)", render: (row) => money(row.manualPurchaseTotalCostKrw) },
+    { key: "manualSales", header: "가구매 매출 제외액", render: (row) => money(row.manualPurchaseSalesKrw) },
+    { key: "manualTotal", header: "가구매 업체수수료", render: (row) => money(row.manualPurchaseTotalCostKrw) },
     { key: "adSpend", header: "광고비(집행상품 기준)", render: (row) => money(row.adSpendKrw) },
     { key: "adGeneratedSales", header: "광고 발생 전환매출", render: (row) => money(row.adGeneratedSalesKrw) },
     { key: "roas", header: "ROAS(집행상품 기준)", render: (row) => percent(row.roas) },
     { key: "organic", header: "오가닉 매출(판매상품 기준)", render: (row) => money(row.organicSalesKrw) },
     { key: "totalCost", header: "총비용", render: (row) => money(row.totalCostKrw) },
-    { key: "normalMargin", header: "정상 판매 순이익", render: (row) => money(row.normalMarginKrw) },
+    { key: "normalMargin", header: "업체수수료 차감 전 순이익", render: (row) => money(row.normalMarginKrw) },
     {
       key: "margin",
       header: "최종/부분 순이익(운영 기여)",
@@ -153,7 +157,7 @@ function productProfitColumns(groupBy: CoupangGroupBy, showReported: boolean, sh
       `정상:${row.normalCalculationStatus}`,
       `가구매:${row.manualCalculationStatus}`,
       ...(incompleteChildren.length > 0 ? [`제외 상품: ${incompleteChildren.map((child) => child.productName).join(", ")}`] : []),
-      ...row.warnings
+      ...row.warnings.map(coupangProfitWarningLabel)
     ].join(" | ");
   } });
   return columns;

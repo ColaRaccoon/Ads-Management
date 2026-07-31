@@ -35,6 +35,15 @@ export type CoupangProfitSegmentInput = {
   salesQuantity: number;
 };
 
+export type CoupangProfitByAccountingBasesInput = {
+  recognizedSegments: CoupangProfitSegmentInput[];
+  incurredSegments: CoupangProfitSegmentInput[];
+  cost: CoupangCostInput;
+  ads: CoupangAdInput;
+  salesFeeRate: number;
+  includeReturnCost?: boolean;
+};
+
 export type CoupangAdInput = {
   // Advertisement-performance axis (spendProductId).
   adSpendKrw: number;
@@ -134,7 +143,20 @@ export function calculateCoupangProfitBySegments(input: {
   salesFeeRate: number;
   includeReturnCost?: boolean;
 }): CoupangSegmentProfitResult {
-  const segmentResults = input.segments.map((segment) => ({
+  return calculateCoupangProfitByAccountingBases({
+    recognizedSegments: input.segments,
+    incurredSegments: input.segments,
+    cost: input.cost,
+    ads: input.ads,
+    salesFeeRate: input.salesFeeRate,
+    includeReturnCost: input.includeReturnCost
+  });
+}
+
+export function calculateCoupangProfitByAccountingBases(
+  input: CoupangProfitByAccountingBasesInput
+): CoupangSegmentProfitResult {
+  const incurredSegmentResults = input.incurredSegments.map((segment) => ({
     fulfillmentMethod: segment.fulfillmentMethod,
     calculated: calculateCoupangProfit(
       {
@@ -157,13 +179,13 @@ export function calculateCoupangProfitBySegments(input: {
       }
     )
   }));
-  const netSalesKrw = sum(segmentResults.map((result) => result.calculated.netSalesKrw));
-  const productCostKrw = sum(segmentResults.map((result) => result.calculated.productCostKrw));
-  const salesFeeKrw = sum(segmentResults.map((result) => result.calculated.salesFeeKrw));
-  const sellerSalesQuantity = sum(input.segments
+  const netSalesKrw = sum(input.recognizedSegments.map((segment) => finiteNumber(segment.netSalesKrw)));
+  const productCostKrw = sum(incurredSegmentResults.map((result) => result.calculated.productCostKrw));
+  const salesFeeKrw = sum(incurredSegmentResults.map((result) => result.calculated.salesFeeKrw));
+  const sellerSalesQuantity = sum(input.incurredSegments
     .filter((segment) => segment.fulfillmentMethod === "SELLER")
     .map((segment) => finiteNumber(segment.salesQuantity)));
-  const growthSalesQuantity = sum(input.segments
+  const growthSalesQuantity = sum(input.incurredSegments
     .filter((segment) => segment.fulfillmentMethod === "GROWTH")
     .map((segment) => finiteNumber(segment.salesQuantity)));
   const sellerShippingCostKrw = finiteNumber(input.cost.sellerShippingFeeKrw) * sellerSalesQuantity;
@@ -172,9 +194,9 @@ export function calculateCoupangProfitBySegments(input: {
   const growthShippingCostKrw = finiteNumber(input.cost.growthShippingFeeKrw) * growthSalesQuantity;
   const totalLogisticsCostKrw = sellerShippingCostKrw + hanaroShippingCostKrw + growthInboundCostKrw + growthShippingCostKrw;
   const shippingCostKrw = totalLogisticsCostKrw;
-  const returnCostKrw = sum(segmentResults.map((result) => result.calculated.returnCostKrw));
-  const extraCostKrw = sum(segmentResults.map((result) => result.calculated.extraCostKrw));
-  const vatKrw = sum(segmentResults.map((result) => result.calculated.vatKrw));
+  const returnCostKrw = sum(incurredSegmentResults.map((result) => result.calculated.returnCostKrw));
+  const extraCostKrw = sum(incurredSegmentResults.map((result) => result.calculated.extraCostKrw));
+  const vatKrw = sum(incurredSegmentResults.map((result) => result.calculated.vatKrw));
   const adSpendKrw = finiteNumber(input.ads.adSpendKrw);
   const totalCostKrw = productCostKrw + salesFeeKrw + shippingCostKrw + returnCostKrw + extraCostKrw + vatKrw + adSpendKrw;
   const marginKrw = netSalesKrw - totalCostKrw;

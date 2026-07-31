@@ -184,6 +184,7 @@ export type ProductProfitRow = {
   children?: ProductProfitRow[];
   saleMethod: string | null;
   matchedSalesLineCount: number;
+  // Raw Coupang-reported activity; this is the cost-incurrence basis.
   reportedSalesQuantity: number;
   reportedOrderCount: number;
   reportedSalesKrw: number;
@@ -198,6 +199,7 @@ export type ProductProfitRow = {
   promotionPriceKrw: number | null;
   priceSource: "PROMOTION" | "BASE" | "MISSING" | "CONFLICT" | "MIXED";
   priceWarnings: string[];
+  // These operating costs retain the raw reported activity, including manual-purchase transactions.
   productCostKrw: number | null;
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
@@ -219,6 +221,7 @@ export type ProductProfitRow = {
   manualPurchaseShippingCostKrw: number | null;
   manualPurchaseOtherCostKrw: number | null;
   manualPurchaseTotalCostKrw: number | null;
+  // Revenue recognized after the manual-purchase sales/quantity snapshot is excluded.
   actualSalesKrw: number | null;
   actualNetSalesKrw: number | null;
   actualSalesQuantity: number | null;
@@ -233,6 +236,7 @@ export type ProductProfitRow = {
   organicSalesKrw: number | null;
   reportedOrganicSalesKrw: number;
   actualOrganicSalesKrw: number | null;
+  // Recognized net sales less incurred operating costs, before the manual-purchase vendor fee.
   normalMarginKrw: number | null;
   totalCostKrw: number | null;
   marginKrw: number | null;
@@ -2957,9 +2961,11 @@ export class CoupangService {
             });
         const normal = actual.isValid
           ? normalAttempt
-          : { ...normalReference, calculated: null };
+          : actual.isManualOnly
+            ? normalAttempt
+            : { ...normalReference, calculated: null };
         const initialManualPart = calculateManualPurchaseProfitAdjustment(manual);
-        const manualPart = manual && !actual.isValid
+        const manualPart = manual && !actual.isValid && !actual.isManualOnly
           ? { ...initialManualPart, status: "INCOMPLETE" as const, marginAdjustmentKrw: null }
           : initialManualPart;
         const combined = combineCoupangProfitParts({ normal, manual: manualPart });
@@ -2970,7 +2976,7 @@ export class CoupangService {
         const reportedOrganicSalesKrw =
           reported.netSalesKrw - attribution.attributedSalesKrw;
         const displaySaleMethods = uniqueNonEmpty([...reported.saleMethods, ...(manual?.saleMethods ?? [])]);
-        const requiresNormalCostRule = hasCoupangSalesSegmentActivity(actual.segments);
+        const requiresNormalCostRule = hasCoupangSalesSegmentActivity(reported.segments);
         const dailyComplete = combined.calculationStatus === "COMPLETE";
         return {
           productId,
@@ -2994,8 +3000,8 @@ export class CoupangService {
           productCostKrw: normal.calculated?.productCostKrw ?? null,
           salesFeeKrw: normal.calculated?.salesFeeKrw ?? null,
           shippingCostKrw: normal.calculated?.shippingCostKrw ?? null,
-          sellerSalesQuantity: actual.segments.find((segment) => segment.fulfillmentMethod === "SELLER")?.salesQuantity ?? 0,
-          growthSalesQuantity: actual.segments.find((segment) => segment.fulfillmentMethod === "GROWTH")?.salesQuantity ?? 0,
+          sellerSalesQuantity: reported.segments.find((segment) => segment.fulfillmentMethod === "SELLER")?.salesQuantity ?? 0,
+          growthSalesQuantity: reported.segments.find((segment) => segment.fulfillmentMethod === "GROWTH")?.salesQuantity ?? 0,
           sellerShippingCostKrw: normal.calculated?.sellerShippingCostKrw ?? null,
           hanaroShippingCostKrw: normal.calculated?.hanaroShippingCostKrw ?? null,
           growthInboundCostKrw: normal.calculated?.growthInboundCostKrw ?? null,
@@ -3026,7 +3032,9 @@ export class CoupangService {
           organicSalesKrw: actualOrganicSalesKrw,
           reportedOrganicSalesKrw,
           actualOrganicSalesKrw,
-          normalMarginKrw: normalAttempt.calculated?.marginKrw ?? normalReference.calculated?.marginKrw ?? null,
+          normalMarginKrw: actual.isValid
+            ? normalAttempt.calculated?.marginKrw ?? null
+            : null,
           totalCostKrw: combined.totalCostKrw,
           marginKrw: combined.marginKrw,
           knownTotalCostKrw: dailyComplete ? combined.totalCostKrw ?? 0 : 0,

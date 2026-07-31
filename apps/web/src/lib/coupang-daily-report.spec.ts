@@ -339,6 +339,16 @@ describe("Coupang daily report helpers", () => {
     expect(html).not.toContain("순이익 계산 불완전");
   });
 
+  it("renders the blocking Korean message for a manual purchase without reported sales", () => {
+    const html = renderSingle(product({
+      calculationStatus: "INCOMPLETE",
+      warnings: ["MANUAL_PURCHASE_WITHOUT_REPORTED_SALES"]
+    }));
+
+    expect(html).toContain("가구매에 대응하는 쿠팡 원본 판매자료가 없어 손익을 확정할 수 없습니다");
+    expect(html).not.toContain("MANUAL_PURCHASE_WITHOUT_REPORTED_SALES");
+  });
+
   it("uses a neutral zero tone instead of the blue ROAS tone when ROAS is zero", () => {
     const html = renderSingle(product({ roas: 0 }));
     expect(html).toContain("0.0%");

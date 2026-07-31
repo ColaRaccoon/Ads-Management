@@ -398,6 +398,8 @@ describe("Coupang daily XLSX builder", () => {
     const zeroSaleSingle = exportRow({
       productName: "광고비만 소진된 단일제품",
       reportedSalesQuantity: 0,
+      manualPurchaseQuantity: 0,
+      previousManualPurchaseQuantity: 0,
       adSpendKrw: 50_000,
       visualBlockKey: "product:zero-single",
       visualBlockIndex: 0
@@ -427,6 +429,8 @@ describe("Coupang daily XLSX builder", () => {
       rowKind: "옵션",
       productName: "광고비만 소진된 옵션",
       reportedSalesQuantity: 0,
+      manualPurchaseQuantity: 0,
+      previousManualPurchaseQuantity: 0,
       adSpendKrw: 30_000,
       visualBlockKey: "group:visible",
       visualBlockIndex: 1,
@@ -447,6 +451,8 @@ describe("Coupang daily XLSX builder", () => {
       rowKind: "그룹합계",
       productName: "판매 없는 그룹",
       reportedSalesQuantity: 0,
+      manualPurchaseQuantity: 0,
+      previousManualPurchaseQuantity: 0,
       visualBlockKey: "group:empty",
       visualBlockIndex: 4,
       visualChildProductCount: 1
@@ -455,6 +461,8 @@ describe("Coupang daily XLSX builder", () => {
       rowKind: "옵션",
       productName: "판매 없는 그룹 옵션",
       reportedSalesQuantity: 0,
+      manualPurchaseQuantity: 0,
+      previousManualPurchaseQuantity: 0,
       adSpendKrw: 20_000,
       visualBlockKey: "group:empty",
       visualBlockIndex: 4,
@@ -495,6 +503,81 @@ describe("Coupang daily XLSX builder", () => {
       value: "판매 단일제품",
       fill: "GROUP_BLUE"
     });
+  });
+
+  it("keeps manual-only single products and grouped options in XLSX", () => {
+    const manualOnlySingle = exportRow({
+      productName: "현재 가구매 단일제품",
+      reportedSalesQuantity: 0,
+      previousReportedSalesQuantity: 0,
+      manualPurchaseQuantity: 2,
+      previousManualPurchaseQuantity: 0,
+      marginKrw: null,
+      visualBlockKey: "product:manual-only",
+      visualBlockIndex: 3
+    });
+    const manualOnlyGroup = exportRow({
+      rowKind: "그룹합계",
+      productName: "전일 가구매 그룹",
+      reportedSalesQuantity: 0,
+      previousReportedSalesQuantity: 0,
+      manualPurchaseQuantity: 0,
+      previousManualPurchaseQuantity: 1,
+      marginKrw: null,
+      visualBlockKey: "group:manual-only",
+      visualBlockIndex: 4,
+      visualChildProductCount: 2
+    });
+    const manualOnlyOption = exportRow({
+      rowKind: "옵션",
+      productName: "전일 가구매 옵션",
+      reportedSalesQuantity: 0,
+      previousReportedSalesQuantity: 0,
+      manualPurchaseQuantity: 0,
+      previousManualPurchaseQuantity: 1,
+      marginKrw: null,
+      visualBlockKey: "group:manual-only",
+      visualBlockIndex: 4,
+      indentLevel: 1
+    });
+    const inactiveOption = exportRow({
+      rowKind: "옵션",
+      productName: "활동 없는 옵션",
+      reportedSalesQuantity: 0,
+      previousReportedSalesQuantity: 0,
+      manualPurchaseQuantity: 0,
+      previousManualPurchaseQuantity: 0,
+      visualBlockKey: "group:manual-only",
+      visualBlockIndex: 4,
+      indentLevel: 1
+    });
+    const groupNote = noteRow({
+      productName: "기타사항: 가구매 원본자료 확인 필요",
+      visualBlockKey: "group:manual-only",
+      visualBlockIndex: 4
+    });
+
+    const filtered = filterCoupangDailyXlsxRows([
+      total,
+      manualOnlySingle,
+      manualOnlyGroup,
+      manualOnlyOption,
+      inactiveOption,
+      groupNote
+    ]);
+
+    expect(filtered.map((row) => row.productName)).toEqual([
+      "전체 합계",
+      "현재 가구매 단일제품",
+      "전일 가구매 그룹",
+      "전일 가구매 옵션",
+      "기타사항: 가구매 원본자료 확인 필요"
+    ]);
+    expect(filtered.map((row) => row.visualBlockIndex)).toEqual([
+      null, 0, 1, 1, 1
+    ]);
+    expect(filtered[2]?.visualChildProductCount).toBe(1);
+    expect(buildCoupangDailyXlsxInput(filtered).rows).toHaveLength(6);
   });
 });
 

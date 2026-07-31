@@ -1579,7 +1579,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(inactiveOption?.warnings).toContain("COUPANG_COST_RULE_MISSING");
   });
 
-  it("separates manual-purchase sales before calculating normal costs and charges snapshots once", async () => {
+  it("excludes manual-purchase sales while preserving reported costs and charging the vendor fee once", async () => {
     const date = new Date("2026-07-21T00:00:00.000Z");
     const product = { id: "product-1", displayName: "테스트 상품" };
     const prisma = {
@@ -1607,7 +1607,13 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       coupangPromotionPrice: { findMany: vi.fn(async () => []) }
     };
     const service = new CoupangService(prisma as never);
-    const rows = await (service as any).buildProductProfitRows({ from: "2026-07-21", to: "2026-07-21", fromDate: date, toDate: date });
+    const range = { from: "2026-07-21", to: "2026-07-21", fromDate: date, toDate: date };
+    const rows = await (service as any).buildProductProfitRows(range);
+    const baselineService = new CoupangService({
+      ...prisma,
+      coupangManualPurchase: { findMany: vi.fn(async () => []) }
+    } as never);
+    const baselineRows = await (baselineService as any).buildProductProfitRows(range);
 
     expect(rows[0]).toMatchObject({
       reportedNetSalesKrw: 1_000_000,
@@ -1615,19 +1621,134 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       manualPurchaseProductCostKrw: 0,
       actualNetSalesKrw: 900_000,
       actualSalesQuantity: 90,
-      productCostKrw: 270_000,
-      salesFeeKrw: 90_000,
-      shippingCostKrw: 180_000,
+      productCostKrw: 300_000,
+      salesFeeKrw: 100_000,
+      shippingCostKrw: 200_000,
+      sellerSalesQuantity: 100,
       calculationStatus: "COMPLETE"
     });
-    expect(rows[0].vatKrw).toBeCloseTo(900_000 / 11);
+    expect(rows[0].vatKrw).toBeCloseTo(1_000_000 / 11);
     expect(rows[0].manualPurchaseTotalCostKrw).toBe(5_000);
     expect(rows[0]).not.toHaveProperty("manualPurchaseVatKrw");
-    expect(rows[0].marginKrw).toBeCloseTo(900_000 - 270_000 - 90_000 - 180_000 - 900_000 / 11 - 5_000);
-    expect(Math.round(rows[0].marginKrw)).toBe(273_182);
+    expect(rows[0].normalMarginKrw)
+      .toBeCloseTo(900_000 - 300_000 - 100_000 - 200_000 - 1_000_000 / 11);
+    expect(rows[0].marginKrw)
+      .toBeCloseTo(900_000 - 300_000 - 100_000 - 200_000 - 1_000_000 / 11 - 5_000);
+    expect(Math.round(rows[0].marginKrw)).toBe(204_091);
+    expect(baselineRows[0].marginKrw - rows[0].marginKrw)
+      .toBeCloseTo(100_000 + 5_000);
+    expect(summarizeCoupangProductProfitRows(rows)).toMatchObject({
+      reportedNetSalesKrw: 1_000_000,
+      actualNetSalesKrw: 900_000,
+      manualPurchaseSalesKrw: 100_000,
+      productCostKrw: 300_000,
+      salesFeeKrw: 100_000,
+      shippingCostKrw: 200_000,
+      manualPurchaseTotalCostKrw: 5_000,
+      marginKrw: rows[0].marginKrw
+    });
+    expect(aggregateCoupangProductProfitRowsByGroup(rows, [{
+      id: product.id,
+      groupId: "group-1",
+      group: { id: "group-1", displayName: "테스트 그룹" }
+    }])[0]).toMatchObject({
+      rowType: "GROUP",
+      reportedNetSalesKrw: 1_000_000,
+      actualNetSalesKrw: 900_000,
+      manualPurchaseSalesKrw: 100_000,
+      productCostKrw: 300_000,
+      salesFeeKrw: 100_000,
+      shippingCostKrw: 200_000,
+      manualPurchaseTotalCostKrw: 5_000,
+      marginKrw: rows[0].marginKrw
+    });
   });
 
-  it("keeps net sales numeric with no manual rows or legacy rows and calculates manual-only costs", async () => {
+  it("validates cost rules and logistics from reported activity when recognized sales are zero", async () => {
+    const date = new Date("2026-07-21T00:00:00.000Z");
+    const product = { id: "product-1", displayName: "전량 가구매 상품" };
+    const basePrisma = {
+      ...globalSalesFeeRulePrisma(),
+      coupangSaleLine: { findMany: vi.fn(async () => [{
+        saleDate: date,
+        coupangProductId: product.id,
+        product,
+        productName: product.displayName,
+        salesKrw: new Prisma.Decimal(25_000),
+        cancelAmountKrw: new Prisma.Decimal(0),
+        netSalesKrw: new Prisma.Decimal(25_000),
+        salesQuantity: new Prisma.Decimal(1),
+        orderCount: 1,
+        saleMethod: "판매자배송"
+      }]) },
+      coupangAdMetric: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: vi.fn(async () => [{
+        purchaseDate: date,
+        coupangProductId: product.id,
+        product,
+        quantity: 1,
+        salesAmountKrw: new Prisma.Decimal(25_000),
+        productCostKrw: new Prisma.Decimal(0),
+        vendorFeeTotalKrw: new Prisma.Decimal(3_182),
+        coupangSalesFeeKrw: new Prisma.Decimal(0),
+        shippingCostKrw: new Prisma.Decimal(0),
+        otherCostKrw: new Prisma.Decimal(0),
+        totalCostKrw: new Prisma.Decimal(3_182),
+        saleMethod: "판매자배송"
+      }]) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    };
+    const range = { from: "2026-07-21", to: "2026-07-21", fromDate: date, toDate: date };
+    const missingRuleRows = await (new CoupangService({
+      ...basePrisma,
+      coupangCostRule: { findMany: vi.fn(async () => []) }
+    } as never) as any).buildProductProfitRows(range);
+
+    expect(missingRuleRows[0]).toMatchObject({
+      actualNetSalesKrw: 0,
+      actualSalesQuantity: 0,
+      normalCalculationStatus: "INCOMPLETE",
+      calculationStatus: "INCOMPLETE",
+      ruleStatus: "MISSING_COST_RULE",
+      marginKrw: null
+    });
+    expect(missingRuleRows[0].warnings).toContain("NORMAL_COST_RULE_MISSING");
+
+    const missingShippingRows = await (new CoupangService({
+      ...basePrisma,
+      coupangCostRule: { findMany: vi.fn(async () => [{
+        coupangProductId: product.id,
+        salePriceKrw: new Prisma.Decimal(25_000),
+        supplyPriceKrw: new Prisma.Decimal(0),
+        productCostKrw: new Prisma.Decimal(10_000),
+        salesFeeRate: new Prisma.Decimal(0.1),
+        salesFeeKrw: new Prisma.Decimal(0),
+        sellerShippingFeeKrw: null,
+        hanaroShippingFeeKrw: new Prisma.Decimal(0),
+        growthInboundFeeKrw: new Prisma.Decimal(0),
+        growthShippingFeeKrw: new Prisma.Decimal(0),
+        returnRate: new Prisma.Decimal(0),
+        returnCostPerUnitKrw: new Prisma.Decimal(0),
+        extraCostKrw: new Prisma.Decimal(0),
+        effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+        effectiveTo: null,
+        createdAt: new Date("2026-01-01T00:00:00.000Z")
+      }]) }
+    } as never) as any).buildProductProfitRows(range);
+
+    expect(missingShippingRows[0]).toMatchObject({
+      actualNetSalesKrw: 0,
+      actualSalesQuantity: 0,
+      normalCalculationStatus: "INCOMPLETE",
+      calculationStatus: "INCOMPLETE",
+      sellerSalesQuantity: 1,
+      marginKrw: null
+    });
+    expect(missingShippingRows[0].warnings).toContain("SELLER_SHIPPING_FEE_MISSING");
+  });
+
+  it("keeps net sales numeric with no manual rows or legacy rows and blocks manual-only profit", async () => {
     const date = new Date("2026-07-21T00:00:00.000Z");
     const product = { id: "product-1", displayName: "테스트 상품" };
     const basePrisma = {
@@ -1705,14 +1826,16 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       }]) }
     } as never);
     const manualOnlyRows = await (manualOnlyService as any).buildProductProfitRows(range);
-    expect(manualOnlyRows[0].calculationStatus).toBe("COMPLETE");
-    expect(manualOnlyRows[0].normalCalculationStatus).toBe("NOT_APPLICABLE");
+    expect(manualOnlyRows[0].calculationStatus).toBe("INCOMPLETE");
+    expect(manualOnlyRows[0].normalCalculationStatus).toBe("INCOMPLETE");
     expect(manualOnlyRows[0].manualCalculationStatus).toBe("COMPLETE");
     expect(manualOnlyRows[0].warnings).toContain("MANUAL_PURCHASE_WITHOUT_REPORTED_SALES");
     expect(manualOnlyRows[0].actualNetSalesKrw).toBe(0);
     expect(manualOnlyRows[0].manualPurchaseProductCostKrw).toBe(0);
-    expect(manualOnlyRows[0].totalCostKrw).toBe(600);
-    expect(manualOnlyRows[0].marginKrw).toBe(-600);
+    expect(manualOnlyRows[0].manualPurchaseVendorFeeKrw).toBe(100);
+    expect(manualOnlyRows[0].normalMarginKrw).toBeNull();
+    expect(manualOnlyRows[0].totalCostKrw).toBeNull();
+    expect(manualOnlyRows[0].marginKrw).toBeNull();
   });
 
   it("keeps normal calculations on actual sales when only manual cost snapshots are incomplete", async () => {
@@ -1783,14 +1906,14 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       actualSalesKrw: 75_000,
       actualNetSalesKrw: 75_000,
       actualSalesQuantity: 3,
-      productCostKrw: 30_000,
+      productCostKrw: 40_000,
       normalCalculationStatus: "COMPLETE",
       manualCalculationStatus: "INCOMPLETE",
       calculationStatus: "INCOMPLETE",
       totalCostKrw: null,
       marginKrw: null
     });
-    expect(saleRows[0].normalMarginKrw).toBeCloseTo(75_000 - 30_000 - 7_500 - 75_000 / 11);
+    expect(saleRows[0].normalMarginKrw).toBeCloseTo(75_000 - 40_000 - 10_000 - 100_000 / 11);
     expect(saleRows[0].warnings).toContain("MANUAL_PURCHASE_COST_SNAPSHOT_INCOMPLETE");
 
     const manualOnly = new CoupangService({
@@ -1802,10 +1925,10 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(manualOnlyRows[0]).toMatchObject({
       actualNetSalesKrw: 0,
       actualSalesQuantity: 0,
-      normalCalculationStatus: "NOT_APPLICABLE",
+      normalCalculationStatus: "INCOMPLETE",
       manualCalculationStatus: "INCOMPLETE",
       calculationStatus: "INCOMPLETE",
-      normalMarginKrw: 0,
+      normalMarginKrw: null,
       totalCostKrw: null,
       marginKrw: null
     });
@@ -1894,6 +2017,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       actualSalesQuantity: 1,
       excludedNetSalesKrw: 300_000,
       excludedSalesQuantity: 6,
+      normalMarginKrw: null,
       calculationStatus: "INCOMPLETE"
     });
     expect(quantityRow?.warnings).toContain("MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED");
@@ -1902,6 +2026,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       actualSalesQuantity: 5,
       excludedNetSalesKrw: 300_000,
       excludedSalesQuantity: 6,
+      normalMarginKrw: null,
       calculationStatus: "INCOMPLETE"
     });
     expect(salesRow?.warnings).toContain("MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED");
@@ -1951,7 +2076,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     expect(rows[0].marginKrw).toBeCloseTo(20_000 - 4_000 - 2_000 - 20_000 / 11);
   });
 
-  it("isolates a missing legacy manual sales snapshot to the manual area and keeps a normal reference margin", async () => {
+  it("isolates a missing legacy manual sales snapshot without publishing a reference margin as recognized profit", async () => {
     const date = new Date("2026-07-15T00:00:00.000Z");
     const product = { id: "product-1", displayName: "레거시 가구매 상품" };
     const service = new CoupangService({
@@ -1990,7 +2115,7 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
       productCostKrw: null,
       marginKrw: null
     });
-    expect(rows[0].normalMarginKrw).toBeCloseTo(10_000 - 3_000 - 1_000 - 10_000 / 11);
+    expect(rows[0].normalMarginKrw).toBeNull();
     expect(rows[0].warnings).toContain("MANUAL_PURCHASE_SALES_AMOUNT_MISSING");
   });
 

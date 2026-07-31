@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatCoupangIncompleteReasons, hasCoupangLogisticsMissingWarning } from "./coupang-profit-warning";
+import {
+  coupangProfitWarningLabel,
+  formatCoupangIncompleteReasons,
+  hasCoupangLogisticsMissingWarning
+} from "./coupang-profit-warning";
 
 describe("Coupang incomplete profit warning summary", () => {
   it("deduplicates reason codes and includes representative product names", () => {
@@ -39,5 +43,19 @@ describe("Coupang incomplete profit warning summary", () => {
   it("identifies rows that need a product-settings logistics fix", () => {
     expect(hasCoupangLogisticsMissingWarning(["SELLER_SHIPPING_FEE_MISSING"])).toBe(true);
     expect(hasCoupangLogisticsMissingWarning(["NORMAL_COST_RULE_MISSING"])).toBe(false);
+  });
+
+  it("shows the blocking message when a manual purchase has no reported sales row", () => {
+    expect(coupangProfitWarningLabel("MANUAL_PURCHASE_WITHOUT_REPORTED_SALES")).toBe(
+      "가구매에 대응하는 쿠팡 원본 판매자료가 없어 손익을 확정할 수 없습니다"
+    );
+    expect(formatCoupangIncompleteReasons([{
+      productName: "가구매 옵션",
+      calculationStatus: "INCOMPLETE",
+      warnings: ["MANUAL_PURCHASE_WITHOUT_REPORTED_SALES"],
+      ruleStatus: "OK"
+    }])).toBe(
+      "주요 원인: 가구매에 대응하는 쿠팡 원본 판매자료가 없어 손익을 확정할 수 없습니다 (가구매 옵션)"
+    );
   });
 });

@@ -324,7 +324,7 @@ export default function CoupangUploadsPage() {
         <div className="manual-purchase-summary">
           <SummaryMetric label="선택 상품" value={`${manualSummary.selectedOptionCount.toLocaleString("ko-KR")}개`} />
           <SummaryMetric label="총 가구매 수량" value={`${manualSummary.totalQuantity.toLocaleString("ko-KR")}개`} />
-          <SummaryMetric label="예상 가구매 매출 조정" value={money(manualSummary.expectedSalesAmountKrw)} />
+          <SummaryMetric label="예상 가구매 매출 제외액" value={money(manualSummary.expectedSalesAmountKrw)} />
           <SummaryMetric label="예상 업체수수료" value={money(manualSummary.expectedVendorFeeKrw)} />
         </div>
 
@@ -335,8 +335,8 @@ export default function CoupangUploadsPage() {
         ) : null}
 
         <div className="warning-strip manual-purchase-notice">
-          <span>가구매 매출은 해당 날짜 상품의 프로모션 없는 기본판매가 × 수량으로 원본 실적에서 차감합니다.</span>
-          <span>가구매 비용은 실제 업체수수료만 최종 순이익에서 차감합니다. 상품원가·쿠팡수수료·배송비·기타 부가 비용은 추가 차감하지 않습니다.</span>
+          <span>가구매 매출은 해당 날짜 상품의 프로모션 없는 기본판매가 × 수량으로 계산하여 회사 매출에서 전액 제외합니다.</span>
+          <span>가구매 거래에서 발생한 상품원가·쿠팡 판매수수료·배송/물류비·VAT 등은 원본 거래 기준 비용으로 그대로 유지합니다. 가구매 업체수수료는 최종 순이익에서 별도로 추가 차감합니다.</span>
         </div>
 
         {manualOptions.isError ? <p className="muted">{manualOptions.error.message}</p> : null}

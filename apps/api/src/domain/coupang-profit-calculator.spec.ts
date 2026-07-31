@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateCoupangManualPurchaseCost,
   calculateCoupangProfit,
+  calculateCoupangProfitByAccountingBases,
   calculateCoupangProfitBySegments,
   normalizeCoupangFulfillmentMethod,
   parseExplicitCoupangFulfillmentMethod
@@ -294,6 +295,187 @@ describe("calculateCoupangProfitBySegments", () => {
     });
 
     expect(segmented).toMatchObject(legacy);
+  });
+});
+
+describe("calculateCoupangProfitByAccountingBases", () => {
+  it("uses recognized sales for revenue and incurred sales for every operating cost", () => {
+    const result = calculateCoupangProfitByAccountingBases({
+      recognizedSegments: [
+        { fulfillmentMethod: "SELLER", netSalesKrw: 75_000, salesQuantity: 3 }
+      ],
+      incurredSegments: [
+        { fulfillmentMethod: "SELLER", netSalesKrw: 100_000, salesQuantity: 4 }
+      ],
+      cost: {
+        productCostKrw: 10_000,
+        sellerShippingFeeKrw: 1_000,
+        returnRate: 0.25,
+        returnCostPerUnitKrw: 2_000,
+        extraCostKrw: 500
+      },
+      ads: {
+        adSpendKrw: 5_000,
+        adGeneratedSalesKrw: 30_000,
+        attributedConversionSalesKrw: 20_000
+      },
+      salesFeeRate: 0.1,
+      includeReturnCost: true
+    });
+
+    expect(result).toMatchObject({
+      netSalesKrw: 75_000,
+      productCostKrw: 40_000,
+      salesFeeKrw: 10_000,
+      shippingCostKrw: 4_000,
+      returnCostKrw: 2_000,
+      extraCostKrw: 2_000,
+      adSpendKrw: 5_000,
+      organicSalesKrw: 55_000,
+      sellerSalesQuantity: 4,
+      growthSalesQuantity: 0,
+      roas: 6,
+      warnings: []
+    });
+    expect(result.vatKrw).toBeCloseTo(100_000 / 11);
+    expect(result.totalCostKrw).toBeCloseTo(63_000 + 100_000 / 11);
+    expect(result.marginKrw).toBeCloseTo(12_000 - 100_000 / 11);
+    expect(result.marginRate).toBeCloseTo(result.marginKrw / 75_000);
+  });
+
+  it("preserves the legacy result when there is no manual purchase and both bases match", () => {
+    const segments = [
+      { fulfillmentMethod: "SELLER" as const, netSalesKrw: 60_000, salesQuantity: 3 },
+      { fulfillmentMethod: "GROWTH" as const, netSalesKrw: 40_000, salesQuantity: 2 }
+    ];
+    const cost = {
+      productCostKrw: 1_000,
+      sellerShippingFeeKrw: 2_500,
+      hanaroShippingFeeKrw: 300,
+      growthInboundFeeKrw: 700,
+      growthShippingFeeKrw: 1_300,
+      returnRate: 0.1,
+      returnCostPerUnitKrw: 500,
+      extraCostKrw: 100
+    };
+    const ads = {
+      adSpendKrw: 4_000,
+      adGeneratedSalesKrw: 25_000,
+      attributedConversionSalesKrw: 25_000
+    };
+    const legacy = calculateCoupangProfitBySegments({
+      segments,
+      cost,
+      ads,
+      salesFeeRate: 0.1,
+      includeReturnCost: true
+    });
+    const accountingBases = calculateCoupangProfitByAccountingBases({
+      recognizedSegments: segments,
+      incurredSegments: segments,
+      cost,
+      ads,
+      salesFeeRate: 0.1,
+      includeReturnCost: true
+    });
+
+    expect(accountingBases).toEqual(legacy);
+  });
+
+  it("keeps seller and growth logistics on the original incurred fulfillment mix", () => {
+    const result = calculateCoupangProfitByAccountingBases({
+      recognizedSegments: [
+        { fulfillmentMethod: "SELLER", netSalesKrw: 20_000, salesQuantity: 1 },
+        { fulfillmentMethod: "GROWTH", netSalesKrw: 40_000, salesQuantity: 2 }
+      ],
+      incurredSegments: [
+        { fulfillmentMethod: "SELLER", netSalesKrw: 60_000, salesQuantity: 3 },
+        { fulfillmentMethod: "GROWTH", netSalesKrw: 40_000, salesQuantity: 2 }
+      ],
+      cost: {
+        productCostKrw: 1_000,
+        sellerShippingFeeKrw: 2_500,
+        hanaroShippingFeeKrw: 300,
+        growthInboundFeeKrw: 700,
+        growthShippingFeeKrw: 1_300,
+        returnRate: 0.1,
+        returnCostPerUnitKrw: 500,
+        extraCostKrw: 100
+      },
+      ads: {
+        adSpendKrw: 10_000,
+        adGeneratedSalesKrw: 120_000,
+        attributedConversionSalesKrw: 120_000
+      },
+      salesFeeRate: 0.1,
+      includeReturnCost: true
+    });
+
+    expect(result).toMatchObject({
+      netSalesKrw: 60_000,
+      productCostKrw: 5_000,
+      salesFeeKrw: 10_000,
+      sellerSalesQuantity: 3,
+      growthSalesQuantity: 2,
+      sellerShippingCostKrw: 7_500,
+      hanaroShippingCostKrw: 600,
+      growthInboundCostKrw: 1_400,
+      growthShippingCostKrw: 2_600,
+      totalLogisticsCostKrw: 12_100,
+      shippingCostKrw: 12_100,
+      extraCostKrw: 500,
+      adSpendKrw: 10_000,
+      organicSalesKrw: -60_000,
+      warnings: ["AD_CONVERSION_EXCEEDS_NET_SALES"]
+    });
+    expect(result.returnCostKrw).toBeCloseTo(250);
+    expect(result.vatKrw).toBeCloseTo(100_000 / 11);
+    expect(result.totalCostKrw).toBeCloseTo(37_850 + 100_000 / 11);
+    expect(result.marginKrw).toBeCloseTo(22_150 - 100_000 / 11);
+  });
+
+  it("retains all incurred costs when recognized sales and quantity are zero", () => {
+    const result = calculateCoupangProfitByAccountingBases({
+      recognizedSegments: [
+        { fulfillmentMethod: "GROWTH", netSalesKrw: 0, salesQuantity: 0 }
+      ],
+      incurredSegments: [
+        { fulfillmentMethod: "GROWTH", netSalesKrw: 30_000, salesQuantity: 1 }
+      ],
+      cost: {
+        productCostKrw: 10_000,
+        hanaroShippingFeeKrw: 500,
+        growthInboundFeeKrw: 700,
+        growthShippingFeeKrw: 1_000,
+        returnRate: 0.1,
+        returnCostPerUnitKrw: 2_000,
+        extraCostKrw: 300
+      },
+      ads: {
+        adSpendKrw: 2_000,
+        adGeneratedSalesKrw: 0,
+        attributedConversionSalesKrw: 10_000
+      },
+      salesFeeRate: 0.1,
+      includeReturnCost: true
+    });
+
+    expect(result).toMatchObject({
+      netSalesKrw: 0,
+      productCostKrw: 10_000,
+      salesFeeKrw: 3_000,
+      shippingCostKrw: 2_200,
+      returnCostKrw: 200,
+      extraCostKrw: 300,
+      adSpendKrw: 2_000,
+      growthSalesQuantity: 1,
+      organicSalesKrw: -10_000,
+      marginRate: null,
+      warnings: ["AD_CONVERSION_EXCEEDS_NET_SALES"]
+    });
+    expect(result.vatKrw).toBeCloseTo(30_000 / 11);
+    expect(result.totalCostKrw).toBeCloseTo(17_700 + 30_000 / 11);
+    expect(result.marginKrw).toBeCloseTo(-(17_700 + 30_000 / 11));
   });
 });
 

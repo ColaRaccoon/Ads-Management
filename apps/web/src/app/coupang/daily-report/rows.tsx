@@ -8,6 +8,7 @@ import {
   formatDailyRatio,
   type DailyNote
 } from "../../../lib/coupang-daily-report";
+import { coupangProfitWarningLabel } from "../../../lib/coupang-profit-warning";
 import type {
   CoupangDailyGroupRow,
   CoupangDailyProductRow,
@@ -206,7 +207,7 @@ function formatRowWarning(warning: string) {
   if (warning === "AD_CONVERSION_EXCEEDS_NET_SALES") {
     return "판매상품 귀속 전환매출이 실제 순매출을 초과합니다. (AD_CONVERSION_EXCEEDS_NET_SALES)";
   }
-  return warning;
+  return coupangProfitWarningLabel(warning);
 }
 
 function incompleteClass(row: CoupangDailyReportRow) {

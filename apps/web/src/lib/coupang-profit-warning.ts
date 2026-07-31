@@ -48,6 +48,7 @@ export function coupangProfitWarningLabel(reason: string) {
     SELLER_SHIPPING_FEE_MISSING: "판매자 배송비가 설정되지 않았습니다",
     HANARO_SHIPPING_FEE_MISSING: "하나로 배송비가 설정되지 않았습니다",
     GROWTH_INBOUND_FEE_MISSING: "그로스 입출고비가 설정되지 않았습니다",
-    GROWTH_SHIPPING_FEE_MISSING: "그로스 배송비가 설정되지 않았습니다"
+    GROWTH_SHIPPING_FEE_MISSING: "그로스 배송비가 설정되지 않았습니다",
+    MANUAL_PURCHASE_WITHOUT_REPORTED_SALES: "가구매에 대응하는 쿠팡 원본 판매자료가 없어 손익을 확정할 수 없습니다"
   } as Record<string, string>)[reason] ?? reason;
 }

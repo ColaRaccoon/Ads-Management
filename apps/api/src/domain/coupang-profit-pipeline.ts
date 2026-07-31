@@ -1,5 +1,5 @@
 import {
-  calculateCoupangProfitBySegments,
+  calculateCoupangProfitByAccountingBases,
   normalizeCoupangFulfillmentMethod,
   type CoupangAdInput,
   type CoupangCostInput,
@@ -362,13 +362,15 @@ export function calculateNormalCoupangProfit(input: {
     return { status: "INCOMPLETE", calculated: null, warnings };
   }
 
-  const hasNormalActivity = hasCoupangSalesSegmentActivity(input.actual.segments);
+  const incurredSegments = resolvedReportedSegments(input.reported);
+  const hasIncurredActivity = hasCoupangSalesSegmentActivity(incurredSegments);
   if (input.salesFeeRate === null && !input.actual.isManualOnly) {
     return { status: "INCOMPLETE", calculated: null, warnings: ["COUPANG_GLOBAL_SALES_FEE_RATE_MISSING"] };
   }
-  if (!hasNormalActivity) {
-    const calculated = calculateCoupangProfitBySegments({
-      segments: input.actual.segments,
+  if (!hasIncurredActivity) {
+    const calculated = calculateCoupangProfitByAccountingBases({
+      recognizedSegments: input.actual.segments,
+      incurredSegments,
       cost: emptyCostInput(),
       ads: input.ads,
       salesFeeRate: input.salesFeeRate ?? 0,
@@ -382,12 +384,13 @@ export function calculateNormalCoupangProfit(input: {
   if (!input.cost) {
     return { status: "INCOMPLETE", calculated: null, warnings: ["NORMAL_COST_RULE_MISSING"] };
   }
-  const missingLogisticsWarnings = missingCoupangLogisticsCostWarnings(input.actual.segments, input.cost);
+  const missingLogisticsWarnings = missingCoupangLogisticsCostWarnings(incurredSegments, input.cost);
   if (missingLogisticsWarnings.length > 0) {
     return { status: "INCOMPLETE", calculated: null, warnings: missingLogisticsWarnings };
   }
-  const calculated = calculateCoupangProfitBySegments({
-    segments: input.actual.segments,
+  const calculated = calculateCoupangProfitByAccountingBases({
+    recognizedSegments: input.actual.segments,
+    incurredSegments,
     cost: input.cost,
     ads: input.ads,
     salesFeeRate: input.salesFeeRate,
@@ -459,7 +462,8 @@ function hasBlockingManualSalesWarning(warnings: string[]) {
     "MANUAL_PURCHASE_SALES_AMOUNT_MISSING",
     "MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED",
     "MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED",
-    "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE"
+    "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE",
+    "MANUAL_PURCHASE_WITHOUT_REPORTED_SALES"
   ].includes(warning));
 }
 

@@ -232,13 +232,13 @@ function filterSalesActiveBlock(blockRows: CoupangDailyExportRow[]) {
   const groupTotal = blockRows.find((row) => row.rowKind === "그룹합계");
   if (groupTotal) {
     const visibleOptions = blockRows.filter(
-      (row) => row.rowKind === "옵션" && hasReportedSales(row)
+      (row) => row.rowKind === "옵션" && hasReportableSalesActivity(row)
     );
-    if (!hasReportedSales(groupTotal) && visibleOptions.length === 0) {
+    if (!hasReportableSalesActivity(groupTotal) && visibleOptions.length === 0) {
       return [];
     }
     return blockRows
-      .filter((row) => row.rowKind !== "옵션" || hasReportedSales(row))
+      .filter((row) => row.rowKind !== "옵션" || hasReportableSalesActivity(row))
       .map((row) => row === groupTotal
         ? { ...row, visualChildProductCount: visibleOptions.length }
         : row);
@@ -246,20 +246,26 @@ function filterSalesActiveBlock(blockRows: CoupangDailyExportRow[]) {
 
   const singleProduct = blockRows.find((row) => row.rowKind === "단일제품");
   if (singleProduct) {
-    return hasReportedSales(singleProduct) ? blockRows : [];
+    return hasReportableSalesActivity(singleProduct) ? blockRows : [];
   }
 
   const visibleProducts = blockRows.filter(
-    (row) => row.rowKind === "옵션" && hasReportedSales(row)
+    (row) => row.rowKind === "옵션" && hasReportableSalesActivity(row)
   );
   return visibleProducts.length > 0
-    ? blockRows.filter((row) => row.rowKind !== "옵션" || hasReportedSales(row))
+    ? blockRows.filter((row) => row.rowKind !== "옵션" || hasReportableSalesActivity(row))
     : [];
 }
 
-function hasReportedSales(row: CoupangDailyExportRow) {
-  const quantity = finiteExportNumber(row.reportedSalesQuantity);
-  return quantity !== null && quantity !== 0;
+function hasReportableSalesActivity(row: CoupangDailyExportRow) {
+  return [
+    row.reportedSalesQuantity,
+    row.manualPurchaseQuantity,
+    row.previousManualPurchaseQuantity
+  ].some((value) => {
+    const quantity = finiteExportNumber(value);
+    return quantity !== null && quantity !== 0;
+  });
 }
 
 function toXlsxCell(
