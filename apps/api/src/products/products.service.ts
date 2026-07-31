@@ -61,6 +61,7 @@ export class ProductsService {
       const updated = await this.prisma.$transaction(async (tx) => {
         await tx.productMatchRule.updateMany({ where: { productId: id }, data: { isActive: false } });
         await tx.cafe24ProductRule.updateMany({ where: { productId: id }, data: { isActive: false } });
+        await tx.cafe24CouponRule.updateMany({ where: { productId: id }, data: { isActive: false } });
         await tx.cafe24ProductRule.updateMany({ where: { adCostSourceProductId: id }, data: { adCostSourceProductId: null } });
         await tx.metaAdset.updateMany({ where: { currentProductId: id }, data: { currentProductId: null } });
         return tx.product.update({
@@ -79,6 +80,7 @@ export class ProductsService {
     const deleted = await this.prisma.$transaction(async (tx) => {
       await tx.productMatchRule.deleteMany({ where: { productId: id } });
       await tx.cafe24ProductRule.deleteMany({ where: { productId: id } });
+      await tx.cafe24CouponRule.deleteMany({ where: { productId: id } });
       await tx.cafe24ProductRule.updateMany({ where: { adCostSourceProductId: id }, data: { adCostSourceProductId: null } });
       await tx.productCpaRule.deleteMany({ where: { productId: id } });
       await tx.productCostRule.deleteMany({ where: { productId: id } });
@@ -98,24 +100,31 @@ export class ProductsService {
         displayName: String(body.displayName ?? name),
         sku: optionalString(body.sku),
         sortOrder: numberOrDefault(body.sortOrder, 100),
-        isActive: body.isActive === undefined ? true : Boolean(body.isActive)
+        isActive: booleanValue(body.isActive, true)
       }
     });
   }
 
   async updateProduct(id: string, body: Record<string, unknown>) {
     await this.assertProduct(id);
-    return this.prisma.product.update({
-      where: { id },
-      data: {
-        code: optionalString(body.code),
-        name: optionalString(body.name),
-        displayName: optionalString(body.displayName),
-        sku: body.sku === null ? null : optionalString(body.sku),
-        sortOrder: body.sortOrder === undefined ? undefined : numberOrDefault(body.sortOrder, 100),
-        isActive: body.isActive === undefined ? undefined : Boolean(body.isActive)
-      }
-    });
+    const data = {
+      code: optionalString(body.code),
+      name: optionalString(body.name),
+      displayName: optionalString(body.displayName),
+      sku: body.sku === null ? null : optionalString(body.sku),
+      sortOrder: body.sortOrder === undefined ? undefined : numberOrDefault(body.sortOrder, 100),
+      isActive: body.isActive === undefined ? undefined : booleanValue(body.isActive, true)
+    };
+    if (data.isActive === false) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.cafe24CouponRule.updateMany({
+          where: { productId: id },
+          data: { isActive: false }
+        });
+        return tx.product.update({ where: { id }, data });
+      });
+    }
+    return this.prisma.product.update({ where: { id }, data });
   }
 
   listCostRules(productId?: string) {
@@ -228,6 +237,19 @@ function optionalString(value: unknown): string | undefined {
 function numberOrDefault(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function booleanValue(value: unknown, fallback: boolean): boolean {
+  if (value === undefined) {
+    return fallback;
+  }
+  if (typeof value !== "boolean") {
+    throw new BadRequestException({
+      code: "INVALID_BOOLEAN",
+      message: "isActive must be a boolean."
+    });
+  }
+  return value;
 }
 
 function decimal(value: unknown, field: string): Prisma.Decimal {

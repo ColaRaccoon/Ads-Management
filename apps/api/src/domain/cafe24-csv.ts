@@ -3,9 +3,10 @@ import { createHash } from "node:crypto";
 import { decode } from "iconv-lite";
 import { formatDateOnly, ParseIssue, toDateOnly } from "./date-number";
 
-export const CAFE24_ORDER_SCHEMA_VERSION = 1;
+export const CAFE24_ORDER_SCHEMA_VERSION = 2;
 
 export const CAFE24_ORDER_COLUMN_ALIASES = {
+  totalOrderKrw: ["총 주문금액", "총주문금액", "총 주문 금액"],
   orderNo: ["주문번호", "주문 번호"],
   lineOrderNo: ["품목별 주문번호", "품목별주문번호", "품목 주문번호"],
   totalPaidKrw: ["총 결제금액", "총결제금액", "총 결제 금액"],
@@ -18,9 +19,26 @@ export const CAFE24_ORDER_COLUMN_ALIASES = {
   orderedAt: ["발주일", "발주일시", "주문일시", "주문일"]
 } as const;
 
-export const CAFE24_ORDER_REQUIRED_COLUMNS = Object.values(CAFE24_ORDER_COLUMN_ALIASES).map((aliases) => aliases[0]);
-
 export type Cafe24OrderColumnKey = keyof typeof CAFE24_ORDER_COLUMN_ALIASES;
+
+export const CAFE24_ORDER_REQUIRED_KEYS = [
+  "orderNo",
+  "lineOrderNo",
+  "totalPaidKrw",
+  "productNo",
+  "productName",
+  "optionName",
+  "quantity",
+  "salePriceKrw",
+  "paymentMethod",
+  "orderedAt"
+] as const satisfies readonly Cafe24OrderColumnKey[];
+
+export const CAFE24_ORDER_REQUIRED_COLUMNS = CAFE24_ORDER_REQUIRED_KEYS.map(
+  (key) => CAFE24_ORDER_COLUMN_ALIASES[key][0]
+);
+
+export const CAFE24_ORDER_OPTIONAL_COLUMNS = [CAFE24_ORDER_COLUMN_ALIASES.totalOrderKrw[0]] as const;
 
 export type ParsedCafe24OrderRow = {
   orderNo: string;
@@ -30,6 +48,7 @@ export type ParsedCafe24OrderRow = {
   optionName: string;
   quantity: number;
   salePriceKrw: number;
+  totalOrderKrw: number | null;
   totalPaidKrw: number;
   paymentMethod: string | null;
   orderedAt: Date | null;
@@ -38,7 +57,7 @@ export type ParsedCafe24OrderRow = {
 
 export class Cafe24CsvHeaderValidator {
   static validate(headers: string[]): { valid: boolean; missingColumns: string[] } {
-    const missingColumns = (Object.keys(CAFE24_ORDER_COLUMN_ALIASES) as Cafe24OrderColumnKey[])
+    const missingColumns = CAFE24_ORDER_REQUIRED_KEYS
       .filter((key) => !findHeader(headers, CAFE24_ORDER_COLUMN_ALIASES[key]))
       .map((key) => CAFE24_ORDER_COLUMN_ALIASES[key][0]);
 
@@ -64,6 +83,8 @@ export class Cafe24CsvParser {
       .filter((date): date is Date => Boolean(date))
       .map(formatDateOnly)
       .sort();
+    const couponReady = Boolean(findHeader(headers, CAFE24_ORDER_COLUMN_ALIASES.totalOrderKrw));
+    const couponMissingColumns = couponReady ? [] : [CAFE24_ORDER_COLUMN_ALIASES.totalOrderKrw[0]];
 
     return {
       schemaVersion: CAFE24_ORDER_SCHEMA_VERSION,
@@ -75,6 +96,12 @@ export class Cafe24CsvParser {
       orderEnd: orderDates[orderDates.length - 1] ?? null,
       totalQuantity: validRows.reduce((total, row) => total + row.quantity, 0),
       totalPaidKrw: validRows.reduce((total, row) => total + row.totalPaidKrw, 0),
+      totalOrderKrw: couponReady
+        ? validRows.reduce((total, row) => total + (row.totalOrderKrw ?? 0), 0)
+        : null,
+      totalOrderKrwIsRowSum: couponReady,
+      couponReady,
+      couponMissingColumns,
       sampleRows: validRows.slice(0, 5)
     };
   }
@@ -88,7 +115,8 @@ export class Cafe24CsvParser {
     const optionName = this.requiredText(rawRow, "optionName", issues);
     const quantity = this.requiredNumber(rawRow, "quantity", issues);
     const salePriceKrw = this.requiredNumber(rawRow, "salePriceKrw", issues);
-    const totalPaidKrw = this.requiredNumber(rawRow, "totalPaidKrw", issues);
+    const totalOrderKrw = this.optionalNumber(rawRow, "totalOrderKrw", issues);
+    const totalPaidKrw = this.requiredNumber(rawRow, "totalPaidKrw", issues, { emptyIsInvalid: true });
     const orderedAt = this.requiredDateTime(rawRow, "orderedAt", issues);
     const orderDate = orderedAt ? toDateOnly(formatDateOnly(orderedAt)) : null;
 
@@ -98,6 +126,14 @@ export class Cafe24CsvParser {
         errorCode: "NEGATIVE_QUANTITY",
         message: "Cafe24 quantity cannot be negative.",
         rawValue: readColumn(rawRow, "quantity")
+      });
+    }
+    if (totalOrderKrw !== null && totalOrderKrw < 0) {
+      issues.push({
+        columnName: CAFE24_ORDER_COLUMN_ALIASES.totalOrderKrw[0],
+        errorCode: "NEGATIVE_TOTAL_ORDER",
+        message: "Cafe24 total order amount cannot be negative.",
+        rawValue: readColumn(rawRow, "totalOrderKrw")
       });
     }
 
@@ -111,6 +147,7 @@ export class Cafe24CsvParser {
             optionName,
             quantity,
             salePriceKrw,
+            totalOrderKrw,
             totalPaidKrw,
             paymentMethod: textValue(readColumn(rawRow, "paymentMethod")),
             orderedAt,
@@ -183,9 +220,14 @@ export class Cafe24CsvParser {
     return value ?? "";
   }
 
-  private requiredNumber(rawRow: Record<string, string>, key: Cafe24OrderColumnKey, issues: ParseIssue[]): number {
+  private requiredNumber(
+    rawRow: Record<string, string>,
+    key: Cafe24OrderColumnKey,
+    issues: ParseIssue[],
+    options: { emptyIsInvalid?: boolean } = {}
+  ): number {
     const rawValue = readColumn(rawRow, key);
-    const parsed = parseCafe24Number(rawValue, { emptyAs: 0 });
+    const parsed = parseCafe24Number(rawValue, { emptyAs: options.emptyIsInvalid ? null : 0 });
     if (parsed === null) {
       issues.push({
         columnName: CAFE24_ORDER_COLUMN_ALIASES[key][0],
@@ -194,6 +236,27 @@ export class Cafe24CsvParser {
         rawValue
       });
       return 0;
+    }
+    return parsed;
+  }
+
+  private optionalNumber(
+    rawRow: Record<string, string>,
+    key: Cafe24OrderColumnKey,
+    issues: ParseIssue[]
+  ): number | null {
+    const rawValue = readColumn(rawRow, key);
+    if (rawValue === undefined || rawValue.trim() === "" || rawValue.trim() === "-") {
+      return null;
+    }
+    const parsed = parseCafe24Number(rawValue, { emptyAs: null });
+    if (parsed === null) {
+      issues.push({
+        columnName: CAFE24_ORDER_COLUMN_ALIASES[key][0],
+        errorCode: "INVALID_NUMBER",
+        message: `${CAFE24_ORDER_COLUMN_ALIASES[key][0]} must be numeric.`,
+        rawValue
+      });
     }
     return parsed;
   }

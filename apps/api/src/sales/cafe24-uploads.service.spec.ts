@@ -84,6 +84,10 @@ describe("Cafe24 upload current/version policy", () => {
       existingCurrent: { id: "line-current", importVersion: 4 }
     });
     const service = new Cafe24UploadsService(prisma as never, {} as never);
+    const rawRow = {
+      ...rawCafe24Row(),
+      [CAFE24_ORDER_COLUMN_ALIASES.paymentMethod[0]]: "쿠폰,신용카드"
+    };
 
     await (
       service as unknown as {
@@ -94,10 +98,10 @@ describe("Cafe24 upload current/version policy", () => {
       batchId: "batch-invalid",
       rowNumber: 2,
       sourceRowHash: "row-hash",
-      orderLineKey: effectiveCafe24OrderLineKey(null, rawCafe24Row()),
+      orderLineKey: effectiveCafe24OrderLineKey(null, rawRow),
       parsedRow: null,
-      rawRow: rawCafe24Row(),
-      sanitizedRawRow: rawCafe24Row(),
+      rawRow,
+      sanitizedRawRow: rawRow,
       productId: null,
       cafe24ProductRuleId: null,
       matchSource: MatchSource.UNMATCHED,
@@ -114,8 +118,56 @@ describe("Cafe24 upload current/version policy", () => {
       orderLineKey: "20260611-000001:20260611-000001-01:120:Wavebar black",
       importVersion: 4,
       isCurrent: false,
-      validationStatus: RowValidationStatus.ERROR
+      validationStatus: RowValidationStatus.ERROR,
+      paymentMethod: "쿠폰,신용카드"
     });
+  });
+  it("stores parsed total order amount and preserves a missing legacy value as null", async () => {
+    const parsedRow = {
+      orderNo: "20260611-000001",
+      lineOrderNo: "20260611-000001-01",
+      productNo: "120",
+      productName: "Wavebar",
+      optionName: "Wavebar black",
+      quantity: 1,
+      salePriceKrw: 90000,
+      totalOrderKrw: 90000,
+      totalPaidKrw: 85000,
+      paymentMethod: "쿠폰,신용카드",
+      orderedAt: date("2026-06-11"),
+      orderDate: date("2026-06-11")
+    };
+    const storedPrisma = fakeSavePrisma({ existingCurrent: null });
+    const legacyPrisma = fakeSavePrisma({ existingCurrent: null });
+
+    for (const [prisma, totalOrderKrw] of [
+      [storedPrisma, 90000],
+      [legacyPrisma, null]
+    ] as const) {
+      const service = new Cafe24UploadsService(prisma as never, {} as never);
+      await (
+        service as unknown as {
+          saveCafe24OrderLine: (input: Record<string, unknown>) => Promise<unknown>;
+        }
+      ).saveCafe24OrderLine({
+        conflictPolicy: ConflictPolicy.NEW_VERSION,
+        batchId: "batch-1",
+        rowNumber: 2,
+        sourceRowHash: "row-hash",
+        orderLineKey: "order-key",
+        parsedRow: { ...parsedRow, totalOrderKrw },
+        rawRow: rawCafe24Row(),
+        sanitizedRawRow: rawCafe24Row(),
+        productId: "product-1",
+        cafe24ProductRuleId: "rule-1",
+        matchSource: MatchSource.RULE,
+        validationStatus: RowValidationStatus.VALID,
+        validationErrors: []
+      });
+    }
+
+    expect(storedPrisma.createCalls[0].data.totalOrderKrw.toNumber()).toBe(90000);
+    expect(legacyPrisma.createCalls[0].data.totalOrderKrw).toBeNull();
   });
 });
 
@@ -327,6 +379,46 @@ describe("Cafe24UploadsService duplicate upload guard", () => {
       data: { isCurrent: false }
     });
   });
+  it("returns the stored schema v2 coupon preview for a reusable duplicate", async () => {
+    const previewSummary = {
+      couponReady: true,
+      couponMissingColumns: [],
+      totalOrderKrw: 90000
+    };
+    const service = new Cafe24UploadsService(
+      {
+        cafe24UploadBatch: {
+          findUnique: async () => ({
+            id: "batch-v2",
+            status: UploadStatus.IMPORTED,
+            rowCount: 1,
+            validRowCount: 1,
+            warningCount: 0,
+            errorCount: 0,
+            orderStart: date("2026-06-11"),
+            orderEnd: date("2026-06-11"),
+            columnSchema: { schemaVersion: 2, previewSummary }
+          })
+        },
+        cafe24OrderLine: {
+          count: async () => 1
+        }
+      } as never,
+      {} as never
+    );
+
+    await expect(
+      (
+        service as unknown as {
+          duplicateUploadSummary: (batchId: string) => Promise<unknown>;
+        }
+      ).duplicateUploadSummary("batch-v2")
+    ).resolves.toMatchObject({
+      duplicate: true,
+      schemaVersion: 2,
+      previewSummary
+    });
+  });
 });
 
 describe("Cafe24UploadsService deleteUpload", () => {
@@ -483,6 +575,33 @@ describe("Cafe24 current-version migration", () => {
 
     expect(sql).toContain(`WHERE "validation_status" <> 'ERROR'`);
     expect(sql).toMatch(/SET "is_current" = false\s+WHERE "validation_status" = 'ERROR'/);
+  });
+});
+
+describe("Cafe24 coupon rule migration", () => {
+  it("adds nullable total order amount without backfilling and creates guarded coupon rules", () => {
+    const sql = readFileSync(
+      join(process.cwd(), "prisma/migrations/20260731000000_add_cafe24_coupon_rules/migration.sql"),
+      "utf8"
+    );
+
+    expect(sql).toContain(`CREATE TYPE "cafe24_coupon_scope" AS ENUM ('GLOBAL', 'PRODUCT')`);
+    expect(sql).toMatch(/ADD COLUMN "total_order_krw" DECIMAL\(14,2\)/);
+    expect(sql).not.toMatch(/UPDATE\s+"cafe24_order_lines"[\s\S]*"total_order_krw"/i);
+    expect(sql).toContain(`CHECK ("discount_krw" > 0)`);
+    expect(sql).toContain(`CHECK ("valid_to" IS NULL OR "valid_to" >= "valid_from")`);
+    expect(sql).toContain(`("scope" = 'GLOBAL' AND "product_id" IS NULL)`);
+    expect(sql).toContain(`("scope" = 'PRODUCT' AND "product_id" IS NOT NULL)`);
+    expect(sql).toContain(`ON DELETE CASCADE ON UPDATE CASCADE`);
+    expect(sql).toContain(`CREATE INDEX "cafe24_coupon_rules_active_dates_idx"`);
+    expect(sql).toContain(`CREATE INDEX "cafe24_coupon_rules_product_active_dates_idx"`);
+
+    const indexNames = [...sql.matchAll(/CREATE INDEX "([^"]+)"/g)].map((match) => match[1]);
+    expect(indexNames.every((name) => Buffer.byteLength(name, "utf8") <= 63)).toBe(true);
+
+    const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
+    expect(schema).toContain(`map: "cafe24_coupon_rules_active_dates_idx"`);
+    expect(schema).toContain(`map: "cafe24_coupon_rules_product_active_dates_idx"`);
   });
 });
 

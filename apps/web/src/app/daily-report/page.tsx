@@ -95,9 +95,16 @@ type SalesProductRow = {
   adSpendKrw: number | null;
   grossCostKrw: number | null;
   totalCostKrw: number | null;
+  marginBeforeCouponKrw: number | null;
+  couponDeductionKrw: number;
   marginKrw: number | null;
   marginRate: number | null;
   matchedSalesLineCount: number;
+  couponOrderCount: number;
+  couponExactOrderCount: number;
+  couponEstimatedOrderCount: number;
+  couponUnmatchedOrderCount: number;
+  couponIgnoredResidualKrw: number;
 };
 
 type SalesProductIndex = {
@@ -491,8 +498,10 @@ function ProductSalesMarginSection({
                   <th>실결제액</th>
                   <th>상품 비용</th>
                   <th>광고비</th>
+                  <th>쿠폰 차감</th>
                   <th>총비용</th>
-                  <th>실제 마진</th>
+                  <th>쿠폰 적용 전 마진</th>
+                  <th>최종 순마진</th>
                   <th>마진율</th>
                 </tr>
               </thead>
@@ -509,13 +518,26 @@ function ProductSalesMarginSection({
                   <td>{money(row.totalPaidKrw, "KRW")}</td>
                   <td>{money(row.grossCostKrw, "KRW")}</td>
                   <td>{money(row.adSpendKrw, "KRW")}</td>
+                  <td>{money(row.couponDeductionKrw, "KRW")}</td>
                   <td>{money(row.totalCostKrw, "KRW")}</td>
+                  <td>{money(row.marginBeforeCouponKrw, "KRW")}</td>
                   <td>{money(row.marginKrw, "KRW")}</td>
                   <td>{formatMarginRate(row.marginRate)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
+          {row.couponOrderCount > 0 || row.couponIgnoredResidualKrw > 0 ? (
+            <p className="daily-sales-note">
+              쿠폰 적용 {numberFmt(row.couponOrderCount)}건 · 정확 {numberFmt(row.couponExactOrderCount)}건 ·
+              추정 {numberFmt(row.couponEstimatedOrderCount)}건 · 무시 잔여 {money(row.couponIgnoredResidualKrw, "KRW")}
+            </p>
+          ) : null}
+          {row.couponUnmatchedOrderCount > 0 ? (
+            <p className="daily-sales-note">
+              쿠폰 기록이 있으나 금액을 찾지 못한 주문 {numberFmt(row.couponUnmatchedOrderCount)}건
+            </p>
+          ) : null}
           {row.matchedSalesLineCount === 0 ? (
             <p className="daily-sales-note">해당 기준일에 매칭된 카페24 판매 행이 없어 0 기준으로 표시합니다.</p>
           ) : null}
@@ -720,7 +742,9 @@ function salesRowHasActivity(row: SalesProductRow | null) {
     hasNonZeroNumber(row.revenueKrw) ||
     hasNonZeroNumber(row.totalPaidKrw) ||
     hasNonZeroNumber(row.adSpendUsd) ||
-    hasNonZeroNumber(row.adSpendKrw)
+    hasNonZeroNumber(row.adSpendKrw) ||
+    hasNonZeroNumber(row.couponDeductionKrw) ||
+    hasNonZeroNumber(row.couponUnmatchedOrderCount)
   );
 }
 

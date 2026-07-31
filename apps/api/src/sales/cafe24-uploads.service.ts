@@ -562,9 +562,15 @@ export class Cafe24UploadsService {
 
   private async duplicateUploadSummary(batchId: string) {
     const batch = await this.assertUpload(batchId);
+    const columnSchema =
+      batch.columnSchema && typeof batch.columnSchema === "object" && !Array.isArray(batch.columnSchema)
+        ? batch.columnSchema
+        : {};
     return {
       duplicate: true,
       batchId: batch.id,
+      schemaVersion:
+        typeof columnSchema.schemaVersion === "number" ? columnSchema.schemaVersion : 1,
       status: batch.status,
       rowCount: batch.rowCount,
       validRowCount: batch.validRowCount,
@@ -573,7 +579,8 @@ export class Cafe24UploadsService {
       matchedCount: await this.prisma.cafe24OrderLine.count({ where: { uploadBatchId: batch.id, productId: { not: null } } }),
       unmatchedCount: await this.prisma.cafe24OrderLine.count({ where: { uploadBatchId: batch.id, productId: null } }),
       orderStart: batch.orderStart ? formatDateOnly(batch.orderStart) : null,
-      orderEnd: batch.orderEnd ? formatDateOnly(batch.orderEnd) : null
+      orderEnd: batch.orderEnd ? formatDateOnly(batch.orderEnd) : null,
+      previewSummary: columnSchema.previewSummary ?? null
     };
   }
 
@@ -700,8 +707,14 @@ export class Cafe24UploadsService {
           optionName: input.parsedRow?.optionName ?? rawString(input.rawRow, "optionName"),
           quantity: new Prisma.Decimal(input.parsedRow?.quantity ?? 0),
           salePriceKrw: new Prisma.Decimal(input.parsedRow?.salePriceKrw ?? 0),
+          totalOrderKrw:
+            input.parsedRow?.totalOrderKrw === null || input.parsedRow?.totalOrderKrw === undefined
+              ? null
+              : new Prisma.Decimal(input.parsedRow.totalOrderKrw),
           totalPaidKrw: new Prisma.Decimal(input.parsedRow?.totalPaidKrw ?? 0),
-          paymentMethod: input.parsedRow?.paymentMethod,
+          paymentMethod:
+            input.parsedRow?.paymentMethod ??
+            (rawString(input.sanitizedRawRow, "paymentMethod") || null),
           orderedAt: input.parsedRow?.orderedAt,
           orderDate: input.parsedRow?.orderDate,
           productId: input.productId,

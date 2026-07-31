@@ -137,6 +137,13 @@ enum CreativeLogActionType {
   @@map("creative_log_action_type")
 }
 
+enum Cafe24CouponScope {
+  GLOBAL
+  PRODUCT
+
+  @@map("cafe24_coupon_scope")
+}
+
 model AppUser {
   id        String   @id @default(uuid()) @db.Uuid
   email     String?  @unique
@@ -172,6 +179,7 @@ model Product {
   cafe24OrderLines Cafe24OrderLine[]
   cafe24ProductRules Cafe24ProductRule[] @relation("Cafe24ProductRuleProduct")
   cafe24AdCostSourceRules Cafe24ProductRule[] @relation("Cafe24AdCostSourceProduct")
+  cafe24CouponRules Cafe24CouponRule[]
   currentAdsets   MetaAdset[]               @relation("CurrentAdsetProduct")
 
   @@map("products")
@@ -610,6 +618,7 @@ model Cafe24OrderLine {
   optionName          String              @map("option_name")
   quantity            Decimal             @default(0) @db.Decimal(14, 4)
   salePriceKrw        Decimal             @default(0) @map("sale_price_krw") @db.Decimal(14, 2)
+  totalOrderKrw       Decimal?            @map("total_order_krw") @db.Decimal(14, 2)
   totalPaidKrw        Decimal             @default(0) @map("total_paid_krw") @db.Decimal(14, 2)
   paymentMethod       String?             @map("payment_method")
   orderedAt           DateTime?           @map("ordered_at")
@@ -641,6 +650,27 @@ model Cafe24OrderLine {
   @@index([isCurrent, orderDate])
   @@index([supersededByOrderLineId])
   @@map("cafe24_order_lines")
+}
+
+model Cafe24CouponRule {
+  id          String              @id @default(uuid()) @db.Uuid
+  name        String
+  scope       Cafe24CouponScope
+  productId   String?             @map("product_id") @db.Uuid
+  discountKrw Decimal             @map("discount_krw") @db.Decimal(14, 2)
+  priority    Int                 @default(100)
+  validFrom   DateTime            @map("valid_from") @db.Date
+  validTo     DateTime?           @map("valid_to") @db.Date
+  isActive    Boolean             @default(true) @map("is_active")
+  note        String?
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  product     Product?            @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([isActive, validFrom, validTo], map: "cafe24_coupon_rules_active_dates_idx")
+  @@index([productId, isActive, validFrom, validTo], map: "cafe24_coupon_rules_product_active_dates_idx")
+  @@index([discountKrw], map: "cafe24_coupon_rules_discount_krw_idx")
+  @@map("cafe24_coupon_rules")
 }
 
 model Cafe24ProductRule {

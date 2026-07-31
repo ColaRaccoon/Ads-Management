@@ -28,6 +28,29 @@ type Cafe24UploadBatchRow = {
   errorCount: number;
   orderStart?: string | null;
   orderEnd?: string | null;
+  columnSchema?: {
+    schemaVersion?: number;
+    previewSummary?: Cafe24CouponPreview | null;
+  } | null;
+};
+
+type Cafe24CouponPreview = {
+  schemaVersion?: number;
+  couponReady?: boolean;
+  couponMissingColumns?: string[];
+  totalOrderKrw?: number | null;
+  totalOrderKrwIsRowSum?: boolean;
+};
+
+type Cafe24UploadResult = {
+  schemaVersion?: number;
+  rowCount: number;
+  matchedCount: number;
+  unmatchedCount: number;
+  warningCount: number;
+  couponReady?: boolean;
+  couponMissingColumns?: string[];
+  previewSummary?: Cafe24CouponPreview | null;
 };
 
 export default function UploadsPage() {
@@ -53,7 +76,7 @@ export default function UploadsPage() {
   const cafe24Upload = useMutation({
     mutationFn: async () => {
       if (!cafe24File) throw new Error("Cafe24 CSV file is required.");
-      return uploadCafe24Csv(cafe24File, cafe24ConflictPolicy);
+      return uploadCafe24Csv(cafe24File, cafe24ConflictPolicy) as Promise<Cafe24UploadResult>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries();
@@ -72,6 +95,7 @@ export default function UploadsPage() {
     }
   });
   const summary = upload.data?.previewSummary;
+  const cafe24CouponPreview = couponPreview(cafe24Upload.data);
 
   const handleDelete = (row: UploadBatchRow) => {
     const filename = row.originalFilename || row.id;
@@ -155,6 +179,15 @@ export default function UploadsPage() {
               <span>Matched {cafe24Upload.data.matchedCount}</span>
               <span>Unmatched {cafe24Upload.data.unmatchedCount}</span>
               <span>Warnings {cafe24Upload.data.warningCount}</span>
+              <span>쿠폰 계산 준비: {couponReadyLabel(cafe24CouponPreview?.couponReady)}</span>
+              {(cafe24CouponPreview?.couponMissingColumns?.length ?? 0) > 0 ? (
+                <span>누락 컬럼: {cafe24CouponPreview?.couponMissingColumns?.join(", ")}</span>
+              ) : null}
+            </div>
+          ) : null}
+          {cafe24CouponPreview?.couponReady === false ? (
+            <div className="warning-strip">
+              <span><AlertTriangle size={15} />총 주문금액 컬럼이 없어 쿠폰 금액 자동 선택은 적용되지 않습니다.</span>
             </div>
           ) : null}
         </div>
@@ -205,6 +238,16 @@ export default function UploadsPage() {
             { key: "warn", header: "Warnings", render: (row) => row.warningCount },
             { key: "err", header: "Errors", render: (row) => row.errorCount },
             {
+              key: "couponReady",
+              header: "쿠폰 계산 준비",
+              render: (row) => couponBatchReadyLabel(row)
+            },
+            {
+              key: "couponMissing",
+              header: "쿠폰 누락 컬럼",
+              render: (row) => couponBatchMissingColumns(row)
+            },
+            {
               key: "actions",
               header: "",
               render: (row) => (
@@ -224,4 +267,68 @@ export default function UploadsPage() {
       </div>
     </section>
   );
+}
+
+function couponPreview(result: Cafe24UploadResult | undefined): Cafe24CouponPreview | null {
+  if (!result) {
+    return null;
+  }
+  if (result.previewSummary) {
+    if (
+      result.previewSummary.couponReady === undefined &&
+      Number(result.previewSummary.schemaVersion ?? result.schemaVersion) < 2
+    ) {
+      return {
+        ...result.previewSummary,
+        couponReady: false,
+        couponMissingColumns: ["총 주문금액"]
+      };
+    }
+    return result.previewSummary;
+  }
+  if (Number(result.schemaVersion) < 2) {
+    return {
+      schemaVersion: result.schemaVersion,
+      couponReady: false,
+      couponMissingColumns: ["총 주문금액"]
+    };
+  }
+  if (result.couponReady !== undefined || result.couponMissingColumns !== undefined) {
+    return {
+      couponReady: result.couponReady,
+      couponMissingColumns: result.couponMissingColumns
+    };
+  }
+  return null;
+}
+
+function couponReadyLabel(value: boolean | undefined) {
+  if (value === true) {
+    return "가능";
+  }
+  if (value === false) {
+    return "불가능";
+  }
+  return "확인 불가";
+}
+
+function couponBatchReadyLabel(row: Cafe24UploadBatchRow) {
+  const preview = row.columnSchema?.previewSummary;
+  if (preview?.couponReady !== undefined) {
+    return couponReadyLabel(preview.couponReady);
+  }
+  const schemaVersion = Number(preview?.schemaVersion ?? row.columnSchema?.schemaVersion);
+  if (Number.isFinite(schemaVersion) && schemaVersion < 2) {
+    return "불가능 (구형 업로드)";
+  }
+  return "확인 불가";
+}
+
+function couponBatchMissingColumns(row: Cafe24UploadBatchRow) {
+  const preview = row.columnSchema?.previewSummary;
+  if ((preview?.couponMissingColumns?.length ?? 0) > 0) {
+    return preview?.couponMissingColumns?.join(", ") ?? "-";
+  }
+  const schemaVersion = Number(preview?.schemaVersion ?? row.columnSchema?.schemaVersion);
+  return Number.isFinite(schemaVersion) && schemaVersion < 2 ? "총 주문금액 (재업로드 필요)" : "-";
 }
