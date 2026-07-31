@@ -36,9 +36,13 @@ export type CoupangProfitSegmentInput = {
 };
 
 export type CoupangAdInput = {
+  // Advertisement-performance axis (spendProductId).
   adSpendKrw: number;
-  adConversionSalesKrw: number;
-  adConversionQuantity?: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity?: number;
+  // Sold-product attribution axis (conversionProductId).
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity?: number;
 };
 
 export type CoupangProfitResult = {
@@ -102,7 +106,7 @@ export function calculateCoupangProfit(
   const adSpendKrw = finiteNumber(ads.adSpendKrw);
   const totalCostKrw = productCostKrw + salesFeeKrw + shippingCostKrw + returnCostKrw + extraCostKrw + vatKrw + adSpendKrw;
   const marginKrw = netSalesKrw - totalCostKrw;
-  const organicSalesKrw = netSalesKrw - finiteNumber(ads.adConversionSalesKrw);
+  const organicSalesKrw = netSalesKrw - finiteNumber(ads.attributedConversionSalesKrw);
   const warnings = organicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : [];
 
   return {
@@ -117,7 +121,7 @@ export function calculateCoupangProfit(
     totalCostKrw,
     marginKrw,
     marginRate: safeDivide(marginKrw, netSalesKrw),
-    roas: safeDivide(finiteNumber(ads.adConversionSalesKrw), adSpendKrw),
+    roas: safeDivide(finiteNumber(ads.adGeneratedSalesKrw), adSpendKrw),
     organicSalesKrw,
     warnings
   };
@@ -139,7 +143,13 @@ export function calculateCoupangProfitBySegments(input: {
         salesQuantity: segment.salesQuantity
       },
       input.cost,
-      { adSpendKrw: 0, adConversionSalesKrw: 0, adConversionQuantity: 0 },
+      {
+        adSpendKrw: 0,
+        adGeneratedSalesKrw: 0,
+        attributedConversionSalesKrw: 0,
+        adGeneratedQuantity: 0,
+        attributedConversionQuantity: 0
+      },
       {
         salesFeeRate: input.salesFeeRate,
         includeReturnCost: input.includeReturnCost,
@@ -168,7 +178,7 @@ export function calculateCoupangProfitBySegments(input: {
   const adSpendKrw = finiteNumber(input.ads.adSpendKrw);
   const totalCostKrw = productCostKrw + salesFeeKrw + shippingCostKrw + returnCostKrw + extraCostKrw + vatKrw + adSpendKrw;
   const marginKrw = netSalesKrw - totalCostKrw;
-  const organicSalesKrw = netSalesKrw - finiteNumber(input.ads.adConversionSalesKrw);
+  const organicSalesKrw = netSalesKrw - finiteNumber(input.ads.attributedConversionSalesKrw);
 
   return {
     netSalesKrw,
@@ -182,7 +192,7 @@ export function calculateCoupangProfitBySegments(input: {
     totalCostKrw,
     marginKrw,
     marginRate: safeDivide(marginKrw, netSalesKrw),
-    roas: safeDivide(finiteNumber(input.ads.adConversionSalesKrw), adSpendKrw),
+    roas: safeDivide(finiteNumber(input.ads.adGeneratedSalesKrw), adSpendKrw),
     organicSalesKrw,
     warnings: organicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : [],
     sellerSalesQuantity,

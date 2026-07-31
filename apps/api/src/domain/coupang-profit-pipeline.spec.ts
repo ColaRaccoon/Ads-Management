@@ -21,7 +21,7 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual,
       cost: costInput(),
-      ads: { adSpendKrw: 5_000, adConversionSalesKrw: 30_000 },
+      ads: adInput(5_000, 30_000),
       salesFeeRate: 0.1
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(null) });
@@ -39,7 +39,7 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual,
       cost: costInput(),
-      ads: { adSpendKrw: 5_000, adConversionSalesKrw: 30_000 },
+      ads: adInput(5_000, 30_000),
       salesFeeRate: 0.1
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(manual) });
@@ -75,7 +75,7 @@ describe("Coupang product-date profit pipeline", () => {
         returnCostPerUnitKrw: 0,
         extraCostKrw: 0
       },
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      ads: adInput(),
       salesFeeRate: 0
     });
     const combined = combineCoupangProfitParts({
@@ -104,7 +104,7 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual,
       cost: costInput(),
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      ads: adInput(),
       salesFeeRate: 0.1
     });
     const manualPart = calculateManualPurchaseProfitAdjustment(manual);
@@ -131,7 +131,7 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual,
       cost: null,
-      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 },
+      ads: adInput(3_000),
       salesFeeRate: 0.1
     });
     const manualPart = calculateManualPurchaseProfitAdjustment(manual);
@@ -150,7 +150,7 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual: adjustReportedSalesForManualPurchase(reported, manual),
       cost: costInput(),
-      ads: { adSpendKrw: 7_000, adConversionSalesKrw: 0 },
+      ads: adInput(7_000),
       salesFeeRate: 0.1
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(manual) });
@@ -167,7 +167,7 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual,
       cost: null,
-      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 },
+      ads: adInput(3_000),
       salesFeeRate: null
     });
     const combined = combineCoupangProfitParts({ normal, manual: calculateManualPurchaseProfitAdjustment(manual) });
@@ -184,7 +184,7 @@ describe("Coupang product-date profit pipeline", () => {
       reported,
       actual: adjustReportedSalesForManualPurchase(reported, null),
       cost: null,
-      ads: { adSpendKrw: 3_000, adConversionSalesKrw: 0 },
+      ads: adInput(3_000),
       salesFeeRate: null
     });
 
@@ -331,7 +331,7 @@ describe("Coupang product-date profit pipeline", () => {
         growthInboundFeeKrw: 700,
         growthShippingFeeKrw: 1_300
       },
-      ads: { adSpendKrw: 10_000, adConversionSalesKrw: 30_000 },
+      ads: adInput(10_000, 30_000),
       salesFeeRate: 0.1
     });
 
@@ -361,7 +361,7 @@ describe("Coupang product-date profit pipeline", () => {
         sellerShippingFeeKrw: null,
         hanaroShippingFeeKrw: null
       },
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      ads: adInput(),
       salesFeeRate: 0.1
     });
 
@@ -390,7 +390,7 @@ describe("Coupang product-date profit pipeline", () => {
         sellerShippingFeeKrw: 0,
         hanaroShippingFeeKrw: null
       },
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      ads: adInput(),
       salesFeeRate: 0.1
     });
 
@@ -435,7 +435,7 @@ describe("Coupang product-date profit pipeline", () => {
         returnRate: 0,
         extraCostKrw: 0
       },
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      ads: adInput(),
       salesFeeRate: 0
     });
 
@@ -616,5 +616,17 @@ function costInput() {
     returnRate: 0,
     returnCostPerUnitKrw: 0,
     extraCostKrw: 0
+  };
+}
+
+function adInput(
+  adSpendKrw = 0,
+  adGeneratedSalesKrw = 0,
+  attributedConversionSalesKrw = adGeneratedSalesKrw
+) {
+  return {
+    adSpendKrw,
+    adGeneratedSalesKrw,
+    attributedConversionSalesKrw
   };
 }

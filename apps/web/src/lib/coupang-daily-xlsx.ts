@@ -71,12 +71,18 @@ export const COUPANG_DAILY_XLSX_COLUMNS: CoupangDailyXlsxColumn[] = [
     width: 12,
     value: (row) => row.manualPurchaseQuantity
   },
-  { key: "roas", header: "광고수익률", style: "Percent1", width: 14, value: (row) => row.roas },
+  {
+    key: "roas",
+    header: "광고수익률(집행상품 기준)",
+    style: "Percent1",
+    width: 25,
+    value: (row) => row.roas
+  },
   {
     key: "organicSalesKrw",
-    header: "오가닉매출",
+    header: "오가닉매출(판매상품 기준)",
     style: "Krw",
-    width: 16,
+    width: 25,
     value: (row) => row.organicSalesKrw
   },
   { key: "marginKrw", header: "최종순이익", style: "Krw", width: 18, value: (row) => row.marginKrw },

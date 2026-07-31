@@ -52,8 +52,10 @@ export type CoupangProductProfitRow = {
   manualCalculationStatus: "COMPLETE" | "INCOMPLETE" | "NOT_APPLICABLE";
   calculationStatus: "COMPLETE" | "INCOMPLETE";
   adSpendKrw: number;
-  adConversionSalesKrw: number;
-  adConversionQuantity: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity: number;
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity: number;
   organicSalesKrw: number | null;
   reportedOrganicSalesKrw: number;
   actualOrganicSalesKrw: number | null;
@@ -109,7 +111,10 @@ export type CoupangProfitSummary = {
   extraCostKrw: number | null;
   vatKrw: number | null;
   adSpendKrw: number;
-  adConversionSalesKrw: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity: number;
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity: number;
   organicSalesKrw: number | null;
   reportedOrganicSalesKrw: number;
   actualOrganicSalesKrw: number | null;
@@ -146,6 +151,10 @@ export type CoupangDailyPreviousMetrics = {
   reportedSalesQuantity: number;
   manualPurchaseQuantity: number;
   adSpendKrw: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity: number;
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity: number;
   roas: number | null;
   marginKrw: number | null;
 };
@@ -155,6 +164,10 @@ export type CoupangDailyVisibleMetrics = {
   reportedSalesQuantity: number;
   manualPurchaseQuantity: number;
   adSpendKrw: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity: number;
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity: number;
   roas: number | null;
   organicSalesKrw: number | null;
   marginKrw: number | null;

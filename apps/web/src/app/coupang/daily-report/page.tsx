@@ -280,9 +280,9 @@ export default function CoupangDailyReportPage() {
                 <th scope="col">쿠팡 원본매출</th>
                 <th scope="col">원본 판매수량</th>
                 <th scope="col">가구매수량</th>
-                <th scope="col">광고비</th>
-                <th scope="col">광고수익률</th>
-                <th scope="col" title="가구매 조정 후 실제 순매출에서 광고 전환매출을 차감한 값">
+                <th scope="col">광고비(집행상품 기준)</th>
+                <th scope="col">광고수익률(집행상품 기준)</th>
+                <th scope="col" title="가구매 조정 후 실제 순매출에서 판매상품 귀속 전환매출을 차감한 값">
                   오가닉 매출
                 </th>
                 <th scope="col">최종 순이익</th>
@@ -330,6 +330,7 @@ export default function CoupangDailyReportPage() {
       </section>
 
       <p className="coupang-daily-footnote coupang-daily-no-print">
+        광고수익률은 광고 집행 상품 기준 전환매출 ÷ 광고비이며, 오가닉 매출은 판매상품 귀속 전환매출을 차감합니다.
         그룹 행은 현재 필터에 남은 옵션의 합계이며, 화면에서 접어도 인쇄 및 내보내기에는 그 옵션이 모두 포함됩니다.
       </p>
     </section>
@@ -366,12 +367,12 @@ function SummaryStrip({
       />
       <SummaryItem label="가구매수량" value={formatDailyQuantity(current.manualPurchaseQuantity)} />
       <SummaryItem
-        label="광고비"
+        label="광고비(집행상품 기준)"
         value={formatDailyMoney(current.adSpendKrw)}
         previous={formatDailyMoney(previous.adSpendKrw)}
       />
       <SummaryItem
-        label="광고수익률"
+        label="광고수익률(집행상품 기준)"
         value={formatDailyRatio(current.roas)}
         previous={formatDailyRatio(previous.roas)}
         tone={current.roas === 0 ? "zero" : "roas"}

@@ -56,11 +56,11 @@ export const COUPANG_DAILY_CSV_COLUMNS: CsvColumn<CoupangDailyExportRow>[] = [
   { header: "원본 판매수량", value: (row) => row.reportedSalesQuantity },
   { header: "전일 원본 판매수량", value: (row) => row.previousReportedSalesQuantity },
   { header: "가구매수량", value: (row) => row.manualPurchaseQuantity },
-  { header: "광고비", value: (row) => row.adSpendKrw },
-  { header: "전일 광고비", value: (row) => row.previousAdSpendKrw },
-  { header: "광고수익률", value: (row) => row.roas },
-  { header: "전일 광고수익률", value: (row) => row.previousRoas },
-  { header: "오가닉 매출", value: (row) => row.organicSalesKrw },
+  { header: "광고비(집행상품 기준)", value: (row) => row.adSpendKrw },
+  { header: "전일 광고비(집행상품 기준)", value: (row) => row.previousAdSpendKrw },
+  { header: "광고수익률(집행상품 기준)", value: (row) => row.roas },
+  { header: "전일 광고수익률(집행상품 기준)", value: (row) => row.previousRoas },
+  { header: "오가닉 매출(판매상품 기준)", value: (row) => row.organicSalesKrw },
   { header: "최종 순이익", value: (row) => row.marginKrw },
   { header: "전일 최종 순이익", value: (row) => row.previousMarginKrw }
 ];

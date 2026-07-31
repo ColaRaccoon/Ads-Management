@@ -28,8 +28,10 @@ export default function CoupangDashboardPage() {
     { key: "actualQty", header: "판매수량", render: (row) => numberFmt(row.actualSalesQuantity) },
     { key: "manualSales", header: "가구매 매출 조정", render: (row) => money(row.manualPurchaseSalesKrw) },
     { key: "manualCost", header: "가구매 비용(업체수수료)", render: (row) => money(row.manualPurchaseTotalCostKrw) },
-    { key: "adSpend", header: "광고비", render: (row) => money(row.adSpendKrw) },
-    { key: "organic", header: "유기적 매출", render: (row) => money(row.organicSalesKrw) },
+    { key: "adSpend", header: "광고비(집행상품 기준)", render: (row) => money(row.adSpendKrw) },
+    { key: "adGeneratedSales", header: "광고 발생 전환매출", render: (row) => money(row.adGeneratedSalesKrw) },
+    { key: "roas", header: "ROAS(집행상품 기준)", render: (row) => percent(row.roas) },
+    { key: "organic", header: "오가닉 매출(판매상품 기준)", render: (row) => money(row.organicSalesKrw) },
     { key: "normalMargin", header: "정상 판매 순이익", render: (row) => money(row.normalMarginKrw) },
     { key: "margin", header: "최종/부분 순이익", render: (row) => row.calculationStatus === "COMPLETE" ? money(row.marginKrw) : row.rowType === "GROUP" ? `${money(row.knownMarginKrw)} (부분)` : "-" },
     { key: "status", header: "상태", render: (row) => {
@@ -59,13 +61,17 @@ export default function CoupangDashboardPage() {
           value={money(data?.summary.isComplete === false ? data.summary.knownMarginKrw : data?.summary.marginKrw)}
           helper={data?.summary.isComplete === false ? `${data.summary.incompleteProductCount}개 상품 제외` : percent(data?.summary.marginRate)}
         />
-        <KpiCard label="광고비" value={money(data?.summary.adSpendKrw)} />
-        <KpiCard label="유기적 매출" value={money(data?.summary.organicSalesKrw)} />
+        <KpiCard label="광고비(집행상품 기준)" value={money(data?.summary.adSpendKrw)} />
+        <KpiCard label="오가닉 매출(판매상품 기준)" value={money(data?.summary.organicSalesKrw)} />
         <KpiCard label="가구매 수량" value={numberFmt(data?.summary.manualPurchaseQuantity)} />
         <KpiCard label="가구매 매출 조정" value={money(data?.summary.manualPurchaseSalesKrw)} />
         <KpiCard label="정상 판매 순이익" value={money(data?.summary.normalMarginKrw)} />
         <KpiCard label="가구매 비용(업체수수료)" value={money(data?.summary.manualPurchaseTotalCostKrw)} />
-        <KpiCard label="ROAS" value={percent(data?.summary.roas)} />
+        <KpiCard
+          label="광고성과 ROAS(집행 기준)"
+          value={percent(data?.summary.roas)}
+          helper="광고 발생 전환매출 ÷ 광고비"
+        />
       </div>
       <div className="panel" style={{ marginTop: 12 }}>
         <div className="toolbar">

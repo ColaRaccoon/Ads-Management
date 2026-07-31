@@ -2145,6 +2145,277 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
   });
 });
 
+describe("Coupang cross-product ad attribution", () => {
+  it("keeps spend and generated sales on the execution product while attributing organic sales to the sold product", async () => {
+    const date = new Date("2026-07-29T00:00:00.000Z");
+    const productA = { id: "product-a", displayName: "상품 A" };
+    const productB = { id: "product-b", displayName: "상품 B" };
+    const products = [productA, productB];
+    const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(0),
+      coupangSaleLine: {
+        findMany: vi.fn(async () => products.map((product) => ({
+          saleDate: date,
+          coupangProductId: product.id,
+          product,
+          productName: product.displayName,
+          salesKrw: new Prisma.Decimal(200_000),
+          cancelAmountKrw: new Prisma.Decimal(0),
+          netSalesKrw: new Prisma.Decimal(200_000),
+          salesQuantity: new Prisma.Decimal(10),
+          orderCount: 10,
+          saleMethod: "판매자배송"
+        })))
+      },
+      coupangAdMetric: {
+        findMany: vi.fn(async () => [{
+          metricDate: date,
+          spendProductId: productA.id,
+          conversionProductId: productA.id,
+          spendProduct: { ...productA, group: null },
+          conversionProduct: productA,
+          campaignName: "캠페인 A",
+          adGroupName: "광고그룹",
+          impressions: BigInt(100),
+          clicks: 10,
+          adSpendKrw: new Prisma.Decimal(10_000),
+          totalOrders1d: 2,
+          directOrders1d: 2,
+          indirectOrders1d: 0,
+          totalConversionSales1dKrw: new Prisma.Decimal(20_000),
+          directConversionSales1dKrw: new Prisma.Decimal(20_000),
+          indirectConversionSales1dKrw: new Prisma.Decimal(0),
+          totalSalesQuantity1d: new Prisma.Decimal(2)
+        }, {
+          metricDate: date,
+          spendProductId: productB.id,
+          conversionProductId: productA.id,
+          spendProduct: { ...productB, group: null },
+          conversionProduct: productA,
+          campaignName: "캠페인 B",
+          adGroupName: "광고그룹",
+          impressions: BigInt(300),
+          clicks: 30,
+          adSpendKrw: new Prisma.Decimal(30_000),
+          totalOrders1d: 9,
+          directOrders1d: 0,
+          indirectOrders1d: 9,
+          totalConversionSales1dKrw: new Prisma.Decimal(90_000),
+          directConversionSales1dKrw: new Prisma.Decimal(0),
+          indirectConversionSales1dKrw: new Prisma.Decimal(90_000),
+          totalSalesQuantity1d: new Prisma.Decimal(9)
+        }])
+      },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangCostRule: {
+        findMany: vi.fn(async () => products.map((product) => ({
+          coupangProductId: product.id,
+          salePriceKrw: new Prisma.Decimal(20_000),
+          supplyPriceKrw: new Prisma.Decimal(0),
+          productCostKrw: new Prisma.Decimal(0),
+          salesFeeRate: new Prisma.Decimal(0),
+          salesFeeKrw: new Prisma.Decimal(0),
+          sellerShippingFeeKrw: new Prisma.Decimal(0),
+          hanaroShippingFeeKrw: new Prisma.Decimal(0),
+          growthInboundFeeKrw: new Prisma.Decimal(0),
+          growthShippingFeeKrw: new Prisma.Decimal(0),
+          returnRate: new Prisma.Decimal(0),
+          returnCostPerUnitKrw: new Prisma.Decimal(0),
+          extraCostKrw: new Prisma.Decimal(0),
+          effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
+          effectiveTo: null,
+          createdAt: new Date("2026-01-01T00:00:00.000Z")
+        })))
+      },
+      coupangProduct: { findMany: vi.fn(async () => products) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows: ProductProfitRow[] = await (service as any).buildProductProfitRows({
+      from: "2026-07-29",
+      to: "2026-07-29",
+      fromDate: date,
+      toDate: date
+    });
+    const rowA = rows.find((row) => row.productId === productA.id);
+    const rowB = rows.find((row) => row.productId === productB.id);
+
+    expect(rowA).toMatchObject({
+      adSpendKrw: 10_000,
+      adGeneratedSalesKrw: 20_000,
+      adGeneratedQuantity: 2,
+      attributedConversionSalesKrw: 110_000,
+      attributedConversionQuantity: 11,
+      actualOrganicSalesKrw: 90_000,
+      roas: 2
+    });
+    expect(rowB).toMatchObject({
+      adSpendKrw: 30_000,
+      adGeneratedSalesKrw: 90_000,
+      adGeneratedQuantity: 9,
+      attributedConversionSalesKrw: 0,
+      attributedConversionQuantity: 0,
+      actualOrganicSalesKrw: 200_000,
+      roas: 3
+    });
+    const summary = summarizeCoupangProductProfitRows(rows);
+    expect(summary).toMatchObject({
+      adSpendKrw: 40_000,
+      adGeneratedSalesKrw: 110_000,
+      attributedConversionSalesKrw: 110_000,
+      roas: 2.75,
+      completeProductCount: 2,
+      incompleteProductCount: 0
+    });
+    expect(summary.totalCostKrw).toBeCloseTo(40_000 + 400_000 / 11);
+    expect(summary.marginKrw).toBeCloseTo(400_000 - 40_000 - 400_000 / 11);
+
+    const grouped = aggregateCoupangProductProfitRowsByGroup(rows, [{
+      id: productA.id,
+      group: { id: "group-a", displayName: "그룹 A" }
+    }, {
+      id: productB.id,
+      group: { id: "group-b", displayName: "그룹 B" }
+    }]);
+    expect(grouped.find((row) => row.groupId === "group-a")).toMatchObject({
+      adSpendKrw: 10_000,
+      adGeneratedSalesKrw: 20_000,
+      attributedConversionSalesKrw: 110_000,
+      roas: 2
+    });
+    expect(grouped.find((row) => row.groupId === "group-b")).toMatchObject({
+      adSpendKrw: 30_000,
+      adGeneratedSalesKrw: 90_000,
+      attributedConversionSalesKrw: 0,
+      roas: 3
+    });
+
+    const analysis = await service.adsAnalysis({
+      from: "2026-07-29",
+      to: "2026-07-29",
+      groupBy: "product"
+    });
+    expect(analysis.rows.find((row) => row.productId === productA.id)).toMatchObject({
+      adSpendKrw: rowA?.adSpendKrw,
+      totalConversionSales1dKrw: rowA?.adGeneratedSalesKrw,
+      roas: rowA?.roas
+    });
+    expect(analysis.rows.find((row) => row.productId === productB.id)).toMatchObject({
+      adSpendKrw: rowB?.adSpendKrw,
+      totalConversionSales1dKrw: rowB?.adGeneratedSalesKrw,
+      roas: rowB?.roas
+    });
+  });
+
+  it("recalculates a multi-day ROAS from summed generated sales and spend instead of averaging daily ratios", async () => {
+    const firstDate = new Date("2026-07-28T00:00:00.000Z");
+    const secondDate = new Date("2026-07-29T00:00:00.000Z");
+    const product = { id: "weighted-product", displayName: "기간 가중 상품" };
+    const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(0),
+      coupangSaleLine: { findMany: vi.fn(async () => []) },
+      coupangAdMetric: {
+        findMany: vi.fn(async () => [{
+          metricDate: firstDate,
+          spendProductId: product.id,
+          conversionProductId: product.id,
+          adSpendKrw: new Prisma.Decimal(10_000),
+          totalConversionSales1dKrw: new Prisma.Decimal(10_000),
+          totalSalesQuantity1d: new Prisma.Decimal(1)
+        }, {
+          metricDate: secondDate,
+          spendProductId: product.id,
+          conversionProductId: product.id,
+          adSpendKrw: new Prisma.Decimal(30_000),
+          totalConversionSales1dKrw: new Prisma.Decimal(90_000),
+          totalSalesQuantity1d: new Prisma.Decimal(9)
+        }])
+      },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => []) },
+      coupangProduct: { findMany: vi.fn(async () => [product]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows: ProductProfitRow[] = await (service as any).buildProductProfitRows({
+      from: "2026-07-28",
+      to: "2026-07-29",
+      fromDate: firstDate,
+      toDate: secondDate
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      adSpendKrw: 40_000,
+      adGeneratedSalesKrw: 100_000,
+      adGeneratedQuantity: 10,
+      attributedConversionSalesKrw: 100_000,
+      attributedConversionQuantity: 10,
+      roas: 2.5
+    });
+    expect(rows[0].roas).not.toBe((1 + 3) / 2);
+  });
+
+  it("keeps unmatched spend and conversion axes independent without allocating either to another product", async () => {
+    const date = new Date("2026-07-29T00:00:00.000Z");
+    const attributedProduct = { id: "attributed-only", displayName: "판매귀속 상품" };
+    const performanceProduct = { id: "performance-only", displayName: "광고집행 상품" };
+    const service = new CoupangService({
+      ...globalSalesFeeRulePrisma(0),
+      coupangSaleLine: { findMany: vi.fn(async () => []) },
+      coupangAdMetric: {
+        findMany: vi.fn(async () => [{
+          metricDate: date,
+          spendProductId: null,
+          conversionProductId: attributedProduct.id,
+          adSpendKrw: new Prisma.Decimal(7_306),
+          totalConversionSales1dKrw: new Prisma.Decimal(142_400),
+          totalSalesQuantity1d: new Prisma.Decimal(4)
+        }, {
+          metricDate: date,
+          spendProductId: performanceProduct.id,
+          conversionProductId: null,
+          adSpendKrw: new Prisma.Decimal(1_000),
+          totalConversionSales1dKrw: new Prisma.Decimal(5_000),
+          totalSalesQuantity1d: new Prisma.Decimal(1)
+        }])
+      },
+      coupangManualPurchase: { findMany: vi.fn(async () => []) },
+      coupangCostRule: { findMany: vi.fn(async () => []) },
+      coupangProduct: {
+        findMany: vi.fn(async () => [attributedProduct, performanceProduct])
+      },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) }
+    } as never);
+
+    const rows: ProductProfitRow[] = await (service as any).buildProductProfitRows({
+      from: "2026-07-29",
+      to: "2026-07-29",
+      fromDate: date,
+      toDate: date
+    });
+    expect(rows.find((row) => row.productId === attributedProduct.id)).toMatchObject({
+      adSpendKrw: 0,
+      adGeneratedSalesKrw: 0,
+      attributedConversionSalesKrw: 142_400,
+      attributedConversionQuantity: 4,
+      roas: null
+    });
+    expect(rows.find((row) => row.productId === performanceProduct.id)).toMatchObject({
+      adSpendKrw: 1_000,
+      adGeneratedSalesKrw: 5_000,
+      adGeneratedQuantity: 1,
+      attributedConversionSalesKrw: 0,
+      roas: 5
+    });
+    expect(summarizeCoupangProductProfitRows(rows)).toMatchObject({
+      adSpendKrw: 1_000,
+      adGeneratedSalesKrw: 5_000,
+      attributedConversionSalesKrw: 142_400
+    });
+  });
+});
+
 describe("Coupang product group aggregation", () => {
   it("sums calculated product rows by group and recalculates margin rate and ROAS", () => {
     const rows = [
@@ -2165,7 +2436,10 @@ describe("Coupang product group aggregation", () => {
         manualPurchaseShippingCostKrw: 0,
         manualPurchaseTotalCostKrw: 6_364,
         adSpendKrw: 20_000,
-        adConversionSalesKrw: 60_000,
+        adGeneratedSalesKrw: 60_000,
+        adGeneratedQuantity: 3,
+        attributedConversionSalesKrw: 160_000,
+        attributedConversionQuantity: 8,
         totalCostKrw: 71_364 + 100_000 / 11,
         marginKrw: 28_636 - 100_000 / 11,
         marginRate: 0.35,
@@ -2189,7 +2463,10 @@ describe("Coupang product group aggregation", () => {
         manualPurchaseShippingCostKrw: 0,
         manualPurchaseTotalCostKrw: 3_182,
         adSpendKrw: 30_000,
-        adConversionSalesKrw: 90_000,
+        adGeneratedSalesKrw: 90_000,
+        adGeneratedQuantity: 6,
+        attributedConversionSalesKrw: 40_000,
+        attributedConversionQuantity: 2,
         totalCostKrw: 141_182 + 200_000 / 11,
         marginKrw: 58_818 - 200_000 / 11,
         marginRate: 0.31,
@@ -2227,7 +2504,10 @@ describe("Coupang product group aggregation", () => {
       manualPurchaseCoupangSalesFeeKrw: 0,
       manualPurchaseShippingCostKrw: 0,
       adSpendKrw: 50_000,
-      adConversionSalesKrw: 150_000,
+      adGeneratedSalesKrw: 150_000,
+      adGeneratedQuantity: 9,
+      attributedConversionSalesKrw: 200_000,
+      attributedConversionQuantity: 10,
       salePriceKrw: null,
       priceSource: "MIXED",
       saleMethod: "MIXED"
@@ -2392,8 +2672,10 @@ describe("Coupang product group aggregation", () => {
         salesQuantity: 0,
         orderCount: 0,
         adSpendKrw: 0,
-        adConversionSalesKrw: 0,
-        adConversionQuantity: 0
+        adGeneratedSalesKrw: 0,
+        adGeneratedQuantity: 0,
+        attributedConversionSalesKrw: 0,
+        attributedConversionQuantity: 0
       }),
       productProfitRow({
         productId: "sales-row",
@@ -2597,8 +2879,18 @@ describe("Coupang product group aggregation", () => {
     } as never);
     vi.spyOn(service as any, "buildProductProfitRows")
       .mockResolvedValueOnce([
-        productProfitRow({ productId: productA, reportedSalesKrw: 100, adSpendKrw: 10, adConversionSalesKrw: 30 }),
-        productProfitRow({ productId: productB, reportedSalesKrw: 900, adSpendKrw: 90, adConversionSalesKrw: 90 })
+        productProfitRow({
+          productId: productA,
+          reportedSalesKrw: 100,
+          adSpendKrw: 10,
+          adGeneratedSalesKrw: 30
+        }),
+        productProfitRow({
+          productId: productB,
+          reportedSalesKrw: 900,
+          adSpendKrw: 90,
+          adGeneratedSalesKrw: 90
+        })
       ])
       .mockResolvedValueOnce([]);
 
@@ -3017,7 +3309,10 @@ describe("Coupang product group aggregation", () => {
         reportedSalesQuantity: 9,
         manualPurchaseQuantity: 1,
         adSpendKrw: 100,
-        adConversionSalesKrw: 400,
+        adGeneratedSalesKrw: 400,
+        adGeneratedQuantity: 4,
+        attributedConversionSalesKrw: 800,
+        attributedConversionQuantity: 8,
         roas: 4,
         actualOrganicSalesKrw: 500,
         totalCostKrw: 700,
@@ -3030,7 +3325,10 @@ describe("Coupang product group aggregation", () => {
         reportedSalesQuantity: 1,
         actualSalesQuantity: 1,
         adSpendKrw: 300,
-        adConversionSalesKrw: 600,
+        adGeneratedSalesKrw: 600,
+        adGeneratedQuantity: 6,
+        attributedConversionSalesKrw: 100,
+        attributedConversionQuantity: 1,
         roas: 2,
         actualOrganicSalesKrw: -500,
         totalCostKrw: null,
@@ -3065,7 +3363,10 @@ describe("Coupang product group aggregation", () => {
         reportedSalesQuantity: 7,
         manualPurchaseQuantity: 2,
         adSpendKrw: 100,
-        adConversionSalesKrw: 300,
+        adGeneratedSalesKrw: 300,
+        adGeneratedQuantity: 3,
+        attributedConversionSalesKrw: 500,
+        attributedConversionQuantity: 5,
         roas: 3,
         totalCostKrw: 550,
         marginKrw: 150
@@ -3077,7 +3378,10 @@ describe("Coupang product group aggregation", () => {
         reportedSalesQuantity: 2,
         manualPurchaseQuantity: 1,
         adSpendKrw: 50,
-        adConversionSalesKrw: 100,
+        adGeneratedSalesKrw: 100,
+        adGeneratedQuantity: 1,
+        attributedConversionSalesKrw: 100,
+        attributedConversionQuantity: 1,
         roas: 2,
         totalCostKrw: 160,
         marginKrw: 40
@@ -3125,6 +3429,10 @@ describe("Coupang product group aggregation", () => {
       reportedSalesQuantity: 11,
       manualPurchaseQuantity: 1,
       adSpendKrw: 400,
+      adGeneratedSalesKrw: 1_000,
+      adGeneratedQuantity: 10,
+      attributedConversionSalesKrw: 900,
+      attributedConversionQuantity: 9,
       roas: 2.5,
       organicSalesKrw: 50,
       marginKrw: null,
@@ -3135,6 +3443,10 @@ describe("Coupang product group aggregation", () => {
         reportedSalesQuantity: 9,
         manualPurchaseQuantity: 3,
         adSpendKrw: 150,
+        adGeneratedSalesKrw: 400,
+        adGeneratedQuantity: 4,
+        attributedConversionSalesKrw: 600,
+        attributedConversionQuantity: 6,
         roas: 8 / 3,
         marginKrw: 190
       }
@@ -3217,6 +3529,10 @@ describe("Coupang product group aggregation", () => {
       reportedSalesQuantity: 17,
       manualPurchaseQuantity: 1,
       adSpendKrw: 400,
+      adGeneratedSalesKrw: 1_000,
+      adGeneratedQuantity: 10,
+      attributedConversionSalesKrw: 900,
+      attributedConversionQuantity: 9,
       roas: 2.5,
       organicSalesKrw: 350,
       marginKrw: null,
@@ -4442,8 +4758,10 @@ function productProfitRow(overrides: Partial<ProductProfitRow>): ProductProfitRo
     manualCalculationStatus: overrides.manualPurchaseQuantity ? "COMPLETE" : "NOT_APPLICABLE",
     calculationStatus,
     adSpendKrw: 0,
-    adConversionSalesKrw: 0,
-    adConversionQuantity: 0,
+    adGeneratedSalesKrw: 0,
+    adGeneratedQuantity: 0,
+    attributedConversionSalesKrw: 0,
+    attributedConversionQuantity: 0,
     organicSalesKrw: 0,
     reportedOrganicSalesKrw: actualNetSalesKrw,
     actualOrganicSalesKrw: actualNetSalesKrw,

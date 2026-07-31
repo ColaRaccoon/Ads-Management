@@ -38,6 +38,7 @@ const increasedOption = exportRow({
   visualBlockKey: "group:wavebar",
   visualBlockIndex: 0,
   indentLevel: 1,
+  roas: 2.083,
   marginKrw: 20_000,
   previousMarginKrw: -5_000
 });
@@ -84,13 +85,13 @@ describe("Coupang daily XLSX builder", () => {
       "판매수",
       "전일자 판매수",
       "가구매 수",
-      "광고수익률",
-      "오가닉매출",
+      "광고수익률(집행상품 기준)",
+      "오가닉매출(판매상품 기준)",
       "최종순이익",
       "전일자 최종 순이익"
     ]);
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.width)).toEqual([
-      34, 16, 17, 11, 15, 12, 14, 16, 18, 20
+      34, 16, 17, 11, 15, 12, 25, 25, 18, 20
     ]);
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.style)).toEqual([
       "Text", "Krw", "Krw", "Number", "Number", "Number", "Percent1", "Krw", "Krw", "Krw"
@@ -241,7 +242,7 @@ describe("Coupang daily XLSX builder", () => {
     expect(increaseCells[9]?.fontTone).toBe("NEGATIVE");
     expect(decreaseCells[8]?.fontTone).toBe("NEGATIVE");
     expect(decreaseCells[9]?.fontTone).toBe("POSITIVE");
-    expect(increaseCells[6]).toMatchObject({ value: 5.406, style: "Percent1" });
+    expect(increaseCells[6]).toMatchObject({ value: 2.083, style: "Percent1" });
   });
 
   it("cycles the four product palettes by visible block order", () => {
@@ -332,7 +333,7 @@ describe("Coupang daily XLSX builder", () => {
     expectCellStyleResource(styles, sheet, "B6", "border").toContain("<left/><right/>");
     expect(sheet).toMatch(/<c r="B3" s="\d+"><v>924000<\/v><\/c>/);
     expect(sheet).toMatch(/<c r="D4" s="\d+"><v>30<\/v><\/c>/);
-    expect(sheet).toMatch(/<c r="G4" s="\d+"><v>5\.406<\/v><\/c>/);
+    expect(sheet).toMatch(/<c r="G4" s="\d+"><v>2\.083<\/v><\/c>/);
     expect(sheet).not.toMatch(/<c r="(?:B3|D4|G4)"[^>]*t="inlineStr"/);
   });
 

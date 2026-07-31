@@ -47,7 +47,7 @@ export default function CoupangAdsPage() {
       <div className="page-title">
         <div>
           <h1>Coupang Ads Analysis</h1>
-          <p>Ad spend is attributed by execution product; conversion sales by conversion product.</p>
+          <p>광고비와 전환매출을 모두 광고 집행 상품 기준으로 합산한 광고 성과입니다.</p>
         </div>
       </div>
       <div className="panel">
@@ -65,14 +65,14 @@ export default function CoupangAdsPage() {
             { key: "adGroup", header: "Ad Group", render: (row) => row.adGroupName ?? "-" },
             { key: "impressions", header: "Impressions", render: (row) => numberFmt(row.impressions) },
             { key: "clicks", header: "Clicks", render: (row) => numberFmt(row.clicks) },
-            { key: "spend", header: "Ad Spend", render: (row) => money(row.adSpendKrw) },
+            { key: "spend", header: "광고비(집행상품 기준)", render: (row) => money(row.adSpendKrw) },
             { key: "orders", header: "Orders", render: (row) => numberFmt(row.totalOrders1d) },
             { key: "directOrders", header: "Direct", render: (row) => numberFmt(row.directOrders1d) },
             { key: "indirectOrders", header: "Indirect", render: (row) => numberFmt(row.indirectOrders1d) },
-            { key: "sales", header: "Conv Sales", render: (row) => money(row.totalConversionSales1dKrw) },
+            { key: "sales", header: "광고 발생 전환매출", render: (row) => money(row.totalConversionSales1dKrw) },
             { key: "directSales", header: "Direct Sales", render: (row) => money(row.directConversionSales1dKrw) },
             { key: "indirectSales", header: "Indirect Sales", render: (row) => money(row.indirectConversionSales1dKrw) },
-            { key: "roas", header: "ROAS", render: (row) => percent(row.roas) }
+            { key: "roas", header: "ROAS(집행상품 기준)", render: (row) => percent(row.roas) }
           ]}
         />
       </div>

@@ -8,6 +8,88 @@ import {
 } from "./coupang-profit-calculator";
 
 describe("calculateCoupangProfit", () => {
+  it("separates ad-generated ROAS from sales-attributed organic revenue", () => {
+    const baseInput = {
+      sales: { netSalesKrw: 200_000, salesQuantity: 1, saleMethod: "seller" },
+      cost: {
+        productCostKrw: 0,
+        sellerShippingFeeKrw: 0,
+        returnRate: 0,
+        returnCostPerUnitKrw: 0
+      },
+      options: { salesFeeRate: 0, includeReturnCost: true }
+    };
+    const result = calculateCoupangProfit(
+      baseInput.sales,
+      baseInput.cost,
+      {
+        adSpendKrw: 10_000,
+        adGeneratedSalesKrw: 30_000,
+        attributedConversionSalesKrw: 80_000
+      },
+      baseInput.options
+    );
+    const generatedOnlyChange = calculateCoupangProfit(
+      baseInput.sales,
+      baseInput.cost,
+      {
+        adSpendKrw: 10_000,
+        adGeneratedSalesKrw: 50_000,
+        attributedConversionSalesKrw: 80_000
+      },
+      baseInput.options
+    );
+    const attributionOnlyChange = calculateCoupangProfit(
+      baseInput.sales,
+      baseInput.cost,
+      {
+        adSpendKrw: 10_000,
+        adGeneratedSalesKrw: 30_000,
+        attributedConversionSalesKrw: 120_000
+      },
+      baseInput.options
+    );
+    const spendOnlyChange = calculateCoupangProfit(
+      baseInput.sales,
+      baseInput.cost,
+      {
+        adSpendKrw: 20_000,
+        adGeneratedSalesKrw: 30_000,
+        attributedConversionSalesKrw: 80_000
+      },
+      baseInput.options
+    );
+    const zeroSpend = calculateCoupangProfit(
+      baseInput.sales,
+      baseInput.cost,
+      {
+        adSpendKrw: 0,
+        adGeneratedSalesKrw: 30_000,
+        attributedConversionSalesKrw: 80_000
+      },
+      baseInput.options
+    );
+
+    expect(result.roas).toBe(3);
+    expect(result.organicSalesKrw).toBe(120_000);
+    expect(generatedOnlyChange).toMatchObject({
+      roas: 5,
+      organicSalesKrw: 120_000,
+      marginKrw: result.marginKrw
+    });
+    expect(attributionOnlyChange).toMatchObject({
+      roas: 3,
+      organicSalesKrw: 80_000,
+      marginKrw: result.marginKrw
+    });
+    expect(spendOnlyChange).toMatchObject({
+      roas: 1.5,
+      organicSalesKrw: 120_000,
+      marginKrw: result.marginKrw - 10_000
+    });
+    expect(zeroSpend.roas).toBeNull();
+  });
+
   it("includes return-rate cost and ad spend in total cost", () => {
     const result = calculateCoupangProfit(
       { netSalesKrw: 100_000, salesQuantity: 10, saleMethod: "seller" },
@@ -19,7 +101,11 @@ describe("calculateCoupangProfit", () => {
         returnCostPerUnitKrw: 2_000,
         extraCostKrw: 100
       },
-      { adSpendKrw: 8_000, adConversionSalesKrw: 60_000 },
+      {
+        adSpendKrw: 8_000,
+        adGeneratedSalesKrw: 60_000,
+        attributedConversionSalesKrw: 60_000
+      },
       { salesFeeRate: 0.05, includeReturnCost: true }
     );
 
@@ -41,7 +127,11 @@ describe("calculateCoupangProfit", () => {
         returnRate: 0,
         returnCostPerUnitKrw: 0
       },
-      { adSpendKrw: 10_000, adConversionSalesKrw: 70_000 },
+      {
+        adSpendKrw: 10_000,
+        adGeneratedSalesKrw: 70_000,
+        attributedConversionSalesKrw: 70_000
+      },
       { salesFeeRate: 0.02 }
     );
 
@@ -61,7 +151,11 @@ describe("calculateCoupangProfit", () => {
         returnRate: 0,
         returnCostPerUnitKrw: 0
       },
-      { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      {
+        adSpendKrw: 0,
+        adGeneratedSalesKrw: 0,
+        attributedConversionSalesKrw: 0
+      },
       { salesFeeRate: 0.108 }
     );
 
@@ -78,7 +172,11 @@ describe("calculateCoupangProfit", () => {
         returnRate: 0,
         returnCostPerUnitKrw: 0
       },
-      { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      {
+        adSpendKrw: 0,
+        adGeneratedSalesKrw: 0,
+        attributedConversionSalesKrw: 0
+      },
       { salesFeeRate: 0 }
     );
 
@@ -110,7 +208,11 @@ describe("calculateCoupangProfitBySegments", () => {
         returnRate: 0,
         extraCostKrw: 0
       },
-      ads: { adSpendKrw: 10_000, adConversionSalesKrw: 120_000 },
+      ads: {
+        adSpendKrw: 10_000,
+        adGeneratedSalesKrw: 120_000,
+        attributedConversionSalesKrw: 120_000
+      },
       salesFeeRate: 0.1
     });
 
@@ -145,7 +247,11 @@ describe("calculateCoupangProfitBySegments", () => {
         growthInboundFeeKrw: 0,
         growthShippingFeeKrw: 0
       },
-      ads: { adSpendKrw: 0, adConversionSalesKrw: 0 },
+      ads: {
+        adSpendKrw: 0,
+        adGeneratedSalesKrw: 0,
+        attributedConversionSalesKrw: 0
+      },
       salesFeeRate: 0
     });
 
@@ -168,7 +274,11 @@ describe("calculateCoupangProfitBySegments", () => {
       returnCostPerUnitKrw: 500,
       extraCostKrw: 100
     };
-    const ads = { adSpendKrw: 4_000, adConversionSalesKrw: 25_000 };
+    const ads = {
+      adSpendKrw: 4_000,
+      adGeneratedSalesKrw: 25_000,
+      attributedConversionSalesKrw: 25_000
+    };
     const legacy = calculateCoupangProfit(
       { saleMethod, netSalesKrw: 50_000, salesQuantity: 2 },
       cost,

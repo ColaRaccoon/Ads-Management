@@ -267,11 +267,11 @@ describe("Coupang daily report helpers", () => {
       "원본 판매수량",
       "전일 원본 판매수량",
       "가구매수량",
-      "광고비",
-      "전일 광고비",
-      "광고수익률",
-      "전일 광고수익률",
-      "오가닉 매출",
+      "광고비(집행상품 기준)",
+      "전일 광고비(집행상품 기준)",
+      "광고수익률(집행상품 기준)",
+      "전일 광고수익률(집행상품 기준)",
+      "오가닉 매출(판매상품 기준)",
       "최종 순이익",
       "전일 최종 순이익"
     ].join(","));
@@ -415,6 +415,10 @@ function metricsBase() {
     reportedSalesQuantity: 23,
     manualPurchaseQuantity: 3,
     adSpendKrw: 128_000,
+    adGeneratedSalesKrw: 691_968,
+    adGeneratedQuantity: 18,
+    attributedConversionSalesKrw: 678_000,
+    attributedConversionQuantity: 17,
     roas: 5.406,
     organicSalesKrw: 246_000,
     marginKrw: 244_700
@@ -427,6 +431,10 @@ function previous() {
     reportedSalesQuantity: 21,
     manualPurchaseQuantity: 2,
     adSpendKrw: 121_000,
+    adGeneratedSalesKrw: 627_022,
+    adGeneratedQuantity: 16,
+    attributedConversionSalesKrw: 590_000,
+    attributedConversionQuantity: 15,
     roas: 5.182,
     marginKrw: 231_800
   };

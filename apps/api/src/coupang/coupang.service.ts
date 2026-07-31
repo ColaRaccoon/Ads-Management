@@ -159,6 +159,21 @@ type ManualPurchaseEntryInput = {
 
 type CoupangGroupBy = "product" | "group";
 
+type AdPerformanceEntry = {
+  productId: string;
+  date: string;
+  spendKrw: number;
+  generatedSalesKrw: number;
+  generatedQuantity: number;
+};
+
+type SalesAttributionEntry = {
+  productId: string;
+  date: string;
+  attributedSalesKrw: number;
+  attributedQuantity: number;
+};
+
 export type ProductProfitRow = {
   rowType?: "PRODUCT" | "GROUP";
   productId: string;
@@ -211,8 +226,10 @@ export type ProductProfitRow = {
   manualCalculationStatus: CoupangCalculationPartStatus;
   calculationStatus: "COMPLETE" | "INCOMPLETE";
   adSpendKrw: number;
-  adConversionSalesKrw: number;
-  adConversionQuantity: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity: number;
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity: number;
   organicSalesKrw: number | null;
   reportedOrganicSalesKrw: number;
   actualOrganicSalesKrw: number | null;
@@ -238,6 +255,10 @@ export type CoupangDailyPreviousMetrics = {
   reportedSalesQuantity: number;
   manualPurchaseQuantity: number;
   adSpendKrw: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity: number;
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity: number;
   roas: number | null;
   marginKrw: number | null;
 };
@@ -247,6 +268,10 @@ export type CoupangDailyVisibleMetrics = {
   reportedSalesQuantity: number;
   manualPurchaseQuantity: number;
   adSpendKrw: number;
+  adGeneratedSalesKrw: number;
+  adGeneratedQuantity: number;
+  attributedConversionSalesKrw: number;
+  attributedConversionQuantity: number;
   roas: number | null;
   organicSalesKrw: number | null;
   marginKrw: number | null;
@@ -2807,43 +2832,78 @@ export class CoupangService {
         }))
     );
 
-    const spendByProductDate = new Map<string, { productId: string; date: string; amount: number }>();
-    const conversionByProductDate = new Map<string, { productId: string; date: string; salesKrw: number; quantity: number }>();
+    const adPerformanceByProductDate = new Map<string, AdPerformanceEntry>();
+    const salesAttributionByProductDate = new Map<string, SalesAttributionEntry>();
     for (const metric of adMetrics) {
       const date = formatDateOnly(metric.metricDate ?? range.toDate);
       if (metric.spendProductId) {
         const key = productDateKey(metric.spendProductId, date);
-        const current = spendByProductDate.get(key) ?? { productId: metric.spendProductId, date, amount: 0 };
-        current.amount += numberFrom(metric.adSpendKrw);
-        spendByProductDate.set(key, current);
+        const current = adPerformanceByProductDate.get(key) ?? {
+          productId: metric.spendProductId,
+          date,
+          spendKrw: 0,
+          generatedSalesKrw: 0,
+          generatedQuantity: 0
+        };
+        current.spendKrw += numberFrom(metric.adSpendKrw);
+        current.generatedSalesKrw += numberFrom(metric.totalConversionSales1dKrw);
+        current.generatedQuantity += numberFrom(metric.totalSalesQuantity1d);
+        adPerformanceByProductDate.set(key, current);
       }
       if (metric.conversionProductId) {
         const key = productDateKey(metric.conversionProductId, date);
-        const current = conversionByProductDate.get(key) ?? { productId: metric.conversionProductId, date, salesKrw: 0, quantity: 0 };
-        current.salesKrw += numberFrom(metric.totalConversionSales1dKrw);
-        current.quantity += numberFrom(metric.totalSalesQuantity1d);
-        conversionByProductDate.set(key, current);
+        const current = salesAttributionByProductDate.get(key) ?? {
+          productId: metric.conversionProductId,
+          date,
+          attributedSalesKrw: 0,
+          attributedQuantity: 0
+        };
+        current.attributedSalesKrw += numberFrom(metric.totalConversionSales1dKrw);
+        current.attributedQuantity += numberFrom(metric.totalSalesQuantity1d);
+        salesAttributionByProductDate.set(key, current);
       }
     }
 
     const allProductDateKeys = new Set([
       ...reportedByProductDate.keys(),
       ...manualByProductDate.keys(),
-      ...spendByProductDate.keys(),
-      ...conversionByProductDate.keys()
+      ...adPerformanceByProductDate.keys(),
+      ...salesAttributionByProductDate.keys()
     ]);
     const dailyRows: ProductProfitRow[] = Array.from(allProductDateKeys).map((key) => {
         const reportedEntry = reportedByProductDate.get(key);
         const manual = manualByProductDate.get(key) ?? null;
-        const spendEntry = spendByProductDate.get(key);
-        const conversionEntry = conversionByProductDate.get(key);
-        const productId = reportedEntry?.productId ?? manual?.productId ?? spendEntry?.productId ?? conversionEntry?.productId ?? "";
-        const dateText = reportedEntry?.date ?? manual?.date ?? spendEntry?.date ?? conversionEntry?.date ?? range.to;
+        const performanceEntry = adPerformanceByProductDate.get(key);
+        const attributionEntry = salesAttributionByProductDate.get(key);
+        const productId =
+          reportedEntry?.productId ??
+          manual?.productId ??
+          performanceEntry?.productId ??
+          attributionEntry?.productId ??
+          "";
+        const dateText =
+          reportedEntry?.date ??
+          manual?.date ??
+          performanceEntry?.date ??
+          attributionEntry?.date ??
+          range.to;
         const date = asDateOnly(dateText);
         const productName = productById.get(productId)?.displayName ?? reportedEntry?.productName ?? "Coupang Product";
         const reported = reportedEntry ?? emptyReportedSalesFacts(productId, dateText, productName);
-        const conversion = conversionEntry ?? { productId, date: dateText, salesKrw: 0, quantity: 0 };
-        const adSpendKrw = spendEntry?.amount ?? 0;
+        const performance = performanceEntry ?? {
+          productId,
+          date: dateText,
+          spendKrw: 0,
+          generatedSalesKrw: 0,
+          generatedQuantity: 0
+        };
+        const attribution = attributionEntry ?? {
+          productId,
+          date: dateText,
+          attributedSalesKrw: 0,
+          attributedQuantity: 0
+        };
+        const adSpendKrw = performance.spendKrw;
         const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], date);
         const salesFeeRule = findSalesFeeRuleForDate(salesFeeRules, date);
         const resolvedPrice = resolveCoupangSalePrice({
@@ -2864,8 +2924,10 @@ export class CoupangService {
           cost: costRule ? costInput(costRule) : null,
           ads: {
             adSpendKrw,
-            adConversionSalesKrw: conversion.salesKrw,
-            adConversionQuantity: conversion.quantity
+            adGeneratedSalesKrw: performance.generatedSalesKrw,
+            attributedConversionSalesKrw: attribution.attributedSalesKrw,
+            adGeneratedQuantity: performance.generatedQuantity,
+            attributedConversionQuantity: attribution.attributedQuantity
           },
           salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
         });
@@ -2886,8 +2948,10 @@ export class CoupangService {
               cost: costRule ? costInput(costRule) : null,
               ads: {
                 adSpendKrw,
-                adConversionSalesKrw: conversion.salesKrw,
-                adConversionQuantity: conversion.quantity
+                adGeneratedSalesKrw: performance.generatedSalesKrw,
+                attributedConversionSalesKrw: attribution.attributedSalesKrw,
+                adGeneratedQuantity: performance.generatedQuantity,
+                attributedConversionQuantity: attribution.attributedQuantity
               },
               salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
             });
@@ -2899,8 +2963,12 @@ export class CoupangService {
           ? { ...initialManualPart, status: "INCOMPLETE" as const, marginAdjustmentKrw: null }
           : initialManualPart;
         const combined = combineCoupangProfitParts({ normal, manual: manualPart });
-        const actualOrganicSalesKrw = actual.netSalesKrw === null ? null : actual.netSalesKrw - conversion.salesKrw;
-        const reportedOrganicSalesKrw = reported.netSalesKrw - conversion.salesKrw;
+        const actualOrganicSalesKrw =
+          actual.netSalesKrw === null
+            ? null
+            : actual.netSalesKrw - attribution.attributedSalesKrw;
+        const reportedOrganicSalesKrw =
+          reported.netSalesKrw - attribution.attributedSalesKrw;
         const displaySaleMethods = uniqueNonEmpty([...reported.saleMethods, ...(manual?.saleMethods ?? [])]);
         const requiresNormalCostRule = hasCoupangSalesSegmentActivity(actual.segments);
         const dailyComplete = combined.calculationStatus === "COMPLETE";
@@ -2951,8 +3019,10 @@ export class CoupangService {
           manualCalculationStatus: manualPart.status,
           calculationStatus: combined.calculationStatus,
           adSpendKrw,
-          adConversionSalesKrw: conversion.salesKrw,
-          adConversionQuantity: conversion.quantity,
+          adGeneratedSalesKrw: performance.generatedSalesKrw,
+          adGeneratedQuantity: performance.generatedQuantity,
+          attributedConversionSalesKrw: attribution.attributedSalesKrw,
+          attributedConversionQuantity: attribution.attributedQuantity,
           organicSalesKrw: actualOrganicSalesKrw,
           reportedOrganicSalesKrw,
           actualOrganicSalesKrw,
@@ -2972,7 +3042,7 @@ export class CoupangService {
           incompleteNormalCount: normal.status === "INCOMPLETE" ? 1 : 0,
           incompleteManualCount: manualPart.status === "INCOMPLETE" ? 1 : 0,
           marginRate: combined.marginKrw === null || actual.netSalesKrw === null ? null : safeDivide(combined.marginKrw, actual.netSalesKrw),
-          roas: safeDivide(conversion.salesKrw, adSpendKrw),
+          roas: safeDivide(performance.generatedSalesKrw, adSpendKrw),
           warnings: uniqueNonEmpty([
             ...actual.warnings,
             ...normal.warnings,
@@ -3614,8 +3684,10 @@ export function hasDailyReportActivity(row: ProductProfitRow) {
     row.salesQuantity !== 0 ||
     row.orderCount !== 0 ||
     row.adSpendKrw !== 0 ||
-    row.adConversionSalesKrw !== 0 ||
-    row.adConversionQuantity !== 0 ||
+    row.adGeneratedSalesKrw !== 0 ||
+    row.adGeneratedQuantity !== 0 ||
+    row.attributedConversionSalesKrw !== 0 ||
+    row.attributedConversionQuantity !== 0 ||
     row.manualPurchaseQuantity !== 0 ||
     row.manualPurchaseSalesKrw !== 0 ||
     row.manualPurchaseTotalCostKrw !== 0 ||
@@ -3635,6 +3707,10 @@ export function toDailyPreviousMetrics(row: ProductProfitRow | undefined): Coupa
     reportedSalesQuantity: row?.reportedSalesQuantity ?? 0,
     manualPurchaseQuantity: row?.manualPurchaseQuantity ?? 0,
     adSpendKrw: row?.adSpendKrw ?? 0,
+    adGeneratedSalesKrw: row?.adGeneratedSalesKrw ?? 0,
+    adGeneratedQuantity: row?.adGeneratedQuantity ?? 0,
+    attributedConversionSalesKrw: row?.attributedConversionSalesKrw ?? 0,
+    attributedConversionQuantity: row?.attributedConversionQuantity ?? 0,
     roas: row?.roas ?? null,
     marginKrw: row?.marginKrw ?? null
   };
@@ -3646,6 +3722,10 @@ export function toDailyVisibleMetrics(row: ProductProfitRow | undefined): Coupan
     reportedSalesQuantity: row?.reportedSalesQuantity ?? 0,
     manualPurchaseQuantity: row?.manualPurchaseQuantity ?? 0,
     adSpendKrw: row?.adSpendKrw ?? 0,
+    adGeneratedSalesKrw: row?.adGeneratedSalesKrw ?? 0,
+    adGeneratedQuantity: row?.adGeneratedQuantity ?? 0,
+    attributedConversionSalesKrw: row?.attributedConversionSalesKrw ?? 0,
+    attributedConversionQuantity: row?.attributedConversionQuantity ?? 0,
     roas: row?.roas ?? null,
     organicSalesKrw: row?.actualOrganicSalesKrw ?? (row ? null : 0),
     marginKrw: row?.marginKrw ?? (row ? null : 0)
@@ -3663,6 +3743,10 @@ function toCoupangDailySummary(
     reportedSalesQuantity: summary.reportedSalesQuantity,
     manualPurchaseQuantity: summary.manualPurchaseQuantity,
     adSpendKrw: summary.adSpendKrw,
+    adGeneratedSalesKrw: summary.adGeneratedSalesKrw,
+    adGeneratedQuantity: summary.adGeneratedQuantity,
+    attributedConversionSalesKrw: summary.attributedConversionSalesKrw,
+    attributedConversionQuantity: summary.attributedConversionQuantity,
     roas: summary.roas,
     organicSalesKrw: summary.actualOrganicSalesKrw,
     marginKrw: hasSourceRows ? summary.marginKrw : null,
@@ -3878,8 +3962,14 @@ function aggregateCoupangProductProfitGroup(
   const manualPurchaseOtherCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseOtherCostKrw));
   const manualPurchaseTotalCostKrw = strictSumNullable(rows.map((row) => row.manualPurchaseTotalCostKrw));
   const adSpendKrw = sumNumbers(rows.map((row) => row.adSpendKrw));
-  const adConversionSalesKrw = sumNumbers(rows.map((row) => row.adConversionSalesKrw));
-  const adConversionQuantity = sumNumbers(rows.map((row) => row.adConversionQuantity));
+  const adGeneratedSalesKrw = sumNumbers(rows.map((row) => row.adGeneratedSalesKrw));
+  const adGeneratedQuantity = sumNumbers(rows.map((row) => row.adGeneratedQuantity));
+  const attributedConversionSalesKrw = sumNumbers(
+    rows.map((row) => row.attributedConversionSalesKrw)
+  );
+  const attributedConversionQuantity = sumNumbers(
+    rows.map((row) => row.attributedConversionQuantity)
+  );
   const organicSalesKrw = strictSumNullable(rows.map((row) => row.organicSalesKrw));
   const reportedOrganicSalesKrw = sumNumbers(rows.map((row) => row.reportedOrganicSalesKrw));
   const actualOrganicSalesKrw = strictSumNullable(rows.map((row) => row.actualOrganicSalesKrw));
@@ -3968,8 +4058,10 @@ function aggregateCoupangProductProfitGroup(
     manualCalculationStatus,
     calculationStatus,
     adSpendKrw,
-    adConversionSalesKrw,
-    adConversionQuantity,
+    adGeneratedSalesKrw,
+    adGeneratedQuantity,
+    attributedConversionSalesKrw,
+    attributedConversionQuantity,
     organicSalesKrw,
     reportedOrganicSalesKrw,
     actualOrganicSalesKrw,
@@ -3985,7 +4077,7 @@ function aggregateCoupangProductProfitGroup(
     incompleteNormalCount,
     incompleteManualCount,
     marginRate: marginKrw === null || actualNetSalesKrw === null ? null : safeDivide(marginKrw, actualNetSalesKrw),
-    roas: safeDivide(adConversionSalesKrw, adSpendKrw),
+    roas: safeDivide(adGeneratedSalesKrw, adSpendKrw),
     warnings: uniqueNonEmpty([...rows.flatMap((row) => row.warnings), ...groupWarnings]),
     ruleStatus: hasUnmatched ? "UNMATCHED" : hasMissingCostRule ? "MISSING_COST_RULE" : "OK"
   };
@@ -4066,7 +4158,14 @@ export function summarizeCoupangProductProfitRows(rows: ProductProfitRow[]) {
   const totalCostKrw = strictSumNullable(rows.map((row) => row.totalCostKrw));
   const marginKrw = strictSumNullable(rows.map((row) => row.marginKrw));
   const adSpendKrw = sumNumbers(rows.map((row) => row.adSpendKrw));
-  const adConversionSalesKrw = sumNumbers(rows.map((row) => row.adConversionSalesKrw));
+  const adGeneratedSalesKrw = sumNumbers(rows.map((row) => row.adGeneratedSalesKrw));
+  const adGeneratedQuantity = sumNumbers(rows.map((row) => row.adGeneratedQuantity));
+  const attributedConversionSalesKrw = sumNumbers(
+    rows.map((row) => row.attributedConversionSalesKrw)
+  );
+  const attributedConversionQuantity = sumNumbers(
+    rows.map((row) => row.attributedConversionQuantity)
+  );
   const completeRows = rows.filter((row) =>
     row.calculationStatus === "COMPLETE" && Number.isFinite(row.marginKrw) && Number.isFinite(row.totalCostKrw)
   );
@@ -4114,7 +4213,10 @@ export function summarizeCoupangProductProfitRows(rows: ProductProfitRow[]) {
     extraCostKrw,
     vatKrw,
     adSpendKrw,
-    adConversionSalesKrw,
+    adGeneratedSalesKrw,
+    adGeneratedQuantity,
+    attributedConversionSalesKrw,
+    attributedConversionQuantity,
     organicSalesKrw,
     reportedOrganicSalesKrw,
     actualOrganicSalesKrw,
@@ -4130,7 +4232,7 @@ export function summarizeCoupangProductProfitRows(rows: ProductProfitRow[]) {
     incompleteNormalCount: rows.filter((row) => row.normalCalculationStatus === "INCOMPLETE").length,
     incompleteManualCount: rows.filter((row) => row.manualCalculationStatus === "INCOMPLETE").length,
     marginRate: marginKrw === null || actualNetSalesKrw === null ? null : safeDivide(marginKrw, actualNetSalesKrw),
-    roas: safeDivide(adConversionSalesKrw, adSpendKrw),
+    roas: safeDivide(adGeneratedSalesKrw, adSpendKrw),
     adSpendRatio: actualNetSalesKrw === null ? null : safeDivide(adSpendKrw, actualNetSalesKrw),
     incompleteCalculationCount,
     missingCostRuleCount: rows.filter((row) => row.ruleStatus === "MISSING_COST_RULE").length,
