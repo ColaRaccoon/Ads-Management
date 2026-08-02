@@ -9,7 +9,7 @@ import {
 } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { normalizeUploadedFilename } from "../common/encoding";
-import { asDateOnly, numberFrom, parseDateRange } from "../common/date-range";
+import { asDateOnly, dateRangeDays, numberFrom, parseDateRange } from "../common/date-range";
 import { PrismaService } from "../common/prisma.service";
 import {
   CoupangAdsXlsxParser,
@@ -318,7 +318,17 @@ export type CoupangDailySummary = CoupangDailyVisibleMetrics & {
 };
 
 export type CoupangDailyReportResponse = {
+  period: {
+    from: string;
+    to: string;
+  };
+  previousPeriod: {
+    from: string;
+    to: string;
+  };
+  /** @deprecated Use period.to. Kept for older clients. */
   date: string;
+  /** @deprecated Use previousPeriod.to. Kept for older clients. */
   previousDate: string;
   appliedFilter: {
     mode: "ALL" | "FILTERED";
@@ -2610,20 +2620,27 @@ export class CoupangService {
 
   async dailyReport(query: {
     date?: string;
+    from?: string;
+    to?: string;
     categoryIds?: string;
     includeUncategorized?: string;
     q?: string;
   }): Promise<CoupangDailyReportResponse> {
-    if (!query.date) {
+    if (!query.date && !query.from && !query.to) {
       throw new BadRequestException({ code: "DATE_REQUIRED", message: "date is required." });
     }
-    const date = toDateOnly(query.date);
-    if (!date) {
-      throw new BadRequestException({ code: "INVALID_DATE", message: "date must be YYYY-MM-DD." });
-    }
-    const currentDate = formatDateOnly(date);
-    const previous = previousDate(date);
-    const previousDateText = formatDateOnly(previous);
+    const range = query.from || query.to
+      ? parseDateRange(query.from, query.to)
+      : dailySingleDateRange(query.date!);
+    const periodDays = dateRangeDays(range.from, range.to);
+    const previousToDate = previousDate(range.fromDate);
+    const previousFromDate = shiftUtcDate(previousToDate, 1 - periodDays);
+    const previousRange = {
+      from: formatDateOnly(previousFromDate),
+      to: formatDateOnly(previousToDate),
+      fromDate: previousFromDate,
+      toDate: previousToDate
+    };
     const selectedCategoryIds = parseDailyCategoryIds(query.categoryIds);
     const includeUncategorized = parseIncludeUncategorized(query.includeUncategorized);
     if (typeof query.q === "string" && query.q.trim().length > 100) {
@@ -2634,18 +2651,13 @@ export class CoupangService {
       coupangDailyReportCategory?: PrismaService["coupangDailyReportCategory"];
     }).coupangDailyReportCategory;
     const [currentProductRows, previousProductRows, products, manualPurchases, allCategories] = await Promise.all([
-      this.buildProductProfitRows({ from: currentDate, to: currentDate, fromDate: date, toDate: date }),
-      this.buildProductProfitRows({
-        from: previousDateText,
-        to: previousDateText,
-        fromDate: previous,
-        toDate: previous
-      }),
+      this.buildProductProfitRows(range),
+      this.buildProductProfitRows(previousRange),
       this.prisma.coupangProduct.findMany({
         include: { group: true }
       }),
       this.prisma.coupangManualPurchase.findMany({
-        where: { purchaseDate: date },
+        where: { purchaseDate: { gte: range.fromDate, lte: range.toDate } },
         select: {
           coupangProductId: true,
           productDisplayName: true,
@@ -2712,8 +2724,10 @@ export class CoupangService {
     const mode = selectedCategoryIds.size || includeUncategorized || normalizedQuery ? "FILTERED" : "ALL";
 
     return {
-      date: currentDate,
-      previousDate: previousDateText,
+      period: { from: range.from, to: range.to },
+      previousPeriod: { from: previousRange.from, to: previousRange.to },
+      date: range.to,
+      previousDate: previousRange.to,
       appliedFilter: {
         mode,
         categories: selectedCategories,
@@ -5230,9 +5244,22 @@ function rethrowSalesFeeRuleWriteError(error: unknown): never {
 }
 
 function previousDate(date: Date) {
-  const previous = new Date(date);
-  previous.setUTCDate(previous.getUTCDate() - 1);
-  return previous;
+  return shiftUtcDate(date, -1);
+}
+
+function shiftUtcDate(date: Date, days: number) {
+  const shifted = new Date(date);
+  shifted.setUTCDate(shifted.getUTCDate() + days);
+  return shifted;
+}
+
+function dailySingleDateRange(value: string) {
+  const date = toDateOnly(value);
+  if (!date) {
+    throw new BadRequestException({ code: "INVALID_DATE", message: "date must be YYYY-MM-DD." });
+  }
+  const dateText = formatDateOnly(date);
+  return { from: dateText, to: dateText, fromDate: date, toDate: date };
 }
 
 function dateTimesDiffer(left: Date | null, right: Date | null) {

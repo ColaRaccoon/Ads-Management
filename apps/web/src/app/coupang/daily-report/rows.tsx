@@ -18,11 +18,13 @@ import type {
 export function CoupangDailyGroupBody({
   row,
   expanded,
-  onToggle
+  onToggle,
+  comparisonLabel = "직전 기간"
 }: {
   row: CoupangDailyGroupRow;
   expanded: boolean;
   onToggle: () => void;
+  comparisonLabel?: string;
 }) {
   const notes = dailyRowNotes(row);
   const collapsedClass = expanded ? "" : " coupang-daily-collapsed";
@@ -47,7 +49,7 @@ export function CoupangDailyGroupBody({
             <ProductName row={row} />
           </div>
         </th>
-        <MetricCells row={row} />
+        <MetricCells row={row} comparisonLabel={comparisonLabel} />
       </tr>
       {row.children.map((child) => (
         <tr
@@ -60,7 +62,7 @@ export function CoupangDailyGroupBody({
               <span title={rowCategoryTitle(child)}>{child.productName}</span>
             </div>
           </th>
-          <MetricCells row={child} />
+          <MetricCells row={child} comparisonLabel={comparisonLabel} />
         </tr>
       ))}
       {notes.length > 0 ? (
@@ -83,9 +85,11 @@ export function CoupangDailyGroupBody({
 }
 
 export function CoupangDailySingleBody({
-  row
+  row,
+  comparisonLabel = "직전 기간"
 }: {
   row: CoupangDailyProductRow;
+  comparisonLabel?: string;
 }) {
   const notes = dailyRowNotes(row);
   return (
@@ -99,7 +103,7 @@ export function CoupangDailySingleBody({
             <ProductName row={row} />
           </div>
         </th>
-        <MetricCells row={row} />
+        <MetricCells row={row} comparisonLabel={comparisonLabel} />
       </tr>
       {notes.length > 0 ? (
         <tr className="coupang-daily-memo-row">
@@ -136,7 +140,7 @@ function rowCategoryTitle(row: CoupangDailyReportRow) {
   return categoryTitle ? `${row.productName} · ${categoryTitle}` : row.productName;
 }
 
-function MetricCells({ row }: { row: CoupangDailyReportRow }) {
+function MetricCells({ row, comparisonLabel }: { row: CoupangDailyReportRow; comparisonLabel: string }) {
   return (
     <>
       <MetricCell value={row.reportedSalesKrw} format={formatDailyMoney} />
@@ -144,18 +148,21 @@ function MetricCells({ row }: { row: CoupangDailyReportRow }) {
         value={row.reportedSalesQuantity}
         previous={row.previous.reportedSalesQuantity}
         format={formatDailyQuantity}
+        comparisonLabel={comparisonLabel}
       />
       <MetricCell value={row.manualPurchaseQuantity} format={formatDailyQuantity} />
       <MetricCell
         value={row.adSpendKrw}
         previous={row.previous.adSpendKrw}
         format={formatDailyMoney}
+        comparisonLabel={comparisonLabel}
       />
       <MetricCell
         value={row.roas}
         previous={row.previous.roas}
         format={formatDailyRatio}
         tone={row.roas === 0 ? "zero" : "roas"}
+        comparisonLabel={comparisonLabel}
       />
       <MetricCell value={row.organicSalesKrw} format={formatDailyMoney} />
       <MetricCell
@@ -163,6 +170,7 @@ function MetricCells({ row }: { row: CoupangDailyReportRow }) {
         previous={row.previous.marginKrw}
         format={formatDailyProfit}
         tone={profitTone(row.marginKrw)}
+        comparisonLabel={comparisonLabel}
       />
     </>
   );
@@ -172,12 +180,14 @@ function MetricCell({
   value,
   previous,
   format,
-  tone
+  tone,
+  comparisonLabel
 }: {
   value: number | null;
   previous?: number | null;
   format: (value: number | null) => string;
   tone?: "roas" | "positive" | "negative" | "zero";
+  comparisonLabel?: string;
 }) {
   const currentText = format(value);
   const toneClass = tone ? ` coupang-daily-${tone}` : value === 0 ? " coupang-daily-zero" : "";
@@ -186,7 +196,7 @@ function MetricCell({
       {previous === undefined ? currentText : (
         <span className="coupang-daily-metric-inline">
           <span>{currentText}</span>
-          <small>(전일 {format(previous)})</small>
+          <small>({comparisonLabel ?? "직전 기간"} {format(previous)})</small>
         </span>
       )}
     </td>

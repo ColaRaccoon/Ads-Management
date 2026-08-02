@@ -81,14 +81,14 @@ describe("Coupang daily XLSX builder", () => {
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.header)).toEqual([
       "제품명",
       "매출",
-      "전일자 매출",
+      "직전 기간 매출",
       "판매수",
-      "전일자 판매수",
+      "직전 기간 판매수",
       "가구매 수",
       "광고수익률(집행상품 기준)",
       "오가닉매출(판매상품 기준)",
       "최종순이익",
-      "전일자 최종 순이익"
+      "직전 기간 최종 순이익"
     ]);
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.width)).toEqual([
       34, 16, 17, 11, 15, 12, 25, 25, 18, 20

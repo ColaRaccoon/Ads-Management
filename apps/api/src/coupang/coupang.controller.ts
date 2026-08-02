@@ -223,11 +223,13 @@ export class CoupangController {
   @Get("daily-report")
   dailyReport(
     @Query("date") date?: string,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
     @Query("categoryIds") categoryIds?: string,
     @Query("includeUncategorized") includeUncategorized?: string,
     @Query("q") q?: string
   ) {
-    return this.coupangService.dailyReport({ date, categoryIds, includeUncategorized, q });
+    return this.coupangService.dailyReport({ date, from, to, categoryIds, includeUncategorized, q });
   }
 
   @Get("daily-report/categories")

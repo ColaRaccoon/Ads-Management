@@ -89,6 +89,8 @@ function dailyResponse({
   rows?: CoupangDailyReportResponse["rows"];
 } = {}): CoupangDailyReportResponse {
   return {
+    period: { from: "2026-07-24", to: "2026-07-24" },
+    previousPeriod: { from: "2026-07-23", to: "2026-07-23" },
     date: "2026-07-24",
     previousDate: "2026-07-23",
     appliedFilter: {
@@ -257,7 +259,7 @@ describe("Coupang daily report helpers", () => {
 
     expect(COUPANG_DAILY_CSV_COLUMNS).toHaveLength(17);
     expect(header).toBe([
-      "조회일",
+      "조회 기간",
       "선택 필터",
       "검색어",
       "소속 리포트 카테고리",
@@ -265,15 +267,15 @@ describe("Coupang daily report helpers", () => {
       "제품/옵션",
       "쿠팡 원본매출",
       "원본 판매수량",
-      "전일 원본 판매수량",
+      "직전 기간 원본 판매수량",
       "가구매수량",
       "광고비(집행상품 기준)",
-      "전일 광고비(집행상품 기준)",
+      "직전 기간 광고비(집행상품 기준)",
       "광고수익률(집행상품 기준)",
-      "전일 광고수익률(집행상품 기준)",
+      "직전 기간 광고수익률(집행상품 기준)",
       "오가닉 매출(판매상품 기준)",
       "최종 순이익",
-      "전일 최종 순이익"
+      "직전 기간 최종 순이익"
     ].join(","));
     expect(totalRow?.split(",")).toHaveLength(17);
     expect(header).not.toContain("visualBlock");

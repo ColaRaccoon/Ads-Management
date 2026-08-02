@@ -233,6 +233,14 @@ export type CoupangDailySummary = CoupangDailyVisibleMetrics & {
 };
 
 export type CoupangDailyReportResponse = {
+  period: {
+    from: string;
+    to: string;
+  };
+  previousPeriod: {
+    from: string;
+    to: string;
+  };
   date: string;
   previousDate: string;
   appliedFilter: {

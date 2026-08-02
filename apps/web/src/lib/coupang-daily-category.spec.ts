@@ -20,6 +20,16 @@ describe("Coupang daily category UI helpers", () => {
     })).toBe("/coupang/daily-report?date=2026-07-24&categoryIds=a%2Cb&includeUncategorized=true&q=%EC%9B%A8%EC%9D%B4%EB%B8%8C+%EB%B0%94");
   });
 
+  it("builds a date-range report URL for the shared drag calendar", () => {
+    expect(buildCoupangDailyReportUrl({
+      from: "2026-07-21",
+      to: "2026-07-24",
+      categoryIds: [],
+      includeUncategorized: false,
+      query: ""
+    })).toBe("/coupang/daily-report?from=2026-07-21&to=2026-07-24");
+  });
+
   it("normalizes query case and repeated whitespace identically for cache keys and URLs", () => {
     const normalized = normalizeDailyReportQuery("  WaVE   BAR  ");
     expect(normalized).toBe("wave bar");

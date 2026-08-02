@@ -45,7 +45,7 @@ export const COUPANG_DAILY_XLSX_COLUMNS: CoupangDailyXlsxColumn[] = [
   { key: "reportedSalesKrw", header: "매출", style: "Krw", width: 16, value: (row) => row.reportedSalesKrw },
   {
     key: "previousReportedSalesKrw",
-    header: "전일자 매출",
+    header: "직전 기간 매출",
     style: "Krw",
     width: 17,
     value: (row) => row.previousReportedSalesKrw
@@ -59,7 +59,7 @@ export const COUPANG_DAILY_XLSX_COLUMNS: CoupangDailyXlsxColumn[] = [
   },
   {
     key: "previousReportedSalesQuantity",
-    header: "전일자 판매수",
+    header: "직전 기간 판매수",
     style: "Number",
     width: 15,
     value: (row) => row.previousReportedSalesQuantity
@@ -88,7 +88,7 @@ export const COUPANG_DAILY_XLSX_COLUMNS: CoupangDailyXlsxColumn[] = [
   { key: "marginKrw", header: "최종순이익", style: "Krw", width: 18, value: (row) => row.marginKrw },
   {
     key: "previousMarginKrw",
-    header: "전일자 최종 순이익",
+    header: "직전 기간 최종 순이익",
     style: "Krw",
     width: 20,
     value: (row) => row.previousMarginKrw

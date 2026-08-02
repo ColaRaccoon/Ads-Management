@@ -2919,6 +2919,12 @@ describe("Coupang product group aggregation", () => {
     await expect(service.dailyReport({ date: "2026-02-30" })).rejects.toMatchObject({
       response: { code: "INVALID_DATE" }
     });
+    await expect(service.dailyReport({ from: "2026-07-24" })).rejects.toMatchObject({
+      response: { code: "DATE_RANGE_REQUIRED" }
+    });
+    await expect(service.dailyReport({ from: "2026-07-25", to: "2026-07-24" })).rejects.toMatchObject({
+      response: { code: "INVALID_DATE_RANGE" }
+    });
     await expect(service.dailyReport({
       date: "2026-07-24",
       includeUncategorized: ""
@@ -2946,6 +2952,30 @@ describe("Coupang product group aggregation", () => {
     })).rejects.toMatchObject({
       response: { code: "DAILY_QUERY_TOO_LONG" }
     });
+  });
+
+  it("aggregates a dragged range and compares it with the immediately preceding range of equal length", async () => {
+    const findManualPurchases = vi.fn(async () => []);
+    const service = new CoupangService({
+      coupangProduct: { findMany: vi.fn(async () => []) },
+      coupangManualPurchase: { findMany: findManualPurchases }
+    } as never);
+    const buildRows = vi.spyOn(service as any, "buildProductProfitRows").mockResolvedValue([]);
+
+    const result = await service.dailyReport({ from: "2026-07-21", to: "2026-07-24" });
+
+    expect(result.period).toEqual({ from: "2026-07-21", to: "2026-07-24" });
+    expect(result.previousPeriod).toEqual({ from: "2026-07-17", to: "2026-07-20" });
+    expect(buildRows).toHaveBeenNthCalledWith(1, expect.objectContaining({ from: "2026-07-21", to: "2026-07-24" }));
+    expect(buildRows).toHaveBeenNthCalledWith(2, expect.objectContaining({ from: "2026-07-17", to: "2026-07-20" }));
+    expect(findManualPurchases).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        purchaseDate: {
+          gte: new Date("2026-07-21T00:00:00.000Z"),
+          lte: new Date("2026-07-24T00:00:00.000Z")
+        }
+      }
+    }));
   });
 
   it("rejects an inactive category requested directly as a report filter", async () => {
@@ -3536,11 +3566,18 @@ describe("Coupang product group aggregation", () => {
 
     expect(result.date).toBe("2026-07-24");
     expect(result.previousDate).toBe("2026-07-23");
+    expect(result.period).toEqual({ from: "2026-07-24", to: "2026-07-24" });
+    expect(result.previousPeriod).toEqual({ from: "2026-07-23", to: "2026-07-23" });
     expect(buildRows).toHaveBeenNthCalledWith(1, expect.objectContaining({ from: "2026-07-24", to: "2026-07-24" }));
     expect(buildRows).toHaveBeenNthCalledWith(2, expect.objectContaining({ from: "2026-07-23", to: "2026-07-23" }));
     expect(findProducts).toHaveBeenCalledWith({ include: { group: true } });
     expect(findManualPurchases).toHaveBeenCalledWith({
-      where: { purchaseDate: new Date("2026-07-24T00:00:00.000Z") },
+      where: {
+        purchaseDate: {
+          gte: new Date("2026-07-24T00:00:00.000Z"),
+          lte: new Date("2026-07-24T00:00:00.000Z")
+        }
+      },
       select: { coupangProductId: true, productDisplayName: true, memo: true }
     });
     expect(result).not.toHaveProperty("groupBy");

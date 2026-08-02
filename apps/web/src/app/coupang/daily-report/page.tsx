@@ -13,7 +13,7 @@ import {
   formatDailyRatio,
   isDailyGroupExpanded
 } from "@/lib/coupang-daily-report";
-import { koreaYesterdayDateInput } from "@/lib/korea-date";
+import { useRange } from "@/lib/use-range";
 import {
   CoupangDailyGroupBody,
   CoupangDailySingleBody
@@ -38,7 +38,7 @@ import { DailyCategoryFilter } from "./category-filter";
 import { DailyCategoryManager } from "./category-manager";
 
 export default function CoupangDailyReportPage() {
-  const [date, setDate] = useState(koreaYesterdayDateInput);
+  const range = useRange();
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -62,9 +62,9 @@ export default function CoupangDailyReportPage() {
   useEffect(() => { const timer = window.setTimeout(() => setDebouncedQuery(searchQuery), 300); return () => window.clearTimeout(timer); }, [searchQuery]);
   const normalizedDebouncedQuery = normalizeDailyReportQuery(debouncedQuery);
   const report = useQuery({
-    queryKey: ["coupang-daily-report", date, canonicalIds.join(","), includeUncategorized, normalizedDebouncedQuery],
+    queryKey: ["coupang-daily-report", range.from, range.to, canonicalIds.join(","), includeUncategorized, normalizedDebouncedQuery],
     queryFn: () => apiGet<CoupangDailyReportResponse>(buildCoupangDailyReportUrl({
-      date, categoryIds: canonicalIds, includeUncategorized, query: normalizedDebouncedQuery
+      from: range.from, to: range.to, categoryIds: canonicalIds, includeUncategorized, query: normalizedDebouncedQuery
     }))
   });
   const rows = report.data?.rows ?? [];
@@ -81,6 +81,13 @@ export default function CoupangDailyReportPage() {
       : [],
     [report.data]
   );
+  const selectedPeriod = report.data?.period ?? range;
+  const selectedPeriodLabel = report.data ? formatDailyPeriod(report.data.period) : "-";
+  const previousPeriodLabel = report.data ? formatDailyPeriod(report.data.previousPeriod) : null;
+  const comparisonLabel = selectedPeriod.from === selectedPeriod.to ? "전일" : "직전 기간";
+  const exportPeriodSlug = selectedPeriod.from === selectedPeriod.to
+    ? selectedPeriod.from
+    : `${selectedPeriod.from}_${selectedPeriod.to}`;
 
   useEffect(() => {
     if (!report.data) return;
@@ -109,7 +116,7 @@ export default function CoupangDailyReportPage() {
   const exportXlsx = () => {
     const workbook = buildCoupangDailyXlsxWorkbook(exportRows);
     const slug = dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0);
-    downloadXlsx(`${date}_쿠팡_데일리리포트_${slug}.xlsx`, workbook);
+    downloadXlsx(`${exportPeriodSlug}_쿠팡_데일리리포트_${slug}.xlsx`, workbook);
   };
 
   return (
@@ -120,24 +127,14 @@ export default function CoupangDailyReportPage() {
           <h1>Coupang Daily Report</h1>
           <p className="coupang-daily-subtitle">
             {report.data
-              ? `${report.data.date} 실적과 ${report.data.previousDate} 전일 값을 비교합니다. 제품 ${counts.topLevelCount}개 · 옵션 ${counts.optionCount}개`
-              : "선택 날짜의 제품 실적과 전일 값을 비교합니다."}
+              ? `${selectedPeriodLabel} 실적과 ${previousPeriodLabel} ${comparisonLabel} 값을 비교합니다. 제품 ${counts.topLevelCount}개 · 옵션 ${counts.optionCount}개`
+              : "상단 달력에서 선택한 기간의 제품 실적을 직전 동일 기간과 비교합니다."}
           </p>
         </div>
         <div className="coupang-daily-print-meta" aria-hidden="true">
-          조회일 {report.data?.date ?? date} · 범위 {report.data?.appliedFilter.label ?? "전체 제품"} · 검색 {report.data?.appliedFilter.query ?? "없음"}
+          조회 기간 {selectedPeriodLabel} · 비교 기간 {previousPeriodLabel ?? "-"} · 범위 {report.data?.appliedFilter.label ?? "전체 제품"} · 검색 {report.data?.appliedFilter.query ?? "없음"}
         </div>
         <div className="coupang-daily-actions coupang-daily-no-print">
-          <label className="coupang-daily-visually-hidden" htmlFor="coupang-daily-date">
-            조회 날짜
-          </label>
-          <input
-            id="coupang-daily-date"
-            className="input coupang-daily-date-input"
-            type="date"
-            value={date}
-            onChange={(event) => setDate(event.target.value)}
-          />
           <button
             className="button coupang-daily-action"
             type="button"
@@ -150,7 +147,7 @@ export default function CoupangDailyReportPage() {
             type="button"
             disabled={!report.data}
             onClick={() =>
-              downloadCsv(`${date}_쿠팡_데일리리포트_${dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0)}.csv`, COUPANG_DAILY_CSV_COLUMNS, exportRows)
+              downloadCsv(`${exportPeriodSlug}_쿠팡_데일리리포트_${dailyReportFilenameSlug(report.data?.appliedFilter.label ?? "전체", report.data?.appliedFilter.categories.length ?? 0)}.csv`, COUPANG_DAILY_CSV_COLUMNS, exportRows)
             }
           >
             <Download size={14} aria-hidden="true" /> CSV
@@ -210,6 +207,7 @@ export default function CoupangDailyReportPage() {
             previous={report.data.summary.previous}
             counts={counts}
             filtered={report.data.appliedFilter.mode === "FILTERED"}
+            comparisonLabel={comparisonLabel}
           />
           {report.data.summary.current.isComplete ? null : (
             <div className="coupang-daily-warning" role="alert">
@@ -226,7 +224,7 @@ export default function CoupangDailyReportPage() {
             <div className="coupang-daily-warning" role="status">
               <TriangleAlert size={14} aria-hidden="true" />
               <span>
-                전일 일부 상품의 계산이 불완전하여 전일 최종 순이익은 표시하지 않습니다.
+                {comparisonLabel} 일부 상품의 계산이 불완전하여 {comparisonLabel} 최종 순이익은 표시하지 않습니다.
               </span>
             </div>
           )}
@@ -272,7 +270,7 @@ export default function CoupangDailyReportPage() {
         <div className="coupang-daily-table-wrap">
           <table className="coupang-daily-table">
             <caption className="coupang-daily-visually-hidden">
-              선택일 및 전일 쿠팡 제품과 옵션별 실적
+              선택 기간 및 직전 동일 기간의 쿠팡 제품과 옵션별 실적
             </caption>
             <thead>
               <tr>
@@ -310,11 +308,13 @@ export default function CoupangDailyReportPage() {
                         normalizedSearchQuery.length > 0
                       )}
                       onToggle={() => toggleGroup(row.groupId)}
+                      comparisonLabel={comparisonLabel}
                     />
                   ) : (
                     <CoupangDailySingleBody
                       key={row.productId}
                       row={row}
+                      comparisonLabel={comparisonLabel}
                     />
                   );
                 })}
@@ -341,12 +341,14 @@ function SummaryStrip({
   current,
   previous,
   counts,
-  filtered
+  filtered,
+  comparisonLabel
 }: {
   current: CoupangDailySummary;
   previous: CoupangDailySummary;
   counts: ReturnType<typeof reportCounts>;
   filtered: boolean;
+  comparisonLabel: string;
 }) {
   const currentMargin = current.isComplete ? current.marginKrw : current.knownMarginKrw;
   const previousMargin = previous.isComplete ? previous.marginKrw : null;
@@ -364,17 +366,20 @@ function SummaryStrip({
         label="원본 판매수량"
         value={formatDailyQuantity(current.reportedSalesQuantity)}
         previous={formatDailyQuantity(previous.reportedSalesQuantity)}
+        comparisonLabel={comparisonLabel}
       />
       <SummaryItem label="가구매수량" value={formatDailyQuantity(current.manualPurchaseQuantity)} />
       <SummaryItem
         label="광고비(집행상품 기준)"
         value={formatDailyMoney(current.adSpendKrw)}
         previous={formatDailyMoney(previous.adSpendKrw)}
+        comparisonLabel={comparisonLabel}
       />
       <SummaryItem
         label="광고수익률(집행상품 기준)"
         value={formatDailyRatio(current.roas)}
         previous={formatDailyRatio(previous.roas)}
+        comparisonLabel={comparisonLabel}
         tone={current.roas === 0 ? "zero" : "roas"}
       />
       <SummaryItem label="오가닉 매출" value={formatDailyMoney(current.organicSalesKrw)} />
@@ -382,6 +387,7 @@ function SummaryStrip({
         label="최종 순이익"
         value={formatDailyProfit(currentMargin)}
         previous={formatDailyProfit(previousMargin)}
+        comparisonLabel={comparisonLabel}
         tone={profitTone(currentMargin)}
       />
     </section>
@@ -392,12 +398,14 @@ function SummaryItem({
   label,
   value,
   previous,
-  tone
+  tone,
+  comparisonLabel = "직전 기간"
 }: {
   label: string;
   value: string;
   previous?: string;
   tone?: "roas" | "positive" | "negative" | "zero";
+  comparisonLabel?: string;
 }) {
   return (
     <div className="coupang-daily-summary-item">
@@ -407,7 +415,7 @@ function SummaryItem({
       ) : (
         <strong className={`coupang-daily-metric-inline${tone ? ` coupang-daily-${tone}` : ""}`}>
           <span>{value}</span>
-          <small>(전일 {previous})</small>
+          <small>({comparisonLabel} {previous})</small>
         </strong>
       )}
     </div>
@@ -461,6 +469,12 @@ function profitTone(value: number | null): "positive" | "negative" | "zero" | un
   if (value > 0) return "positive";
   if (value < 0) return "negative";
   return "zero";
+}
+
+function formatDailyPeriod(period: { from: string; to: string }) {
+  const from = period.from.replaceAll("-", ".");
+  const to = period.to.replaceAll("-", ".");
+  return period.from === period.to ? from : `${from} - ${to}`;
 }
 
 function setsEqual(left: Set<string>, right: Set<string>) {

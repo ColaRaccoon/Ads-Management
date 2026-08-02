@@ -6,10 +6,20 @@ export function normalizeDailyReportQuery(value: string) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("ko-KR");
 }
 
-export function buildCoupangDailyReportUrl(input: {
-  date: string; categoryIds: Iterable<string>; includeUncategorized: boolean; query: string;
+type CoupangDailyReportDateInput =
+  | { from: string; to: string; date?: never }
+  | { date: string; from?: never; to?: never };
+
+export function buildCoupangDailyReportUrl(input: CoupangDailyReportDateInput & {
+  categoryIds: Iterable<string>; includeUncategorized: boolean; query: string;
 }) {
-  const params = new URLSearchParams({ date: input.date });
+  const params = new URLSearchParams();
+  if (input.from && input.to) {
+    params.set("from", input.from);
+    params.set("to", input.to);
+  } else if (input.date) {
+    params.set("date", input.date);
+  }
   const ids = canonicalDailyCategoryIds(input.categoryIds);
   if (ids.length) params.set("categoryIds", ids.join(","));
   if (input.includeUncategorized) params.set("includeUncategorized", "true");
