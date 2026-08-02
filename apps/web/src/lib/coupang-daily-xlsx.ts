@@ -27,6 +27,7 @@ type CoupangDailyXlsxColumnKey =
   | "reportedSalesQuantity"
   | "previousReportedSalesQuantity"
   | "manualPurchaseQuantity"
+  | "adSpendKrw"
   | "roas"
   | "organicSalesKrw"
   | "marginKrw"
@@ -70,6 +71,13 @@ export const COUPANG_DAILY_XLSX_COLUMNS: CoupangDailyXlsxColumn[] = [
     style: "Number",
     width: 12,
     value: (row) => row.manualPurchaseQuantity
+  },
+  {
+    key: "adSpendKrw",
+    header: "광고비",
+    style: "Krw",
+    width: 16,
+    value: (row) => row.adSpendKrw
   },
   {
     key: "roas",

@@ -77,7 +77,7 @@ const singleNote = noteRow({
 });
 
 describe("Coupang daily XLSX builder", () => {
-  it("uses the exact ten report columns and widths", () => {
+  it("uses the exact eleven report columns and widths", () => {
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.header)).toEqual([
       "제품명",
       "매출",
@@ -85,16 +85,17 @@ describe("Coupang daily XLSX builder", () => {
       "판매수",
       "직전 기간 판매수",
       "가구매 수",
+      "광고비",
       "광고수익률(집행상품 기준)",
       "오가닉매출(판매상품 기준)",
       "최종순이익",
       "직전 기간 최종 순이익"
     ]);
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.width)).toEqual([
-      34, 16, 17, 11, 15, 12, 25, 25, 18, 20
+      34, 16, 17, 11, 15, 12, 16, 25, 25, 18, 20
     ]);
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.style)).toEqual([
-      "Text", "Krw", "Krw", "Number", "Number", "Number", "Percent1", "Krw", "Krw", "Krw"
+      "Text", "Krw", "Krw", "Number", "Number", "Number", "Krw", "Percent1", "Krw", "Krw", "Krw"
     ]);
   });
 
@@ -139,7 +140,7 @@ describe("Coupang daily XLSX builder", () => {
       indent: 1
     });
     expect(secondOptionRow[0]?.fill).toBe("GROUP_MINT");
-    expect(note).toHaveLength(10);
+    expect(note).toHaveLength(11);
     expect(note[0]).toMatchObject({
       value: "기타사항: 블랙 리뷰 보강",
       fill: "GROUP_MINT",
@@ -169,8 +170,8 @@ describe("Coupang daily XLSX builder", () => {
     expect(rowCells(rows[7])[0]?.fill).toBe("GROUP_BLUE");
     expect(rows.every((row) => Array.isArray(row) || row.height !== 6)).toBe(true);
     expect(input.merges).toEqual([
-      { fromRow: 6, fromColumn: 1, toRow: 6, toColumn: 10 },
-      { fromRow: 8, fromColumn: 1, toRow: 8, toColumn: 10 }
+      { fromRow: 6, fromColumn: 1, toRow: 6, toColumn: 11 },
+      { fromRow: 8, fromColumn: 1, toRow: 8, toColumn: 11 }
     ]);
     expect(input.freezeRow).toBe(1);
     expect(input.autoFilter).toEqual({ fromRow: 1, toRow: 8 });
@@ -218,7 +219,7 @@ describe("Coupang daily XLSX builder", () => {
       bold: true,
       borderTone: "DECREASE"
     });
-    expect(noteCells).toHaveLength(10);
+    expect(noteCells).toHaveLength(11);
     expect(noteCells[0]).toMatchObject({
       value: "기타사항: 블랙 리뷰 보강",
       fill: "GROUP_MINT",
@@ -238,11 +239,12 @@ describe("Coupang daily XLSX builder", () => {
       bold: true,
       borderTone: "DECREASE"
     });
-    expect(increaseCells[8]?.fontTone).toBe("POSITIVE");
-    expect(increaseCells[9]?.fontTone).toBe("NEGATIVE");
-    expect(decreaseCells[8]?.fontTone).toBe("NEGATIVE");
-    expect(decreaseCells[9]?.fontTone).toBe("POSITIVE");
-    expect(increaseCells[6]).toMatchObject({ value: 2.083, style: "Percent1" });
+    expect(increaseCells[9]?.fontTone).toBe("POSITIVE");
+    expect(increaseCells[10]?.fontTone).toBe("NEGATIVE");
+    expect(decreaseCells[9]?.fontTone).toBe("NEGATIVE");
+    expect(decreaseCells[10]?.fontTone).toBe("POSITIVE");
+    expect(increaseCells[6]).toMatchObject({ value: 128_000, style: "Krw" });
+    expect(increaseCells[7]).toMatchObject({ value: 2.083, style: "Percent1" });
   });
 
   it("cycles the four product palettes by visible block order", () => {
@@ -305,7 +307,7 @@ describe("Coupang daily XLSX builder", () => {
     expect(styles).toContain(`formatCode="0.0%"`);
     expect(styles).toContain(`<alignment horizontal="left" indent="1"/>`);
     expect(styles).toContain(`<alignment wrapText="1"/>`);
-    expect(sheet).toContain(`<dimension ref="A1:J8"/>`);
+    expect(sheet).toContain(`<dimension ref="A1:K8"/>`);
     expect(sheet).not.toContain(`ht="6" customHeight="1"`);
     expect(sheet.match(/<row r="\d+"/g)).toEqual([
       `<row r="1"`,
@@ -318,23 +320,24 @@ describe("Coupang daily XLSX builder", () => {
       `<row r="8"`
     ]);
     expect(sheet).toMatch(/<row r="6" ht="\d+" customHeight="1">/);
-    expect(sheet).toContain(`<autoFilter ref="A1:J8"/>`);
+    expect(sheet).toContain(`<autoFilter ref="A1:K8"/>`);
     expect(sheet).toContain(
-      `<mergeCells count="2"><mergeCell ref="A6:J6"/><mergeCell ref="A8:J8"/></mergeCells>`
+      `<mergeCells count="2"><mergeCell ref="A6:K6"/><mergeCell ref="A8:K8"/></mergeCells>`
     );
     expect(sheet).toMatch(/<c r="A6" t="inlineStr" s="\d+"><is><t>기타사항: 블랙 리뷰 보강<\/t><\/is><\/c>/);
     expect(sheet).toMatch(/<c r="B6" t="inlineStr" s="\d+"><is><t><\/t><\/is><\/c>/);
-    expect(sheet).toMatch(/<c r="J6" t="inlineStr" s="\d+"><is><t><\/t><\/is><\/c>/);
-    expect(sheet).toMatch(/<c r="J8" t="inlineStr" s="\d+"><is><t><\/t><\/is><\/c>/);
-    expectCellStyleResource(styles, sheet, "J6", "fill").toContain(`rgb="FFE7F3EF"`);
-    expectCellStyleResource(styles, sheet, "J6", "border").toContain(
+    expect(sheet).toMatch(/<c r="K6" t="inlineStr" s="\d+"><is><t><\/t><\/is><\/c>/);
+    expect(sheet).toMatch(/<c r="K8" t="inlineStr" s="\d+"><is><t><\/t><\/is><\/c>/);
+    expectCellStyleResource(styles, sheet, "K6", "fill").toContain(`rgb="FFE7F3EF"`);
+    expectCellStyleResource(styles, sheet, "K6", "border").toContain(
       `<right style="thin"><color rgb="FFD8E0DE"/></right>`
     );
     expectCellStyleResource(styles, sheet, "B6", "border").toContain("<left/><right/>");
     expect(sheet).toMatch(/<c r="B3" s="\d+"><v>924000<\/v><\/c>/);
     expect(sheet).toMatch(/<c r="D4" s="\d+"><v>30<\/v><\/c>/);
-    expect(sheet).toMatch(/<c r="G4" s="\d+"><v>2\.083<\/v><\/c>/);
-    expect(sheet).not.toMatch(/<c r="(?:B3|D4|G4)"[^>]*t="inlineStr"/);
+    expect(sheet).toMatch(/<c r="G4" s="\d+"><v>128000<\/v><\/c>/);
+    expect(sheet).toMatch(/<c r="H4" s="\d+"><v>2\.083<\/v><\/c>/);
+    expect(sheet).not.toMatch(/<c r="(?:B3|D4|G4|H4)"[^>]*t="inlineStr"/);
   });
 
   it("gives long merged notes a bounded explicit height so wrapped text is not clipped", () => {
@@ -353,7 +356,7 @@ describe("Coupang daily XLSX builder", () => {
 
     expect(note.height).toBeGreaterThan(42);
     expect(note.height).toBeLessThanOrEqual(120);
-    expect(note.cells).toHaveLength(10);
+    expect(note.cells).toHaveLength(11);
     expect(note.cells[0]).toEqual(
       expect.objectContaining({
         value: longText,
@@ -365,7 +368,7 @@ describe("Coupang daily XLSX builder", () => {
       cell.value === "" && cell.fill === "GROUP_MINT"
     )).toBe(true);
     expect(input.merges).toEqual([
-      { fromRow: 5, fromColumn: 1, toRow: 5, toColumn: 10 }
+      { fromRow: 5, fromColumn: 1, toRow: 5, toColumn: 11 }
     ]);
 
     const sheet = readZipText(
@@ -384,7 +387,7 @@ describe("Coupang daily XLSX builder", () => {
     expect(sheet).toContain(
       `<row r="5" ht="${note.height}" customHeight="1">`
     );
-    expect(sheet).toContain(`<mergeCell ref="A5:J5"/>`);
+    expect(sheet).toContain(`<mergeCell ref="A5:K5"/>`);
   });
 
   it("keeps a summary row when the filtered report has no product rows", () => {
