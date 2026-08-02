@@ -19,6 +19,7 @@ CSV 업로드 기반 Meta 광고 성과 분석/운영 판단 보조 웹앱입니
 
 ```env
 DATABASE_URL="postgresql://meta_ads_app:<PASSWORD>@localhost:5432/meta_ads_performance?schema=public"
+PRISMA_CONNECTION_LIMIT=1
 PORT=4100
 UPLOAD_STORAGE_DIR="./storage/uploads"
 REPORT_STORAGE_DIR="./storage/reports"
