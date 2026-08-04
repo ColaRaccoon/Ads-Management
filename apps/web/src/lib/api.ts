@@ -74,9 +74,7 @@ export async function uploadCsv(file: File, conflictPolicy = "SKIP") {
     method: "POST",
     body: formData
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
+  await assertApiResponse(response);
   return response.json();
 }
 

@@ -538,6 +538,44 @@ p.muted {
   flex-direction: column;
 }
 
+.manual-purchase-save-feedback {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 7px;
+  min-height: 34px;
+  border: 1px solid;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.manual-purchase-save-feedback.success {
+  border-color: #b6dcc8;
+  background: #e5f5ec;
+  color: var(--green);
+}
+
+.manual-purchase-save-feedback.error {
+  border-color: #efb8b4;
+  background: #fff1f0;
+  color: var(--red);
+}
+
+.manual-purchase-save-feedback svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.manual-purchase-save-copy {
+  display: grid;
+  gap: 1px;
+}
+
+.manual-purchase-save-copy span {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 560px) {
   .manual-purchase-grid,
   .manual-purchase-controls {

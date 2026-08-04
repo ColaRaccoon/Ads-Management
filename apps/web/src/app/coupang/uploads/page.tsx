@@ -1,6 +1,6 @@
 "use client";
 
-import { Save, Trash2, UploadCloud } from "lucide-react";
+import { CheckCircle2, CircleX, Save, Trash2, UploadCloud } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -423,7 +423,7 @@ export default function CoupangUploadsPage() {
             <Save size={16} />
             저장
           </button>
-          <MutationMessage mutation={saveManualPurchases} />
+          <ManualPurchaseSaveMessage mutation={saveManualPurchases} />
         </div>
       </div>
 
@@ -503,6 +503,34 @@ function MutationMessage({ mutation }: { mutation: { data: unknown; error: Error
     return <span style={{ color: "#b42318" }}>{mutation.error?.message}</span>;
   }
   return mutation.data ? <pre>{JSON.stringify(mutation.data, null, 2)}</pre> : null;
+}
+
+function ManualPurchaseSaveMessage({
+  mutation
+}: {
+  mutation: { error: Error | null; isError: boolean; isSuccess: boolean };
+}) {
+  if (mutation.isError) {
+    const reason = mutation.error?.message.trim() || "알 수 없는 오류가 발생했습니다.";
+    return (
+      <div className="manual-purchase-save-feedback error" role="alert">
+        <CircleX aria-hidden="true" size={18} />
+        <div className="manual-purchase-save-copy">
+          <strong>저장 실패</strong>
+          <span>이유: {reason}</span>
+        </div>
+      </div>
+    );
+  }
+  if (mutation.isSuccess) {
+    return (
+      <div className="manual-purchase-save-feedback success" role="status">
+        <CheckCircle2 aria-hidden="true" size={18} />
+        <strong>저장 성공</strong>
+      </div>
+    );
+  }
+  return null;
 }
 
 function SummaryMetric({ label, value }: { label: string; value: string }) {

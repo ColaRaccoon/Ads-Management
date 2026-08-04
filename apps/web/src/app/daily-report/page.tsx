@@ -2,11 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO, subDays } from "date-fns";
-import { Printer, Search, Settings2 } from "lucide-react";
+import { Download, Printer, Search, Settings2 } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
 import { money, numberFmt } from "@/lib/date-range";
+import { buildMetaDailyXlsxWorkbook } from "@/lib/meta-daily-xlsx";
 import { useRange } from "@/lib/use-range";
+import { downloadXlsx } from "@/lib/xlsx";
 
 type CreativePerformanceRow = {
   creativeKey: string;
@@ -228,6 +230,28 @@ export default function DailyReportPage() {
     [visibleColumns]
   );
   const isLoading = current.isLoading || previous.isLoading || salesPerformance.isLoading || !settingsLoaded;
+  const exportDisabled =
+    isLoading ||
+    current.isError ||
+    previous.isError ||
+    salesPerformance.isError ||
+    reportGroups.length === 0;
+  const exportXlsx = () => {
+    const workbook = buildMetaDailyXlsxWorkbook({
+      reportDate,
+      productCount: reportGroups.length,
+      totals: reportTotals,
+      visibleColumns: selectedColumns.map((column) => column.key),
+      groups: reportGroups.map((group) => ({
+        productName: group.productName,
+        productId: group.productId,
+        totals: group.totals,
+        salesRow: group.salesRow,
+        rows: group.rows
+      }))
+    });
+    downloadXlsx(`${reportDate}_메타_데일리리포트.xlsx`, workbook);
+  };
 
   return (
     <section className="page daily-report-page">
@@ -240,7 +264,9 @@ export default function DailyReportPage() {
           deliveryStatus={deliveryStatus}
           query={query}
           visibleColumns={visibleColumns}
+          exportDisabled={exportDisabled}
           onDeliveryStatusChange={setDeliveryStatus}
+          onExportXlsx={exportXlsx}
           onPrint={() => window.print()}
           onQueryChange={setQuery}
           onToggleColumn={(key) => setVisibleColumns((columns) => toggleColumn(columns, key))}
@@ -283,17 +309,21 @@ export default function DailyReportPage() {
 
 function DailyReportToolbar({
   deliveryStatus,
+  exportDisabled,
   query,
   visibleColumns,
   onDeliveryStatusChange,
+  onExportXlsx,
   onPrint,
   onQueryChange,
   onToggleColumn
 }: {
   deliveryStatus: DeliveryStatusFilter;
+  exportDisabled: boolean;
   query: string;
   visibleColumns: ColumnKey[];
   onDeliveryStatusChange: (value: DeliveryStatusFilter) => void;
+  onExportXlsx: () => void;
   onPrint: () => void;
   onQueryChange: (value: string) => void;
   onToggleColumn: (value: ColumnKey) => void;
@@ -332,9 +362,13 @@ function DailyReportToolbar({
           ))}
         </div>
       </div>
-      <button className="button primary" type="button" onClick={onPrint}>
+      <button className="button" type="button" onClick={onPrint}>
         <Printer size={15} />
         출력
+      </button>
+      <button className="button primary" type="button" disabled={exportDisabled} onClick={onExportXlsx}>
+        <Download size={15} />
+        XLSX
       </button>
     </div>
   );

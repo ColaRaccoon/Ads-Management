@@ -31,6 +31,11 @@ import { formatDateOnly } from "../domain/date-number";
 import { ExchangeRatesService } from "../exchange-rates/exchange-rates.service";
 import { MappingsService } from "../mappings/mappings.service";
 
+const UPLOAD_DELETE_TRANSACTION_OPTIONS = {
+  maxWait: 30_000,
+  timeout: 300_000
+};
+
 @Injectable()
 export class UploadsService {
   private readonly csvParser = new MetaCsvParser();
@@ -718,7 +723,7 @@ export class UploadsService {
         restoredAdsetCurrentCount,
         ...creativeCleanup
       };
-    });
+    }, UPLOAD_DELETE_TRANSACTION_OPTIONS);
 
     const storedFileDeleted = await this.deleteStoredUploadFile(batch.storedFilePath);
     return {

@@ -362,9 +362,6 @@ function fillForBlockIndex(blockIndex: number | null) {
 }
 
 function xlsxProductName(row: CoupangDailyExportRow) {
-  if (row.rowKind === "그룹합계") {
-    return `Σ ${row.productName} (그룹 합계 · 옵션 ${row.visualChildProductCount ?? 0}개)`;
-  }
   return row.productName;
 }
 

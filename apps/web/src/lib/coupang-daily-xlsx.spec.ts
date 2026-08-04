@@ -128,7 +128,7 @@ describe("Coupang daily XLSX builder", () => {
     const secondOptionRow = rowCells(rows[4]);
     const note = rowCells(rows[5]);
     expect(groupRow[0]).toMatchObject({
-      value: "Σ 웨이브 밸런스바 (그룹 합계 · 옵션 2개)",
+      value: "웨이브 밸런스바",
       fill: "GROUP_MINT",
       bold: true,
       borderTone: "BLOCK_START"
@@ -499,7 +499,7 @@ describe("Coupang daily XLSX builder", () => {
 
     const inputRows = buildCoupangDailyXlsxInput(filtered).rows;
     expect(rowCells(inputRows[2])[0]).toMatchObject({
-      value: "Σ 판매 그룹 (그룹 합계 · 옵션 1개)",
+      value: "판매 그룹",
       fill: "GROUP_MINT"
     });
     expect(rowCells(inputRows[5])[0]).toMatchObject({
