@@ -2,12 +2,13 @@
 
 import { Ban, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
 import { money } from "@/lib/date-range";
-import { koreaYesterdayDateInput } from "@/lib/korea-date";
+import { koreaTodayDateInput, koreaYesterdayDateInput } from "@/lib/korea-date";
+import { currentMetaProductCostRuleMap, type MetaProductCostRule } from "@/lib/meta-product-cost";
 import {
   type Cafe24CouponRule,
   type Cafe24CouponScope,
@@ -59,6 +60,10 @@ export default function ProductSettingsPage() {
     queryKey: ["products"],
     queryFn: () => apiGet<ProductRow[]>("/products")
   });
+  const costRules = useQuery({
+    queryKey: ["product-cost-rules"],
+    queryFn: () => apiGet<MetaProductCostRule[]>("/product-cost-rules")
+  });
   const couponProducts = useQuery({
     queryKey: [...CAFE24_COUPON_PRODUCTS_QUERY_KEY],
     queryFn: () => apiGet<ProductRow[]>(CAFE24_COUPON_PRODUCTS_QUERY_PATH)
@@ -93,6 +98,12 @@ export default function ProductSettingsPage() {
       apiPatch<Cafe24CouponRule>(`/sales/cafe24/coupon-rules/${id}`, body),
     onSuccess: () => invalidateCouponQueries()
   });
+  const today = koreaTodayDateInput();
+  const currentCostRules = useMemo(
+    () => currentMetaProductCostRuleMap(costRules.data ?? [], today),
+    [costRules.data, today]
+  );
+  const configuredProductCount = (products.data ?? []).filter((product) => currentCostRules.has(product.id)).length;
 
   const onProduct = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -130,13 +141,38 @@ export default function ProductSettingsPage() {
         </div>
       </div>
       <div className="panel" style={{ marginTop: 12 }}>
-        <h2>제품 목록</h2>
+        <div className="rule-form-title">
+          <strong>제품 목록 · 현재 비용 설정</strong>
+          <span>
+            {today} 기준 적용값 · {costRules.isLoading ? "비용 정보를 불러오는 중" : `${configuredProductCount}/${products.data?.length ?? 0}개 제품 설정됨`}
+          </span>
+        </div>
+        {costRules.error ? (
+          <div className="warning-strip" style={{ marginBottom: 12 }}>
+            <span>현재 비용 정보를 불러오지 못했습니다: {(costRules.error as Error).message}</span>
+          </div>
+        ) : null}
         <DataTable rows={products.data ?? []} columns={[
           { key: "code", header: "Code", render: (row) => row.code },
           { key: "name", header: "Name", render: (row) => row.displayName },
           { key: "sku", header: "SKU", render: (row) => row.sku ?? "-" },
-          { key: "active", header: "Active", render: (row) => String(row.isActive) },
-          { key: "cost", header: "최근 판매가", render: (row) => money(Number(row.costRules?.[0]?.salePriceKrw ?? 0)) },
+          {
+            key: "costStatus",
+            header: "비용 설정",
+            render: (row) => costRules.isLoading ? (
+              <span className="muted">불러오는 중</span>
+            ) : currentCostRules.has(row.id) ? (
+              <span className="badge scale">적용 중</span>
+            ) : (
+              <span className="badge stop_candidate">미설정</span>
+            )
+          },
+          { key: "salePrice", header: "판매가", render: (row) => costRuleMoney(currentCostRules.get(row.id)?.salePriceKrw) },
+          { key: "productCost", header: "상품 원가", render: (row) => costRuleMoney(currentCostRules.get(row.id)?.productCostKrw) },
+          { key: "shipping", header: "배송비", render: (row) => costRuleMoney(currentCostRules.get(row.id)?.shippingKrw) },
+          { key: "extraCost", header: "기타 비용", render: (row) => costRuleMoney(currentCostRules.get(row.id)?.extraCostKrw) },
+          { key: "vat", header: "부가세", render: (row) => costRuleMoney(currentCostRules.get(row.id)?.vatKrw) },
+          { key: "period", header: "적용 기간", render: (row) => costRulePeriod(currentCostRules.get(row.id)) },
           { key: "cpa", header: "Target Ratio", render: (row) => row.cpaRules?.[0]?.targetRatio ?? "-" },
           {
             key: "actions",
@@ -628,4 +664,19 @@ function RatioInput({ name, defaultValue, step }: { name: string; defaultValue: 
       type="number"
     />
   );
+}
+
+function costRuleMoney(value: number | string | null | undefined) {
+  if (value === null || value === undefined || String(value).trim() === "") {
+    return "-";
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? money(parsed) : "-";
+}
+
+function costRulePeriod(rule: MetaProductCostRule | undefined) {
+  if (!rule) {
+    return "-";
+  }
+  return `${rule.effectiveFrom.slice(0, 10)} ~ ${rule.effectiveTo?.slice(0, 10) ?? "계속"}`;
 }
