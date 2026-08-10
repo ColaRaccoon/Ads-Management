@@ -10,7 +10,7 @@ export type CoupangProductProfitRow = {
   children?: CoupangProductProfitRow[];
   saleMethod: string | null;
   matchedSalesLineCount: number;
-  // Raw Coupang-reported activity. Manual purchases remain in this cost-incurrence basis.
+  // Raw Coupang-reported activity retained for comparison and audit.
   reportedSalesKrw: number;
   reportedNetSalesKrw: number;
   reportedSalesQuantity: number;
@@ -25,7 +25,7 @@ export type CoupangProductProfitRow = {
   promotionPriceKrw: number | null;
   priceSource: string;
   priceWarnings: string[];
-  // Operating costs are calculated from the raw reported activity above, not the adjusted activity.
+  // Operating costs calculated from sales after manual-purchase adjustment.
   productCostKrw: number | null;
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
@@ -47,7 +47,7 @@ export type CoupangProductProfitRow = {
   manualPurchaseShippingCostKrw: number | null;
   manualPurchaseOtherCostKrw: number | null;
   manualPurchaseTotalCostKrw: number | null;
-  // Revenue recognized after excluding the stored manual-purchase sales/quantity snapshot.
+  // Normal-profit basis after excluding the stored manual-purchase sales/quantity snapshot.
   actualSalesKrw: number | null;
   actualNetSalesKrw: number | null;
   actualSalesQuantity: number | null;
@@ -62,7 +62,7 @@ export type CoupangProductProfitRow = {
   organicSalesKrw: number | null;
   reportedOrganicSalesKrw: number;
   actualOrganicSalesKrw: number | null;
-  // Recognized net sales less reported-activity costs, before the manual-purchase vendor fee.
+  // Adjusted normal-sales profit before the manual-purchase vendor fee.
   normalMarginKrw: number | null;
   totalCostKrw: number | null;
   marginKrw: number | null;

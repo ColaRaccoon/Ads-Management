@@ -47,7 +47,7 @@ export default function CoupangDashboardPage() {
 
   return (
     <section className="page">
-      <div className="page-title"><div><h1>Coupang Dashboard</h1><p>가구매 매출은 회사 매출에서 전액 제외하고, 원본 거래에서 발생한 상품원가·쿠팡 판매수수료·배송/물류비·VAT는 그대로 유지하며, 가구매 업체수수료를 최종 순이익에서 별도로 추가 차감합니다.</p></div></div>
+      <div className="page-title"><div><h1>Coupang Dashboard</h1><p>가구매 매출과 수량을 원본 실적에서 제외한 뒤 상품원가·쿠팡 판매수수료·배송/물류비·VAT를 조정 후 실적으로 계산하고, 가구매 업체수수료를 최종 순이익에서 별도로 한 번 차감합니다.</p></div></div>
       {dashboard.isError ? <div className="warning-strip"><AlertTriangle size={15} /> Coupang API or database settings need attention.</div> : null}
       <div className="warning-strip">
         <span><AlertTriangle size={15} /> Missing cost rules {data?.summary.missingCostRuleCount ?? 0}</span>

@@ -1,5 +1,5 @@
 import {
-  calculateCoupangProfitByAccountingBases,
+  calculateCoupangProfitBySegments,
   normalizeCoupangFulfillmentMethod,
   type CoupangAdInput,
   type CoupangCostInput,
@@ -351,7 +351,6 @@ function deductManualSalesAmount(
 }
 
 export function calculateNormalCoupangProfit(input: {
-  reported: ReportedSalesFacts;
   actual: ActualSalesFacts;
   cost: CoupangCostInput | null;
   ads: CoupangAdInput;
@@ -362,15 +361,14 @@ export function calculateNormalCoupangProfit(input: {
     return { status: "INCOMPLETE", calculated: null, warnings };
   }
 
-  const incurredSegments = resolvedReportedSegments(input.reported);
-  const hasIncurredActivity = hasCoupangSalesSegmentActivity(incurredSegments);
+  const normalSegments = input.actual.segments;
+  const hasNormalActivity = hasCoupangSalesSegmentActivity(normalSegments);
   if (input.salesFeeRate === null && !input.actual.isManualOnly) {
     return { status: "INCOMPLETE", calculated: null, warnings: ["COUPANG_GLOBAL_SALES_FEE_RATE_MISSING"] };
   }
-  if (!hasIncurredActivity) {
-    const calculated = calculateCoupangProfitByAccountingBases({
-      recognizedSegments: input.actual.segments,
-      incurredSegments,
+  if (!hasNormalActivity) {
+    const calculated = calculateCoupangProfitBySegments({
+      segments: normalSegments,
       cost: emptyCostInput(),
       ads: input.ads,
       salesFeeRate: input.salesFeeRate ?? 0,
@@ -384,13 +382,12 @@ export function calculateNormalCoupangProfit(input: {
   if (!input.cost) {
     return { status: "INCOMPLETE", calculated: null, warnings: ["NORMAL_COST_RULE_MISSING"] };
   }
-  const missingLogisticsWarnings = missingCoupangLogisticsCostWarnings(incurredSegments, input.cost);
+  const missingLogisticsWarnings = missingCoupangLogisticsCostWarnings(normalSegments, input.cost);
   if (missingLogisticsWarnings.length > 0) {
     return { status: "INCOMPLETE", calculated: null, warnings: missingLogisticsWarnings };
   }
-  const calculated = calculateCoupangProfitByAccountingBases({
-    recognizedSegments: input.actual.segments,
-    incurredSegments,
+  const calculated = calculateCoupangProfitBySegments({
+    segments: normalSegments,
     cost: input.cost,
     ads: input.ads,
     salesFeeRate: input.salesFeeRate,

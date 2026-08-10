@@ -38,7 +38,7 @@ export default function CoupangProfitPage() {
       <div className="page-title">
         <div>
           <h1>Coupang Profit Table</h1>
-          <p>가구매 매출은 회사 매출에서 전액 제외하고, 원본 거래에서 발생한 상품원가·쿠팡 판매수수료·배송/물류비·VAT는 그대로 유지하며, 가구매 업체수수료를 최종 순이익에서 별도로 추가 차감합니다.</p>
+          <p>가구매 매출과 수량을 원본 실적에서 제외한 뒤 상품원가·쿠팡 판매수수료·배송/물류비·VAT를 조정 후 실적으로 계산하고, 가구매 업체수수료를 최종 순이익에서 별도로 한 번 차감합니다.</p>
           <p title="교차 구매가 있는 경우 판매상품에 광고비를 재배부한 회계이익이 아닙니다.">
             광고비는 광고 집행 상품에 귀속되므로 상품별 순이익은 집행비를 포함한 운영 기여값입니다.
           </p>
@@ -90,12 +90,12 @@ function productProfitColumns(groupBy: CoupangGroupBy, showReported: boolean, sh
     { key: "actualSales", header: "가구매 조정 후 매출", render: (row) => money(row.actualSalesKrw) },
     { key: "actualNet", header: "가구매 조정 후 순매출", render: (row) => money(row.actualNetSalesKrw) },
     { key: "actualQty", header: "가구매 조정 후 판매수량", render: (row) => numberFmt(row.actualSalesQuantity) },
-    { key: "productCost", header: "상품원가(원본 거래 기준)", render: (row) => money(row.productCostKrw) },
-    { key: "salesFee", header: "쿠팡 판매수수료(원본 거래 기준)", render: (row) => money(row.salesFeeKrw) },
-    { key: "shipping", header: "배송/물류비(원본 거래 기준)", render: (row) => money(row.shippingCostKrw) },
-    { key: "return", header: "반품예상비(원본 거래 기준)", render: (row) => money(row.returnCostKrw) },
-    { key: "extra", header: "기타비용(원본 거래 기준)", render: (row) => money(row.extraCostKrw) },
-    { key: "vat", header: "쿠팡 매출 VAT(원본 거래 기준)", render: (row) => money(row.vatKrw) },
+    { key: "productCost", header: "상품원가(가구매 조정 후)", render: (row) => money(row.productCostKrw) },
+    { key: "salesFee", header: "쿠팡 판매수수료(가구매 조정 후)", render: (row) => money(row.salesFeeKrw) },
+    { key: "shipping", header: "배송/물류비(가구매 조정 후)", render: (row) => money(row.shippingCostKrw) },
+    { key: "return", header: "반품예상비(가구매 조정 후)", render: (row) => money(row.returnCostKrw) },
+    { key: "extra", header: "기타비용(가구매 조정 후)", render: (row) => money(row.extraCostKrw) },
+    { key: "vat", header: "쿠팡 매출 VAT(가구매 조정 후)", render: (row) => money(row.vatKrw) },
     { key: "manualQty", header: "가구매 수량", render: (row) => numberFmt(row.manualPurchaseQuantity) },
     { key: "manualSales", header: "가구매 매출 제외액", render: (row) => money(row.manualPurchaseSalesKrw) },
     { key: "manualTotal", header: "가구매 업체수수료", render: (row) => money(row.manualPurchaseTotalCostKrw) },

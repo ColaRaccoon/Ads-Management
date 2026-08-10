@@ -184,7 +184,7 @@ export type ProductProfitRow = {
   children?: ProductProfitRow[];
   saleMethod: string | null;
   matchedSalesLineCount: number;
-  // Raw Coupang-reported activity; this is the cost-incurrence basis.
+  // Raw Coupang-reported activity retained for comparison and audit.
   reportedSalesQuantity: number;
   reportedOrderCount: number;
   reportedSalesKrw: number;
@@ -199,7 +199,7 @@ export type ProductProfitRow = {
   promotionPriceKrw: number | null;
   priceSource: "PROMOTION" | "BASE" | "MISSING" | "CONFLICT" | "MIXED";
   priceWarnings: string[];
-  // These operating costs retain the raw reported activity, including manual-purchase transactions.
+  // Operating costs calculated from sales after manual-purchase adjustment.
   productCostKrw: number | null;
   salesFeeKrw: number | null;
   shippingCostKrw: number | null;
@@ -221,7 +221,7 @@ export type ProductProfitRow = {
   manualPurchaseShippingCostKrw: number | null;
   manualPurchaseOtherCostKrw: number | null;
   manualPurchaseTotalCostKrw: number | null;
-  // Revenue recognized after the manual-purchase sales/quantity snapshot is excluded.
+  // Normal-profit basis after the manual-purchase sales/quantity snapshot is excluded.
   actualSalesKrw: number | null;
   actualNetSalesKrw: number | null;
   actualSalesQuantity: number | null;
@@ -236,7 +236,7 @@ export type ProductProfitRow = {
   organicSalesKrw: number | null;
   reportedOrganicSalesKrw: number;
   actualOrganicSalesKrw: number | null;
-  // Recognized net sales less incurred operating costs, before the manual-purchase vendor fee.
+  // Adjusted normal-sales profit before the manual-purchase vendor fee.
   normalMarginKrw: number | null;
   totalCostKrw: number | null;
   marginKrw: number | null;
@@ -2936,8 +2936,16 @@ export class CoupangService {
           date
         });
         const actual = adjustReportedSalesForManualPurchase(reported, manual);
+        const normalCostBasisSegments = actual.isValid
+          ? actual.segments
+          : reported.segments;
+        const normalCostBasisSellerSalesQuantity = normalCostBasisSegments.find(
+          (segment) => segment.fulfillmentMethod === "SELLER"
+        )?.salesQuantity ?? 0;
+        const normalCostBasisGrowthSalesQuantity = normalCostBasisSegments.find(
+          (segment) => segment.fulfillmentMethod === "GROWTH"
+        )?.salesQuantity ?? 0;
         const normalAttempt = calculateNormalCoupangProfit({
-          reported,
           actual,
           cost: costRule ? costInput(costRule) : null,
           ads: {
@@ -2952,7 +2960,6 @@ export class CoupangService {
         const normalReference = actual.isValid
           ? normalAttempt
           : calculateNormalCoupangProfit({
-              reported,
               actual: {
                 salesKrw: reported.salesKrw,
                 netSalesKrw: reported.netSalesKrw,
@@ -2990,7 +2997,7 @@ export class CoupangService {
         const reportedOrganicSalesKrw =
           reported.netSalesKrw - attribution.attributedSalesKrw;
         const displaySaleMethods = uniqueNonEmpty([...reported.saleMethods, ...(manual?.saleMethods ?? [])]);
-        const requiresNormalCostRule = hasCoupangSalesSegmentActivity(reported.segments);
+        const requiresNormalCostRule = hasCoupangSalesSegmentActivity(normalCostBasisSegments);
         const dailyComplete = combined.calculationStatus === "COMPLETE";
         return {
           productId,
@@ -3014,8 +3021,8 @@ export class CoupangService {
           productCostKrw: normal.calculated?.productCostKrw ?? null,
           salesFeeKrw: normal.calculated?.salesFeeKrw ?? null,
           shippingCostKrw: normal.calculated?.shippingCostKrw ?? null,
-          sellerSalesQuantity: reported.segments.find((segment) => segment.fulfillmentMethod === "SELLER")?.salesQuantity ?? 0,
-          growthSalesQuantity: reported.segments.find((segment) => segment.fulfillmentMethod === "GROWTH")?.salesQuantity ?? 0,
+          sellerSalesQuantity: normal.calculated?.sellerSalesQuantity ?? normalCostBasisSellerSalesQuantity,
+          growthSalesQuantity: normal.calculated?.growthSalesQuantity ?? normalCostBasisGrowthSalesQuantity,
           sellerShippingCostKrw: normal.calculated?.sellerShippingCostKrw ?? null,
           hanaroShippingCostKrw: normal.calculated?.hanaroShippingCostKrw ?? null,
           growthInboundCostKrw: normal.calculated?.growthInboundCostKrw ?? null,
