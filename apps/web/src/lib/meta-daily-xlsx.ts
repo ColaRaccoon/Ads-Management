@@ -8,39 +8,12 @@ import {
   type XlsxRow,
   type XlsxWorkbookInput
 } from "./xlsx";
+import { META_DAILY_COLUMNS, type MetaDailyColumnKey } from "./meta-daily-columns";
+import { formatMetaDeliveryStatus, META_VIDEO_RATE_COLUMNS, percentToRatio } from "./meta-video-display";
+import type { MetaCreativePerformanceRow } from "@/types/meta";
 
-export type MetaDailyColumnKey =
-  | "creative"
-  | "status"
-  | "dataDays"
-  | "spendUsd"
-  | "spendKrw"
-  | "purchaseCount"
-  | "cpa"
-  | "ctr"
-  | "cpm"
-  | "roas";
-
-export type MetaDailyCreativeRow = {
-  creativeKey: string;
-  displayName: string;
-  productName: string | null;
-  productId: string | null;
-  materialNo: string | null;
-  deliveryStatus: string | null;
-  totals: {
-    spendUsd: number;
-    spendKrw: number | null;
-    purchaseCount: number;
-    cpaUsd: number | null;
-    cpaKrw: number | null;
-    ctrLinkPct: number | null;
-    cpmUsd: number | null;
-    roas: number | null;
-    revenueKrw: number | null;
-  };
-  dataDays: number;
-};
+export type { MetaDailyColumnKey } from "./meta-daily-columns";
+export type MetaDailyCreativeRow = MetaCreativePerformanceRow;
 
 export type MetaDailyProductTotals = {
   spendUsd: number;
@@ -96,18 +69,7 @@ type ExpandedCreativeColumn = {
   cell: (current: MetaDailyCreativeRow) => XlsxCell;
 };
 
-const META_DAILY_COLUMN_ORDER: MetaDailyColumnKey[] = [
-  "creative",
-  "status",
-  "dataDays",
-  "spendUsd",
-  "spendKrw",
-  "purchaseCount",
-  "cpa",
-  "ctr",
-  "cpm",
-  "roas"
-];
+const META_DAILY_COLUMN_ORDER: MetaDailyColumnKey[] = META_DAILY_COLUMNS.map((column) => column.key);
 
 const PRODUCT_BANDS: XlsxCellFill[] = [
   "GROUP_MINT",
@@ -132,11 +94,16 @@ const SALES_HEADERS = [
 
 const SUMMARY_HEADERS = ["제품수", "총 광고비 USD", "총 광고비 KRW", "총 구매건수", "전체 CPA", "전체 ROAS"];
 const SALES_SECTION_TITLE = "카페24 실매출 기반 마진";
-const META_DAILY_COLUMN_COUNT = 13;
+const META_DAILY_MIN_COLUMN_COUNT = 13;
 
 export function buildMetaDailyXlsxInput(report: MetaDailyXlsxReport): XlsxWorkbookInput {
   const creativeColumns = expandCreativeColumns(report.visibleColumns);
-  const columnCount = META_DAILY_COLUMN_COUNT;
+  const columnCount = Math.max(
+    META_DAILY_MIN_COLUMN_COUNT,
+    creativeColumns.length,
+    SALES_HEADERS.length,
+    SUMMARY_HEADERS.length
+  );
   const widths = Array.from({ length: columnCount }, (_, index) => {
     const creativeWidth = creativeColumns[index]?.width ?? 0;
     const baseWidth = index === 0 ? 34 : 15;
@@ -255,7 +222,7 @@ function creativeColumnsFor(key: MetaDailyColumnKey): ExpandedCreativeColumn[] {
       return [{
         header: "활성상태",
         width: 12,
-        cell: (current) => textCell(formatStatus(current.deliveryStatus))
+        cell: (current) => textCell(formatMetaDeliveryStatus(current.deliveryStatus))
       }];
     case "dataDays":
       return [{
@@ -275,10 +242,25 @@ function creativeColumnsFor(key: MetaDailyColumnKey): ExpandedCreativeColumn[] {
       return [metricColumn(
         "CTR",
         12,
-        (row) => percentCell(isKnownNumber(row.totals.ctrLinkPct) ? row.totals.ctrLinkPct / 100 : null)
+        (row) => percentCell(percentToRatio(row.totals.ctrLinkPct))
       )];
     case "cpm":
       return [metricColumn("CPM", 14, (row) => moneyCell(row.totals.cpmUsd, "Usd"))];
+    case "reach":
+      return [metricColumn("도달", 12, (row) => numberCell(row.totals.reach))];
+    case "videoPlay3sRatePct":
+    case "videoPlay25RatePct":
+    case "videoPlay50RatePct":
+    case "videoPlay75RatePct":
+    case "videoPlay100RatePct": {
+      const definition = META_VIDEO_RATE_COLUMNS.find((column) => column.key === key);
+      if (!definition) return [];
+      return [metricColumn(
+        definition.label,
+        13,
+        (row) => percentCell(percentToRatio(row.totals[key]))
+      )];
+    }
     case "roas":
       return [metricColumn("ROAS", 12, (row) => percentCell(row.totals.roas))];
   }
@@ -476,14 +458,6 @@ function profitCell(value: number | null | undefined, fill: XlsxCellFill): XlsxC
 
 function salesProductLabel(row: MetaDailySalesRow) {
   return row.product?.displayName ?? row.product?.name ?? row.product?.code ?? row.productId;
-}
-
-function formatStatus(value: string | null) {
-  const normalized = value?.toLowerCase();
-  if (!normalized) return "-";
-  if (normalized === "active") return "활성";
-  if (normalized === "inactive" || normalized === "not_delivering") return "비활성";
-  return value ?? "-";
 }
 
 function formatNumber(value: number) {

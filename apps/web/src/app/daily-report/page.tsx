@@ -6,54 +6,32 @@ import { Download, Printer, Search, Settings2 } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
 import { money, numberFmt } from "@/lib/date-range";
+import { META_DAILY_COLUMNS, type MetaDailyColumnKey } from "@/lib/meta-daily-columns";
+import {
+  DEFAULT_META_DAILY_REPORT_SETTINGS,
+  META_DAILY_REPORT_SETTINGS_V1_KEY,
+  META_DAILY_REPORT_SETTINGS_V2_KEY,
+  migrateMetaDailyReportSettingsV1,
+  normalizeMetaDailyReportSettings,
+  type MetaDailyDeliveryStatusFilter,
+  type MetaDailyReportSettings
+} from "@/lib/meta-daily-settings";
 import { buildMetaDailyXlsxWorkbook } from "@/lib/meta-daily-xlsx";
+import { formatMetaDeliveryStatus, formatPercent } from "@/lib/meta-video-display";
 import { useRange } from "@/lib/use-range";
 import { downloadXlsx } from "@/lib/xlsx";
+import type { MetaCreativePerformanceRow } from "@/types/meta";
 
-type CreativePerformanceRow = {
-  creativeKey: string;
-  displayName: string;
-  productName: string | null;
-  productId: string | null;
-  materialNo: string | null;
-  deliveryStatus: string | null;
-  totals: {
-    spendUsd: number;
-    spendKrw: number | null;
-    purchaseCount: number;
-    cpaUsd: number | null;
-    cpaKrw: number | null;
-    ctrLinkPct: number | null;
-    cpmUsd: number | null;
-    roas: number | null;
-    revenueKrw: number | null;
-  };
-  dataDays: number;
-};
-
-type DeliveryStatusFilter = "active" | "inactive" | "all" | "hasSpend";
-type ColumnKey =
-  | "creative"
-  | "status"
-  | "dataDays"
-  | "spendUsd"
-  | "spendKrw"
-  | "purchaseCount"
-  | "cpa"
-  | "ctr"
-  | "cpm"
-  | "roas";
+type CreativePerformanceRow = MetaCreativePerformanceRow;
+type DeliveryStatusFilter = MetaDailyDeliveryStatusFilter;
+type ColumnKey = MetaDailyColumnKey;
 
 type ColumnDefinition = {
   key: ColumnKey;
   label: string;
 };
 
-type DailyReportSettings = {
-  query: string;
-  deliveryStatus: DeliveryStatusFilter;
-  visibleColumns: ColumnKey[];
-};
+type DailyReportSettings = MetaDailyReportSettings;
 
 type ProductTotals = {
   spendUsd: number;
@@ -125,26 +103,8 @@ type PreviousIndexes = {
   byDisplayName: Map<string, CreativePerformanceRow>;
 };
 
-const DAILY_REPORT_COLUMNS: ColumnDefinition[] = [
-  { key: "creative", label: "소재" },
-  { key: "status", label: "활성상태" },
-  { key: "dataDays", label: "집계일수" },
-  { key: "spendUsd", label: "광고비 USD" },
-  { key: "spendKrw", label: "광고비 KRW" },
-  { key: "purchaseCount", label: "구매건수" },
-  { key: "cpa", label: "CPA" },
-  { key: "ctr", label: "CTR" },
-  { key: "cpm", label: "CPM" },
-  { key: "roas", label: "ROAS" }
-];
-
-const DEFAULT_VISIBLE_COLUMNS = DAILY_REPORT_COLUMNS.map((column) => column.key);
-const DAILY_REPORT_SETTINGS_KEY = "meta-ads-performance:daily-report-settings:v1";
-const DEFAULT_DAILY_REPORT_SETTINGS: DailyReportSettings = {
-  query: "",
-  deliveryStatus: "active",
-  visibleColumns: DEFAULT_VISIBLE_COLUMNS
-};
+const DAILY_REPORT_COLUMNS: ColumnDefinition[] = [...META_DAILY_COLUMNS];
+const DEFAULT_DAILY_REPORT_SETTINGS: DailyReportSettings = DEFAULT_META_DAILY_REPORT_SETTINGS;
 
 export default function DailyReportPage() {
   const range = useRange();
@@ -599,7 +559,7 @@ function renderColumnValue(
     case "creative":
       return <CreativeNameCell row={row} />;
     case "status":
-      return <span className={`status-pill ${statusClass(row.deliveryStatus)}`}>{formatStatus(row.deliveryStatus)}</span>;
+      return <span className={`status-pill ${statusClass(row.deliveryStatus)}`}>{formatMetaDeliveryStatus(row.deliveryStatus)}</span>;
     case "dataDays":
       return numberFmt(row.dataDays);
     case "spendUsd":
@@ -642,6 +602,24 @@ function renderColumnValue(
         <MetricWithPrevious
           current={money(row.totals.cpmUsd, "USD")}
           previous={previous ? money(previous.totals.cpmUsd, "USD") : "-"}
+        />
+      );
+    case "reach":
+      return (
+        <MetricWithPrevious
+          current={numberFmt(row.totals.reach)}
+          previous={previous ? numberFmt(previous.totals.reach) : "-"}
+        />
+      );
+    case "videoPlay3sRatePct":
+    case "videoPlay25RatePct":
+    case "videoPlay50RatePct":
+    case "videoPlay75RatePct":
+    case "videoPlay100RatePct":
+      return (
+        <MetricWithPrevious
+          current={formatPercent(row.totals[column.key])}
+          previous={previous ? formatPercent(previous.totals[column.key]) : "-"}
         />
       );
     case "roas":
@@ -935,25 +913,15 @@ function readDailyReportSettings(): DailyReportSettings {
     return DEFAULT_DAILY_REPORT_SETTINGS;
   }
   try {
-    const raw = window.localStorage.getItem(DAILY_REPORT_SETTINGS_KEY);
-    if (!raw) {
-      return DEFAULT_DAILY_REPORT_SETTINGS;
+    const v2 = window.localStorage.getItem(META_DAILY_REPORT_SETTINGS_V2_KEY);
+    if (v2) {
+      return normalizeMetaDailyReportSettings(JSON.parse(v2));
     }
-    const parsed = JSON.parse(raw) as Partial<DailyReportSettings>;
-    const parsedColumns = Array.isArray(parsed.visibleColumns)
-      ? parsed.visibleColumns.filter(isColumnKey)
-      : DEFAULT_DAILY_REPORT_SETTINGS.visibleColumns;
-    const visibleColumns =
-      parsedColumns.length > 0
-        ? DAILY_REPORT_COLUMNS.map((column) => column.key).filter((key) => parsedColumns.includes(key))
-        : DEFAULT_DAILY_REPORT_SETTINGS.visibleColumns;
-    return {
-      query: typeof parsed.query === "string" ? parsed.query : DEFAULT_DAILY_REPORT_SETTINGS.query,
-      deliveryStatus: isDeliveryStatus(parsed.deliveryStatus)
-        ? parsed.deliveryStatus
-        : DEFAULT_DAILY_REPORT_SETTINGS.deliveryStatus,
-      visibleColumns
-    };
+    const v1 = window.localStorage.getItem(META_DAILY_REPORT_SETTINGS_V1_KEY);
+    if (!v1) return DEFAULT_DAILY_REPORT_SETTINGS;
+    const migrated = migrateMetaDailyReportSettingsV1(JSON.parse(v1));
+    window.localStorage.setItem(META_DAILY_REPORT_SETTINGS_V2_KEY, JSON.stringify(migrated));
+    return migrated;
   } catch {
     return DEFAULT_DAILY_REPORT_SETTINGS;
   }
@@ -963,7 +931,7 @@ function writeDailyReportSettings(settings: DailyReportSettings) {
   if (typeof window === "undefined") {
     return;
   }
-  window.localStorage.setItem(DAILY_REPORT_SETTINGS_KEY, JSON.stringify(settings));
+  window.localStorage.setItem(META_DAILY_REPORT_SETTINGS_V2_KEY, JSON.stringify(settings));
 }
 
 function sum(values: Array<number | null | undefined>): number {
@@ -996,31 +964,11 @@ function formatCpa(totals: { cpaKrw?: number | null; cpaUsd?: number | null }) {
   return money(totals.cpaUsd, "USD");
 }
 
-function formatPercent(value: number | null | undefined) {
-  if (!isKnownNumber(value)) {
-    return "-";
-  }
-  return `${numberFmt(value, 2)}%`;
-}
-
 function formatRoas(value: number | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return "-";
   }
   return `${numberFmt(value * 100, 2)}%`;
-}
-
-function formatStatus(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-  if (value.toLowerCase() === "active") {
-    return "활성";
-  }
-  if (value.toLowerCase() === "inactive" || value.toLowerCase() === "not_delivering") {
-    return "비활성";
-  }
-  return value;
 }
 
 function statusClass(value: string | null) {
@@ -1052,12 +1000,4 @@ function normalizeLookupText(value: string | null | undefined) {
     .split(/\s+/)
     .join("")
     .toLowerCase();
-}
-
-function isDeliveryStatus(value: unknown): value is DeliveryStatusFilter {
-  return value === "active" || value === "inactive" || value === "all" || value === "hasSpend";
-}
-
-function isColumnKey(value: unknown): value is ColumnKey {
-  return DAILY_REPORT_COLUMNS.some((column) => column.key === value);
 }

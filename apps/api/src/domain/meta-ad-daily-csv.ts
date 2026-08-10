@@ -1,8 +1,12 @@
 import { parse } from "csv-parse/sync";
 import { createHash } from "node:crypto";
 import { ParseIssue, parseDateString, parseNumberValue, toDateOnly } from "./date-number";
+import {
+  META_VIDEO_PLAY_COLUMNS,
+  type MetaVideoPlayCountField
+} from "./meta-video-metrics";
 
-export const META_AD_DAILY_SCHEMA_VERSION = "meta_ad_daily_v1";
+export const META_AD_DAILY_SCHEMA_VERSION = "meta_ad_daily_v2";
 
 export const META_AD_DAILY_CSV_COLUMNS = [
   "보고 시작",
@@ -36,7 +40,9 @@ export const META_AD_DAILY_CSV_COLUMNS = [
   "광고 세트 이름",
   "캠페인 이름",
   "광고 세트 ID",
-  "캠페인 ID"
+  "캠페인 ID",
+  "광고 ID",
+  ...META_VIDEO_PLAY_COLUMNS.map((column) => column.csvColumn)
 ] as const;
 
 export const META_AD_DAILY_CSV_COLUMN_MAPPINGS = [
@@ -72,7 +78,12 @@ export const META_AD_DAILY_CSV_COLUMN_MAPPINGS = [
   { csvColumn: "캠페인 이름", fieldName: "campaign_name", requirement: "required" },
   { csvColumn: "광고 세트 ID", fieldName: "meta_adset_id", requirement: "required" },
   { csvColumn: "캠페인 ID", fieldName: "meta_campaign_id", requirement: "required" },
-  { csvColumn: "광고 ID", fieldName: "meta_ad_id", requirement: "optional" }
+  { csvColumn: "광고 ID", fieldName: "meta_ad_id", requirement: "optional" },
+  ...META_VIDEO_PLAY_COLUMNS.map((column) => ({
+    csvColumn: column.csvColumn,
+    fieldName: column.countField,
+    requirement: "optional" as const
+  }))
 ] as const;
 
 export const META_AD_DAILY_REQUIRED_COLUMNS = [
@@ -94,10 +105,14 @@ export const META_AD_DAILY_RECOMMENDED_COLUMNS = [
   "링크 클릭",
   "랜딩 페이지 조회",
   "CPC(링크 클릭당 비용) (USD)",
-  "CTR(링크 클릭률)"
+  "CTR(링크 클릭률)",
+  "도달"
 ] as const;
 
-export const META_AD_DAILY_OPTIONAL_COLUMNS = ["광고 ID"] as const;
+export const META_AD_DAILY_OPTIONAL_COLUMNS = [
+  "광고 ID",
+  ...META_VIDEO_PLAY_COLUMNS.map((column) => column.csvColumn)
+] as const;
 
 export type ParsedMetaAdDailyRow = {
   dateStart: Date;
@@ -117,6 +132,11 @@ export type ParsedMetaAdDailyRow = {
   resultIndicator: string | null;
   purchaseCount: number;
   reach: number;
+  videoPlay3sCount: number | null;
+  videoPlay25Count: number | null;
+  videoPlay50Count: number | null;
+  videoPlay75Count: number | null;
+  videoPlay100Count: number | null;
   frequency: number | null;
   costPerResultUsd: number | null;
   adsetBudgetLabel: string | null;
@@ -153,16 +173,40 @@ export type MetaAdDailyPreviewSummary = {
   duplicateKeys: string[];
   totalSpendUsd: number;
   totalPurchases: number;
+  videoMetricSchema: "NONE" | "PARTIAL" | "FULL";
+  presentVideoColumns: string[];
+  missingVideoColumns: string[];
   sampleRows: ParsedMetaAdDailyRow[];
 };
 
+export type MetaAdDailyHeaderValidation = {
+  valid: boolean;
+  missingColumns: string[];
+  warnings: string[];
+  videoMetricSchema: "NONE" | "PARTIAL" | "FULL";
+  presentVideoColumns: string[];
+  missingVideoColumns: string[];
+};
+
 export class MetaAdDailyCsvValidator {
-  static validate(headers: string[]): { valid: boolean; missingColumns: string[]; warnings: string[] } {
+  static validate(headers: string[]): MetaAdDailyHeaderValidation {
     const headerSet = normalizedHeaderSet(headers);
     const missingColumns = META_AD_DAILY_REQUIRED_COLUMNS.filter((column) => !headerSet.has(column));
     const warnings = META_AD_DAILY_RECOMMENDED_COLUMNS.filter((column) => !headerSet.has(column)).map(
       (column) => `권장 컬럼이 없습니다: ${column}`
     );
+    const presentVideoColumns = META_VIDEO_PLAY_COLUMNS
+      .map((column) => column.csvColumn)
+      .filter((column) => headerSet.has(column));
+    const missingVideoColumns = META_VIDEO_PLAY_COLUMNS
+      .map((column) => column.csvColumn)
+      .filter((column) => !headerSet.has(column));
+    const videoMetricSchema =
+      presentVideoColumns.length === 0
+        ? "NONE"
+        : missingVideoColumns.length === 0
+          ? "FULL"
+          : "PARTIAL";
 
     if (!headerSet.has("광고 ID")) {
       warnings.push(
@@ -170,7 +214,20 @@ export class MetaAdDailyCsvValidator {
       );
     }
 
-    return { valid: missingColumns.length === 0, missingColumns, warnings };
+    if (videoMetricSchema === "PARTIAL") {
+      warnings.push(
+        `동영상 재생 컬럼이 일부만 존재하며 누락 단계는 표시할 수 없습니다: ${missingVideoColumns.join(", ")}`
+      );
+    }
+
+    return {
+      valid: missingColumns.length === 0,
+      missingColumns,
+      warnings,
+      videoMetricSchema,
+      presentVideoColumns,
+      missingVideoColumns
+    };
   }
 }
 
@@ -192,6 +249,7 @@ export class MetaAdDailyCsvParser {
 
     const resultCount = this.count(rawRow, "결과", issues);
     const reach = this.count(rawRow, "도달", issues);
+    const videoPlayCounts = this.videoPlayCounts(rawRow, issues);
     const impressions = this.count(rawRow, "노출", issues);
     const linkClicks = this.count(rawRow, "링크 클릭", issues);
     const shopClicks = this.count(rawRow, "shop_clicks", issues);
@@ -220,6 +278,7 @@ export class MetaAdDailyCsvParser {
             resultIndicator,
             purchaseCount: isPurchaseResult(resultIndicator) ? resultCount : 0,
             reach,
+            ...videoPlayCounts,
             frequency: this.optionalNumber(rawRow, "빈도", issues),
             costPerResultUsd: this.optionalNumber(rawRow, "결과당 비용", issues),
             adsetBudgetLabel: textValue(rawRow["광고 세트 예산"]),
@@ -268,6 +327,9 @@ export class MetaAdDailyCsvParser {
       duplicateKeys,
       totalSpendUsd: round2(validRows.reduce((sum, row) => sum + row.spendUsd, 0)),
       totalPurchases: validRows.reduce((sum, row) => sum + row.purchaseCount, 0),
+      videoMetricSchema: headerValidation.videoMetricSchema,
+      presentVideoColumns: headerValidation.presentVideoColumns,
+      missingVideoColumns: headerValidation.missingVideoColumns,
       sampleRows: validRows.slice(0, 5)
     };
   }
@@ -365,6 +427,34 @@ export class MetaAdDailyCsvParser {
     return allowFraction ? parsed : Math.trunc(parsed);
   }
 
+  private videoPlayCounts(
+    rawRow: Record<string, string>,
+    issues: ParseIssue[]
+  ): Record<MetaVideoPlayCountField, number | null> {
+    const rowHasAnyVideoValue = META_VIDEO_PLAY_COLUMNS.some(
+      ({ csvColumn }) => hasOwnColumn(rawRow, csvColumn) && textValue(rawRow[csvColumn]) !== null
+    );
+    const counts: Record<MetaVideoPlayCountField, number | null> = {
+      videoPlay3sCount: null,
+      videoPlay25Count: null,
+      videoPlay50Count: null,
+      videoPlay75Count: null,
+      videoPlay100Count: null
+    };
+
+    for (const column of META_VIDEO_PLAY_COLUMNS) {
+      if (!hasOwnColumn(rawRow, column.csvColumn) || !rowHasAnyVideoValue) {
+        counts[column.countField] = null;
+        continue;
+      }
+      counts[column.countField] = textValue(rawRow[column.csvColumn]) === null
+        ? 0
+        : this.count(rawRow, column.csvColumn, issues);
+    }
+
+    return counts;
+  }
+
   private optionalNumber(rawRow: Record<string, string>, columnName: string, issues: ParseIssue[]): number | null {
     const parsed = parseNumberValue(rawRow[columnName], { emptyAs: null });
     if (parsed === null && textValue(rawRow[columnName])) {
@@ -411,6 +501,10 @@ export function isPurchaseResult(resultIndicator: string | null) {
 function textValue(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function hasOwnColumn(rawRow: Record<string, string>, columnName: string) {
+  return Object.prototype.hasOwnProperty.call(rawRow, columnName);
 }
 
 function normalizedHeaderSet(headers: string[]) {

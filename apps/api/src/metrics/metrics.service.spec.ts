@@ -116,6 +116,67 @@ describe("creativeMetrics", () => {
     expect(rows[0].totals.roas).toBeCloseTo(50000 / 13000, 6);
   });
 
+  it("returns reach plus complete video count and rate totals from summed ad-day rows", async () => {
+    const prisma = fakeCreativeMetricsPrisma({
+      adMetrics: [
+        creativeAdMetric({
+          reach: 84,
+          videoPlay3sCount: 41,
+          videoPlay25Count: 8,
+          videoPlay50Count: 5,
+          videoPlay75Count: 2,
+          videoPlay100Count: 2
+        }),
+        creativeAdMetric({
+          adIdentityKey: "ad-2",
+          reach: 16,
+          videoPlay3sCount: 9,
+          videoPlay25Count: 2,
+          videoPlay50Count: 1,
+          videoPlay75Count: 0,
+          videoPlay100Count: 0
+        })
+      ]
+    });
+    const service = new MetricsService(prisma as never);
+
+    const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
+
+    expect(rows[0].totals).toMatchObject({
+      reach: 100,
+      videoPlay3sCount: 50,
+      videoPlay25Count: 10,
+      videoPlay50Count: 6,
+      videoPlay75Count: 2,
+      videoPlay100Count: 2,
+      videoPlay3sRatePct: 50,
+      videoPlay25RatePct: 10,
+      videoPlay50RatePct: 6,
+      videoPlay75RatePct: 2,
+      videoPlay100RatePct: 2
+    });
+  });
+
+  it("returns null for only the video stage that is incomplete in a mixed period", async () => {
+    const prisma = fakeCreativeMetricsPrisma({
+      adMetrics: [
+        creativeAdMetric({ reach: 10, videoPlay3sCount: 5, videoPlay25Count: 2 }),
+        creativeAdMetric({ adIdentityKey: "ad-2", reach: 20, videoPlay3sCount: 10, videoPlay25Count: null })
+      ]
+    });
+    const service = new MetricsService(prisma as never);
+
+    const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
+
+    expect(rows[0].totals).toMatchObject({
+      reach: 30,
+      videoPlay3sCount: 15,
+      videoPlay3sRatePct: 50,
+      videoPlay25Count: null,
+      videoPlay25RatePct: null
+    });
+  });
+
   it("returns null productId when one creative group contains multiple productIds", async () => {
     const prisma = fakeCreativeMetricsPrisma({
       adMetrics: [
@@ -214,6 +275,12 @@ function creativeAdMetric(overrides: Record<string, unknown> = {}) {
     resultIndicator: null,
     resultCount: 0,
     purchaseCount: 1,
+    reach: 100,
+    videoPlay3sCount: null,
+    videoPlay25Count: null,
+    videoPlay50Count: null,
+    videoPlay75Count: null,
+    videoPlay100Count: null,
     impressions: BigInt(1000),
     linkClicks: 20,
     clicksAll: 30,

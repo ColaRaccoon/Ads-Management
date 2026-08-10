@@ -8,6 +8,7 @@ import { PeriodMetricCalculator, PeriodMetricRow, PeriodMetricResult } from "../
 import { ComparisonCalculator } from "../domain/comparison-calculator";
 import { CreativeNameParser } from "../domain/creative-name-parser";
 import { isPurchaseResult } from "../domain/meta-ad-daily-csv";
+import { aggregateMetaVideoMetrics } from "../domain/meta-video-metrics";
 
 type MetricWithRelations = Prisma.MetaAdsetDailyMetricGetPayload<{
   include: { product: true; metaAdset: true };
@@ -873,9 +874,11 @@ function aggregateAdDailyRows(
       marginKrw: null
     }))
   );
+  const videoTotals = aggregateMetaVideoMetrics(rows);
   return {
     totals: {
       ...totals,
+      ...videoTotals,
       cpmUsd: divideOrNull(totals.spendUsd * 1000, totals.impressions)
     },
     dataDays: totals.dataDays
@@ -924,6 +927,7 @@ function aggregateCreativeDailyRows(
     };
   });
   const totals = calculator.calculate(periodRows);
+  const videoTotals = aggregateMetaVideoMetrics(rows);
   const hasUnknownSpendKrw = periodRows.some((row) => row.spendUsd > 0 && row.spendKrw === null);
   const hasUnknownRevenueKrw = periodRows.some((row) => row.resultCount > 0 && row.revenueKrw === null);
   const spendKrw = hasUnknownSpendKrw ? null : totals.spendKrw;
@@ -932,6 +936,7 @@ function aggregateCreativeDailyRows(
   return {
     totals: {
       ...totals,
+      ...videoTotals,
       spendKrw,
       revenueKrw,
       cpaKrw: spendKrw === null ? null : divideOrNull(spendKrw, totals.purchaseCount),

@@ -7,6 +7,7 @@ import {
   type MetaDailyXlsxReport
 } from "./meta-daily-xlsx";
 import type { XlsxCell, XlsxRow } from "./xlsx";
+import { META_DAILY_COLUMNS } from "./meta-daily-columns";
 
 describe("Meta daily XLSX builder", () => {
   it("keeps only the visible current-day Meta columns and values", () => {
@@ -142,6 +143,35 @@ describe("Meta daily XLSX builder", () => {
     ]));
   });
 
+  it("expands beyond the legacy width and writes reach plus five video percentages", () => {
+    const report = reportFixture();
+    report.visibleColumns = META_DAILY_COLUMNS.map((column) => column.key);
+    const input = buildMetaDailyXlsxInput(report);
+    const headers = rowCells(input.rows[4]);
+    const data = rowCells(input.rows[5]);
+
+    expect(input.columns).toHaveLength(16);
+    expect(headers).toHaveLength(16);
+    expect(headers.slice(9, 15).map((cell) => cell.value)).toEqual([
+      "도달",
+      "3초 재생률",
+      "25% 재생률",
+      "50% 재생률",
+      "75% 재생률",
+      "100% 재생률"
+    ]);
+    expect(headers[15]).toMatchObject({ value: "ROAS" });
+    expect(data[9]).toMatchObject({ value: 84, style: "Number" });
+    expect(data[10]).toMatchObject({ value: 41 / 84, style: "Percent" });
+    expect(data[11]).toMatchObject({ value: 8 / 84, style: "Percent" });
+    expect(data[15]).toMatchObject({ value: 2.2, style: "Percent" });
+    expect(input.merges).toContainEqual({ fromRow: 1, fromColumn: 1, toRow: 1, toColumn: 16 });
+
+    const sheet = readZipText(buildMetaDailyXlsxWorkbook(report), "xl/worksheets/sheet1.xml");
+    expect(sheet).toContain(`<dimension ref="A1:P16"/>`);
+    expect(sheet).toMatch(/<c r="K6" s="\d+"><v>0\.4880952380952381<\/v><\/c>/);
+  });
+
   it("writes valid OOXML with the same four product-band colors used by Coupang", () => {
     const report = reportFixture();
     const paletteReport = {
@@ -238,7 +268,18 @@ function creativeRow(overrides: Partial<MetaDailyCreativeRow> = {}): MetaDailyCr
       ctrLinkPct: 3.45,
       cpmUsd: 14.2,
       roas: 2.2,
-      revenueKrw: 363_000
+      revenueKrw: 363_000,
+      reach: 84,
+      videoPlay3sCount: 41,
+      videoPlay25Count: 8,
+      videoPlay50Count: 5,
+      videoPlay75Count: 2,
+      videoPlay100Count: 2,
+      videoPlay3sRatePct: 41 / 84 * 100,
+      videoPlay25RatePct: 8 / 84 * 100,
+      videoPlay50RatePct: 5 / 84 * 100,
+      videoPlay75RatePct: 2 / 84 * 100,
+      videoPlay100RatePct: 2 / 84 * 100
     },
     dataDays: 1,
     ...overrides
