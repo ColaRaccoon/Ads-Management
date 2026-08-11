@@ -3,6 +3,43 @@ import { AdStage, ConflictPolicy, MatchSource } from "@prisma/client";
 import { toDateOnly } from "../domain/date-number";
 import { MetaAdDailyCsvParser, type ParsedMetaAdDailyRow } from "../domain/meta-ad-daily-csv";
 import { findMissingSnapshotMetricIds, nextImportVersion, snapshotMetricKey, UploadsService } from "./uploads.service";
+import { MetaMetricVersionService } from "./meta-metric-version.service";
+import { UPLOAD_DELETE_TRANSACTION_OPTIONS, UploadLifecycleService } from "./upload-lifecycle.service";
+
+describe("UploadsService public facade contract", () => {
+  it("keeps every controller-facing operation public", () => {
+    const methods = Object.getOwnPropertyNames(UploadsService.prototype);
+
+    expect(methods).toEqual(expect.arrayContaining([
+      "importMetaAdDailyCsv",
+      "importMetaAdsetCsv",
+      "listUploads",
+      "previewUpload",
+      "uploadErrors",
+      "deleteUpload"
+    ]));
+  });
+
+  it("delegates all six operations to their responsibility services", async () => {
+    const service = new UploadsService(
+      { importMetaAdDailyCsv: async () => "ad-daily" } as never,
+      { importMetaAdsetCsv: async () => "adset" } as never,
+      {
+        listUploads: async () => "list",
+        previewUpload: async () => "preview",
+        uploadErrors: async () => "errors"
+      } as never,
+      { deleteUpload: async () => "deleted" } as never
+    );
+
+    await expect(service.importMetaAdDailyCsv(undefined, ConflictPolicy.SKIP)).resolves.toBe("ad-daily");
+    await expect(service.importMetaAdsetCsv(undefined, ConflictPolicy.SKIP)).resolves.toBe("adset");
+    await expect(service.listUploads()).resolves.toBe("list");
+    await expect(service.previewUpload("batch-1")).resolves.toBe("preview");
+    await expect(service.uploadErrors("batch-1")).resolves.toBe("errors");
+    await expect(service.deleteUpload("batch-1")).resolves.toBe("deleted");
+  });
+});
 
 describe("upload snapshot helpers", () => {
   it("uses latest importVersion regardless of current row", () => {
@@ -65,6 +102,10 @@ describe("Meta ad daily upload mapping", () => {
 });
 
 describe("Meta ad daily metric version history", () => {
+  it("keeps the long-running delete transaction options unchanged", () => {
+    expect(UPLOAD_DELETE_TRANSACTION_OPTIONS).toEqual({ maxWait: 30_000, timeout: 300_000 });
+  });
+
   it.each([
     ["NEW_VERSION", ConflictPolicy.NEW_VERSION],
     ["OVERWRITE", ConflictPolicy.OVERWRITE]
@@ -85,7 +126,7 @@ describe("Meta ad daily metric version history", () => {
     };
     const harness = metricHistoryHarness(parsedRow, previousVideoCounts);
 
-    const result = await importAdMetric(harness.service, parsedRow, conflictPolicy, "batch-new");
+    const result = await importAdMetric(harness.versionService, parsedRow, conflictPolicy, "batch-new");
 
     expect(result).toEqual({ imported: true, skipped: false });
     expect(harness.rows).toHaveLength(2);
@@ -120,7 +161,7 @@ describe("Meta ad daily metric version history", () => {
       videoPlay100Count: 1
     });
 
-    await importAdMetric(harness.service, parsedRow, ConflictPolicy.NEW_VERSION, "batch-legacy");
+    await importAdMetric(harness.versionService, parsedRow, ConflictPolicy.NEW_VERSION, "batch-legacy");
 
     expect(harness.rows[1]).toMatchObject({
       importVersion: 2,
@@ -149,9 +190,9 @@ describe("Meta ad daily metric version history", () => {
       videoPlay100Count: 1
     };
     const harness = metricHistoryHarness(parsedRow, previousVideoCounts);
-    await importAdMetric(harness.service, parsedRow, ConflictPolicy.NEW_VERSION, "batch-new");
+    await importAdMetric(harness.versionService, parsedRow, ConflictPolicy.NEW_VERSION, "batch-new");
 
-    const deleted = await harness.service.deleteUpload("batch-new");
+    const deleted = await harness.lifecycleService.deleteUpload("batch-new");
 
     expect(deleted).toMatchObject({
       batchId: "batch-new",
@@ -166,6 +207,32 @@ describe("Meta ad daily metric version history", () => {
       supersededByMetricId: null,
       ...previousVideoCounts
     });
+  });
+
+  it("restores the newest remaining adset metric using the shared transaction client", async () => {
+    const metricDate = date("2026-08-10");
+    const rows = [{ id: "adset-v1", metricDate, metaAdsetId: "adset-1", isCurrent: false, supersededByMetricId: null }];
+    const tx = {
+      metaAdsetDailyMetric: {
+        updateMany: async () => {
+          rows.forEach((row) => { row.isCurrent = false; });
+          return { count: rows.length };
+        },
+        findFirst: async () => rows[0] ?? null,
+        update: async ({ data }: { data: { isCurrent: boolean; supersededByMetricId: string | null } }) => {
+          Object.assign(rows[0], data);
+          return rows[0];
+        }
+      }
+    };
+    const service = new UploadLifecycleService({} as never, {} as never);
+
+    const restored = await service.restoreCurrentAdsetMetrics(tx as never, [
+      { id: "adset-v2", metricDate, metaAdsetId: "adset-1" }
+    ]);
+
+    expect(restored).toBe(1);
+    expect(rows[0]).toMatchObject({ isCurrent: true, supersededByMetricId: null });
   });
 });
 
@@ -211,11 +278,9 @@ async function captureAdMetricCreateData(parsedRow: ParsedMetaAdDailyRow) {
   const prisma = {
     $transaction: async (callback: (tx: typeof transaction) => Promise<void>) => callback(transaction)
   };
-  const service = new UploadsService(prisma as never, {} as never, {} as never, {} as never);
+  const service = new MetaMetricVersionService(prisma as never);
 
-  await (service as unknown as {
-    importAdDailyMetric: (input: Record<string, unknown>) => Promise<unknown>;
-  }).importAdDailyMetric({
+  await service.importAdDailyMetric({
     batchId: "batch-1",
     uploadRowId: "upload-row-1",
     parsedRow,
@@ -357,19 +422,21 @@ function metricHistoryHarness(parsedRow: ParsedMetaAdDailyRow, previousVideoCoun
   };
   return {
     rows,
-    service: new UploadsService(prisma as never, {} as never, {} as never, {} as never)
+    versionService: new MetaMetricVersionService(prisma as never),
+    lifecycleService: new UploadLifecycleService(
+      prisma as never,
+      { deleteStoredUploadFile: async () => false } as never
+    )
   };
 }
 
 async function importAdMetric(
-  service: UploadsService,
+  service: MetaMetricVersionService,
   parsedRow: ParsedMetaAdDailyRow,
   conflictPolicy: ConflictPolicy,
   batchId: string
 ) {
-  return (service as unknown as {
-    importAdDailyMetric: (input: Record<string, unknown>) => Promise<{ imported: boolean; skipped: boolean }>;
-  }).importAdDailyMetric({
+  return service.importAdDailyMetric({
     batchId,
     uploadRowId: `row-${batchId}`,
     parsedRow,

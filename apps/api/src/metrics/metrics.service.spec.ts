@@ -3,6 +3,72 @@ import { BadRequestException } from "@nestjs/common";
 import { AdStage, Prisma } from "@prisma/client";
 import { deliveryStatusWhere, MetricsService, parseDeliveryStatusFilter } from "./metrics.service";
 import { toDateOnly } from "../domain/date-number";
+import { DashboardMetricsService } from "./dashboard-metrics.service";
+import { MetaAdMetricsReadService } from "./meta-ad-metrics-read.service";
+import { MetaAdsetMetricDecorationService } from "./meta-adset-metric-decoration.service";
+import { MetaAdsetMetricsReadService } from "./meta-adset-metrics-read.service";
+
+describe("MetricsService public facade contract", () => {
+  it("keeps every controller and service-facing operation public", () => {
+    const methods = Object.getOwnPropertyNames(MetricsService.prototype);
+
+    expect(methods).toEqual(expect.arrayContaining([
+      "dashboardSummary",
+      "dashboardTrends",
+      "productMetrics",
+      "adsetMetrics",
+      "campaignMetrics",
+      "adMetrics",
+      "creativeMetrics",
+      "compareAdsByName",
+      "adsForAdset",
+      "adsetsForCampaign",
+      "unmatchedMetrics",
+      "decoratedMetrics",
+      "aggregate"
+    ]));
+  });
+
+  it("delegates every public operation without recomputing results", async () => {
+    const service = new MetricsService(
+      {
+        campaignMetrics: async () => "campaign",
+        adMetrics: async () => "ad",
+        creativeMetrics: async () => "creative",
+        compareAdsByName: async () => "compare",
+        adsForAdset: async () => "ads-for-adset",
+        adsetsForCampaign: async () => "adsets-for-campaign"
+      } as never,
+      {
+        productMetrics: async () => "product",
+        adsetMetrics: async () => "adset",
+        unmatchedMetrics: async () => "unmatched"
+      } as never,
+      {
+        dashboardSummary: async () => "summary",
+        dashboardTrends: async () => "trends"
+      } as never,
+      {
+        decoratedMetrics: async () => "decorated",
+        aggregate: () => "aggregate"
+      } as never
+    );
+
+    await expect(service.dashboardSummary()).resolves.toBe("summary");
+    await expect(service.dashboardTrends()).resolves.toBe("trends");
+    await expect(service.productMetrics()).resolves.toBe("product");
+    await expect(service.adsetMetrics({})).resolves.toBe("adset");
+    await expect(service.campaignMetrics({})).resolves.toBe("campaign");
+    await expect(service.adMetrics({})).resolves.toBe("ad");
+    await expect(service.creativeMetrics({})).resolves.toBe("creative");
+    await expect(service.compareAdsByName("ad")).resolves.toBe("compare");
+    await expect(service.adsForAdset("adset")).resolves.toBe("ads-for-adset");
+    await expect(service.adsetsForCampaign("campaign")).resolves.toBe("adsets-for-campaign");
+    await expect(service.unmatchedMetrics()).resolves.toBe("unmatched");
+    await expect(service.decoratedMetrics(date("2026-08-10"), date("2026-08-10"))).resolves.toBe("decorated");
+    expect(service.aggregate([])).toBe("aggregate");
+  });
+});
 
 describe("MetricsService exchange rate fallback", () => {
   it("does not calculate with a zero legacy FX rate when DB exchange rate is missing", async () => {
@@ -10,7 +76,7 @@ describe("MetricsService exchange rate fallback", () => {
       costRuleFxRateKrwPerUsd: 0,
       exchangeRates: []
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.decoratedMetrics(date("2026-05-29"), date("2026-05-29"));
 
@@ -24,7 +90,7 @@ describe("MetricsService exchange rate fallback", () => {
       costRuleFxRateKrwPerUsd: 1300,
       exchangeRates: []
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.decoratedMetrics(date("2026-05-29"), date("2026-05-29"));
 
@@ -38,7 +104,7 @@ describe("MetricsService exchange rate fallback", () => {
       costRuleVatKrw: 0,
       exchangeRates: []
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.decoratedMetrics(date("2026-05-29"), date("2026-05-29"));
 
@@ -60,7 +126,7 @@ describe("MetricsService exchange rate fallback", () => {
         }
       ]
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.decoratedMetrics(date("2026-05-29"), date("2026-05-29"));
     const aggregate = service.aggregate(rows);
@@ -93,7 +159,7 @@ describe("deliveryStatus filter", () => {
 describe("creativeMetrics", () => {
   it("uses the creative lifetime for dataDays instead of the selected date range", async () => {
     const prisma = fakeCreativeMetricsPrisma();
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
@@ -106,7 +172,7 @@ describe("creativeMetrics", () => {
 
   it("returns KRW spend, KRW CPA, KRW revenue, and ROAS for creative totals", async () => {
     const prisma = fakeCreativeMetricsPrisma();
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
@@ -138,7 +204,7 @@ describe("creativeMetrics", () => {
         })
       ]
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
@@ -164,7 +230,7 @@ describe("creativeMetrics", () => {
         creativeAdMetric({ adIdentityKey: "ad-2", reach: 20, videoPlay3sCount: 10, videoPlay25Count: null })
       ]
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
@@ -184,7 +250,7 @@ describe("creativeMetrics", () => {
         creativeAdMetric({ adIdentityKey: "ad-2", spendUsd: new Prisma.Decimal(0), purchaseCount: 0, productId: "product-2" })
       ]
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
@@ -204,7 +270,7 @@ describe("creativeMetrics", () => {
       ],
       exchangeRates: []
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
@@ -226,7 +292,7 @@ describe("creativeMetrics", () => {
         })
       ]
     });
-    const service = new MetricsService(prisma as never);
+    const service = createMetricsService(prisma);
 
     const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
 
@@ -236,6 +302,17 @@ describe("creativeMetrics", () => {
     expect(rows[0].totals.roas).toBeNull();
   });
 });
+
+function createMetricsService(prisma: unknown) {
+  const prismaService = prisma as never;
+  const decorationService = new MetaAdsetMetricDecorationService(prismaService);
+  return new MetricsService(
+    new MetaAdMetricsReadService(prismaService),
+    new MetaAdsetMetricsReadService(prismaService, decorationService),
+    new DashboardMetricsService(prismaService, decorationService),
+    decorationService
+  );
+}
 
 function fakeCreativeMetricsPrisma(
   input: { adMetrics?: unknown[]; costRules?: unknown[]; exchangeRates?: unknown[] } = {}
