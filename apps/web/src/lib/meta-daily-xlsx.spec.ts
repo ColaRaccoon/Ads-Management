@@ -18,7 +18,7 @@ describe("Meta daily XLSX builder", () => {
     expect(creativeHeaders.slice(0, 5).map((cell) => cell.value)).toEqual([
       "소재",
       "활성상태",
-      "광고비 USD",
+      "광고비 KRW",
       "CTR",
       "ROAS"
     ]);
@@ -29,7 +29,7 @@ describe("Meta daily XLSX builder", () => {
     });
     expect(creative[0]?.value).not.toContain("M-07");
     expect(creative[1]).toMatchObject({ value: "활성", style: "Text" });
-    expect(creative[2]).toMatchObject({ value: 120.5, style: "Usd" });
+    expect(creative[2]).toMatchObject({ value: 165_000, style: "Krw" });
     expect(creative[3]).toMatchObject({ value: 0.0345, style: "Percent" });
     expect(creative[4]).toMatchObject({ value: 2.2, style: "Percent" });
     expect(creative.slice(5).every((cell) => cell.fill === "GROUP_MINT")).toBe(true);
@@ -56,11 +56,10 @@ describe("Meta daily XLSX builder", () => {
 
     expect(headers).toHaveLength(13);
     expect(data).toHaveLength(13);
-    expect(headers.slice(0, 10).map((cell) => cell.value)).toEqual([
+    expect(headers.slice(0, 9).map((cell) => cell.value)).toEqual([
       "소재",
       "활성상태",
       "집계일수",
-      "광고비 USD",
       "광고비 KRW",
       "구매건수",
       "CPA",
@@ -68,7 +67,7 @@ describe("Meta daily XLSX builder", () => {
       "CPM",
       "ROAS"
     ]);
-    expect(headers.slice(10).every((cell) => cell.value === "")).toBe(true);
+    expect(headers.slice(9).every((cell) => cell.value === "")).toBe(true);
     expect(input.columns).toHaveLength(13);
 
     const sheet = readZipText(
@@ -89,9 +88,8 @@ describe("Meta daily XLSX builder", () => {
       fontTone: "INVERSE",
       bold: true
     });
-    expect(rowCells(rows[2]).slice(0, 6).map((cell) => cell.value)).toEqual([
+    expect(rowCells(rows[2]).slice(0, 5).map((cell) => cell.value)).toEqual([
       2,
-      120.5,
       165_000,
       3,
       55_000,
@@ -101,10 +99,9 @@ describe("Meta daily XLSX builder", () => {
     const firstProduct = rowCells(rows[3]);
     expect(firstProduct[0]).toMatchObject({ value: "웨이브바", fill: "GROUP_MINT", bold: true });
     expect(firstProduct[2]).toMatchObject({ value: 1, style: "Number" });
-    expect(firstProduct[4]).toMatchObject({ value: 120.5, style: "Usd" });
-    expect(firstProduct[6]).toMatchObject({ value: 165_000, style: "Krw" });
-    expect(firstProduct[10]).toMatchObject({ value: 55_000, style: "Krw" });
-    expect(firstProduct[12]).toMatchObject({ value: 2.2, style: "Percent" });
+    expect(firstProduct[4]).toMatchObject({ value: 165_000, style: "Krw" });
+    expect(firstProduct[8]).toMatchObject({ value: 55_000, style: "Krw" });
+    expect(firstProduct[10]).toMatchObject({ value: 2.2, style: "Percent" });
 
     expect(rowCells(rows[6])[0]).toMatchObject({
       value: "카페24 실매출 기반 마진",
@@ -150,9 +147,9 @@ describe("Meta daily XLSX builder", () => {
     const headers = rowCells(input.rows[4]);
     const data = rowCells(input.rows[5]);
 
-    expect(input.columns).toHaveLength(16);
-    expect(headers).toHaveLength(16);
-    expect(headers.slice(9, 15).map((cell) => cell.value)).toEqual([
+    expect(input.columns).toHaveLength(15);
+    expect(headers).toHaveLength(15);
+    expect(headers.slice(8, 14).map((cell) => cell.value)).toEqual([
       "도달",
       "3초 재생률",
       "25% 재생률",
@@ -160,16 +157,16 @@ describe("Meta daily XLSX builder", () => {
       "75% 재생률",
       "100% 재생률"
     ]);
-    expect(headers[15]).toMatchObject({ value: "ROAS" });
-    expect(data[9]).toMatchObject({ value: 84, style: "Number" });
-    expect(data[10]).toMatchObject({ value: 41 / 84, style: "Percent" });
-    expect(data[11]).toMatchObject({ value: 8 / 84, style: "Percent" });
-    expect(data[15]).toMatchObject({ value: 2.2, style: "Percent" });
-    expect(input.merges).toContainEqual({ fromRow: 1, fromColumn: 1, toRow: 1, toColumn: 16 });
+    expect(headers[14]).toMatchObject({ value: "ROAS" });
+    expect(data[8]).toMatchObject({ value: 84, style: "Number" });
+    expect(data[9]).toMatchObject({ value: 41 / 84, style: "Percent" });
+    expect(data[10]).toMatchObject({ value: 8 / 84, style: "Percent" });
+    expect(data[14]).toMatchObject({ value: 2.2, style: "Percent" });
+    expect(input.merges).toContainEqual({ fromRow: 1, fromColumn: 1, toRow: 1, toColumn: 15 });
 
     const sheet = readZipText(buildMetaDailyXlsxWorkbook(report), "xl/worksheets/sheet1.xml");
-    expect(sheet).toContain(`<dimension ref="A1:P16"/>`);
-    expect(sheet).toMatch(/<c r="K6" s="\d+"><v>0\.4880952380952381<\/v><\/c>/);
+    expect(sheet).toContain(`<dimension ref="A1:O16"/>`);
+    expect(sheet).toMatch(/<c r="J6" s="\d+"><v>0\.4880952380952381<\/v><\/c>/);
   });
 
   it("writes valid OOXML with the same four product-band colors used by Coupang", () => {
@@ -200,9 +197,11 @@ describe("Meta daily XLSX builder", () => {
     expect(sheet).toContain(`<dimension ref="A1:M16"/>`);
     expect(sheet).toContain(`<pane ySplit="3" topLeftCell="A4"`);
     expect(sheet).toContain(`<mergeCell ref="A1:M1"/>`);
-    expect(sheet).toMatch(/<c r="C6" s="\d+"><v>120\.5<\/v><\/c>/);
+    expect(sheet).toMatch(/<c r="C6" s="\d+"><v>165000<\/v><\/c>/);
     expect(sheet).toMatch(/<c r="D6" s="\d+"><v>0\.0345<\/v><\/c>/);
     expect(sheet).not.toMatch(/<c r="(?:C6|D6)"[^>]*t="inlineStr"/);
+    expect(sheet).not.toContain("광고비 USD");
+    expect(sheet).not.toContain("총 광고비 USD");
     expect(sheet).not.toContain("전일");
   });
 });

@@ -92,7 +92,7 @@ const SALES_HEADERS = [
   "마진율"
 ];
 
-const SUMMARY_HEADERS = ["제품수", "총 광고비 USD", "총 광고비 KRW", "총 구매건수", "전체 CPA", "전체 ROAS"];
+const SUMMARY_HEADERS = ["제품수", "총 광고비 KRW", "총 구매건수", "전체 CPA", "전체 ROAS"];
 const SALES_SECTION_TITLE = "카페24 실매출 기반 마진";
 const META_DAILY_MIN_COLUMN_COUNT = 13;
 
@@ -204,6 +204,8 @@ export function buildMetaDailyXlsxWorkbook(report: MetaDailyXlsxReport) {
 
 function expandCreativeColumns(visibleColumns: MetaDailyColumnKey[]): ExpandedCreativeColumn[] {
   const selected = new Set(visibleColumns);
+  if (selected.has("spendUsd")) selected.add("spendKrw");
+  selected.delete("spendUsd");
   return META_DAILY_COLUMN_ORDER.flatMap((key) => selected.has(key) ? creativeColumnsFor(key) : []);
 }
 
@@ -231,7 +233,7 @@ function creativeColumnsFor(key: MetaDailyColumnKey): ExpandedCreativeColumn[] {
         cell: (current) => numberCell(current.dataDays)
       }];
     case "spendUsd":
-      return [metricColumn("광고비 USD", 15, (row) => moneyCell(row.totals.spendUsd, "Usd"))];
+      return [];
     case "spendKrw":
       return [metricColumn("광고비 KRW", 16, (row) => moneyCell(row.totals.spendKrw, "Krw"))];
     case "purchaseCount":
@@ -287,7 +289,6 @@ function summaryHeaderRow(): XlsxCell[] {
 function summaryValueRow(report: MetaDailyXlsxReport): XlsxCell[] {
   return [
     totalCell(report.productCount, "TotalNumber"),
-    totalCell(report.totals.spendUsd, "TotalUsd"),
     totalCell(report.totals.spendKrw, "TotalKrw"),
     totalCell(report.totals.purchaseCount, "TotalNumber"),
     totalCpaCell(report.totals),
@@ -309,8 +310,6 @@ function productHeaderRow(group: MetaDailyExportGroup, fill: XlsxCellFill, colum
     bandCell(group.productName, "Text", fill, true, "BLOCK_START"),
     bandCell("소재 수", "Text", fill, true, "BLOCK_START"),
     bandCell(group.rows.length, "Number", fill, true, "BLOCK_START"),
-    bandCell("광고비 USD", "Text", fill, true, "BLOCK_START"),
-    bandCell(group.totals.spendUsd, "Usd", fill, true, "BLOCK_START"),
     bandCell("광고비 KRW", "Text", fill, true, "BLOCK_START"),
     bandCell(group.totals.spendKrw, "Krw", fill, true, "BLOCK_START"),
     bandCell("구매", "Text", fill, true, "BLOCK_START"),
