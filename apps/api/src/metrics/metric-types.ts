@@ -68,3 +68,10 @@ export type CampaignMetricQuery = {
 };
 
 export type CreativeMetricQuery = AdMetricQuery & { q?: string };
+
+export type CreativeVideoTrendQuery = {
+  from?: string;
+  to?: string;
+  productId?: string;
+  deliveryStatus?: string;
+};

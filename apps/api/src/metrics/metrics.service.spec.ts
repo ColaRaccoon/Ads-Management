@@ -20,6 +20,7 @@ describe("MetricsService public facade contract", () => {
       "campaignMetrics",
       "adMetrics",
       "creativeMetrics",
+      "creativeVideoTrends",
       "compareAdsByName",
       "adsForAdset",
       "adsetsForCampaign",
@@ -35,6 +36,7 @@ describe("MetricsService public facade contract", () => {
         campaignMetrics: async () => "campaign",
         adMetrics: async () => "ad",
         creativeMetrics: async () => "creative",
+        creativeVideoTrends: async () => "creative-video-trends",
         compareAdsByName: async () => "compare",
         adsForAdset: async () => "ads-for-adset",
         adsetsForCampaign: async () => "adsets-for-campaign"
@@ -61,6 +63,7 @@ describe("MetricsService public facade contract", () => {
     await expect(service.campaignMetrics({})).resolves.toBe("campaign");
     await expect(service.adMetrics({})).resolves.toBe("ad");
     await expect(service.creativeMetrics({})).resolves.toBe("creative");
+    await expect(service.creativeVideoTrends({})).resolves.toBe("creative-video-trends");
     await expect(service.compareAdsByName("ad")).resolves.toBe("compare");
     await expect(service.adsForAdset("adset")).resolves.toBe("ads-for-adset");
     await expect(service.adsetsForCampaign("campaign")).resolves.toBe("adsets-for-campaign");

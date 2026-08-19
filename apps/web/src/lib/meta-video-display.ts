@@ -8,6 +8,15 @@ export const META_VIDEO_RATE_COLUMNS = [
   { key: "videoPlay100RatePct", label: "100% 재생률" }
 ] as const satisfies readonly { key: MetaVideoRateKey; label: string }[];
 
+export const META_CREATIVE_TREND_METRICS = [
+  { key: "reach", label: "도달수", unit: "count", description: "일자별 도달 인원" },
+  ...META_VIDEO_RATE_COLUMNS.map((column) => ({
+    ...column,
+    unit: "percent" as const,
+    description: "일자별 재생률"
+  }))
+] as const;
+
 export function formatPercent(value: number | null | undefined) {
   if (!isKnownNumber(value)) {
     return "-";

@@ -73,6 +73,16 @@ export class MetricsController {
     return this.metricsService.creativeMetrics({ from, to, campaignId, adsetId, productId, stage, deliveryStatus, q });
   }
 
+  @Get("ads/creative-video-trends")
+  creativeVideoTrends(
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("productId") productId?: string,
+    @Query("deliveryStatus") deliveryStatus?: string
+  ) {
+    return this.metricsService.creativeVideoTrends({ from, to, productId, deliveryStatus });
+  }
+
   @Get("ads")
   ads(
     @Query("from") from?: string,

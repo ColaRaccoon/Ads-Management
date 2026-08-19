@@ -222,6 +222,172 @@ describe("MetaAdMetricsReadService response and query contract", () => {
       marginKrw: null
     });
   });
+
+  it("requires a UUID productId before querying creative video trends", async () => {
+    let queryCount = 0;
+    const prisma = {
+      metaAdDailyMetric: {
+        findMany: async () => {
+          queryCount += 1;
+          return [];
+        }
+      }
+    };
+    const service = new MetaAdMetricsReadService(prisma as never);
+
+    await expect(service.creativeVideoTrends({ from: "2026-08-10", to: "2026-08-11" }))
+      .rejects.toMatchObject({ response: { code: "PRODUCT_ID_REQUIRED" } });
+    await expect(service.creativeVideoTrends({
+      from: "2026-08-10",
+      to: "2026-08-11",
+      productId: "product-1"
+    })).rejects.toMatchObject({ response: { code: "INVALID_PRODUCT_ID" } });
+    expect(queryCount).toBe(0);
+  });
+
+  it("groups creative video trends by parsed creative and date with weighted rates", async () => {
+    const productId = "123e4567-e89b-42d3-a456-426614174000";
+    const queries: Array<Record<string, unknown>> = [];
+    const prisma = {
+      metaAdDailyMetric: {
+        findMany: async ({ where }: { where: Record<string, unknown> }) => {
+          queries.push(where);
+          return [
+            adMetric("material-10-later", 0, 0, {
+              metricDate: new Date("2026-08-11T00:00:00.000Z"),
+              adIdentityKey: "ad-10-c",
+              metaAdId: "ad-10-c",
+              adNameSnapshot: "260810_웨이브바_10_IG",
+              productId,
+              reach: 100,
+              videoPlay3sCount: 0,
+              videoPlay25Count: 0,
+              videoPlay50Count: 0,
+              videoPlay75Count: 0,
+              videoPlay100Count: 0
+            }),
+            adMetric("material-2", 0, 0, {
+              adIdentityKey: "ad-2",
+              metaAdId: "ad-2",
+              adNameSnapshot: "260810_웨이브바_2_IG",
+              productId,
+              reach: 50,
+              videoPlay3sCount: 25
+            }),
+            adMetric("material-10-a", 0, 0, {
+              adIdentityKey: "ad-10-a",
+              metaAdId: "ad-10-a",
+              adNameSnapshot: "260810_웨이브바_10_IG",
+              productId,
+              reach: 100,
+              videoPlay3sCount: 50,
+              videoPlay25Count: 10,
+              videoPlay50Count: null,
+              videoPlay75Count: 2,
+              videoPlay100Count: 1
+            }),
+            adMetric("material-10-b", 0, 0, {
+              adIdentityKey: "ad-10-b",
+              metaAdId: "ad-10-b",
+              adNameSnapshot: "260810_웨이브바_10_FB",
+              productId,
+              reach: 300,
+              videoPlay3sCount: 75,
+              videoPlay25Count: 30,
+              videoPlay50Count: 15,
+              videoPlay75Count: 6,
+              videoPlay100Count: 3
+            }),
+            adMetric("material-10-zero-reach", 0, 0, {
+              adIdentityKey: "ad-10-d",
+              metaAdId: "ad-10-d",
+              adNameSnapshot: "260810_웨이브바_10_IG",
+              productId,
+              reach: 0,
+              videoPlay3sCount: null,
+              videoPlay25Count: null,
+              videoPlay50Count: null,
+              videoPlay75Count: null,
+              videoPlay100Count: null
+            })
+          ];
+        }
+      }
+    };
+    const service = new MetaAdMetricsReadService(prisma as never);
+
+    const result = await service.creativeVideoTrends({
+      from: "2026-08-10",
+      to: "2026-08-11",
+      productId,
+      deliveryStatus: "active"
+    });
+
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatchObject({
+      isCurrent: true,
+      metricDate: {
+        gte: new Date("2026-08-10T00:00:00.000Z"),
+        lte: new Date("2026-08-11T00:00:00.000Z")
+      },
+      productId,
+      adDeliveryStatus: { equals: "active", mode: "insensitive" }
+    });
+    expect(result.period).toEqual({
+      from: "2026-08-10",
+      to: "2026-08-11",
+      selectedDays: 2,
+      dataDays: 2
+    });
+    expect(result.creatives.map((creative) => creative.materialNo)).toEqual(["2", "10"]);
+    expect(result.creatives[1]).toMatchObject({
+      creativeKey: "웨이브바_10",
+      displayName: "웨이브바_10",
+      productName: "웨이브바",
+      materialNo: "10",
+      deliveryStatus: "active",
+      originalAdNames: ["260810_웨이브바_10_FB", "260810_웨이브바_10_IG"],
+      dataDays: 2,
+      points: [
+        {
+          date: "2026-08-10",
+          reach: 400,
+          videoPlay3sRatePct: 31.25,
+          videoPlay25RatePct: 10,
+          videoPlay50RatePct: null,
+          videoPlay75RatePct: 2,
+          videoPlay100RatePct: 1
+        },
+        {
+          date: "2026-08-11",
+          reach: 100,
+          videoPlay3sRatePct: 0,
+          videoPlay25RatePct: 0,
+          videoPlay50RatePct: 0,
+          videoPlay75RatePct: 0,
+          videoPlay100RatePct: 0
+        }
+      ]
+    });
+  });
+
+  it("returns an empty creative video trend response without extra context queries", async () => {
+    const productId = "123e4567-e89b-42d3-a456-426614174000";
+    const prisma = {
+      metaAdDailyMetric: { findMany: async () => [] }
+    };
+    const service = new MetaAdMetricsReadService(prisma as never);
+
+    await expect(service.creativeVideoTrends({
+      from: "2026-08-10",
+      to: "2026-08-12",
+      productId
+    })).resolves.toEqual({
+      productId,
+      period: { from: "2026-08-10", to: "2026-08-12", selectedDays: 3, dataDays: 0 },
+      creatives: []
+    });
+  });
 });
 
 function adMetric(

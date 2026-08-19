@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   Shuffle,
   TableProperties,
+  TrendingUp,
   Upload
 } from "lucide-react";
 import { DateRangePicker } from "./date-range-picker";
@@ -41,6 +42,7 @@ const navGroups = [
       { href: "/campaigns", label: "Meta Campaigns", icon: BarChart3 },
       { href: "/adsets", label: "Meta Adsets", icon: TableProperties },
       { href: "/ads", label: "Meta Ads", icon: Package },
+      { href: "/creative-trends", label: "Meta 소재 추이", icon: TrendingUp },
       { href: "/daily-report", label: "Meta Daily Report", icon: ClipboardList },
       { href: "/mappings", label: "Meta Mappings", icon: Shuffle },
       { href: "/settings/products", label: "Meta Product Settings", icon: Settings },

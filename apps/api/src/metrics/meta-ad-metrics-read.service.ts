@@ -4,6 +4,7 @@ import { PrismaService } from "../common/prisma.service";
 import { dateRangeDays, parseDateRange } from "../common/date-range";
 import { formatDateOnly, toDateOnly } from "../domain/date-number";
 import { CreativeNameParser } from "../domain/creative-name-parser";
+import { aggregateMetaVideoMetrics } from "../domain/meta-video-metrics";
 import { PeriodMetricCalculator } from "../domain/period-metric-calculator";
 import { adDeliveryStatusWhere, isUuid, parseDeliveryStatusFilter } from "./metric-filters";
 import {
@@ -23,6 +24,7 @@ import {
   CostRule,
   CreativeFinancialContext,
   CreativeMetricQuery,
+  CreativeVideoTrendQuery,
   ExchangeRateRow
 } from "./metric-types";
 
@@ -84,10 +86,7 @@ export class MetaAdMetricsReadService {
   async creativeMetrics(query: CreativeMetricQuery) {
     const metrics = await this.currentAdMetrics(query);
     const financialContext = await this.creativeFinancialContext(metrics);
-    const parsedMetrics = metrics.map((row) => ({
-      row,
-      parsedName: this.creativeNameParser.parse(row.adNameSnapshot)
-    }));
+    const parsedMetrics = this.parseCreativeRows(metrics);
     const groups = groupBy(parsedMetrics, (item) => item.parsedName.creativeKey);
     const lifetimesByCreativeKey = await this.creativeLifetimes(Array.from(groups.keys()));
     const normalizedQuery = query.q?.trim().toLowerCase() ?? "";
@@ -144,6 +143,89 @@ export class MetaAdMetricsReadService {
           .some((value) => value.toLowerCase().includes(normalizedQuery));
       })
       .sort((a, b) => b.totals.spendUsd - a.totals.spendUsd);
+  }
+
+  async creativeVideoTrends(query: CreativeVideoTrendQuery) {
+    const productId = query.productId?.trim();
+    if (!productId) {
+      throw new BadRequestException({ code: "PRODUCT_ID_REQUIRED", message: "productId 값이 필요합니다." });
+    }
+    if (!isUuid(productId)) {
+      throw new BadRequestException({ code: "INVALID_PRODUCT_ID", message: "productId UUID 형식이 올바르지 않습니다." });
+    }
+
+    const range = parseDateRange(query.from, query.to);
+    const metrics = await this.currentAdMetrics({
+      from: range.from,
+      to: range.to,
+      productId,
+      deliveryStatus: query.deliveryStatus
+    });
+    const groups = groupBy(this.parseCreativeRows(metrics), (item) => item.parsedName.creativeKey);
+    const creatives = Array.from(groups.entries())
+      .map(([creativeKey, unsortedItems]) => {
+        const items = [...unsortedItems].sort(
+          (a, b) => a.row.metricDate.getTime() - b.row.metricDate.getTime()
+        );
+        const rows = items.map((item) => item.row);
+        const latestParsedName = items[items.length - 1].parsedName;
+        const dateGroups = groupBy(items, (item) => formatDateOnly(item.row.metricDate));
+        const points = Array.from(dateGroups.entries())
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([date, dateItems]) => {
+            const aggregate = aggregateMetaVideoMetrics(dateItems.map((item) => item.row));
+            return {
+              date,
+              reach: aggregate.reach,
+              videoPlay3sRatePct: aggregate.videoPlay3sRatePct,
+              videoPlay25RatePct: aggregate.videoPlay25RatePct,
+              videoPlay50RatePct: aggregate.videoPlay50RatePct,
+              videoPlay75RatePct: aggregate.videoPlay75RatePct,
+              videoPlay100RatePct: aggregate.videoPlay100RatePct
+            };
+          });
+
+        return {
+          creativeKey,
+          displayName: latestParsedName.displayName,
+          productName: latestParsedName.productName,
+          materialNo: latestParsedName.materialNo,
+          deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
+          originalAdNames: uniqueNonEmpty(rows.map((row) => row.adNameSnapshot).reverse()).reverse(),
+          dataDays: points.length,
+          points
+        };
+      })
+      .sort((a, b) => {
+        if (a.materialNo && !b.materialNo) return -1;
+        if (!a.materialNo && b.materialNo) return 1;
+        const materialComparison = (a.materialNo ?? "").localeCompare(b.materialNo ?? "", "ko-KR", {
+          numeric: true,
+          sensitivity: "base"
+        });
+        const displayNameComparison = a.displayName.localeCompare(b.displayName, "ko-KR", {
+          numeric: true,
+          sensitivity: "base"
+        });
+        return materialComparison || displayNameComparison || a.creativeKey.localeCompare(b.creativeKey, "ko-KR", {
+          numeric: true,
+          sensitivity: "base"
+        });
+      });
+    const dataDays = new Set(
+      creatives.flatMap((creative) => creative.points.map((point) => point.date))
+    ).size;
+
+    return {
+      productId,
+      period: {
+        from: range.from,
+        to: range.to,
+        selectedDays: dateRangeDays(range.from, range.to),
+        dataDays
+      },
+      creatives
+    };
   }
 
   async compareAdsByName(adName: string | undefined, from?: string, to?: string, deliveryStatus?: string) {
@@ -287,5 +369,12 @@ export class MetaAdMetricsReadService {
       costRulesByProductId: groupBy(costRules, (rule) => rule.productId),
       exchangeRateByDate: new Map(exchangeRates.map((rate) => [formatDateOnly(rate.rateDate), rate]))
     };
+  }
+
+  private parseCreativeRows(rows: AdDailyMetricRow[]) {
+    return rows.map((row) => ({
+      row,
+      parsedName: this.creativeNameParser.parse(row.adNameSnapshot)
+    }));
   }
 }

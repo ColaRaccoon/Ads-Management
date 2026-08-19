@@ -8,6 +8,7 @@ import {
   AdsetMetricQuery,
   CampaignMetricQuery,
   CreativeMetricQuery,
+  CreativeVideoTrendQuery,
   DecoratedMetric
 } from "./metric-types";
 
@@ -53,6 +54,10 @@ export class MetricsService {
 
   creativeMetrics(query: CreativeMetricQuery) {
     return this.adMetricsReadService.creativeMetrics(query);
+  }
+
+  creativeVideoTrends(query: CreativeVideoTrendQuery) {
+    return this.adMetricsReadService.creativeVideoTrends(query);
   }
 
   compareAdsByName(adName: string | undefined, from?: string, to?: string, deliveryStatus?: string) {

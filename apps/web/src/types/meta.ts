@@ -42,3 +42,45 @@ export type MetaVideoRateKey =
   | "videoPlay50RatePct"
   | "videoPlay75RatePct"
   | "videoPlay100RatePct";
+
+export type MetaProductListItem = {
+  id: string;
+  code: string;
+  name: string;
+  displayName: string | null;
+  isActive: boolean;
+};
+
+export type MetaCreativeVideoTrendPoint = {
+  date: string;
+  reach: number;
+  videoPlay3sRatePct: number | null;
+  videoPlay25RatePct: number | null;
+  videoPlay50RatePct: number | null;
+  videoPlay75RatePct: number | null;
+  videoPlay100RatePct: number | null;
+};
+
+export type MetaCreativeVideoTrendSeries = {
+  creativeKey: string;
+  displayName: string;
+  productName: string | null;
+  materialNo: string | null;
+  deliveryStatus: string | null;
+  originalAdNames: string[];
+  dataDays: number;
+  points: MetaCreativeVideoTrendPoint[];
+};
+
+export type MetaCreativeVideoTrendResponse = {
+  productId: string;
+  period: {
+    from: string;
+    to: string;
+    selectedDays: number;
+    dataDays: number;
+  };
+  creatives: MetaCreativeVideoTrendSeries[];
+};
+
+export type MetaCreativeTrendMetricKey = "reach" | MetaVideoRateKey;
