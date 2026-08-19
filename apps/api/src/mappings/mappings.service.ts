@@ -40,23 +40,42 @@ export class MappingsService {
 
   async rematchCurrentMetrics(body: Record<string, unknown> = {}) {
     const range = dateRangeFromBody(body);
-    const metrics = await this.prisma.metaAdsetDailyMetric.findMany({
-      where: {
-        isCurrent: true,
-        productId: null,
-        ...(range ? { metricDate: { gte: range.fromDate, lte: range.toDate } } : {})
-      },
-      select: {
-        id: true,
-        metricDate: true,
-        adsetName: true,
-        metaAdsetId: true,
-        uploadRowId: true
-      },
-      orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
-    });
+    const [metrics, unmatchedAdMetrics] = await Promise.all([
+      this.prisma.metaAdsetDailyMetric.findMany({
+        where: {
+          isCurrent: true,
+          productId: null,
+          ...(range ? { metricDate: { gte: range.fromDate, lte: range.toDate } } : {})
+        },
+        select: {
+          id: true,
+          metricDate: true,
+          adsetName: true,
+          metaAdsetId: true,
+          uploadRowId: true
+        },
+        orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
+      }),
+      this.prisma.metaAdDailyMetric.findMany({
+        where: {
+          isCurrent: true,
+          productId: null,
+          ...(range ? { metricDate: { gte: range.fromDate, lte: range.toDate } } : {})
+        },
+        select: {
+          id: true,
+          uploadRowId: true,
+          metaAdsetRefId: true,
+          metricDate: true,
+          adNameSnapshot: true,
+          adsetNameSnapshot: true,
+          campaignNameSnapshot: true
+        },
+        orderBy: [{ metricDate: "asc" }, { adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
+      })
+    ]);
 
-    if (metrics.length === 0) {
+    if (metrics.length === 0 && unmatchedAdMetrics.length === 0) {
       return {
         scannedCount: 0,
         rematchedCount: 0,
@@ -68,8 +87,18 @@ export class MappingsService {
       };
     }
 
-    const metaAdsetIds = Array.from(new Set(metrics.map((metric) => metric.metaAdsetId)));
-    const metricDates = Array.from(new Map(metrics.map((metric) => [formatDateOnly(metric.metricDate), metric.metricDate])).values());
+    const adsetMetricKeys = new Set(metrics.map((metric) => adsetDateKey(metric.metaAdsetId, metric.metricDate)));
+    const standaloneAdMetrics = unmatchedAdMetrics.filter(
+      (metric) => !adsetMetricKeys.has(adsetDateKey(metric.metaAdsetRefId, metric.metricDate))
+    );
+    const metaAdsetIds = Array.from(new Set([
+      ...metrics.map((metric) => metric.metaAdsetId),
+      ...standaloneAdMetrics.map((metric) => metric.metaAdsetRefId)
+    ]));
+    const sourceMetaAdsetIds = Array.from(new Set(metrics.map((metric) => metric.metaAdsetId)));
+    const sourceMetricDates = Array.from(
+      new Map(metrics.map((metric) => [formatDateOnly(metric.metricDate), metric.metricDate])).values()
+    );
     const [histories, rules, adMetrics] = await Promise.all([
       this.prisma.adsetProductHistory.findMany({ where: { metaAdsetId: { in: metaAdsetIds } } }),
       this.prisma.productMatchRule.findMany({
@@ -79,8 +108,8 @@ export class MappingsService {
       this.prisma.metaAdDailyMetric.findMany({
         where: {
           isCurrent: true,
-          metaAdsetRefId: { in: metaAdsetIds },
-          metricDate: { in: metricDates }
+          metaAdsetRefId: { in: sourceMetaAdsetIds },
+          metricDate: { in: sourceMetricDates }
         },
         select: {
           id: true,
@@ -123,6 +152,7 @@ export class MappingsService {
     let rematchedAdMetricCount = 0;
     let rematchedByRuleCount = 0;
     let rematchedByManualCount = 0;
+    let rematchedStandaloneAdMetricCount = 0;
     const affectedAdsetIds = new Set<string>();
 
     for (const metric of metrics) {
@@ -261,6 +291,46 @@ export class MappingsService {
       }
     }
 
+    for (const adMetric of standaloneAdMetrics) {
+      const metricDate = formatDateOnly(adMetric.metricDate);
+      const historiesForMetric = (historiesByAdset.get(adMetric.metaAdsetRefId) ?? []).map((history) => ({
+        productId: history.productId,
+        effectiveFrom: formatDateOnly(history.effectiveFrom),
+        effectiveTo: history.effectiveTo ? formatDateOnly(history.effectiveTo) : null
+      }));
+      const result = matcher.match(sourceRowMatchText(adMetric), metricDate, historiesForMetric, activeRules);
+      if (!result.productId) {
+        continue;
+      }
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.metaAdDailyMetric.update({
+          where: { id: adMetric.id },
+          data: {
+            productId: result.productId,
+            productMatchSource: result.source as MatchSource,
+            productMatchRuleId: result.matchRuleId ?? null
+          }
+        });
+        if (adMetric.uploadRowId) {
+          await tx.uploadRow.updateMany({
+            where: { id: adMetric.uploadRowId, productId: null },
+            data: {
+              productId: result.productId,
+              productMatchSource: result.source as MatchSource,
+              productMatchRuleId: result.matchRuleId ?? null,
+              validationStatus: RowValidationStatus.VALID
+            }
+          });
+        }
+      });
+
+      rematchedAdMetricCount += 1;
+      rematchedStandaloneAdMetricCount += 1;
+      rematchedByRuleCount += result.source === "RULE" ? 1 : 0;
+      rematchedByManualCount += result.source === "MANUAL" ? 1 : 0;
+    }
+
     for (const metaAdsetId of affectedAdsetIds) {
       const latest = await this.prisma.metaAdsetDailyMetric.findFirst({
         where: { metaAdsetId, isCurrent: true, productId: { not: null } },
@@ -273,12 +343,13 @@ export class MappingsService {
     }
 
     return {
-      scannedCount: metrics.length,
+      scannedCount: metrics.length + standaloneAdMetrics.length,
       rematchedCount,
       rematchedAdMetricCount,
       rematchedByRuleCount,
       rematchedByManualCount,
-      stillUnmatchedCount: metrics.length - rematchedCount,
+      stillUnmatchedCount:
+        metrics.length - rematchedCount + standaloneAdMetrics.length - rematchedStandaloneAdMetricCount,
       range: range ? { from: range.from, to: range.to } : null
     };
   }
