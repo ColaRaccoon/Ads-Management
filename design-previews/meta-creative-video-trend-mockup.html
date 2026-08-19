@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meta 소재별 영상 지표 추이 · 화면 목업</title>
+  <style>
+    :root {
+      --bg: #f5f7f8;
+      --panel: #ffffff;
+      --line: #d9e0e6;
+      --line-strong: #b7c2cc;
+      --text: #18222d;
+      --muted: #65727f;
+      --brand: #146c63;
+      --brand-dark: #0f5b53;
+      --brand-weak: #e5f3f0;
+      --blue: #2764b7;
+      --orange: #dc7218;
+      --purple: #7b4ab6;
+      --red: #b42318;
+      --green: #137a45;
+      --shadow: 0 8px 22px rgba(24, 34, 45, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, select { font: inherit; }
+    button, label, select { -webkit-tap-highlight-color: transparent; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--line);
+      background: #fbfcfc;
+      padding: 18px 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 4px 8px 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .brand svg { color: var(--brand); flex: 0 0 auto; }
+    .nav { display: grid; gap: 4px; }
+    .nav-group { display: grid; gap: 4px; }
+
+    .nav-group + .nav-group {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .nav-label {
+      padding: 0 10px 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #2e3c49;
+      font-size: 14px;
+    }
+
+    .nav-item.active {
+      background: var(--brand-weak);
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      width: 18px;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .main { min-width: 0; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      min-height: 66px;
+      padding: 11px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+    }
+
+    .date-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      padding: 5px 8px;
+      background: #fff;
+    }
+
+    .date-control svg { color: var(--muted); }
+    .date-control input { width: 120px; border: 0; outline: 0; color: var(--text); background: transparent; }
+    .date-separator { color: #8a96a1; }
+
+    .button, .icon-button, .text-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 36px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      padding: 7px 11px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .button:hover, .icon-button:hover { border-color: var(--brand); }
+    .button.primary { border-color: var(--brand); background: var(--brand); color: #fff; font-weight: 700; }
+    .button.primary:hover { background: var(--brand-dark); }
+    .icon-button { width: 36px; padding: 0; font-size: 18px; }
+    .text-button { min-height: auto; border: 0; padding: 2px; color: var(--brand); font-size: 12px; font-weight: 700; }
+
+    .page { padding: 20px 22px 38px; }
+
+    .page-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .page-title h1 { margin: 0; font-size: 22px; line-height: 1.25; }
+    .page-title p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+
+    .period-summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid #cde2de;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #f2faf8;
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .analysis-layout {
+      display: grid;
+      grid-template-columns: 286px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .control-panel { position: sticky; top: 82px; overflow: hidden; }
+
+    .control-section { padding: 14px; }
+    .control-section + .control-section { border-top: 1px solid var(--line); }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    .section-heading strong { font-size: 13px; }
+    .section-heading small { color: var(--muted); font-size: 11px; }
+
+    .select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      padding: 7px 9px;
+      background: #fff;
+      color: var(--text);
+      outline: 0;
+    }
+
+    .select:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(20, 108, 99, 0.12); }
+
+    .product-note { display: flex; align-items: center; gap: 5px; margin-top: 7px; color: var(--muted); font-size: 11px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #21a164; }
+
+    .check-list { display: grid; gap: 6px; }
+
+    .creative-check {
+      display: grid;
+      grid-template-columns: 18px 10px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 7px;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .creative-check:hover { border-color: #99bcb7; background: #fbfefd; }
+    .creative-check:has(input:checked) { border-color: #a8cbc6; background: #f4faf9; }
+    input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
+    .series-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .creative-name { display: grid; gap: 2px; min-width: 0; }
+    .creative-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .creative-name small { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+
+    .active-badge {
+      border-radius: 999px;
+      padding: 3px 5px;
+      background: #e5f5ec;
+      color: var(--green);
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .metric-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+    .metric-check {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 8px;
+      background: #fff;
+      cursor: pointer;
+      color: #344555;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .metric-check:has(input:checked) { border-color: var(--brand); background: var(--brand-weak); color: var(--brand); }
+
+    .formula-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .formula-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      width: 15px;
+      height: 15px;
+      border: 1px solid #aab5be;
+      border-radius: 50%;
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .chart-panel { overflow: hidden; }
+
+    .chart-panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chart-panel-head h2 { margin: 0; font-size: 16px; }
+    .chart-panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+
+    .chart-panel-meta { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .meta-chip { border: 1px solid var(--line); border-radius: 999px; padding: 5px 8px; background: #f8fafb; color: #50606e; font-size: 10px; white-space: nowrap; }
+
+    .series-legend {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-height: 40px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfc;
+      overflow-x: auto;
+    }
+
+    .legend-label { color: var(--muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .legend-item { display: inline-flex; align-items: center; gap: 5px; color: #344555; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .legend-line { width: 18px; height: 3px; border-radius: 2px; }
+
+    .chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; }
+
+    .chart-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .chart-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 11px 12px 2px;
+    }
+
+    .chart-title { display: grid; gap: 2px; }
+    .chart-title strong { font-size: 13px; }
+    .chart-title small { color: var(--muted); font-size: 10px; }
+
+    .latest-chip { border-radius: 999px; padding: 5px 7px; background: #f1f5f6; color: #40515f; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .chart-svg { display: block; width: 100%; height: 250px; }
+    .grid-line { stroke: #e8ecef; stroke-width: 1; }
+    .axis-text { fill: #788591; font-size: 9px; }
+    .line-path { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .point { stroke: #fff; stroke-width: 1.5; }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      display: grid;
+      place-items: center;
+      min-height: 420px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+      background: #fbfcfc;
+    }
+
+    .empty-state strong { display: block; color: var(--text); margin-bottom: 5px; }
+
+    .insight-strip {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 9px;
+      margin: 0 12px 12px;
+      border: 1px solid #d5e6e3;
+      border-radius: 7px;
+      padding: 10px 11px;
+      background: #f5fbfa;
+      color: #334a47;
+      font-size: 11px;
+    }
+
+    .insight-icon { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 6px; background: var(--brand-weak); color: var(--brand); font-weight: 800; }
+    .insight-strip strong { color: var(--brand); }
+    .mockup-badge { border-radius: 999px; padding: 4px 7px; background: #fff; color: var(--muted); font-size: 9px; white-space: nowrap; }
+
+    @media (max-width: 1120px) {
+      .analysis-layout { grid-template-columns: 250px minmax(0, 1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 820px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .analysis-layout { grid-template-columns: 1fr; }
+      .control-panel { position: static; }
+      .topbar { position: static; justify-content: flex-start; flex-wrap: wrap; }
+      .page-title { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 19V9m6 10V5m6 14v-7m4 7H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span>Meta Ads Performance Hub</span>
+      </div>
+      <nav class="nav" aria-label="주 메뉴">
+        <div class="nav-group">
+          <div class="nav-label">Meta</div>
+          <div class="nav-item"><span class="nav-icon">▦</span><span>Meta Dashboard</span></div>
+          <div class="nav-item"><span class="nav-icon">⇧</span><span>Meta Uploads</span></div>
+          <div class="nav-item"><span class="nav-icon">▱</span><span>Meta Campaigns</span></div>
+          <div class="nav-item"><span class="nav-icon">▤</span><span>Meta Adsets</span></div>
+          <div class="nav-item"><span class="nav-icon">✦</span><span>Meta Ads</span></div>
+          <div class="nav-item active"><span class="nav-icon">⌁</span><span>Meta 소재 추이</span></div>
+          <div class="nav-item"><span class="nav-icon">⑂</span><span>Meta Mappings</span></div>
+          <div class="nav-item"><span class="nav-icon">☷</span><span>Meta Product Settings</span></div>
+          <div class="nav-item"><span class="nav-icon">☑</span><span>Meta Change Logs</span></div>
+        </div>
+        <div class="nav-group">
+          <div class="nav-label">쿠팡</div>
+          <div class="nav-item"><span class="nav-icon">▦</span><span>Coupang Dashboard</span></div>
+          <div class="nav-item"><span class="nav-icon">⇧</span><span>Coupang Uploads</span></div>
+          <div class="nav-item"><span class="nav-icon">□</span><span>쿠팡 상품 설정</span></div>
+          <div class="nav-item"><span class="nav-icon">▤</span><span>Coupang Profit Table</span></div>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="date-control" aria-label="조회 기간">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+          <input id="date-from" type="date" value="2026-08-01" aria-label="시작일" />
+          <span class="date-separator">~</span>
+          <input id="date-to" type="date" value="2026-08-14" aria-label="종료일" />
+        </div>
+        <button id="apply-range" class="button primary" type="button">기간 적용</button>
+        <button id="reset-view" class="icon-button" type="button" title="선택 초기화">↻</button>
+      </header>
+
+      <section class="page">
+        <div class="page-title">
+          <div>
+            <h1>소재별 영상 지표 추이</h1>
+            <p>제품의 광고 소재별 도달수와 영상 재생률 변화를 일자별로 비교합니다.</p>
+          </div>
+          <div id="period-summary" class="period-summary">● 2026.08.01 ~ 08.14 · 14일</div>
+        </div>
+
+        <div class="analysis-layout">
+          <aside class="panel control-panel" aria-label="그래프 조건 선택">
+            <div class="control-section">
+              <div class="section-heading">
+                <strong>1. 제품 선택</strong>
+              </div>
+              <select id="product-select" class="select" aria-label="제품 선택"></select>
+              <div class="product-note"><span class="status-dot"></span><span id="product-note">활성 소재 5개 · 일별 데이터 있음</span></div>
+            </div>
+
+            <div class="control-section">
+              <div class="section-heading">
+                <strong>2. 비교 소재</strong>
+                <button id="toggle-all-creatives" class="text-button" type="button">전체 선택</button>
+              </div>
+              <div id="creative-list" class="check-list"></div>
+            </div>
+
+            <div class="control-section">
+              <div class="section-heading">
+                <strong>3. 표시 지표</strong>
+                <small id="metric-count">2개 선택</small>
+              </div>
+              <div id="metric-list" class="metric-list"></div>
+              <p class="formula-note"><span class="formula-icon">i</span><span>재생률 = 각 재생 구간 도달수 ÷ 전체 도달수 × 100<br />단위가 다른 지표는 각각의 그래프로 표시됩니다.</span></p>
+            </div>
+          </aside>
+
+          <section class="panel chart-panel" aria-live="polite">
+            <div class="chart-panel-head">
+              <div>
+                <h2 id="chart-product-name">두줄보호대 · 소재 추이</h2>
+                <p id="chart-description">선택한 3개 소재의 일별 성과</p>
+              </div>
+              <div class="chart-panel-meta">
+                <span id="days-chip" class="meta-chip">일별 · 14개 데이터 포인트</span>
+                <span class="meta-chip">KST 기준</span>
+              </div>
+            </div>
+            <div id="series-legend" class="series-legend"></div>
+            <div id="chart-grid" class="chart-grid"></div>
+            <div class="insight-strip">
+              <span class="insight-icon">↗</span>
+              <span id="insight-text"><strong>04_UGC_리뷰</strong> 소재의 3초 재생률이 기간 초 대비 6.2%p 상승했습니다.</span>
+              <span class="mockup-badge">목업 예시 데이터</span>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const colors = ["#2764b7", "#dc7218", "#7b4ab6", "#137a45", "#b42318"];
+    const metrics = [
+      { key: "reach", label: "도달수", unit: "명", defaultOn: true },
+      { key: "rate3", label: "3초 재생률", unit: "%", defaultOn: true },
+      { key: "rate25", label: "25% 재생률", unit: "%", defaultOn: false },
+      { key: "rate50", label: "50% 재생률", unit: "%", defaultOn: false },
+      { key: "rate75", label: "75% 재생률", unit: "%", defaultOn: false },
+      { key: "rate100", label: "100% 재생률", unit: "%", defaultOn: false }
+    ];
+
+    const products = [
+      {
+        id: "wrist-double",
+        name: "두줄보호대",
+        creatives: [
+          { id: "hook-black", material: "01", name: "01_후킹_블랙", ad: "두줄보호대_후킹영상_A", seed: 1, base: 7120, rate: 57.6 },
+          { id: "howto-white", material: "02", name: "02_사용법_화이트", ad: "두줄보호대_사용법_B", seed: 3, base: 5980, rate: 52.1 },
+          { id: "ugc-review", material: "04", name: "04_UGC_리뷰", ad: "두줄보호대_UGC_C", seed: 5, base: 4820, rate: 48.8 },
+          { id: "compare", material: "07", name: "07_비교형", ad: "두줄보호대_비교_D", seed: 7, base: 4150, rate: 44.3 },
+          { id: "benefit", material: "09", name: "09_혜택강조", ad: "두줄보호대_혜택_E", seed: 9, base: 3710, rate: 40.7 }
+        ]
+      },
+      {
+        id: "pullup-bar",
+        name: "풀업바",
+        creatives: [
+          { id: "install", material: "01", name: "01_설치방법", ad: "풀업바_설치_A", seed: 2, base: 6800, rate: 55.2 },
+          { id: "strength", material: "03", name: "03_내구성테스트", ad: "풀업바_강도_B", seed: 4, base: 5220, rate: 49.6 },
+          { id: "homegym", material: "05", name: "05_홈짐루틴", ad: "풀업바_루틴_C", seed: 6, base: 4380, rate: 46.1 },
+          { id: "review", material: "08", name: "08_리뷰형", ad: "풀업바_리뷰_D", seed: 8, base: 3460, rate: 43.9 }
+        ]
+      },
+      {
+        id: "silk-mask",
+        name: "실크안대",
+        creatives: [
+          { id: "sleep", material: "01", name: "01_숙면후킹", ad: "실크안대_숙면_A", seed: 2, base: 6150, rate: 58.4 },
+          { id: "texture", material: "02", name: "02_소재강조", ad: "실크안대_소재_B", seed: 5, base: 4910, rate: 53.7 },
+          { id: "light", material: "06", name: "06_차광비교", ad: "실크안대_차광_C", seed: 7, base: 4020, rate: 50.2 }
+        ]
+      }
+    ];
+
+    const allDates = Array.from({ length: 14 }, (_, index) => {
+      const day = String(index + 1).padStart(2, "0");
+      return `2026-08-${day}`;
+    });
+
+    let selectedProductId = products[0].id;
+    let selectedCreativeIds = new Set(products[0].creatives.slice(0, 3).map((creative) => creative.id));
+    let selectedMetricKeys = new Set(metrics.filter((metric) => metric.defaultOn).map((metric) => metric.key));
+    let appliedFrom = "2026-08-01";
+    let appliedTo = "2026-08-14";
+
+    const productSelect = document.getElementById("product-select");
+    const creativeList = document.getElementById("creative-list");
+    const metricList = document.getElementById("metric-list");
+    const chartGrid = document.getElementById("chart-grid");
+    const seriesLegend = document.getElementById("series-legend");
+
+    function currentProduct() {
+      return products.find((product) => product.id === selectedProductId) || products[0];
+    }
+
+    function datesInRange() {
+      return allDates.filter((date) => date >= appliedFrom && date <= appliedTo);
+    }
+
+    function creativeValues(creative) {
+      return allDates.map((date, index) => {
+        const wave = Math.sin((index + creative.seed) * 0.76);
+        const softWave = Math.cos((index + creative.seed) * 0.43);
+        const reach = Math.max(0, Math.round(creative.base * (0.83 + index * 0.018 + wave * 0.105)));
+        const rate3 = clamp(creative.rate + index * 0.34 + wave * 2.5, 18, 82);
+        const rate25 = clamp(rate3 * 0.47 + softWave * 1.2, 7, 52);
+        const rate50 = clamp(rate3 * 0.27 + wave * 0.75, 3, 33);
+        const rate75 = clamp(rate3 * 0.18 + softWave * 0.48, 2, 24);
+        const rate100 = clamp(rate3 * 0.103 + wave * 0.3, 1, 15);
+        return { date, reach, rate3, rate25, rate50, rate75, rate100 };
+      });
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, Number(value.toFixed(2))));
+    }
+
+    function renderProducts() {
+      productSelect.innerHTML = products.map((product) => `<option value="${product.id}">${product.name}</option>`).join("");
+      productSelect.value = selectedProductId;
+    }
+
+    function renderCreativeChecks() {
+      const product = currentProduct();
+      creativeList.innerHTML = product.creatives.map((creative, index) => `
+        <label class="creative-check" title="${creative.ad}">
+          <input type="checkbox" data-creative="${creative.id}" ${selectedCreativeIds.has(creative.id) ? "checked" : ""} />
+          <span class="series-dot" style="background:${colors[index]}"></span>
+          <span class="creative-name"><strong>${creative.name}</strong><small>${creative.ad}</small></span>
+          <span class="active-badge">활성</span>
+        </label>
+      `).join("");
+      document.getElementById("product-note").textContent = `활성 소재 ${product.creatives.length}개 · 일별 데이터 있음`;
+      creativeList.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) selectedCreativeIds.add(input.dataset.creative);
+          else selectedCreativeIds.delete(input.dataset.creative);
+          renderCharts();
+        });
+      });
+    }
+
+    function renderMetricChecks() {
+      metricList.innerHTML = metrics.map((metric) => `
+        <label class="metric-check">
+          <input type="checkbox" data-metric="${metric.key}" ${selectedMetricKeys.has(metric.key) ? "checked" : ""} />
+          <span>${metric.label}</span>
+        </label>
+      `).join("");
+      metricList.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) selectedMetricKeys.add(input.dataset.metric);
+          else selectedMetricKeys.delete(input.dataset.metric);
+          document.getElementById("metric-count").textContent = `${selectedMetricKeys.size}개 선택`;
+          renderCharts();
+        });
+      });
+      document.getElementById("metric-count").textContent = `${selectedMetricKeys.size}개 선택`;
+    }
+
+    function renderLegend(creatives) {
+      if (!creatives.length) {
+        seriesLegend.innerHTML = `<span class="legend-label">비교 소재를 1개 이상 선택해주세요.</span>`;
+        return;
+      }
+      const product = currentProduct();
+      seriesLegend.innerHTML = `<span class="legend-label">소재</span>` + creatives.map((creative) => {
+        const index = product.creatives.findIndex((item) => item.id === creative.id);
+        return `<span class="legend-item"><span class="legend-line" style="background:${colors[index]}"></span>${creative.name}</span>`;
+      }).join("");
+    }
+
+    function renderCharts() {
+      const product = currentProduct();
+      const dates = datesInRange();
+      const creatives = product.creatives.filter((creative) => selectedCreativeIds.has(creative.id));
+      const activeMetrics = metrics.filter((metric) => selectedMetricKeys.has(metric.key));
+      document.getElementById("chart-product-name").textContent = `${product.name} · 소재 추이`;
+      document.getElementById("chart-description").textContent = `선택한 ${creatives.length}개 소재의 일별 성과`;
+      document.getElementById("days-chip").textContent = `일별 · ${dates.length}개 데이터 포인트`;
+      renderLegend(creatives);
+
+      if (!dates.length) {
+        chartGrid.innerHTML = `<div class="empty-state"><div><strong>선택한 기간에 데이터가 없습니다.</strong><span>2026년 8월 1일~14일 범위로 기간을 조정해주세요.</span></div></div>`;
+        return;
+      }
+      if (!creatives.length || !activeMetrics.length) {
+        chartGrid.innerHTML = `<div class="empty-state"><div><strong>그래프 조건을 선택해주세요.</strong><span>왼쪽에서 비교할 소재와 표시 지표를 체크하면 그래프가 나타납니다.</span></div></div>`;
+        return;
+      }
+
+      chartGrid.innerHTML = activeMetrics.map((metric) => chartCard(metric, creatives, dates)).join("");
+      updateInsight(creatives, dates);
+    }
+
+    function chartCard(metric, creatives, dates) {
+      const product = currentProduct();
+      const series = creatives.map((creative) => {
+        const values = creativeValues(creative).filter((row) => dates.includes(row.date));
+        const index = product.creatives.findIndex((item) => item.id === creative.id);
+        return { creative, values, color: colors[index] };
+      });
+      const allValues = series.flatMap((item) => item.values.map((row) => row[metric.key]));
+      const maximum = metric.key === "reach" ? niceMax(Math.max(...allValues)) : Math.min(100, niceRateMax(Math.max(...allValues)));
+      const minimum = 0;
+      const latestAverage = series.reduce((sum, item) => sum + item.values[item.values.length - 1][metric.key], 0) / series.length;
+      return `
+        <article class="chart-card">
+          <div class="chart-card-head">
+            <span class="chart-title"><strong>${metric.label}</strong><small>일자별 ${metric.unit === "%" ? "재생률" : "도달 인원"}</small></span>
+            <span class="latest-chip">최근 평균 ${formatValue(latestAverage, metric)}</span>
+          </div>
+          ${buildSvg(series, dates, metric, minimum, maximum)}
+        </article>
+      `;
+    }
+
+    function buildSvg(series, dates, metric, minimum, maximum) {
+      const width = 600;
+      const height = 250;
+      const left = 48;
+      const right = 15;
+      const top = 15;
+      const bottom = 35;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      const x = (index) => left + (dates.length === 1 ? plotWidth / 2 : index * plotWidth / (dates.length - 1));
+      const y = (value) => top + plotHeight - ((value - minimum) / Math.max(1, maximum - minimum)) * plotHeight;
+      let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${metric.label} 선 그래프">`;
+      for (let tick = 0; tick <= 4; tick += 1) {
+        const value = minimum + (maximum - minimum) * (4 - tick) / 4;
+        const yPos = top + plotHeight * tick / 4;
+        svg += `<line class="grid-line" x1="${left}" y1="${yPos}" x2="${width - right}" y2="${yPos}" />`;
+        svg += `<text class="axis-text" x="${left - 7}" y="${yPos + 3}" text-anchor="end">${formatAxis(value, metric)}</text>`;
+      }
+      const labelIndexes = [...new Set([0, Math.floor((dates.length - 1) / 3), Math.floor((dates.length - 1) * 2 / 3), dates.length - 1])];
+      labelIndexes.forEach((index) => {
+        svg += `<text class="axis-text" x="${x(index)}" y="${height - 12}" text-anchor="middle">${dates[index].slice(5).replace("-", ".")}</text>`;
+      });
+      series.forEach((item) => {
+        const points = item.values.map((row, index) => `${x(index)},${y(row[metric.key])}`).join(" ");
+        svg += `<polyline class="line-path" stroke="${item.color}" points="${points}" />`;
+        item.values.forEach((row, index) => {
+          const radius = index === item.values.length - 1 ? 3.7 : 2.2;
+          svg += `<circle class="point" cx="${x(index)}" cy="${y(row[metric.key])}" r="${radius}" fill="${item.color}"><title>${row.date} · ${item.creative.name} · ${formatValue(row[metric.key], metric)}</title></circle>`;
+        });
+      });
+      svg += `</svg>`;
+      return svg;
+    }
+
+    function niceMax(value) {
+      const step = value > 10000 ? 5000 : value > 5000 ? 2000 : 1000;
+      return Math.max(step, Math.ceil(value / step) * step);
+    }
+
+    function niceRateMax(value) {
+      return Math.max(20, Math.ceil(value / 10) * 10);
+    }
+
+    function formatAxis(value, metric) {
+      if (metric.key === "reach") return value >= 1000 ? `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}k` : Math.round(value).toLocaleString("ko-KR");
+      return `${Math.round(value)}%`;
+    }
+
+    function formatValue(value, metric) {
+      if (metric.key === "reach") return `${Math.round(value).toLocaleString("ko-KR")}명`;
+      return `${Number(value).toFixed(1)}%`;
+    }
+
+    function updateInsight(creatives, dates) {
+      if (!creatives.length) return;
+      const gains = creatives.map((creative) => {
+        const values = creativeValues(creative).filter((row) => dates.includes(row.date));
+        return { creative, gain: values[values.length - 1].rate3 - values[0].rate3 };
+      }).sort((a, b) => b.gain - a.gain);
+      const best = gains[0];
+      document.getElementById("insight-text").innerHTML = `<strong>${best.creative.name}</strong> 소재의 3초 재생률이 기간 초 대비 ${best.gain >= 0 ? "+" : ""}${best.gain.toFixed(1)}%p 변화했습니다.`;
+    }
+
+    function applyRange() {
+      const from = document.getElementById("date-from").value;
+      const to = document.getElementById("date-to").value;
+      if (!from || !to) return;
+      appliedFrom = from <= to ? from : to;
+      appliedTo = from <= to ? to : from;
+      document.getElementById("date-from").value = appliedFrom;
+      document.getElementById("date-to").value = appliedTo;
+      const dates = datesInRange();
+      const fromText = appliedFrom.replaceAll("-", ".");
+      const toText = appliedTo.slice(5).replace("-", ".");
+      document.getElementById("period-summary").textContent = `● ${fromText} ~ ${toText} · ${dates.length}일`;
+      renderCharts();
+    }
+
+    productSelect.addEventListener("change", () => {
+      selectedProductId = productSelect.value;
+      selectedCreativeIds = new Set(currentProduct().creatives.slice(0, 3).map((creative) => creative.id));
+      renderCreativeChecks();
+      renderCharts();
+    });
+
+    document.getElementById("toggle-all-creatives").addEventListener("click", () => {
+      const creatives = currentProduct().creatives;
+      const allSelected = creatives.every((creative) => selectedCreativeIds.has(creative.id));
+      selectedCreativeIds = allSelected ? new Set() : new Set(creatives.map((creative) => creative.id));
+      renderCreativeChecks();
+      renderCharts();
+    });
+
+    document.getElementById("apply-range").addEventListener("click", applyRange);
+    document.getElementById("reset-view").addEventListener("click", () => {
+      selectedProductId = products[0].id;
+      selectedCreativeIds = new Set(products[0].creatives.slice(0, 3).map((creative) => creative.id));
+      selectedMetricKeys = new Set(metrics.filter((metric) => metric.defaultOn).map((metric) => metric.key));
+      appliedFrom = "2026-08-01";
+      appliedTo = "2026-08-14";
+      document.getElementById("date-from").value = appliedFrom;
+      document.getElementById("date-to").value = appliedTo;
+      document.getElementById("period-summary").textContent = "● 2026.08.01 ~ 08.14 · 14일";
+      renderProducts();
+      renderCreativeChecks();
+      renderMetricChecks();
+      renderCharts();
+    });
+
+    renderProducts();
+    renderCreativeChecks();
+    renderMetricChecks();
+    renderCharts();
+  </script>
+</body>
+</html>

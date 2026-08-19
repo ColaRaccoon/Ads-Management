@@ -22,6 +22,7 @@ export type MetaCreativeMetricTotals = MetaVideoMetricTotals & {
   cpmUsd: number | null;
   roas: number | null;
   revenueKrw: number | null;
+  marginKrw: number | null;
 };
 
 export type MetaCreativePerformanceRow = {

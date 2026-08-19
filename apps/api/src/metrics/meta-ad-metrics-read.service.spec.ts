@@ -145,6 +145,83 @@ describe("MetaAdMetricsReadService response and query contract", () => {
       totals: expect.objectContaining({ spendUsd: 10 })
     });
   });
+
+  it("calculates each creative's net profit with its dated product costs and exchange rate", async () => {
+    const metricDate = new Date("2026-08-10T00:00:00.000Z");
+    const prisma = {
+      metaAdDailyMetric: {
+        findMany: async () => [
+          adMetric("metric-1", 10, 2, { adNameSnapshot: "260810_웨이브바_01" })
+        ]
+      },
+      productCostRule: {
+        findMany: async () => [{
+          id: "cost-1",
+          productId: "product-1",
+          salePriceKrw: new Prisma.Decimal(30_000),
+          vatKrw: new Prisma.Decimal(3_000),
+          productCostKrw: new Prisma.Decimal(10_000),
+          shippingKrw: new Prisma.Decimal(2_000),
+          extraCostKrw: new Prisma.Decimal(500),
+          fxRateKrwPerUsd: new Prisma.Decimal(0),
+          effectiveFrom: metricDate,
+          effectiveTo: null,
+          note: null,
+          createdAt: metricDate
+        }]
+      },
+      exchangeRate: {
+        findMany: async () => [{
+          rateDate: metricDate,
+          rate: new Prisma.Decimal(1_300)
+        }]
+      },
+      creative: { findMany: async () => [] }
+    };
+    const service = new MetaAdMetricsReadService(prisma as never);
+
+    const result = await service.creativeMetrics({ from: "2026-08-10", to: "2026-08-10" });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      productId: "product-1",
+      productName: "웨이브바",
+      materialNo: "01",
+      totals: {
+        spendUsd: 10,
+        spendKrw: 13_000,
+        purchaseCount: 2,
+        revenueKrw: 60_000,
+        marginKrw: 16_000
+      }
+    });
+  });
+
+  it("does not publish a creative net profit when a sale has no matching cost rule", async () => {
+    const prisma = {
+      metaAdDailyMetric: {
+        findMany: async () => [adMetric("metric-1", 10, 1)]
+      },
+      productCostRule: { findMany: async () => [] },
+      exchangeRate: {
+        findMany: async () => [{
+          rateDate: new Date("2026-08-10T00:00:00.000Z"),
+          rate: new Prisma.Decimal(1_300)
+        }]
+      },
+      creative: { findMany: async () => [] }
+    };
+    const service = new MetaAdMetricsReadService(prisma as never);
+
+    const result = await service.creativeMetrics({ from: "2026-08-10", to: "2026-08-10" });
+
+    expect(result[0].totals).toMatchObject({
+      spendKrw: 13_000,
+      purchaseCount: 1,
+      revenueKrw: null,
+      marginKrw: null
+    });
+  });
 });
 
 function adMetric(

@@ -268,6 +268,7 @@ function creativeRow(overrides: Partial<MetaDailyCreativeRow> = {}): MetaDailyCr
       cpmUsd: 14.2,
       roas: 2.2,
       revenueKrw: 363_000,
+      marginKrw: 133_000,
       reach: 84,
       videoPlay3sCount: 41,
       videoPlay25Count: 8,

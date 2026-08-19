@@ -43,6 +43,7 @@ const columns: SortableColumn[] = [
   { key: "dataDays", header: "집계일수", render: (row) => numberFmt(row.dataDays) },
   { key: "spend", header: "광고비", render: (row) => money(row.totals.spendUsd, "USD") },
   { key: "purchase", header: "구매", render: (row) => numberFmt(row.totals.purchaseCount) },
+  { key: "profit", header: "순이익", render: (row) => money(row.totals.marginKrw, "KRW") },
   { key: "cpa", header: "CPA", render: (row) => money(row.totals.cpaUsd, "USD") },
   { key: "ctr", header: "CTR", render: (row) => formatPercent(row.totals.ctrLinkPct) },
   { key: "cpm", header: "CPM", render: (row) => money(row.totals.cpmUsd, "USD") },

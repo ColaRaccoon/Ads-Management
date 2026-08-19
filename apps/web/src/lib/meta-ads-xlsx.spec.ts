@@ -17,15 +17,16 @@ describe("Meta Ads XLSX builder", () => {
       "75% 재생률",
       "100% 재생률"
     ]);
-    expect(values[9]).toMatchObject({ value: 84, style: "Number" });
-    expect(values[10]).toMatchObject({ value: 0.4880952380952381, style: "Percent" });
-    expect(values[11]).toMatchObject({ value: 0.09523809523809523, style: "Percent" });
-    expect(values[14]?.style).toBe("Percent");
-    expect(values[14]?.value).toBeCloseTo(0.02380952380952381, 12);
+    expect(values[6]).toMatchObject({ value: 16_000, style: "Krw" });
+    expect(values[10]).toMatchObject({ value: 84, style: "Number" });
+    expect(values[11]).toMatchObject({ value: 0.4880952380952381, style: "Percent" });
+    expect(values[12]).toMatchObject({ value: 0.09523809523809523, style: "Percent" });
+    expect(values[15]?.style).toBe("Percent");
+    expect(values[15]?.value).toBeCloseTo(0.02380952380952381, 12);
 
     const sheet = readZipText(buildMetaAdsXlsxWorkbook([rowFixture()]), "xl/worksheets/sheet1.xml");
-    expect(sheet).toContain(`<dimension ref="A1:O2"/>`);
-    expect(sheet).toMatch(/<c r="K2" s="\d+"><v>0\.4880952380952381<\/v><\/c>/);
+    expect(sheet).toContain(`<dimension ref="A1:P2"/>`);
+    expect(sheet).toMatch(/<c r="L2" s="\d+"><v>0\.4880952380952381<\/v><\/c>/);
   });
 
   it("keeps unavailable rates as a dash while preserving real zero", () => {
@@ -34,8 +35,8 @@ describe("Meta Ads XLSX builder", () => {
     row.totals.videoPlay25RatePct = 0;
     const values = rowCells(buildMetaAdsXlsxInput([row]).rows[1]);
 
-    expect(values[10]).toMatchObject({ value: null, style: "Percent" });
-    expect(values[11]).toMatchObject({ value: 0, style: "Percent" });
+    expect(values[11]).toMatchObject({ value: null, style: "Percent" });
+    expect(values[12]).toMatchObject({ value: 0, style: "Percent" });
   });
 });
 
@@ -58,6 +59,7 @@ function rowFixture(): MetaCreativePerformanceRow {
       cpmUsd: 10,
       roas: 2,
       revenueKrw: 26_000,
+      marginKrw: 16_000,
       reach: 84,
       videoPlay3sCount: 41,
       videoPlay25Count: 8,

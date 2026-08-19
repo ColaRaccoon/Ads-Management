@@ -1,9 +1,12 @@
 import { numberFrom } from "../common/date-range";
 import { formatDateOnly } from "../domain/date-number";
+import { MarginCalculator } from "../domain/margin-calculator";
 import { isPurchaseResult } from "../domain/meta-ad-daily-csv";
 import { aggregateMetaVideoMetrics } from "../domain/meta-video-metrics";
 import { PeriodMetricCalculator } from "../domain/period-metric-calculator";
 import { AdDailyMetricRow, CreativeFinancialContext } from "./metric-types";
+
+const marginCalculator = new MarginCalculator();
 
 export function aggregateAdDailyRows(calculator: PeriodMetricCalculator, rows: AdDailyMetricRow[]) {
   const totals = calculator.calculate(
@@ -50,7 +53,11 @@ export function aggregateCreativeDailyRows(
       : legacyExchangeRate > 0
         ? legacyExchangeRate
         : null;
-    const spendKrw = exchangeRateKrwPerUsd === null ? null : spendUsd * exchangeRateKrwPerUsd;
+    const spendKrw = spendUsd === 0
+      ? 0
+      : exchangeRateKrwPerUsd === null
+        ? null
+        : spendUsd * exchangeRateKrwPerUsd;
     const salePriceKrw = costRule ? numberFrom(costRule.salePriceKrw) : null;
     const revenueKrw =
       purchaseCount === 0
@@ -58,6 +65,26 @@ export function aggregateCreativeDailyRows(
         : salePriceKrw !== null && Number.isFinite(salePriceKrw)
           ? purchaseCount * salePriceKrw
           : null;
+    const margin = costRule && spendKrw !== null
+      ? marginCalculator.margin(
+          {
+            spendUsd,
+            purchaseCount,
+            exchangeRateKrwPerUsd: exchangeRateKrwPerUsd ?? 0
+          },
+          {
+            salePriceKrw: numberFrom(costRule.salePriceKrw),
+            vatKrw: numberFrom(costRule.vatKrw),
+            productCostKrw: numberFrom(costRule.productCostKrw),
+            shippingKrw: numberFrom(costRule.shippingKrw),
+            extraCostKrw: numberFrom(costRule.extraCostKrw)
+          }
+        )
+      : null;
+    // Meta Daily와 같은 원가 기준을 쓰되, 제품 매칭이 없으면 제품별 순이익을 확정하지 않는다.
+    const marginKrw = row.productId
+      ? margin?.marginKrw ?? (purchaseCount === 0 && spendKrw !== null ? -spendKrw : null)
+      : null;
 
     return {
       metricDate,
@@ -69,15 +96,17 @@ export function aggregateCreativeDailyRows(
       clicksAll: row.clicksAll,
       landingPageViews: row.landingPageViews,
       revenueKrw,
-      marginKrw: null
+      marginKrw
     };
   });
   const totals = calculator.calculate(periodRows);
   const videoTotals = aggregateMetaVideoMetrics(rows);
   const hasUnknownSpendKrw = periodRows.some((row) => row.spendUsd > 0 && row.spendKrw === null);
   const hasUnknownRevenueKrw = periodRows.some((row) => row.resultCount > 0 && row.revenueKrw === null);
+  const hasUnknownMarginKrw = periodRows.some((row) => row.marginKrw === null);
   const spendKrw = hasUnknownSpendKrw ? null : totals.spendKrw;
   const revenueKrw = hasUnknownRevenueKrw ? null : totals.revenueKrw;
+  const marginKrw = hasUnknownMarginKrw ? null : totals.marginKrw;
 
   return {
     totals: {
@@ -85,6 +114,7 @@ export function aggregateCreativeDailyRows(
       ...videoTotals,
       spendKrw,
       revenueKrw,
+      marginKrw,
       cpaKrw: spendKrw === null ? null : divideOrNull(spendKrw, totals.purchaseCount),
       roas: spendKrw === null || revenueKrw === null ? null : divideOrNull(revenueKrw, spendKrw),
       cpmUsd: divideOrNull(totals.spendUsd * 1000, totals.impressions)

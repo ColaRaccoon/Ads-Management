@@ -11,9 +11,20 @@ describe("Meta Ads sorting", () => {
     expect(sortMetaCreativeRows(rows, "videoPlay3sRatePct", "desc").map((item) => item.displayName))
       .toEqual(["high", "zero", "null"]);
   });
+
+  it("sorts net profit numerically and leaves unavailable profit last", () => {
+    const rows = [row("loss", 0, -1_000), row("unknown", 0, null), row("profit", 0, 2_000)];
+
+    expect(sortMetaCreativeRows(rows, "profit", "desc").map((item) => item.displayName))
+      .toEqual(["profit", "loss", "unknown"]);
+  });
 });
 
-function row(displayName: string, videoPlay3sRatePct: number | null): MetaCreativePerformanceRow {
+function row(
+  displayName: string,
+  videoPlay3sRatePct: number | null,
+  marginKrw: number | null = 0
+): MetaCreativePerformanceRow {
   return {
     creativeKey: displayName,
     displayName,
@@ -32,6 +43,7 @@ function row(displayName: string, videoPlay3sRatePct: number | null): MetaCreati
       cpmUsd: null,
       roas: null,
       revenueKrw: 0,
+      marginKrw,
       reach: 10,
       videoPlay3sCount: videoPlay3sRatePct === null ? null : 0,
       videoPlay25Count: null,

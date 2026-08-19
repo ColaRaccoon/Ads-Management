@@ -134,6 +134,7 @@ function creative(overrides: CreativeOverrides = {}): MetaCreativePerformanceRow
       cpmUsd: null,
       roas: null,
       revenueKrw: overrides.revenueKrw === undefined ? 0 : overrides.revenueKrw,
+      marginKrw: 0,
       reach: 0,
       videoPlay3sCount: null,
       videoPlay25Count: null,

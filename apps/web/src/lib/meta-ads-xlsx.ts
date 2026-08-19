@@ -16,6 +16,7 @@ const META_ADS_EXPORT_COLUMNS: MetaAdsExportColumn[] = [
   { header: "집계일수", width: 11, style: "Number", value: (row) => row.dataDays },
   { header: "광고비", width: 14, style: "Usd", value: (row) => row.totals.spendUsd },
   { header: "구매", width: 10, style: "Number", value: (row) => row.totals.purchaseCount },
+  { header: "순이익", width: 16, style: "Krw", value: (row) => row.totals.marginKrw },
   { header: "CPA", width: 14, style: "Usd", value: (row) => row.totals.cpaUsd },
   { header: "CTR", width: 10, style: "Percent", value: (row) => percentToRatio(row.totals.ctrLinkPct) },
   { header: "CPM", width: 14, style: "Usd", value: (row) => row.totals.cpmUsd },

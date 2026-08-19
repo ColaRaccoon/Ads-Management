@@ -56,7 +56,9 @@ export function aggregateMetaVideoMetrics(rows: readonly MetaVideoMetricRow[]): 
   };
 
   for (const column of META_VIDEO_PLAY_COLUMNS) {
-    const complete = rows.length > 0 && rows.every((row) => row[column.countField] !== null);
+    const complete = rows.length > 0 && rows.every(
+      (row) => row[column.countField] !== null || row.reach === 0
+    );
     const count = complete
       ? rows.reduce((sum, row) => sum + (row[column.countField] ?? 0), 0)
       : null;
