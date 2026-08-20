@@ -14,7 +14,7 @@ describe("MetaAdDailyImportService response and snapshot contract", () => {
     expect(result).toMatchObject({
       batchId: "batch-1",
       sourceLevel: UploadLevel.AD,
-      schemaVersion: "meta_ad_daily_v2",
+      schemaVersion: "meta_ad_daily_v3",
       status: UploadStatus.IMPORTED,
       rowCount: 1,
       validRowCount: 1,

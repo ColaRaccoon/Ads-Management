@@ -143,6 +143,12 @@ export function CreativeTrendControls({
         <p className="creative-trend-formula-note">
           <Info aria-hidden="true" size={15} />
           <span>
+            CPM = 지출 ÷ 노출 × 1,000 · CPC = 지출 ÷ 링크 클릭
+            <br />
+            CTR = 링크 클릭 ÷ 노출 × 100
+            <br />
+            장바구니 전환율 = 장바구니 담기 ÷ 도달수 × 100
+            <br />
             재생률 = 해당 재생 구간 수 ÷ 도달수 × 100
             <br />
             단위가 다른 지표는 각각의 그래프로 표시됩니다.

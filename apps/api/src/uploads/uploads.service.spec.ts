@@ -68,13 +68,14 @@ describe("upload snapshot helpers", () => {
 });
 
 describe("Meta ad daily upload mapping", () => {
-  it("passes all five parsed video counts to Prisma without calculating rates", async () => {
+  it("passes parsed video and add-to-cart counts to Prisma without calculating rates", async () => {
     const parsedRow = parseAdRow({
       "동영상 3초 이상 재생": "9",
       "동영상 25% 재생": "2",
       "동영상 50% 재생": "1",
       "동영상 75% 재생": "",
-      "동영상 100% 재생": ""
+      "동영상 100% 재생": "",
+      "장바구니에 담기": "3"
     });
     const data = await captureAdMetricCreateData(parsedRow);
 
@@ -83,7 +84,8 @@ describe("Meta ad daily upload mapping", () => {
       videoPlay25Count: 2,
       videoPlay50Count: 1,
       videoPlay75Count: 0,
-      videoPlay100Count: 0
+      videoPlay100Count: 0,
+      addToCartCount: 3
     });
     expect(Object.keys(data).some((key) => key.toLowerCase().includes("ratepct"))).toBe(false);
   });
@@ -96,7 +98,8 @@ describe("Meta ad daily upload mapping", () => {
       videoPlay25Count: null,
       videoPlay50Count: null,
       videoPlay75Count: null,
-      videoPlay100Count: null
+      videoPlay100Count: null,
+      addToCartCount: null
     });
   });
 });

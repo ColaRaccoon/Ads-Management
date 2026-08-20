@@ -32,6 +32,7 @@ export function adDailyMetricCreateData(input: AdMetricImportInput, importVersio
     videoPlay50Count: input.parsedRow.videoPlay50Count,
     videoPlay75Count: input.parsedRow.videoPlay75Count,
     videoPlay100Count: input.parsedRow.videoPlay100Count,
+    addToCartCount: input.parsedRow.addToCartCount,
     frequency: decimalOrNull(input.parsedRow.frequency),
     costPerResultUsd: decimalOrNull(input.parsedRow.costPerResultUsd),
     adsetBudgetLabel: input.parsedRow.adsetBudgetLabel,

@@ -4,11 +4,11 @@ import { PrismaService } from "../common/prisma.service";
 import { dateRangeDays, parseDateRange } from "../common/date-range";
 import { formatDateOnly, toDateOnly } from "../domain/date-number";
 import { CreativeNameParser } from "../domain/creative-name-parser";
-import { aggregateMetaVideoMetrics } from "../domain/meta-video-metrics";
 import { PeriodMetricCalculator } from "../domain/period-metric-calculator";
 import { adDeliveryStatusWhere, isUuid, parseDeliveryStatusFilter } from "./metric-filters";
 import {
   aggregateAdDailyRows,
+  aggregateAddToCartRatePct,
   aggregateCreativeDailyRows,
   firstNonNull,
   groupBy,
@@ -173,15 +173,20 @@ export class MetaAdMetricsReadService {
         const points = Array.from(dateGroups.entries())
           .sort(([left], [right]) => left.localeCompare(right))
           .map(([date, dateItems]) => {
-            const aggregate = aggregateMetaVideoMetrics(dateItems.map((item) => item.row));
+            const dateRows = dateItems.map((item) => item.row);
+            const aggregate = aggregateAdDailyRows(this.periodCalculator, dateRows);
             return {
               date,
-              reach: aggregate.reach,
-              videoPlay3sRatePct: aggregate.videoPlay3sRatePct,
-              videoPlay25RatePct: aggregate.videoPlay25RatePct,
-              videoPlay50RatePct: aggregate.videoPlay50RatePct,
-              videoPlay75RatePct: aggregate.videoPlay75RatePct,
-              videoPlay100RatePct: aggregate.videoPlay100RatePct
+              reach: aggregate.totals.reach,
+              cpmUsd: aggregate.totals.cpmUsd,
+              cpcLinkUsd: aggregate.totals.cpcLinkUsd,
+              ctrLinkPct: aggregate.totals.ctrLinkPct,
+              addToCartRatePct: aggregateAddToCartRatePct(dateRows),
+              videoPlay3sRatePct: aggregate.totals.videoPlay3sRatePct,
+              videoPlay25RatePct: aggregate.totals.videoPlay25RatePct,
+              videoPlay50RatePct: aggregate.totals.videoPlay50RatePct,
+              videoPlay75RatePct: aggregate.totals.videoPlay75RatePct,
+              videoPlay100RatePct: aggregate.totals.videoPlay100RatePct
             };
           });
 

@@ -54,6 +54,10 @@ export type MetaProductListItem = {
 export type MetaCreativeVideoTrendPoint = {
   date: string;
   reach: number;
+  cpmUsd: number | null;
+  cpcLinkUsd: number | null;
+  ctrLinkPct: number | null;
+  addToCartRatePct: number | null;
   videoPlay3sRatePct: number | null;
   videoPlay25RatePct: number | null;
   videoPlay50RatePct: number | null;
@@ -83,4 +87,10 @@ export type MetaCreativeVideoTrendResponse = {
   creatives: MetaCreativeVideoTrendSeries[];
 };
 
-export type MetaCreativeTrendMetricKey = "reach" | MetaVideoRateKey;
+export type MetaCreativeTrendMetricKey =
+  | "reach"
+  | "cpmUsd"
+  | "cpcLinkUsd"
+  | "ctrLinkPct"
+  | "addToCartRatePct"
+  | MetaVideoRateKey;

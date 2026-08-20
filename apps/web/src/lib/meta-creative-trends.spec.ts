@@ -231,6 +231,9 @@ describe("meta creative trend display model", () => {
     expect(creativeLabel(trendSeries({ materialNo: "04" }))).toBe("04번 소재");
     expect(creativeLabel(trendSeries({ materialNo: null, displayName: "소재 이름" }))).toBe("소재 이름");
     expect(formatTrendMetricValue(1234, "reach")).toBe("1,234명");
+    expect(formatTrendMetricValue(1.234, "cpcLinkUsd")).toBe("$1.23");
+    expect(formatTrendMetricValue(0, "cpmUsd")).toBe("$0");
+    expect(formatTrendMetricValue(2.5, "addToCartRatePct")).toBe("2.50%");
     expect(formatTrendMetricValue(48.81, "videoPlay3sRatePct")).toBe("48.81%");
     expect(formatTrendMetricValue(null, "videoPlay3sRatePct")).toBe("-");
   });
@@ -257,6 +260,10 @@ function trendPoint(
   return {
     date,
     reach: 100,
+    cpmUsd: 10,
+    cpcLinkUsd: 0.5,
+    ctrLinkPct: 2,
+    addToCartRatePct: 1,
     videoPlay3sRatePct: 50,
     videoPlay25RatePct: 20,
     videoPlay50RatePct: 10,

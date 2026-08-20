@@ -55,7 +55,7 @@ export function CreativeMetricChart({ metric, model }: { metric: TrendMetric; mo
               tickLine={false}
             />
             <YAxis
-              allowDecimals={isPercent}
+              allowDecimals={metric.unit !== "count"}
               axisLine={false}
               domain={yDomain}
               tick={{ fill: "#788591", fontSize: 10 }}
@@ -177,12 +177,15 @@ function CreativeTrendTooltip({
 }
 
 function formatAxisTick(value: number, metricKey: MetaCreativeTrendMetricKey) {
-  if (metricKey !== "reach") {
-    return `${Math.round(value)}%`;
+  if (metricKey === "reach") {
+    if (Math.abs(value) >= 1000) {
+      const thousands = value / 1000;
+      return `${thousands.toLocaleString("ko-KR", { maximumFractionDigits: thousands < 10 ? 1 : 0 })}k`;
+    }
+    return numberFmt(value);
   }
-  if (Math.abs(value) >= 1000) {
-    const thousands = value / 1000;
-    return `${thousands.toLocaleString("ko-KR", { maximumFractionDigits: thousands < 10 ? 1 : 0 })}k`;
+  if (metricKey === "cpmUsd" || metricKey === "cpcLinkUsd") {
+    return `$${value.toLocaleString("en-US", { maximumFractionDigits: value < 10 ? 2 : 1 })}`;
   }
-  return numberFmt(value);
+  return `${Math.round(value)}%`;
 }

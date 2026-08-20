@@ -169,8 +169,8 @@ export default function CreativeTrendsPage() {
     <section className="page">
       <div className="page-title">
         <div>
-          <h1>소재별 영상 지표 추이</h1>
-          <p>제품의 광고 소재별 도달수와 영상 재생률 변화를 일자별로 비교합니다.</p>
+          <h1>소재별 성과 지표 추이</h1>
+          <p>제품의 광고 소재별 도달·비용·클릭·전환·영상 재생 지표를 일자별로 비교합니다.</p>
         </div>
         <div className="creative-trend-page-title-actions">
           <span className="creative-trend-period-chip">

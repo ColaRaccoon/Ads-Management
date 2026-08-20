@@ -6,7 +6,7 @@ import {
   type MetaVideoPlayCountField
 } from "./meta-video-metrics";
 
-export const META_AD_DAILY_SCHEMA_VERSION = "meta_ad_daily_v2";
+export const META_AD_DAILY_SCHEMA_VERSION = "meta_ad_daily_v3";
 
 export const META_AD_DAILY_CSV_COLUMNS = [
   "보고 시작",
@@ -42,7 +42,8 @@ export const META_AD_DAILY_CSV_COLUMNS = [
   "광고 세트 ID",
   "캠페인 ID",
   "광고 ID",
-  ...META_VIDEO_PLAY_COLUMNS.map((column) => column.csvColumn)
+  ...META_VIDEO_PLAY_COLUMNS.map((column) => column.csvColumn),
+  "장바구니에 담기"
 ] as const;
 
 export const META_AD_DAILY_CSV_COLUMN_MAPPINGS = [
@@ -83,7 +84,8 @@ export const META_AD_DAILY_CSV_COLUMN_MAPPINGS = [
     csvColumn: column.csvColumn,
     fieldName: column.countField,
     requirement: "optional" as const
-  }))
+  })),
+  { csvColumn: "장바구니에 담기", fieldName: "add_to_cart_count", requirement: "recommended" }
 ] as const;
 
 export const META_AD_DAILY_REQUIRED_COLUMNS = [
@@ -106,7 +108,8 @@ export const META_AD_DAILY_RECOMMENDED_COLUMNS = [
   "랜딩 페이지 조회",
   "CPC(링크 클릭당 비용) (USD)",
   "CTR(링크 클릭률)",
-  "도달"
+  "도달",
+  "장바구니에 담기"
 ] as const;
 
 export const META_AD_DAILY_OPTIONAL_COLUMNS = [
@@ -137,6 +140,7 @@ export type ParsedMetaAdDailyRow = {
   videoPlay50Count: number | null;
   videoPlay75Count: number | null;
   videoPlay100Count: number | null;
+  addToCartCount: number | null;
   frequency: number | null;
   costPerResultUsd: number | null;
   adsetBudgetLabel: string | null;
@@ -279,6 +283,7 @@ export class MetaAdDailyCsvParser {
             purchaseCount: isPurchaseResult(resultIndicator) ? resultCount : 0,
             reach,
             ...videoPlayCounts,
+            addToCartCount: this.optionalCount(rawRow, "장바구니에 담기", issues),
             frequency: this.optionalNumber(rawRow, "빈도", issues),
             costPerResultUsd: this.optionalNumber(rawRow, "결과당 비용", issues),
             adsetBudgetLabel: textValue(rawRow["광고 세트 예산"]),
@@ -453,6 +458,13 @@ export class MetaAdDailyCsvParser {
     }
 
     return counts;
+  }
+
+  private optionalCount(rawRow: Record<string, string>, columnName: string, issues: ParseIssue[]): number | null {
+    if (!hasOwnColumn(rawRow, columnName)) {
+      return null;
+    }
+    return textValue(rawRow[columnName]) === null ? 0 : this.count(rawRow, columnName, issues);
   }
 
   private optionalNumber(rawRow: Record<string, string>, columnName: string, issues: ParseIssue[]): number | null {

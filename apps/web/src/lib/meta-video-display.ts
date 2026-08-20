@@ -10,6 +10,15 @@ export const META_VIDEO_RATE_COLUMNS = [
 
 export const META_CREATIVE_TREND_METRICS = [
   { key: "reach", label: "도달수", unit: "count", description: "일자별 도달 인원" },
+  { key: "cpmUsd", label: "CPM", unit: "usd", description: "1,000회 노출당 비용 (USD)" },
+  { key: "cpcLinkUsd", label: "CPC", unit: "usd", description: "링크 클릭당 비용 (USD)" },
+  { key: "ctrLinkPct", label: "CTR", unit: "percent", description: "링크 클릭률" },
+  {
+    key: "addToCartRatePct",
+    label: "장바구니 전환율",
+    unit: "percent",
+    description: "도달 인원 중 장바구니에 담은 비율"
+  },
   ...META_VIDEO_RATE_COLUMNS.map((column) => ({
     ...column,
     unit: "percent" as const,

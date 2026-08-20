@@ -152,6 +152,22 @@ describe("MetaAdDailyCsvParser video metrics", () => {
   });
 });
 
+describe("MetaAdDailyCsvParser add-to-cart metric", () => {
+  const parser = new MetaAdDailyCsvParser();
+
+  it("parses the new Meta add-to-cart column and preserves a real zero", () => {
+    expect(parser.parseRow(validRow({ "장바구니에 담기": "1,234" })).parsedRow?.addToCartCount).toBe(1234);
+    expect(parser.parseRow(validRow({ "장바구니에 담기": "0" })).parsedRow?.addToCartCount).toBe(0);
+    expect(parser.parseRow(validRow({ "장바구니에 담기": "" })).parsedRow?.addToCartCount).toBe(0);
+  });
+
+  it("keeps legacy rows without the column unavailable and recommends the new column", () => {
+    expect(parser.parseRow(validRow()).parsedRow?.addToCartCount).toBeNull();
+    expect(MetaAdDailyCsvValidator.validate([...META_AD_DAILY_REQUIRED_COLUMNS, "도달"]).warnings)
+      .toContain("권장 컬럼이 없습니다: 장바구니에 담기");
+  });
+});
+
 function validRow(overrides: Record<string, string> = {}) {
   return {
     "보고 시작": "2026-08-10",

@@ -127,6 +127,20 @@ export function adPurchaseCount(row: { resultIndicator: string | null; resultCou
   return isPurchaseResult(row.resultIndicator) ? row.resultCount : row.purchaseCount;
 }
 
+export function aggregateAddToCartRatePct(
+  rows: readonly Pick<AdDailyMetricRow, "reach" | "addToCartCount">[]
+) {
+  const complete = rows.length > 0 && rows.every(
+    (row) => row.addToCartCount !== null || row.reach === 0
+  );
+  if (!complete) {
+    return null;
+  }
+  const reach = rows.reduce((sum, row) => sum + row.reach, 0);
+  const addToCartCount = rows.reduce((sum, row) => sum + (row.addToCartCount ?? 0), 0);
+  return divideOrNull(addToCartCount * 100, reach);
+}
+
 export function summarizeDeliveryStatus(values: Array<string | null>) {
   const normalized = values.filter((value): value is string => Boolean(value)).map((value) => value.toLowerCase());
   if (normalized.includes("active")) {

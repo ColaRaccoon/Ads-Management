@@ -1,5 +1,5 @@
 import { eachDayOfInterval, format, isValid, parseISO } from "date-fns";
-import { numberFmt } from "./date-range";
+import { money, numberFmt } from "./date-range";
 import { formatPercent } from "./meta-video-display";
 import type {
   MetaCreativeTrendMetricKey,
@@ -251,6 +251,9 @@ export function trendSelectedDays(from: string, to: string) {
 export function formatTrendMetricValue(value: number | null | undefined, metricKey: MetaCreativeTrendMetricKey) {
   if (metricKey === "reach") {
     return value === null || value === undefined || !Number.isFinite(value) ? "-" : `${numberFmt(value)}명`;
+  }
+  if (metricKey === "cpmUsd" || metricKey === "cpcLinkUsd") {
+    return money(value, "USD");
   }
   return formatPercent(value);
 }
