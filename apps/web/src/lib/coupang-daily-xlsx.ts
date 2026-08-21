@@ -160,8 +160,10 @@ export function buildCoupangDailyXlsxInput(
 ): XlsxWorkbookInput {
   const filteredRows = filterCoupangDailyXlsxRows(exportRows);
   const rows: Array<XlsxCell[] | XlsxRow> = [
-    COUPANG_DAILY_XLSX_COLUMNS.map((column): XlsxCell => ({
-      value: column.header,
+    COUPANG_DAILY_XLSX_COLUMNS.map((column, columnIndex): XlsxCell => ({
+      value: columnIndex === 0
+        ? formatCoupangDailyXlsxDateHeader(exportRows[0]?.date)
+        : column.header,
       style: "Header",
       fill: "REPORT_HEADER",
       fontTone: "INVERSE",
@@ -198,6 +200,14 @@ export function buildCoupangDailyXlsxInput(
 
 export function buildCoupangDailyXlsxWorkbook(exportRows: CoupangDailyExportRow[]) {
   return buildXlsxWorkbook(buildCoupangDailyXlsxInput(exportRows));
+}
+
+export function formatCoupangDailyXlsxDateHeader(reportDate: string | undefined) {
+  if (!reportDate) return "날짜";
+  return reportDate.replace(/\d{4}-\d{2}-\d{2}/g, (isoDate) => {
+    const weekday = koreanWeekday(isoDate);
+    return weekday === null ? isoDate : `${isoDate} (${weekday}요일)`;
+  });
 }
 
 export function filterCoupangDailyXlsxRows(
@@ -373,4 +383,23 @@ function profitFontTone(value: string | number | null | undefined): XlsxFontTone
 
 function finiteExportNumber(value: string | number | null | undefined) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function koreanWeekday(isoDate: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return ["일", "월", "화", "수", "목", "금", "토"][date.getUTCDay()];
 }

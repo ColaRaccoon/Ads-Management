@@ -5,7 +5,8 @@ import {
   buildCoupangDailyXlsxWorkbook,
   classifyDailySalesQuantityHighlight,
   COUPANG_DAILY_XLSX_COLUMNS,
-  filterCoupangDailyXlsxRows
+  filterCoupangDailyXlsxRows,
+  formatCoupangDailyXlsxDateHeader
 } from "./coupang-daily-xlsx";
 import type { XlsxCell, XlsxRow } from "./xlsx";
 
@@ -113,7 +114,7 @@ describe("Coupang daily XLSX builder", () => {
 
     expect(rows).toHaveLength(8);
     expect(rowCells(rows[0])[0]).toMatchObject({
-      value: "제품명",
+      value: "2026-07-29 (수요일)",
       fill: "REPORT_HEADER",
       fontTone: "INVERSE",
       bold: true
@@ -308,6 +309,7 @@ describe("Coupang daily XLSX builder", () => {
     expect(styles).toContain(`<alignment horizontal="left" indent="1"/>`);
     expect(styles).toContain(`<alignment wrapText="1"/>`);
     expect(sheet).toContain(`<dimension ref="A1:K8"/>`);
+    expect(sheet).toMatch(/<c r="A1" t="inlineStr" s="\d+"><is><t>2026-07-29 \(수요일\)<\/t><\/is><\/c>/);
     expect(sheet).not.toContain(`ht="6" customHeight="1"`);
     expect(sheet.match(/<row r="\d+"/g)).toEqual([
       `<row r="1"`,
@@ -338,6 +340,16 @@ describe("Coupang daily XLSX builder", () => {
     expect(sheet).toMatch(/<c r="G4" s="\d+"><v>128000<\/v><\/c>/);
     expect(sheet).toMatch(/<c r="H4" s="\d+"><v>2\.083<\/v><\/c>/);
     expect(sheet).not.toMatch(/<c r="(?:B3|D4|G4|H4)"[^>]*t="inlineStr"/);
+  });
+
+  it("adds Korean weekdays to single-day and date-range report headers", () => {
+    expect(formatCoupangDailyXlsxDateHeader("2026-07-29")).toBe(
+      "2026-07-29 (수요일)"
+    );
+    expect(formatCoupangDailyXlsxDateHeader("2026-07-29 ~ 2026-07-31")).toBe(
+      "2026-07-29 (수요일) ~ 2026-07-31 (금요일)"
+    );
+    expect(formatCoupangDailyXlsxDateHeader(undefined)).toBe("날짜");
   });
 
   it("gives long merged notes a bounded explicit height so wrapped text is not clipped", () => {
