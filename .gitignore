@@ -9,6 +9,8 @@ storage/uploads/*
 storage/reports/*
 apps/api/storage/uploads/*
 apps/api/storage/reports/*
+.security-dev/
+apps/api/storage/security-dev/
 *.log
 *.tsbuildinfo
 .DS_Store

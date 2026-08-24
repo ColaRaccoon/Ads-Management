@@ -1,0 +1,2 @@
+*.sql text eol=lf
+보안단계별적용/*.md whitespace=-blank-at-eol
