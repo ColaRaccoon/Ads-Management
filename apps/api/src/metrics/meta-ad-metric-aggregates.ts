@@ -4,6 +4,7 @@ import { MarginCalculator } from "../domain/margin-calculator";
 import { isPurchaseResult } from "../domain/meta-ad-daily-csv";
 import { aggregateMetaVideoMetrics } from "../domain/meta-video-metrics";
 import { PeriodMetricCalculator } from "../domain/period-metric-calculator";
+import { findEffectiveRuleForDate } from "../domain/effective-rule";
 import { AdDailyMetricRow, CreativeFinancialContext } from "./metric-types";
 
 const marginCalculator = new MarginCalculator();
@@ -152,12 +153,10 @@ export function summarizeDeliveryStatus(values: Array<string | null>) {
   return values.find((value): value is string => Boolean(value)) ?? null;
 }
 
-export function findRuleForDate<T extends { effectiveFrom: Date; effectiveTo: Date | null }>(rules: T[], date: Date): T | null {
-  return (
-    rules
-      .filter((rule) => rule.effectiveFrom <= date && (!rule.effectiveTo || rule.effectiveTo >= date))
-      .sort((a, b) => b.effectiveFrom.getTime() - a.effectiveFrom.getTime())[0] ?? null
-  );
+export function findRuleForDate<
+  T extends { id: string; effectiveFrom: Date; effectiveTo: Date | null; createdAt: Date }
+>(rules: T[], date: Date): T | null {
+  return findEffectiveRuleForDate(rules, date);
 }
 
 export function groupBy<T>(items: T[], keyFn: (item: T) => string) {

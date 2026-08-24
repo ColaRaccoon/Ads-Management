@@ -38,8 +38,14 @@ export class MetaAdsetMetricDecorationService {
     const productIds = Array.from(new Set(metrics.map((metric) => metric.productId).filter(Boolean))) as string[];
     const metricDates = Array.from(new Set(metrics.map((metric) => formatDateOnly(metric.metricDate))));
     const [costRules, cpaRules, exchangeRates] = await Promise.all([
-      this.prisma.productCostRule.findMany({ where: { productId: { in: productIds } }, orderBy: { effectiveFrom: "desc" } }),
-      this.prisma.productCpaRule.findMany({ where: { productId: { in: productIds } }, orderBy: { effectiveFrom: "desc" } }),
+      this.prisma.productCostRule.findMany({
+        where: { productId: { in: productIds } },
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
+      }),
+      this.prisma.productCpaRule.findMany({
+        where: { productId: { in: productIds } },
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
+      }),
       this.prisma.exchangeRate.findMany({
         where: {
           baseCurrency: "USD",

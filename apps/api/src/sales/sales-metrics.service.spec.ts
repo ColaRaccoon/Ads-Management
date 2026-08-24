@@ -34,6 +34,64 @@ describe("SalesMetricsService", () => {
     expect(result.summary.adUnmatchedSpendKrw).toBe(6500);
   });
 
+  it("uses the historical cost snapshot on each side of a change date without a gap", async () => {
+    const prisma = fakePrisma({
+      salesLines: [
+        cafe24Line({ id: "line-before", orderDate: date("2026-08-20"), orderedAt: date("2026-08-20"), salePriceKrw: new Prisma.Decimal(38900) }),
+        cafe24Line({ id: "line-after", orderDate: date("2026-08-21"), orderedAt: date("2026-08-21"), salePriceKrw: new Prisma.Decimal(36900) })
+      ],
+      adMetrics: [],
+      costRules: [
+        costRule({
+          id: "cost-old",
+          salePriceKrw: new Prisma.Decimal(38900),
+          vatKrw: new Prisma.Decimal(3890),
+          productCostKrw: new Prisma.Decimal(6000),
+          shippingKrw: new Prisma.Decimal(2800),
+          extraCostKrw: new Prisma.Decimal(0),
+          effectiveFrom: date("2026-06-01"),
+          effectiveTo: date("2026-08-20")
+        }),
+        costRule({
+          id: "cost-new",
+          salePriceKrw: new Prisma.Decimal(36900),
+          vatKrw: new Prisma.Decimal(3690),
+          productCostKrw: new Prisma.Decimal(6000),
+          shippingKrw: new Prisma.Decimal(2800),
+          extraCostKrw: new Prisma.Decimal(0),
+          effectiveFrom: date("2026-08-21")
+        })
+      ]
+    });
+    const service = new SalesMetricsService(prisma as never);
+
+    const result = await service.productPerformance({ from: "2026-08-20", to: "2026-08-21" });
+
+    expect(result.rows[0]).toMatchObject({
+      quantity: 2,
+      revenueKrw: 75800,
+      grossCostKrw: 25180,
+      ruleStatus: "OK"
+    });
+  });
+
+  it("deterministically selects id DESC for duplicate same-date snapshots", async () => {
+    const createdAt = date("2026-06-01");
+    const prisma = fakePrisma({
+      salesLines: [cafe24Line({ salePriceKrw: new Prisma.Decimal(50000) })],
+      adMetrics: [],
+      costRules: [
+        costRule({ id: "a", productCostKrw: new Prisma.Decimal(1000), createdAt }),
+        costRule({ id: "b", productCostKrw: new Prisma.Decimal(9000), createdAt })
+      ]
+    });
+    const service = new SalesMetricsService(prisma as never);
+
+    const result = await service.productPerformance({ from: "2026-06-11", to: "2026-06-11" });
+
+    expect(result.rows[0].grossCostKrw).toBe(18000);
+  });
+
   it("optionally filters Meta ad spend by deliveryStatus for daily report reuse", async () => {
     const prisma = fakePrisma();
     const service = new SalesMetricsService(prisma as never);
@@ -698,6 +756,8 @@ function costRule(overrides: Record<string, unknown> = {}) {
     fxRateKrwPerUsd: new Prisma.Decimal(1200),
     effectiveFrom: date("2026-01-01"),
     effectiveTo: null,
+    createdAt: date("2026-01-01"),
+    updatedAt: date("2026-01-01"),
     ...overrides
   };
 }

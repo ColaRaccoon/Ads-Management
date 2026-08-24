@@ -9,6 +9,7 @@ import {
 } from "../domain/cafe24-coupon-matcher";
 import { Cafe24SalesCalculator } from "../domain/cafe24-sales-calculator";
 import { formatDateOnly, safeDivide, toDateOnly } from "../domain/date-number";
+import { findEffectiveRuleForDate } from "../domain/effective-rule";
 import { PrismaService } from "../common/prisma.service";
 import { isCompleteCafe24UploadBatch } from "./cafe24-uploads.service";
 
@@ -72,7 +73,7 @@ export class SalesMetricsService {
       productIds.length > 0
         ? this.prisma.productCostRule.findMany({
             where: { productId: { in: productIds } },
-            orderBy: { effectiveFrom: "desc" }
+            orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
           })
         : Promise.resolve([] as CostRule[]),
       metricDates.length > 0
@@ -584,12 +585,8 @@ function summarizeCouponResolutions(resolutions: Cafe24CouponResolution[]) {
   };
 }
 
-function findRuleForDate<T extends { effectiveFrom: Date; effectiveTo: Date | null }>(rules: T[], date: Date): T | null {
-  return (
-    rules
-      .filter((rule) => rule.effectiveFrom <= date && (!rule.effectiveTo || rule.effectiveTo >= date))
-      .sort((a, b) => b.effectiveFrom.getTime() - a.effectiveFrom.getTime())[0] ?? null
-  );
+function findRuleForDate<T extends { id: string; effectiveFrom: Date; effectiveTo: Date | null; createdAt: Date }>(rules: T[], date: Date): T | null {
+  return findEffectiveRuleForDate(rules, date);
 }
 
 function couponRuleInput(rule: CouponRule): Cafe24CouponRuleInput {

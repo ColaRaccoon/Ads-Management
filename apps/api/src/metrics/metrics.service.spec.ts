@@ -185,6 +185,21 @@ describe("creativeMetrics", () => {
     expect(rows[0].totals.roas).toBeCloseTo(50000 / 13000, 6);
   });
 
+  it("uses createdAt and id descending to resolve duplicate same-date creative cost rules", async () => {
+    const createdAt = date("2026-06-01");
+    const prisma = fakeCreativeMetricsPrisma({
+      costRules: [
+        creativeCostRule({ id: "a", productCostKrw: new Prisma.Decimal(1000), createdAt }),
+        creativeCostRule({ id: "b", productCostKrw: new Prisma.Decimal(9000), createdAt })
+      ]
+    });
+    const service = createMetricsService(prisma);
+
+    const rows = await service.creativeMetrics({ from: "2026-06-08", to: "2026-06-08" });
+
+    expect(rows[0].totals.marginKrw).toBe(19000);
+  });
+
   it("returns reach plus complete video count and rate totals from summed ad-day rows", async () => {
     const prisma = fakeCreativeMetricsPrisma({
       adMetrics: [
@@ -382,6 +397,8 @@ function creativeCostRule(overrides: Record<string, unknown> = {}) {
     fxRateKrwPerUsd: new Prisma.Decimal(1200),
     effectiveFrom: date("2026-01-01"),
     effectiveTo: null,
+    createdAt: date("2026-01-01"),
+    updatedAt: date("2026-01-01"),
     ...overrides
   };
 }
@@ -443,7 +460,9 @@ function fakeMetricsPrisma(input: {
           extraCostKrw: new Prisma.Decimal(1000),
           fxRateKrwPerUsd: new Prisma.Decimal(input.costRuleFxRateKrwPerUsd),
           effectiveFrom: date("2026-01-01"),
-          effectiveTo: null
+          effectiveTo: null,
+          createdAt: date("2026-01-01"),
+          updatedAt: date("2026-01-01")
         }
       ]
     },
@@ -456,7 +475,9 @@ function fakeMetricsPrisma(input: {
           watchRatio: new Prisma.Decimal(1.1),
           stopRatio: new Prisma.Decimal(1.25),
           effectiveFrom: date("2026-01-01"),
-          effectiveTo: null
+          effectiveTo: null,
+          createdAt: date("2026-01-01"),
+          updatedAt: date("2026-01-01")
         }
       ]
     },

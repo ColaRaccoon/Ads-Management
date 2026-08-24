@@ -354,7 +354,7 @@ export class MetaAdMetricsReadService {
       productIds.length > 0
         ? this.prisma.productCostRule.findMany({
             where: { productId: { in: productIds } },
-            orderBy: { effectiveFrom: "desc" }
+            orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
           })
         : Promise.resolve([] as CostRule[]);
     const exchangeRatesPromise =
