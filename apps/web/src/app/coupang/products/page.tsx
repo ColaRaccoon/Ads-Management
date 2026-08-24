@@ -19,6 +19,7 @@ import {
   currentCoupangSalesFeeLabel
 } from "@/lib/coupang-sales-fee-ui";
 import { DataTable } from "@/components/data-table";
+import { useCan } from "@/features/auth/use-auth";
 
 type CoupangProductGroup = {
   id: string;
@@ -139,6 +140,7 @@ type CostSnapshot = Pick<
 >;
 
 export default function CoupangProductsPage() {
+  const canManageProducts = useCan("products.manage");
   const koreaToday = koreaTodayDateInput();
   const [form, setForm] = useState<ProductForm>(() => createInitialForm());
   const [groupName, setGroupName] = useState("");
@@ -386,7 +388,7 @@ export default function CoupangProductsPage() {
             최근 변경 이력
           </button>
         </div>
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        {canManageProducts ? <div className="form-grid" style={{ marginTop: 12 }}>
           <label className="field">
             <span className="field-label">판매 수수료율 (%)</span>
             <input
@@ -425,10 +427,12 @@ export default function CoupangProductsPage() {
           </div>
           {saveSalesFeeRule.isError ? <span style={{ color: "#b42318" }}>{saveSalesFeeRule.error.message}</span> : null}
           {salesFeeSaveMessage ? <span style={{ color: "#067647" }}>{salesFeeSaveMessage}</span> : null}
-        </div>
+        </div> : (
+          <div className="warning-strip" style={{ marginTop: 12 }}><span>읽기 전용 계정입니다. 현재 수수료율과 변경 이력만 확인할 수 있습니다.</span></div>
+        )}
         {isFeeHistoryOpen ? (
           <div style={{ marginTop: 12 }}>
-            <DataTable
+            <DataTable<CoupangSalesFeeRule>
               rows={salesFeeRules.data ?? []}
               empty="등록된 공통 판매 수수료율이 없습니다."
               columns={[
@@ -436,18 +440,18 @@ export default function CoupangProductsPage() {
                 { key: "to", header: "적용 종료일", render: (row) => row.effectiveTo ?? "현재" },
                 { key: "rate", header: "판매 수수료율", render: (row) => `${row.salesFeePercent}%` },
                 { key: "created", header: "생성 시각", render: (row) => formatDateTime(row.createdAt) },
-                {
+                ...(canManageProducts ? [{
                   key: "correct",
                   header: "관리",
-                  render: (row) => <button className="button" type="button" onClick={() => correctGlobalRule(row)}>이 이력 정정</button>
-                }
+                  render: (row: CoupangSalesFeeRule) => <button className="button" type="button" onClick={() => correctGlobalRule(row)}>이 이력 정정</button>
+                }] : [])
               ]}
             />
           </div>
         ) : null}
       </div>
 
-      <div className="panel" style={{ marginTop: 12 }}>
+      {canManageProducts ? <div className="panel" style={{ marginTop: 12 }}>
         <div className="toolbar" style={{ justifyContent: "space-between", marginBottom: 12 }}>
           <div>
             <h2 style={{ marginBottom: 4 }}>{correctingCostRuleId ? "과거 비용 이력 정정" : editingProductId ? "쿠팡 상품 수정" : "새 쿠팡 상품"}</h2>
@@ -650,7 +654,9 @@ export default function CoupangProductsPage() {
             />
           </div>
         ) : null}
-      </div>
+      </div> : (
+        <ReadOnlyCoupangProductPanel product={editingProduct} />
+      )}
 
       <div className="panel" style={{ marginTop: 12 }}>
         <div className="collapsible-header">
@@ -662,31 +668,31 @@ export default function CoupangProductsPage() {
         </div>
         {isGroupsOpen ? (
           <div className="collapsible-body">
-            <div className="toolbar">
+            {canManageProducts ? <div className="toolbar">
               <input className="input" placeholder="그룹명" value={groupName} onChange={(event) => setGroupName(event.target.value)} />
               <button className="button primary" type="button" disabled={!groupName || createGroup.isPending} onClick={() => createGroup.mutate()}>
                 <Save size={16} />
                 생성
               </button>
               {createGroup.isError ? <span style={{ color: "#b42318" }}>{createGroup.error.message}</span> : null}
-            </div>
-            <DataTable
+            </div> : <div className="warning-strip"><span>읽기 전용 계정입니다. 제품그룹 목록만 확인할 수 있습니다.</span></div>}
+            <DataTable<CoupangProductGroup>
               rows={groups.data ?? []}
               empty="등록된 제품그룹이 없습니다."
               columns={[
                 { key: "name", header: "제품그룹", render: (row) => row.displayName },
                 { key: "products", header: "연결 상품 수", render: (row) => row.products?.length ?? 0 },
                 { key: "active", header: "상태", render: (row) => (row.isActive ? "활성" : "비활성") },
-                {
+                ...(canManageProducts ? [{
                   key: "actions",
                   header: "관리",
-                  render: (row) => (
+                  render: (row: CoupangProductGroup) => (
                     <button className="button" type="button" disabled={deactivateGroup.isPending} onClick={() => deactivateGroup.mutate(row.id)}>
                       <Trash2 size={16} />
                       비활성화
                     </button>
                   )
-                }
+                }] : [])
               ]}
             />
           </div>
@@ -703,7 +709,7 @@ export default function CoupangProductsPage() {
         </div>
         {isSettingsOpen ? (
           <div className="collapsible-body">
-            <DataTable
+            <DataTable<CoupangProductSetting>
               rows={products.data ?? []}
               empty="등록된 쿠팡 상품이 없습니다."
               onRowClick={editProduct}
@@ -727,10 +733,10 @@ export default function CoupangProductsPage() {
                 { key: "extra", header: "기타 비용", render: (row) => money(row.currentCostRule?.extraCostKrw) },
                 { key: "effective", header: "적용 시작일", render: (row) => formatDate(row.currentCostRule?.effectiveFrom) },
                 { key: "active", header: "상태", render: (row) => (row.isActive ? "활성" : "비활성") },
-                {
+                ...(canManageProducts ? [{
                   key: "edit",
                   header: "수정",
-                  render: (row) => (
+                  render: (row: CoupangProductSetting) => (
                     <button
                       className="icon-button"
                       type="button"
@@ -743,13 +749,56 @@ export default function CoupangProductsPage() {
                       <Pencil size={16} />
                     </button>
                   )
-                }
+                }] : [])
               ]}
             />
           </div>
         ) : null}
       </div>
     </section>
+  );
+}
+
+function ReadOnlyCoupangProductPanel({ product }: { product: CoupangProductSetting | null }) {
+  const rule = product ? primaryRule(product) : undefined;
+  return (
+    <div className="panel" style={{ marginTop: 12 }}>
+      <h2>쿠팡 상품 상세</h2>
+      {!product ? (
+        <div className="warning-strip"><span>읽기 전용 계정입니다. 아래 설정 목록에서 상품을 선택하면 현재 값과 비용 이력을 확인할 수 있습니다.</span></div>
+      ) : (
+        <>
+          <div className="warning-strip"><span>읽기 전용 · {product.displayName}</span></div>
+          <div className="grid two">
+            <div className="field"><span className="field-label">제품그룹</span><strong>{product.group?.displayName ?? "없음"}</strong></div>
+            <div className="field"><span className="field-label">상태</span><strong>{product.isActive ? "활성" : "비활성"}</strong></div>
+            <div className="field"><span className="field-label">매칭 키워드</span><span>{listText(rule?.includeKeywords) || "-"}</span></div>
+            <div className="field"><span className="field-label">제외 키워드</span><span>{listText(rule?.excludeKeywords) || "-"}</span></div>
+          </div>
+          <h3 style={{ marginTop: 16 }}>비용 이력</h3>
+          <DataTable<CoupangCostRule>
+            rows={product.costRules}
+            getRowKey={(row) => row.id}
+            empty="비용 이력이 없습니다."
+            columns={[
+              { key: "from", header: "적용 시작일", render: (row) => formatDate(row.effectiveFrom) },
+              { key: "to", header: "적용 종료일", render: (row) => formatDate(row.effectiveTo) },
+              { key: "current", header: "현재 적용", render: (row) => row.id === product.currentCostRule?.id ? "적용 중" : "-" },
+              { key: "price", header: "판매가", render: (row) => money(row.salePriceKrw) },
+              { key: "supply", header: "공급가", render: (row) => money(row.supplyPriceKrw) },
+              { key: "cost", header: "상품 원가", render: (row) => money(row.productCostKrw) },
+              { key: "sellerShip", header: "판매자 배송비", render: (row) => money(row.sellerShippingFeeKrw) },
+              { key: "hanaroShip", header: "하나로 배송비", render: (row) => money(row.hanaroShippingFeeKrw) },
+              { key: "growthInbound", header: "그로스 입출고비", render: (row) => money(row.growthInboundFeeKrw) },
+              { key: "growthShipping", header: "그로스 배송비", render: (row) => money(row.growthShippingFeeKrw) },
+              { key: "returnRate", header: "반품률", render: (row) => coupangRateLabel(row.returnRate) },
+              { key: "returnCost", header: "반품비", render: (row) => money(row.returnCostPerUnitKrw) },
+              { key: "extra", header: "기타 비용", render: (row) => money(row.extraCostKrw) }
+            ]}
+          />
+        </>
+      )}
+    </div>
   );
 }
 

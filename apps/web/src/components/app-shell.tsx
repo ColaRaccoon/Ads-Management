@@ -9,6 +9,7 @@ import {
   ClipboardList,
   History,
   Home,
+  LogOut,
   Package,
   Settings,
   ShoppingCart,
@@ -17,54 +18,52 @@ import {
   TrendingUp,
   Upload
 } from "lucide-react";
+import { Permission, roleLabel } from "@/features/auth/auth-types";
+import { useAuth } from "@/features/auth/use-auth";
 import { DateRangePicker } from "./date-range-picker";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/uploads", label: "Uploads", icon: Upload },
-  { href: "/sales", label: "판매", icon: ShoppingCart },
-  { href: "/campaigns", label: "Campaigns", icon: BarChart3 },
-  { href: "/adsets", label: "Adsets", icon: TableProperties },
-  { href: "/ads", label: "Ads", icon: Package },
-  { href: "/daily-report", label: "Daily Report", icon: ClipboardList },
-  { href: "/mappings", label: "Mappings", icon: Shuffle },
-  { href: "/settings/products", label: "Product Settings", icon: Settings },
-  { href: "/change-logs", label: "Change Logs", icon: History }
-];
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof Home;
+  requiredPermission: Permission;
+};
 
-const navGroups = [
+const navGroups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: "Meta",
     items: [
-      { href: "/dashboard", label: "Meta Dashboard", icon: Home },
-      { href: "/uploads", label: "Meta Uploads", icon: Upload },
-      { href: "/sales", label: "Meta/Cafe24 Sales", icon: ShoppingCart },
-      { href: "/campaigns", label: "Meta Campaigns", icon: BarChart3 },
-      { href: "/adsets", label: "Meta Adsets", icon: TableProperties },
-      { href: "/ads", label: "Meta Ads", icon: Package },
-      { href: "/creative-trends", label: "Meta 소재 추이", icon: TrendingUp },
-      { href: "/daily-report", label: "Meta Daily Report", icon: ClipboardList },
-      { href: "/mappings", label: "Meta Mappings", icon: Shuffle },
-      { href: "/settings/products", label: "Meta Product Settings", icon: Settings },
-      { href: "/change-logs", label: "Meta Change Logs", icon: History }
+      { href: "/dashboard", label: "Meta Dashboard", icon: Home, requiredPermission: "data.read" },
+      { href: "/uploads", label: "Meta Uploads", icon: Upload, requiredPermission: "data.read" },
+      { href: "/sales", label: "Meta/Cafe24 Sales", icon: ShoppingCart, requiredPermission: "data.read" },
+      { href: "/campaigns", label: "Meta Campaigns", icon: BarChart3, requiredPermission: "data.read" },
+      { href: "/adsets", label: "Meta Adsets", icon: TableProperties, requiredPermission: "data.read" },
+      { href: "/ads", label: "Meta Ads", icon: Package, requiredPermission: "data.read" },
+      { href: "/creative-trends", label: "Meta 소재 추이", icon: TrendingUp, requiredPermission: "data.read" },
+      { href: "/daily-report", label: "Meta Daily Report", icon: ClipboardList, requiredPermission: "data.read" },
+      { href: "/mappings", label: "Meta Mappings", icon: Shuffle, requiredPermission: "data.read" },
+      { href: "/settings/products", label: "Meta Product Settings", icon: Settings, requiredPermission: "data.read" },
+      { href: "/change-logs", label: "Meta Change Logs", icon: History, requiredPermission: "data.read" }
     ]
   },
   {
     label: "쿠팡",
     items: [
-      { href: "/coupang/dashboard", label: "Coupang Dashboard", icon: Home },
-      { href: "/coupang/uploads", label: "Coupang Uploads", icon: Upload },
-      { href: "/coupang/products", label: "쿠팡 상품 설정", icon: Settings },
-      { href: "/coupang/profit", label: "Coupang Profit Table", icon: TableProperties },
-      { href: "/coupang/ads", label: "Coupang Ads Analysis", icon: Package },
-      { href: "/coupang/daily-report", label: "Coupang Daily Report", icon: ClipboardList },
-      { href: "/coupang/mappings", label: "쿠팡 매핑관리", icon: Shuffle }
+      { href: "/coupang/dashboard", label: "Coupang Dashboard", icon: Home, requiredPermission: "data.read" },
+      { href: "/coupang/uploads", label: "Coupang Uploads", icon: Upload, requiredPermission: "data.read" },
+      { href: "/coupang/products", label: "쿠팡 상품 설정", icon: Settings, requiredPermission: "data.read" },
+      { href: "/coupang/profit", label: "Coupang Profit Table", icon: TableProperties, requiredPermission: "data.read" },
+      { href: "/coupang/ads", label: "Coupang Ads Analysis", icon: Package, requiredPermission: "data.read" },
+      { href: "/coupang/daily-report", label: "Coupang Daily Report", icon: ClipboardList, requiredPermission: "data.read" },
+      { href: "/coupang/mappings", label: "쿠팡 매핑관리", icon: Shuffle, requiredPermission: "data.read" }
     ]
   }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, can, logout } = useAuth();
+  const visibleGroups = visibleNavGroups(can);
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -73,7 +72,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span>CSV performance operations</span>
         </div>
         <nav className="nav">
-          {navGroups.map((group) => (
+          {visibleGroups.map((group) => (
             <div className="nav-group" key={group.label}>
               <span className="nav-group-label">{group.label}</span>
               {group.items.map((item) => {
@@ -99,9 +98,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Suspense fallback={<div className="toolbar" />}>
             <DateRangePicker />
           </Suspense>
+          <div className="account-toolbar">
+            <div className="account-summary">
+              <strong>{user?.name ?? "사용자"}</strong>
+              <span>{user?.email ?? "이메일 없음"} · {roleLabel(user?.role)}</span>
+            </div>
+            <button className="button" type="button" onClick={() => void logout()}>
+              <LogOut size={15} />
+              로그아웃
+            </button>
+          </div>
         </header>
         {children}
       </main>
     </div>
   );
+}
+
+export function visibleNavGroups(can: (permission: Permission) => boolean) {
+  return navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => can(item.requiredPermission))
+    }))
+    .filter((group) => group.items.length > 0);
 }

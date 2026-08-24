@@ -9,6 +9,7 @@ import {
 import type { CoupangDailyReportCategorySummary } from "@/types/coupang";
 
 type DailyCategoryFilterProps = {
+  canManage: boolean;
   categories: CoupangDailyReportCategorySummary[];
   selected: ReadonlySet<string>;
   includeUncategorized: boolean;
@@ -24,6 +25,7 @@ type DailyCategoryFilterProps = {
 };
 
 export function DailyCategoryFilter({
+  canManage,
   categories,
   selected,
   includeUncategorized,
@@ -197,15 +199,17 @@ export function DailyCategoryFilter({
               {!loading && !error && categories.length === 0 ? (
                 <div className="coupang-daily-category-state">
                   <p>아직 만든 리포트 카테고리가 없습니다.</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      closePopover("manage");
-                      onManage();
-                    }}
-                  >
-                    첫 카테고리 만들기
-                  </button>
+                  {canManage ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closePopover("manage");
+                        onManage();
+                      }}
+                    >
+                      첫 카테고리 만들기
+                    </button>
+                  ) : <span className="muted">카테고리 관리 권한이 없어 전체 제품 범위로 조회합니다.</span>}
                 </div>
               ) : null}
               {!loading && !error && categories.length > 0 && visibleCategories.length === 0 ? (
@@ -275,17 +279,19 @@ export function DailyCategoryFilter({
       >
         초기화
       </button>
-      <button
-        ref={manageButtonRef}
-        type="button"
-        className="button"
-        onClick={() => {
-          closePopover("manage");
-          onManage();
-        }}
-      >
-        카테고리 관리
-      </button>
+      {canManage ? (
+        <button
+          ref={manageButtonRef}
+          type="button"
+          className="button"
+          onClick={() => {
+            closePopover("manage");
+            onManage();
+          }}
+        >
+          카테고리 관리
+        </button>
+      ) : null}
       <small>선택한 카테고리의 제품을 합쳐 표시하며 중복 제품은 한 번만 계산합니다.</small>
     </section>
   );

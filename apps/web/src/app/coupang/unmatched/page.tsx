@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, rangeQuery } from "@/lib/api";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
+import { useCan } from "@/features/auth/use-auth";
 
 type CoupangUnmatched = {
   period: { from: string; to: string };
@@ -22,6 +23,7 @@ type UnmatchedRow = {
 };
 
 export default function CoupangUnmatchedPage() {
+  const canManageMappings = useCan("mappings.manage");
   const range = useRange();
   const queryClient = useQueryClient();
   const unmatched = useQuery({
@@ -40,10 +42,12 @@ export default function CoupangUnmatchedPage() {
           <h1>Coupang Unmatched Review</h1>
           <p>Review no-match, ambiguous, missing cost, and warning rows.</p>
         </div>
-        <button className="button primary" type="button" disabled={rematch.isPending} onClick={() => rematch.mutate()}>
-          <RefreshCw size={16} />
-          Rematch
-        </button>
+        {canManageMappings ? (
+          <button className="button primary" type="button" disabled={rematch.isPending} onClick={() => rematch.mutate()}>
+            <RefreshCw size={16} />
+            Rematch
+          </button>
+        ) : null}
       </div>
       {rematch.data ? (
         <div className="warning-strip">

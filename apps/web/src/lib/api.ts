@@ -1,6 +1,25 @@
 import { DateRange } from "./date-range";
+import { authCoordinator } from "../features/auth/auth-coordination";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/backend-api";
+const AUTH_MUTATION_PATHS = new Set(["/auth/login", "/auth/refresh", "/auth/logout"]);
+const SESSION_ENDING_CODES = new Set([
+  "AUTHENTICATION_REQUIRED",
+  "SESSION_INVALID",
+  "SESSION_REVOKED",
+  "ACCOUNT_INACTIVE"
+]);
+
+export type AuthLifecycleEvent =
+  | { type: "session-invalid"; code: string }
+  | { type: "account-not-provisioned" }
+  | { type: "onboarding-required" }
+  | { type: "permission-denied" }
+  | { type: "refresh-failed"; code: string | null };
+
+const authLifecycleListeners = new Set<(event: AuthLifecycleEvent) => void>();
+let refreshPromise: Promise<void> | null = null;
+let sessionEpoch = 0;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -22,72 +41,86 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
   return error instanceof ApiError ? error.message : fallback;
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
-  await assertApiResponse(response);
-  return response.json() as Promise<T>;
+export function subscribeAuthLifecycle(listener: (event: AuthLifecycleEvent) => void) {
+  authLifecycleListeners.add(listener);
+  return () => {
+    authLifecycleListeners.delete(listener);
+  };
 }
 
-export async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  await assertApiResponse(response);
-  return response.json() as Promise<T>;
+type ApiRequestOptions = Omit<RequestInit, "body" | "method"> & {
+  method?: string;
+  body?: unknown;
+};
+
+export async function apiRequest<T>(
+  path: string,
+  options: ApiRequestOptions = {},
+  retryAfterRefresh = false
+): Promise<T> {
+  const requestEpoch = sessionEpoch;
+  const response = await request(path, options);
+  assertSessionEpoch(requestEpoch);
+  if (response.ok) {
+    const result = await parseApiSuccess<T>(response);
+    assertSessionEpoch(requestEpoch);
+    return result;
+  }
+
+  const error = await apiErrorFromResponse(response);
+  assertSessionEpoch(requestEpoch);
+  if (
+    error.code === "ACCESS_TOKEN_EXPIRED" &&
+    !retryAfterRefresh &&
+    !AUTH_MUTATION_PATHS.has(normalizePath(path))
+  ) {
+    try {
+      await refreshAccessToken();
+    } catch {
+      throw error;
+    }
+    return apiRequest<T>(path, options, true);
+  }
+  if (error.code === "ACCESS_TOKEN_EXPIRED" && retryAfterRefresh) {
+    emitAuthLifecycle({ type: "refresh-failed", code: error.code });
+  } else {
+    handleAuthLifecycle(error);
+  }
+  throw error;
 }
 
-export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  await assertApiResponse(response);
-  return response.json() as Promise<T>;
+export function apiGet<T>(path: string): Promise<T> {
+  return apiRequest<T>(path, { cache: "no-store" });
 }
 
-export async function apiPut<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  await assertApiResponse(response);
-  return response.json() as Promise<T>;
+export function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  return apiRequest<T>(path, { method: "POST", body });
 }
 
-export async function apiDelete<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: "DELETE"
-  });
-  await assertApiResponse(response);
-  return response.json() as Promise<T>;
+export function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  return apiRequest<T>(path, { method: "PATCH", body });
 }
 
-export async function uploadCsv(file: File, conflictPolicy = "SKIP") {
+export function apiPut<T>(path: string, body: unknown): Promise<T> {
+  return apiRequest<T>(path, { method: "PUT", body });
+}
+
+export function apiDelete<T>(path: string): Promise<T> {
+  return apiRequest<T>(path, { method: "DELETE" });
+}
+
+export async function uploadCsv(file: File, conflictPolicy = "SKIP"): Promise<any> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("conflictPolicy", conflictPolicy);
-  const response = await fetch(`${API_BASE}/uploads/meta-ad-daily-csv`, {
-    method: "POST",
-    body: formData
-  });
-  await assertApiResponse(response);
-  return response.json();
+  return apiRequest("/uploads/meta-ad-daily-csv", { method: "POST", body: formData });
 }
 
-export async function uploadCafe24Csv(file: File, conflictPolicy = "SKIP") {
+export async function uploadCafe24Csv(file: File, conflictPolicy = "SKIP"): Promise<any> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("conflictPolicy", conflictPolicy);
-  const response = await fetch(`${API_BASE}/sales/cafe24/uploads`, {
-    method: "POST",
-    body: formData
-  });
-  await assertApiResponse(response);
-  return response.json();
+  return apiRequest("/sales/cafe24/uploads", { method: "POST", body: formData });
 }
 
 export async function uploadCoupangSalesXlsx(file: File, options: { conflictPolicy?: string; reportDate?: string } = {}) {
@@ -134,26 +167,132 @@ export async function uploadCoupangPromotionXlsx(file: File, options: { conflict
   return uploadFormData("/coupang/uploads/promotion", formData);
 }
 
-async function uploadFormData(path: string, formData: FormData) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    body: formData
-  });
-  await assertApiResponse(response);
-  return response.json();
+async function uploadFormData(path: string, formData: FormData): Promise<any> {
+  return apiRequest(path, { method: "POST", body: formData });
 }
 
-async function assertApiResponse(response: Response) {
-  if (response.ok) return;
+async function request(path: string, options: ApiRequestOptions) {
+  const method = (options.method ?? "GET").toUpperCase();
+  const headers = new Headers(options.headers);
+  const body = requestBody(options.body, headers);
+  if (isMutation(method)) {
+    const csrfToken = readCsrfToken();
+    if (csrfToken) headers.set("x-csrf-token", csrfToken);
+  }
+  return fetch(`${API_BASE}${path}`, {
+    ...options,
+    method,
+    headers,
+    body,
+    credentials: "include"
+  });
+}
+
+function requestBody(body: unknown, headers: Headers): BodyInit | undefined {
+  if (body === undefined) return undefined;
+  if (typeof FormData !== "undefined" && body instanceof FormData) return body;
+  headers.set("Content-Type", "application/json");
+  return JSON.stringify(body);
+}
+
+async function parseApiSuccess<T>(response: Response): Promise<T> {
+  if (response.status === 204) return undefined as T;
+  const raw = await response.text();
+  if (raw.length === 0) return undefined as T;
+  return JSON.parse(raw) as T;
+}
+
+async function apiErrorFromResponse(response: Response) {
   const fallback = `요청을 처리하지 못했습니다. (HTTP ${response.status})`;
   let raw = "";
   try {
     raw = await response.text();
   } catch {
-    throw new ApiError(response.status, fallback);
+    return new ApiError(response.status, fallback);
   }
   const parsed = parseApiErrorPayload(raw);
-  throw new ApiError(response.status, parsed.message ?? fallback, parsed.code);
+  return new ApiError(response.status, parsed.message ?? fallback, parsed.code);
+}
+
+async function refreshAccessToken() {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = authCoordinator.runRefresh(async () => {
+    const response = await request("/auth/refresh", { method: "POST" });
+    if (response.ok) {
+      await parseApiSuccess(response);
+      return;
+    }
+    const error = await apiErrorFromResponse(response);
+    if (error.code === "REFRESH_RACE_RETRY") {
+      await authCoordinator.waitForPeerRefresh(undefined, 1_500);
+      return;
+    }
+    handleAuthLifecycle(error);
+    emitAuthLifecycle({ type: "refresh-failed", code: error.code });
+    throw error;
+  }).then(() => undefined).finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+}
+
+function handleAuthLifecycle(error: ApiError) {
+  if (error.code && SESSION_ENDING_CODES.has(error.code)) {
+    emitAuthLifecycle({ type: "session-invalid", code: error.code });
+  } else if (error.code === "ACCOUNT_NOT_PROVISIONED") {
+    emitAuthLifecycle({ type: "account-not-provisioned" });
+  } else if (error.code === "ACCOUNT_ONBOARDING_REQUIRED") {
+    emitAuthLifecycle({ type: "onboarding-required" });
+  } else if (error.code === "PERMISSION_DENIED") {
+    emitAuthLifecycle({ type: "permission-denied" });
+  }
+}
+
+function emitAuthLifecycle(event: AuthLifecycleEvent) {
+  for (const listener of authLifecycleListeners) listener(event);
+}
+
+function isMutation(method: string) {
+  return method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
+}
+
+function normalizePath(path: string) {
+  return path.split("?", 1)[0];
+}
+
+export function csrfTokenFromCookieString(cookieString: string) {
+  for (const part of cookieString.split(";")) {
+    const separator = part.indexOf("=");
+    if (separator <= 0) continue;
+    const name = part.slice(0, separator).trim();
+    if (name !== "meta_csrf" && name !== "__Host-meta_csrf") continue;
+    try {
+      return decodeURIComponent(part.slice(separator + 1).trim());
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+export function invalidateApiSession() {
+  sessionEpoch += 1;
+}
+
+function assertSessionEpoch(requestEpoch: number) {
+  if (requestEpoch !== sessionEpoch) {
+    throw new ApiError(409, "인증 상태가 변경되어 응답을 폐기했습니다.", "AUTH_CONTEXT_CHANGED");
+  }
+}
+
+function readCsrfToken() {
+  return typeof document === "undefined" ? null : csrfTokenFromCookieString(document.cookie);
+}
+
+export function resetApiClientForTests() {
+  refreshPromise = null;
+  sessionEpoch = 0;
+  authLifecycleListeners.clear();
 }
 
 export function parseApiErrorPayload(raw: string): { code: string | null; message: string | null } {

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiDelete, apiGet, uploadCafe24Csv, uploadCsv } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
+import { useCan } from "@/features/auth/use-auth";
 
 type UploadBatchRow = {
   id: string;
@@ -53,7 +54,21 @@ type Cafe24UploadResult = {
   previewSummary?: Cafe24CouponPreview | null;
 };
 
+type MetaUploadResult = {
+  previewSummary?: {
+    sampleRows?: Array<{ dateStart?: string | null }>;
+    rowCount: number;
+    campaignCount: number;
+    adsetCount: number;
+    adCount: number;
+    totalSpendUsd: number;
+    totalPurchases: number;
+    duplicateKeys?: unknown[];
+  };
+};
+
 export default function UploadsPage() {
+  const canManageImports = useCan("imports.manage");
   const [file, setFile] = useState<File | null>(null);
   const [cafe24File, setCafe24File] = useState<File | null>(null);
   const [conflictPolicy, setConflictPolicy] = useState("SKIP");
@@ -67,7 +82,7 @@ export default function UploadsPage() {
   const upload = useMutation({
     mutationFn: async () => {
       if (!file) throw new Error("CSV 파일을 선택하세요.");
-      return uploadCsv(file, conflictPolicy);
+      return uploadCsv(file, conflictPolicy) as Promise<MetaUploadResult>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries();
@@ -121,7 +136,7 @@ export default function UploadsPage() {
         </div>
       </div>
       <div className="grid two">
-        <div className="panel">
+        {canManageImports ? <div className="panel">
           <h2>Meta 광고 단위 CSV 업로드</h2>
           <div className="dropzone">
             <input className="input" type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
@@ -147,7 +162,12 @@ export default function UploadsPage() {
               <pre>{JSON.stringify(upload.data, null, 2)}</pre>
             ) : null}
           </div>
-        </div>
+        </div> : (
+          <div className="panel">
+            <h2>Meta 광고 단위 CSV 업로드</h2>
+            <div className="warning-strip"><span>읽기 전용 계정입니다. 업로드 이력과 검증 결과만 확인할 수 있습니다.</span></div>
+          </div>
+        )}
         <div className="panel">
           <h2>검증 정책</h2>
           <div className="warning-strip">
@@ -158,7 +178,7 @@ export default function UploadsPage() {
         </div>
       </div>
 
-      <div className="panel" style={{ marginTop: 12 }}>
+      {canManageImports ? <div className="panel" style={{ marginTop: 12 }}>
         <h2>Cafe24 Order CSV Upload</h2>
         <div className="dropzone">
           <input className="input" type="file" accept=".csv,text/csv" onChange={(event) => setCafe24File(event.target.files?.[0] ?? null)} />
@@ -191,11 +211,16 @@ export default function UploadsPage() {
             </div>
           ) : null}
         </div>
-      </div>
+      </div> : (
+        <div className="panel" style={{ marginTop: 12 }}>
+          <h2>Cafe24 Order CSV Upload</h2>
+          <div className="warning-strip"><span>읽기 전용 계정입니다. Cafe24 업로드 이력은 아래에서 계속 확인할 수 있습니다.</span></div>
+        </div>
+      )}
 
       <div className="panel" style={{ marginTop: 12 }}>
         <h2>Batch History</h2>
-        <DataTable
+        <DataTable<UploadBatchRow>
           rows={uploads.data ?? []}
           columns={[
             { key: "file", header: "파일명", render: (row) => row.originalFilename },
@@ -206,10 +231,10 @@ export default function UploadsPage() {
             { key: "warn", header: "Warnings", render: (row) => row.warningCount },
             { key: "err", header: "Errors", render: (row) => row.errorCount },
             { key: "hash", header: "Hash", render: (row) => String(row.fileHashSha256).slice(0, 16) },
-            {
+            ...(canManageImports ? [{
               key: "actions",
               header: "",
-              render: (row) => (
+              render: (row: UploadBatchRow) => (
                 <button
                   className="icon-button danger"
                   type="button"
@@ -220,14 +245,14 @@ export default function UploadsPage() {
                   <Trash2 size={15} />
                 </button>
               )
-            }
+            }] : [])
           ]}
         />
       </div>
 
       <div className="panel" style={{ marginTop: 12 }}>
         <h2>Cafe24 Batch History</h2>
-        <DataTable
+        <DataTable<Cafe24UploadBatchRow>
           rows={cafe24Uploads.data ?? []}
           columns={[
             { key: "file", header: "File", render: (row) => row.originalFilename },
@@ -247,10 +272,10 @@ export default function UploadsPage() {
               header: "쿠폰 누락 컬럼",
               render: (row) => couponBatchMissingColumns(row)
             },
-            {
+            ...(canManageImports ? [{
               key: "actions",
               header: "",
-              render: (row) => (
+              render: (row: Cafe24UploadBatchRow) => (
                 <button
                   className="icon-button danger"
                   type="button"
@@ -261,7 +286,7 @@ export default function UploadsPage() {
                   <Trash2 size={15} />
                 </button>
               )
-            }
+            }] : [])
           ]}
         />
       </div>

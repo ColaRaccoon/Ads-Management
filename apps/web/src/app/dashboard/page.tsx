@@ -9,8 +9,10 @@ import { KpiCard } from "@/components/kpi-card";
 import { DataTable } from "@/components/data-table";
 import { DecisionBadge } from "@/components/decision-badge";
 import { ProductBarChart, StageBarChart, TrendChart } from "@/components/Charts";
+import { useCan } from "@/features/auth/use-auth";
 
 export default function DashboardPage() {
+  const canRunOperations = useCan("operations.run");
   const range = useRange();
   const [deliveryStatus, setDeliveryStatus] = useState("active");
   const queryClient = useQueryClient();
@@ -49,10 +51,12 @@ export default function DashboardPage() {
           <option value="inactive">Inactive</option>
           <option value="all">All</option>
         </select>
-        <button className="button primary" type="button" onClick={() => runDecision.mutate()}>
-          <PlayCircle size={16} />
-          판정 실행
-        </button>
+        {canRunOperations ? (
+          <button className="button primary" type="button" onClick={() => runDecision.mutate()}>
+            <PlayCircle size={16} />
+            판정 실행
+          </button>
+        ) : null}
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { AppShell } from "@/components/app-shell";
+import { AppFrame } from "@/components/app-frame";
 
 export const metadata: Metadata = {
   title: "Meta Ads Performance Hub",
@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body>
         <Providers>
-          <AppShell>{children}</AppShell>
+          <AppFrame>{children}</AppFrame>
         </Providers>
       </body>
     </html>

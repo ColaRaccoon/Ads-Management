@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost } from "@/lib/api";
 import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
+import { useCan } from "@/features/auth/use-auth";
 
 type ProductListItem = {
   id: string;
@@ -46,6 +47,7 @@ type ProductLogItem = {
 };
 
 export default function ChangeLogsPage() {
+  const canCreateChangeLogs = useCan("change_logs.create");
   const range = useRange();
   const selectedDate = useMemo(() => range.to || koreaYesterdayDateInput(), [range.to]);
   const queryClient = useQueryClient();
@@ -186,24 +188,28 @@ export default function ChangeLogsPage() {
                 </div>
               </section>
 
-              <form className="creative-log-form product-log-form" onSubmit={submit}>
-                <h3>새 기록</h3>
-                <label className="field">
-                  <span className="field-label">기록일</span>
-                  <input className="input" type="date" value={actionDate} onChange={(event) => setActionDate(event.target.value)} required />
-                </label>
-                <textarea
-                  className="textarea"
-                  value={logText}
-                  onChange={(event) => setLogText(event.target.value)}
-                  placeholder="기록"
-                  required
-                />
-                <button className="button primary" type="submit" disabled={createLog.isPending || !logText.trim()}>
-                  <Save size={16} />
-                  저장
-                </button>
-              </form>
+              {canCreateChangeLogs ? (
+                <form className="creative-log-form product-log-form" onSubmit={submit}>
+                  <h3>새 기록</h3>
+                  <label className="field">
+                    <span className="field-label">기록일</span>
+                    <input className="input" type="date" value={actionDate} onChange={(event) => setActionDate(event.target.value)} required />
+                  </label>
+                  <textarea
+                    className="textarea"
+                    value={logText}
+                    onChange={(event) => setLogText(event.target.value)}
+                    placeholder="기록"
+                    required
+                  />
+                  <button className="button primary" type="submit" disabled={createLog.isPending || !logText.trim()}>
+                    <Save size={16} />
+                    저장
+                  </button>
+                </form>
+              ) : (
+                <div className="warning-strip"><span>읽기 전용 계정입니다. 기존 기록은 계속 확인할 수 있습니다.</span></div>
+              )}
 
               <section className="creative-detail-block">
                 <h3>기록</h3>

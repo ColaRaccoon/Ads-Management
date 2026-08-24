@@ -36,8 +36,10 @@ import {
 } from "@/lib/coupang-daily-category";
 import { DailyCategoryFilter } from "./category-filter";
 import { DailyCategoryManager } from "./category-manager";
+import { useCan } from "@/features/auth/use-auth";
 
 export default function CoupangDailyReportPage() {
+  const canManageCategories = useCan("products.manage");
   const range = useRange();
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -163,6 +165,7 @@ export default function CoupangDailyReportPage() {
         </div>
       </div>
       <DailyCategoryFilter
+        canManage={canManageCategories}
         categories={categories.data ?? []}
         selected={selectedCategoryIds}
         includeUncategorized={includeUncategorized}
@@ -180,16 +183,18 @@ export default function CoupangDailyReportPage() {
         onRetry={() => categories.refetch()}
         onManage={() => setCategoryManagerOpen(true)}
       />
-      <DailyCategoryManager
-        open={categoryManagerOpen}
-        onClose={() => setCategoryManagerOpen(false)}
-        returnFocusRef={categoryManageButtonRef}
-        onCategoryDeactivated={(categoryId) => {
-          const plan = planDailyCategoryDeactivation(selectedCategoryIds, categoryId);
-          if (plan.selectionChanged) setSelectedCategoryIds(plan.selected);
-          return { invalidateCurrentReport: plan.invalidateCurrentReport };
-        }}
-      />
+      {canManageCategories ? (
+        <DailyCategoryManager
+          open={categoryManagerOpen}
+          onClose={() => setCategoryManagerOpen(false)}
+          returnFocusRef={categoryManageButtonRef}
+          onCategoryDeactivated={(categoryId) => {
+            const plan = planDailyCategoryDeactivation(selectedCategoryIds, categoryId);
+            if (plan.selectionChanged) setSelectedCategoryIds(plan.selected);
+            return { invalidateCurrentReport: plan.invalidateCurrentReport };
+          }}
+        />
+      ) : null}
       {categories.isError ? <p className="coupang-daily-warning" role="status">카테고리 목록을 불러오지 못했습니다. 전체 리포트는 계속 사용할 수 있습니다.</p> : null}
       {report.data ? (
         <div className="coupang-daily-applied-filter" aria-live="polite">

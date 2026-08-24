@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { uploadCsv } from "@/lib/api";
+import { PermissionGate } from "@/components/permission-gate";
 
 export function UploadDropzone({ onUploaded }: { onUploaded?: (result: any) => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -22,16 +23,18 @@ export function UploadDropzone({ onUploaded }: { onUploaded?: (result: any) => v
   });
 
   return (
-    <div className="dropzone">
-      <input className="input" type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
-      <div className="toolbar">
-        <button className="btn primary" type="button" onClick={() => mutation.mutate()} disabled={!file || mutation.isPending}>
-          <UploadCloud size={17} />
-          Upload
-        </button>
+    <PermissionGate permission="imports.manage" fallback={<div className="warning-strip"><span>읽기 전용 계정입니다.</span></div>}>
+      <div className="dropzone">
+        <input className="input" type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+        <div className="toolbar">
+          <button className="btn primary" type="button" onClick={() => mutation.mutate()} disabled={!file || mutation.isPending}>
+            <UploadCloud size={17} />
+            Upload
+          </button>
+        </div>
+        {mutation.isError ? <div className="badge risk">{(mutation.error as any).message ?? "업로드 실패"}</div> : null}
+        {mutation.isSuccess ? <div className="badge good">{mutation.data.status}</div> : null}
       </div>
-      {mutation.isError ? <div className="badge risk">{(mutation.error as any).message ?? "업로드 실패"}</div> : null}
-      {mutation.isSuccess ? <div className="badge good">{mutation.data.status}</div> : null}
-    </div>
+    </PermissionGate>
   );
 }

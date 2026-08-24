@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { apiPost } from "@/lib/api";
 import { usePeriod } from "@/lib/usePeriod";
+import { PermissionGate } from "@/components/permission-gate";
 
 export function ReportExportButton({ reportType }: { reportType: string }) {
   const { from, to } = usePeriod();
@@ -14,9 +15,11 @@ export function ReportExportButton({ reportType }: { reportType: string }) {
   });
 
   return (
-    <button className="btn primary" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-      <Download size={17} />
-      {reportType}
-    </button>
+    <PermissionGate permission="reports.generate">
+      <button className="btn primary" type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+        <Download size={17} />
+        {reportType}
+      </button>
+    </PermissionGate>
   );
 }

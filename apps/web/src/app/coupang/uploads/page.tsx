@@ -22,6 +22,7 @@ import type {
   CoupangManualPurchaseOptionsResponse,
   CoupangManualPurchaseSaveResponse
 } from "@/types/coupang";
+import { useCan } from "@/features/auth/use-auth";
 
 type CoupangUploadBatch = {
   id: string;
@@ -47,6 +48,9 @@ const KOREAN_PRODUCT_NAME_COLLATOR = new Intl.Collator("ko-KR", {
 });
 
 export default function CoupangUploadsPage() {
+  const canManageImports = useCan("imports.manage");
+  const canRunOperations = useCan("operations.run");
+  const canManageProducts = useCan("products.manage");
   const [salesFile, setSalesFile] = useState<File | null>(null);
   const [adsFile, setAdsFile] = useState<File | null>(null);
   const [marginFile, setMarginFile] = useState<File | null>(null);
@@ -214,6 +218,7 @@ export default function CoupangUploadsPage() {
         </div>
       </div>
 
+      {canManageImports ? <>
       <div className="grid two">
         <UploadPanel
           accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -262,6 +267,12 @@ export default function CoupangUploadsPage() {
           <MutationMessage mutation={promotionUpload} />
         </UploadPanel>
       </div>
+      </> : (
+        <div className="panel">
+          <h2>파일 업로드</h2>
+          <div className="warning-strip"><span>읽기 전용 계정입니다. 업로드 배치 이력은 아래에서 계속 확인할 수 있습니다.</span></div>
+        </div>
+      )}
 
       <div className="panel" style={{ marginTop: 12 }}>
         <div className="toolbar">
@@ -294,7 +305,7 @@ export default function CoupangUploadsPage() {
           />
         </div>
 
-        <div className="manual-purchase-fee">
+        {canManageProducts ? <div className="manual-purchase-fee">
           <label className="field">
             <span className="field-label">건당 업체 수수료</span>
             <span className="input-with-unit">
@@ -317,7 +328,13 @@ export default function CoupangUploadsPage() {
             설정 저장
           </button>
           <MutationMessage mutation={saveManualVendorFee} />
-        </div>
+        </div> : (
+          <div className="manual-purchase-fee">
+            <span className="field-label">현재 건당 업체 수수료</span>
+            <strong>{money(manualOptions.data?.vendorFeePerUnitKrw)}</strong>
+            <span className="muted">읽기 전용</span>
+          </div>
+        )}
 
         <div className="manual-purchase-summary">
           <SummaryMetric label="선택 상품" value={`${manualSummary.selectedOptionCount.toLocaleString("ko-KR")}개`} />
@@ -338,7 +355,7 @@ export default function CoupangUploadsPage() {
         </div>
 
         {manualOptions.isError ? <p className="muted">{manualOptions.error.message}</p> : null}
-        <div className="manual-purchase-grid">
+        {canRunOperations ? <div className="manual-purchase-grid">
           {filteredManualOptions.map((option) => {
             const draft = manualDrafts[option.coupangProductId] ?? emptyManualDraft(option);
             const quantity = Number(draft.quantity);
@@ -409,9 +426,21 @@ export default function CoupangUploadsPage() {
               </div>
             );
           })}
-        </div>
+        </div> : (
+          <DataTable<CoupangManualPurchaseOption>
+            rows={filteredManualOptions}
+            empty={manualOptions.isLoading ? "가구매 값을 불러오는 중입니다." : "표시할 상품이 없습니다."}
+            getRowKey={(row) => row.coupangProductId}
+            columns={[
+              { key: "product", header: "상품", render: (row) => row.productName },
+              { key: "quantity", header: "현재 가구매 수량", render: (row) => row.existingQuantity.toLocaleString("ko-KR") },
+              { key: "memo", header: "기타사항", render: (row) => row.existingMemo || "-" },
+              { key: "status", header: "계산 상태", render: (row) => row.isCalculable ? "계산 가능" : row.warnings[0] ?? "계산 불가" }
+            ]}
+          />
+        )}
 
-        <div className="toolbar" style={{ marginTop: 12 }}>
+        {canRunOperations ? <div className="toolbar" style={{ marginTop: 12 }}>
           <button
             className="button primary"
             type="button"
@@ -422,12 +451,14 @@ export default function CoupangUploadsPage() {
             저장
           </button>
           <ManualPurchaseSaveMessage mutation={saveManualPurchases} />
-        </div>
+        </div> : (
+          <div className="warning-strip" style={{ marginTop: 12 }}><span>읽기 전용 계정입니다. 저장 기능은 제공되지 않습니다.</span></div>
+        )}
       </div>
 
       <div className="panel" style={{ marginTop: 12 }}>
         <h2>Coupang Batch History</h2>
-        <DataTable
+        <DataTable<CoupangUploadBatch>
           rows={uploads.data ?? []}
           columns={[
             { key: "file", header: "File", render: (row) => row.originalFilename },
@@ -438,10 +469,10 @@ export default function CoupangUploadsPage() {
             { key: "valid", header: "Valid", render: (row) => row.validRowCount },
             { key: "warnings", header: "Warnings", render: (row) => row.warningCount },
             { key: "errors", header: "Errors", render: (row) => row.errorCount },
-            {
+            ...(canManageImports ? [{
               key: "actions",
               header: "",
-              render: (row) => (
+              render: (row: CoupangUploadBatch) => (
                 <button
                   className="icon-button danger"
                   type="button"
@@ -456,7 +487,7 @@ export default function CoupangUploadsPage() {
                   <Trash2 size={15} />
                 </button>
               )
-            }
+            }] : [])
           ]}
         />
       </div>

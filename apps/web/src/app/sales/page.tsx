@@ -8,6 +8,7 @@ import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
 import { buildXlsxWorkbook, downloadXlsx } from "@/lib/xlsx";
 import type { XlsxCell } from "@/lib/xlsx";
+import { useCan } from "@/features/auth/use-auth";
 import {
   type Cafe24CouponAuditResponse,
   type Cafe24CouponAuditRow,
@@ -94,6 +95,7 @@ const successSummaryStyle = {
 } as const;
 
 export default function SalesPage() {
+  const canManageMappings = useCan("mappings.manage");
   const range = useRange();
   const queryClient = useQueryClient();
   const [couponAuditFilter, setCouponAuditFilter] = useState<CouponAuditFilter>("ATTENTION");
@@ -142,10 +144,12 @@ export default function SalesPage() {
             <Download size={16} />
             엑셀 출력
           </button>
-          <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
-            <RefreshCw size={16} />
-            다시 매칭
-          </button>
+          {canManageMappings ? (
+            <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
+              <RefreshCw size={16} />
+              다시 매칭
+            </button>
+          ) : null}
         </div>
       </div>
 

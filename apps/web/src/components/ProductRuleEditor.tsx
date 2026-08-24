@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { DataTable } from "./DataTable";
+import { PermissionGate } from "@/components/permission-gate";
 
 export function ProductRuleEditor() {
   const queryClient = useQueryClient();
@@ -25,27 +26,29 @@ export function ProductRuleEditor() {
   return (
     <div className="panel">
       <h2>Product Rules</h2>
-      <div className="form-grid">
-        <select className="select" value={form.productId} onChange={(event) => setForm({ ...form, productId: event.target.value })}>
-          <option value="">Product</option>
-          {products.map((product) => (
-            <option key={product.id} value={product.id}>
-              {product.displayName}
-            </option>
-          ))}
-        </select>
-        <select className="select" value={form.matchType} onChange={(event) => setForm({ ...form, matchType: event.target.value })}>
-          <option value="CONTAINS">CONTAINS</option>
-          <option value="EXACT">EXACT</option>
-          <option value="REGEX">REGEX</option>
-        </select>
-        <input className="input" value={form.pattern} onChange={(event) => setForm({ ...form, pattern: event.target.value })} placeholder="pattern" />
-        <input className="input" type="number" value={form.priority} onChange={(event) => setForm({ ...form, priority: Number(event.target.value) })} />
-      </div>
-      <button className="btn primary" style={{ marginTop: 10 }} type="button" onClick={() => mutation.mutate()}>
-        <Plus size={17} />
-        Rule
-      </button>
+      <PermissionGate permission="mappings.manage" fallback={<div className="warning-strip"><span>읽기 전용 계정입니다.</span></div>}>
+        <div className="form-grid">
+          <select className="select" value={form.productId} onChange={(event) => setForm({ ...form, productId: event.target.value })}>
+            <option value="">Product</option>
+            {products.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.displayName}
+              </option>
+            ))}
+          </select>
+          <select className="select" value={form.matchType} onChange={(event) => setForm({ ...form, matchType: event.target.value })}>
+            <option value="CONTAINS">CONTAINS</option>
+            <option value="EXACT">EXACT</option>
+            <option value="REGEX">REGEX</option>
+          </select>
+          <input className="input" value={form.pattern} onChange={(event) => setForm({ ...form, pattern: event.target.value })} placeholder="pattern" />
+          <input className="input" type="number" value={form.priority} onChange={(event) => setForm({ ...form, priority: Number(event.target.value) })} />
+        </div>
+        <button className="btn primary" style={{ marginTop: 10 }} type="button" onClick={() => mutation.mutate()}>
+          <Plus size={17} />
+          Rule
+        </button>
+      </PermissionGate>
       <div style={{ marginTop: 12 }}>
         <DataTable
           rows={rules}

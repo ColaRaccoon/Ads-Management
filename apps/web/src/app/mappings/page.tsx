@@ -7,8 +7,10 @@ import { apiDelete, apiGet, apiPatch, apiPost, rangeQuery } from "@/lib/api";
 import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
+import { useCan } from "@/features/auth/use-auth";
 
 export default function MappingsPage() {
+  const canManageMappings = useCan("mappings.manage");
   const range = useRange();
   const queryClient = useQueryClient();
   const unmatched = useQuery({
@@ -63,10 +65,12 @@ export default function MappingsPage() {
           <h1>매핑</h1>
           <p>미매칭 광고세트와 제품/SC-CBO-ASC 수동 이력, 자동 매칭 규칙을 관리합니다.</p>
         </div>
-        <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
-          <RefreshCw size={16} />
-          {rematch.isPending ? "\uACC4\uC0B0 \uC911" : "\uC790\uB3D9\uB9E4\uD551\uACC4\uC0B0"}
-        </button>
+        {canManageMappings ? (
+          <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
+            <RefreshCw size={16} />
+            {rematch.isPending ? "\uACC4\uC0B0 \uC911" : "\uC790\uB3D9\uB9E4\uD551\uACC4\uC0B0"}
+          </button>
+        ) : null}
       </div>
       {rematch.data ? (
         <div className="warning-strip">
@@ -78,7 +82,7 @@ export default function MappingsPage() {
       {rematch.isError ? (
         <div className="warning-strip"><span>{"\uC790\uB3D9\uB9E4\uD551 \uACC4\uC0B0 \uC2E4\uD328"}: {String(rematch.error.message)}</span></div>
       ) : null}
-      <div className="grid two">
+      {canManageMappings ? <div className="grid two">
         <form className="panel" onSubmit={submitRule}>
           <h2>제품 자동 매핑 규칙</h2>
           <div className="form-grid">
@@ -103,10 +107,13 @@ export default function MappingsPage() {
           <h2>수동 매핑</h2>
           <ManualForm products={products.data ?? []} onProduct={(body) => manualProduct.mutate(body)} onStage={(body) => manualStage.mutate(body)} />
         </div>
-      </div>
+      </div> : (
+        <div className="warning-strip"><span>읽기 전용 계정입니다. 매핑 규칙과 미매칭 결과는 계속 확인할 수 있습니다.</span></div>
+      )}
       <div className="panel" style={{ marginTop: 12 }}>
         <h2>카페24 상품/옵션 매핑</h2>
         <Cafe24MappingRules
+          canManage={canManageMappings}
           error={cafe24Rules.error ?? createCafe24Rule.error ?? updateCafe24Rule.error ?? deleteCafe24Rule.error}
           isLoading={cafe24Rules.isLoading}
           isSaving={createCafe24Rule.isPending || updateCafe24Rule.isPending || deleteCafe24Rule.isPending}
@@ -178,6 +185,7 @@ function ManualForm({ products, onProduct, onStage }: { products: Array<Record<s
 }
 
 function Cafe24MappingRules({
+  canManage,
   products,
   rules,
   isLoading,
@@ -187,6 +195,7 @@ function Cafe24MappingRules({
   onUpdate,
   onDelete
 }: {
+  canManage: boolean;
   products: Array<Record<string, any>>;
   rules: Array<Record<string, any>>;
   isLoading: boolean;
@@ -201,12 +210,16 @@ function Cafe24MappingRules({
   return (
     <div className="rule-editor">
       {error ? <div className="warning-strip"><span>카페24 매핑 규칙 오류: {error.message}</span></div> : null}
-      <Cafe24RuleForm
-        isSaving={isSaving}
-        onSubmit={(body) => onCreate(body)}
-        products={products}
-        submitLabel="카페24 규칙 생성"
-      />
+      {canManage ? (
+        <Cafe24RuleForm
+          isSaving={isSaving}
+          onSubmit={(body) => onCreate(body)}
+          products={products}
+          submitLabel="카페24 규칙 생성"
+        />
+      ) : (
+        <div className="warning-strip"><span>읽기 전용입니다. 저장된 카페24 매핑 조건은 아래에서 확인할 수 있습니다.</span></div>
+      )}
       <div className="rule-form-title">
         <strong>제품별 저장된 카페24 규칙</strong>
         <span>{isLoading ? "규칙을 불러오는 중" : `비활성 포함 ${rules.length}개 규칙`}</span>
@@ -220,20 +233,40 @@ function Cafe24MappingRules({
               {group.rules.length}개 규칙. 포함 키워드는 해당 옵션 행을 이 제품으로 보내고, 제외 키워드는 이 규칙에서 빼냅니다.
             </span>
           </div>
-          {group.rules.map((rule) => (
-            <Cafe24SavedRule
-              key={cafe24RuleFormKey(rule)}
-              isSaving={isSaving}
-              onDelete={() => onDelete(String(rule.id))}
-              onSubmit={(body) => onUpdate(String(rule.id), body)}
-              products={products}
-              rule={rule}
-              submitLabel="규칙 저장"
-            />
-          ))}
+          {group.rules.map((rule) => canManage ? (
+              <Cafe24SavedRule
+                key={cafe24RuleFormKey(rule)}
+                isSaving={isSaving}
+                onDelete={() => onDelete(String(rule.id))}
+                onSubmit={(body) => onUpdate(String(rule.id), body)}
+                products={products}
+                rule={rule}
+                submitLabel="규칙 저장"
+              />
+            ) : (
+              <Cafe24ReadOnlyRule key={cafe24RuleFormKey(rule)} rule={rule} />
+            ))}
         </div>
       ))}
     </div>
+  );
+}
+
+function Cafe24ReadOnlyRule({ rule }: { rule: Record<string, any> }) {
+  const includeKeywords = listArray(rule.optionIncludeKeywords);
+  const excludeKeywords = listArray(rule.optionExcludeKeywords);
+  return (
+    <details className="rule-editor" style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+      <summary style={{ cursor: "pointer" }}>
+        <strong>{String(rule.displayName ?? productLabel(rule.product) ?? "카페24 규칙")}</strong>
+        <span className={rule.isActive === false ? "badge stop_candidate" : "badge scale"} style={{ marginLeft: 8 }}>
+          {rule.isActive === false ? "비활성" : "활성"}
+        </span>
+      </summary>
+      <Cafe24KeywordBadges excludeKeywords={excludeKeywords} includeKeywords={includeKeywords} />
+      <p className="muted">우선순위 {rule.priority ?? 100} · 적용 {dateInputText(rule.validFrom) || "-"} ~ {dateInputText(rule.validTo) || "계속"}</p>
+      {rule.note ? <p>{String(rule.note)}</p> : null}
+    </details>
   );
 }
 

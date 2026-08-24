@@ -33,6 +33,7 @@ import {
   couponScopeLabel,
   dateInputText
 } from "@/lib/cafe24-coupon";
+import { useCan } from "@/features/auth/use-auth";
 
 type ProductRow = {
   id: string;
@@ -75,6 +76,7 @@ type CouponRulePayload = {
 };
 
 export default function ProductSettingsPage() {
+  const canManageProducts = useCan("products.manage");
   const queryClient = useQueryClient();
   const ruleEditorRef = useRef<HTMLDivElement>(null);
   const [selectedProductId, setSelectedProductId] = useState("");
@@ -204,7 +206,7 @@ export default function ProductSettingsPage() {
         </div>
       </div>
       <div className="grid two">
-        <form className="panel" onSubmit={onProduct}>
+        {canManageProducts ? <form className="panel" onSubmit={onProduct}>
           <h2>제품 생성</h2>
           <div className="form-grid">
             <input className="input" name="code" placeholder="code" required />
@@ -212,7 +214,12 @@ export default function ProductSettingsPage() {
             <input className="input" name="displayName" placeholder="display name" required />
             <button className="button primary" type="submit"><Plus size={16} />제품 추가</button>
           </div>
-        </form>
+        </form> : (
+          <div className="panel">
+            <h2>제품 생성</h2>
+            <div className="warning-strip"><span>읽기 전용 계정입니다. 기존 제품과 비용·CPA 이력은 계속 확인할 수 있습니다.</span></div>
+          </div>
+        )}
         <div className="panel" ref={ruleEditorRef}>
           <h2>Product Rule Editor</h2>
           <div className="rule-form-title" style={{ marginBottom: 14 }}>
@@ -225,7 +232,7 @@ export default function ProductSettingsPage() {
               {(costRules.error ?? cpaRules.error) ? <span>비용·CPA 이력을 모두 정상 조회하기 전에는 저장할 수 없습니다.</span> : null}
             </div>
           ) : null}
-          <RuleForms
+          {canManageProducts ? <RuleForms
             costRule={selectedCostRule}
             costHistory={selectedCostHistory}
             correctingCostRule={correctingCostRule}
@@ -243,9 +250,12 @@ export default function ProductSettingsPage() {
             products={products.data ?? []}
             selectedProductId={selectedProductId}
             today={today}
-          />
+          /> : (
+            <div className="warning-strip"><span>읽기 전용입니다. 아래 제품 목록에서 행을 선택하면 원가·CPA 이력을 확인할 수 있습니다.</span></div>
+          )}
           {selectedProduct ? (
             <ProductRuleHistoryTables
+              canManage={canManageProducts}
               correctingCostRuleId={correctingCostRuleId}
               correctingCpaRuleId={correctingCpaRuleId}
               costHistory={selectedCostHistory}
@@ -282,7 +292,7 @@ export default function ProductSettingsPage() {
             <span>현재 비용 정보를 불러오지 못했습니다: {(costRules.error as Error).message}</span>
           </div>
         ) : null}
-        <DataTable
+        <DataTable<ProductRow>
           rows={products.data ?? []}
           getRowKey={(row) => row.id}
           onRowClick={(row) => selectProduct(row.id)}
@@ -311,10 +321,10 @@ export default function ProductSettingsPage() {
           { key: "vat", header: "부가세", render: (row) => costRuleMoney(currentCostRules.get(row.id)?.vatKrw) },
           { key: "period", header: "적용 기간", render: (row) => costRulePeriod(currentCostRules.get(row.id)) },
           { key: "cpa", header: "Target Ratio", render: (row) => currentCpaRules.get(row.id)?.targetRatio ?? "-" },
-          {
+          ...(canManageProducts ? [{
             key: "actions",
             header: "",
-            render: (row) => (
+            render: (row: ProductRow) => (
               <div className="toolbar">
                 <button
                   aria-label={`${productLabel(row)} 규칙 편집`}
@@ -343,11 +353,12 @@ export default function ProductSettingsPage() {
                 </button>
               </div>
             )
-          }
+          }] : [])
         ]}
         />
       </div>
       <CouponSettingsPanel
+        canManage={canManageProducts}
         error={(couponRules.error ?? couponProducts.error ?? createCouponRule.error ?? updateCouponRule.error) as Error | null}
         isLoading={couponRules.isLoading || couponProducts.isLoading}
         isSaving={createCouponRule.isPending || updateCouponRule.isPending}
@@ -361,6 +372,7 @@ export default function ProductSettingsPage() {
 }
 
 function CouponSettingsPanel({
+  canManage,
   products,
   rules,
   isLoading,
@@ -369,6 +381,7 @@ function CouponSettingsPanel({
   onCreate,
   onUpdate
 }: {
+  canManage: boolean;
   products: ProductRow[];
   rules: Cafe24CouponRule[];
   isLoading: boolean;
@@ -419,15 +432,19 @@ function CouponSettingsPanel({
       </div>
       {error ? <div className="warning-strip"><span>쿠폰 규칙 오류: {error.message}</span></div> : null}
       <div className="rule-editor">
-        <CouponRuleForm
-          draft={draft}
-          isEditing={Boolean(editingRule)}
-          isSaving={isSaving}
-          onCancel={editingRule ? stopEditing : undefined}
-          onChange={setDraft}
-          onSubmit={submit}
-          products={products}
-        />
+        {canManage ? (
+          <CouponRuleForm
+            draft={draft}
+            isEditing={Boolean(editingRule)}
+            isSaving={isSaving}
+            onCancel={editingRule ? stopEditing : undefined}
+            onChange={setDraft}
+            onSubmit={submit}
+            products={products}
+          />
+        ) : (
+          <div className="warning-strip"><span>읽기 전용입니다. 저장된 쿠폰 규칙은 계속 확인할 수 있습니다.</span></div>
+        )}
         <div className="rule-form-title">
           <strong>저장된 쿠폰 규칙</strong>
           <span>{isLoading ? "규칙을 불러오는 중입니다." : `비활성 포함 ${rules.length}개 규칙`}</span>
@@ -440,7 +457,7 @@ function CouponSettingsPanel({
             {
               key: "active",
               header: "활성 상태",
-              render: (rule) => (
+              render: (rule: Cafe24CouponRule) => (
                 <span className={rule.isActive ? "badge scale" : "badge stop_candidate"}>
                   {rule.isActive ? "활성" : "비활성"}
                 </span>
@@ -457,10 +474,10 @@ function CouponSettingsPanel({
             },
             { key: "priority", header: "우선순위", render: (rule) => rule.priority },
             { key: "note", header: "메모", render: (rule) => rule.note || "-" },
-            {
+            ...(canManage ? [{
               key: "edit",
               header: "편집",
-              render: (rule) => (
+              render: (rule: Cafe24CouponRule) => (
                 <button
                   aria-label={`${rule.name} 편집`}
                   className="icon-button"
@@ -472,11 +489,10 @@ function CouponSettingsPanel({
                   <Pencil size={15} />
                 </button>
               )
-            },
-            {
+            }, {
               key: "deactivate",
               header: "비활성화",
-              render: (rule) =>
+              render: (rule: Cafe24CouponRule) =>
                 rule.isActive ? (
                   <button
                     aria-label={`${rule.name} 비활성화`}
@@ -491,7 +507,7 @@ function CouponSettingsPanel({
                 ) : (
                   "-"
                 )
-            }
+            }] : [])
           ]}
         />
       </div>
@@ -1017,6 +1033,7 @@ function RuleHistoryImpactPreview<T extends MetaProductEffectiveRule>({
 }
 
 function ProductRuleHistoryTables({
+  canManage,
   costHistory,
   cpaHistory,
   currentCostRuleId,
@@ -1027,6 +1044,7 @@ function ProductRuleHistoryTables({
   onCorrectCost,
   onCorrectCpa
 }: {
+  canManage: boolean;
   costHistory: MetaProductCostRule[];
   cpaHistory: MetaProductCpaRule[];
   currentCostRuleId?: string;
@@ -1044,7 +1062,7 @@ function ProductRuleHistoryTables({
           <strong>원가 이력</strong>
           <span>정정은 과거 보고서를 바꿀 수 있으므로 오입력 수정에만 사용하세요.</span>
         </div>
-        <DataTable
+        <DataTable<MetaProductCostRule>
           empty={isLoading ? "원가 이력을 불러오는 중입니다." : "원가 이력이 없습니다."}
           getRowKey={(row) => row.id}
           rows={isLoading ? [] : costHistory}
@@ -1060,13 +1078,13 @@ function ProductRuleHistoryTables({
             { key: "created", header: "생성 시각", render: (row) => ruleDateTime(row.createdAt) },
             { key: "updated", header: "수정 시각", render: (row) => ruleDateTime(row.updatedAt) },
             { key: "note", header: "메모", render: (row) => row.note || "-" },
-            {
+            ...(canManage ? [{
               key: "correct",
               header: "관리",
-              render: (row) => <button className="button" disabled={correctingCostRuleId === row.id} onClick={() => onCorrectCost(row.id)} type="button">
+              render: (row: MetaProductCostRule) => <button className="button" disabled={correctingCostRuleId === row.id} onClick={() => onCorrectCost(row.id)} type="button">
                 {correctingCostRuleId === row.id ? "정정 중" : "이 이력 정정"}
               </button>
-            }
+            }] : [])
           ]}
         />
       </div>
@@ -1075,7 +1093,7 @@ function ProductRuleHistoryTables({
           <strong>CPA 이력</strong>
           <span>Target/Watch/Stop의 적용 기간을 서버가 연속되도록 관리합니다.</span>
         </div>
-        <DataTable
+        <DataTable<MetaProductCpaRule>
           empty={isLoading ? "CPA 이력을 불러오는 중입니다." : "CPA 이력이 없습니다."}
           getRowKey={(row) => row.id}
           rows={isLoading ? [] : cpaHistory}
@@ -1089,13 +1107,13 @@ function ProductRuleHistoryTables({
             { key: "created", header: "생성 시각", render: (row) => ruleDateTime(row.createdAt) },
             { key: "updated", header: "수정 시각", render: (row) => ruleDateTime(row.updatedAt) },
             { key: "note", header: "메모", render: (row) => row.note || "-" },
-            {
+            ...(canManage ? [{
               key: "correct",
               header: "관리",
-              render: (row) => <button className="button" disabled={correctingCpaRuleId === row.id} onClick={() => onCorrectCpa(row.id)} type="button">
+              render: (row: MetaProductCpaRule) => <button className="button" disabled={correctingCpaRuleId === row.id} onClick={() => onCorrectCpa(row.id)} type="button">
                 {correctingCpaRuleId === row.id ? "정정 중" : "이 이력 정정"}
               </button>
-            }
+            }] : [])
           ]}
         />
       </div>

@@ -8,6 +8,7 @@ import { apiDelete, apiGet, apiPatch, apiPost, rangeQuery } from "@/lib/api";
 import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
+import { useCan } from "@/features/auth/use-auth";
 
 type CoupangProductSetting = {
   id: string;
@@ -93,6 +94,7 @@ const defaultDraft = (): RuleDraft => ({
 });
 
 export default function CoupangMappingsPage() {
+  const canManageMappings = useCan("mappings.manage");
   const range = useRange();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<RuleDraft>(defaultDraft);
@@ -197,10 +199,12 @@ export default function CoupangMappingsPage() {
           <h1>쿠팡 매핑관리</h1>
           <p>쿠팡 판매/광고/프로모션 데이터의 상품 자동매핑 규칙과 확인 필요 항목을 관리합니다.</p>
         </div>
-        <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
-          <RefreshCw size={16} />
-          {rematch.isPending ? "계산 중" : "자동매핑 다시 계산"}
-        </button>
+        {canManageMappings ? (
+          <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
+            <RefreshCw size={16} />
+            {rematch.isPending ? "계산 중" : "자동매핑 다시 계산"}
+          </button>
+        ) : null}
       </div>
 
       {mutationError ? <div className="warning-strip"><span>처리 실패: {mutationError.message}</span></div> : null}
@@ -214,7 +218,7 @@ export default function CoupangMappingsPage() {
       </div>
 
       <div className="grid two">
-        <form className="panel" onSubmit={submitRule}>
+        {canManageMappings ? <form className="panel" onSubmit={submitRule}>
           <h2>{editingRuleId ? "매핑 규칙 수정" : "새 매핑 규칙"}</h2>
           <div className="rule-form">
             <Field label="상품" help="규칙이 연결될 쿠팡 상품">
@@ -269,7 +273,12 @@ export default function CoupangMappingsPage() {
               ) : null}
             </div>
           </div>
-        </form>
+        </form> : (
+          <div className="panel">
+            <h2>매핑 규칙</h2>
+            <div className="warning-strip"><span>읽기 전용 계정입니다. 저장된 규칙과 확인 필요 항목은 계속 조회할 수 있습니다.</span></div>
+          </div>
+        )}
 
         <div className="panel">
           <h2>확인 필요 항목</h2>
@@ -288,7 +297,7 @@ export default function CoupangMappingsPage() {
               <option value="PROMOTION_PRODUCT">프로모션 상품</option>
             </select>
           </div>
-          <DataTable
+          <DataTable<CoupangMappingIssue>
             rows={filteredIssues}
             empty={issues.isLoading ? "불러오는 중입니다." : "확인 필요 항목이 없습니다."}
             columns={[
@@ -299,15 +308,15 @@ export default function CoupangMappingsPage() {
               { key: "text", header: "상품 텍스트", render: (row) => row.productText },
               { key: "amount", header: "금액", render: (row) => money(row.amountKrw) },
               { key: "candidates", header: "후보", render: (row) => keywordBadges(row.candidates, "후보") },
-              {
+              ...(canManageMappings ? [{
                 key: "action",
                 header: "작업",
-                render: (row) => (
+                render: (row: CoupangMappingIssue) => (
                   <button className="button" type="button" onClick={() => createRuleFromIssue(row)}>
                     규칙 만들기
                   </button>
                 )
-              }
+              }] : [])
             ]}
           />
         </div>
@@ -315,7 +324,7 @@ export default function CoupangMappingsPage() {
 
       <div className="panel" style={{ marginTop: 12 }}>
         <h2>저장된 매핑 규칙</h2>
-        <DataTable
+        <DataTable<CoupangMappingRule>
           rows={savedRules}
           empty={rules.isLoading ? "불러오는 중입니다." : "저장된 매핑 규칙이 없습니다."}
           columns={[
@@ -327,10 +336,10 @@ export default function CoupangMappingsPage() {
             { key: "period", header: "적용기간", render: (row) => `${dateInputText(row.validFrom) || "-"} ~ ${dateInputText(row.validTo) || "-"}` },
             { key: "ad", header: "광고", render: (row) => (row.adEnabled ? "반영" : "제외") },
             { key: "status", header: "상태", render: (row) => <span className={row.isActive === false ? "badge stop_candidate" : "badge scale"}>{row.isActive === false ? "비활성" : "활성"}</span> },
-            {
+            ...(canManageMappings ? [{
               key: "actions",
               header: "작업",
-              render: (row) => (
+              render: (row: CoupangMappingRule) => (
                 <span className="toolbar">
                   <button className="button" type="button" onClick={() => editRule(row)}>편집</button>
                   <button className="button danger" disabled={isSaving || row.isActive === false} type="button" onClick={() => disableRule.mutate(row.id)}>
@@ -339,7 +348,7 @@ export default function CoupangMappingsPage() {
                   </button>
                 </span>
               )
-            }
+            }] : [])
           ]}
         />
       </div>

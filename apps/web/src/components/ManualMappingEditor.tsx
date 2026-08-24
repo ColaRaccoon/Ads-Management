@@ -5,6 +5,7 @@ import { Save } from "lucide-react";
 import { useState } from "react";
 import { apiGet, apiPost, withPeriod } from "@/lib/api";
 import { usePeriod } from "@/lib/usePeriod";
+import { PermissionGate } from "@/components/permission-gate";
 
 export function ManualMappingEditor() {
   const { from, to } = usePeriod();
@@ -49,6 +50,7 @@ export function ManualMappingEditor() {
   return (
     <div className="panel">
       <h2>Manual Mapping</h2>
+      <PermissionGate permission="mappings.manage" fallback={<div className="warning-strip"><span>읽기 전용 계정입니다.</span></div>}>
       <div className="form-grid">
         <select className="select wide" value={metaAdsetId} onChange={(event) => setMetaAdsetId(event.target.value)}>
           <option value="">Adset</option>
@@ -87,6 +89,7 @@ export function ManualMappingEditor() {
           Stage
         </button>
       </div>
+      </PermissionGate>
     </div>
   );
 }
