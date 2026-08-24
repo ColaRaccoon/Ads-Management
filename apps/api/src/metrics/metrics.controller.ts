@@ -1,11 +1,13 @@
 import { Controller, Get, Param, Query } from "@nestjs/common";
 import { MetricsService } from "./metrics.service";
+import { RequirePermissions } from "../auth/route-decorators";
 
 @Controller("metrics")
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
 
   @Get("campaigns")
+  @RequirePermissions("data.read")
   campaigns(
     @Query("from") from?: string,
     @Query("to") to?: string,
@@ -17,6 +19,7 @@ export class MetricsController {
   }
 
   @Get("adsets")
+  @RequirePermissions("data.read")
   adsets(
     @Query("from") from?: string,
     @Query("to") to?: string,
@@ -30,6 +33,7 @@ export class MetricsController {
   }
 
   @Get("adsets/:metaAdsetId/ads")
+  @RequirePermissions("data.read")
   adsetAds(
     @Query("from") from: string | undefined,
     @Query("to") to: string | undefined,
@@ -40,6 +44,7 @@ export class MetricsController {
   }
 
   @Get("campaigns/:metaCampaignId/adsets")
+  @RequirePermissions("data.read")
   campaignAdsets(
     @Query("from") from: string | undefined,
     @Query("to") to: string | undefined,
@@ -50,6 +55,7 @@ export class MetricsController {
   }
 
   @Get("ads/compare-by-name")
+  @RequirePermissions("data.read")
   compareAdsByName(
     @Query("adName") adName?: string,
     @Query("from") from?: string,
@@ -60,6 +66,7 @@ export class MetricsController {
   }
 
   @Get("ads/creatives")
+  @RequirePermissions("data.read")
   creativeAds(
     @Query("from") from?: string,
     @Query("to") to?: string,
@@ -74,6 +81,7 @@ export class MetricsController {
   }
 
   @Get("ads/creative-video-trends")
+  @RequirePermissions("data.read")
   creativeVideoTrends(
     @Query("from") from?: string,
     @Query("to") to?: string,
@@ -84,6 +92,7 @@ export class MetricsController {
   }
 
   @Get("ads")
+  @RequirePermissions("data.read")
   ads(
     @Query("from") from?: string,
     @Query("to") to?: string,
@@ -97,11 +106,13 @@ export class MetricsController {
   }
 
   @Get("products")
+  @RequirePermissions("data.read")
   products(@Query("from") from?: string, @Query("to") to?: string, @Query("deliveryStatus") deliveryStatus?: string) {
     return this.metricsService.productMetrics(from, to, deliveryStatus);
   }
 
   @Get("unmatched")
+  @RequirePermissions("data.read")
   unmatched(@Query("from") from?: string, @Query("to") to?: string, @Query("deliveryStatus") deliveryStatus?: string) {
     return this.metricsService.unmatchedMetrics(from, to, deliveryStatus);
   }

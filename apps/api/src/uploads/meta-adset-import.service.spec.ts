@@ -4,11 +4,13 @@ import { describe, expect, it } from "vitest";
 import { META_ADSET_REQUIRED_COLUMNS } from "../domain/meta-csv";
 import { MetaAdsetImportService } from "./meta-adset-import.service";
 
+const ACTOR_ID = "11111111-1111-4111-8111-111111111111";
+
 describe("MetaAdsetImportService contract", () => {
   it("returns the established adset import fields through the real parser/orchestrator path", async () => {
     const harness = adsetImportHarness();
 
-    const result = await harness.service.importMetaAdsetCsv(file(adsetCsv()), ConflictPolicy.OVERWRITE);
+    const result = await harness.service.importMetaAdsetCsv(file(adsetCsv()), ConflictPolicy.OVERWRITE, ACTOR_ID);
 
     expect(result).toMatchObject({
       batchId: "batch-1",
@@ -24,6 +26,7 @@ describe("MetaAdsetImportService contract", () => {
       reportStart: "2026-08-10",
       reportEnd: "2026-08-10"
     });
+    expect(harness.batchCreates[0]).toMatchObject({ uploadedBy: ACTOR_ID });
     expect(harness.metricInputs).toEqual([
       expect.objectContaining({
         batchId: "batch-1",
@@ -40,7 +43,11 @@ describe("MetaAdsetImportService contract", () => {
     const harness = adsetImportHarness();
 
     const error = await rejected(
-      harness.service.importMetaAdsetCsv(file(Buffer.from('"unknown"\n"value"', "utf8")), ConflictPolicy.NEW_VERSION)
+      harness.service.importMetaAdsetCsv(
+        file(Buffer.from('"unknown"\n"value"', "utf8")),
+        ConflictPolicy.NEW_VERSION,
+        ACTOR_ID
+      )
     );
 
     expect(error).toBeInstanceOf(BadRequestException);
@@ -61,6 +68,7 @@ describe("MetaAdsetImportService contract", () => {
 });
 
 function adsetImportHarness() {
+  const batchCreates: Record<string, unknown>[] = [];
   const batchUpdates: Record<string, unknown>[] = [];
   const metricInputs: unknown[] = [];
   const batch = {
@@ -76,7 +84,10 @@ function adsetImportHarness() {
   const prisma = {
     uploadBatch: {
       findUnique: async () => null,
-      create: async ({ data }: { data: Record<string, unknown> }) => ({ ...batch, ...data, id: batch.id }),
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        batchCreates.push(data);
+        return { ...batch, ...data, id: batch.id };
+      },
       update: async ({ data }: { data: Record<string, unknown> }) => {
         batchUpdates.push(data);
         return { ...batch, ...data };
@@ -108,6 +119,7 @@ function adsetImportHarness() {
   const exchangeRates = { ensureUsdKrwRates: async () => undefined };
 
   return {
+    batchCreates,
     batchUpdates,
     metricInputs,
     service: new MetaAdsetImportService(

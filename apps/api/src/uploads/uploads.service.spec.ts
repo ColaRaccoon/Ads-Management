@@ -32,8 +32,12 @@ describe("UploadsService public facade contract", () => {
       { deleteUpload: async () => "deleted" } as never
     );
 
-    await expect(service.importMetaAdDailyCsv(undefined, ConflictPolicy.SKIP)).resolves.toBe("ad-daily");
-    await expect(service.importMetaAdsetCsv(undefined, ConflictPolicy.SKIP)).resolves.toBe("adset");
+    await expect(
+      service.importMetaAdDailyCsv(undefined, ConflictPolicy.SKIP, "11111111-1111-4111-8111-111111111111")
+    ).resolves.toBe("ad-daily");
+    await expect(
+      service.importMetaAdsetCsv(undefined, ConflictPolicy.SKIP, "11111111-1111-4111-8111-111111111111")
+    ).resolves.toBe("adset");
     await expect(service.listUploads()).resolves.toBe("list");
     await expect(service.previewUpload("batch-1")).resolves.toBe("preview");
     await expect(service.uploadErrors("batch-1")).resolves.toBe("errors");

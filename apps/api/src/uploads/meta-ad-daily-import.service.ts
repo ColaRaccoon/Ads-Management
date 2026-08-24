@@ -51,7 +51,7 @@ export class MetaAdDailyImportService {
     private readonly uploadExchangeRateService: UploadExchangeRateService
   ) {}
 
-  async importMetaAdDailyCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy) {
+  async importMetaAdDailyCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string) {
     if (!file?.buffer) {
       throw new BadRequestException({ code: "FILE_REQUIRED", message: "CSV 파일이 필요합니다." });
     }
@@ -102,7 +102,8 @@ export class MetaAdDailyImportService {
         },
         rowCount: rows.length,
         conflictPolicy,
-        status: UploadStatus.VALIDATING
+        status: UploadStatus.VALIDATING,
+        uploadedBy: actorId
       }
     });
 

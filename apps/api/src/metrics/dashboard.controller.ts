@@ -1,11 +1,13 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { MetricsService } from "./metrics.service";
+import { RequirePermissions } from "../auth/route-decorators";
 
 @Controller("dashboard")
 export class DashboardController {
   constructor(private readonly metricsService: MetricsService) {}
 
   @Get("summary")
+  @RequirePermissions("data.read")
   summary(
     @Query("from") from?: string,
     @Query("to") to?: string,
@@ -16,6 +18,7 @@ export class DashboardController {
   }
 
   @Get("trends")
+  @RequirePermissions("data.read")
   trends(
     @Query("from") from?: string,
     @Query("to") to?: string,

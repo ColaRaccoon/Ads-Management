@@ -31,7 +31,7 @@ export class MetaAdsetImportService {
     private readonly uploadExchangeRateService: UploadExchangeRateService
   ) {}
 
-  async importMetaAdsetCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy) {
+  async importMetaAdsetCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string) {
     if (!file?.buffer) {
       throw new BadRequestException({ code: "FILE_REQUIRED", message: "CSV 파일이 필요합니다." });
     }
@@ -73,7 +73,8 @@ export class MetaAdsetImportService {
         columnSchema: { columns: headers, count: headers.length, originalFileHashSha256: fileHashSha256 },
         rowCount: rows.length,
         conflictPolicy,
-        status: UploadStatus.VALIDATING
+        status: UploadStatus.VALIDATING,
+        uploadedBy: actorId
       }
     });
 

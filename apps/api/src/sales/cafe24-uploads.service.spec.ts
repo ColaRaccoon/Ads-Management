@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ConflictPolicy, MatchSource, RowValidationStatus, UploadStatus } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -12,6 +12,8 @@ import {
   resolveCafe24LineStoredState
 } from "./cafe24-uploads.service";
 import { toDateOnly } from "../domain/date-number";
+
+const ACTOR_ID = "11111111-1111-4111-8111-111111111111";
 
 describe("Cafe24 upload current/version policy", () => {
   it("keeps duplicate natural keys non-current on SKIP", () => {
@@ -279,6 +281,34 @@ describe("Cafe24UploadsService rematch", () => {
 });
 
 describe("Cafe24UploadsService duplicate upload guard", () => {
+  it("attributes a newly created batch to the authenticated actor", async () => {
+    const create = vi.fn(async ({ data }) => ({ id: "batch-actor", ...data }));
+    const prisma = {
+      cafe24UploadBatch: {
+        findMany: vi.fn(async () => []),
+        findUnique: vi.fn(async () => null),
+        create,
+        update: vi.fn(async () => ({}))
+      },
+      cafe24UploadRowError: { createMany: vi.fn(async () => ({ count: 1 })) }
+    };
+    const service = new Cafe24UploadsService(prisma as never, {} as never);
+    (service as unknown as { parser: { parseBuffer: () => unknown; preview: () => unknown } }).parser = {
+      parseBuffer: () => ({ headers: [], rows: [] }),
+      preview: () => ({ rowCount: 0 })
+    };
+
+    await expect(
+      service.importCafe24Csv(
+        { originalname: "orders.csv", buffer: Buffer.from("invalid", "utf8") } as Express.Multer.File,
+        ConflictPolicy.SKIP,
+        ACTOR_ID
+      )
+    ).rejects.toMatchObject({ response: expect.objectContaining({ code: "CSV_HEADER_INVALID" }) });
+
+    expect(create.mock.calls[0][0].data.uploadedBy).toBe(ACTOR_ID);
+  });
+
   it("treats a batch with fewer saved rows than parsed rows as incomplete", async () => {
     const service = new Cafe24UploadsService(
       {

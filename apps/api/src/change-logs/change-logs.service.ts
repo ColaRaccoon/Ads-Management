@@ -43,7 +43,7 @@ export class ChangeLogsService {
     });
   }
 
-  create(body: Record<string, unknown>) {
+  create(body: Record<string, unknown>, actorId: string) {
     const actionType = requiredEnum(body.actionType, ACTION_TYPES, "actionType");
     const targetType = requiredEnum(body.targetType, TARGET_TYPES, "targetType");
     return this.prisma.changeLog.create({
@@ -59,7 +59,8 @@ export class ChangeLogsService {
         newValue: body.newValue === undefined ? undefined : (body.newValue as Prisma.InputJsonValue),
         reason: requiredString(body.reason, "reason"),
         relatedDecisionId: optionalString(body.relatedDecisionId),
-        nextCheckDate: body.nextCheckDate ? asDateOnly(String(body.nextCheckDate)) : null
+        nextCheckDate: body.nextCheckDate ? asDateOnly(String(body.nextCheckDate)) : null,
+        createdBy: actorId
       }
     });
   }
@@ -184,7 +185,7 @@ export class ChangeLogsService {
     };
   }
 
-  async createCreativeLog(creativeId: string, body: Record<string, unknown>) {
+  async createCreativeLog(creativeId: string, body: Record<string, unknown>, actorId: string) {
     const creative = await this.prisma.creative.findFirst({ where: visibleCreativeWhere(null, creativeId), select: { id: true } });
     if (!creative) {
       throw new NotFoundException({ code: "CREATIVE_NOT_FOUND", message: "creativeId에 해당하는 광고소재를 찾을 수 없습니다." });
@@ -200,7 +201,8 @@ export class ChangeLogsService {
         reason: requiredString(body.reason, "reason"),
         memo: optionalString(body.memo),
         relatedAdsetIds: optionalStringArray(body.relatedAdsetIds) as Prisma.InputJsonValue,
-        nextCheckDate: body.nextCheckDate ? asDateOnly(String(body.nextCheckDate)) : null
+        nextCheckDate: body.nextCheckDate ? asDateOnly(String(body.nextCheckDate)) : null,
+        createdBy: actorId
       }
     });
   }
@@ -296,7 +298,7 @@ export class ChangeLogsService {
     };
   }
 
-  async createProductLog(productId: string, body: Record<string, unknown>) {
+  async createProductLog(productId: string, body: Record<string, unknown>, actorId: string) {
     const product = await this.prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
     if (!product) {
       throw new NotFoundException({ code: "PRODUCT_NOT_FOUND", message: "productId에 해당하는 제품을 찾을 수 없습니다." });
@@ -308,7 +310,8 @@ export class ChangeLogsService {
           body.actionDate === undefined || body.actionDate === null || String(body.actionDate).trim() === ""
             ? asDateOnly(todayInputValue())
             : parseSingleDate(String(body.actionDate), "actionDate"),
-        text: requiredString(body.text, "text")
+        text: requiredString(body.text, "text"),
+        createdBy: actorId
       }
     });
   }

@@ -18,6 +18,8 @@ import {
   summarizeCoupangProductProfitRows
 } from "./coupang.service";
 
+const ACTOR_ID = "11111111-1111-4111-8111-111111111111";
+
 describe("global Coupang sales fee snapshots", () => {
   it("converts UI percentages to bounded decimal rates, including 0%", () => {
     expect(salesFeeRateFromPercentBody(11.88).toString()).toBe("0.1188");
@@ -423,7 +425,8 @@ describe("Coupang price text import repair", () => {
 
     const result = await service.importPriceText(
       { originalname: "판매가.txt", buffer } as Express.Multer.File,
-      { effectiveFrom: "2026-06-22" }
+      { effectiveFrom: "2026-06-22" },
+      ACTOR_ID
     );
 
     expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, warningCount: 0, errorCount: 0 });
@@ -431,6 +434,7 @@ describe("Coupang price text import repair", () => {
     expect(prisma.coupangUploadBatch.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         sourceType: CoupangUploadSourceType.PRICE_TEXT,
+        uploadedBy: ACTOR_ID,
         fileHashSha256: expect.not.stringMatching(createHash("sha256").update(buffer).digest("hex"))
       })
     });
@@ -3870,7 +3874,8 @@ describe("CoupangService margin import mapping rules", () => {
 
     const result = await service.importMarginCsv(
       { originalname: "invalid-margin.tsv", buffer } as Express.Multer.File,
-      { effectiveFrom: "2026-06-22" }
+      { effectiveFrom: "2026-06-22" },
+      ACTOR_ID
     );
 
     expect(result).toMatchObject({ rowCount: 1, validRowCount: 0, errorCount: 1 });
@@ -3892,7 +3897,8 @@ describe("CoupangService margin import mapping rules", () => {
 
     const result = await service.importMarginCsv(
       { originalname: "margin.tsv", buffer } as Express.Multer.File,
-      { effectiveFrom: "2026-06-22" }
+      { effectiveFrom: "2026-06-22" },
+      ACTOR_ID
     );
 
     expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, errorCount: 0 });
@@ -3932,7 +3938,11 @@ describe("CoupangService sales import", () => {
       ["A-1", "Black", "Zero Bar", "seller", "3,295,600", 106, 107, "3,757,600", 122, "-462,000", 15, 0]
     ]);
 
-    const result = await service.importSalesXlsx({ originalname: "sales.xlsx", buffer } as Express.Multer.File, body);
+    const result = await service.importSalesXlsx(
+      { originalname: "sales.xlsx", buffer } as Express.Multer.File,
+      body,
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, warningCount: 0, errorCount: 0 });
     expect(prisma.coupangSaleLine.create).toHaveBeenCalledTimes(1);
@@ -3955,7 +3965,11 @@ describe("CoupangService sales import", () => {
       ["A-1", "Black", "Zero Bar", "seller", "100,000", 3, 4, "120,000", 5, cancelAmountKrw, 1, 0]
     ]);
 
-    const result = await service.importSalesXlsx({ originalname: "sales.xlsx", buffer } as Express.Multer.File, body);
+    const result = await service.importSalesXlsx(
+      { originalname: "sales.xlsx", buffer } as Express.Multer.File,
+      body,
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({ rowCount: 1, validRowCount: 1, warningCount: 0, errorCount: 0 });
     expect(prisma.coupangSaleLine.create).toHaveBeenCalledTimes(1);
@@ -3996,7 +4010,11 @@ describe("CoupangService rematch", () => {
       ["2026-06-22", "Campaign", "Group", "E-2", "Spend Product 4-pack", "C-2", "-", 1000, 50, "12,000", 3, 2, 1, 90000, 60000, 30000, 4, 2, 2]
     ]);
 
-    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importAdsXlsx(
+      { originalname: "ads.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({
       rowCount: 2,
@@ -4030,7 +4048,11 @@ describe("CoupangService rematch", () => {
       ["2026-06-22", "Campaign", "Group", "Spend Product 2-pack ad", "E-1", "-", "C-1", "-", 1000, 50, "12,000", 3, 2, 1, 90000, 60000, 30000, 4, 2, 2]
     ]);
 
-    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importAdsXlsx(
+      { originalname: "ads.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({
       rowCount: 1,
@@ -4064,7 +4086,11 @@ describe("CoupangService rematch", () => {
       ["2026-06-22", "Campaign", "Group", "Spend Product 2-pack ad", "E-1", "Unknown Product", "C-1", "-", 1000, 50, "12,000", 3, 2, 1, 90000, 60000, 30000, 4, 2, 2]
     ]);
 
-    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importAdsXlsx(
+      { originalname: "ads.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({
       rowCount: 1,
@@ -4096,7 +4122,11 @@ describe("CoupangService rematch", () => {
       ["2026-06-29", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "-", 30, 3, 3000, 3, 2, 1, 30000, 20000, 10000, 4, 3, 1]
     ]);
 
-    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importAdsXlsx(
+      { originalname: "ads.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({
       rowCount: 3,
@@ -4151,7 +4181,11 @@ describe("CoupangService rematch", () => {
       ["2026-06-29", "Campaign", "Group", "Spend Product B", "E-1", "-", "C-1", "-", 20, 2, 2000, 2, 1, 1, 20000, 10000, 10000, 3, 2, 1]
     ]);
 
-    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importAdsXlsx(
+      { originalname: "ads.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({
       rowCount: 2,
@@ -4178,7 +4212,11 @@ describe("CoupangService rematch", () => {
       ["2026-06-29", "Campaign", "Group", "Spend Product A", "E-1", "-", "C-1", "-", 20, 2, 2000, 2, 1, 1, 20000, 10000, 10000, 3, 2, 1]
     ]);
 
-    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importAdsXlsx(
+      { originalname: "ads.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({
       rowCount: 2,
@@ -4216,7 +4254,11 @@ describe("CoupangService rematch", () => {
       ["2026-06-29", "Campaign", "Group", "E-1", "Spend Product 2-pack", "C-1", "-", 20, 2, 2000, 2, 1, 1, 20000, 10000, 10000, 3, 2, 1]
     ]);
 
-    const result = await service.importAdsXlsx({ originalname: "ads.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importAdsXlsx(
+      { originalname: "ads.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({
       rowCount: 2,
@@ -4464,7 +4506,11 @@ describe("CoupangService promotion import", () => {
       ["Zero Bar", "Black", 24050, "취소", "2026-06-19", "2026-07-19"]
     ]);
 
-    const result = await service.importPromotionXlsx({ originalname: "promotion.xlsx", buffer } as Express.Multer.File, {});
+    const result = await service.importPromotionXlsx(
+      { originalname: "promotion.xlsx", buffer } as Express.Multer.File,
+      {},
+      ACTOR_ID
+    );
 
     expect(result).toMatchObject({ warningCount: 1, matchedCount: 1 });
     expect(prisma.coupangPromotionPrice.create).toHaveBeenCalledWith({

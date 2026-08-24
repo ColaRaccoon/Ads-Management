@@ -27,7 +27,7 @@ export class Cafe24UploadsService {
     private readonly exchangeRatesService: ExchangeRatesService
   ) {}
 
-  async importCafe24Csv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy) {
+  async importCafe24Csv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string) {
     if (!file?.buffer) {
       throw new BadRequestException({ code: "FILE_REQUIRED", message: "Cafe24 CSV file is required." });
     }
@@ -71,7 +71,8 @@ export class Cafe24UploadsService {
         },
         rowCount: rows.length,
         conflictPolicy: importConflictPolicy,
-        status: UploadStatus.VALIDATING
+        status: UploadStatus.VALIDATING,
+        uploadedBy: actorId
       }
     });
 

@@ -41,7 +41,6 @@ type ManualDraft = {
   memo: string;
 };
 
-const MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY = "coupang_manual_purchase_vendor_fee_per_unit_krw";
 const KOREAN_PRODUCT_NAME_COLLATOR = new Intl.Collator("ko-KR", {
   numeric: true,
   sensitivity: "base"
@@ -164,9 +163,8 @@ export default function CoupangUploadsPage() {
   });
   const saveManualVendorFee = useMutation({
     mutationFn: () =>
-      apiPatch(`/settings/${MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY}`, {
-        valueJson: Number(manualFeeDraft),
-        description: "Default vendor fee per Coupang manual purchase unit"
+      apiPatch("/settings/products/coupang-manual-purchase-vendor-fee", {
+        valueJson: Number(manualFeeDraft)
       }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["coupang-manual-purchase-options"] })
   });

@@ -17,7 +17,7 @@ export class MappingsService {
     });
   }
 
-  async createProductRule(body: Record<string, unknown>) {
+  async createProductRule(body: Record<string, unknown>, actorId: string) {
     const productId = requiredString(body.productId, "productId");
     const matchType = parseMatchType(body.matchType);
     const pattern = requiredString(body.pattern, "pattern");
@@ -32,7 +32,8 @@ export class MappingsService {
         isActive: body.isActive === undefined ? true : Boolean(body.isActive),
         validFrom: body.validFrom ? asDateOnly(String(body.validFrom)) : asDateOnly(formatDateOnly(new Date())),
         validTo: body.validTo ? asDateOnly(String(body.validTo)) : null,
-        note: optionalString(body.note)
+        note: optionalString(body.note),
+        createdBy: actorId
       },
       include: { product: true }
     });
@@ -354,7 +355,7 @@ export class MappingsService {
     };
   }
 
-  async createManualProductMapping(body: Record<string, unknown>) {
+  async createManualProductMapping(body: Record<string, unknown>, actorId: string) {
     const productId = requiredString(body.productId, "productId");
     const effectiveFrom = asDateOnly(requiredString(body.effectiveFrom, "effectiveFrom"));
     const effectiveTo = body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : null;
@@ -368,7 +369,8 @@ export class MappingsService {
         effectiveFrom,
         effectiveTo,
         source: MatchSource.MANUAL,
-        note: optionalString(body.note)
+        note: optionalString(body.note),
+        createdBy: actorId
       }
     });
 
@@ -435,7 +437,7 @@ export class MappingsService {
     return { history, rematchedMetricCount, rematchedAdMetricCount };
   }
 
-  async createManualStageMapping(body: Record<string, unknown>) {
+  async createManualStageMapping(body: Record<string, unknown>, actorId: string) {
     const stage = parseStage(body.stage);
     const effectiveFrom = asDateOnly(requiredString(body.effectiveFrom, "effectiveFrom"));
     const effectiveTo = body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : null;
@@ -448,7 +450,8 @@ export class MappingsService {
         effectiveFrom,
         effectiveTo,
         source: MatchSource.MANUAL,
-        note: optionalString(body.note)
+        note: optionalString(body.note),
+        createdBy: actorId
       }
     });
 

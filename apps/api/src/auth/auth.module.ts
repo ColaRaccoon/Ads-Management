@@ -1,9 +1,11 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { CommonModule } from "../common/common.module";
 import { AuthController } from "./auth.controller";
 import { AUTH_CONFIG, loadAuthConfig } from "./auth.config";
 import { AuthService } from "./auth.service";
 import { AuthenticationGuard } from "./authentication.guard";
+import { PermissionGuard } from "./permission.guard";
 import { AuthCookieService } from "./cookie.service";
 import { IDENTITY_PROVIDER } from "./identity-provider";
 import {
@@ -27,13 +29,17 @@ import { SupabaseJwtVerifier } from "./supabase-jwt.verifier";
     AuthCookieService,
     AuthRequestSecurityService,
     AuthService,
-    AuthenticationGuard
+    AuthenticationGuard,
+    PermissionGuard,
+    { provide: APP_GUARD, useExisting: AuthenticationGuard },
+    { provide: APP_GUARD, useExisting: PermissionGuard }
   ],
   exports: [
     AUTH_CONFIG,
     AuthCookieService,
     AuthService,
-    AuthenticationGuard
+    AuthenticationGuard,
+    PermissionGuard
   ]
 })
 export class AuthModule {}

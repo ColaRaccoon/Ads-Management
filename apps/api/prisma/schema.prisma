@@ -180,6 +180,19 @@ model AppUser {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   authSessions    AppAuthSession[]
+  creativeChangeLogs CreativeChangeLog[]  @relation("CreativeChangeLogCreator")
+  productChangeLogs  ProductChangeLog[]   @relation("ProductChangeLogCreator")
+  productMatchRules  ProductMatchRule[]   @relation("ProductMatchRuleCreator")
+  adsetProductHistories AdsetProductHistory[] @relation("AdsetProductHistoryCreator")
+  adsetStageHistories   AdsetStageHistory[]   @relation("AdsetStageHistoryCreator")
+  metaUploadBatches    UploadBatch[]       @relation("MetaUploadBatchUploader")
+  cafe24UploadBatches  Cafe24UploadBatch[] @relation("Cafe24UploadBatchUploader")
+  coupangUploadBatches CoupangUploadBatch[] @relation("CoupangUploadBatchUploader")
+  decisionRuns         DecisionRun[]       @relation("DecisionRunCreator")
+  decisionLogs         DecisionLog[]       @relation("DecisionLogCreator")
+  changeLogs           ChangeLog[]         @relation("ChangeLogCreator")
+  reportExports        ReportExport[]      @relation("ReportExportCreator")
+  updatedSettings      AppSetting[]         @relation("AppSettingUpdater")
 
   @@map("app_users")
 }
@@ -450,9 +463,11 @@ model CreativeChangeLog {
   createdAt       DateTime              @default(now()) @map("created_at")
   updatedAt       DateTime              @updatedAt @map("updated_at")
   creative        Creative              @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  createdByUser   AppUser?              @relation("CreativeChangeLogCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([creativeId, actionDate])
   @@index([actionDate, actionType])
+  @@index([createdBy])
   @@map("creative_change_logs")
 }
 
@@ -465,9 +480,11 @@ model ProductChangeLog {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdByUser AppUser? @relation("ProductChangeLogCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([productId, actionDate])
   @@index([actionDate])
+  @@index([createdBy])
   @@map("product_change_logs")
 }
 
@@ -504,8 +521,10 @@ model ProductMatchRule {
   uploadRows     UploadRow[]
   dailyMetrics   MetaAdsetDailyMetric[]
   adDailyMetrics MetaAdDailyMetric[]
+  createdByUser  AppUser?                  @relation("ProductMatchRuleCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([isActive, priority])
+  @@index([createdBy])
   @@map("product_match_rules")
 }
 
@@ -523,8 +542,10 @@ model AdsetProductHistory {
   metaAdset     MetaAdset         @relation(fields: [metaAdsetId], references: [id])
   product       Product           @relation(fields: [productId], references: [id])
   matchRule     ProductMatchRule? @relation(fields: [matchRuleId], references: [id])
+  createdByUser AppUser?          @relation("AdsetProductHistoryCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([metaAdsetId, effectiveFrom, effectiveTo])
+  @@index([createdBy])
   @@map("adset_product_histories")
 }
 
@@ -539,8 +560,10 @@ model AdsetStageHistory {
   createdBy     String?     @map("created_by") @db.Uuid
   createdAt     DateTime    @default(now()) @map("created_at")
   metaAdset     MetaAdset   @relation(fields: [metaAdsetId], references: [id])
+  createdByUser AppUser?    @relation("AdsetStageHistoryCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([metaAdsetId, effectiveFrom, effectiveTo])
+  @@index([createdBy])
   @@map("adset_stage_histories")
 }
 
@@ -569,8 +592,10 @@ model UploadBatch {
   errors         UploadRowError[]
   metrics        MetaAdsetDailyMetric[]
   adMetrics      MetaAdDailyMetric[]
+  uploadedByUser AppUser?                @relation("MetaUploadBatchUploader", fields: [uploadedBy], references: [id], onDelete: Restrict)
 
   @@index([reportStart, reportEnd])
+  @@index([uploadedBy])
   @@map("upload_batches")
 }
 
@@ -638,13 +663,16 @@ model Cafe24UploadBatch {
   errorCount       Int                     @default(0) @map("error_count")
   conflictPolicy   ConflictPolicy          @default(SKIP) @map("conflict_policy")
   status           UploadStatus            @default(PENDING)
+  uploadedBy       String?                 @map("uploaded_by") @db.Uuid
   uploadedAt       DateTime                @default(now()) @map("uploaded_at")
   validatedAt      DateTime?               @map("validated_at")
   importedAt       DateTime?               @map("imported_at")
   rows             Cafe24OrderLine[]
   errors           Cafe24UploadRowError[]
+  uploadedByUser   AppUser?                @relation("Cafe24UploadBatchUploader", fields: [uploadedBy], references: [id], onDelete: Restrict)
 
   @@index([orderStart, orderEnd])
+  @@index([uploadedBy])
   @@map("cafe24_upload_batches")
 }
 
@@ -948,6 +976,7 @@ model CoupangUploadBatch {
   errorCount       Int                     @default(0) @map("error_count")
   conflictPolicy   ConflictPolicy          @default(SKIP) @map("conflict_policy")
   status           UploadStatus            @default(PENDING)
+  uploadedBy       String?                 @map("uploaded_by") @db.Uuid
   uploadedAt       DateTime                @default(now()) @map("uploaded_at")
   validatedAt      DateTime?               @map("validated_at")
   importedAt       DateTime?               @map("imported_at")
@@ -955,8 +984,10 @@ model CoupangUploadBatch {
   adMetrics        CoupangAdMetric[]
   promotionPrices  CoupangPromotionPrice[]
   errors           CoupangUploadRowError[]
+  uploadedByUser   AppUser?                @relation("CoupangUploadBatchUploader", fields: [uploadedBy], references: [id], onDelete: Restrict)
 
   @@index([sourceType, dataStart, dataEnd])
+  @@index([uploadedBy])
   @@map("coupang_upload_batches")
 }
 
@@ -1281,7 +1312,9 @@ model DecisionRun {
   createdBy   String?       @map("created_by") @db.Uuid
   createdAt   DateTime      @default(now()) @map("created_at")
   logs        DecisionLog[]
+  createdByUser AppUser?    @relation("DecisionRunCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
+  @@index([createdBy])
   @@map("decision_runs")
 }
 
@@ -1308,10 +1341,12 @@ model DecisionLog {
   product           Product?     @relation(fields: [productId], references: [id])
   metaAdset         MetaAdset?   @relation(fields: [metaAdsetId], references: [id])
   changeLogs        ChangeLog[]
+  createdByUser     AppUser?     @relation("DecisionLogCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([periodStart, periodEnd, decision])
   @@index([productId, decisionDate])
   @@index([metaAdsetId, decisionDate])
+  @@index([createdBy])
   @@map("decision_logs")
 }
 
@@ -1334,8 +1369,10 @@ model ChangeLog {
   product           Product?     @relation(fields: [productId], references: [id])
   metaAdset         MetaAdset?   @relation(fields: [metaAdsetId], references: [id])
   relatedDecision   DecisionLog? @relation(fields: [relatedDecisionId], references: [id])
+  createdByUser     AppUser?     @relation("ChangeLogCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([actionDate, actionType])
+  @@index([createdBy])
   @@map("change_logs")
 }
 
@@ -1350,8 +1387,10 @@ model ReportExport {
   status         String     @default("CREATED")
   createdBy      String?    @map("created_by") @db.Uuid
   createdAt      DateTime   @default(now()) @map("created_at")
+  createdByUser  AppUser?   @relation("ReportExportCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@index([reportType, periodStart, periodEnd])
+  @@index([createdBy])
   @@map("report_exports")
 }
 
@@ -1361,6 +1400,8 @@ model AppSetting {
   description String?
   updatedBy   String?  @map("updated_by") @db.Uuid
   updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedByUser AppUser? @relation("AppSettingUpdater", fields: [updatedBy], references: [id], onDelete: Restrict)
 
+  @@index([updatedBy])
   @@map("app_settings")
 }

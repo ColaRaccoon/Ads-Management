@@ -446,7 +446,7 @@ export class CoupangService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async importSalesXlsx(file: Express.Multer.File | undefined, body: Record<string, unknown>) {
+  async importSalesXlsx(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
     const upload = this.assertFile(file, "Coupang sales XLSX file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
@@ -471,7 +471,7 @@ export class CoupangService {
         missingColumns: parsed.missingColumns
       },
       rowCount: parsed.rows.length
-    });
+    }, actorId);
 
     if (parsed.missingColumns.length > 0) {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.SALES, parsed.missingColumns);
@@ -619,7 +619,7 @@ export class CoupangService {
     };
   }
 
-  async importAdsXlsx(file: Express.Multer.File | undefined, body: Record<string, unknown>) {
+  async importAdsXlsx(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
     const upload = this.assertFile(file, "Coupang ads XLSX file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
@@ -644,7 +644,7 @@ export class CoupangService {
         aggregatedDuplicateCount: Math.max(parsed.rows.length - importRows.length, 0)
       },
       rowCount: parsed.rows.length
-    });
+    }, actorId);
 
     if (parsed.missingColumns.length > 0) {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.ADS, parsed.missingColumns);
@@ -804,7 +804,7 @@ export class CoupangService {
     };
   }
 
-  async importMarginCsv(file: Express.Multer.File | undefined, body: Record<string, unknown>) {
+  async importMarginCsv(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
     const upload = this.assertFile(file, "Coupang margin CSV file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
@@ -825,7 +825,7 @@ export class CoupangService {
         ignoredColumns: parsed.ignoredColumns
       },
       rowCount: parsed.rows.length
-    });
+    }, actorId);
 
     if (parsed.missingColumns.length > 0) {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.MARGIN, parsed.missingColumns);
@@ -955,7 +955,7 @@ export class CoupangService {
     };
   }
 
-  async importPriceText(file: Express.Multer.File | undefined, body: Record<string, unknown>) {
+  async importPriceText(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
     const upload = this.assertFile(file, "Coupang price text file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
@@ -972,7 +972,7 @@ export class CoupangService {
         format: "name price"
       },
       rowCount: parsed.rows.length
-    });
+    }, actorId);
     const effectiveFrom = body.effectiveFrom
       ? requiredDateFromBody(body.effectiveFrom, "effectiveFrom")
       : currentKoreaDateOnly();
@@ -1066,7 +1066,7 @@ export class CoupangService {
     };
   }
 
-  async importPromotionXlsx(file: Express.Multer.File | undefined, body: Record<string, unknown>) {
+  async importPromotionXlsx(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
     const upload = this.assertFile(file, "Coupang promotion XLSX file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
@@ -1087,7 +1087,7 @@ export class CoupangService {
         missingColumns: parsed.missingColumns
       },
       rowCount: parsed.rows.length
-    });
+    }, actorId);
 
     if (parsed.missingColumns.length > 0) {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.PROMOTION, parsed.missingColumns);
@@ -1208,16 +1208,20 @@ export class CoupangService {
     };
   }
 
-  async importBundle(files: { sales?: Express.Multer.File[]; ads?: Express.Multer.File[]; margin?: Express.Multer.File[] }, body: Record<string, unknown>) {
+  async importBundle(
+    files: { sales?: Express.Multer.File[]; ads?: Express.Multer.File[]; margin?: Express.Multer.File[] },
+    body: Record<string, unknown>,
+    actorId: string
+  ) {
     const results: Record<string, unknown> = {};
     if (files.margin?.[0]) {
-      results.margin = await this.importMarginCsv(files.margin[0], body);
+      results.margin = await this.importMarginCsv(files.margin[0], body, actorId);
     }
     if (files.sales?.[0]) {
-      results.sales = await this.importSalesXlsx(files.sales[0], body);
+      results.sales = await this.importSalesXlsx(files.sales[0], body, actorId);
     }
     if (files.ads?.[0]) {
-      results.ads = await this.importAdsXlsx(files.ads[0], body);
+      results.ads = await this.importAdsXlsx(files.ads[0], body, actorId);
     }
     return results;
   }
@@ -3133,7 +3137,7 @@ export class CoupangService {
     allowDuplicateFileHash?: boolean;
     columnSchema: Prisma.InputJsonValue;
     rowCount: number;
-  }) {
+  }, actorId: string) {
     return this.prisma.coupangUploadBatch.create({
       data: {
         sourceType: input.sourceType,
@@ -3146,7 +3150,8 @@ export class CoupangService {
         columnSchema: input.columnSchema,
         rowCount: input.rowCount,
         conflictPolicy: input.conflictPolicy,
-        status: UploadStatus.VALIDATING
+        status: UploadStatus.VALIDATING,
+        uploadedBy: actorId
       }
     });
   }

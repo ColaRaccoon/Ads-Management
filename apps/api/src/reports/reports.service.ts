@@ -17,7 +17,10 @@ export class ReportsService {
     private readonly config: ConfigService
   ) {}
 
-  async export(body: { reportType?: string; from?: string; to?: string; parameters?: Record<string, unknown> }) {
+  async export(
+    body: { reportType?: string; from?: string; to?: string; parameters?: Record<string, unknown> },
+    actorId: string
+  ) {
     const reportType = parseReportType(body.reportType);
     const range = parseDateRange(body.from, body.to);
     const report = await this.prisma.reportExport.create({
@@ -26,7 +29,8 @@ export class ReportsService {
         periodStart: range.fromDate,
         periodEnd: range.toDate,
         parameters: (body.parameters ?? {}) as Prisma.InputJsonObject,
-        status: "CREATING"
+        status: "CREATING",
+        createdBy: actorId
       }
     });
 

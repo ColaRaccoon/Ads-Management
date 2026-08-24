@@ -5,11 +5,13 @@ import { META_AD_DAILY_CSV_COLUMNS } from "../domain/meta-ad-daily-csv";
 import { MetaAdDailyImportService } from "./meta-ad-daily-import.service";
 import { snapshotAdMetricKey } from "./upload-keys";
 
+const ACTOR_ID = "11111111-1111-4111-8111-111111111111";
+
 describe("MetaAdDailyImportService response and snapshot contract", () => {
   it("returns the established ad import fields through the real parser/orchestrator path", async () => {
     const harness = dailyImportHarness();
 
-    const result = await harness.service.importMetaAdDailyCsv(file(dailyCsv()), ConflictPolicy.NEW_VERSION);
+    const result = await harness.service.importMetaAdDailyCsv(file(dailyCsv()), ConflictPolicy.NEW_VERSION, ACTOR_ID);
 
     expect(result).toMatchObject({
       batchId: "batch-1",
@@ -29,12 +31,13 @@ describe("MetaAdDailyImportService response and snapshot contract", () => {
       reportEnd: "2026-08-10",
       previewSummary: expect.objectContaining({ rowCount: 1, videoMetricSchema: "FULL" })
     });
+    expect(harness.batchCreates[0]).toMatchObject({ uploadedBy: ACTOR_ID });
   });
 
   it("includes a SKIP duplicate in the ad snapshot and still refreshes derived adsets", async () => {
     const harness = dailyImportHarness({ metricResult: { imported: false, skipped: true } });
 
-    const result = await harness.service.importMetaAdDailyCsv(file(dailyCsv()), ConflictPolicy.SKIP);
+    const result = await harness.service.importMetaAdDailyCsv(file(dailyCsv()), ConflictPolicy.SKIP, ACTOR_ID);
 
     const expectedKey = snapshotAdMetricKey({
       metricDate: new Date("2026-08-10T00:00:00.000Z"),
@@ -53,7 +56,11 @@ describe("MetaAdDailyImportService validation contract", () => {
     const harness = dailyImportHarness();
 
     const error = await rejected(
-      harness.service.importMetaAdDailyCsv(file(Buffer.from('"unknown"\n"value"', "utf8")), ConflictPolicy.NEW_VERSION)
+      harness.service.importMetaAdDailyCsv(
+        file(Buffer.from('"unknown"\n"value"', "utf8")),
+        ConflictPolicy.NEW_VERSION,
+        ACTOR_ID
+      )
     );
 
     expect(error).toBeInstanceOf(BadRequestException);
@@ -77,7 +84,7 @@ describe("MetaAdDailyImportService validation contract", () => {
     const harness = dailyImportHarness();
 
     const error = await rejected(
-      harness.service.importMetaAdDailyCsv(file(dailyCsv(2)), ConflictPolicy.NEW_VERSION)
+      harness.service.importMetaAdDailyCsv(file(dailyCsv(2)), ConflictPolicy.NEW_VERSION, ACTOR_ID)
     );
 
     expect(error).toBeInstanceOf(BadRequestException);
@@ -97,6 +104,7 @@ describe("MetaAdDailyImportService validation contract", () => {
 });
 
 function dailyImportHarness(options: { metricResult?: { imported: boolean; skipped: boolean } } = {}) {
+  const batchCreates: Record<string, unknown>[] = [];
   const batchUpdates: Record<string, unknown>[] = [];
   const rowErrorCreates: Array<Array<Record<string, unknown>>> = [];
   const processedMetricInputs: unknown[] = [];
@@ -116,7 +124,10 @@ function dailyImportHarness(options: { metricResult?: { imported: boolean; skipp
   const prisma = {
     uploadBatch: {
       findUnique: async () => null,
-      create: async ({ data }: { data: Record<string, unknown> }) => ({ ...batch, ...data, id: batch.id }),
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        batchCreates.push(data);
+        return { ...batch, ...data, id: batch.id };
+      },
       update: async ({ data }: { data: Record<string, unknown> }) => {
         batchUpdates.push(data);
         return { ...batch, ...data };
@@ -170,6 +181,7 @@ function dailyImportHarness(options: { metricResult?: { imported: boolean; skipp
   const exchangeRates = { ensureUsdKrwRates: async () => undefined };
 
   return {
+    batchCreates,
     batchUpdates,
     rowErrorCreates,
     processedMetricInputs,

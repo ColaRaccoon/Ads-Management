@@ -4,6 +4,10 @@ import { PrismaService } from "../common/prisma.service";
 import { asDateOnly } from "../common/date-range";
 import { dateValuesDiffer, previousUtcDate } from "../domain/effective-rule";
 import { formatDateOnly } from "../domain/date-number";
+import { UpdateCoupangManualPurchaseVendorFeeDto } from "./dto/update-coupang-manual-purchase-vendor-fee.dto";
+
+const COUPANG_MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY = "coupang_manual_purchase_vendor_fee_per_unit_krw";
+const COUPANG_MANUAL_PURCHASE_VENDOR_FEE_DESCRIPTION = "Default vendor fee per Coupang manual purchase unit";
 
 const PRODUCT_RULE_TRANSACTION_OPTIONS = {
   maxWait: 30_000,
@@ -375,15 +379,26 @@ export class ProductsService {
     return this.prisma.appSetting.findMany({ orderBy: { key: "asc" } });
   }
 
-  updateSetting(key: string, body: { valueJson?: unknown; description?: string }) {
+  updateSetting(key: string, body: { valueJson?: unknown; description?: string }, actorId: string) {
     if (body.valueJson === undefined) {
       throw new BadRequestException({ code: "VALUE_REQUIRED", message: "valueJson 값이 필요합니다." });
     }
     return this.prisma.appSetting.upsert({
       where: { key },
-      update: { valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description },
-      create: { key, valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description }
+      update: { valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description, updatedBy: actorId },
+      create: { key, valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description, updatedBy: actorId }
     });
+  }
+
+  updateCoupangManualPurchaseVendorFee(body: UpdateCoupangManualPurchaseVendorFeeDto, actorId: string) {
+    return this.updateSetting(
+      COUPANG_MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY,
+      {
+        valueJson: body.valueJson,
+        description: COUPANG_MANUAL_PURCHASE_VENDOR_FEE_DESCRIPTION
+      },
+      actorId
+    );
   }
 
   async assertProduct(id: string) {

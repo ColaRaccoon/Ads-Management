@@ -14,7 +14,10 @@ export class DecisionsService {
     private readonly metricsService: MetricsService
   ) {}
 
-  async run(body: { from?: string; to?: string; compareType?: string; filters?: Record<string, unknown> }) {
+  async run(
+    body: { from?: string; to?: string; compareType?: string; filters?: Record<string, unknown> },
+    actorId: string
+  ) {
     const range = parseDateRange(body.from, body.to);
     const requestedDeliveryStatus = typeof body.filters?.deliveryStatus === "string" ? body.filters.deliveryStatus : undefined;
     const deliveryStatus = parseDeliveryStatusFilter(requestedDeliveryStatus);
@@ -25,7 +28,8 @@ export class DecisionsService {
         periodStart: range.fromDate,
         periodEnd: range.toDate,
         compareType: body.compareType,
-        filters: filters as Prisma.InputJsonObject
+        filters: filters as Prisma.InputJsonObject,
+        createdBy: actorId
       }
     });
 
@@ -52,7 +56,7 @@ export class DecisionsService {
       stopCpaKrw: null,
       ...settings
     });
-    logs.push(...this.toLogs(decisionRun.id, range, "OVERALL", overallDecisions, summary.totals, {}));
+    logs.push(...this.toLogs(decisionRun.id, range, "OVERALL", overallDecisions, summary.totals, {}, actorId));
 
     for (const product of products) {
       if (!product.thresholds) {
@@ -67,7 +71,8 @@ export class DecisionsService {
           reason: "제품 원가/CPA 기준이 설정되지 않아 판정을 보류합니다.",
           recommendedAction: "Product Settings에서 원가 rule과 CPA rule을 입력하세요.",
           metricsSnapshot: product as Prisma.InputJsonObject,
-          ruleSnapshot: { ruleStatus: product.ruleStatus }
+          ruleSnapshot: { ruleStatus: product.ruleStatus },
+          createdBy: actorId
         });
         continue;
       }
@@ -88,9 +93,16 @@ export class DecisionsService {
         ...settings
       });
       logs.push(
-        ...this.toLogs(decisionRun.id, range, "PRODUCT", decisions, product.totals, product.thresholds, {
-          productId: product.productId
-        })
+        ...this.toLogs(
+          decisionRun.id,
+          range,
+          "PRODUCT",
+          decisions,
+          product.totals,
+          product.thresholds,
+          actorId,
+          { productId: product.productId }
+        )
       );
     }
 
@@ -108,7 +120,8 @@ export class DecisionsService {
           reason: "광고세트의 제품 매칭 또는 기준 설정이 없어 판정을 보류합니다.",
           recommendedAction: "Mappings 또는 Product Settings에서 기준을 보완하세요.",
           metricsSnapshot: adset as Prisma.InputJsonObject,
-          ruleSnapshot: { ruleStatus: adset.ruleStatus }
+          ruleSnapshot: { ruleStatus: adset.ruleStatus },
+          createdBy: actorId
         });
         continue;
       }
@@ -129,11 +142,20 @@ export class DecisionsService {
         ...settings
       });
       logs.push(
-        ...this.toLogs(decisionRun.id, range, "ADSET", decisions, adset.totals, adset.thresholds, {
-          metaAdsetId: adset.metaAdsetId,
-          productId: adset.product?.id,
-          stage: adset.stage
-        })
+        ...this.toLogs(
+          decisionRun.id,
+          range,
+          "ADSET",
+          decisions,
+          adset.totals,
+          adset.thresholds,
+          actorId,
+          {
+            metaAdsetId: adset.metaAdsetId,
+            productId: adset.product?.id,
+            stage: adset.stage
+          }
+        )
       );
     }
 
@@ -155,7 +177,8 @@ export class DecisionsService {
           reason: `${stage} 단계 기준 ${marginKrw > 0 ? "흑자" : "손실"}입니다.`,
           recommendedAction: "단계별 예산 배분 후보를 검토하고 변경 시 로그로 기록하세요.",
           metricsSnapshot: { stage, marginKrw, adsetCount: rows.length },
-          ruleSnapshot: {}
+          ruleSnapshot: {},
+          createdBy: actorId
         });
       }
     }
@@ -193,6 +216,7 @@ export class DecisionsService {
     decisions: ReturnType<DecisionClassifier["classify"]>,
     metricsSnapshot: unknown,
     ruleSnapshot: unknown,
+    actorId: string,
     ids: { productId?: string | null; metaAdsetId?: string | null; stage?: AdStage | null } = {}
   ): Prisma.DecisionLogCreateManyInput[] {
     return decisions.map((decision) => ({
@@ -208,7 +232,8 @@ export class DecisionsService {
       reason: decision.reason,
       recommendedAction: decision.recommendedAction,
       metricsSnapshot: metricsSnapshot as Prisma.InputJsonValue,
-      ruleSnapshot: ruleSnapshot as Prisma.InputJsonValue
+      ruleSnapshot: ruleSnapshot as Prisma.InputJsonValue,
+      createdBy: actorId
     }));
   }
 
