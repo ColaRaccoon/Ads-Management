@@ -7,6 +7,12 @@ export class ApiExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<{ originalUrl?: string; url?: string }>();
+
+    if ((request.originalUrl ?? request.url ?? "").startsWith("/api/auth/")) {
+      response.setHeader("Cache-Control", "private, no-store");
+      response.setHeader("Pragma", "no-cache");
+    }
 
     const prismaError =
       exception instanceof Prisma.PrismaClientKnownRequestError
@@ -17,9 +23,11 @@ export class ApiExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : prismaError?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
     const payload = exception instanceof HttpException ? exception.getResponse() : null;
+    const structuredPayload =
+      typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : null;
     const message =
-      typeof payload === "object" && payload !== null && "message" in payload
-        ? (payload as { message: unknown }).message
+      structuredPayload && "message" in structuredPayload
+        ? structuredPayload.message
         : prismaError
           ? prismaError.message
         : exception instanceof Error
@@ -27,9 +35,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
           : "Unexpected server error";
 
     response.status(status).json({
-      code: exception instanceof HttpException ? exception.name : prismaError?.code ?? "INTERNAL_SERVER_ERROR",
+      code:
+        exception instanceof HttpException
+          ? typeof structuredPayload?.code === "string"
+            ? structuredPayload.code
+            : exception.name
+          : prismaError?.code ?? "INTERNAL_SERVER_ERROR",
       message,
-      details: typeof payload === "object" && payload !== null ? payload : prismaError?.details ?? null
+      details:
+        exception instanceof HttpException
+          ? structuredPayload && "details" in structuredPayload
+            ? structuredPayload.details
+            : structuredPayload
+          : prismaError?.details ?? null
     });
   }
 }

@@ -145,16 +145,58 @@ enum Cafe24CouponScope {
   @@map("cafe24_coupon_scope")
 }
 
+enum AppRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+  GUEST
+
+  @@map("app_role")
+}
+
+enum InviteStatus {
+  PENDING_PROVIDER
+  INVITED
+  VERIFIED_PENDING_PASSWORD
+  ACTIVE
+  RECONCILE_REQUIRED
+  CANCELLED
+
+  @@map("invite_status")
+}
+
 model AppUser {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String?  @unique
-  name      String
-  role      String   @default("ADMIN")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id              String           @id @default(uuid()) @db.Uuid
+  email           String?          @unique
+  normalizedEmail String?          @unique @map("normalized_email")
+  name            String
+  role            AppRole          @default(GUEST)
+  inviteStatus    InviteStatus     @default(PENDING_PROVIDER) @map("invite_status")
+  authUserId      String?          @unique @map("auth_user_id") @db.Uuid
+  isActive        Boolean          @default(true) @map("is_active")
+  lastLoginAt     DateTime?        @map("last_login_at")
+  deactivatedAt   DateTime?        @map("deactivated_at")
+  authzVersion    Int              @default(1) @map("authz_version")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  authSessions    AppAuthSession[]
 
   @@map("app_users")
+}
+
+model AppAuthSession {
+  id                String    @id @default(uuid()) @db.Uuid
+  appUserId         String    @map("app_user_id") @db.Uuid
+  providerSessionId String    @unique @map("provider_session_id")
+  revokedAt         DateTime? @map("revoked_at")
+  lastSeenAt        DateTime? @map("last_seen_at")
+  refreshedAt       DateTime? @map("refreshed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  appUser           AppUser   @relation(fields: [appUserId], references: [id], onDelete: Restrict)
+
+  @@index([appUserId, revokedAt])
+  @@map("app_auth_sessions")
 }
 
 model Product {

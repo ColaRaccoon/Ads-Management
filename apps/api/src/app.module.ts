@@ -10,11 +10,13 @@ import { ReportsModule } from "./reports/reports.module";
 import { ChangeLogsModule } from "./change-logs/change-logs.module";
 import { SalesModule } from "./sales/sales.module";
 import { CoupangModule } from "./coupang/coupang.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CommonModule,
+    AuthModule,
     UploadsModule,
     ProductsModule,
     MappingsModule,
