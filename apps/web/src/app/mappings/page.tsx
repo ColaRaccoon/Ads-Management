@@ -152,16 +152,16 @@ function ManualForm({ products, onProduct, onStage }: { products: Array<Record<s
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const body = {
+    const shared = {
       adsetName: form.get("adsetName"),
       externalAdsetId: form.get("externalAdsetId"),
-      productId: form.get("productId"),
-      stage: form.get("stage"),
       effectiveFrom: form.get("effectiveFrom"),
       applyCurrentMetrics: form.get("applyCurrentMetrics") === "on"
     };
-    if (body.productId) onProduct(body);
-    if (body.stage) onStage(body);
+    const productId = form.get("productId");
+    const stage = form.get("stage");
+    if (productId) onProduct({ ...shared, productId });
+    if (stage) onStage({ ...shared, stage });
   };
   return (
     <form className="form-grid" onSubmit={submit}>

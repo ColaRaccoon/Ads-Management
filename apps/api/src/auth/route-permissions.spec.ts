@@ -12,7 +12,7 @@ import {
   REQUIRED_PERMISSIONS
 } from "./route-decorators";
 
-type ExpectedAccess = "public" | "authenticated" | "data.read" | "change_logs.create"
+type ExpectedAccess = "public" | "authenticated" | "internal-probe" | "data.read" | "change_logs.create"
   | "reports.generate" | "products.manage" | "imports.manage" | "mappings.manage"
   | "operations.run" | "settings.manage" | "users.manage" | "audit.read";
 
@@ -28,6 +28,8 @@ const expectedRoutes = new Map<string, ExpectedAccess>([
   route("PATCH", "/api/users/:id", "users.manage"),
   route("POST", "/api/users/:id/reconcile-invitation", "users.manage"),
   route("GET", "/api/security-audit", "audit.read"),
+  route("GET", "/api/health/live", "public"),
+  route("GET", "/api/health/ready", "internal-probe"),
 
   route("POST", "/api/uploads/meta-ad-daily-csv", "imports.manage"),
   route("POST", "/api/uploads/meta-adset-csv", "imports.manage"),
@@ -157,13 +159,18 @@ describe("active AppModule route permissions", () => {
     const globalGuards = (Reflect.getMetadata(MODULE_METADATA.PROVIDERS, AuthModule) ?? [])
       .filter((provider: { provide?: unknown }) => provider?.provide === APP_GUARD)
       .map((provider: { useExisting?: Type<unknown> }) => provider.useExisting?.name);
-    expect(globalGuards).toEqual(["AuthenticationGuard", "PermissionGuard"]);
+    expect(globalGuards).toEqual([
+      "AuthenticationGuard",
+      "InternalProbeGuard",
+      "PermissionGuard",
+      "HttpSecurityGuard"
+    ]);
   });
 
   it("matches the independent method and normalized-path inventory", () => {
-    expect(discoveredRoutes.controllers).toBe(17);
+    expect(discoveredRoutes.controllers).toBe(18);
     expect([...discoveredRoutes.routes.keys()].sort()).toEqual([...expectedRoutes.keys()].sort());
-    expect(discoveredRoutes.routes.size).toBe(124);
+    expect(discoveredRoutes.routes.size).toBe(126);
   });
 
   it("gives every handler exactly one explicit access contract with the expected permission", () => {
@@ -172,7 +179,7 @@ describe("active AppModule route permissions", () => {
       expect(actual, key).toBeDefined();
       const access = Reflect.getMetadata(AUTH_ROUTE_ACCESS, actual!.handler);
       const permissions = Reflect.getMetadata(REQUIRED_PERMISSIONS, actual!.handler);
-      if (expected === "public" || expected === "authenticated") {
+      if (expected === "public" || expected === "authenticated" || expected === "internal-probe") {
         expect(access, key).toBe(expected);
         expect(permissions, key).toBeUndefined();
       } else {
@@ -188,14 +195,15 @@ describe("active AppModule route permissions", () => {
       .map(([key]) => key)
       .sort();
     expect(publicRoutes).toEqual([
+      "GET /api/health/live",
       "POST /api/auth/invitations/accept",
       "POST /api/auth/login",
       "POST /api/auth/logout",
       "POST /api/auth/refresh"
     ]);
-    expect([...discoveredRoutes.routes.values()].filter(
-      ({ handler }) => Reflect.getMetadata(AUTH_ROUTE_ACCESS, handler) === "internal-probe"
-    )).toHaveLength(0);
+    expect([...discoveredRoutes.routes].filter(
+      ([, { handler }]) => Reflect.getMetadata(AUTH_ROUTE_ACCESS, handler) === "internal-probe"
+    ).map(([key]) => key)).toEqual(["GET /api/health/ready"]);
   });
 });
 
@@ -221,7 +229,7 @@ describe("role permission guard matrix for every active method/path", () => {
     );
     for (const [key, expected] of expectedRoutes) {
       const context = contextFor(discoveredRoutes.routes.get(key)!.handler, {});
-      if (expected === "public") {
+      if (expected === "public" || expected === "internal-probe") {
         await expect(authenticate.canActivate(context)).resolves.toBe(true);
       } else {
         await expect(authenticate.canActivate(context)).rejects.toMatchObject({

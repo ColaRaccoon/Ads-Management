@@ -33,6 +33,7 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "exceljs": "^4.4.0",
+    "helmet": "^8.1.0",
     "iconv-lite": "^0.7.2",
     "jose": "^5.10.0",
     "multer": "^2.0.0",

@@ -9,6 +9,7 @@ export type AuthConfig = {
   cookieSecure: boolean;
   sessionHandleSecret: string;
   csrfSecret: string;
+  csrfTtlMs: number;
   allowedOrigins: ReadonlySet<string>;
   production: boolean;
 };
@@ -25,6 +26,13 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
   const cookieSecure = parseBoolean(required(env, "AUTH_COOKIE_SECURE"), "AUTH_COOKIE_SECURE");
   const sessionHandleSecret = strongSecret(env, "AUTH_SESSION_HANDLE_SECRET");
   const csrfSecret = strongSecret(env, "AUTH_CSRF_SECRET");
+  const csrfTtlMs = parseInteger(
+    env.AUTH_CSRF_TTL_SECONDS,
+    "AUTH_CSRF_TTL_SECONDS",
+    300,
+    86_400,
+    28_800
+  ) * 1000;
   const supabasePublishableKey = required(env, "SUPABASE_PUBLISHABLE_KEY");
   const supabaseSecretKey = required(env, "SUPABASE_SECRET_KEY");
 
@@ -62,6 +70,7 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     cookieSecure,
     sessionHandleSecret,
     csrfSecret,
+    csrfTtlMs,
     allowedOrigins,
     production
   };
@@ -126,6 +135,22 @@ function parseBoolean(value: string, key: string) {
   if (value === "true") return true;
   if (value === "false") return false;
   throw new Error(`${key} must be true or false.`);
+}
+
+function parseInteger(
+  value: string | undefined,
+  key: string,
+  minimum: number,
+  maximum: number,
+  fallback: number
+) {
+  const normalized = value?.trim() || String(fallback);
+  if (!/^\d+$/.test(normalized)) throw new Error(`${key} must be an integer.`);
+  const parsed = Number(normalized);
+  if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(`${key} must be between ${minimum} and ${maximum}.`);
+  }
+  return parsed;
 }
 
 function optionalEnvironment(value: string | undefined, key: string) {

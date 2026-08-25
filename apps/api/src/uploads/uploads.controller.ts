@@ -3,6 +3,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { ConflictPolicy } from "@prisma/client";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
+import { UploadFormDto, UploadListQueryDto, UploadParamDto } from "./dto/upload-transport.dto";
 import { UploadsService } from "./uploads.service";
 
 @Controller("uploads")
@@ -14,10 +15,10 @@ export class UploadsController {
   @UseInterceptors(FileInterceptor("file"))
   uploadMetaAdDailyCsv(
     @UploadedFile() file: Express.Multer.File,
-    @Body("conflictPolicy") conflictPolicy: ConflictPolicy | undefined,
+    @Body() body: UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.uploadsService.importMetaAdDailyCsv(file, conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
+    return this.uploadsService.importMetaAdDailyCsv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
   }
 
   @Post("meta-adset-csv")
@@ -25,33 +26,33 @@ export class UploadsController {
   @UseInterceptors(FileInterceptor("file"))
   uploadMetaAdsetCsv(
     @UploadedFile() file: Express.Multer.File,
-    @Body("conflictPolicy") conflictPolicy: ConflictPolicy | undefined,
+    @Body() body: UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.uploadsService.importMetaAdsetCsv(file, conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
+    return this.uploadsService.importMetaAdsetCsv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
   }
 
   @Get()
   @RequirePermissions("data.read")
-  list(@Query("take") take?: string) {
-    return this.uploadsService.listUploads(take ? Number(take) : 50);
+  list(@Query() query: UploadListQueryDto) {
+    return this.uploadsService.listUploads(query.take ?? 50);
   }
 
   @Get(":id/preview")
   @RequirePermissions("data.read")
-  preview(@Param("id") id: string) {
-    return this.uploadsService.previewUpload(id);
+  preview(@Param() params: UploadParamDto) {
+    return this.uploadsService.previewUpload(params.id);
   }
 
   @Get(":id/errors")
   @RequirePermissions("data.read")
-  errors(@Param("id") id: string) {
-    return this.uploadsService.uploadErrors(id);
+  errors(@Param() params: UploadParamDto) {
+    return this.uploadsService.uploadErrors(params.id);
   }
 
   @Delete(":id")
   @RequirePermissions("imports.manage")
-  remove(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
-    return this.uploadsService.deleteUpload(id, actor.id);
+  remove(@Param() params: UploadParamDto, @CurrentUser() actor: AuthenticatedUser) {
+    return this.uploadsService.deleteUpload(params.id, actor.id);
   }
 }

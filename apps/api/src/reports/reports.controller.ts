@@ -3,6 +3,7 @@ import { Response } from "express";
 import { ReportsService } from "./reports.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
+import { ExportReportDto, ReportParamDto } from "./dto/report-transport.dto";
 
 @Controller("reports")
 export class ReportsController {
@@ -11,7 +12,7 @@ export class ReportsController {
   @Post("export")
   @RequirePermissions("reports.generate")
   export(
-    @Body() body: { reportType?: string; from?: string; to?: string; parameters?: Record<string, unknown> },
+    @Body() body: ExportReportDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
     return this.reportsService.export(body, actor.id);
@@ -25,8 +26,8 @@ export class ReportsController {
 
   @Get(":id/download")
   @RequirePermissions("data.read")
-  async download(@Param("id") id: string, @Res() response: Response) {
-    const download = await this.reportsService.download(id);
+  async download(@Param() params: ReportParamDto, @Res() response: Response) {
+    const download = await this.reportsService.download(params.id);
     response.download(download.absolutePath, download.filename);
   }
 }

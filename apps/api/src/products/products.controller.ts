@@ -3,6 +3,12 @@ import { ProductsService } from "./products.service";
 import { RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
 import { CurrentUser } from "../auth/route-decorators";
+import {
+  CreateProductDto,
+  ProductListQueryDto,
+  ProductParamDto,
+  UpdateProductDto
+} from "./dto/product-transport.dto";
 
 @Controller("products")
 export class ProductsController {
@@ -10,29 +16,29 @@ export class ProductsController {
 
   @Get()
   @RequirePermissions("data.read")
-  list(@Query("includeInactive") includeInactive?: string) {
-    return this.productsService.listProducts(includeInactive === "true");
+  list(@Query() query: ProductListQueryDto) {
+    return this.productsService.listProducts(query.includeInactive === "true");
   }
 
   @Post()
   @RequirePermissions("products.manage")
-  create(@Body() body: Record<string, unknown>) {
+  create(@Body() body: CreateProductDto) {
     return this.productsService.createProduct(body);
   }
 
   @Patch(":id")
   @RequirePermissions("products.manage")
   update(
-    @Param("id") id: string,
-    @Body() body: Record<string, unknown>,
+    @Param() params: ProductParamDto,
+    @Body() body: UpdateProductDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.productsService.updateProduct(id, body, actor.id);
+    return this.productsService.updateProduct(params.id, body, actor.id);
   }
 
   @Delete(":id")
   @RequirePermissions("products.manage")
-  remove(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
-    return this.productsService.deleteProduct(id, actor.id);
+  remove(@Param() params: ProductParamDto, @CurrentUser() actor: AuthenticatedUser) {
+    return this.productsService.deleteProduct(params.id, actor.id);
   }
 }

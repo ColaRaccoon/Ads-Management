@@ -239,6 +239,19 @@ model AppAuthSession {
   @@map("app_auth_sessions")
 }
 
+model SecurityRateLimitBucket {
+  keyHash     String   @map("key_hash") @db.Char(64)
+  windowStart DateTime @map("window_start") @db.Timestamptz(3)
+  windowMs    Int      @map("window_ms")
+  count       Int      @default(1)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@id([keyHash, windowStart, windowMs])
+  @@index([expiresAt])
+  @@map("security_rate_limit_buckets")
+}
+
 model SecurityAuditEvent {
   id          String                 @id @default(uuid()) @db.Uuid
   actorUserId String?                @map("actor_user_id") @db.Uuid

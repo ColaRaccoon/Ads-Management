@@ -1,6 +1,17 @@
 import { Controller, Get, Param, Query } from "@nestjs/common";
 import { MetricsService } from "./metrics.service";
 import { RequirePermissions } from "../auth/route-decorators";
+import {
+  AdMetricsQueryDto,
+  AdsetMetricsQueryDto,
+  CampaignMetricsQueryDto,
+  CompareAdsQueryDto,
+  CreativeMetricsQueryDto,
+  CreativeVideoTrendsQueryDto,
+  MetaAdsetParamDto,
+  MetaCampaignParamDto,
+  MetricDateRangeQueryDto
+} from "./dto/metrics-query.dto";
 
 @Controller("metrics")
 export class MetricsController {
@@ -8,112 +19,67 @@ export class MetricsController {
 
   @Get("campaigns")
   @RequirePermissions("data.read")
-  campaigns(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("productId") productId?: string,
-    @Query("stage") stage?: string,
-    @Query("deliveryStatus") deliveryStatus?: string
-  ) {
-    return this.metricsService.campaignMetrics({ from, to, productId, stage, deliveryStatus });
+  campaigns(@Query() query: CampaignMetricsQueryDto) {
+    return this.metricsService.campaignMetrics(query);
   }
 
   @Get("adsets")
   @RequirePermissions("data.read")
-  adsets(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("campaignId") campaignId?: string,
-    @Query("productId") productId?: string,
-    @Query("stage") stage?: string,
-    @Query("decision") decision?: string,
-    @Query("deliveryStatus") deliveryStatus?: string
-  ) {
-    return this.metricsService.adsetMetrics({ from, to, campaignId, productId, stage, decision, deliveryStatus });
+  adsets(@Query() query: AdsetMetricsQueryDto) {
+    return this.metricsService.adsetMetrics(query);
   }
 
   @Get("adsets/:metaAdsetId/ads")
   @RequirePermissions("data.read")
   adsetAds(
-    @Query("from") from: string | undefined,
-    @Query("to") to: string | undefined,
-    @Query("deliveryStatus") deliveryStatus: string | undefined,
-    @Param("metaAdsetId") metaAdsetId: string
+    @Query() query: MetricDateRangeQueryDto,
+    @Param() params: MetaAdsetParamDto
   ) {
-    return this.metricsService.adsForAdset(metaAdsetId, from, to, deliveryStatus);
+    return this.metricsService.adsForAdset(params.metaAdsetId, query.from, query.to, query.deliveryStatus);
   }
 
   @Get("campaigns/:metaCampaignId/adsets")
   @RequirePermissions("data.read")
   campaignAdsets(
-    @Query("from") from: string | undefined,
-    @Query("to") to: string | undefined,
-    @Query("deliveryStatus") deliveryStatus: string | undefined,
-    @Param("metaCampaignId") metaCampaignId: string
+    @Query() query: MetricDateRangeQueryDto,
+    @Param() params: MetaCampaignParamDto
   ) {
-    return this.metricsService.adsetsForCampaign(metaCampaignId, from, to, deliveryStatus);
+    return this.metricsService.adsetsForCampaign(params.metaCampaignId, query.from, query.to, query.deliveryStatus);
   }
 
   @Get("ads/compare-by-name")
   @RequirePermissions("data.read")
-  compareAdsByName(
-    @Query("adName") adName?: string,
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("deliveryStatus") deliveryStatus?: string
-  ) {
-    return this.metricsService.compareAdsByName(adName, from, to, deliveryStatus);
+  compareAdsByName(@Query() query: CompareAdsQueryDto) {
+    return this.metricsService.compareAdsByName(query.adName, query.from, query.to, query.deliveryStatus);
   }
 
   @Get("ads/creatives")
   @RequirePermissions("data.read")
-  creativeAds(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("campaignId") campaignId?: string,
-    @Query("adsetId") adsetId?: string,
-    @Query("productId") productId?: string,
-    @Query("stage") stage?: string,
-    @Query("deliveryStatus") deliveryStatus?: string,
-    @Query("q") q?: string
-  ) {
-    return this.metricsService.creativeMetrics({ from, to, campaignId, adsetId, productId, stage, deliveryStatus, q });
+  creativeAds(@Query() query: CreativeMetricsQueryDto) {
+    return this.metricsService.creativeMetrics(query);
   }
 
   @Get("ads/creative-video-trends")
   @RequirePermissions("data.read")
-  creativeVideoTrends(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("productId") productId?: string,
-    @Query("deliveryStatus") deliveryStatus?: string
-  ) {
-    return this.metricsService.creativeVideoTrends({ from, to, productId, deliveryStatus });
+  creativeVideoTrends(@Query() query: CreativeVideoTrendsQueryDto) {
+    return this.metricsService.creativeVideoTrends(query);
   }
 
   @Get("ads")
   @RequirePermissions("data.read")
-  ads(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("campaignId") campaignId?: string,
-    @Query("adsetId") adsetId?: string,
-    @Query("productId") productId?: string,
-    @Query("stage") stage?: string,
-    @Query("deliveryStatus") deliveryStatus?: string
-  ) {
-    return this.metricsService.adMetrics({ from, to, campaignId, adsetId, productId, stage, deliveryStatus });
+  ads(@Query() query: AdMetricsQueryDto) {
+    return this.metricsService.adMetrics(query);
   }
 
   @Get("products")
   @RequirePermissions("data.read")
-  products(@Query("from") from?: string, @Query("to") to?: string, @Query("deliveryStatus") deliveryStatus?: string) {
-    return this.metricsService.productMetrics(from, to, deliveryStatus);
+  products(@Query() query: MetricDateRangeQueryDto) {
+    return this.metricsService.productMetrics(query.from, query.to, query.deliveryStatus);
   }
 
   @Get("unmatched")
   @RequirePermissions("data.read")
-  unmatched(@Query("from") from?: string, @Query("to") to?: string, @Query("deliveryStatus") deliveryStatus?: string) {
-    return this.metricsService.unmatchedMetrics(from, to, deliveryStatus);
+  unmatched(@Query() query: MetricDateRangeQueryDto) {
+    return this.metricsService.unmatchedMetrics(query.from, query.to, query.deliveryStatus);
   }
 }

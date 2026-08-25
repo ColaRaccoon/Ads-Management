@@ -3,6 +3,7 @@ import { AuthenticatedUser } from "../auth/auth.types";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { UpdateCoupangManualPurchaseVendorFeeDto } from "./dto/update-coupang-manual-purchase-vendor-fee.dto";
 import { ProductsService } from "./products.service";
+import { SettingKeyParamDto, UpdateSettingDto } from "./dto/product-transport.dto";
 
 @Controller("settings")
 export class SettingsController {
@@ -17,11 +18,11 @@ export class SettingsController {
   @Patch(":key")
   @RequirePermissions("settings.manage")
   update(
-    @Param("key") key: string,
-    @Body() body: { valueJson?: unknown; description?: string },
+    @Param() params: SettingKeyParamDto,
+    @Body() body: UpdateSettingDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.productsService.updateSetting(key, body, actor.id);
+    return this.productsService.updateSetting(params.key, body, actor.id);
   }
 
   @Patch("products/coupang-manual-purchase-vendor-fee")

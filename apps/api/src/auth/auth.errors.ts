@@ -30,14 +30,24 @@ const messages: Record<AuthErrorCode, string> = {
   REFRESH_RACE_RETRY: "Another refresh completed first. Synchronize and retry once.",
   ORIGIN_NOT_ALLOWED: "The request origin is not allowed.",
   CSRF_INVALID: "The CSRF token is invalid.",
-  RATE_LIMITED: "Too many authentication attempts. Try again later."
+  RATE_LIMITED: "Too many requests. Try again later."
 };
 
 export class AuthHttpException extends HttpException {
-  constructor(readonly code: AuthErrorCode, status: HttpStatus) {
-    super({ code, message: messages[code], details: null }, status);
+  constructor(
+    readonly code: AuthErrorCode,
+    status: HttpStatus,
+    details: Record<string, unknown> | null = null
+  ) {
+    super({ code, message: messages[code], details }, status);
     this.name = code;
   }
+}
+
+export function rateLimitError(retryAfterSeconds: number) {
+  return new AuthHttpException("RATE_LIMITED", HttpStatus.TOO_MANY_REQUESTS, {
+    retryAfterSeconds: Math.max(1, Math.ceil(retryAfterSeconds))
+  });
 }
 
 export function authError(code: AuthErrorCode) {

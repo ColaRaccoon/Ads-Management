@@ -2,6 +2,8 @@ import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { DecisionsService } from "./decisions.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
+import { DateRangeQueryDto } from "../validation/transport-validation";
+import { RunDecisionDto } from "./dto/decision-transport.dto";
 
 @Controller("decisions")
 export class DecisionsController {
@@ -10,7 +12,7 @@ export class DecisionsController {
   @Post("run")
   @RequirePermissions("operations.run")
   run(
-    @Body() body: { from?: string; to?: string; compareType?: string; filters?: Record<string, unknown> },
+    @Body() body: RunDecisionDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
     return this.decisionsService.run(body, actor.id);
@@ -18,7 +20,7 @@ export class DecisionsController {
 
   @Get()
   @RequirePermissions("data.read")
-  list(@Query("from") from?: string, @Query("to") to?: string) {
-    return this.decisionsService.list(from, to);
+  list(@Query() query: DateRangeQueryDto) {
+    return this.decisionsService.list(query.from, query.to);
   }
 }

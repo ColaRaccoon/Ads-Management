@@ -13,14 +13,20 @@ import { CoupangModule } from "./coupang/coupang.module";
 import { AuthModule } from "./auth/auth.module";
 import { SecurityAuditModule } from "./security-audit/security-audit.module";
 import { UsersModule } from "./users/users.module";
+import { validateRuntimeEnvironment } from "./common/http-security.config";
+import { HealthModule } from "./health/health.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: process.env.NODE_ENV === "test" ? undefined : validateRuntimeEnvironment
+    }),
     CommonModule,
     SecurityAuditModule,
     AuthModule,
     UsersModule,
+    HealthModule,
     UploadsModule,
     ProductsModule,
     MappingsModule,

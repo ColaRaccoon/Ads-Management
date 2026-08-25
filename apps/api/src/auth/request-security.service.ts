@@ -1,43 +1,22 @@
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 import { Inject, Injectable } from "@nestjs/common";
 import { Request } from "express";
 import { AUTH_CONFIG, AuthConfig } from "./auth.config";
 import { AuthCookieService } from "./cookie.service";
-import { authError } from "./auth.errors";
+import { authError, rateLimitError } from "./auth.errors";
 
 export const SECURITY_RATE_LIMITER = Symbol("SECURITY_RATE_LIMITER");
 
+export type RateLimitDecision = {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  retryAfterSeconds: number;
+};
+
 export interface SecurityRateLimiter {
-  consume(key: string, limit: number, windowMs: number): Promise<boolean>;
-}
-
-@Injectable()
-export class InMemorySecurityRateLimiter implements SecurityRateLimiter {
-  private readonly attempts = new Map<string, { timestamps: number[]; maxWindowMs: number }>();
-  private static readonly MAX_KEYS = 10_000;
-
-  async consume(key: string, limit: number, windowMs: number) {
-    const now = Date.now();
-    const stored = this.attempts.get(key);
-    const maxWindowMs = Math.max(stored?.maxWindowMs ?? 0, windowMs);
-    const retained = (stored?.timestamps ?? []).filter((at) => at > now - maxWindowMs);
-    const attemptsInWindow = retained.filter((at) => at > now - windowMs).length;
-    if (attemptsInWindow >= limit) return false;
-    if (retained.length === 0) this.attempts.delete(key);
-    if (!this.attempts.has(key) && this.attempts.size >= InMemorySecurityRateLimiter.MAX_KEYS) {
-      for (const [storedKey, bucket] of this.attempts) {
-        const live = bucket.timestamps.filter((at) => at > now - bucket.maxWindowMs);
-        if (live.length === 0) this.attempts.delete(storedKey);
-        else if (live.length !== bucket.timestamps.length) {
-          this.attempts.set(storedKey, { ...bucket, timestamps: live });
-        }
-      }
-      if (this.attempts.size >= InMemorySecurityRateLimiter.MAX_KEYS) return false;
-    }
-    retained.push(now);
-    this.attempts.set(key, { timestamps: retained, maxWindowMs });
-    return true;
-  }
+  consume(key: string, limit: number, windowMs: number): Promise<RateLimitDecision>;
 }
 
 @Injectable()
@@ -85,6 +64,31 @@ export class AuthRequestSecurityService {
     if (!this.cookies.verifyCsrfToken(csrfCookie, csrfHeader)) throw authError("CSRF_INVALID");
   }
 
+  async assertGeneralRead(request: Request) {
+    await this.consumeKey(`http:read:${clientAddress(request)}`, 600, 60_000);
+  }
+
+  async assertGeneralMutation(request: Request, expensive: boolean) {
+    this.assertMutationOrigin(request);
+    const principal = (request as Request & {
+      authenticatedUser?: { id?: string };
+    }).authenticatedUser;
+    const identity = principal?.id
+      ? createHash("sha256").update(principal.id).digest("base64url")
+      : "anonymous";
+    const scope = expensive ? "expensive" : "mutation";
+    const limit = expensive ? 15 : 120;
+    const windowMs = expensive ? 5 * 60_000 : 60_000;
+    await this.consumeKey(
+      `http:${scope}:${clientAddress(request)}:${identity}`,
+      limit,
+      windowMs
+    );
+    const csrfCookie = parseCookie(request.headers.cookie, this.cookies.csrfCookieName);
+    const csrfHeader = request.get("x-csrf-token");
+    if (!this.cookies.verifyCsrfToken(csrfCookie, csrfHeader)) throw authError("CSRF_INVALID");
+  }
+
   assertMutationOrigin(request: Request) {
     this.assertOrigin(request);
   }
@@ -102,14 +106,29 @@ export class AuthRequestSecurityService {
   }
 
   private async consumeKey(key: string, limit: number, windowMs: number) {
-    if (!(await this.limiter.consume(key, limit, windowMs))) {
-      throw authError("RATE_LIMITED");
+    const decision = await this.limiter.consume(key, limit, windowMs);
+    if (!decision.allowed) {
+      throw rateLimitError(decision.retryAfterSeconds);
     }
   }
 }
 
-function clientAddress(request: Request) {
-  return request.ip || request.socket.remoteAddress || "unknown";
+export function clientAddress(request: Request) {
+  const address = request.ip || request.socket.remoteAddress || "unknown";
+  return normalizeClientAddress(address);
+}
+
+export function normalizeClientAddress(value: string) {
+  const address = value.trim();
+  const family = isIP(address);
+  if (family === 4) {
+    return address.split(".").map((octet) => String(Number(octet))).join(".");
+  }
+  if (family === 6) {
+    const hostname = new URL(`http://[${address}]/`).hostname;
+    return hostname.slice(1, -1).toLowerCase();
+  }
+  return "unknown";
 }
 
 function parseCookie(header: string | undefined, name: string) {

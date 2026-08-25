@@ -1,49 +1,53 @@
-import { Transform } from "class-transformer";
 import { SecurityAuditActorType, SecurityAuditResult } from "@prisma/client";
-import { IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from "class-validator";
+import { IsEnum, IsString, Matches, MaxLength } from "class-validator";
+import {
+  IsDateOnly,
+  IsOnOrAfter,
+  IsOptionalUndefined,
+  IsUuidV4,
+  StrictPositiveInteger
+} from "../../validation/transport-validation";
 
 export class ListSecurityAuditDto {
-  @IsOptional()
-  @Transform(({ value }) => Number(value))
-  @IsInt()
-  @Min(1)
-  @Max(100)
+  @IsOptionalUndefined()
+  @StrictPositiveInteger(100)
   limit = 50;
 
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsString()
   @MaxLength(512)
   cursor?: string;
 
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsString()
   @MaxLength(96)
   @Matches(/^[A-Z][A-Z0-9_]*$/)
   action?: string;
 
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsString()
   @MaxLength(64)
   @Matches(/^[A-Z][A-Z0-9_]*$/)
   targetType?: string;
 
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsEnum(SecurityAuditResult)
   result?: SecurityAuditResult;
 
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsEnum(SecurityAuditActorType)
   actorType?: SecurityAuditActorType;
 
-  @IsOptional()
-  @IsUUID()
+  @IsOptionalUndefined()
+  @IsUuidV4()
   actorUserId?: string;
 
-  @IsOptional()
-  @IsDateString({ strict: true })
+  @IsOptionalUndefined()
+  @IsDateOnly()
   from?: string;
 
-  @IsOptional()
-  @IsDateString({ strict: true })
+  @IsOptionalUndefined()
+  @IsDateOnly()
+  @IsOnOrAfter("from")
   to?: string;
 }

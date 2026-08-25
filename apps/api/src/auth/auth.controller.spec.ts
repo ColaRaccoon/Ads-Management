@@ -140,7 +140,8 @@ describe("AuthController", () => {
     expect(response.json).toHaveBeenCalledWith({
       code: "CSRF_INVALID",
       message: "The CSRF token is invalid.",
-      details: null
+      details: null,
+      requestId: expect.stringMatching(/^[0-9a-f-]{36}$/)
     });
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
   });

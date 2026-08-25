@@ -1,11 +1,42 @@
 import { AppRole } from "@prisma/client";
-import { ValidationPipe } from "@nestjs/common";
+import { INestApplication, Module, ValidationPipe } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
 import { describe, expect, it, vi } from "vitest";
+import { AuthRequestSecurityService } from "../auth/request-security.service";
+import { DangerousJsonKeysPipe } from "../validation/dangerous-json-keys.pipe";
 import { InviteUserDto } from "./dto/invite-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 import { UsersController } from "./users.controller";
+import { UsersService } from "./users.service";
 
 const actor = { id: "11111111-1111-4111-8111-111111111111" } as never;
 const request = {} as never;
+const httpUsers = {
+  list: vi.fn(),
+  invite: vi.fn(),
+  update: vi.fn(),
+  reconcile: vi.fn()
+};
+const httpSecurity = { assertCsrfMutation: vi.fn() };
+
+// Vitest's fast TS transform does not emit decorator type metadata, so supply the
+// same runtime metadata that the production TypeScript build emits for this HTTP test.
+Reflect.defineMetadata("design:paramtypes", [UsersService, AuthRequestSecurityService], UsersController);
+Reflect.defineMetadata(
+  "design:paramtypes",
+  [String, UpdateUserDto, Object, Object, Object],
+  UsersController.prototype,
+  "update"
+);
+
+@Module({
+  controllers: [UsersController],
+  providers: [
+    { provide: UsersService, useValue: httpUsers },
+    { provide: AuthRequestSecurityService, useValue: httpSecurity }
+  ]
+})
+class StrictUsersTestModule {}
 
 describe("UsersController", () => {
   it("checks exact-origin CSRF before every management mutation", async () => {
@@ -53,4 +84,47 @@ describe("UsersController", () => {
       }, { type: "body", metatype: InviteUserDto })).rejects.toMatchObject({ status: 400 });
     }
   );
+
+  it("rejects null UpdateUserDto fields in the real global HTTP pipe before controller services run", async () => {
+    httpUsers.update.mockClear();
+    httpSecurity.assertCsrfMutation.mockClear();
+    let app: INestApplication | undefined;
+    try {
+      app = await NestFactory.create(StrictUsersTestModule, { logger: false });
+      app.setGlobalPrefix("api");
+      app.use((incomingRequest: { authenticatedUser?: typeof actor }, _response: unknown, next: () => void) => {
+        incomingRequest.authenticatedUser = actor;
+        next();
+      });
+      app.useGlobalPipes(
+        new DangerousJsonKeysPipe(),
+        new ValidationPipe({
+          transform: true,
+          whitelist: true,
+          forbidNonWhitelisted: true,
+          forbidUnknownValues: true,
+          transformOptions: { enableImplicitConversion: false },
+          validationError: { target: false, value: false }
+        })
+      );
+      await app.listen(0, "127.0.0.1");
+      const address = app.getHttpServer().address() as { port: number };
+      for (const field of ["name", "role", "isActive"] as const) {
+        const response = await fetch(
+          `http://127.0.0.1:${address.port}/api/users/22222222-2222-4222-8222-222222222222`,
+          {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ [field]: null })
+          }
+        );
+        const responseBody = await response.text();
+        expect(response.status, `${field}: ${responseBody}`).toBe(400);
+      }
+      expect(httpSecurity.assertCsrfMutation).not.toHaveBeenCalled();
+      expect(httpUsers.update).not.toHaveBeenCalled();
+    } finally {
+      await app?.close();
+    }
+  });
 });

@@ -1,20 +1,21 @@
 import { AppRole } from "@prisma/client";
 import { Transform } from "class-transformer";
-import { IsBoolean, IsEnum, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsBoolean, IsEnum, IsString, MaxLength, MinLength } from "class-validator";
+import { IsOptionalUndefined } from "../../validation/transport-validation";
 
 export class UpdateUserDto {
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsString()
   @Transform(({ value }) => typeof value === "string" ? value.trim() : value)
   @MinLength(1)
   @MaxLength(120)
   name?: string;
 
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsEnum(AppRole)
   role?: AppRole;
 
-  @IsOptional()
+  @IsOptionalUndefined()
   @IsBoolean()
   isActive?: boolean;
 }

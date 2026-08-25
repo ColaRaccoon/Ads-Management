@@ -55,11 +55,13 @@ export class AuthCookieService {
   }
 
   issueCsrfCookie(response: Response) {
+    const issuedAt = Math.floor(Date.now() / 1000).toString(10);
     const nonce = randomBytes(32).toString("base64url");
-    const token = `${nonce}.${this.mac("csrf", nonce, this.config.csrfSecret)}`;
+    const value = `${issuedAt}.${nonce}`;
+    const token = `${value}.${this.mac("csrf", value, this.config.csrfSecret)}`;
     response.cookie(this.csrfCookieName, token, {
       ...this.baseOptions(false),
-      maxAge: SESSION_TTL_MS
+      maxAge: this.config.csrfTtlMs
     });
     return token;
   }
@@ -81,9 +83,14 @@ export class AuthCookieService {
 
   verifyCsrfToken(cookie: string | undefined, header: string | undefined) {
     if (!cookie || !header || !safeEqual(cookie, header) || cookie.length > 256) return false;
-    const [nonce, signature, extra] = cookie.split(".");
-    if (!nonce || !signature || extra) return false;
-    const expected = this.mac("csrf", nonce, this.config.csrfSecret);
+    const [issuedAtText, nonce, signature, extra] = cookie.split(".");
+    if (!issuedAtText || !nonce || !signature || extra || !/^\d{10}$/.test(issuedAtText)) return false;
+    const issuedAtMs = Number(issuedAtText) * 1000;
+    const ageMs = Date.now() - issuedAtMs;
+    if (!Number.isSafeInteger(issuedAtMs) || ageMs < -30_000 || ageMs > this.config.csrfTtlMs) {
+      return false;
+    }
+    const expected = this.mac("csrf", `${issuedAtText}.${nonce}`, this.config.csrfSecret);
     return safeEqual(signature, expected);
   }
 

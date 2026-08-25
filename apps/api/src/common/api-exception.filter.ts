@@ -1,13 +1,18 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from "@nestjs/common";
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { Response } from "express";
+import { requestIdOf, RequestWithContext, safeLogText } from "./request-context";
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(ApiExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<{ originalUrl?: string; url?: string }>();
+    const request = ctx.getRequest<RequestWithContext>();
+    const requestId = requestIdOf(request);
+    response.setHeader("X-Request-Id", requestId);
 
     if ((request.originalUrl ?? request.url ?? "").startsWith("/api/auth/")) {
       response.setHeader("Cache-Control", "private, no-store");
@@ -18,36 +23,96 @@ export class ApiExceptionFilter implements ExceptionFilter {
       exception instanceof Prisma.PrismaClientKnownRequestError
         ? toPrismaHttpError(exception)
         : null;
+    const parserError = toBodyParserHttpError(exception);
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
-        : prismaError?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+        : parserError?.status ?? prismaError?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
     const payload = exception instanceof HttpException ? exception.getResponse() : null;
     const structuredPayload =
       typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : null;
-    const message =
-      structuredPayload && "message" in structuredPayload
-        ? structuredPayload.message
-        : prismaError
-          ? prismaError.message
-        : "Unexpected server error";
+    const safeHttp = exception instanceof HttpException
+      ? safeHttpPayload(status, structuredPayload)
+      : null;
+    const retryAfterSeconds = safeHttp?.code === "RATE_LIMITED"
+      ? safeRetryAfter(structuredPayload?.details)
+      : null;
+    if (retryAfterSeconds !== null) {
+      response.setHeader("Retry-After", String(retryAfterSeconds));
+    }
+
+    if (!safeHttp || status >= 500) {
+      this.logger.error(JSON.stringify({
+        requestId,
+        status,
+        code: safeHttp?.code ?? parserError?.code ?? prismaError?.code ?? "INTERNAL_SERVER_ERROR",
+        errorType: safeLogText(
+          exception instanceof Error ? exception.constructor.name : typeof exception,
+          80
+        )
+      }));
+    }
 
     response.status(status).json({
-      code:
-        exception instanceof HttpException
-          ? typeof structuredPayload?.code === "string"
-            ? structuredPayload.code
-            : exception.name
-          : prismaError?.code ?? "INTERNAL_SERVER_ERROR",
-      message,
-      details:
-        exception instanceof HttpException
-          ? structuredPayload && "details" in structuredPayload
-            ? structuredPayload.details
-            : structuredPayload
-          : prismaError?.details ?? null
+      code: safeHttp?.code ?? parserError?.code ?? prismaError?.code ?? "INTERNAL_SERVER_ERROR",
+      message: safeHttp?.message ?? parserError?.message ?? prismaError?.message ?? "Unexpected server error",
+      details: retryAfterSeconds === null ? null : { retryAfterSeconds },
+      requestId
     });
   }
+}
+
+function toBodyParserHttpError(error: unknown) {
+  if (!error || typeof error !== "object") return null;
+  const candidate = error as { type?: unknown; status?: unknown; statusCode?: unknown };
+  if (
+    candidate.type === "entity.too.large" &&
+    (candidate.status === HttpStatus.PAYLOAD_TOO_LARGE ||
+      candidate.statusCode === HttpStatus.PAYLOAD_TOO_LARGE)
+  ) {
+    return {
+      status: HttpStatus.PAYLOAD_TOO_LARGE,
+      code: "PAYLOAD_TOO_LARGE",
+      message: "The request payload is too large."
+    };
+  }
+  return null;
+}
+
+function safeHttpPayload(status: number, payload: Record<string, unknown> | null) {
+  const explicitCode = typeof payload?.code === "string" && /^[A-Z][A-Z0-9_]{0,99}$/.test(payload.code)
+    ? payload.code
+    : null;
+  if (!explicitCode) {
+    const fallback = status === 400
+      ? { code: "VALIDATION_FAILED", message: "Request validation failed." }
+      : status === 413
+        ? { code: "PAYLOAD_TOO_LARGE", message: "The request payload is too large." }
+        : { code: `HTTP_${status}`, message: "The request could not be completed." };
+    return {
+      code: fallback.code,
+      message: fallback.message
+    };
+  }
+  const message = safePublicMessage(payload?.message);
+  return {
+    code: explicitCode,
+    message: message ?? "The request could not be completed."
+  };
+}
+
+function safePublicMessage(value: unknown) {
+  if (typeof value !== "string") return null;
+  const normalized = value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+  return normalized.length > 0 && normalized.length <= 500 ? normalized : null;
+}
+
+function safeRetryAfter(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const seconds = (value as Record<string, unknown>).retryAfterSeconds;
+  return Number.isInteger(seconds) && Number(seconds) >= 1 && Number(seconds) <= 86_400
+    ? Number(seconds)
+    : null;
 }
 
 function toPrismaHttpError(error: Prisma.PrismaClientKnownRequestError) {

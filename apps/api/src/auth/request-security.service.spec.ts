@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { AuthConfig } from "./auth.config";
 import {
-  AuthRequestSecurityService,
-  InMemorySecurityRateLimiter
+  AuthRequestSecurityService
 } from "./request-security.service";
 
 const config = {
@@ -25,7 +24,7 @@ describe("AuthRequestSecurityService", () => {
   });
 
   it("uses an IP-independent account bucket as well as IP buckets", async () => {
-    const consume = vi.fn().mockResolvedValue(true);
+    const consume = vi.fn().mockResolvedValue(allowed());
     const service = makeService(consume);
     await service.assertLoginRequest(request("http://localhost:3200", "10.0.0.1"), "user@example.com");
     await service.assertLoginRequest(request("http://localhost:3200", "10.0.0.2"), "user@example.com");
@@ -37,7 +36,7 @@ describe("AuthRequestSecurityService", () => {
   });
 
   it("rate-limits invalid CSRF attempts before verifying the token", async () => {
-    const consume = vi.fn().mockResolvedValue(true);
+    const consume = vi.fn().mockResolvedValue(allowed());
     const verifyCsrfToken = vi.fn().mockReturnValue(false);
     const service = makeService(consume, verifyCsrfToken);
     await expect(service.assertSessionCsrfAndRate(
@@ -49,7 +48,7 @@ describe("AuthRequestSecurityService", () => {
   });
 
   it("requires exact same-site invitation acceptance and never uses the raw link hash as a limiter key", async () => {
-    const consume = vi.fn().mockResolvedValue(true);
+    const consume = vi.fn().mockResolvedValue(allowed());
     const service = makeService(consume);
     const tokenHash = "sensitive-link-hash-value";
     await expect(service.assertInvitationAccept(
@@ -67,34 +66,26 @@ describe("AuthRequestSecurityService", () => {
     expect(JSON.stringify(consume.mock.calls)).not.toContain(tokenHash);
   });
 
-  it("fails closed when the development adapter reaches its bounded key capacity", async () => {
-    const limiter = new InMemorySecurityRateLimiter();
-    for (let index = 0; index < 10_000; index += 1) {
-      await expect(limiter.consume(`key-${index}`, 2, 60_000)).resolves.toBe(true);
-    }
-    await expect(limiter.consume("key-over-capacity", 2, 60_000)).resolves.toBe(false);
-  });
-
-  it("preserves a live long-window bucket while sweeping expired short-window buckets", async () => {
-    let now = 1_000_000;
-    const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
-    try {
-      const limiter = new InMemorySecurityRateLimiter();
-      await expect(limiter.consume("long-window", 1, 5 * 60_000)).resolves.toBe(true);
-      for (let index = 0; index < 9_999; index += 1) {
-        await limiter.consume(`short-${index}`, 2, 60_000);
+  it("returns a stable 429 decision with bounded Retry-After metadata", async () => {
+    const service = makeService(vi.fn().mockResolvedValue({
+      allowed: false,
+      limit: 10,
+      remaining: 0,
+      retryAfterSeconds: 17
+    }));
+    await expect(service.assertGeneralRead(request(undefined))).rejects.toMatchObject({
+      code: "RATE_LIMITED",
+      status: 429,
+      response: {
+        code: "RATE_LIMITED",
+        details: { retryAfterSeconds: 17 }
       }
-      now += 2 * 60_000;
-      await expect(limiter.consume("new-short", 2, 60_000)).resolves.toBe(true);
-      await expect(limiter.consume("long-window", 1, 5 * 60_000)).resolves.toBe(false);
-    } finally {
-      clock.mockRestore();
-    }
+    });
   });
 });
 
 function makeService(
-  consume = vi.fn().mockResolvedValue(true),
+  consume = vi.fn().mockResolvedValue(allowed()),
   verifyCsrfToken = vi.fn().mockReturnValue(true)
 ) {
   return new AuthRequestSecurityService(
@@ -102,6 +93,10 @@ function makeService(
     { csrfCookieName: "meta_csrf", verifyCsrfToken } as never,
     { consume } as never
   );
+}
+
+function allowed() {
+  return { allowed: true, limit: 100, remaining: 99, retryAfterSeconds: 60 };
 }
 
 function request(origin: string | undefined, ip = "10.0.0.1", fetchSite?: string) {

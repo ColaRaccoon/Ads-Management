@@ -4,6 +4,15 @@ import { ConflictPolicy } from "@prisma/client";
 import { Cafe24UploadsService } from "./cafe24-uploads.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
+import {
+  Cafe24ParamDto,
+  Cafe24RematchQueryDto,
+  Cafe24RuleDto,
+  Cafe24RulesQueryDto,
+  Cafe24UploadFormDto,
+  Cafe24UploadListQueryDto,
+  Cafe24UploadPreviewQueryDto
+} from "./dto/sales-transport.dto";
 
 @Controller("sales/cafe24")
 export class Cafe24UploadsController {
@@ -14,72 +23,77 @@ export class Cafe24UploadsController {
   @UseInterceptors(FileInterceptor("file"))
   uploadCafe24Csv(
     @UploadedFile() file: Express.Multer.File,
-    @Body("conflictPolicy") conflictPolicy: ConflictPolicy | undefined,
+    @Body() body: Cafe24UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.cafe24UploadsService.importCafe24Csv(file, conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
+    return this.cafe24UploadsService.importCafe24Csv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
   }
 
   @Get("uploads")
   @RequirePermissions("data.read")
-  listUploads(@Query("take") take?: string) {
-    return this.cafe24UploadsService.listUploads(take ? Number(take) : 50);
+  listUploads(@Query() query: Cafe24UploadListQueryDto) {
+    return this.cafe24UploadsService.listUploads(query.take ?? 50);
   }
 
   @Get("uploads/:id/preview")
   @RequirePermissions("data.read")
-  previewUpload(@Param("id") id: string, @Query("take") take?: string) {
-    return this.cafe24UploadsService.previewUpload(id, take ? Number(take) : 50);
+  previewUpload(@Param() params: Cafe24ParamDto, @Query() query: Cafe24UploadPreviewQueryDto) {
+    return this.cafe24UploadsService.previewUpload(params.id, query.take ?? 50);
   }
 
   @Get("uploads/:id/errors")
   @RequirePermissions("data.read")
-  uploadErrors(@Param("id") id: string) {
-    return this.cafe24UploadsService.uploadErrors(id);
+  uploadErrors(@Param() params: Cafe24ParamDto) {
+    return this.cafe24UploadsService.uploadErrors(params.id);
   }
 
   @Delete("uploads/:id")
   @RequirePermissions("imports.manage")
-  deleteUpload(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
-    return this.cafe24UploadsService.deleteUpload(id, actor.id);
+  deleteUpload(@Param() params: Cafe24ParamDto, @CurrentUser() actor: AuthenticatedUser) {
+    return this.cafe24UploadsService.deleteUpload(params.id, actor.id);
   }
 
   @Post("rematch")
   @RequirePermissions("mappings.manage")
   rematch(
     @CurrentUser() actor: AuthenticatedUser,
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("take") take?: string
+    @Query() query: Cafe24RematchQueryDto
   ) {
-    return this.cafe24UploadsService.rematchCafe24Lines({ from, to, take }, actor.id);
+    return this.cafe24UploadsService.rematchCafe24Lines({
+      from: query.from,
+      to: query.to,
+      take: query.take === undefined ? undefined : String(query.take)
+    }, actor.id);
   }
 
   @Get("rules")
   @RequirePermissions("data.read")
-  listRules(@Query("productId") productId?: string, @Query("includeInactive") includeInactive?: string) {
-    return this.cafe24UploadsService.listRules({ productId, includeInactive: includeInactive === "true" });
+  listRules(@Query() query: Cafe24RulesQueryDto) {
+    return this.cafe24UploadsService.listRules({
+      productId: query.productId,
+      includeInactive: query.includeInactive === "true"
+    });
   }
 
   @Post("rules")
   @RequirePermissions("mappings.manage")
-  createRule(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+  createRule(@Body() body: Cafe24RuleDto, @CurrentUser() actor: AuthenticatedUser) {
     return this.cafe24UploadsService.createRule(body, actor.id);
   }
 
   @Patch("rules/:id")
   @RequirePermissions("mappings.manage")
   updateRule(
-    @Param("id") id: string,
-    @Body() body: Record<string, unknown>,
+    @Param() params: Cafe24ParamDto,
+    @Body() body: Cafe24RuleDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.cafe24UploadsService.updateRule(id, body, actor.id);
+    return this.cafe24UploadsService.updateRule(params.id, body, actor.id);
   }
 
   @Delete("rules/:id")
   @RequirePermissions("mappings.manage")
-  deleteRule(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
-    return this.cafe24UploadsService.deleteRule(id, actor.id);
+  deleteRule(@Param() params: Cafe24ParamDto, @CurrentUser() actor: AuthenticatedUser) {
+    return this.cafe24UploadsService.deleteRule(params.id, actor.id);
   }
 }

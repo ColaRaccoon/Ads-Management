@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { MetricsService } from "./metrics.service";
 import { RequirePermissions } from "../auth/route-decorators";
+import { DashboardSummaryQueryDto, DashboardTrendsQueryDto } from "./dto/metrics-query.dto";
 
 @Controller("dashboard")
 export class DashboardController {
@@ -8,23 +9,13 @@ export class DashboardController {
 
   @Get("summary")
   @RequirePermissions("data.read")
-  summary(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("compare") compare?: string,
-    @Query("deliveryStatus") deliveryStatus?: string
-  ) {
-    return this.metricsService.dashboardSummary(from, to, compare, deliveryStatus);
+  summary(@Query() query: DashboardSummaryQueryDto) {
+    return this.metricsService.dashboardSummary(query.from, query.to, query.compare, query.deliveryStatus);
   }
 
   @Get("trends")
   @RequirePermissions("data.read")
-  trends(
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("groupBy") groupBy?: string,
-    @Query("deliveryStatus") deliveryStatus?: string
-  ) {
-    return this.metricsService.dashboardTrends(from, to, groupBy ?? "date", deliveryStatus);
+  trends(@Query() query: DashboardTrendsQueryDto) {
+    return this.metricsService.dashboardTrends(query.from, query.to, query.groupBy ?? "date", query.deliveryStatus);
   }
 }

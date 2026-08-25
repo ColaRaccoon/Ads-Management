@@ -10,11 +10,13 @@ import { AuthCookieService } from "./cookie.service";
 import { IDENTITY_PROVIDER } from "./identity-provider";
 import {
   AuthRequestSecurityService,
-  InMemorySecurityRateLimiter,
   SECURITY_RATE_LIMITER
 } from "./request-security.service";
 import { SupabaseAuthAdapter } from "./supabase-auth.adapter";
 import { SupabaseJwtVerifier } from "./supabase-jwt.verifier";
+import { PostgresSecurityRateLimiter } from "./postgres-security-rate-limiter";
+import { InternalProbeGuard } from "./internal-probe.guard";
+import { HttpSecurityGuard } from "./http-security.guard";
 
 @Module({
   imports: [CommonModule],
@@ -23,16 +25,20 @@ import { SupabaseJwtVerifier } from "./supabase-jwt.verifier";
     { provide: AUTH_CONFIG, useFactory: () => loadAuthConfig() },
     SupabaseAuthAdapter,
     { provide: IDENTITY_PROVIDER, useExisting: SupabaseAuthAdapter },
-    InMemorySecurityRateLimiter,
-    { provide: SECURITY_RATE_LIMITER, useExisting: InMemorySecurityRateLimiter },
+    PostgresSecurityRateLimiter,
+    { provide: SECURITY_RATE_LIMITER, useExisting: PostgresSecurityRateLimiter },
     SupabaseJwtVerifier,
     AuthCookieService,
     AuthRequestSecurityService,
     AuthService,
     AuthenticationGuard,
+    InternalProbeGuard,
     PermissionGuard,
+    HttpSecurityGuard,
     { provide: APP_GUARD, useExisting: AuthenticationGuard },
-    { provide: APP_GUARD, useExisting: PermissionGuard }
+    { provide: APP_GUARD, useExisting: InternalProbeGuard },
+    { provide: APP_GUARD, useExisting: PermissionGuard },
+    { provide: APP_GUARD, useExisting: HttpSecurityGuard }
   ],
   exports: [
     AUTH_CONFIG,
@@ -41,6 +47,8 @@ import { SupabaseJwtVerifier } from "./supabase-jwt.verifier";
     AuthService,
     AuthRequestSecurityService,
     AuthenticationGuard,
+    InternalProbeGuard,
+    HttpSecurityGuard,
     PermissionGuard
   ]
 })

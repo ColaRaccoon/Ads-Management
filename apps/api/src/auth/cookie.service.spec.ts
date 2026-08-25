@@ -53,6 +53,20 @@ describe("AuthCookieService", () => {
     expect(cookies.verifyCsrfToken(undefined, undefined)).toBe(false);
   });
 
+  it("rejects an otherwise valid signed CSRF token after its server-enforced expiry", () => {
+    let now = Date.parse("2026-08-25T00:00:00.000Z");
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+    try {
+      const cookies = new AuthCookieService(config(false));
+      const token = cookies.issueCsrfCookie({ cookie: vi.fn() } as never);
+      expect(cookies.verifyCsrfToken(token, token)).toBe(true);
+      now += 8 * 60 * 60 * 1000 + 1_000;
+      expect(cookies.verifyCsrfToken(token, token)).toBe(false);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
   it("can preserve only a rotated refresh token during verifier recovery", () => {
     const cookies = new AuthCookieService(config(true));
     const response = { cookie: vi.fn() };
@@ -71,6 +85,7 @@ function config(production: boolean) {
     production,
     cookieSecure: production,
     sessionHandleSecret: "s".repeat(48),
-    csrfSecret: "c".repeat(48)
+    csrfSecret: "c".repeat(48),
+    csrfTtlMs: 8 * 60 * 60 * 1000
   } as AuthConfig;
 }

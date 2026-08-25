@@ -11,6 +11,7 @@ import {
   REQUIRED_PERMISSIONS
 } from "./route-decorators";
 import type { Permission } from "./role-permissions";
+import { INTERNAL_PROBE_AUTHORIZED, InternalProbeRequest } from "./internal-probe.guard";
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -21,10 +22,11 @@ export class PermissionGuard implements CanActivate {
     const access = this.reflector.get<string>(AUTH_ROUTE_ACCESS, handler);
 
     if (access === PUBLIC_ROUTE) return true;
-    // Internal probes require their dedicated network/header guard. Until an
-    // active probe is introduced, fail closed instead of treating this marker
-    // as a general authentication bypass.
-    if (access === INTERNAL_PROBE_ROUTE) throw authError("PERMISSION_DENIED");
+    if (access === INTERNAL_PROBE_ROUTE) {
+      const request = context.switchToHttp().getRequest<InternalProbeRequest>();
+      if (request[INTERNAL_PROBE_AUTHORIZED]) return true;
+      throw authError("PERMISSION_DENIED");
+    }
 
     const principal = context.switchToHttp().getRequest<AuthenticatedRequest>().authenticatedUser;
     if (!principal) throw authError("AUTHENTICATION_REQUIRED");
