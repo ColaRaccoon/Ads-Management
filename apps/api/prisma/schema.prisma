@@ -165,6 +165,24 @@ enum InviteStatus {
   @@map("invite_status")
 }
 
+enum SecurityAuditActorType {
+  USER
+  SYSTEM
+  ANONYMOUS
+
+  @@map("security_audit_actor_type")
+}
+
+enum SecurityAuditResult {
+  REQUESTED
+  PROVIDER_SUCCEEDED
+  SUCCESS
+  FAILURE
+  PARTIAL
+
+  @@map("security_audit_result")
+}
+
 model AppUser {
   id              String           @id @default(uuid()) @db.Uuid
   email           String?          @unique
@@ -177,6 +195,10 @@ model AppUser {
   lastLoginAt     DateTime?        @map("last_login_at")
   deactivatedAt   DateTime?        @map("deactivated_at")
   authzVersion    Int              @default(1) @map("authz_version")
+  invitedAt       DateTime?        @map("invited_at")
+  invitedBy       String?          @map("invited_by") @db.Uuid
+  invitationRequestId String?      @unique @map("invitation_request_id") @db.Uuid
+  invitationErrorCode String?      @map("invitation_error_code") @db.VarChar(64)
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   authSessions    AppAuthSession[]
@@ -193,7 +215,12 @@ model AppUser {
   changeLogs           ChangeLog[]         @relation("ChangeLogCreator")
   reportExports        ReportExport[]      @relation("ReportExportCreator")
   updatedSettings      AppSetting[]         @relation("AppSettingUpdater")
+  invitedByUser        AppUser?             @relation("AppUserInviter", fields: [invitedBy], references: [id], onDelete: Restrict)
+  invitedUsers         AppUser[]            @relation("AppUserInviter")
+  securityAuditEvents  SecurityAuditEvent[] @relation("SecurityAuditActor")
 
+  @@index([invitedBy])
+  @@index([inviteStatus, createdAt])
   @@map("app_users")
 }
 
@@ -210,6 +237,27 @@ model AppAuthSession {
 
   @@index([appUserId, revokedAt])
   @@map("app_auth_sessions")
+}
+
+model SecurityAuditEvent {
+  id          String                 @id @default(uuid()) @db.Uuid
+  actorUserId String?                @map("actor_user_id") @db.Uuid
+  actorType   SecurityAuditActorType @map("actor_type")
+  action      String                 @db.VarChar(96)
+  targetType  String                 @map("target_type") @db.VarChar(64)
+  targetId    String?                @map("target_id") @db.VarChar(128)
+  result      SecurityAuditResult
+  beforeJson  Json?                  @map("before_json")
+  afterJson   Json?                  @map("after_json")
+  requestId   String?                @map("request_id") @db.Uuid
+  createdAt   DateTime               @default(now()) @map("created_at")
+  actor       AppUser?               @relation("SecurityAuditActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt, id])
+  @@index([action, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([requestId])
+  @@map("security_audit_events")
 }
 
 model Product {

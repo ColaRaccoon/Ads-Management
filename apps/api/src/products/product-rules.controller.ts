@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ProductsService } from "./products.service";
-import { RequirePermissions } from "../auth/route-decorators";
+import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
+import { AuthenticatedUser } from "../auth/auth.types";
 
 @Controller()
 export class ProductRulesController {
@@ -14,14 +15,18 @@ export class ProductRulesController {
 
   @Post("product-cost-rules")
   @RequirePermissions("products.manage")
-  createCostRule(@Body() body: Record<string, unknown>) {
-    return this.productsService.createCostRule(body);
+  createCostRule(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.productsService.createCostRule(body, actor.id);
   }
 
   @Post("products/:productId/cost-rule-snapshots")
   @RequirePermissions("products.manage")
-  saveCostRuleSnapshot(@Param("productId") productId: string, @Body() body: Record<string, unknown>) {
-    return this.productsService.saveCostRuleSnapshot(productId, body);
+  saveCostRuleSnapshot(
+    @Param("productId") productId: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.productsService.saveCostRuleSnapshot(productId, body, actor.id);
   }
 
   @Patch("products/:productId/cost-rules/:ruleId/correction")
@@ -29,9 +34,10 @@ export class ProductRulesController {
   correctCostRule(
     @Param("productId") productId: string,
     @Param("ruleId") ruleId: string,
-    @Body() body: Record<string, unknown>
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.productsService.correctCostRule(productId, ruleId, body);
+    return this.productsService.correctCostRule(productId, ruleId, body, actor.id);
   }
 
   @Get("product-cpa-rules")
@@ -42,14 +48,18 @@ export class ProductRulesController {
 
   @Post("product-cpa-rules")
   @RequirePermissions("products.manage")
-  createCpaRule(@Body() body: Record<string, unknown>) {
-    return this.productsService.createCpaRule(body);
+  createCpaRule(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.productsService.createCpaRule(body, actor.id);
   }
 
   @Post("products/:productId/cpa-rule-snapshots")
   @RequirePermissions("products.manage")
-  saveCpaRuleSnapshot(@Param("productId") productId: string, @Body() body: Record<string, unknown>) {
-    return this.productsService.saveCpaRuleSnapshot(productId, body);
+  saveCpaRuleSnapshot(
+    @Param("productId") productId: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.productsService.saveCpaRuleSnapshot(productId, body, actor.id);
   }
 
   @Patch("products/:productId/cpa-rules/:ruleId/correction")
@@ -57,9 +67,10 @@ export class ProductRulesController {
   correctCpaRule(
     @Param("productId") productId: string,
     @Param("ruleId") ruleId: string,
-    @Body() body: Record<string, unknown>
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.productsService.correctCpaRule(productId, ruleId, body);
+    return this.productsService.correctCpaRule(productId, ruleId, body, actor.id);
   }
 
   @Get("product-rule-duplicate-diagnostics")

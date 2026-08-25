@@ -23,14 +23,20 @@ import { Cafe24UploadsController } from "../sales/cafe24-uploads.controller";
 import { Cafe24UploadsService } from "../sales/cafe24-uploads.service";
 import { UploadsController } from "../uploads/uploads.controller";
 import { UploadsService } from "../uploads/uploads.service";
+import { SecurityAuditController } from "../security-audit/security-audit.controller";
+import { SecurityAuditService } from "../security-audit/security-audit.service";
+import { UsersController } from "../users/users.controller";
+import { UsersService } from "../users/users.service";
 import { authError } from "./auth.errors";
 import { AuthService } from "./auth.service";
 import { AuthenticationGuard } from "./authentication.guard";
 import { AuthCookieService } from "./cookie.service";
 import { PermissionGuard } from "./permission.guard";
+import { AuthRequestSecurityService } from "./request-security.service";
 
 type BusinessPermission = "change_logs.create" | "reports.generate" | "products.manage"
-  | "imports.manage" | "mappings.manage" | "operations.run" | "settings.manage";
+  | "imports.manage" | "mappings.manage" | "operations.run" | "settings.manage"
+  | "users.manage" | "audit.read";
 type TestRole = "GUEST" | "USER" | "ADMIN" | "SUPER_ADMIN";
 type Mutation = { method: "POST" | "PUT" | "PATCH" | "DELETE"; path: string; permission: BusinessPermission };
 
@@ -107,13 +113,19 @@ const rolePermissions: Record<TestRole, readonly BusinessPermission[]> = {
   ],
   SUPER_ADMIN: [
     "change_logs.create", "reports.generate", "products.manage", "imports.manage",
-    "mappings.manage", "operations.run", "settings.manage"
+    "mappings.manage", "operations.run", "settings.manage", "users.manage", "audit.read"
   ]
 };
 
 const actorForwardingMutations = new Set([
   "POST /uploads/meta-ad-daily-csv",
   "POST /uploads/meta-adset-csv",
+  "POST /product-cost-rules",
+  "POST /products/:productId/cost-rule-snapshots",
+  "PATCH /products/:productId/cost-rules/:ruleId/correction",
+  "POST /product-cpa-rules",
+  "POST /products/:productId/cpa-rule-snapshots",
+  "PATCH /products/:productId/cpa-rules/:ruleId/correction",
   "PATCH /settings/:key",
   "PATCH /settings/products/coupang-manual-purchase-vendor-fee",
   "POST /mappings/product-rules",
@@ -125,12 +137,21 @@ const actorForwardingMutations = new Set([
   "POST /change-logs/products/:productId/logs",
   "POST /change-logs",
   "POST /sales/cafe24/uploads",
+  "POST /sales/cafe24/coupon-rules",
+  "PATCH /sales/cafe24/coupon-rules/:id",
   "POST /coupang/uploads/sales",
   "POST /coupang/uploads/ads",
   "POST /coupang/uploads/margin",
   "POST /coupang/uploads/price-text",
   "POST /coupang/uploads/promotion",
-  "POST /coupang/uploads/bundle"
+  "POST /coupang/uploads/bundle",
+  "POST /coupang/product-groups",
+  "PATCH /coupang/product-groups/:id",
+  "DELETE /coupang/product-groups/:id",
+  "POST /coupang/daily-report/categories",
+  "PATCH /coupang/daily-report/categories/:id",
+  "PUT /coupang/daily-report/categories/:id/products",
+  "DELETE /coupang/daily-report/categories/:id"
 ]);
 
 const serviceInvocation = vi.fn().mockResolvedValue({});
@@ -150,7 +171,9 @@ const serviceMock = new Proxy({}, {
     ChangeLogsController,
     Cafe24UploadsController,
     Cafe24CouponRulesController,
-    CoupangController
+    CoupangController,
+    UsersController,
+    SecurityAuditController
   ],
   providers: [
     { provide: UploadsService, useValue: serviceMock },
@@ -162,6 +185,12 @@ const serviceMock = new Proxy({}, {
     { provide: Cafe24UploadsService, useValue: serviceMock },
     { provide: Cafe24CouponRulesService, useValue: serviceMock },
     { provide: CoupangService, useValue: serviceMock },
+    { provide: UsersService, useValue: serviceMock },
+    { provide: SecurityAuditService, useValue: serviceMock },
+    {
+      provide: AuthRequestSecurityService,
+      useValue: { assertCsrfMutation: vi.fn().mockResolvedValue(undefined) }
+    },
     {
       provide: AuthService,
       useValue: {
@@ -221,6 +250,11 @@ describe("role permissions through the Nest HTTP pipeline", () => {
     Object.assign(app.get(Cafe24UploadsController), { cafe24UploadsService: serviceMock });
     Object.assign(app.get(Cafe24CouponRulesController), { couponRulesService: serviceMock });
     Object.assign(app.get(CoupangController), { coupangService: serviceMock });
+    Object.assign(app.get(UsersController), {
+      users: serviceMock,
+      requestSecurity: app.get(AuthRequestSecurityService)
+    });
+    Object.assign(app.get(SecurityAuditController), { audit: serviceMock });
     app.setGlobalPrefix("api");
     await app.listen(0, "127.0.0.1");
     const address = app.getHttpServer().address() as AddressInfo;
@@ -270,6 +304,50 @@ describe("role permissions through the Nest HTTP pipeline", () => {
       }
     }
   );
+
+  it.each([
+    "ANONYMOUS", "GUEST", "USER", "ADMIN", "SUPER_ADMIN"
+  ] as const)("enforces every security administration endpoint for %s", async (requester) => {
+    const routes = [
+      { method: "GET", path: "/users", body: undefined },
+      {
+        method: "POST",
+        path: "/users/invitations",
+        body: { email: "guest@example.com", name: "Guest", role: "GUEST" }
+      },
+      {
+        method: "PATCH",
+        path: "/users/22222222-2222-4222-8222-222222222222",
+        body: { name: "Changed" }
+      },
+      {
+        method: "POST",
+        path: "/users/22222222-2222-4222-8222-222222222222/reconcile-invitation",
+        body: { action: "CANCEL" }
+      },
+      { method: "GET", path: "/security-audit?limit=20", body: undefined }
+    ] as const;
+    for (const route of routes) {
+      serviceInvocation.mockClear();
+      const response = await fetch(`${baseUrl}/api${route.path}`, {
+        method: route.method,
+        headers: {
+          ...(route.body ? { "content-type": "application/json" } : {}),
+          ...(requester === "ANONYMOUS" ? {} : { "x-test-role": requester })
+        },
+        body: route.body ? JSON.stringify(route.body) : undefined
+      });
+      const allowed = requester === "SUPER_ADMIN";
+      if (allowed) {
+        expect(response.status, `${requester} ${route.method} ${route.path}`).toBeLessThan(400);
+        expect(serviceInvocation).toHaveBeenCalled();
+      } else {
+        expect(response.status, `${requester} ${route.method} ${route.path}`)
+          .toBe(requester === "ANONYMOUS" ? 401 : 403);
+        expect(serviceInvocation).not.toHaveBeenCalled();
+      }
+    }
+  });
 });
 
 function mutation(method: Mutation["method"], path: string, permission: BusinessPermission): Mutation {

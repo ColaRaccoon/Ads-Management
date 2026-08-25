@@ -21,8 +21,8 @@ export class MappingsController {
 
   @Post("rematch")
   @RequirePermissions("mappings.manage")
-  rematchCurrentMetrics(@Body() body: Record<string, unknown>) {
-    return this.mappingsService.rematchCurrentMetrics(body);
+  rematchCurrentMetrics(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.mappingsService.rematchCurrentMetrics(body, actor.id);
   }
 
   @Post("product/manual")

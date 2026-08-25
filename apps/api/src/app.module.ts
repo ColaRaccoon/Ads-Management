@@ -11,12 +11,16 @@ import { ChangeLogsModule } from "./change-logs/change-logs.module";
 import { SalesModule } from "./sales/sales.module";
 import { CoupangModule } from "./coupang/coupang.module";
 import { AuthModule } from "./auth/auth.module";
+import { SecurityAuditModule } from "./security-audit/security-audit.module";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CommonModule,
+    SecurityAuditModule,
     AuthModule,
+    UsersModule,
     UploadsModule,
     ProductsModule,
     MappingsModule,

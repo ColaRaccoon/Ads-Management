@@ -105,8 +105,8 @@ export class CoupangController {
 
   @Delete("uploads/:id")
   @RequirePermissions("imports.manage")
-  deleteUpload(@Param("id") id: string) {
-    return this.coupangService.deleteUpload(id);
+  deleteUpload(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.deleteUpload(id, actor.id);
   }
 
   @Get("product-settings")
@@ -117,14 +117,18 @@ export class CoupangController {
 
   @Post("product-settings")
   @RequirePermissions("products.manage")
-  createProductSetting(@Body() body: Record<string, unknown>) {
-    return this.coupangService.createProductSetting(body);
+  createProductSetting(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.createProductSetting(body, actor.id);
   }
 
   @Patch("product-settings/:id/configuration")
   @RequirePermissions("products.manage")
-  updateProductConfiguration(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.coupangService.updateProductConfiguration(id, body);
+  updateProductConfiguration(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.coupangService.updateProductConfiguration(id, body, actor.id);
   }
 
   @Patch("product-settings/:productId/cost-rules/:costRuleId")
@@ -132,9 +136,10 @@ export class CoupangController {
   correctProductCostRule(
     @Param("productId") productId: string,
     @Param("costRuleId") costRuleId: string,
-    @Body() body: Record<string, unknown>
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.coupangService.correctProductCostRule(productId, costRuleId, body);
+    return this.coupangService.correctProductCostRule(productId, costRuleId, body, actor.id);
   }
 
   @Get("sales-fee-rules/current")
@@ -151,26 +156,34 @@ export class CoupangController {
 
   @Post("sales-fee-rules")
   @RequirePermissions("products.manage")
-  createSalesFeeRule(@Body() body: Record<string, unknown>) {
-    return this.coupangService.createSalesFeeRule(body);
+  createSalesFeeRule(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.createSalesFeeRule(body, actor.id);
   }
 
   @Patch("sales-fee-rules/:id")
   @RequirePermissions("products.manage")
-  correctSalesFeeRule(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.coupangService.correctSalesFeeRule(id, body);
+  correctSalesFeeRule(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.coupangService.correctSalesFeeRule(id, body, actor.id);
   }
 
   @Patch("product-settings/:id")
   @RequirePermissions("products.manage")
-  updateProductSetting(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.coupangService.updateProductSetting(id, body);
+  updateProductSetting(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.coupangService.updateProductSetting(id, body, actor.id);
   }
 
   @Delete("product-settings/:id")
   @RequirePermissions("products.manage")
-  deleteProductSetting(@Param("id") id: string) {
-    return this.coupangService.deleteProductSetting(id);
+  deleteProductSetting(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.deleteProductSetting(id, actor.id);
   }
 
   @Get("product-groups")
@@ -181,20 +194,24 @@ export class CoupangController {
 
   @Post("product-groups")
   @RequirePermissions("products.manage")
-  createProductGroup(@Body() body: Record<string, unknown>) {
-    return this.coupangService.createProductGroup(body);
+  createProductGroup(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.createProductGroup(body, actor.id);
   }
 
   @Patch("product-groups/:id")
   @RequirePermissions("products.manage")
-  updateProductGroup(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.coupangService.updateProductGroup(id, body);
+  updateProductGroup(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.coupangService.updateProductGroup(id, body, actor.id);
   }
 
   @Delete("product-groups/:id")
   @RequirePermissions("products.manage")
-  deleteProductGroup(@Param("id") id: string) {
-    return this.coupangService.deleteProductGroup(id);
+  deleteProductGroup(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.deleteProductGroup(id, actor.id);
   }
 
   @Get("mapping-rules")
@@ -205,20 +222,24 @@ export class CoupangController {
 
   @Post("mapping-rules")
   @RequirePermissions("mappings.manage")
-  createMappingRule(@Body() body: Record<string, unknown>) {
-    return this.coupangService.createMappingRule(body);
+  createMappingRule(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.createMappingRule(body, actor.id);
   }
 
   @Patch("mapping-rules/:id")
   @RequirePermissions("mappings.manage")
-  updateMappingRule(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.coupangService.updateMappingRule(id, body);
+  updateMappingRule(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.coupangService.updateMappingRule(id, body, actor.id);
   }
 
   @Delete("mapping-rules/:id")
   @RequirePermissions("mappings.manage")
-  deleteMappingRule(@Param("id") id: string) {
-    return this.coupangService.deleteMappingRule(id);
+  deleteMappingRule(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.deleteMappingRule(id, actor.id);
   }
 
   @Get("manual-purchases/options")
@@ -247,8 +268,13 @@ export class CoupangController {
 
   @Post("rematch")
   @RequirePermissions("mappings.manage")
-  rematch(@Query("from") from?: string, @Query("to") to?: string, @Query("take") take?: string) {
-    return this.coupangService.rematch({ from, to, take });
+  rematch(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("take") take?: string
+  ) {
+    return this.coupangService.rematch({ from, to, take }, actor.id);
   }
 
   @Get("dashboard")
@@ -308,25 +334,33 @@ export class CoupangController {
 
   @Post("daily-report/categories")
   @RequirePermissions("products.manage")
-  createDailyReportCategory(@Body() body: Record<string, unknown>) {
-    return this.coupangService.createDailyReportCategory(body);
+  createDailyReportCategory(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.createDailyReportCategory(body, actor.id);
   }
 
   @Patch("daily-report/categories/:id")
   @RequirePermissions("products.manage")
-  updateDailyReportCategory(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.coupangService.updateDailyReportCategory(id, body);
+  updateDailyReportCategory(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.coupangService.updateDailyReportCategory(id, body, actor.id);
   }
 
   @Put("daily-report/categories/:id/products")
   @RequirePermissions("products.manage")
-  replaceDailyReportCategoryProducts(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.coupangService.replaceDailyReportCategoryProducts(id, body);
+  replaceDailyReportCategoryProducts(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.coupangService.replaceDailyReportCategoryProducts(id, body, actor.id);
   }
 
   @Delete("daily-report/categories/:id")
   @RequirePermissions("products.manage")
-  deleteDailyReportCategory(@Param("id") id: string) {
-    return this.coupangService.deleteDailyReportCategory(id);
+  deleteDailyReportCategory(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.deleteDailyReportCategory(id, actor.id);
   }
 }

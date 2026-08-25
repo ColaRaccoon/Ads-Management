@@ -4,13 +4,21 @@ export type AppFrameDecision =
   | { mode: "loading" }
   | { mode: "bare" }
   | { mode: "shell" }
-  | { mode: "redirect"; destination: "/login" | "/dashboard" | "/account-setup" | "/forbidden" };
+  | { mode: "redirect"; destination: "/login" | "/dashboard" | "/complete-invitation" | "/forbidden" };
 
 export function appFrameDecision(
   status: AuthStatus,
   pathname: string,
   canRead: boolean
 ): AppFrameDecision {
+  // Mount the fragment-bearing landing before /auth/me settles so it can
+  // remove the one-time value from the visible URL immediately.
+  if (pathname === "/invite/accept") return { mode: "bare" };
+
+  if (pathname === "/complete-invitation" && (status === "loading" || status === "onboarding")) {
+    return { mode: "bare" };
+  }
+
   if (status === "loading") return { mode: "loading" };
 
   if (status === "not-provisioned") {
@@ -20,9 +28,9 @@ export function appFrameDecision(
   }
 
   if (status === "onboarding") {
-    return pathname === "/account-setup"
+    return pathname === "/complete-invitation"
       ? { mode: "bare" }
-      : { mode: "redirect", destination: "/account-setup" };
+      : { mode: "redirect", destination: "/complete-invitation" };
   }
 
   if (status === "anonymous") {
@@ -31,7 +39,7 @@ export function appFrameDecision(
       : { mode: "redirect", destination: "/login" };
   }
 
-  if (pathname === "/login" || pathname === "/account-setup") {
+  if (pathname === "/login" || pathname === "/account-setup" || pathname === "/complete-invitation") {
     return { mode: "redirect", destination: "/dashboard" };
   }
   if (!canRead && pathname !== "/forbidden") {

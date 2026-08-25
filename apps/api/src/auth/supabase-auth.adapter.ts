@@ -4,7 +4,10 @@ import { AUTH_CONFIG, AuthConfig } from "./auth.config";
 import {
   IdentityProvider,
   ProviderInvalidCredentialsError,
+  ProviderInvalidInvitationError,
   ProviderInvalidRefreshTokenError,
+  ProviderPasswordPolicyError,
+  ProviderUserNotFoundError,
   ProviderUnavailableError
 } from "./identity-provider";
 import { ProviderSession, ProviderUser } from "./auth.types";
@@ -69,12 +72,86 @@ export class SupabaseAuthAdapter implements IdentityProvider {
       throw new ProviderUnavailableError();
     }
     const { data, error } = result;
-    if (error || !data.user) throw new ProviderUnavailableError();
-    return {
-      id: data.user.id,
-      email: data.user.email ?? null,
-      emailVerified: Boolean(data.user.email_confirmed_at)
-    };
+    if (error) {
+      if (error.status === 404) throw new ProviderUserNotFoundError();
+      throw new ProviderUnavailableError();
+    }
+    if (!data.user) throw new ProviderUserNotFoundError();
+    return toProviderUser(data.user);
+  }
+
+  async inviteUserByEmail(email: string, redirectTo: string, requestId: string) {
+    const client = this.createAdminClient();
+    let result: Awaited<ReturnType<typeof client.auth.admin.inviteUserByEmail>>;
+    try {
+      result = await client.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        data: { invitation_request_id: requestId }
+      });
+    } catch {
+      throw new ProviderUnavailableError();
+    }
+    if (result.error || !result.data.user) throw new ProviderUnavailableError();
+    return toProviderUser(result.data.user);
+  }
+
+  async verifyInvitationToken(tokenHash: string): Promise<ProviderSession> {
+    const client = this.createPublicClient();
+    let result: Awaited<ReturnType<typeof client.auth.verifyOtp>>;
+    try {
+      result = await client.auth.verifyOtp({ token_hash: tokenHash, type: "invite" });
+    } catch {
+      throw new ProviderUnavailableError();
+    }
+    if (result.error) {
+      if (result.error.status === 400 || result.error.status === 401 || result.error.status === 403) {
+        throw new ProviderInvalidInvitationError();
+      }
+      throw new ProviderUnavailableError();
+    }
+    if (!result.data.session || !result.data.user) throw new ProviderInvalidInvitationError();
+    return toProviderSession(result.data.session);
+  }
+
+  async updatePassword(accessToken: string, password: string): Promise<ProviderUser> {
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.supabaseUrl}/auth/v1/user`, {
+        method: "PUT",
+        headers: {
+          apikey: this.config.supabasePublishableKey,
+          authorization: `Bearer ${accessToken}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ password }),
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS)
+      });
+    } catch {
+      throw new ProviderUnavailableError();
+    }
+    if (!response.ok) {
+      if (response.status === 400 || response.status === 422) throw new ProviderPasswordPolicyError();
+      if (response.status === 401 || response.status === 403) throw new ProviderInvalidInvitationError();
+      throw new ProviderUnavailableError();
+    }
+    let user: Parameters<typeof toProviderUser>[0];
+    try {
+      user = await response.json() as Parameters<typeof toProviderUser>[0];
+    } catch {
+      throw new ProviderUnavailableError();
+    }
+    return toProviderUser(user);
+  }
+
+  async deleteInvitationUser(authUserId: string) {
+    const client = this.createAdminClient();
+    let result: Awaited<ReturnType<typeof client.auth.admin.deleteUser>>;
+    try {
+      result = await client.auth.admin.deleteUser(authUserId, false);
+    } catch {
+      throw new ProviderUnavailableError();
+    }
+    if (result.error) throw new ProviderUnavailableError();
   }
 
   private createPublicClient() {
@@ -117,17 +194,33 @@ function toProviderSession(session: {
   access_token: string;
   refresh_token: string;
   expires_in: number;
-  user: { id: string; email?: string; email_confirmed_at?: string };
+  user: {
+    id: string;
+    email?: string;
+    email_confirmed_at?: string;
+    user_metadata?: Record<string, unknown>;
+  };
 }): ProviderSession {
   return {
     accessToken: session.access_token,
     refreshToken: session.refresh_token,
     expiresIn: session.expires_in,
-    user: {
-      id: session.user.id,
-      email: session.user.email ?? null,
-      emailVerified: Boolean(session.user.email_confirmed_at)
-    }
+    user: toProviderUser(session.user)
+  };
+}
+
+function toProviderUser(user: {
+  id: string;
+  email?: string;
+  email_confirmed_at?: string;
+  user_metadata?: Record<string, unknown>;
+}): ProviderUser {
+  const requestId = user.user_metadata?.invitation_request_id;
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    emailVerified: Boolean(user.email_confirmed_at),
+    invitationRequestId: typeof requestId === "string" ? requestId : null
   };
 }
 

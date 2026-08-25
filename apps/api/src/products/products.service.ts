@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { Prisma, SecurityAuditActorType, SecurityAuditResult } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { asDateOnly } from "../common/date-range";
 import { dateValuesDiffer, previousUtcDate } from "../domain/effective-rule";
 import { formatDateOnly } from "../domain/date-number";
 import { UpdateCoupangManualPurchaseVendorFeeDto } from "./dto/update-coupang-manual-purchase-vendor-fee.dto";
+import { writeSecurityAudit } from "../security-audit/security-audit.types";
 
 const COUPANG_MANUAL_PURCHASE_VENDOR_FEE_SETTING_KEY = "coupang_manual_purchase_vendor_fee_per_unit_krw";
 const COUPANG_MANUAL_PURCHASE_VENDOR_FEE_DESCRIPTION = "Default vendor fee per Coupang manual purchase unit";
@@ -34,7 +35,7 @@ export class ProductsService {
     });
   }
 
-  async deleteProduct(id: string) {
+  async deleteProduct(id: string, actorId?: string) {
     const product = await this.assertProduct(id);
     const [
       currentAdsetCount,
@@ -80,7 +81,7 @@ export class ProductsService {
         await tx.cafe24CouponRule.updateMany({ where: { productId: id }, data: { isActive: false } });
         await tx.cafe24ProductRule.updateMany({ where: { adCostSourceProductId: id }, data: { adCostSourceProductId: null } });
         await tx.metaAdset.updateMany({ where: { currentProductId: id }, data: { currentProductId: null } });
-        return tx.product.update({
+        const result = await tx.product.update({
           where: { id },
           data: {
             code: deletedCode,
@@ -88,6 +89,19 @@ export class ProductsService {
             sortOrder: 9999
           }
         });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "PRODUCT_DEACTIVATED",
+            targetType: "PRODUCT",
+            targetId: id,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: productAuditSnapshot(product),
+            afterJson: productAuditSnapshot(result)
+          });
+        }
+        return result;
       });
 
       return { mode: "deactivated", product: updated };
@@ -100,7 +114,20 @@ export class ProductsService {
       await tx.cafe24ProductRule.updateMany({ where: { adCostSourceProductId: id }, data: { adCostSourceProductId: null } });
       await tx.productCpaRule.deleteMany({ where: { productId: id } });
       await tx.productCostRule.deleteMany({ where: { productId: id } });
-      return tx.product.delete({ where: { id } });
+      const result = await tx.product.delete({ where: { id } });
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "PRODUCT_DELETED",
+          targetType: "PRODUCT",
+          targetId: id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: productAuditSnapshot(product),
+          afterJson: { deleted: true }
+        });
+      }
+      return result;
     });
 
     return { mode: "deleted", product: deleted };
@@ -121,8 +148,8 @@ export class ProductsService {
     });
   }
 
-  async updateProduct(id: string, body: Record<string, unknown>) {
-    await this.assertProduct(id);
+  async updateProduct(id: string, body: Record<string, unknown>, actorId?: string) {
+    const existing = await this.assertProduct(id);
     const data = {
       code: optionalString(body.code),
       name: optionalString(body.name),
@@ -137,7 +164,20 @@ export class ProductsService {
           where: { productId: id },
           data: { isActive: false }
         });
-        return tx.product.update({ where: { id }, data });
+        const result = await tx.product.update({ where: { id }, data });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "PRODUCT_DEACTIVATED",
+            targetType: "PRODUCT",
+            targetId: id,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: productAuditSnapshot(existing),
+            afterJson: productAuditSnapshot(result)
+          });
+        }
+        return result;
       });
     }
     return this.prisma.product.update({ where: { id }, data });
@@ -151,12 +191,12 @@ export class ProductsService {
     });
   }
 
-  async createCostRule(body: Record<string, unknown>) {
+  async createCostRule(body: Record<string, unknown>, actorId?: string) {
     const productId = requiredString(body.productId, "productId");
-    return this.saveCostRuleSnapshot(productId, body);
+    return this.saveCostRuleSnapshot(productId, body, actorId);
   }
 
-  async saveCostRuleSnapshot(productId: string, body: Record<string, unknown>) {
+  async saveCostRuleSnapshot(productId: string, body: Record<string, unknown>, actorId?: string) {
     assertServerManagedEffectiveTo(body, "PRODUCT_COST_RULE_EFFECTIVE_TO_MANAGED");
     assertAtLeastOneField(body, COST_SNAPSHOT_FIELDS, "PRODUCT_COST_RULE_SNAPSHOT_EMPTY");
     const effectiveFrom = asDateOnly(requiredString(body.effectiveFrom, "effectiveFrom"));
@@ -199,11 +239,34 @@ export class ProductsService {
         ? await tx.productCostRule.update({ where: { id: sameDateRule.id }, data: snapshot })
         : await tx.productCostRule.create({ data: { productId, ...snapshot } });
       await this.normalizeCostRuleRanges(tx, productId);
-      return this.costRuleWriteResult(tx, productId, saved.id, sameDateRule ? "UPDATED_SAME_DATE" : "CREATED");
+      const result = await this.costRuleWriteResult(
+        tx,
+        productId,
+        saved.id,
+        sameDateRule ? "UPDATED_SAME_DATE" : "CREATED"
+      );
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: sameDateRule ? "PRODUCT_COST_RULE_UPDATED" : "PRODUCT_COST_RULE_CREATED",
+          targetType: "PRODUCT_COST_RULE",
+          targetId: result.rule.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: sameDateRule ? productCostRuleAuditSnapshot(sameDateRule) : undefined,
+          afterJson: productCostRuleAuditSnapshot(result.rule)
+        });
+      }
+      return result;
     }, PRODUCT_RULE_TRANSACTION_OPTIONS);
   }
 
-  async correctCostRule(productId: string, ruleId: string, body: Record<string, unknown>) {
+  async correctCostRule(
+    productId: string,
+    ruleId: string,
+    body: Record<string, unknown>,
+    actorId?: string
+  ) {
     assertServerManagedEffectiveTo(body, "PRODUCT_COST_RULE_EFFECTIVE_TO_MANAGED");
     assertAtLeastOneField(
       body,
@@ -254,7 +317,20 @@ export class ProductsService {
         }
       });
       await this.normalizeCostRuleRanges(tx, productId);
-      return this.costRuleWriteResult(tx, productId, ruleId, "CORRECTED");
+      const result = await this.costRuleWriteResult(tx, productId, ruleId, "CORRECTED");
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "PRODUCT_COST_RULE_CORRECTED",
+          targetType: "PRODUCT_COST_RULE",
+          targetId: ruleId,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: productCostRuleAuditSnapshot(existing),
+          afterJson: productCostRuleAuditSnapshot(result.rule)
+        });
+      }
+      return result;
     }, PRODUCT_RULE_TRANSACTION_OPTIONS);
   }
 
@@ -266,12 +342,12 @@ export class ProductsService {
     });
   }
 
-  async createCpaRule(body: Record<string, unknown>) {
+  async createCpaRule(body: Record<string, unknown>, actorId?: string) {
     const productId = requiredString(body.productId, "productId");
-    return this.saveCpaRuleSnapshot(productId, body);
+    return this.saveCpaRuleSnapshot(productId, body, actorId);
   }
 
-  async saveCpaRuleSnapshot(productId: string, body: Record<string, unknown>) {
+  async saveCpaRuleSnapshot(productId: string, body: Record<string, unknown>, actorId?: string) {
     assertServerManagedEffectiveTo(body, "PRODUCT_CPA_RULE_EFFECTIVE_TO_MANAGED");
     assertAtLeastOneField(body, CPA_SNAPSHOT_FIELDS, "PRODUCT_CPA_RULE_SNAPSHOT_EMPTY");
     const effectiveFrom = asDateOnly(requiredString(body.effectiveFrom, "effectiveFrom"));
@@ -302,11 +378,34 @@ export class ProductsService {
         ? await tx.productCpaRule.update({ where: { id: sameDateRule.id }, data: snapshot })
         : await tx.productCpaRule.create({ data: { productId, ...snapshot } });
       await this.normalizeCpaRuleRanges(tx, productId);
-      return this.cpaRuleWriteResult(tx, productId, saved.id, sameDateRule ? "UPDATED_SAME_DATE" : "CREATED");
+      const result = await this.cpaRuleWriteResult(
+        tx,
+        productId,
+        saved.id,
+        sameDateRule ? "UPDATED_SAME_DATE" : "CREATED"
+      );
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: sameDateRule ? "PRODUCT_CPA_RULE_UPDATED" : "PRODUCT_CPA_RULE_CREATED",
+          targetType: "PRODUCT_CPA_RULE",
+          targetId: result.rule.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: sameDateRule ? productCpaRuleAuditSnapshot(sameDateRule) : undefined,
+          afterJson: productCpaRuleAuditSnapshot(result.rule)
+        });
+      }
+      return result;
     }, PRODUCT_RULE_TRANSACTION_OPTIONS);
   }
 
-  async correctCpaRule(productId: string, ruleId: string, body: Record<string, unknown>) {
+  async correctCpaRule(
+    productId: string,
+    ruleId: string,
+    body: Record<string, unknown>,
+    actorId?: string
+  ) {
     assertServerManagedEffectiveTo(body, "PRODUCT_CPA_RULE_EFFECTIVE_TO_MANAGED");
     assertAtLeastOneField(
       body,
@@ -353,7 +452,20 @@ export class ProductsService {
         }
       });
       await this.normalizeCpaRuleRanges(tx, productId);
-      return this.cpaRuleWriteResult(tx, productId, ruleId, "CORRECTED");
+      const result = await this.cpaRuleWriteResult(tx, productId, ruleId, "CORRECTED");
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "PRODUCT_CPA_RULE_CORRECTED",
+          targetType: "PRODUCT_CPA_RULE",
+          targetId: ruleId,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: productCpaRuleAuditSnapshot(existing),
+          afterJson: productCpaRuleAuditSnapshot(result.rule)
+        });
+      }
+      return result;
     }, PRODUCT_RULE_TRANSACTION_OPTIONS);
   }
 
@@ -379,14 +491,32 @@ export class ProductsService {
     return this.prisma.appSetting.findMany({ orderBy: { key: "asc" } });
   }
 
-  updateSetting(key: string, body: { valueJson?: unknown; description?: string }, actorId: string) {
+  async updateSetting(key: string, body: { valueJson?: unknown; description?: string }, actorId: string) {
     if (body.valueJson === undefined) {
       throw new BadRequestException({ code: "VALUE_REQUIRED", message: "valueJson 값이 필요합니다." });
     }
-    return this.prisma.appSetting.upsert({
-      where: { key },
-      update: { valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description, updatedBy: actorId },
-      create: { key, valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description, updatedBy: actorId }
+    return this.prisma.$transaction(async (tx) => {
+      const before = await tx.appSetting.findUnique({ where: { key } });
+      const updated = await tx.appSetting.upsert({
+        where: { key },
+        update: { valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description, updatedBy: actorId },
+        create: { key, valueJson: body.valueJson as Prisma.InputJsonValue, description: body.description, updatedBy: actorId }
+      });
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "APP_SETTING_CHANGED",
+        targetType: "APP_SETTING",
+        targetId: key,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: { exists: Boolean(before) },
+        afterJson: {
+          exists: true,
+          valueChanged: true,
+          descriptionChanged: before?.description !== updated.description
+        }
+      });
+      return updated;
     });
   }
 
@@ -677,6 +807,66 @@ function serializableRuleValue(value: unknown): unknown {
     return String(value);
   }
   return value ?? null;
+}
+
+function productAuditSnapshot(product: {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+}) {
+  return {
+    id: product.id,
+    code: product.code,
+    name: product.name,
+    isActive: product.isActive
+  } satisfies Prisma.InputJsonObject;
+}
+
+function productCostRuleAuditSnapshot(rule: {
+  id: string;
+  productId: string;
+  salePriceKrw: Prisma.Decimal;
+  vatKrw: Prisma.Decimal;
+  productCostKrw: Prisma.Decimal;
+  shippingKrw: Prisma.Decimal;
+  extraCostKrw: Prisma.Decimal;
+  fxRateKrwPerUsd: Prisma.Decimal;
+  effectiveFrom: Date;
+  effectiveTo: Date | null;
+}) {
+  return {
+    id: rule.id,
+    productId: rule.productId,
+    salePriceKrw: String(rule.salePriceKrw),
+    vatKrw: String(rule.vatKrw),
+    productCostKrw: String(rule.productCostKrw),
+    shippingKrw: String(rule.shippingKrw),
+    extraCostKrw: String(rule.extraCostKrw),
+    fxRateKrwPerUsd: String(rule.fxRateKrwPerUsd),
+    effectiveFrom: formatDateOnly(rule.effectiveFrom),
+    effectiveTo: rule.effectiveTo ? formatDateOnly(rule.effectiveTo) : null
+  } satisfies Prisma.InputJsonObject;
+}
+
+function productCpaRuleAuditSnapshot(rule: {
+  id: string;
+  productId: string;
+  targetRatio: Prisma.Decimal;
+  watchRatio: Prisma.Decimal;
+  stopRatio: Prisma.Decimal;
+  effectiveFrom: Date;
+  effectiveTo: Date | null;
+}) {
+  return {
+    id: rule.id,
+    productId: rule.productId,
+    targetRatio: String(rule.targetRatio),
+    watchRatio: String(rule.watchRatio),
+    stopRatio: String(rule.stopRatio),
+    effectiveFrom: formatDateOnly(rule.effectiveFrom),
+    effectiveTo: rule.effectiveTo ? formatDateOnly(rule.effectiveTo) : null
+  } satisfies Prisma.InputJsonObject;
 }
 
 function numberOrDefault(value: unknown, fallback: number): number {

@@ -30,9 +30,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
         ? structuredPayload.message
         : prismaError
           ? prismaError.message
-        : exception instanceof Error
-          ? exception.message
-          : "Unexpected server error";
+        : "Unexpected server error";
 
     response.status(status).json({
       code:
@@ -58,7 +56,7 @@ function toPrismaHttpError(error: Prisma.PrismaClientKnownRequestError) {
       status: HttpStatus.CONFLICT,
       code: "UNIQUE_CONSTRAINT",
       message: "이미 같은 고유 값이 존재합니다.",
-      details: { prismaCode: error.code, target: error.meta?.target ?? null }
+      details: null
     };
   }
 
@@ -67,7 +65,7 @@ function toPrismaHttpError(error: Prisma.PrismaClientKnownRequestError) {
       status: HttpStatus.BAD_REQUEST,
       code: "FOREIGN_KEY_CONSTRAINT",
       message: "연결된 데이터를 찾을 수 없습니다.",
-      details: { prismaCode: error.code, field: error.meta?.field_name ?? null }
+      details: null
     };
   }
 
@@ -76,7 +74,7 @@ function toPrismaHttpError(error: Prisma.PrismaClientKnownRequestError) {
       status: HttpStatus.NOT_FOUND,
       code: "RECORD_NOT_FOUND",
       message: "요청한 데이터를 찾을 수 없습니다.",
-      details: { prismaCode: error.code }
+      details: null
     };
   }
 
@@ -84,6 +82,6 @@ function toPrismaHttpError(error: Prisma.PrismaClientKnownRequestError) {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     code: "DATABASE_ERROR",
     message: "데이터베이스 처리 중 오류가 발생했습니다.",
-    details: { prismaCode: error.code, meta: error.meta ?? null }
+    details: null
   };
 }

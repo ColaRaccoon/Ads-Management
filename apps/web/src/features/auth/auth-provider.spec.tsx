@@ -108,12 +108,44 @@ describe("AuthProvider cache and revalidation integration", () => {
     expect(queryClient.getQueryData(AUTH_ME_QUERY_KEY)).toBeUndefined();
     expect(coordinatorMocks.broadcastLogout).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps a verified invitation in onboarding across /auth/me reloads", async () => {
+    const queryClient = createQueryClient();
+    apiMocks.get.mockResolvedValueOnce(authMe("v1", [], "VERIFIED_PENDING_PASSWORD"));
+    renderProvider(queryClient);
+
+    expect(await screen.findByText("onboarding:none:")).toBeTruthy();
+    expect(queryClient.getQueryData(AUTH_ME_QUERY_KEY)).toEqual(authMe("v1", [], "VERIFIED_PENDING_PASSWORD"));
+  });
+
+  it("owns cache replacement and account broadcast for accept and password completion", async () => {
+    const queryClient = createQueryClient();
+    apiMocks.get.mockRejectedValueOnce({ code: "AUTHENTICATION_REQUIRED" });
+    renderProvider(queryClient);
+    expect(await screen.findByText("anonymous:none:")).toBeTruthy();
+    queryClient.setQueryData(["sensitive-before-invite"], { secret: "cached" });
+
+    apiMocks.post.mockResolvedValueOnce(authMe("v2", [], "VERIFIED_PENDING_PASSWORD"));
+    fireEvent.click(screen.getByRole("button", { name: "accept" }));
+    expect(await screen.findByText("onboarding:none:")).toBeTruthy();
+    expect(queryClient.getQueryData(["sensitive-before-invite"])).toBeUndefined();
+    expect(coordinatorMocks.broadcastAccountChanged).toHaveBeenCalledTimes(1);
+
+    queryClient.setQueryData(["onboarding-cache"], { private: true });
+    apiMocks.post.mockResolvedValueOnce(authMe("v3", ["data.read"], "ACTIVE"));
+    fireEvent.click(screen.getByRole("button", { name: "complete" }));
+    expect(await screen.findByText("authenticated:user-1:data.read")).toBeTruthy();
+    expect(queryClient.getQueryData(["onboarding-cache"])).toBeUndefined();
+    expect(coordinatorMocks.broadcastAccountChanged).toHaveBeenCalledTimes(2);
+  });
 });
 
 function AuthProbe() {
   const auth = useAuth();
   return <div>
     <span>{`${auth.status}:${auth.user?.id ?? "none"}:${auth.permissions.join(",")}`}</span>
+    <button type="button" onClick={() => void auth.acceptInvitation("opaque-hash")}>accept</button>
+    <button type="button" onClick={() => void auth.completeInvitation("a-strong-password")}>complete</button>
     <button type="button" onClick={() => void auth.logout()}>logout</button>
   </div>;
 }
@@ -130,9 +162,13 @@ function createQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
 
-function authMe(authorizationVersion: string, permissions: string[]) {
+function authMe(
+  authorizationVersion: string,
+  permissions: string[],
+  inviteStatus: "ACTIVE" | "VERIFIED_PENDING_PASSWORD" = "ACTIVE"
+) {
   return {
-    user: { id: "user-1", email: "user@example.test", name: "Role User", role: "USER", isActive: true },
+    user: { id: "user-1", email: "user@example.test", name: "Role User", role: "USER", isActive: true, inviteStatus },
     permissions,
     authorizationVersion
   };

@@ -16,12 +16,23 @@ export type Permission = (typeof PERMISSIONS)[number];
 export const APP_ROLES = ["SUPER_ADMIN", "ADMIN", "USER", "GUEST"] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
+export const AUTH_INVITE_STATUSES = [
+  "PENDING_PROVIDER",
+  "INVITED",
+  "VERIFIED_PENDING_PASSWORD",
+  "ACTIVE",
+  "RECONCILE_REQUIRED",
+  "CANCELLED"
+] as const;
+export type AuthInviteStatus = (typeof AUTH_INVITE_STATUSES)[number];
+
 export type AuthUser = {
   id: string;
   email: string | null;
   name: string;
   role: AppRole;
   isActive: boolean;
+  inviteStatus: AuthInviteStatus;
 };
 
 export type AuthMe = {
@@ -39,6 +50,7 @@ export type AuthStatus =
 
 const permissionSet = new Set<string>(PERMISSIONS);
 const roleSet = new Set<string>(APP_ROLES);
+const inviteStatusSet = new Set<string>(AUTH_INVITE_STATUSES);
 
 const ROLE_LABELS: Record<AppRole, string> = {
   SUPER_ADMIN: "총관리자",
@@ -68,6 +80,7 @@ export function parseAuthMe(value: unknown): AuthMe {
     typeof user.name !== "string" ||
     typeof user.role !== "string" || !roleSet.has(user.role) ||
     typeof user.isActive !== "boolean" ||
+    typeof user.inviteStatus !== "string" || !inviteStatusSet.has(user.inviteStatus) ||
     !Array.isArray(permissions) ||
     permissions.some((permission) => typeof permission !== "string" || !permissionSet.has(permission)) ||
     typeof authorizationVersion !== "string" || authorizationVersion.length === 0
@@ -80,7 +93,8 @@ export function parseAuthMe(value: unknown): AuthMe {
       email: user.email,
       name: user.name,
       role: user.role as AppRole,
-      isActive: user.isActive
+      isActive: user.isActive,
+      inviteStatus: user.inviteStatus as AuthInviteStatus
     },
     permissions: [...new Set(permissions as Permission[])],
     authorizationVersion

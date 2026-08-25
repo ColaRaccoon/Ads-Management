@@ -1,7 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { Cafe24CouponScope, Prisma } from "@prisma/client";
+import {
+  Cafe24CouponScope,
+  Prisma,
+  SecurityAuditActorType,
+  SecurityAuditResult
+} from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { toDateOnly } from "../domain/date-number";
+import { writeSecurityAudit } from "../security-audit/security-audit.types";
 
 @Injectable()
 export class Cafe24CouponRulesService {
@@ -32,7 +38,7 @@ export class Cafe24CouponRulesService {
     });
   }
 
-  async createCouponRule(body: Record<string, unknown>) {
+  async createCouponRule(body: Record<string, unknown>, actorId?: string) {
     const name = requiredString(body.name, "name");
     const scope = couponScope(body.scope);
     const productId = couponProductId(scope, body.productId);
@@ -46,7 +52,7 @@ export class Cafe24CouponRulesService {
       await this.assertActiveProduct(productId);
     }
 
-    return this.prisma.cafe24CouponRule.create({
+    const save = (client: Pick<Prisma.TransactionClient, "cafe24CouponRule">) => client.cafe24CouponRule.create({
       data: {
         name,
         scope,
@@ -60,9 +66,23 @@ export class Cafe24CouponRulesService {
       },
       include: { product: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const created = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "CAFE24_COUPON_RULE_CREATED",
+        targetType: "CAFE24_COUPON_RULE",
+        targetId: created.id,
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: couponRuleAuditSnapshot(created)
+      });
+      return created;
+    });
   }
 
-  async updateCouponRule(id: string, body: Record<string, unknown>) {
+  async updateCouponRule(id: string, body: Record<string, unknown>, actorId?: string) {
     const existing = await this.prisma.cafe24CouponRule.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException({
@@ -91,7 +111,7 @@ export class Cafe24CouponRulesService {
       await this.assertActiveProduct(productId);
     }
 
-    return this.prisma.cafe24CouponRule.update({
+    const save = (client: Pick<Prisma.TransactionClient, "cafe24CouponRule">) => client.cafe24CouponRule.update({
       where: { id },
       data: {
         name,
@@ -105,6 +125,21 @@ export class Cafe24CouponRulesService {
         note: body.note === undefined ? existing.note : nullableString(body.note)
       },
       include: { product: true }
+    });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: updated.isActive ? "CAFE24_COUPON_RULE_UPDATED" : "CAFE24_COUPON_RULE_DEACTIVATED",
+        targetType: "CAFE24_COUPON_RULE",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: couponRuleAuditSnapshot(existing),
+        afterJson: couponRuleAuditSnapshot(updated)
+      });
+      return updated;
     });
   }
 
@@ -121,6 +156,30 @@ export class Cafe24CouponRulesService {
     }
     return product;
   }
+}
+
+function couponRuleAuditSnapshot(rule: {
+  id: string;
+  name: string;
+  scope: Cafe24CouponScope;
+  productId: string | null;
+  discountKrw: Prisma.Decimal;
+  priority: number;
+  validFrom: Date;
+  validTo: Date | null;
+  isActive: boolean;
+}) {
+  return {
+    id: rule.id,
+    name: rule.name,
+    scope: rule.scope,
+    productId: rule.productId,
+    discountKrw: String(rule.discountKrw),
+    priority: rule.priority,
+    validFrom: rule.validFrom.toISOString().slice(0, 10),
+    validTo: rule.validTo?.toISOString().slice(0, 10) ?? null,
+    isActive: rule.isActive
+  } satisfies Prisma.InputJsonObject;
 }
 
 function couponScope(value: unknown): Cafe24CouponScope {

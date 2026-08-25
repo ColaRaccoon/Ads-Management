@@ -6,6 +6,7 @@ const CATEGORY_B = "22222222-2222-4222-8222-222222222222";
 const PRODUCT_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const PRODUCT_B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const PRODUCT_MISSING = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+const ACTOR_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 
 describe("Coupang daily report category writes", () => {
   it("creates empty and initially populated categories with normalized names and duplicate product ids removed", async () => {
@@ -166,6 +167,27 @@ describe("Coupang daily report category writes", () => {
     });
     expect(fake.memberships()).toEqual([[CATEGORY_A, PRODUCT_A]]);
   });
+
+  it("writes all four category mutation SUCCESS audits in their local transactions", async () => {
+    const fake = dailyCategoryPrisma();
+    const service = new CoupangService(fake.prisma as never);
+
+    await service.createDailyReportCategory({ displayName: "분류", productIds: [PRODUCT_A] }, ACTOR_ID);
+    await service.updateDailyReportCategory(CATEGORY_B, { displayName: "분류 수정" }, ACTOR_ID);
+    const current = fake.category(CATEGORY_B);
+    await service.replaceDailyReportCategoryProducts(CATEGORY_B, {
+      productIds: [PRODUCT_B],
+      expectedUpdatedAt: current.updatedAt.toISOString()
+    }, ACTOR_ID);
+    await service.deleteDailyReportCategory(CATEGORY_B, ACTOR_ID);
+
+    expect(fake.auditCreate.mock.calls.map(([call]) => call.data)).toEqual([
+      expect.objectContaining({ action: "COUPANG_DAILY_REPORT_CATEGORY_CREATED", result: "SUCCESS" }),
+      expect.objectContaining({ action: "COUPANG_DAILY_REPORT_CATEGORY_UPDATED", result: "SUCCESS" }),
+      expect.objectContaining({ action: "COUPANG_DAILY_REPORT_CATEGORY_PRODUCTS_REPLACED", result: "SUCCESS" }),
+      expect.objectContaining({ action: "COUPANG_DAILY_REPORT_CATEGORY_DEACTIVATED", result: "SUCCESS" })
+    ]);
+  });
 });
 
 type CategorySeed = {
@@ -213,6 +235,7 @@ function dailyCategoryPrisma(input: {
     categories.set(current.id, { ...current, ...data });
     return { count: 1 };
   });
+  const auditCreate = vi.fn(async ({ data }: any) => data);
   const categoryDelegate = {
     create: vi.fn(async ({ data }: any) => {
       assertUnique(data.standardName);
@@ -263,7 +286,8 @@ function dailyCategoryPrisma(input: {
         if (input.failCreateMany) throw new Error("injected membership failure");
         for (const member of data) memberships.add(`${member.categoryId}:${member.coupangProductId}`);
       })
-    }
+    },
+    securityAuditEvent: { create: auditCreate }
   };
   let transactionTail = Promise.resolve();
   const prisma = {
@@ -290,6 +314,7 @@ function dailyCategoryPrisma(input: {
   };
   return {
     prisma,
+    auditCreate,
     updateMany,
     category: (id: string) => categoryWithMembers(id)!,
     memberships: () => [...memberships].map((key) => key.split(":") as [string, string])

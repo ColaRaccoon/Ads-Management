@@ -48,6 +48,25 @@ describe("AuthRequestSecurityService", () => {
     expect(verifyCsrfToken).toHaveBeenCalledTimes(1);
   });
 
+  it("requires exact same-site invitation acceptance and never uses the raw link hash as a limiter key", async () => {
+    const consume = vi.fn().mockResolvedValue(true);
+    const service = makeService(consume);
+    const tokenHash = "sensitive-link-hash-value";
+    await expect(service.assertInvitationAccept(
+      request("http://localhost:3200", "10.0.0.1", "cross-site"),
+      tokenHash
+    )).rejects.toMatchObject({ code: "ORIGIN_NOT_ALLOWED" });
+    await expect(service.assertInvitationAccept(
+      request("http://localhost:3200", "10.0.0.1"),
+      tokenHash
+    )).rejects.toMatchObject({ code: "ORIGIN_NOT_ALLOWED" });
+    await service.assertInvitationAccept(
+      request("http://localhost:3200", "10.0.0.1", "same-origin"),
+      tokenHash
+    );
+    expect(JSON.stringify(consume.mock.calls)).not.toContain(tokenHash);
+  });
+
   it("fails closed when the development adapter reaches its bounded key capacity", async () => {
     const limiter = new InMemorySecurityRateLimiter();
     for (let index = 0; index < 10_000; index += 1) {

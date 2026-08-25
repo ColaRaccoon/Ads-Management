@@ -12,6 +12,7 @@ export type ProviderUser = {
   id: string;
   email: string | null;
   emailVerified: boolean;
+  invitationRequestId?: string | null;
 };
 
 export type ProviderSession = {
@@ -43,8 +44,9 @@ export type AuthUserResponse = {
     id: string;
     email: string | null;
     name: string;
-    role: AppRole;
-    isActive: boolean;
+      role: AppRole;
+      isActive: boolean;
+      inviteStatus: InviteStatus;
   };
   permissions: Permission[];
   authorizationVersion: string;

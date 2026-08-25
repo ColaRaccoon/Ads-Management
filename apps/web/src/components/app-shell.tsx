@@ -12,11 +12,13 @@ import {
   LogOut,
   Package,
   Settings,
+  ShieldCheck,
   ShoppingCart,
   Shuffle,
   TableProperties,
   TrendingUp,
-  Upload
+  Upload,
+  Users
 } from "lucide-react";
 import { Permission, roleLabel } from "@/features/auth/auth-types";
 import { useAuth } from "@/features/auth/use-auth";
@@ -56,6 +58,13 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
       { href: "/coupang/ads", label: "Coupang Ads Analysis", icon: Package, requiredPermission: "data.read" },
       { href: "/coupang/daily-report", label: "Coupang Daily Report", icon: ClipboardList, requiredPermission: "data.read" },
       { href: "/coupang/mappings", label: "쿠팡 매핑관리", icon: Shuffle, requiredPermission: "data.read" }
+    ]
+  },
+  {
+    label: "관리",
+    items: [
+      { href: "/settings/users", label: "사용자 관리", icon: Users, requiredPermission: "users.manage" },
+      { href: "/settings/security-audit", label: "보안 감사", icon: ShieldCheck, requiredPermission: "audit.read" }
     ]
   }
 ];

@@ -5,6 +5,8 @@ import {
   MatchSource,
   Prisma,
   RowValidationStatus,
+  SecurityAuditActorType,
+  SecurityAuditResult,
   UploadStatus
 } from "@prisma/client";
 import { createHash } from "node:crypto";
@@ -52,6 +54,7 @@ import {
   ParsedCoupangSaleRow
 } from "../domain/coupang-sales-xlsx";
 import { formatDateOnly, ParseIssue, safeDivide, toDateOnly } from "../domain/date-number";
+import { writeSecurityAudit } from "../security-audit/security-audit.types";
 import {
   collectDailyRowCategories,
   filterProfitRowsByProductIds,
@@ -72,6 +75,70 @@ type ExistingCurrentCoupangRow = {
   id: string;
   importVersion: number;
 } | null;
+
+function coupangRuleAuditSnapshot(rule: {
+  id: string;
+  coupangProductId: string;
+  priority: number;
+  isActive: boolean;
+}) {
+  return {
+    id: rule.id,
+    productId: rule.coupangProductId,
+    priority: rule.priority,
+    isActive: rule.isActive
+  } satisfies Prisma.InputJsonObject;
+}
+
+function coupangProductAuditSnapshot(product: {
+  id: string;
+  standardName: string;
+  displayName: string;
+  sortOrder: number;
+  isActive: boolean;
+}) {
+  return {
+    id: product.id,
+    standardName: product.standardName,
+    displayName: product.displayName,
+    sortOrder: product.sortOrder,
+    isActive: product.isActive
+  } satisfies Prisma.InputJsonObject;
+}
+
+function coupangProductGroupAuditSnapshot(group: {
+  id: string;
+  standardName: string;
+  displayName: string;
+  sortOrder: number;
+  isActive: boolean;
+}) {
+  return {
+    id: group.id,
+    standardName: group.standardName,
+    displayName: group.displayName,
+    sortOrder: group.sortOrder,
+    isActive: group.isActive
+  } satisfies Prisma.InputJsonObject;
+}
+
+function coupangDailyCategoryAuditSnapshot(category: {
+  id: string;
+  displayName: string;
+  sortOrder: number;
+  isActive: boolean;
+  members?: Array<{ coupangProductId: string }>;
+}) {
+  return {
+    id: category.id,
+    displayName: category.displayName,
+    sortOrder: category.sortOrder,
+    isActive: category.isActive,
+    ...(category.members
+      ? { productIds: category.members.map((member) => member.coupangProductId).sort() }
+      : {})
+  } satisfies Prisma.InputJsonObject;
+}
 
 type CoupangRowImportDecision = {
   importVersion: number;
@@ -1272,7 +1339,7 @@ export class CoupangService {
     });
   }
 
-  async deleteUpload(id: string) {
+  async deleteUpload(id: string, actorId?: string) {
     const upload = await this.assertUpload(id);
     const priceTextRows = upload.sourceType === CoupangUploadSourceType.PRICE_TEXT
       ? priceTextAppliedRows(upload.columnSchema, upload.validRowCount)
@@ -1308,7 +1375,20 @@ export class CoupangService {
       }
       await this.restoreCurrentCoupangSaleLines(tx, saleLineKeys);
       await this.restoreCurrentCoupangAdMetrics(tx, adMetricKeys);
-      return tx.coupangUploadBatch.delete({ where: { id } });
+      const deleted = await tx.coupangUploadBatch.delete({ where: { id } });
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "COUPANG_UPLOAD_DELETE",
+          targetType: "COUPANG_UPLOAD_BATCH",
+          targetId: id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: { sourceType: upload.sourceType, status: upload.status, rowCount: upload.rowCount },
+          afterJson: { deleted: true }
+        });
+      }
+      return deleted;
     }, COUPANG_TRANSACTION_OPTIONS);
   }
 
@@ -1337,10 +1417,10 @@ export class CoupangService {
     });
   }
 
-  async createProductGroup(body: Record<string, unknown>) {
+  async createProductGroup(body: Record<string, unknown>, actorId?: string) {
     const displayName = requiredString(body.displayName ?? body.standardName, "displayName");
     const standardName = standardProductName(requiredString(body.standardName ?? displayName, "standardName"));
-    return this.prisma.coupangProductGroup.create({
+    const save = (client: Pick<Prisma.TransactionClient, "coupangProductGroup">) => client.coupangProductGroup.create({
       data: {
         standardName,
         displayName,
@@ -1349,10 +1429,24 @@ export class CoupangService {
       },
       include: { products: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const created = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_PRODUCT_GROUP_CREATED",
+        targetType: "COUPANG_PRODUCT_GROUP",
+        targetId: created.id,
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: coupangProductGroupAuditSnapshot(created)
+      });
+      return created;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async updateProductGroup(id: string, body: Record<string, unknown>) {
-    await this.assertProductGroup(id);
+  async updateProductGroup(id: string, body: Record<string, unknown>, actorId?: string) {
+    const before = await this.assertProductGroup(id);
     const data: Prisma.CoupangProductGroupUpdateInput = {};
     if (body.displayName !== undefined) {
       data.displayName = requiredString(body.displayName, "displayName");
@@ -1366,20 +1460,50 @@ export class CoupangService {
     if (body.isActive !== undefined) {
       data.isActive = Boolean(body.isActive);
     }
-    return this.prisma.coupangProductGroup.update({
+    const save = (client: Pick<Prisma.TransactionClient, "coupangProductGroup">) => client.coupangProductGroup.update({
       where: { id },
       data,
       include: { products: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: updated.isActive ? "COUPANG_PRODUCT_GROUP_UPDATED" : "COUPANG_PRODUCT_GROUP_DEACTIVATED",
+        targetType: "COUPANG_PRODUCT_GROUP",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: coupangProductGroupAuditSnapshot(before),
+        afterJson: coupangProductGroupAuditSnapshot(updated)
+      });
+      return updated;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async deleteProductGroup(id: string) {
-    await this.assertProductGroup(id);
-    return this.prisma.coupangProductGroup.update({
+  async deleteProductGroup(id: string, actorId?: string) {
+    const before = await this.assertProductGroup(id);
+    const save = (client: Pick<Prisma.TransactionClient, "coupangProductGroup">) => client.coupangProductGroup.update({
       where: { id },
       data: { isActive: false },
       include: { products: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_PRODUCT_GROUP_DEACTIVATED",
+        targetType: "COUPANG_PRODUCT_GROUP",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: coupangProductGroupAuditSnapshot(before),
+        afterJson: coupangProductGroupAuditSnapshot(updated)
+      });
+      return updated;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
   async listDailyReportCategories(includeInactive = false) {
@@ -1439,7 +1563,7 @@ export class CoupangService {
     };
   }
 
-  async createDailyReportCategory(body: Record<string, unknown>) {
+  async createDailyReportCategory(body: Record<string, unknown>, actorId?: string) {
     const displayName = dailyCategoryDisplayName(body.displayName);
     const productIds = dailyCategoryProductIds(body.productIds, false);
     const sortOrder = dailyCategorySortOrder(body.sortOrder, 100);
@@ -1457,6 +1581,17 @@ export class CoupangService {
           },
           include: { members: { select: { coupangProductId: true } } }
         });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "COUPANG_DAILY_REPORT_CATEGORY_CREATED",
+            targetType: "COUPANG_DAILY_REPORT_CATEGORY",
+            targetId: category.id,
+            result: SecurityAuditResult.SUCCESS,
+            afterJson: coupangDailyCategoryAuditSnapshot(category)
+          });
+        }
         return serializeDailyCategory(category);
       }, COUPANG_TRANSACTION_OPTIONS);
     } catch (error) {
@@ -1464,8 +1599,8 @@ export class CoupangService {
     }
   }
 
-  async updateDailyReportCategory(id: string, body: Record<string, unknown>) {
-    await this.assertDailyReportCategory(id);
+  async updateDailyReportCategory(id: string, body: Record<string, unknown>, actorId?: string) {
+    const before = await this.assertDailyReportCategory(id);
     const data: Prisma.CoupangDailyReportCategoryUpdateInput = {};
     if (body.displayName !== undefined) {
       const displayName = dailyCategoryDisplayName(body.displayName);
@@ -1475,18 +1610,34 @@ export class CoupangService {
     if (body.sortOrder !== undefined) data.sortOrder = dailyCategorySortOrder(body.sortOrder);
     if (body.isActive !== undefined) data.isActive = dailyCategoryBoolean(body.isActive, "isActive");
     try {
-      const category = await this.prisma.coupangDailyReportCategory.update({
+      const save = (client: Pick<Prisma.TransactionClient, "coupangDailyReportCategory">) => client.coupangDailyReportCategory.update({
         where: { id },
         data,
         include: { members: { select: { coupangProductId: true } } }
       });
-      return serializeDailyCategory(category);
+      if (!actorId) return serializeDailyCategory(await save(this.prisma));
+      return await this.prisma.$transaction(async (tx) => {
+        const category = await save(tx);
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: category.isActive
+            ? "COUPANG_DAILY_REPORT_CATEGORY_UPDATED"
+            : "COUPANG_DAILY_REPORT_CATEGORY_DEACTIVATED",
+          targetType: "COUPANG_DAILY_REPORT_CATEGORY",
+          targetId: id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: coupangDailyCategoryAuditSnapshot(before),
+          afterJson: coupangDailyCategoryAuditSnapshot(category)
+        });
+        return serializeDailyCategory(category);
+      }, COUPANG_TRANSACTION_OPTIONS);
     } catch (error) {
       rethrowDailyCategoryWriteError(error);
     }
   }
 
-  async replaceDailyReportCategoryProducts(id: string, body: Record<string, unknown>) {
+  async replaceDailyReportCategoryProducts(id: string, body: Record<string, unknown>, actorId?: string) {
     const productIds = dailyCategoryProductIds(body.productIds, true);
     const expectedUpdatedAt = typeof body.expectedUpdatedAt === "string"
       ? new Date(body.expectedUpdatedAt)
@@ -1508,6 +1659,12 @@ export class CoupangService {
     try {
       return await this.prisma.$transaction(async (tx) => {
         await assertDailyCategoryProductsExist(tx, productIds);
+        const before = actorId
+          ? await tx.coupangDailyReportCategory.findUnique({
+              where: { id },
+              include: { members: { select: { coupangProductId: true } } }
+            })
+          : null;
         const claimed = await tx.coupangDailyReportCategory.updateMany({
           where: { id, updatedAt: expectedUpdatedAt },
           data: { ...metadata, updatedAt: nextUpdatedAt }
@@ -1536,6 +1693,18 @@ export class CoupangService {
           where: { id },
           include: { members: { select: { coupangProductId: true } } }
         });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "COUPANG_DAILY_REPORT_CATEGORY_PRODUCTS_REPLACED",
+            targetType: "COUPANG_DAILY_REPORT_CATEGORY",
+            targetId: id,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: before ? coupangDailyCategoryAuditSnapshot(before) : undefined,
+            afterJson: coupangDailyCategoryAuditSnapshot(updated)
+          });
+        }
         return serializeDailyCategory(updated);
       }, COUPANG_TRANSACTION_OPTIONS);
     } catch (error) {
@@ -1543,14 +1712,28 @@ export class CoupangService {
     }
   }
 
-  async deleteDailyReportCategory(id: string) {
-    await this.assertDailyReportCategory(id);
-    const category = await this.prisma.coupangDailyReportCategory.update({
+  async deleteDailyReportCategory(id: string, actorId?: string) {
+    const before = await this.assertDailyReportCategory(id);
+    const save = (client: Pick<Prisma.TransactionClient, "coupangDailyReportCategory">) => client.coupangDailyReportCategory.update({
       where: { id },
       data: { isActive: false },
       include: { members: { select: { coupangProductId: true } } }
     });
-    return serializeDailyCategory(category);
+    if (!actorId) return serializeDailyCategory(await save(this.prisma));
+    return this.prisma.$transaction(async (tx) => {
+      const category = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_DAILY_REPORT_CATEGORY_DEACTIVATED",
+        targetType: "COUPANG_DAILY_REPORT_CATEGORY",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: coupangDailyCategoryAuditSnapshot(before),
+        afterJson: coupangDailyCategoryAuditSnapshot(category)
+      });
+      return serializeDailyCategory(category);
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
   private async assertDailyReportCategory(id: string) {
@@ -1567,12 +1750,11 @@ export class CoupangService {
     });
   }
 
-  async createMappingRule(body: Record<string, unknown>) {
+  async createMappingRule(body: Record<string, unknown>, actorId?: string) {
     const coupangProductId = requiredString(body.coupangProductId ?? body.productId, "coupangProductId");
     const product = await this.assertProduct(coupangProductId);
     const includeKeywords = requiredStringArray(body.includeKeywords, "includeKeywords");
-    return this.prisma.coupangProductRule.create({
-      data: {
+    const save = async (client: Pick<Prisma.TransactionClient, "coupangProductRule">) => client.coupangProductRule.create({ data: {
         coupangProductId,
         displayName: optionalString(body.displayName) ?? product.displayName,
         includeKeywords,
@@ -1587,10 +1769,24 @@ export class CoupangService {
       },
       include: { product: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const created = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_MAPPING_RULE_CREATED",
+        targetType: "COUPANG_PRODUCT_RULE",
+        targetId: created.id,
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: coupangRuleAuditSnapshot(created)
+      });
+      return created;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async updateMappingRule(id: string, body: Record<string, unknown>) {
-    await this.assertMappingRule(id);
+  async updateMappingRule(id: string, body: Record<string, unknown>, actorId?: string) {
+    const before = await this.assertMappingRule(id);
     const data: Prisma.CoupangProductRuleUncheckedUpdateInput = {};
     const nextProductId = body.coupangProductId ?? body.productId;
     if (nextProductId !== undefined) {
@@ -1628,23 +1824,49 @@ export class CoupangService {
     if (body.note !== undefined) {
       data.note = optionalNullableString(body.note);
     }
-    return this.prisma.coupangProductRule.update({
-      where: { id },
-      data,
-      include: { product: true }
+    const save = async (client: Pick<Prisma.TransactionClient, "coupangProductRule">) => client.coupangProductRule.update({
+      where: { id }, data, include: { product: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: updated.isActive ? "COUPANG_MAPPING_RULE_UPDATED" : "COUPANG_MAPPING_RULE_DEACTIVATED",
+        targetType: "COUPANG_PRODUCT_RULE",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: coupangRuleAuditSnapshot(before),
+        afterJson: coupangRuleAuditSnapshot(updated)
+      });
+      return updated;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async deleteMappingRule(id: string) {
-    await this.assertMappingRule(id);
-    return this.prisma.coupangProductRule.update({
-      where: { id },
-      data: { isActive: false },
-      include: { product: true }
+  async deleteMappingRule(id: string, actorId?: string) {
+    const before = await this.assertMappingRule(id);
+    const save = async (client: Pick<Prisma.TransactionClient, "coupangProductRule">) => client.coupangProductRule.update({
+      where: { id }, data: { isActive: false }, include: { product: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_MAPPING_RULE_DEACTIVATED",
+        targetType: "COUPANG_PRODUCT_RULE",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: coupangRuleAuditSnapshot(before),
+        afterJson: coupangRuleAuditSnapshot(updated)
+      });
+      return updated;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async createProductSetting(body: Record<string, unknown>) {
+  async createProductSetting(body: Record<string, unknown>, actorId?: string) {
     assertGlobalSalesFeeFieldsNotPresent(body);
     assertCoupangCostEffectiveToNotPresent(body);
     const displayName = requiredString(body.displayName ?? body.standardName, "displayName");
@@ -1661,8 +1883,7 @@ export class CoupangService {
     if (groupId) {
       await this.assertProductGroup(groupId);
     }
-    return this.prisma.coupangProduct.create({
-      data: {
+    const save = async (client: Pick<Prisma.TransactionClient, "coupangProduct">) => client.coupangProduct.create({ data: {
         standardName,
         displayName,
         sortOrder: numberOrDefault(body.sortOrder, 100),
@@ -1672,9 +1893,23 @@ export class CoupangService {
       },
       include: { group: true, productRules: true, costRules: true }
     });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const created = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_PRODUCT_SETTING_CREATED",
+        targetType: "COUPANG_PRODUCT",
+        targetId: created.id,
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: coupangProductAuditSnapshot(created)
+      });
+      return created;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async updateProductSetting(id: string, body: Record<string, unknown>) {
+  async updateProductSetting(id: string, body: Record<string, unknown>, actorId?: string) {
     assertGlobalSalesFeeFieldsNotPresent(body);
     assertCoupangCostEffectiveToNotPresent(body);
     if (hasCoupangCostFields(body)) {
@@ -1685,22 +1920,39 @@ export class CoupangService {
       const result = await this.updateProductConfiguration(id, {
         ...configurationBody,
         effectiveFrom: body.effectiveFrom ?? formatDateOnly(currentKoreaDateOnly())
-      });
+      }, actorId);
       return result.product;
     }
-    await this.assertProduct(id);
-    const productData = await this.buildCoupangProductSettingUpdateData(this.prisma, body);
-    if (Object.keys(productData).length > 0) {
-      await this.prisma.coupangProduct.update({ where: { id }, data: productData });
-    }
-
-    return this.prisma.coupangProduct.findUnique({
-      where: { id },
-      include: { group: true, productRules: true, costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] } }
-    });
+    const before = await this.assertProduct(id);
+    const save = async (client: Pick<Prisma.TransactionClient, "coupangProduct" | "coupangProductGroup">) => {
+      const productData = await this.buildCoupangProductSettingUpdateData(client, body);
+      if (Object.keys(productData).length > 0) {
+        await client.coupangProduct.update({ where: { id }, data: productData });
+      }
+      return client.coupangProduct.findUnique({
+        where: { id },
+        include: { group: true, productRules: true, costRules: { orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] } }
+      });
+    };
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await save(tx);
+      if (!updated) throw new NotFoundException({ code: "COUPANG_PRODUCT_NOT_FOUND", message: "Coupang product was not found." });
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: updated.isActive ? "COUPANG_PRODUCT_SETTING_UPDATED" : "COUPANG_PRODUCT_SETTING_DEACTIVATED",
+        targetType: "COUPANG_PRODUCT",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: coupangProductAuditSnapshot(before),
+        afterJson: coupangProductAuditSnapshot(updated)
+      });
+      return updated;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async updateProductConfiguration(id: string, body: Record<string, unknown>) {
+  async updateProductConfiguration(id: string, body: Record<string, unknown>, actorId?: string) {
     assertGlobalSalesFeeFieldsNotPresent(body);
     assertCoupangCostEffectiveToNotPresent(body);
     try {
@@ -1771,6 +2023,21 @@ export class CoupangService {
         }
         const costRules = sortCoupangCostRulesForSettings(updated.costRules);
         const productResult = { ...updated, costRules, currentCostRule: findRuleForDate(costRules, currentKoreaDateOnly()) };
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: updated.isActive ? "COUPANG_PRODUCT_SETTING_UPDATED" : "COUPANG_PRODUCT_SETTING_DEACTIVATED",
+            targetType: "COUPANG_PRODUCT",
+            targetId: id,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: coupangProductAuditSnapshot(product),
+            afterJson: {
+              ...coupangProductAuditSnapshot(updated),
+              costRuleChanged: Boolean(costRuleChange)
+            }
+          });
+        }
         return { product: productResult, costRuleChange };
       }, COUPANG_TRANSACTION_OPTIONS);
     } catch (error) {
@@ -1778,7 +2045,12 @@ export class CoupangService {
     }
   }
 
-  async correctProductCostRule(productId: string, costRuleId: string, body: Record<string, unknown>) {
+  async correctProductCostRule(
+    productId: string,
+    costRuleId: string,
+    body: Record<string, unknown>,
+    actorId?: string
+  ) {
     try {
       return await this.prisma.$transaction(async (tx) => {
         const product = await tx.coupangProduct.findUnique({ where: { id: productId } });
@@ -1845,6 +2117,18 @@ export class CoupangService {
         await tx.coupangCostRule.update({ where: { id: costRuleId }, data });
         await this.normalizeCoupangCostRuleRanges(tx, productId);
         const normalized = await tx.coupangCostRule.findUniqueOrThrow({ where: { id: costRuleId } });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "COUPANG_PRODUCT_COST_RULE_CORRECTED",
+            targetType: "COUPANG_COST_RULE",
+            targetId: costRuleId,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: { productId, effectiveFrom: formatDateOnly(existing.effectiveFrom) },
+            afterJson: { productId, effectiveFrom: formatDateOnly(normalized.effectiveFrom), changedFields }
+          });
+        }
         console.info("COUPANG_COST_RULE_CORRECTED", { productId, costRuleId, effectiveFrom: formatDateOnly(normalized.effectiveFrom), changedFields });
         return normalized;
       }, COUPANG_TRANSACTION_OPTIONS);
@@ -1875,7 +2159,7 @@ export class CoupangService {
     return rules.map(serializeSalesFeeRule);
   }
 
-  async createSalesFeeRule(body: Record<string, unknown>) {
+  async createSalesFeeRule(body: Record<string, unknown>, actorId?: string) {
     const salesFeeRate = salesFeeRateFromPercentBody(body.salesFeePercent);
     const effectiveFrom = requiredDateFromBody(body.effectiveFrom, "effectiveFrom");
     const note = optionalNullableString(body.note);
@@ -1892,6 +2176,17 @@ export class CoupangService {
         const created = await tx.coupangSalesFeeRule.create({ data: { salesFeeRate, effectiveFrom, note } });
         await this.normalizeSalesFeeRuleRanges(tx);
         const rule = await tx.coupangSalesFeeRule.findUniqueOrThrow({ where: { id: created.id } });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "COUPANG_SALES_FEE_SETTING_CREATED",
+            targetType: "COUPANG_SALES_FEE_RULE",
+            targetId: rule.id,
+            result: SecurityAuditResult.SUCCESS,
+            afterJson: { effectiveFrom: formatDateOnly(rule.effectiveFrom) }
+          });
+        }
         return { rule: serializeSalesFeeRule(rule) };
       }, COUPANG_TRANSACTION_OPTIONS);
     } catch (error) {
@@ -1899,7 +2194,7 @@ export class CoupangService {
     }
   }
 
-  async correctSalesFeeRule(id: string, body: Record<string, unknown>) {
+  async correctSalesFeeRule(id: string, body: Record<string, unknown>, actorId?: string) {
     try {
       return await this.prisma.$transaction(async (tx) => {
         await this.lockSalesFeeRuleWrites(tx);
@@ -1938,6 +2233,18 @@ export class CoupangService {
         await tx.coupangSalesFeeRule.update({ where: { id }, data });
         await this.normalizeSalesFeeRuleRanges(tx);
         const rule = await tx.coupangSalesFeeRule.findUniqueOrThrow({ where: { id } });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "COUPANG_SALES_FEE_SETTING_CORRECTED",
+            targetType: "COUPANG_SALES_FEE_RULE",
+            targetId: id,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: { effectiveFrom: formatDateOnly(existing.effectiveFrom) },
+            afterJson: { effectiveFrom: formatDateOnly(rule.effectiveFrom) }
+          });
+        }
         return { rule: serializeSalesFeeRule(rule) };
       }, COUPANG_TRANSACTION_OPTIONS);
     } catch (error) {
@@ -1945,9 +2252,26 @@ export class CoupangService {
     }
   }
 
-  async deleteProductSetting(id: string) {
-    await this.assertProduct(id);
-    return this.prisma.coupangProduct.update({ where: { id }, data: { isActive: false } });
+  async deleteProductSetting(id: string, actorId?: string) {
+    const before = await this.assertProduct(id);
+    const save = async (client: Pick<Prisma.TransactionClient, "coupangProduct">) => client.coupangProduct.update({
+      where: { id }, data: { isActive: false }
+    });
+    if (!actorId) return save(this.prisma);
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await save(tx);
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_PRODUCT_SETTING_DEACTIVATED",
+        targetType: "COUPANG_PRODUCT",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: coupangProductAuditSnapshot(before),
+        afterJson: coupangProductAuditSnapshot(updated)
+      });
+      return updated;
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
   async manualPurchaseOptions(query: { date?: string }) {
@@ -2258,7 +2582,7 @@ export class CoupangService {
     `);
   }
 
-  async rematch(query: { from?: string; to?: string; take?: string }) {
+  async rematch(query: { from?: string; to?: string; take?: string }, actorId?: string) {
     const range = parseDateRange(query.from, query.to);
     const take = Math.min(Math.max(Number(query.take ?? 1000) || 1000, 1), 5000);
     const rules = await this.matcherRules();
@@ -2277,7 +2601,8 @@ export class CoupangService {
       const matched = match.reason === "MATCHED";
       const warnings = matched ? [] : [matchIssue(match.reason, match.candidates)];
       const validationStatus = validationStatusFor([], warnings, matched ? match.productId : null);
-      await this.prisma.coupangSaleLine.update({
+      await this.prisma.$transaction(async (tx) => {
+      await tx.coupangSaleLine.update({
         where: { id: line.id },
         data: {
           coupangProductId: matched ? match.productId : null,
@@ -2294,7 +2619,20 @@ export class CoupangService {
         adMetricId: null,
         rowNumber: line.rowNumber,
         warnings
-      });
+      }, tx);
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "COUPANG_MAPPING_REMATCH",
+          targetType: "COUPANG_SALE_LINE",
+          targetId: line.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: { matched: Boolean(line.coupangProductId), validationStatus: line.validationStatus },
+          afterJson: { matched, validationStatus }
+        });
+      }
+      }, COUPANG_TRANSACTION_OPTIONS);
       matchedSalesCount += matched ? 1 : 0;
     }
 
@@ -2324,7 +2662,8 @@ export class CoupangService {
         warnings,
         productMatches.spendProductId || productMatches.conversionProductId
       );
-      await this.prisma.coupangAdMetric.update({
+      await this.prisma.$transaction(async (tx) => {
+      await tx.coupangAdMetric.update({
         where: { id: metric.id },
         data: {
           spendProductId: productMatches.spendProductId,
@@ -2344,7 +2683,28 @@ export class CoupangService {
         adMetricId: metric.id,
         rowNumber: metric.rowNumber,
         warnings
-      });
+      }, tx);
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "COUPANG_MAPPING_REMATCH",
+          targetType: "COUPANG_AD_METRIC",
+          targetId: metric.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: {
+            spendMatched: Boolean(metric.spendProductId),
+            conversionMatched: Boolean(metric.conversionProductId),
+            validationStatus: metric.validationStatus
+          },
+          afterJson: {
+            spendMatched: productMatches.spendMatched,
+            conversionMatched: productMatches.conversionMatched,
+            validationStatus
+          }
+        });
+      }
+      }, COUPANG_TRANSACTION_OPTIONS);
       matchedSpendCount += productMatches.spendMatched ? 1 : 0;
       matchedConversionCount += productMatches.conversionMatched ? 1 : 0;
     }
@@ -2367,7 +2727,8 @@ export class CoupangService {
         ...(isInactivePromotionStatus(promotion.promotionStatus) ? [invalidPromotionStatusIssue(promotion.promotionStatus)] : [])
       ];
       const validationStatus = validationStatusFor([], warnings, matched ? match.productId : null);
-      await this.prisma.coupangPromotionPrice.update({
+      await this.prisma.$transaction(async (tx) => {
+      await tx.coupangPromotionPrice.update({
         where: { id: promotion.id },
         data: {
           coupangProductId: matched ? match.productId : null,
@@ -2385,8 +2746,31 @@ export class CoupangService {
         promotionPriceId: promotion.id,
         rowNumber: promotion.rowNumber,
         warnings
-      });
+      }, tx);
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "COUPANG_MAPPING_REMATCH",
+          targetType: "COUPANG_PROMOTION_PRICE",
+          targetId: promotion.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: { matched: Boolean(promotion.coupangProductId), validationStatus: promotion.validationStatus },
+          afterJson: { matched, validationStatus }
+        });
+      }
+      }, COUPANG_TRANSACTION_OPTIONS);
       matchedPromotionCount += matched ? 1 : 0;
+    }
+    if (actorId && saleLines.length === 0 && adMetrics.length === 0 && promotionPrices.length === 0) {
+      await this.prisma.$transaction((tx) => writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_MAPPING_REMATCH",
+        targetType: "COUPANG_MAPPING",
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: { scannedCount: 0, matchedCount: 0 }
+      }));
     }
     return {
       period: { from: range.from, to: range.to },
@@ -3467,8 +3851,8 @@ export class CoupangService {
     promotionPriceId?: string | null;
     rowNumber: number;
     warnings: RowIssue[];
-  }) {
-    await this.prisma.coupangUploadRowError.deleteMany({
+  }, client: Pick<Prisma.TransactionClient, "coupangUploadRowError"> = this.prisma) {
+    await client.coupangUploadRowError.deleteMany({
       where: {
         saleLineId: input.saleLineId ?? undefined,
         adMetricId: input.adMetricId ?? undefined,
@@ -3477,7 +3861,7 @@ export class CoupangService {
       }
     });
     await this.createRowErrors(
-      this.prisma as unknown as Prisma.TransactionClient,
+      client as Prisma.TransactionClient,
       input.uploadBatchId,
       input.sourceType,
       input.saleLineId,

@@ -1,5 +1,5 @@
 import { Cafe24CouponScope, Prisma } from "@prisma/client";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Cafe24CouponRulesService } from "./cafe24-coupon-rules.service";
 
 describe("Cafe24CouponRulesService", () => {
@@ -176,6 +176,28 @@ describe("Cafe24CouponRulesService", () => {
     const service = new Cafe24CouponRulesService(fakePrisma({ existing: null }) as never);
     await expectErrorCode(service.updateCouponRule("missing", { isActive: false }), "COUPON_RULE_NOT_FOUND");
   });
+
+  it("writes create and update SUCCESS audits in the coupon mutation transaction", async () => {
+    const prisma = fakePrisma();
+    const service = new Cafe24CouponRulesService(prisma as never);
+
+    await service.createCouponRule(productBody(), "actor-1");
+    await service.updateCouponRule("rule-1", { isActive: false }, "actor-1");
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(prisma.auditCreate.mock.calls.map(([call]: any[]) => call.data)).toEqual([
+      expect.objectContaining({
+        actorUserId: "actor-1",
+        action: "CAFE24_COUPON_RULE_CREATED",
+        result: "SUCCESS"
+      }),
+      expect.objectContaining({
+        actorUserId: "actor-1",
+        action: "CAFE24_COUPON_RULE_DEACTIVATED",
+        result: "SUCCESS"
+      })
+    ]);
+  });
 });
 
 function productBody() {
@@ -220,7 +242,8 @@ function fakePrisma(
         }
       : input.existing;
 
-  return {
+  const auditCreate = vi.fn(async ({ data }: any) => data);
+  const prisma = {
     createCalls,
     updateCalls,
     findManyCalls,
@@ -245,8 +268,12 @@ function fakePrisma(
         updateCalls.push(args);
         return { id: "rule-1", ...args.data };
       }
-    }
+    },
+    securityAuditEvent: { create: auditCreate },
+    auditCreate,
+    $transaction: vi.fn(async (callback: (client: any) => Promise<unknown>) => callback(prisma))
   };
+  return prisma;
 }
 
 async function expectErrorCode(promise: Promise<unknown>, code: string) {

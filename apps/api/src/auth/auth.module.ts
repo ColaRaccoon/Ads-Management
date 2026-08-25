@@ -36,8 +36,10 @@ import { SupabaseJwtVerifier } from "./supabase-jwt.verifier";
   ],
   exports: [
     AUTH_CONFIG,
+    IDENTITY_PROVIDER,
     AuthCookieService,
     AuthService,
+    AuthRequestSecurityService,
     AuthenticationGuard,
     PermissionGuard
   ]

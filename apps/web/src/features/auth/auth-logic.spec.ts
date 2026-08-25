@@ -8,7 +8,7 @@ import { hasPermission, parseAuthMe, roleLabel } from "./auth-types";
 describe("authentication and permission logic", () => {
   it("accepts only server-returned known permissions and uses role only as a label", () => {
     const me = parseAuthMe({
-      user: { id: "u1", email: "user@example.test", name: "User", role: "ADMIN", isActive: true },
+      user: { id: "u1", email: "user@example.test", name: "User", role: "ADMIN", isActive: true, inviteStatus: "ACTIVE" },
       permissions: ["data.read", "imports.manage", "imports.manage"],
       authorizationVersion: "opaque-version"
     });
@@ -21,7 +21,7 @@ describe("authentication and permission logic", () => {
 
   it("rejects unknown permission data instead of deriving permissions from a role", () => {
     expect(() => parseAuthMe({
-      user: { id: "u1", email: null, name: "User", role: "SUPER_ADMIN", isActive: true },
+      user: { id: "u1", email: null, name: "User", role: "SUPER_ADMIN", isActive: true, inviteStatus: "ACTIVE" },
       permissions: ["everything.manage"],
       authorizationVersion: "opaque-version"
     })).toThrow("Invalid authentication response");
@@ -34,6 +34,8 @@ describe("authentication and permission logic", () => {
     ["javascript:alert(1)", "/dashboard"],
     ["/login", "/dashboard"],
     ["/account-setup?next=/sales", "/dashboard"],
+    ["/complete-invitation", "/dashboard"],
+    ["/invite/accept#token_hash=never-a-next-value", "/dashboard"],
     ["/forbidden", "/dashboard"],
     ["/sales?from=2026-08-01#table", "/sales?from=2026-08-01#table"]
   ])("validates post-login next path %s", (next, expected) => {
@@ -49,8 +51,11 @@ describe("authentication and permission logic", () => {
     expect(appFrameDecision("loading", "/dashboard", false)).toEqual({ mode: "loading" });
     expect(appFrameDecision("anonymous", "/dashboard", false)).toEqual({ mode: "redirect", destination: "/login" });
     expect(appFrameDecision("anonymous", "/login", false)).toEqual({ mode: "bare" });
-    expect(appFrameDecision("onboarding", "/dashboard", false)).toEqual({ mode: "redirect", destination: "/account-setup" });
-    expect(appFrameDecision("onboarding", "/account-setup", false)).toEqual({ mode: "bare" });
+    expect(appFrameDecision("anonymous", "/invite/accept", false)).toEqual({ mode: "bare" });
+    expect(appFrameDecision("loading", "/invite/accept", false)).toEqual({ mode: "bare" });
+    expect(appFrameDecision("onboarding", "/dashboard", false)).toEqual({ mode: "redirect", destination: "/complete-invitation" });
+    expect(appFrameDecision("onboarding", "/complete-invitation", false)).toEqual({ mode: "bare" });
+    expect(appFrameDecision("loading", "/complete-invitation", false)).toEqual({ mode: "bare" });
     expect(appFrameDecision("authenticated", "/dashboard", true)).toEqual({ mode: "shell" });
   });
 

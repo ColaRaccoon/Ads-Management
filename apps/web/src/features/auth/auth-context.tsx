@@ -32,6 +32,8 @@ export type AuthContextValue = {
   isAuthenticated: boolean;
   status: AuthStatus;
   login(email: string, password: string): Promise<AuthMe>;
+  acceptInvitation(tokenHash: string): Promise<AuthMe>;
+  completeInvitation(password: string): Promise<AuthMe>;
   logout(): Promise<void>;
   can(permission: Permission): boolean;
   refreshAuth(): Promise<AuthMe | null>;
@@ -179,6 +181,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [queryClient]);
 
+  const replaceSession = useCallback(async (me: AuthMe, status: AuthStatus | null) => {
+    await queryClient.cancelQueries();
+    invalidateApiSession();
+    queryClient.clear();
+    queryClient.setQueryData(AUTH_ME_QUERY_KEY, me);
+    previousIdentity.current = me.user.id;
+    previousAuthorizationVersion.current = me.authorizationVersion;
+    setForcedStatus(status);
+    authCoordinator.broadcastAccountChanged();
+    return me;
+  }, [queryClient]);
+
+  const acceptInvitation = useCallback(async (tokenHash: string) => {
+    const me = parseAuthMe(await apiPost<unknown>("/auth/invitations/accept", { tokenHash }));
+    if (!me.user.isActive || me.user.inviteStatus !== "VERIFIED_PENDING_PASSWORD") {
+      throw new Error("Invalid invitation acceptance response.");
+    }
+    return replaceSession(me, "onboarding");
+  }, [replaceSession]);
+
+  const completeInvitation = useCallback(async (password: string) => {
+    const me = parseAuthMe(await apiPost<unknown>("/auth/password", { password }));
+    if (!me.user.isActive || me.user.inviteStatus !== "ACTIVE") {
+      throw new Error("Invalid invitation completion response.");
+    }
+    return replaceSession(me, null);
+  }, [replaceSession]);
+
   const logout = useCallback(async () => {
     // Local logout is fail-closed and immediate. A peer refresh holding the
     // coordination lock or an unavailable server must never leave the old
@@ -207,10 +237,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: status === "authenticated",
     status,
     login,
+    acceptInvitation,
+    completeInvitation,
     logout,
     can,
     refreshAuth
-  }), [can, login, logout, me, refreshAuth, status]);
+  }), [acceptInvitation, can, completeInvitation, login, logout, me, refreshAuth, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -225,7 +257,9 @@ function statusFromQuery(query: {
   error: unknown;
 }): AuthStatus {
   if (query.isPending) return "loading";
-  if (query.data) return "authenticated";
+  if (query.data?.user.inviteStatus === "ACTIVE" && query.data.user.isActive) return "authenticated";
+  if (query.data?.user.inviteStatus === "VERIFIED_PENDING_PASSWORD" && query.data.user.isActive) return "onboarding";
+  if (query.data) return "not-provisioned";
   const code = apiErrorCode(query.error);
   if (code === "ACCOUNT_ONBOARDING_REQUIRED") return "onboarding";
   if (code === "ACCOUNT_NOT_PROVISIONED") return "not-provisioned";

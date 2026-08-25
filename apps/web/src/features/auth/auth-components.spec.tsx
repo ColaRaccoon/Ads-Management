@@ -73,7 +73,7 @@ describe("authenticated component integration", () => {
     expect(screen.queryByText("Meta Uploads")).toBeNull();
   });
 
-  it("routes onboarding to account setup without mounting business children", async () => {
+  it("routes onboarding to invitation completion without mounting business children", async () => {
     navigation.pathname = "/dashboard";
     renderWithAuth(
       <AppFrame><button type="button">sensitive mutation</button></AppFrame>,
@@ -83,7 +83,7 @@ describe("authenticated component integration", () => {
     expect(screen.queryByRole("button", { name: "sensitive mutation" })).toBeNull();
     expect(screen.queryByText("Meta Uploads")).toBeNull();
     await waitFor(() => {
-      expect(navigation.replace).toHaveBeenCalledWith("/account-setup");
+      expect(navigation.replace).toHaveBeenCalledWith("/complete-invitation");
     });
   });
 
@@ -97,6 +97,23 @@ describe("authenticated component integration", () => {
     expect(screen.getByText(/게스트/)).toBeTruthy();
     expect(screen.queryByText("사용자 관리")).toBeNull();
     expect(screen.getByTestId("business-page")).toBeTruthy();
+  });
+
+  it("shows user and audit navigation only from the two server permissions", () => {
+    const { rerender } = renderWithAuth(
+      <AppShell><div>admin page</div></AppShell>,
+      authValue("authenticated", ["data.read", "users.manage"], "SUPER_ADMIN")
+    );
+
+    expect(screen.getByText("사용자 관리")).toBeTruthy();
+    expect(screen.queryByText("보안 감사")).toBeNull();
+
+    rerender(withAuth(
+      <AppShell><div>admin page</div></AppShell>,
+      authValue("authenticated", ["data.read", "audit.read"], "SUPER_ADMIN")
+    ));
+    expect(screen.queryByText("사용자 관리")).toBeNull();
+    expect(screen.getByText("보안 감사")).toBeTruthy();
   });
 
   it("PermissionGate mounts mutation controls only from server permissions", () => {
@@ -163,13 +180,15 @@ function authValue(
   const authenticated = status === "authenticated";
   return {
     user: authenticated
-      ? { id: "user-1", email: "role@example.test", name: "Role User", role, isActive: true }
+      ? { id: "user-1", email: "role@example.test", name: "Role User", role, isActive: true, inviteStatus: "ACTIVE" }
       : null,
     permissions,
     isLoading: status === "loading",
     isAuthenticated: authenticated,
     status,
     login: vi.fn(),
+    acceptInvitation: vi.fn(),
+    completeInvitation: vi.fn(),
     logout: vi.fn(),
     can: (permission) => granted.has(permission),
     refreshAuth: vi.fn(async () => null)

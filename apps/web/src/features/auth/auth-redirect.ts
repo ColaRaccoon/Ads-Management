@@ -1,5 +1,11 @@
 const APP_ORIGIN = "https://meta-ads-performance.invalid";
-const NON_BUSINESS_NEXT_PATHS = new Set(["/login", "/account-setup", "/forbidden"]);
+const NON_BUSINESS_NEXT_PATHS = new Set([
+  "/login",
+  "/account-setup",
+  "/complete-invitation",
+  "/invite/accept",
+  "/forbidden"
+]);
 
 export function safeNextPath(value: string | null | undefined, fallback = "/dashboard") {
   if (

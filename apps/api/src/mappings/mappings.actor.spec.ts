@@ -17,7 +17,9 @@ describe("MappingsService actor attribution", () => {
         update: vi.fn(async ({ data }) => data)
       },
       adsetProductHistory: { create: adsetProductHistoryCreate },
-      adsetStageHistory: { create: adsetStageHistoryCreate }
+      adsetStageHistory: { create: adsetStageHistoryCreate },
+      securityAuditEvent: { create: vi.fn(async (args) => args) },
+      $transaction: vi.fn(async (callback: (client: unknown) => Promise<unknown>) => callback(prisma))
     };
     const service = new MappingsService(prisma as never);
 

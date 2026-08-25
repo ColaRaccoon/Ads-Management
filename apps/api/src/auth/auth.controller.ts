@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UsePipes, ValidationPipe } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { AuthCookieService } from "./cookie.service";
@@ -8,6 +8,15 @@ import { AuthRequestSecurityService } from "./request-security.service";
 import { Authenticated, CurrentUser, Public } from "./route-decorators";
 import { AuthenticatedUser } from "./auth.types";
 import { authError, AuthHttpException } from "./auth.errors";
+import { AcceptInvitationDto } from "./dto/accept-invitation.dto";
+import { SetInitialPasswordDto } from "./dto/set-initial-password.dto";
+import { invitationError } from "./invitation.errors";
+
+const strictBodyPipe = new ValidationPipe({
+  transform: true,
+  whitelist: true,
+  forbidNonWhitelisted: true
+});
 
 @Controller("auth")
 export class AuthController {
@@ -98,6 +107,42 @@ export class AuthController {
   me(@CurrentUser() principal: AuthenticatedUser, @Res({ passthrough: true }) response: Response) {
     setNoStore(response);
     return this.authService.me(principal);
+  }
+
+  @Post("invitations/accept")
+  @Public()
+  @HttpCode(200)
+  @UsePipes(strictBodyPipe)
+  async acceptInvitation(
+    @Body() body: AcceptInvitationDto,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    setNoStore(response);
+    await this.requestSecurity.assertInvitationAccept(request, body.tokenHash);
+    if (await this.authService.hasActiveBrowserSession(this.cookies.readSessionHandle(request))) {
+      throw invitationError("ACTIVE_SESSION_PRESENT");
+    }
+    const result = await this.authService.acceptInvitation(body.tokenHash);
+    this.cookies.setAuthenticatedCookies(response, result.cookies);
+    return result.response;
+  }
+
+  @Post("password")
+  @Authenticated()
+  @HttpCode(200)
+  @UsePipes(strictBodyPipe)
+  async setInitialPassword(
+    @Body() body: SetInitialPasswordDto,
+    @CurrentUser() principal: AuthenticatedUser,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    setNoStore(response);
+    await this.requestSecurity.assertCsrfMutation(request, "password");
+    const accessToken = this.cookies.readAccessToken(request);
+    if (!accessToken) throw invitationError("ONBOARDING_SESSION_REQUIRED");
+    return this.authService.completeInitialPassword(principal, accessToken, body.password);
   }
 }
 

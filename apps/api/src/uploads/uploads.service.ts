@@ -36,7 +36,7 @@ export class UploadsService {
     return this.queryService.uploadErrors(id);
   }
 
-  deleteUpload(id: string) {
-    return this.lifecycleService.deleteUpload(id);
+  deleteUpload(id: string, actorId?: string) {
+    return this.lifecycleService.deleteUpload(id, actorId);
   }
 }

@@ -40,14 +40,19 @@ export class Cafe24UploadsController {
 
   @Delete("uploads/:id")
   @RequirePermissions("imports.manage")
-  deleteUpload(@Param("id") id: string) {
-    return this.cafe24UploadsService.deleteUpload(id);
+  deleteUpload(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.cafe24UploadsService.deleteUpload(id, actor.id);
   }
 
   @Post("rematch")
   @RequirePermissions("mappings.manage")
-  rematch(@Query("from") from?: string, @Query("to") to?: string, @Query("take") take?: string) {
-    return this.cafe24UploadsService.rematchCafe24Lines({ from, to, take });
+  rematch(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("take") take?: string
+  ) {
+    return this.cafe24UploadsService.rematchCafe24Lines({ from, to, take }, actor.id);
   }
 
   @Get("rules")
@@ -58,19 +63,23 @@ export class Cafe24UploadsController {
 
   @Post("rules")
   @RequirePermissions("mappings.manage")
-  createRule(@Body() body: Record<string, unknown>) {
-    return this.cafe24UploadsService.createRule(body);
+  createRule(@Body() body: Record<string, unknown>, @CurrentUser() actor: AuthenticatedUser) {
+    return this.cafe24UploadsService.createRule(body, actor.id);
   }
 
   @Patch("rules/:id")
   @RequirePermissions("mappings.manage")
-  updateRule(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.cafe24UploadsService.updateRule(id, body);
+  updateRule(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.cafe24UploadsService.updateRule(id, body, actor.id);
   }
 
   @Delete("rules/:id")
   @RequirePermissions("mappings.manage")
-  deleteRule(@Param("id") id: string) {
-    return this.cafe24UploadsService.deleteRule(id);
+  deleteRule(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.cafe24UploadsService.deleteRule(id, actor.id);
   }
 }

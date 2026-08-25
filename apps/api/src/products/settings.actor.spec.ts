@@ -9,7 +9,14 @@ const SPOOFED_ACTOR_ID = "22222222-2222-4222-8222-222222222222";
 describe("ProductsService setting actor attribution", () => {
   it("attributes dynamic and fixed-key settings to the authenticated actor", async () => {
     const upsert = vi.fn(async (args) => args);
-    const service = new ProductsService({ appSetting: { upsert } } as never);
+    const tx = {
+      appSetting: { findUnique: vi.fn(async () => null), upsert },
+      securityAuditEvent: { create: vi.fn(async (args) => args) }
+    };
+    const service = new ProductsService({
+      ...tx,
+      $transaction: vi.fn(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx))
+    } as never);
 
     await service.updateSetting(
       "global_setting",

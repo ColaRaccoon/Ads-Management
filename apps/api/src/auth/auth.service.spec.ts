@@ -4,6 +4,7 @@ import { AuthConfig } from "./auth.config";
 import { AuthCookieService } from "./cookie.service";
 import {
   ProviderInvalidCredentialsError,
+  ProviderInvalidInvitationError,
   ProviderInvalidRefreshTokenError
 } from "./identity-provider";
 import { AuthService } from "./auth.service";
@@ -62,6 +63,7 @@ describe("AuthService", () => {
     });
     expect(JSON.stringify(result.response)).not.toContain("access-token");
     expect(JSON.stringify(result.response)).not.toContain("refresh-token");
+    expect(result.response.user.inviteStatus).toBe(InviteStatus.ACTIVE);
     expect(result.response.permissions).toEqual(["data.read", "change_logs.create", "reports.generate"]);
   });
 
@@ -124,6 +126,277 @@ describe("AuthService", () => {
     expect((await service.authenticateAccessToken("first")).role).toBe(AppRole.USER);
     expect((await service.authenticateAccessToken("second")).role).toBe(AppRole.ADMIN);
     expect(findUser).toHaveBeenCalledTimes(2);
+  });
+
+  it("authenticates only the verified onboarding session with no business permissions", async () => {
+    const onboarding = { ...baseUser, inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD };
+    const prisma = {
+      appUser: { findUnique: vi.fn().mockResolvedValue(onboarding) },
+      appAuthSession: {
+        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, revokedAt: null }),
+        update: vi.fn().mockResolvedValue({})
+      }
+    };
+    const service = makeService(prisma, providerFake(), matchingVerifier());
+    const principal = await service.authenticateAccessToken("onboarding-access");
+    expect(principal.inviteStatus).toBe(InviteStatus.VERIFIED_PENDING_PASSWORD);
+    expect(principal.permissions).toEqual([]);
+    expect(service.me(principal).user.inviteStatus).toBe(InviteStatus.VERIFIED_PENDING_PASSWORD);
+  });
+
+  it("accepts an exact one-time invitation identity and creates cookies only after local commit", async () => {
+    const invited = {
+      ...baseUser,
+      inviteStatus: InviteStatus.INVITED,
+      invitationRequestId: "55555555-5555-4555-8555-555555555555"
+    };
+    const updated = { ...invited, inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD };
+    const tx = {
+      $executeRaw: vi.fn(),
+      appUser: {
+        findUnique: vi.fn().mockResolvedValue(invited),
+        update: vi.fn().mockResolvedValue(updated)
+      },
+      appAuthSession: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({ id: appSessionId })
+      }
+    };
+    const provider = providerFake();
+    provider.verifyInvitationToken.mockResolvedValue({
+      ...providerSession(),
+      user: {
+        ...providerSession().user,
+        invitationRequestId: invited.invitationRequestId
+      }
+    });
+    const service = makeService(transactionPrisma(tx), provider, matchingVerifier());
+    const result = await service.acceptInvitation("opaque-link-hash");
+    expect(result.response.user.inviteStatus).toBe(InviteStatus.VERIFIED_PENDING_PASSWORD);
+    expect(result.response.permissions).toEqual([]);
+    expect(result.cookies.sessionId).toBe(appSessionId);
+  });
+
+  it("maps invalid or expired provider invitation links to one stable error without raw details", async () => {
+    const provider = providerFake();
+    provider.verifyInvitationToken.mockRejectedValue(
+      new ProviderInvalidInvitationError("raw expired provider token detail")
+    );
+    let thrown: any;
+    try {
+      await makeService(transactionPrisma({}), provider, matchingVerifier())
+        .acceptInvitation("expired-link-hash");
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toMatchObject({ code: "INVITATION_INVALID_OR_EXPIRED", status: 400 });
+    expect(JSON.stringify(thrown.getResponse())).not.toMatch(/raw expired|link-hash/i);
+  });
+
+  it("rejects replay after the invitation left INVITED and revokes the provider session", async () => {
+    const replayed = {
+      ...baseUser,
+      inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD,
+      invitationRequestId: "55555555-5555-4555-8555-555555555555"
+    };
+    const tx = {
+      $executeRaw: vi.fn(),
+      appUser: { findUnique: vi.fn().mockResolvedValue(replayed), update: vi.fn() },
+      appAuthSession: { findUnique: vi.fn(), create: vi.fn() }
+    };
+    const provider = providerFake();
+    provider.verifyInvitationToken.mockResolvedValue({
+      ...providerSession(),
+      user: { ...providerSession().user, invitationRequestId: replayed.invitationRequestId }
+    });
+    await expect(makeService(transactionPrisma(tx), provider, matchingVerifier())
+      .acceptInvitation("replayed-link-hash"))
+      .rejects.toMatchObject({ code: "INVITATION_INVALID_OR_EXPIRED" });
+    expect(provider.revokeSession).toHaveBeenCalledWith("access-token");
+    expect(tx.appUser.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a provider subject mismatch before local invitation state changes", async () => {
+    const provider = providerFake();
+    provider.verifyInvitationToken.mockResolvedValue(providerSession());
+    const service = makeService(transactionPrisma({}), provider, {
+      verify: vi.fn().mockResolvedValue({
+        subject: "77777777-7777-4777-8777-777777777777",
+        sessionId: providerSessionId
+      })
+    });
+    await expect(service.acceptInvitation("subject-mismatch-link"))
+      .rejects.toMatchObject({ code: "INVITATION_INVALID_OR_EXPIRED" });
+    expect(provider.revokeSession).toHaveBeenCalledWith("access-token");
+  });
+
+  it.each([
+    ["email", { email: "other@example.com" }],
+    ["request id", { invitationRequestId: "66666666-6666-4666-8666-666666666666" }]
+  ])("rejects provider %s mismatch against the local invitation", async (_name, providerOverride) => {
+    const invited = {
+      ...baseUser,
+      inviteStatus: InviteStatus.INVITED,
+      invitationRequestId: "55555555-5555-4555-8555-555555555555"
+    };
+    const tx = {
+      $executeRaw: vi.fn(),
+      appUser: { findUnique: vi.fn().mockResolvedValue(invited), update: vi.fn() },
+      appAuthSession: { findUnique: vi.fn(), create: vi.fn() }
+    };
+    const provider = providerFake();
+    provider.verifyInvitationToken.mockResolvedValue({
+      ...providerSession(),
+      user: {
+        ...providerSession().user,
+        invitationRequestId: invited.invitationRequestId,
+        ...providerOverride
+      }
+    });
+    await expect(makeService(transactionPrisma(tx), provider, matchingVerifier())
+      .acceptInvitation("mismatched-link"))
+      .rejects.toMatchObject({ code: "INVITATION_INVALID_OR_EXPIRED" });
+    expect(provider.revokeSession).toHaveBeenCalledWith("access-token");
+    expect(tx.appUser.update).not.toHaveBeenCalled();
+  });
+
+  it("marks provider-success/local-audit failure for reconciliation and issues no service result", async () => {
+    const invited = {
+      ...baseUser,
+      inviteStatus: InviteStatus.INVITED,
+      invitationRequestId: "55555555-5555-4555-8555-555555555555"
+    };
+    const verified = { ...invited, inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD };
+    const reconciliation = {
+      ...invited,
+      inviteStatus: InviteStatus.RECONCILE_REQUIRED,
+      invitationErrorCode: "INVITATION_ACCEPT_LOCAL_COMMIT_FAILED"
+    };
+    const auditCreate = vi.fn()
+      .mockRejectedValueOnce(new Error("raw local audit failure"))
+      .mockResolvedValueOnce({});
+    const tx = {
+      $executeRaw: vi.fn(),
+      appUser: {
+        findUnique: vi.fn().mockResolvedValue(invited),
+        update: vi.fn()
+          .mockResolvedValueOnce(verified)
+          .mockResolvedValueOnce(reconciliation)
+      },
+      appAuthSession: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({ id: appSessionId })
+      },
+      securityAuditEvent: { create: auditCreate }
+    };
+    const provider = providerFake();
+    provider.verifyInvitationToken.mockResolvedValue({
+      ...providerSession(),
+      user: { ...providerSession().user, invitationRequestId: invited.invitationRequestId }
+    });
+    let thrown: any;
+    try {
+      await makeService(transactionPrisma(tx), provider, matchingVerifier())
+        .acceptInvitation("local-failure-link");
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toMatchObject({ code: "INVITATION_INVALID_OR_EXPIRED" });
+    expect(JSON.stringify(thrown.getResponse())).not.toContain("raw local audit failure");
+    expect(provider.revokeSession).toHaveBeenCalledWith("access-token");
+    expect(tx.appUser.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        inviteStatus: InviteStatus.RECONCILE_REQUIRED,
+        invitationErrorCode: "INVITATION_ACCEPT_LOCAL_COMMIT_FAILED"
+      })
+    }));
+  });
+
+  it("completes the first password and atomically activates the onboarding user", async () => {
+    const onboarding = { ...baseUser, inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD };
+    const active = { ...baseUser, inviteStatus: InviteStatus.ACTIVE, authzVersion: 2 };
+    const tx = {
+      $executeRaw: vi.fn(),
+      appUser: {
+        findUnique: vi.fn().mockResolvedValue(onboarding),
+        update: vi.fn().mockResolvedValue(active)
+      },
+      appAuthSession: {
+        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, revokedAt: null })
+      }
+    };
+    const provider = providerFake();
+    provider.updatePassword.mockResolvedValue(providerSession().user);
+    const service = makeService(transactionPrisma(tx), provider, matchingVerifier());
+    const response = await service.completeInitialPassword({
+      id: appUserId,
+      authUserId,
+      email: baseUser.email,
+      name: baseUser.name,
+      role: baseUser.role,
+      inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD,
+      isActive: true,
+      authzVersion: 1,
+      permissions: [],
+      sessionId: appSessionId
+    }, "onboarding-access", "a sufficiently long password");
+    expect(provider.updatePassword).toHaveBeenCalledWith("onboarding-access", "a sufficiently long password");
+    expect(response.user.inviteStatus).toBe(InviteStatus.ACTIVE);
+    expect(response.permissions).toContain("data.read");
+  });
+
+  it("keeps onboarding blocked after local activation failure and allows same-session retry", async () => {
+    let user: any = { ...baseUser, inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD };
+    const active = { ...baseUser, inviteStatus: InviteStatus.ACTIVE, authzVersion: 2 };
+    const session = { id: appSessionId, appUserId, revokedAt: null };
+    const tx = {
+      $executeRaw: vi.fn(),
+      appUser: {
+        findUnique: vi.fn().mockImplementation(async () => user),
+        update: vi.fn().mockImplementation(async () => {
+          user = active;
+          return active;
+        })
+      },
+      appAuthSession: { findUnique: vi.fn().mockResolvedValue(session) },
+      securityAuditEvent: { create: vi.fn().mockResolvedValue({}) }
+    };
+    const prisma = transactionPrisma(tx);
+    let transactionAttempt = 0;
+    prisma.$transaction.mockImplementation(async (callback: (client: any) => unknown) => {
+      transactionAttempt += 1;
+      if (transactionAttempt === 1) throw new Error("raw database activation failure");
+      return callback(tx);
+    });
+    const provider = providerFake();
+    provider.updatePassword.mockResolvedValue(providerSession().user);
+    const service = makeService(prisma, provider, matchingVerifier());
+    const principal = onboardingPrincipal();
+    let thrown: any;
+    try {
+      await service.completeInitialPassword(
+        principal,
+        "onboarding-access-token",
+        "a sufficiently long password"
+      );
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toMatchObject({ code: "PASSWORD_LOCAL_COMMIT_FAILED" });
+    expect(JSON.stringify(thrown.getResponse())).not.toMatch(/raw database|access-token|sufficiently long/i);
+    expect(user.inviteStatus).toBe(InviteStatus.VERIFIED_PENDING_PASSWORD);
+    expect(service.me(principal).permissions).toEqual([]);
+
+    await expect(service.completeInitialPassword(
+      principal,
+      "onboarding-access-token",
+      "a sufficiently long password"
+    )).resolves.toMatchObject({
+      user: { inviteStatus: InviteStatus.ACTIVE },
+      permissions: expect.arrayContaining(["data.read"])
+    });
+    expect(provider.updatePassword).toHaveBeenCalledTimes(2);
+    expect(user.inviteStatus).toBe(InviteStatus.ACTIVE);
   });
 
   it("returns REFRESH_RACE_RETRY after taking the database advisory lock", async () => {
@@ -368,8 +641,10 @@ function makeService(prisma: any, provider: any, verifier: any) {
 }
 
 function transactionPrisma(tx: any) {
-  const prisma: any = { ...tx };
-  prisma.$transaction = vi.fn(async (callback: (client: any) => unknown) => callback(tx));
+  const audit = tx.securityAuditEvent ?? { create: vi.fn().mockResolvedValue({}) };
+  const transactionClient = { ...tx, securityAuditEvent: audit };
+  const prisma: any = { ...transactionClient };
+  prisma.$transaction = vi.fn(async (callback: (client: any) => unknown) => callback(transactionClient));
   return prisma;
 }
 
@@ -378,7 +653,11 @@ function providerFake() {
     signInWithPassword: vi.fn().mockResolvedValue(providerSession()),
     refreshSession: vi.fn().mockResolvedValue(providerSession()),
     revokeSession: vi.fn(),
-    getUserById: vi.fn()
+    getUserById: vi.fn(),
+    inviteUserByEmail: vi.fn(),
+    verifyInvitationToken: vi.fn(),
+    updatePassword: vi.fn(),
+    deleteInvitationUser: vi.fn()
   };
 }
 
@@ -394,6 +673,21 @@ function providerSession() {
 function matchingVerifier() {
   return {
     verify: vi.fn().mockResolvedValue({ subject: authUserId, sessionId: providerSessionId })
+  };
+}
+
+function onboardingPrincipal() {
+  return {
+    id: appUserId,
+    authUserId,
+    email: baseUser.email,
+    name: baseUser.name,
+    role: baseUser.role,
+    inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD,
+    isActive: true,
+    authzVersion: 1,
+    permissions: [],
+    sessionId: appSessionId
   };
 }
 

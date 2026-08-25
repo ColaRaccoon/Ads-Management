@@ -14,13 +14,20 @@ import {
 
 type ExpectedAccess = "public" | "authenticated" | "data.read" | "change_logs.create"
   | "reports.generate" | "products.manage" | "imports.manage" | "mappings.manage"
-  | "operations.run" | "settings.manage";
+  | "operations.run" | "settings.manage" | "users.manage" | "audit.read";
 
 const expectedRoutes = new Map<string, ExpectedAccess>([
   route("POST", "/api/auth/login", "public"),
   route("POST", "/api/auth/refresh", "public"),
   route("POST", "/api/auth/logout", "public"),
   route("GET", "/api/auth/me", "authenticated"),
+  route("POST", "/api/auth/invitations/accept", "public"),
+  route("POST", "/api/auth/password", "authenticated"),
+  route("GET", "/api/users", "users.manage"),
+  route("POST", "/api/users/invitations", "users.manage"),
+  route("PATCH", "/api/users/:id", "users.manage"),
+  route("POST", "/api/users/:id/reconcile-invitation", "users.manage"),
+  route("GET", "/api/security-audit", "audit.read"),
 
   route("POST", "/api/uploads/meta-ad-daily-csv", "imports.manage"),
   route("POST", "/api/uploads/meta-adset-csv", "imports.manage"),
@@ -154,9 +161,9 @@ describe("active AppModule route permissions", () => {
   });
 
   it("matches the independent method and normalized-path inventory", () => {
-    expect(discoveredRoutes.controllers).toBe(15);
+    expect(discoveredRoutes.controllers).toBe(17);
     expect([...discoveredRoutes.routes.keys()].sort()).toEqual([...expectedRoutes.keys()].sort());
-    expect(discoveredRoutes.routes.size).toBe(117);
+    expect(discoveredRoutes.routes.size).toBe(124);
   });
 
   it("gives every handler exactly one explicit access contract with the expected permission", () => {
@@ -181,6 +188,7 @@ describe("active AppModule route permissions", () => {
       .map(([key]) => key)
       .sort();
     expect(publicRoutes).toEqual([
+      "POST /api/auth/invitations/accept",
       "POST /api/auth/login",
       "POST /api/auth/logout",
       "POST /api/auth/refresh"

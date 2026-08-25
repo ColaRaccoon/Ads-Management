@@ -66,6 +66,25 @@ export class AuthRequestSecurityService {
     await this.assertSessionCsrfAndRate(request, operation);
   }
 
+  async assertInvitationAccept(request: Request, tokenHash: string) {
+    this.assertMutationOrigin(request);
+    const fetchSite = request.get("sec-fetch-site");
+    if (fetchSite !== "same-origin" && fetchSite !== "same-site") {
+      throw authError("ORIGIN_NOT_ALLOWED");
+    }
+    const tokenKey = createHash("sha256").update(tokenHash).digest("base64url");
+    await this.consumeKey(`auth:invitation:ip:${clientAddress(request)}`, 10, 5 * 60_000);
+    await this.consumeKey(`auth:invitation:token:${tokenKey}`, 3, 15 * 60_000);
+  }
+
+  async assertCsrfMutation(request: Request, operation: "password" | "users") {
+    this.assertMutationOrigin(request);
+    await this.consumeKey(`auth:${operation}:${clientAddress(request)}`, 30, 60_000);
+    const csrfCookie = parseCookie(request.headers.cookie, this.cookies.csrfCookieName);
+    const csrfHeader = request.get("x-csrf-token");
+    if (!this.cookies.verifyCsrfToken(csrfCookie, csrfHeader)) throw authError("CSRF_INVALID");
+  }
+
   assertMutationOrigin(request: Request) {
     this.assertOrigin(request);
   }

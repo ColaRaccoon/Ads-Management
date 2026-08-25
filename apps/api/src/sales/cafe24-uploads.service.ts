@@ -1,5 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { ConflictPolicy, MatchSource, Prisma, RowValidationStatus, UploadStatus } from "@prisma/client";
+import {
+  ConflictPolicy,
+  MatchSource,
+  Prisma,
+  RowValidationStatus,
+  SecurityAuditActorType,
+  SecurityAuditResult,
+  UploadStatus
+} from "@prisma/client";
 import { createHash } from "node:crypto";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { asDateOnly, parseDateRange } from "../common/date-range";
@@ -16,6 +24,7 @@ import {
 import { Cafe24ProductMatcher, Cafe24RuleInput } from "../domain/cafe24-matcher";
 import { formatDateOnly, ParseIssue } from "../domain/date-number";
 import { ExchangeRatesService } from "../exchange-rates/exchange-rates.service";
+import { writeSecurityAudit } from "../security-audit/security-audit.types";
 
 @Injectable()
 export class Cafe24UploadsService {
@@ -323,8 +332,8 @@ export class Cafe24UploadsService {
     });
   }
 
-  async deleteUpload(id: string) {
-    await this.assertUpload(id);
+  async deleteUpload(id: string, actorId?: string) {
+    const upload = await this.assertUpload(id);
     return this.prisma.$transaction(async (tx) => {
       const deletingLines = await tx.cafe24OrderLine.findMany({
         where: { uploadBatchId: id },
@@ -334,11 +343,24 @@ export class Cafe24UploadsService {
       await tx.cafe24UploadRowError.deleteMany({ where: { uploadBatchId: id } });
       await tx.cafe24OrderLine.deleteMany({ where: { uploadBatchId: id } });
       await this.restoreCurrentCafe24OrderLines(tx, currentDeletedKeys);
-      return tx.cafe24UploadBatch.delete({ where: { id } });
+      const deleted = await tx.cafe24UploadBatch.delete({ where: { id } });
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "CAFE24_UPLOAD_DELETE",
+          targetType: "CAFE24_UPLOAD_BATCH",
+          targetId: id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: { status: upload.status, rowCount: upload.rowCount },
+          afterJson: { deleted: true }
+        });
+      }
+      return deleted;
     });
   }
 
-  async rematchCafe24Lines(query: { from?: string; to?: string; take?: string }) {
+  async rematchCafe24Lines(query: { from?: string; to?: string; take?: string }, actorId?: string) {
     const range = parseDateRange(query.from, query.to);
     const take = Math.min(Math.max(Number(query.take ?? 1000) || 1000, 1), 5000);
     const rules = await this.matcherRules();
@@ -436,10 +458,33 @@ export class Cafe24UploadsService {
             }))
           });
         }
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "CAFE24_MAPPING_REMATCH",
+            targetType: "CAFE24_ORDER_LINE",
+            targetId: line.id,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: { matched: Boolean(line.productId), validationStatus: line.validationStatus },
+            afterJson: { matched: Boolean(productId), validationStatus }
+          });
+        }
       });
     }
 
-    await this.refreshCafe24BatchIssueCounts(uniqueNonEmpty(lines.map((line) => line.uploadBatchId)));
+    await this.refreshCafe24BatchIssueCounts(uniqueNonEmpty(lines.map((line) => line.uploadBatchId)), actorId);
+
+    if (actorId && lines.length === 0) {
+      await this.prisma.$transaction((tx) => writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "CAFE24_MAPPING_REMATCH",
+        targetType: "CAFE24_MAPPING",
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: { scannedCount: 0, matchedCount: 0 }
+      }));
+    }
 
     return {
       period: { from: range.from, to: range.to },
@@ -461,15 +506,15 @@ export class Cafe24UploadsService {
     });
   }
 
-  async createRule(body: Record<string, unknown>) {
+  async createRule(body: Record<string, unknown>, actorId?: string) {
     const product = await this.assertProduct(requiredString(body.productId, "productId"));
     const adCostSourceProductId = optionalString(body.adCostSourceProductId);
     if (adCostSourceProductId) {
       await this.assertProduct(adCostSourceProductId);
     }
 
-    return this.prisma.cafe24ProductRule.create({
-      data: {
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.cafe24ProductRule.create({ data: {
         productId: product.id,
         displayName: optionalString(body.displayName) ?? product.displayName,
         productNumbers: stringArray(body.productNumbers) ?? [],
@@ -487,12 +532,24 @@ export class Cafe24UploadsService {
         validFrom: body.validFrom ? asDateOnly(String(body.validFrom)) : undefined,
         validTo: body.validTo ? asDateOnly(String(body.validTo)) : null,
         note: optionalString(body.note)
+      }});
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "CAFE24_MAPPING_RULE_CREATED",
+          targetType: "CAFE24_PRODUCT_RULE",
+          targetId: created.id,
+          result: SecurityAuditResult.SUCCESS,
+          afterJson: cafe24RuleAuditSnapshot(created)
+        });
       }
+      return created;
     });
   }
 
-  async updateRule(id: string, body: Record<string, unknown>) {
-    await this.assertRule(id);
+  async updateRule(id: string, body: Record<string, unknown>, actorId?: string) {
+    const before = await this.assertRule(id);
     const productId = optionalString(body.productId);
     if (productId) {
       await this.assertProduct(productId);
@@ -503,9 +560,8 @@ export class Cafe24UploadsService {
       await this.assertProduct(adCostSourceProductId);
     }
 
-    return this.prisma.cafe24ProductRule.update({
-      where: { id },
-      data: {
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.cafe24ProductRule.update({ where: { id }, data: {
         productId,
         displayName: optionalString(body.displayName),
         productNumbers: body.productNumbers === undefined ? undefined : stringArray(body.productNumbers) ?? [],
@@ -526,17 +582,45 @@ export class Cafe24UploadsService {
         validFrom: body.validFrom === undefined ? undefined : asDateOnly(String(body.validFrom)),
         validTo: body.validTo === undefined ? undefined : body.validTo === null ? null : asDateOnly(String(body.validTo)),
         note: body.note === null ? null : optionalString(body.note)
+      }});
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: updated.isActive ? "CAFE24_MAPPING_RULE_UPDATED" : "CAFE24_MAPPING_RULE_DEACTIVATED",
+          targetType: "CAFE24_PRODUCT_RULE",
+          targetId: id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: cafe24RuleAuditSnapshot(before),
+          afterJson: cafe24RuleAuditSnapshot(updated)
+        });
       }
+      return updated;
     });
   }
 
-  async deleteRule(id: string) {
-    await this.assertRule(id);
+  async deleteRule(id: string, actorId?: string) {
+    const before = await this.assertRule(id);
     const lineCount = await this.prisma.cafe24OrderLine.count({ where: { cafe24ProductRuleId: id } });
-    if (lineCount > 0) {
-      return { mode: "deactivated", rule: await this.prisma.cafe24ProductRule.update({ where: { id }, data: { isActive: false } }) };
-    }
-    return { mode: "deleted", rule: await this.prisma.cafe24ProductRule.delete({ where: { id } }) };
+    return this.prisma.$transaction(async (tx) => {
+      const mode = lineCount > 0 ? "deactivated" : "deleted";
+      const rule = lineCount > 0
+        ? await tx.cafe24ProductRule.update({ where: { id }, data: { isActive: false } })
+        : await tx.cafe24ProductRule.delete({ where: { id } });
+      if (actorId) {
+        await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: mode === "deactivated" ? "CAFE24_MAPPING_RULE_DEACTIVATED" : "CAFE24_MAPPING_RULE_DELETED",
+          targetType: "CAFE24_PRODUCT_RULE",
+          targetId: id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: cafe24RuleAuditSnapshot(before),
+          afterJson: mode === "deactivated" ? cafe24RuleAuditSnapshot(rule) : { deleted: true }
+        });
+      }
+      return { mode, rule };
+    });
   }
 
   private async matcherRules(): Promise<Cafe24RuleInput[]> {
@@ -776,10 +860,13 @@ export class Cafe24UploadsService {
     });
   }
 
-  private async refreshCafe24BatchIssueCounts(batchIds: string[]) {
+  private async refreshCafe24BatchIssueCounts(batchIds: string[], actorId?: string) {
     for (const batchId of batchIds) {
       const [batch, warningCount, errorCount, validRowCount, storedRowCount, orderDateBounds] = await Promise.all([
-        this.prisma.cafe24UploadBatch.findUnique({ where: { id: batchId }, select: { rowCount: true, importedAt: true } }),
+        this.prisma.cafe24UploadBatch.findUnique({
+          where: { id: batchId },
+          select: { rowCount: true, importedAt: true, status: true }
+        }),
         this.prisma.cafe24UploadRowError.count({ where: { uploadBatchId: batchId, severity: "WARNING" } }),
         this.prisma.cafe24UploadRowError.count({ where: { uploadBatchId: batchId, severity: "ERROR" } }),
         this.prisma.cafe24OrderLine.count({
@@ -823,6 +910,18 @@ export class Cafe24UploadsService {
         });
         if (hasMissingRows) {
           await this.demoteIncompleteCafe24CurrentLines(tx, batchId);
+        }
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "CAFE24_MAPPING_REMATCH_BATCH_REFRESHED",
+            targetType: "CAFE24_UPLOAD_BATCH",
+            targetId: batchId,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: { status: batch.status },
+            afterJson: { status, warningCount, errorCount, validRowCount }
+          });
         }
       });
     }
@@ -877,6 +976,20 @@ type RowIssue = Omit<ParseIssue, "columnName"> & {
   columnName: string | null;
   severity: "ERROR" | "WARNING";
 };
+
+function cafe24RuleAuditSnapshot(rule: {
+  id: string;
+  productId: string;
+  priority: number;
+  isActive: boolean;
+}) {
+  return {
+    id: rule.id,
+    productId: rule.productId,
+    priority: rule.priority,
+    isActive: rule.isActive
+  } satisfies Prisma.InputJsonObject;
+}
 
 type SaveCafe24OrderLineInput = {
   conflictPolicy: ConflictPolicy;

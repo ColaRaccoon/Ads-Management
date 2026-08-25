@@ -1,6 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ProductsService } from "./products.service";
 import { RequirePermissions } from "../auth/route-decorators";
+import { AuthenticatedUser } from "../auth/auth.types";
+import { CurrentUser } from "../auth/route-decorators";
 
 @Controller("products")
 export class ProductsController {
@@ -20,13 +22,17 @@ export class ProductsController {
 
   @Patch(":id")
   @RequirePermissions("products.manage")
-  update(@Param("id") id: string, @Body() body: Record<string, unknown>) {
-    return this.productsService.updateProduct(id, body);
+  update(
+    @Param("id") id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() actor: AuthenticatedUser
+  ) {
+    return this.productsService.updateProduct(id, body, actor.id);
   }
 
   @Delete(":id")
   @RequirePermissions("products.manage")
-  remove(@Param("id") id: string) {
-    return this.productsService.deleteProduct(id);
+  remove(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.productsService.deleteProduct(id, actor.id);
   }
 }

@@ -117,7 +117,9 @@ describe("AuthController", () => {
       ["login", "login", RequestMethod.POST, PUBLIC_ROUTE],
       ["refresh", "refresh", RequestMethod.POST, PUBLIC_ROUTE],
       ["logout", "logout", RequestMethod.POST, PUBLIC_ROUTE],
-      ["me", "me", RequestMethod.GET, AUTHENTICATED_ROUTE]
+      ["me", "me", RequestMethod.GET, AUTHENTICATED_ROUTE],
+      ["acceptInvitation", "invitations/accept", RequestMethod.POST, PUBLIC_ROUTE],
+      ["setInitialPassword", "password", RequestMethod.POST, AUTHENTICATED_ROUTE]
     ] as const;
     expect(Reflect.getMetadata(PATH_METADATA, AuthController)).toBe("auth");
     for (const [method, path, requestMethod, access] of expected) {
@@ -159,6 +161,79 @@ describe("AuthController", () => {
       .rejects.toThrow("provider unavailable");
     expect(cookies.clearAuthenticationCookies).toHaveBeenCalledTimes(1);
   });
+
+  it("rejects invitation acceptance before provider verification when another session is active", async () => {
+    const authService = {
+      hasActiveBrowserSession: vi.fn().mockResolvedValue(true),
+      acceptInvitation: vi.fn()
+    };
+    const cookies = {
+      readAccessToken: vi.fn(),
+      readRefreshToken: vi.fn(),
+      readSessionHandle: vi.fn().mockReturnValue("signed-handle")
+    };
+    const security = { assertInvitationAccept: vi.fn() };
+    const controller = new AuthController(authService as never, cookies as never, security as never);
+    await expect(controller.acceptInvitation(
+      { tokenHash: "a".repeat(64) },
+      requestFake(),
+      responseFake() as never
+    )).rejects.toMatchObject({ code: "ACTIVE_SESSION_PRESENT" });
+    expect(authService.acceptInvitation).not.toHaveBeenCalled();
+  });
+
+  it("allows explicit invitation acceptance to overwrite orphan raw auth cookies without a live local handle", async () => {
+    const result = {
+      response: responseBody(),
+      cookies: {
+        accessToken: "new-access",
+        refreshToken: "new-refresh",
+        expiresIn: 600,
+        sessionId: "33333333-3333-4333-8333-333333333333"
+      }
+    };
+    const authService = {
+      hasActiveBrowserSession: vi.fn().mockResolvedValue(false),
+      acceptInvitation: vi.fn().mockResolvedValue(result)
+    };
+    const cookies = {
+      readAccessToken: vi.fn().mockReturnValue("expired-or-corrupt-access"),
+      readRefreshToken: vi.fn(),
+      readSessionHandle: vi.fn(),
+      setAuthenticatedCookies: vi.fn()
+    };
+    const security = { assertInvitationAccept: vi.fn() };
+    const controller = new AuthController(authService as never, cookies as never, security as never);
+    await expect(controller.acceptInvitation(
+      { tokenHash: "a".repeat(64) },
+      requestFake(),
+      responseFake() as never
+    )).resolves.toEqual(responseBody());
+    expect(authService.acceptInvitation).toHaveBeenCalledOnce();
+    expect(cookies.setAuthenticatedCookies).toHaveBeenCalledWith(expect.anything(), result.cookies);
+  });
+
+  it("does not issue cookies when invitation acceptance fails after provider verification", async () => {
+    const authService = {
+      hasActiveBrowserSession: vi.fn().mockResolvedValue(false),
+      acceptInvitation: vi.fn().mockRejectedValue(authError("SESSION_INVALID"))
+    };
+    const cookies = {
+      readSessionHandle: vi.fn(),
+      setAuthenticatedCookies: vi.fn()
+    };
+    const controller = new AuthController(
+      authService as never,
+      cookies as never,
+      { assertInvitationAccept: vi.fn() } as never
+    );
+    await expect(controller.acceptInvitation(
+      { tokenHash: "a".repeat(64) },
+      requestFake(),
+      responseFake() as never
+    )).rejects.toMatchObject({ code: "SESSION_INVALID" });
+    expect(cookies.setAuthenticatedCookies).not.toHaveBeenCalled();
+  });
 });
 
 function responseBody() {
@@ -168,7 +243,8 @@ function responseBody() {
       email: "user@example.com",
       name: "User",
       role: "USER",
-      isActive: true
+      isActive: true,
+      inviteStatus: "ACTIVE"
     },
     permissions: ["data.read"],
     authorizationVersion: "opaque"

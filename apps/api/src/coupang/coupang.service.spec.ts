@@ -604,9 +604,13 @@ describe("CoupangService product settings and mapping rules", () => {
     const prisma = fakeCoupangProductSettingPrisma();
     const service = new CoupangService(prisma as never);
 
-    await service.createProductGroup({ displayName: "Gyro Ball", sortOrder: "5" });
-    await service.updateProductGroup("group-1", { displayName: "Gyro Ball Set", sortOrder: "7", isActive: false });
-    await service.deleteProductGroup("group-1");
+    await service.createProductGroup({ displayName: "Gyro Ball", sortOrder: "5" }, ACTOR_ID);
+    await service.updateProductGroup(
+      "group-1",
+      { displayName: "Gyro Ball Set", sortOrder: "7", isActive: false },
+      ACTOR_ID
+    );
+    await service.deleteProductGroup("group-1", ACTOR_ID);
 
     expect(prisma.coupangProductGroup.create).toHaveBeenCalledWith({
       data: {
@@ -627,6 +631,11 @@ describe("CoupangService product settings and mapping rules", () => {
       data: { isActive: false },
       include: { products: true }
     });
+    expect(prisma.securityAuditEvent.create.mock.calls.map(([call]) => call.data.action)).toEqual([
+      "COUPANG_PRODUCT_GROUP_CREATED",
+      "COUPANG_PRODUCT_GROUP_DEACTIVATED",
+      "COUPANG_PRODUCT_GROUP_DEACTIVATED"
+    ]);
   });
 
   it("connects and clears product setting groupId without creating mapping rules", async () => {
@@ -4797,11 +4806,29 @@ function fakeCoupangProductSettingPrisma() {
     coupangProductGroup: {
       findMany: vi.fn(async () => []),
       findUnique: vi.fn(async (args) =>
-        args.where.id === "group-1" ? { id: "group-1", displayName: "Gyro Ball", standardName: "gyro ball" } : null
+        args.where.id === "group-1"
+          ? {
+              id: "group-1",
+              displayName: "Gyro Ball",
+              standardName: "gyro ball",
+              sortOrder: 5,
+              isActive: true,
+              products: []
+            }
+          : null
       ),
       create: vi.fn(async (args) => ({ id: "group-created", ...args.data, products: [] })),
-      update: vi.fn(async (args) => ({ id: args.where.id, ...args.data, products: [] }))
+      update: vi.fn(async (args) => ({
+        id: args.where.id,
+        displayName: "Gyro Ball",
+        standardName: "gyro ball",
+        sortOrder: 5,
+        isActive: true,
+        ...args.data,
+        products: []
+      }))
     },
+    securityAuditEvent: { create: vi.fn(async ({ data }) => data) },
     coupangProductRule: {
       findFirst: vi.fn(async (): Promise<{ id: string; coupangProductId: string } | null> => null),
       findUnique: vi.fn(async (args) => {
@@ -5351,7 +5378,7 @@ function fakeCoupangAdsImportPrisma(options: { existingAdMetrics?: any[] } = {})
 }
 
 function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any[] } = {}) {
-  return {
+  const prisma = {
     coupangProductRule: {
       findMany: vi.fn(async () => [
         {
@@ -5402,8 +5429,10 @@ function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any
     coupangUploadRowError: {
       deleteMany: vi.fn(async () => ({})),
       createMany: vi.fn(async () => ({}))
-    }
+    },
+    $transaction: vi.fn(async (callback: (client: unknown) => Promise<unknown>) => callback(prisma))
   };
+  return prisma;
 }
 
 function fakeCoupangPromotionImportPrisma() {

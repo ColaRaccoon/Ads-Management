@@ -51,7 +51,7 @@ export class UploadsController {
 
   @Delete(":id")
   @RequirePermissions("imports.manage")
-  remove(@Param("id") id: string) {
-    return this.uploadsService.deleteUpload(id);
+  remove(@Param("id") id: string, @CurrentUser() actor: AuthenticatedUser) {
+    return this.uploadsService.deleteUpload(id, actor.id);
   }
 }

@@ -1,5 +1,12 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { AppRole, AppUser, InviteStatus, Prisma } from "@prisma/client";
+import {
+  AppRole,
+  AppUser,
+  InviteStatus,
+  Prisma,
+  SecurityAuditActorType,
+  SecurityAuditResult
+} from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { AuthCookieService } from "./cookie.service";
 import { authError, AuthHttpException } from "./auth.errors";
@@ -8,12 +15,17 @@ import {
   IDENTITY_PROVIDER,
   IdentityProvider,
   ProviderInvalidCredentialsError,
+  ProviderInvalidInvitationError,
   ProviderInvalidRefreshTokenError,
+  ProviderPasswordPolicyError,
   ProviderUnavailableError
 } from "./identity-provider";
 import { normalizeEmail, normalizeEmailOrNull } from "./email-normalizer";
 import { permissionsForRole } from "./role-permissions";
 import { SupabaseJwtVerifier } from "./supabase-jwt.verifier";
+import { invitationError, InvitationHttpException } from "./invitation.errors";
+import { securityAuditData, userAuditSnapshot, writeSecurityAudit } from "../security-audit/security-audit.types";
+import { canTransitionInvitation, lockInvitationState } from "../users/invite-state-machine";
 
 type AuthTokens = {
   accessToken: string;
@@ -40,6 +52,7 @@ export class AuthService {
     try {
       providerSession = await this.provider.signInWithPassword(normalizedEmail, password);
     } catch (error) {
+      await this.recordAnonymousAudit("LOGIN_FAILED", SecurityAuditResult.FAILURE);
       if (error instanceof ProviderInvalidCredentialsError) throw authError("INVALID_CREDENTIALS");
       throw authError("AUTH_PROVIDER_UNAVAILABLE");
     }
@@ -84,6 +97,15 @@ export class AuthService {
           where: { id: user.id },
           data: { lastLoginAt: new Date() }
         });
+        await writeSecurityAudit(tx, {
+          actorUserId: updatedUser.id,
+          actorType: SecurityAuditActorType.USER,
+          action: "LOGIN_SUCCEEDED",
+          targetType: "APP_USER",
+          targetId: updatedUser.id,
+          result: SecurityAuditResult.SUCCESS,
+          afterJson: { id: updatedUser.id, role: updatedUser.role }
+        });
         return this.toPrincipal(updatedUser, appSession.id);
       });
 
@@ -98,6 +120,7 @@ export class AuthService {
       };
     } catch (error) {
       await this.revokeProviderQuietly(providerSession.accessToken);
+      await this.recordAnonymousAudit("LOGIN_FAILED", SecurityAuditResult.FAILURE);
       throw error;
     }
   }
@@ -105,7 +128,7 @@ export class AuthService {
   async authenticateAccessToken(accessToken: string): Promise<AuthenticatedUser> {
     const token = await this.jwtVerifier.verify(accessToken);
     const user = await this.prisma.appUser.findUnique({ where: { authUserId: token.subject } });
-    this.assertUsableUser(user);
+    this.assertAuthenticatableUser(user);
 
     const session = await this.prisma.appAuthSession.findUnique({
       where: { providerSessionId: token.sessionId }
@@ -169,7 +192,7 @@ export class AuthService {
       }
 
       try {
-        this.assertUsableUser(appSession.appUser);
+        this.assertAuthenticatableUser(appSession.appUser);
       } catch (error) {
         await tx.appAuthSession.update({
           where: { id: appSession.id },
@@ -314,12 +337,186 @@ export class AuthService {
     return this.toResponse(principal);
   }
 
+  async hasActiveBrowserSession(signedHandle: string | undefined) {
+    const id = this.cookies.verifySessionHandle(signedHandle);
+    if (!id) return false;
+    const session = await this.prisma.appAuthSession.findUnique({ where: { id } });
+    return Boolean(session && !session.revokedAt);
+  }
+
+  async acceptInvitation(tokenHash: string): Promise<AuthResult> {
+    let providerSession: ProviderSession;
+    try {
+      providerSession = await this.provider.verifyInvitationToken(tokenHash);
+    } catch (error) {
+      await this.recordAnonymousAudit("USER_INVITATION_ACCEPT_FAILED", SecurityAuditResult.FAILURE);
+      if (error instanceof ProviderUnavailableError) throw authError("AUTH_PROVIDER_UNAVAILABLE");
+      throw invitationError("INVITATION_INVALID_OR_EXPIRED");
+    }
+
+    try {
+      const token = await this.jwtVerifier.verify(providerSession.accessToken);
+      const providerEmail = normalizeEmailOrNull(providerSession.user.email);
+      if (
+        token.subject !== providerSession.user.id ||
+        !providerSession.user.emailVerified ||
+        !providerEmail ||
+        !providerSession.user.invitationRequestId
+      ) throw invitationError("INVITATION_INVALID_OR_EXPIRED");
+
+      const candidate = await this.prisma.appUser.findUnique({
+        where: { authUserId: token.subject },
+        select: { id: true }
+      });
+      if (!candidate) throw invitationError("INVITATION_INVALID_OR_EXPIRED");
+      const principal = await this.prisma.$transaction(async (tx) => {
+        await lockInvitationState(tx, candidate.id);
+        const user = await tx.appUser.findUnique({ where: { id: candidate.id } });
+        if (
+          !user || !user.isActive || user.inviteStatus !== InviteStatus.INVITED ||
+          user.authUserId !== token.subject ||
+          user.normalizedEmail !== providerEmail ||
+          user.invitationRequestId !== providerSession.user.invitationRequestId
+        ) throw invitationError("INVITATION_INVALID_OR_EXPIRED");
+        if (!canTransitionInvitation(user.inviteStatus, InviteStatus.VERIFIED_PENDING_PASSWORD)) {
+          throw invitationError("INVITATION_INVALID_OR_EXPIRED");
+        }
+        const existing = await tx.appAuthSession.findUnique({
+          where: { providerSessionId: token.sessionId }
+        });
+        if (existing && (existing.appUserId !== user.id || existing.revokedAt)) {
+          throw invitationError("INVITATION_INVALID_OR_EXPIRED");
+        }
+        const session = existing ?? await tx.appAuthSession.create({
+          data: {
+            appUserId: user.id,
+            providerSessionId: token.sessionId,
+            lastSeenAt: new Date()
+          }
+        });
+        const updated = await tx.appUser.update({
+          where: { id: user.id },
+          data: {
+            inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD,
+            invitationErrorCode: null,
+            authzVersion: { increment: 1 }
+          }
+        });
+        await writeSecurityAudit(tx, {
+          actorUserId: updated.id,
+          actorType: SecurityAuditActorType.USER,
+          action: "USER_INVITATION_ACCEPTED",
+          targetType: "APP_USER",
+          targetId: updated.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: userAuditSnapshot(user),
+          afterJson: userAuditSnapshot(updated),
+          requestId: updated.invitationRequestId
+        });
+        return this.toPrincipal(updated, session.id);
+      });
+      return {
+        response: this.toResponse(principal),
+        cookies: {
+          accessToken: providerSession.accessToken,
+          refreshToken: providerSession.refreshToken,
+          expiresIn: providerSession.expiresIn,
+          sessionId: principal.sessionId
+        }
+      };
+    } catch (error) {
+      await this.revokeProviderQuietly(providerSession.accessToken);
+      if (!(error instanceof InvitationHttpException) && !(error instanceof AuthHttpException)) {
+        await this.markAcceptCommitFailure(providerSession.user.id).catch(() => undefined);
+      }
+      if (error instanceof AuthHttpException && error.code === "AUTH_PROVIDER_UNAVAILABLE") throw error;
+      throw invitationError("INVITATION_INVALID_OR_EXPIRED");
+    }
+  }
+
+  async completeInitialPassword(principal: AuthenticatedUser, accessToken: string, password: string) {
+    if (principal.inviteStatus !== InviteStatus.VERIFIED_PENDING_PASSWORD) {
+      throw invitationError("ONBOARDING_SESSION_REQUIRED");
+    }
+    let providerUser;
+    try {
+      providerUser = await this.provider.updatePassword(accessToken, password);
+    } catch (error) {
+      if (error instanceof ProviderPasswordPolicyError) throw invitationError("PASSWORD_POLICY_INVALID");
+      if (error instanceof ProviderInvalidInvitationError) throw invitationError("ONBOARDING_SESSION_REQUIRED");
+      throw invitationError("PASSWORD_PROVIDER_UNAVAILABLE");
+    }
+    if (
+      providerUser.id !== principal.authUserId ||
+      normalizeEmailOrNull(providerUser.email) !== normalizeEmailOrNull(principal.email)
+    ) throw invitationError("ONBOARDING_SESSION_REQUIRED");
+
+    try {
+      const updatedPrincipal = await this.prisma.$transaction(async (tx) => {
+        await lockInvitationState(tx, principal.id);
+        const user = await tx.appUser.findUnique({ where: { id: principal.id } });
+        const session = await tx.appAuthSession.findUnique({ where: { id: principal.sessionId } });
+        if (
+          !user || !session || session.revokedAt || session.appUserId !== user.id ||
+          user.authUserId !== providerUser.id || !user.isActive ||
+          user.inviteStatus !== InviteStatus.VERIFIED_PENDING_PASSWORD
+        ) throw invitationError("ONBOARDING_SESSION_REQUIRED");
+        if (!canTransitionInvitation(user.inviteStatus, InviteStatus.ACTIVE)) {
+          throw invitationError("ONBOARDING_SESSION_REQUIRED");
+        }
+        const updated = await tx.appUser.update({
+          where: { id: user.id },
+          data: {
+            inviteStatus: InviteStatus.ACTIVE,
+            authzVersion: { increment: 1 },
+            invitationErrorCode: null
+          }
+        });
+        await writeSecurityAudit(tx, {
+          actorUserId: user.id,
+          actorType: SecurityAuditActorType.USER,
+          action: "USER_INITIAL_PASSWORD_COMPLETED",
+          targetType: "APP_USER",
+          targetId: user.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: userAuditSnapshot(user),
+          afterJson: userAuditSnapshot(updated),
+          requestId: user.invitationRequestId
+        });
+        return this.toPrincipal(updated, session.id);
+      });
+      return this.toResponse(updatedPrincipal);
+    } catch (error) {
+      await this.prisma.securityAuditEvent.create({
+        data: securityAuditData({
+          actorUserId: principal.id,
+          actorType: SecurityAuditActorType.USER,
+          action: "USER_INITIAL_PASSWORD_LOCAL_COMMIT_FAILED",
+          targetType: "APP_USER",
+          targetId: principal.id,
+          result: SecurityAuditResult.PARTIAL,
+          afterJson: { identityCredentialUpdated: true }
+        })
+      }).catch(() => undefined);
+      throw invitationError("PASSWORD_LOCAL_COMMIT_FAILED");
+    }
+  }
+
   private assertUsableUser(user: AppUser | null): asserts user is AppUser {
     if (!user) throw authError("ACCOUNT_NOT_PROVISIONED");
     if (!user.isActive) throw authError("ACCOUNT_INACTIVE");
     if (user.inviteStatus !== InviteStatus.ACTIVE) {
       throw authError("ACCOUNT_ONBOARDING_REQUIRED");
     }
+  }
+
+  private assertAuthenticatableUser(user: AppUser | null): asserts user is AppUser {
+    if (!user) throw authError("ACCOUNT_NOT_PROVISIONED");
+    if (!user.isActive) throw authError("ACCOUNT_INACTIVE");
+    if (
+      user.inviteStatus !== InviteStatus.ACTIVE &&
+      user.inviteStatus !== InviteStatus.VERIFIED_PENDING_PASSWORD
+    ) throw authError("ACCOUNT_ONBOARDING_REQUIRED");
   }
 
   private toPrincipal(user: AppUser, sessionId: string): AuthenticatedUser {
@@ -332,7 +529,7 @@ export class AuthService {
       inviteStatus: user.inviteStatus,
       isActive: user.isActive,
       authzVersion: user.authzVersion,
-      permissions: permissionsForRole(user.role),
+      permissions: user.inviteStatus === InviteStatus.ACTIVE ? permissionsForRole(user.role) : [],
       sessionId
     };
   }
@@ -344,7 +541,8 @@ export class AuthService {
         email: principal.email,
         name: principal.name,
         role: principal.role,
-        isActive: principal.isActive
+        isActive: principal.isActive,
+        inviteStatus: principal.inviteStatus
       },
       permissions: [...principal.permissions],
       authorizationVersion: this.cookies.authorizationVersion(
@@ -360,6 +558,52 @@ export class AuthService {
     } catch {
       // Local session state and cookie clearing remain authoritative.
     }
+  }
+
+  private async recordAnonymousAudit(action: string, result: SecurityAuditResult) {
+    await this.prisma.securityAuditEvent.create({
+      data: securityAuditData({
+        actorType: SecurityAuditActorType.ANONYMOUS,
+        action,
+        targetType: "AUTHENTICATION",
+        result
+      })
+    }).catch(() => undefined);
+  }
+
+  private async markAcceptCommitFailure(authUserId: string) {
+    const candidate = await this.prisma.appUser.findUnique({
+      where: { authUserId },
+      select: { id: true }
+    });
+    if (!candidate) return;
+    await this.prisma.$transaction(async (tx) => {
+      await lockInvitationState(tx, candidate.id);
+      const user = await tx.appUser.findUnique({ where: { id: candidate.id } });
+      if (
+        !user || user.authUserId !== authUserId ||
+        user.inviteStatus !== InviteStatus.INVITED
+      ) return;
+      if (!canTransitionInvitation(user.inviteStatus, InviteStatus.RECONCILE_REQUIRED)) return;
+      const updated = await tx.appUser.update({
+        where: { id: user.id },
+        data: {
+          inviteStatus: InviteStatus.RECONCILE_REQUIRED,
+          invitationErrorCode: "INVITATION_ACCEPT_LOCAL_COMMIT_FAILED",
+          authzVersion: { increment: 1 }
+        }
+      });
+      await writeSecurityAudit(tx, {
+        actorType: SecurityAuditActorType.ANONYMOUS,
+        action: "USER_INVITATION_ACCEPT_LOCAL_COMMIT_FAILED",
+        targetType: "APP_USER",
+        targetId: user.id,
+        result: SecurityAuditResult.PARTIAL,
+        beforeJson: userAuditSnapshot(user),
+        afterJson: userAuditSnapshot(updated),
+        requestId: user.invitationRequestId
+      });
+    });
   }
 }
 

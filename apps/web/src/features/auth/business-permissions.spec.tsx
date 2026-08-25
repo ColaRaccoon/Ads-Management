@@ -134,12 +134,14 @@ function renderBusiness(children: ReactNode, permissions: Permission[], role: "G
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const granted = new Set(permissions);
   const auth: AuthContextValue = {
-    user: { id: "role-user", email: "role@example.test", name: "Role User", role, isActive: true },
+    user: { id: "role-user", email: "role@example.test", name: "Role User", role, isActive: true, inviteStatus: "ACTIVE" },
     permissions,
     isLoading: false,
     isAuthenticated: true,
     status: "authenticated",
     login: vi.fn(),
+    acceptInvitation: vi.fn(),
+    completeInvitation: vi.fn(),
     logout: vi.fn(),
     can: (permission) => granted.has(permission),
     refreshAuth: vi.fn(async () => null)

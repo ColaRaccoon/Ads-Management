@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ProductsService } from "./products.service";
 
 describe("ProductsService deleteProduct", () => {
@@ -283,6 +283,38 @@ describe("ProductsService product rule history", () => {
     expect([first.operation, second.operation].sort()).toEqual(["CREATED", "UPDATED_SAME_DATE"]);
     expect(fixture.costRules.filter((rule) => dateText(rule.effectiveFrom) === "2026-08-21")).toHaveLength(1);
   });
+
+  it("writes SUCCESS audits for cost and CPA mutations on their transaction client", async () => {
+    const fixture = productRuleHistoryFixture({
+      costRules: [costRule("cost-old", "2026-06-01", null)],
+      cpaRules: [cpaRule("cpa-old", "2026-06-01", null)]
+    });
+    const service = new ProductsService(fixture.prisma as never);
+
+    await service.saveCostRuleSnapshot("product-1", {
+      effectiveFrom: "2026-08-21",
+      salePriceKrw: 36900
+    }, "actor-1");
+    await service.saveCpaRuleSnapshot("product-1", {
+      effectiveFrom: "2026-08-21",
+      targetRatio: 0.75
+    }, "actor-1");
+
+    expect(fixture.auditCreate.mock.calls.map(([call]) => call.data)).toEqual([
+      expect.objectContaining({
+        actorUserId: "actor-1",
+        action: "PRODUCT_COST_RULE_CREATED",
+        result: "SUCCESS",
+        targetType: "PRODUCT_COST_RULE"
+      }),
+      expect.objectContaining({
+        actorUserId: "actor-1",
+        action: "PRODUCT_CPA_RULE_CREATED",
+        result: "SUCCESS",
+        targetType: "PRODUCT_CPA_RULE"
+      })
+    ]);
+  });
 });
 
 function fakePrismaForDelete(input: { hasOperationalData?: boolean } = {}) {
@@ -382,6 +414,7 @@ function productRuleHistoryFixture(input: {
   let costSequence = 0;
   let cpaSequence = 0;
   let transactionTail = Promise.resolve();
+  const auditCreate = vi.fn(async ({ data }: any) => data);
 
   const costRepository = ruleRepository(costRules, "cost", () => ++costSequence);
   const cpaRepository = ruleRepository(cpaRules, "cpa", () => ++cpaSequence);
@@ -401,6 +434,7 @@ function productRuleHistoryFixture(input: {
         return { rate: new Prisma.Decimal(1400) };
       }
     },
+    securityAuditEvent: { create: auditCreate },
     $queryRaw: async (query: unknown) => {
       advisoryLocks.push(query);
       return [];
@@ -428,6 +462,7 @@ function productRuleHistoryFixture(input: {
     costRules,
     cpaRules,
     advisoryLocks,
+    auditCreate,
     get exchangeRateLookups() {
       return exchangeRateLookups;
     },

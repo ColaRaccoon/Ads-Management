@@ -7,8 +7,16 @@ export interface IdentityProvider {
   refreshSession(refreshToken: string): Promise<ProviderSession>;
   revokeSession(accessToken: string): Promise<void>;
   getUserById(authUserId: string): Promise<ProviderUser>;
+  inviteUserByEmail(email: string, redirectTo: string, requestId: string): Promise<ProviderUser>;
+  verifyInvitationToken(tokenHash: string): Promise<ProviderSession>;
+  updatePassword(accessToken: string, password: string): Promise<ProviderUser>;
+  deleteInvitationUser(authUserId: string): Promise<void>;
 }
 
 export class ProviderInvalidCredentialsError extends Error {}
 export class ProviderInvalidRefreshTokenError extends Error {}
 export class ProviderUnavailableError extends Error {}
+export class ProviderUserNotFoundError extends Error {}
+export class ProviderInvalidInvitationError extends Error {}
+export class ProviderIdentityConflictError extends Error {}
+export class ProviderPasswordPolicyError extends Error {}
