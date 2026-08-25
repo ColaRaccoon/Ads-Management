@@ -23,4 +23,26 @@ describe("serializeCsv", () => {
 
     expect(csv).toBe("\uFEFF순이익\r\n\r\n0");
   });
+
+  it("STEP7-EVAL-011 escapes external formula prefixes while preserving numbers", () => {
+    const csv = serializeCsv(
+      [
+        { header: "문자열", value: (row: { value: string; amount: number }) => row.value },
+        { header: "숫자", value: (row: { value: string; amount: number }) => row.amount }
+      ],
+      [
+        { value: "=2+2", amount: -12 },
+        { value: "+cmd", amount: 0 },
+        { value: "-10+20", amount: 3 },
+        { value: "@SUM(A1:A2)", amount: 4 },
+        { value: " \t=HYPERLINK(\"x\")", amount: 5 }
+      ]
+    );
+
+    expect(csv).toContain("'=2+2,-12");
+    expect(csv).toContain("'+cmd,0");
+    expect(csv).toContain("'-10+20,3");
+    expect(csv).toContain("'@SUM(A1:A2),4");
+    expect(csv).toContain(`"' \t=HYPERLINK(""x"")",5`);
+  });
 });

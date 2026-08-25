@@ -47,6 +47,8 @@ const mutations: Mutation[] = [
   mutation("POST", "/uploads/meta-ad-daily-csv", "imports.manage"),
   mutation("POST", "/uploads/meta-adset-csv", "imports.manage"),
   mutation("DELETE", "/uploads/:id", "imports.manage"),
+  mutation("POST", "/uploads/storage-tombstones/:id/restore", "settings.manage"),
+  mutation("POST", "/uploads/storage-tombstones/:id/purge", "settings.manage"),
   mutation("POST", "/products", "products.manage"),
   mutation("PATCH", "/products/:id", "products.manage"),
   mutation("DELETE", "/products/:id", "products.manage"),
@@ -120,6 +122,8 @@ const rolePermissions: Record<TestRole, readonly BusinessPermission[]> = {
 const actorForwardingMutations = new Set([
   "POST /uploads/meta-ad-daily-csv",
   "POST /uploads/meta-adset-csv",
+  "POST /uploads/storage-tombstones/:id/restore",
+  "POST /uploads/storage-tombstones/:id/purge",
   "POST /product-cost-rules",
   "POST /products/:productId/cost-rule-snapshots",
   "PATCH /products/:productId/cost-rules/:ruleId/correction",
@@ -266,8 +270,8 @@ describe("role permissions through the Nest HTTP pipeline", () => {
   });
 
   it("covers every active business mutation independently", () => {
-    expect(mutations).toHaveLength(58);
-    expect(new Set(mutations.map(({ method, path }) => `${method} ${path}`)).size).toBe(58);
+    expect(mutations).toHaveLength(60);
+    expect(new Set(mutations.map(({ method, path }) => `${method} ${path}`)).size).toBe(60);
   });
 
   it.each([

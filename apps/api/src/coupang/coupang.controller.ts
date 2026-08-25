@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { FileFieldsInterceptor, FileInterceptor } from "@nestjs/platform-express";
 import { CoupangService } from "./coupang.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
+import { SecureCoupangBundlePipe, SecureUploadPipe } from "../file-security/secure-upload.pipe";
+import { coupangBundleInterceptor, UPLOAD_PROFILES, uploadFileInterceptor } from "../file-security/upload-profiles";
 import {
   CoupangBundleUploadFormDto,
   CoupangCostRuleCorrectionDto,
@@ -39,9 +40,9 @@ export class CoupangController {
 
   @Post("uploads/sales")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_SALES_XLSX))
   uploadSales(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.COUPANG_SALES_XLSX)) file: Express.Multer.File,
     @Body() body: CoupangSalesUploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
@@ -50,9 +51,9 @@ export class CoupangController {
 
   @Post("uploads/ads")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_ADS_XLSX))
   uploadAds(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.COUPANG_ADS_XLSX)) file: Express.Multer.File,
     @Body() body: CoupangUploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
@@ -61,9 +62,9 @@ export class CoupangController {
 
   @Post("uploads/margin")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_MARGIN_TEXT))
   uploadMargin(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.COUPANG_MARGIN_TEXT)) file: Express.Multer.File,
     @Body() body: CoupangMarginUploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
@@ -72,9 +73,9 @@ export class CoupangController {
 
   @Post("uploads/price-text")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_PRICE_TEXT))
   uploadPriceText(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.COUPANG_PRICE_TEXT)) file: Express.Multer.File,
     @Body() body: CoupangMarginUploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
@@ -83,9 +84,9 @@ export class CoupangController {
 
   @Post("uploads/promotion")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_PROMOTION_XLSX))
   uploadPromotion(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.COUPANG_PROMOTION_XLSX)) file: Express.Multer.File,
     @Body() body: CoupangUploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
@@ -94,15 +95,9 @@ export class CoupangController {
 
   @Post("uploads/bundle")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: "sales", maxCount: 1 },
-      { name: "ads", maxCount: 1 },
-      { name: "margin", maxCount: 1 }
-    ])
-  )
+  @UseInterceptors(coupangBundleInterceptor())
   uploadBundle(
-    @UploadedFiles()
+    @UploadedFiles(new SecureCoupangBundlePipe())
     files: {
       sales?: Express.Multer.File[];
       ads?: Express.Multer.File[];

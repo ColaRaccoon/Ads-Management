@@ -30,7 +30,7 @@ const ACTIVE_CONTROLLER_INVENTORY: ControllerInventory[] = [
   { file: "sales/cafe24-uploads.controller.ts", routes: 10, body: 3, query: 4, param: 5, files: 1 },
   { file: "sales/sales-metrics.controller.ts", routes: 3, body: 0, query: 3, param: 0, files: 0 },
   { file: "security-audit/security-audit.controller.ts", routes: 1, body: 0, query: 1, param: 0, files: 0 },
-  { file: "uploads/uploads.controller.ts", routes: 6, body: 2, query: 1, param: 3, files: 2 },
+  { file: "uploads/uploads.controller.ts", routes: 8, body: 2, query: 1, param: 5, files: 2 },
   { file: "users/users.controller.ts", routes: 4, body: 3, query: 0, param: 2, files: 0 }
 ];
 
@@ -57,7 +57,7 @@ const ACTIVE_DTO_FILES = [
 ] as const;
 
 describe("active transport input inventory", () => {
-  it("keeps the literal 126-route / 151-input inventory in sync", () => {
+  it("keeps the literal 128-route / 153-input inventory in sync", () => {
     const totals = { routes: 0, body: 0, query: 0, param: 0, files: 0 };
     for (const expected of ACTIVE_CONTROLLER_INVENTORY) {
       const source = fs.readFileSync(path.join(SRC_ROOT, expected.file), "utf8");
@@ -78,8 +78,8 @@ describe("active transport input inventory", () => {
       for (const key of Object.keys(totals) as Array<keyof typeof totals>) totals[key] += actual[key];
     }
     expect(ACTIVE_CONTROLLER_INVENTORY).toHaveLength(18);
-    expect(totals).toEqual({ routes: 126, body: 52, query: 48, param: 42, files: 9 });
-    expect(totals.body + totals.query + totals.param + totals.files).toBe(151);
+    expect(totals).toEqual({ routes: 128, body: 52, query: 48, param: 44, files: 9 });
+    expect(totals.body + totals.query + totals.param + totals.files).toBe(153);
   });
 
   it("has zero raw Body/Query/Param inputs in the active controller graph", () => {

@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { MulterModule } from "@nestjs/platform-express";
 import { UploadsController } from "./uploads.controller";
 import { UploadsService } from "./uploads.service";
 import { MappingsModule } from "../mappings/mappings.module";
@@ -13,9 +12,10 @@ import { UploadLifecycleService } from "./upload-lifecycle.service";
 import { UploadQueryService } from "./upload-query.service";
 import { UploadStorageService } from "./upload-storage.service";
 import { UploadExchangeRateService } from "./upload-exchange-rate.service";
+import { StorageTombstoneService } from "../storage/storage-tombstone.service";
 
 @Module({
-  imports: [MulterModule.register({}), MappingsModule, ExchangeRatesModule],
+  imports: [MappingsModule, ExchangeRatesModule],
   controllers: [UploadsController],
   providers: [
     UploadsService,
@@ -24,6 +24,7 @@ import { UploadExchangeRateService } from "./upload-exchange-rate.service";
     UploadQueryService,
     UploadLifecycleService,
     UploadStorageService,
+    StorageTombstoneService,
     UploadExchangeRateService,
     MetaEntityWriterService,
     MetaMetricVersionService,

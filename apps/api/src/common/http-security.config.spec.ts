@@ -45,6 +45,40 @@ describe("runtime environment validation", () => {
     })).toThrow("independently generated secret");
   });
 
+  it("allows only a fully configured Supabase private-storage adapter", () => {
+    expect(() => validateRuntimeEnvironment({ ...base, STORAGE_PROVIDER: "supabase" }))
+      .toThrow("SUPABASE_STORAGE_BUCKET is required");
+    expect(validateRuntimeEnvironment({
+      ...base,
+      STORAGE_PROVIDER: "supabase",
+      SUPABASE_STORAGE_BUCKET: "security-step7-dev-private",
+      SUPABASE_STORAGE_RETENTION_DAYS: "30",
+      SUPABASE_STORAGE_TIMEOUT_MS: "15000",
+      SUPABASE_STORAGE_MAX_OBJECT_BYTES: "52428800"
+    })).toMatchObject({
+      STORAGE_PROVIDER: "supabase",
+      SUPABASE_STORAGE_RETENTION_DAYS: "30"
+    });
+    expect(() => validateRuntimeEnvironment({
+      ...base,
+      STORAGE_PROVIDER: "supabase",
+      SUPABASE_STORAGE_BUCKET: "../outside"
+    })).toThrow("valid private bucket id");
+    expect(() => validateRuntimeEnvironment({ ...base, STORAGE_PROVIDER: "s3" }))
+      .toThrow("STORAGE_PROVIDER must be local or supabase");
+  });
+
+  it("STEP7-EVAL-001 fails startup for invalid or upward upload-limit overrides", () => {
+    expect(() => validateRuntimeEnvironment({ ...base, UPLOAD_META_MAX_FILE_BYTES: "invalid-secret-like-value" }))
+      .toThrow("UPLOAD_META_MAX_FILE_BYTES must be an integer");
+    expect(() => validateRuntimeEnvironment({ ...base, UPLOAD_MAX_XLSX_ENTRIES: "2049" }))
+      .toThrow("UPLOAD_MAX_XLSX_ENTRIES must be between 8 and 2048");
+    expect(() => validateRuntimeEnvironment({ ...base, UPLOAD_COUPANG_BUNDLE_MAX_TOTAL_BYTES: "999999999" }))
+      .toThrow("UPLOAD_COUPANG_BUNDLE_MAX_TOTAL_BYTES must be between");
+    expect(() => validateRuntimeEnvironment({ ...base, UPLOAD_MAX_TEXT_ROWS: "50000" }))
+      .not.toThrow();
+  });
+
   it("fails production startup for insecure cookies, origins, or database TLS", () => {
     expect(() => validateRuntimeEnvironment({ ...base, APP_ENV: "production" }))
       .toThrow("AUTH_COOKIE_SECURE must be true");

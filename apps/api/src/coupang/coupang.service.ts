@@ -1,6 +1,7 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import {
   ConflictPolicy,
+  CoupangUploadBatch,
   CoupangUploadSourceType,
   MatchSource,
   Prisma,
@@ -9,8 +10,9 @@ import {
   SecurityAuditResult,
   UploadStatus
 } from "@prisma/client";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { normalizeUploadedFilename } from "../common/encoding";
+import { preflightCoupangBundle } from "../file-security/upload-preflight";
 import { asDateOnly, dateRangeDays, numberFrom, parseDateRange } from "../common/date-range";
 import { PrismaService } from "../common/prisma.service";
 import {
@@ -502,6 +504,24 @@ type CoupangAdsNumericMetricKey =
   | "directSalesQuantity1d"
   | "indirectSalesQuantity1d";
 
+type CoupangBundleField = "margin" | "sales" | "ads";
+
+type CoupangRetrySource =
+  | typeof CoupangUploadSourceType.SALES
+  | typeof CoupangUploadSourceType.ADS
+  | typeof CoupangUploadSourceType.MARGIN;
+
+type CoupangRetryMarker = {
+  version: 1;
+  sourceType: CoupangRetrySource;
+  state: "RESERVED" | "TRANSIENT_FAILED";
+  attemptId: string;
+  leaseExpiresAt: string;
+};
+
+const COUPANG_RETRY_MARKER_KEY = "_securityRetry";
+const COUPANG_RETRY_LEASE_MS = 60 * 60 * 1000;
+
 @Injectable()
 export class CoupangService {
   private readonly salesParser = new CoupangSalesXlsxParser();
@@ -517,17 +537,12 @@ export class CoupangService {
     const upload = this.assertFile(file, "Coupang sales XLSX file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
-    const duplicate = await this.reusableDuplicate(fileHashSha256, CoupangUploadSourceType.SALES, body.conflictPolicy);
-    if (duplicate) {
-      return duplicate;
-    }
-
     const parsed = await this.salesParser.parseBuffer(upload.buffer, {
       filename: originalFilename,
       reportDate: optionalString(body.reportDate),
       cancelAmountMode: parseCoupangCancelAmountMode(optionalString(body.cancelAmountMode))
     });
-    const batch = await this.createBatch({
+    const reservation = await this.reserveCoupangImportBatch({
       sourceType: CoupangUploadSourceType.SALES,
       originalFilename,
       fileHashSha256,
@@ -539,7 +554,10 @@ export class CoupangService {
       },
       rowCount: parsed.rows.length
     }, actorId);
+    if (reservation.duplicate) return reservation.duplicate;
+    const batch = reservation.batch;
 
+    try {
     if (parsed.missingColumns.length > 0) {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.SALES, parsed.missingColumns);
     }
@@ -647,7 +665,7 @@ export class CoupangService {
             validationErrors: [...issues, ...warnings] as unknown as Prisma.InputJsonValue,
             importVersion: storedState.importVersion,
             isCurrent: storedState.isCurrent,
-            rawRow: row.rawRow as Prisma.InputJsonObject
+            rawRow: Prisma.DbNull
           }
         });
         await this.createRowErrors(tx, batch.id, CoupangUploadSourceType.SALES, saved.id, null, row.rowNumber, [
@@ -656,9 +674,7 @@ export class CoupangService {
         ]);
       }
 
-      await tx.coupangUploadBatch.update({
-        where: { id: batch.id },
-        data: {
+      await this.finalizeCoupangReservation(tx, batch, {
           dataStart,
           dataEnd,
           validRowCount,
@@ -667,7 +683,6 @@ export class CoupangService {
           status: statusFor(validRowCount, errorCount),
           validatedAt: new Date(),
           importedAt: validRowCount > 0 ? new Date() : null
-        }
       });
     }, COUPANG_TRANSACTION_OPTIONS);
 
@@ -684,20 +699,18 @@ export class CoupangService {
       dataStart: dataStart ? formatDateOnly(dataStart) : null,
       dataEnd: dataEnd ? formatDateOnly(dataEnd) : null
     };
+    } catch (error) {
+      return this.rethrowCoupangImportFailure(batch, error);
+    }
   }
 
   async importAdsXlsx(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
     const upload = this.assertFile(file, "Coupang ads XLSX file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
-    const duplicate = await this.reusableDuplicate(fileHashSha256, CoupangUploadSourceType.ADS, body.conflictPolicy);
-    if (duplicate) {
-      return duplicate;
-    }
-
     const parsed = await this.adsParser.parseBuffer(upload.buffer);
     const importRows = aggregateCoupangAdsImportRows(parsed.rows);
-    const batch = await this.createBatch({
+    const reservation = await this.reserveCoupangImportBatch({
       sourceType: CoupangUploadSourceType.ADS,
       originalFilename,
       fileHashSha256,
@@ -712,7 +725,10 @@ export class CoupangService {
       },
       rowCount: parsed.rows.length
     }, actorId);
+    if (reservation.duplicate) return reservation.duplicate;
+    const batch = reservation.batch;
 
+    try {
     if (parsed.missingColumns.length > 0) {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.ADS, parsed.missingColumns);
     }
@@ -833,7 +849,7 @@ export class CoupangService {
             validationErrors: [...issues, ...warnings] as unknown as Prisma.InputJsonValue,
             importVersion: storedState.importVersion,
             isCurrent: storedState.isCurrent,
-            rawRow: row.rawRow as Prisma.InputJsonObject
+            rawRow: Prisma.DbNull
           }
         });
         await this.createRowErrors(tx, batch.id, CoupangUploadSourceType.ADS, null, saved.id, row.rowNumber, [
@@ -842,9 +858,7 @@ export class CoupangService {
         ]);
       }
 
-      await tx.coupangUploadBatch.update({
-        where: { id: batch.id },
-        data: {
+      await this.finalizeCoupangReservation(tx, batch, {
           dataStart,
           dataEnd,
           validRowCount,
@@ -853,7 +867,6 @@ export class CoupangService {
           status: statusFor(validRowCount, errorCount),
           validatedAt: new Date(),
           importedAt: validRowCount > 0 ? new Date() : null
-        }
       });
     }, COUPANG_TRANSACTION_OPTIONS);
 
@@ -869,18 +882,17 @@ export class CoupangService {
       dataStart: dataStart ? formatDateOnly(dataStart) : null,
       dataEnd: dataEnd ? formatDateOnly(dataEnd) : null
     };
+    } catch (error) {
+      return this.rethrowCoupangImportFailure(batch, error);
+    }
   }
 
   async importMarginCsv(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
     const upload = this.assertFile(file, "Coupang margin CSV file is required.");
     const originalFilename = normalizeUploadedFilename(upload.originalname);
     const fileHashSha256 = createHash("sha256").update(upload.buffer).digest("hex");
-    const duplicate = await this.reusableDuplicate(fileHashSha256, CoupangUploadSourceType.MARGIN, body.conflictPolicy);
-    if (duplicate) {
-      return duplicate;
-    }
     const parsed = this.marginParser.parseBuffer(upload.buffer);
-    const batch = await this.createBatch({
+    const reservation = await this.reserveCoupangImportBatch({
       sourceType: CoupangUploadSourceType.MARGIN,
       originalFilename,
       fileHashSha256,
@@ -893,7 +905,10 @@ export class CoupangService {
       },
       rowCount: parsed.rows.length
     }, actorId);
+    if (reservation.duplicate) return reservation.duplicate;
+    const batch = reservation.batch;
 
+    try {
     if (parsed.missingColumns.length > 0) {
       await this.failMissingColumns(batch.id, CoupangUploadSourceType.MARGIN, parsed.missingColumns);
     }
@@ -988,9 +1003,7 @@ export class CoupangService {
           costRuleAfter: savedCostRule.after
         });
       }
-      await tx.coupangUploadBatch.update({
-        where: { id: batch.id },
-        data: {
+      await this.finalizeCoupangReservation(tx, batch, {
           validRowCount,
           warningCount,
           errorCount,
@@ -1005,7 +1018,6 @@ export class CoupangService {
           },
           validatedAt: new Date(),
           importedAt: validRowCount > 0 ? new Date() : null
-        }
       });
     }, COUPANG_TRANSACTION_OPTIONS);
 
@@ -1020,6 +1032,9 @@ export class CoupangService {
         ? ["판매수수료율/판매수수료 컬럼은 공통 설정으로 대체되어 무시됨"]
         : []
     };
+    } catch (error) {
+      return this.rethrowCoupangImportFailure(batch, error);
+    }
   }
 
   async importPriceText(file: Express.Multer.File | undefined, body: Record<string, unknown>, actorId: string) {
@@ -1236,7 +1251,7 @@ export class CoupangService {
             matchSource,
             validationStatus,
             validationErrors: [...issues, ...warnings] as unknown as Prisma.InputJsonValue,
-            rawRow: row.rawRow as Prisma.InputJsonObject
+            rawRow: Prisma.DbNull
           }
         });
         await this.createRowErrors(tx, batch.id, CoupangUploadSourceType.PROMOTION, null, null, row.rowNumber, [
@@ -1280,15 +1295,37 @@ export class CoupangService {
     body: Record<string, unknown>,
     actorId: string
   ) {
+    // Validate every part before the first DB mutation. This prevents a valid
+    // first part from being imported when a later bundle part is malformed.
+    await preflightCoupangBundle(files, { requireMime: false });
     const results: Record<string, unknown> = {};
-    if (files.margin?.[0]) {
-      results.margin = await this.importMarginCsv(files.margin[0], body, actorId);
-    }
-    if (files.sales?.[0]) {
-      results.sales = await this.importSalesXlsx(files.sales[0], body, actorId);
-    }
-    if (files.ads?.[0]) {
-      results.ads = await this.importAdsXlsx(files.ads[0], body, actorId);
+    const completedFields: CoupangBundleField[] = [];
+    const imports: Array<{
+      field: CoupangBundleField;
+      file: Express.Multer.File | undefined;
+      run: (file: Express.Multer.File) => Promise<unknown>;
+    }> = [
+      { field: "margin", file: files.margin?.[0], run: (file) => this.importMarginCsv(file, body, actorId) },
+      { field: "sales", file: files.sales?.[0], run: (file) => this.importSalesXlsx(file, body, actorId) },
+      { field: "ads", file: files.ads?.[0], run: (file) => this.importAdsXlsx(file, body, actorId) }
+    ];
+    for (const item of imports) {
+      if (!item.file) continue;
+      try {
+        results[item.field] = await item.run(item.file);
+        completedFields.push(item.field);
+      } catch (error) {
+        if (completedFields.length === 0) throw error;
+        throw new ConflictException({
+          code: "COUPANG_BUNDLE_PARTIAL_FAILURE",
+          message: "The bundle was only partially imported. Retry the complete bundle with SKIP.",
+          details: {
+            completedFields,
+            failedField: item.field,
+            retryConflictPolicy: ConflictPolicy.SKIP
+          }
+        }, { cause: error });
+      }
     }
     return results;
   }
@@ -3522,6 +3559,9 @@ export class CoupangService {
     columnSchema: Prisma.InputJsonValue;
     rowCount: number;
   }, actorId: string) {
+    const columnSchema = isCoupangRetrySource(input.sourceType)
+      ? withCoupangRetryMarker(input.columnSchema, newCoupangRetryMarker(input.sourceType, "RESERVED"))
+      : input.columnSchema;
     return this.prisma.coupangUploadBatch.create({
       data: {
         sourceType: input.sourceType,
@@ -3531,13 +3571,149 @@ export class CoupangService {
           input.conflictPolicy === ConflictPolicy.SKIP && !input.allowDuplicateFileHash
             ? input.fileHashSha256
             : duplicateBatchHash(input.fileHashSha256, input.conflictPolicy),
-        columnSchema: input.columnSchema,
+        columnSchema,
         rowCount: input.rowCount,
         conflictPolicy: input.conflictPolicy,
         status: UploadStatus.VALIDATING,
         uploadedBy: actorId
       }
     });
+  }
+
+  private async reserveCoupangImportBatch(input: {
+    sourceType: CoupangRetrySource;
+    originalFilename: string;
+    fileHashSha256: string;
+    conflictPolicy: ConflictPolicy;
+    columnSchema: Prisma.InputJsonValue;
+    rowCount: number;
+  }, actorId: string): Promise<{
+    duplicate: Awaited<ReturnType<CoupangService["reusableDuplicate"]>>;
+    batch: CoupangUploadBatch;
+  }> {
+    if (input.conflictPolicy === ConflictPolicy.SKIP) {
+      const duplicate = await this.reusableDuplicate(input.fileHashSha256, input.sourceType, input.conflictPolicy);
+      if (duplicate) return { duplicate, batch: null as never };
+      const existing = await this.prisma.coupangUploadBatch.findUnique({ where: { fileHashSha256: input.fileHashSha256 } });
+      if (existing) {
+        return { duplicate: null, batch: await this.claimCoupangRetryBatch(existing, input.sourceType, actorId) };
+      }
+    }
+    try {
+      return { duplicate: null, batch: await this.createBatch(input, actorId) };
+    } catch (error) {
+      if (input.conflictPolicy === ConflictPolicy.SKIP && isPrismaUniqueConflict(error)) {
+        const raced = await this.prisma.coupangUploadBatch.findUnique({ where: { fileHashSha256: input.fileHashSha256 } });
+        if (raced) {
+          return { duplicate: null, batch: await this.claimCoupangRetryBatch(raced, input.sourceType, actorId) };
+        }
+      }
+      throw error;
+    }
+  }
+
+  private async claimCoupangRetryBatch(
+    batch: CoupangUploadBatch,
+    sourceType: CoupangRetrySource,
+    actorId: string
+  ) {
+    if (batch.sourceType !== sourceType) {
+      throw coupangRetryConflict("COUPANG_UPLOAD_RETRY_NOT_ALLOWED", "The file hash is reserved by another upload type.");
+    }
+    const [saleLineCount, adMetricCount, promotionPriceCount, rowErrorCount] = await Promise.all([
+      this.prisma.coupangSaleLine.count({ where: { uploadBatchId: batch.id } }),
+      this.prisma.coupangAdMetric.count({ where: { uploadBatchId: batch.id } }),
+      this.prisma.coupangPromotionPrice.count({ where: { uploadBatchId: batch.id } }),
+      this.prisma.coupangUploadRowError.count({ where: { uploadBatchId: batch.id } })
+    ]);
+    if (saleLineCount > 0 || adMetricCount > 0 || promotionPriceCount > 0 || rowErrorCount > 0 ||
+        batch.validRowCount > 0 || batch.warningCount > 0 || batch.errorCount > 0 || batch.importedAt) {
+      throw coupangRetryConflict("COUPANG_UPLOAD_RETRY_NOT_ALLOWED", "An upload with persisted domain work cannot be retried.");
+    }
+    const marker = coupangRetryMarker(batch.columnSchema);
+    if (!marker || marker.sourceType !== sourceType ||
+        (batch.status !== UploadStatus.VALIDATING && batch.status !== UploadStatus.FAILED)) {
+      throw coupangRetryConflict("COUPANG_UPLOAD_RETRY_NOT_ALLOWED", "The upload reservation is not retryable.");
+    }
+    const leaseExpiresAt = Date.parse(marker.leaseExpiresAt);
+    if (marker.state === "RESERVED" && Number.isFinite(leaseExpiresAt) && leaseExpiresAt > Date.now()) {
+      throw coupangRetryConflict("COUPANG_UPLOAD_IN_PROGRESS", "The same upload is already being processed.");
+    }
+    if (marker.state !== "TRANSIENT_FAILED" && marker.state !== "RESERVED") {
+      throw coupangRetryConflict("COUPANG_UPLOAD_RETRY_NOT_ALLOWED", "The upload reservation is not retryable.");
+    }
+    const claimedSchema = withCoupangRetryMarker(batch.columnSchema, newCoupangRetryMarker(sourceType, "RESERVED"));
+    const claimed = await this.prisma.coupangUploadBatch.updateMany({
+      where: {
+        id: batch.id,
+        status: batch.status,
+        columnSchema: { equals: batch.columnSchema as Prisma.InputJsonValue }
+      },
+      data: {
+        status: UploadStatus.VALIDATING,
+        validatedAt: null,
+        uploadedBy: actorId,
+        columnSchema: claimedSchema
+      }
+    });
+    if (claimed.count !== 1) {
+      throw coupangRetryConflict("COUPANG_UPLOAD_IN_PROGRESS", "The upload reservation ownership changed.");
+    }
+    return {
+      ...batch,
+      status: UploadStatus.VALIDATING,
+      validatedAt: null,
+      uploadedBy: actorId,
+      columnSchema: claimedSchema as unknown as Prisma.JsonValue
+    };
+  }
+
+  private async rethrowCoupangImportFailure(batch: CoupangUploadBatch, error: unknown): Promise<never> {
+    if (error instanceof HttpException && error.getStatus() < 500) throw error;
+    const marker = coupangRetryMarker(batch.columnSchema);
+    if (marker) {
+      const failedSchema = withCoupangRetryMarker(
+        batch.columnSchema,
+        { ...marker, state: "TRANSIENT_FAILED", leaseExpiresAt: new Date().toISOString() }
+      );
+      await this.prisma.coupangUploadBatch.updateMany({
+        where: {
+          id: batch.id,
+          status: UploadStatus.VALIDATING,
+          columnSchema: { equals: batch.columnSchema as Prisma.InputJsonValue }
+        },
+        data: {
+          status: UploadStatus.FAILED,
+          validatedAt: new Date(),
+          columnSchema: failedSchema
+        }
+      }).catch(() => undefined);
+    }
+    throw new ServiceUnavailableException({
+      code: "COUPANG_IMPORT_RETRYABLE_FAILURE",
+      message: "The upload stopped before domain work was committed. Retry the same file with SKIP."
+    }, { cause: error });
+  }
+
+  private async finalizeCoupangReservation(
+    tx: Prisma.TransactionClient,
+    batch: CoupangUploadBatch,
+    data: Prisma.CoupangUploadBatchUpdateManyMutationInput
+  ) {
+    const finalized = await tx.coupangUploadBatch.updateMany({
+      where: {
+        id: batch.id,
+        status: UploadStatus.VALIDATING,
+        columnSchema: { equals: batch.columnSchema as Prisma.InputJsonValue }
+      },
+      data
+    });
+    if (finalized.count !== 1) {
+      throw coupangRetryConflict(
+        "COUPANG_UPLOAD_RESERVATION_LOST",
+        "The upload reservation ownership changed before commit."
+      );
+    }
   }
 
   private async reusableDuplicate(fileHashSha256: string, sourceType: CoupangUploadSourceType, rawPolicy: unknown) {
@@ -5364,6 +5540,58 @@ function parseConflictPolicy(value: unknown) {
     return text as ConflictPolicy;
   }
   throw new BadRequestException({ code: "INVALID_CONFLICT_POLICY", message: "Invalid conflict policy." });
+}
+
+function isCoupangRetrySource(sourceType: CoupangUploadSourceType): sourceType is CoupangRetrySource {
+  return sourceType === CoupangUploadSourceType.SALES ||
+    sourceType === CoupangUploadSourceType.ADS ||
+    sourceType === CoupangUploadSourceType.MARGIN;
+}
+
+function newCoupangRetryMarker(
+  sourceType: CoupangRetrySource,
+  state: CoupangRetryMarker["state"]
+): CoupangRetryMarker {
+  const now = Date.now();
+  return {
+    version: 1,
+    sourceType,
+    state,
+    attemptId: randomUUID(),
+    leaseExpiresAt: new Date(now + COUPANG_RETRY_LEASE_MS).toISOString()
+  };
+}
+
+function withCoupangRetryMarker(schema: Prisma.InputJsonValue | Prisma.JsonValue, marker: CoupangRetryMarker) {
+  const base = schema && typeof schema === "object" && !Array.isArray(schema)
+    ? schema as Record<string, Prisma.JsonValue>
+    : {};
+  return {
+    ...base,
+    [COUPANG_RETRY_MARKER_KEY]: marker
+  } as unknown as Prisma.InputJsonObject;
+}
+
+function coupangRetryMarker(schema: Prisma.JsonValue): CoupangRetryMarker | null {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return null;
+  const candidate = (schema as Record<string, unknown>)[COUPANG_RETRY_MARKER_KEY];
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+  const marker = candidate as Record<string, unknown>;
+  if (marker.version !== 1 || !isCoupangRetrySource(marker.sourceType as CoupangUploadSourceType) ||
+      (marker.state !== "RESERVED" && marker.state !== "TRANSIENT_FAILED") ||
+      typeof marker.attemptId !== "string" || !UUID_PATTERN.test(marker.attemptId) ||
+      typeof marker.leaseExpiresAt !== "string" || !Number.isFinite(Date.parse(marker.leaseExpiresAt))) {
+    return null;
+  }
+  return marker as CoupangRetryMarker;
+}
+
+function coupangRetryConflict(code: string, message: string) {
+  return new ConflictException({ code, message });
+}
+
+function isPrismaUniqueConflict(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
 function parseCoupangCancelAmountMode(value: string | undefined): CoupangCancelAmountMode {

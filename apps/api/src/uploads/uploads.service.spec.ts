@@ -411,9 +411,11 @@ function metricHistoryHarness(parsedRow: ParsedMetaAdDailyRow, previousVideoCoun
       ? {
           id: "batch-new",
           originalFilename: "latest.csv",
-          storedFilePath: null
+          storedFilePath: null,
+          status: "IMPORTED"
         }
       : null,
+    update: async () => ({}),
     delete: async () => ({})
   };
   const transaction = {
@@ -432,7 +434,7 @@ function metricHistoryHarness(parsedRow: ParsedMetaAdDailyRow, previousVideoCoun
     versionService: new MetaMetricVersionService(prisma as never),
     lifecycleService: new UploadLifecycleService(
       prisma as never,
-      { deleteStoredUploadFile: async () => false } as never
+      {} as never
     )
   };
 }

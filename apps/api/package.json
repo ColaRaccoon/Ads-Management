@@ -15,7 +15,10 @@
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema prisma/schema.prisma",
     "prisma:seed": "prisma db seed --schema prisma/schema.prisma",
-    "auth:bootstrap-super-admin": "node --env-file=.env --import tsx src/auth/bootstrap-super-admin.cli.ts"
+    "auth:bootstrap-super-admin": "node --env-file=.env --import tsx src/auth/bootstrap-super-admin.cli.ts",
+    "files:measure-metadata": "node --import tsx src/file-security/upload-metadata-measurement.cli.ts",
+    "storage:purge": "node --env-file=.env --import tsx src/storage/storage-retention.cli.ts",
+    "storage:verify-supabase": "node --env-file=.env --import tsx src/storage/supabase-storage-verification.cli.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -35,6 +38,7 @@
     "exceljs": "^4.4.0",
     "helmet": "^8.1.0",
     "iconv-lite": "^0.7.2",
+    "jszip": "^3.10.1",
     "jose": "^5.10.0",
     "multer": "^2.0.0",
     "reflect-metadata": "^0.2.2",

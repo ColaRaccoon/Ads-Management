@@ -1,7 +1,6 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
-import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/api-exception.filter";
 import { AUTH_CONFIG, AuthConfig } from "./auth/auth.config";
 import {
@@ -9,9 +8,12 @@ import {
   HttpSecurityConfig
 } from "./common/http-security.config";
 import { configureHttpServer } from "./common/http-server";
+import { preloadApiEnvironment } from "./common/environment-preload";
 import { DangerousJsonKeysPipe } from "./validation/dangerous-json-keys.pipe";
 
 async function bootstrap() {
+  preloadApiEnvironment();
+  const { AppModule } = await import("./app.module");
   const app = await NestFactory.create(AppModule, { bodyParser: false });
   app.enableShutdownHooks();
   const authConfig = app.get<AuthConfig>(AUTH_CONFIG);

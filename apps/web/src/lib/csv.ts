@@ -1,3 +1,5 @@
+import { safeExportCellValue } from "./safe-export-cell";
+
 export type CsvColumn<Row> = {
   header: string;
   value: (row: Row) => string | number | null | undefined;
@@ -25,6 +27,6 @@ export function serializeCsv<Row>(columns: CsvColumn<Row>[], rows: Row[]) {
 
 function escapeCsv(value: string | number | null | undefined) {
   if (value === null || value === undefined) return "";
-  const text = String(value);
+  const text = String(safeExportCellValue(value));
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }

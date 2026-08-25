@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { CreativeParseStatus } from "@prisma/client";
+import { CreativeParseStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { AdsetNameNormalizer } from "../domain/adset-name-normalizer";
 import { CreativeNameParser, CreativeNameParts } from "../domain/creative-name-parser";
@@ -13,14 +13,14 @@ export class MetaEntityWriterService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async upsertAdset(parsedRow: ParsedMetaAdsetRow) {
-    const existingCandidates = await this.prisma.metaAdset.findMany({
+  async upsertAdset(parsedRow: ParsedMetaAdsetRow, client: Prisma.TransactionClient | PrismaService = this.prisma) {
+    const existingCandidates = await client.metaAdset.findMany({
       where: { platform: "META", adsetNameKey: parsedRow.adsetNameKey },
       orderBy: [{ lastSeenOn: "desc" }, { createdAt: "desc" }]
     });
     const existing = existingCandidates.find((candidate) => candidate.externalAdsetId) ?? existingCandidates[0] ?? null;
     if (existing) {
-      return this.prisma.metaAdset.update({
+      return client.metaAdset.update({
         where: { id: existing.id },
         data: {
           adsetName: parsedRow.adsetName,
@@ -29,7 +29,7 @@ export class MetaEntityWriterService {
         }
       });
     }
-    return this.prisma.metaAdset.create({
+    return client.metaAdset.create({
       data: {
         platform: "META",
         adsetName: parsedRow.adsetName,
@@ -40,8 +40,8 @@ export class MetaEntityWriterService {
     });
   }
 
-  async upsertCampaign(parsedRow: ParsedMetaAdDailyRow) {
-    const existing = await this.prisma.metaCampaign.findUnique({
+  async upsertCampaign(parsedRow: ParsedMetaAdDailyRow, client: Prisma.TransactionClient | PrismaService = this.prisma) {
+    const existing = await client.metaCampaign.findUnique({
       where: {
         platform_externalCampaignId: {
           platform: "META",
@@ -50,7 +50,7 @@ export class MetaEntityWriterService {
       }
     });
     if (existing) {
-      return this.prisma.metaCampaign.update({
+      return client.metaCampaign.update({
         where: { id: existing.id },
         data: {
           campaignName: parsedRow.campaignName,
@@ -59,7 +59,7 @@ export class MetaEntityWriterService {
         }
       });
     }
-    return this.prisma.metaCampaign.create({
+    return client.metaCampaign.create({
       data: {
         platform: "META",
         externalCampaignId: parsedRow.metaCampaignId,
@@ -70,13 +70,17 @@ export class MetaEntityWriterService {
     });
   }
 
-  async upsertAdsetFromAdDaily(parsedRow: ParsedMetaAdDailyRow, campaignRefId: string) {
+  async upsertAdsetFromAdDaily(
+    parsedRow: ParsedMetaAdDailyRow,
+    campaignRefId: string,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     const adsetNameKey = AdsetNameNormalizer.toKey(parsedRow.adsetName);
-    const existing = await this.prisma.metaAdset.findFirst({
+    const existing = await client.metaAdset.findFirst({
       where: { platform: "META", externalAdsetId: parsedRow.metaAdsetExternalId }
     });
     if (existing) {
-      return this.prisma.metaAdset.update({
+      return client.metaAdset.update({
         where: { id: existing.id },
         data: {
           campaignRefId,
@@ -87,12 +91,12 @@ export class MetaEntityWriterService {
         }
       });
     }
-    const legacyByName = await this.prisma.metaAdset.findFirst({
+    const legacyByName = await client.metaAdset.findFirst({
       where: { platform: "META", externalAdsetId: null, adsetNameKey },
       orderBy: [{ lastSeenOn: "desc" }, { createdAt: "desc" }]
     });
     if (legacyByName) {
-      return this.prisma.metaAdset.update({
+      return client.metaAdset.update({
         where: { id: legacyByName.id },
         data: {
           externalAdsetId: parsedRow.metaAdsetExternalId,
@@ -104,7 +108,7 @@ export class MetaEntityWriterService {
         }
       });
     }
-    return this.prisma.metaAdset.create({
+    return client.metaAdset.create({
       data: {
         platform: "META",
         externalAdsetId: parsedRow.metaAdsetExternalId,
@@ -117,9 +121,12 @@ export class MetaEntityWriterService {
     });
   }
 
-  async upsertCreativeFromAdDaily(parsedRow: ParsedMetaAdDailyRow) {
+  async upsertCreativeFromAdDaily(
+    parsedRow: ParsedMetaAdDailyRow,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     const parsedName = this.creativeNameParser.parse(parsedRow.adName);
-    const existing = await this.prisma.creative.findUnique({
+    const existing = await client.creative.findUnique({
       where: {
         platform_creativeKey: {
           platform: "META",
@@ -128,7 +135,7 @@ export class MetaEntityWriterService {
       }
     });
     if (existing) {
-      const creative = await this.prisma.creative.update({
+      const creative = await client.creative.update({
         where: { id: existing.id },
         data: {
           displayName: parsedName.displayName,
@@ -141,7 +148,7 @@ export class MetaEntityWriterService {
       });
       return { creative, parsedName };
     }
-    const creative = await this.prisma.creative.create({
+    const creative = await client.creative.create({
       data: {
         platform: "META",
         creativeKey: parsedName.creativeKey,
@@ -156,9 +163,14 @@ export class MetaEntityWriterService {
     return { creative, parsedName };
   }
 
-  async upsertCreativeAlias(creativeId: string, parsedName: CreativeNameParts, seenOn: Date) {
+  async upsertCreativeAlias(
+    creativeId: string,
+    parsedName: CreativeNameParts,
+    seenOn: Date,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     const originalKey = creativeOriginalKey(parsedName.originalName);
-    const existing = await this.prisma.creativeAlias.findUnique({
+    const existing = await client.creativeAlias.findUnique({
       where: {
         creativeId_originalKey: {
           creativeId,
@@ -174,7 +186,7 @@ export class MetaEntityWriterService {
       lastSeenOn: seenOn
     };
     if (existing) {
-      return this.prisma.creativeAlias.update({
+      return client.creativeAlias.update({
         where: { id: existing.id },
         data: {
           ...data,
@@ -183,7 +195,7 @@ export class MetaEntityWriterService {
         }
       });
     }
-    return this.prisma.creativeAlias.create({
+    return client.creativeAlias.create({
       data: {
         creativeId,
         originalKey,
@@ -200,8 +212,8 @@ export class MetaEntityWriterService {
     campaignRefId: string;
     metaAdsetRefId: string;
     metaAdRefId: string;
-  }) {
-    const existing = await this.prisma.creativePlacement.findUnique({
+  }, client: Prisma.TransactionClient | PrismaService = this.prisma) {
+    const existing = await client.creativePlacement.findUnique({
       where: {
         creativeId_metaCampaignId_metaAdsetId_originalAdName: {
           creativeId: input.creativeId,
@@ -223,7 +235,7 @@ export class MetaEntityWriterService {
     };
     if (existing) {
       const isLatestObservation = !existing.lastSeenOn || input.parsedRow.metricDate >= existing.lastSeenOn;
-      return this.prisma.creativePlacement.update({
+      return client.creativePlacement.update({
         where: { id: existing.id },
         data: {
           ...(isLatestObservation ? data : {}),
@@ -232,7 +244,7 @@ export class MetaEntityWriterService {
         }
       });
     }
-    return this.prisma.creativePlacement.create({
+    return client.creativePlacement.create({
       data: {
         creativeId: input.creativeId,
         metaCampaignId: input.parsedRow.metaCampaignId,
@@ -244,8 +256,14 @@ export class MetaEntityWriterService {
     });
   }
 
-  async upsertAd(parsedRow: ParsedMetaAdDailyRow, campaignRefId: string, metaAdsetRefId: string, creativeId: string) {
-    const existing = await this.prisma.metaAd.findUnique({
+  async upsertAd(
+    parsedRow: ParsedMetaAdDailyRow,
+    campaignRefId: string,
+    metaAdsetRefId: string,
+    creativeId: string,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
+    const existing = await client.metaAd.findUnique({
       where: {
         platform_metaCampaignId_metaAdsetId_adIdentityKey: {
           platform: "META",
@@ -256,7 +274,7 @@ export class MetaEntityWriterService {
       }
     });
     if (existing) {
-      return this.prisma.metaAd.update({
+      return client.metaAd.update({
         where: { id: existing.id },
         data: {
           campaignRefId,
@@ -270,7 +288,7 @@ export class MetaEntityWriterService {
         }
       });
     }
-    return this.prisma.metaAd.create({
+    return client.metaAd.create({
       data: {
         platform: "META",
         campaignRefId,

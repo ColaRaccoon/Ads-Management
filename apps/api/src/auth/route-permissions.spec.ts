@@ -36,6 +36,8 @@ const expectedRoutes = new Map<string, ExpectedAccess>([
   route("GET", "/api/uploads", "data.read"),
   route("GET", "/api/uploads/:id/preview", "data.read"),
   route("GET", "/api/uploads/:id/errors", "data.read"),
+  route("POST", "/api/uploads/storage-tombstones/:id/restore", "settings.manage"),
+  route("POST", "/api/uploads/storage-tombstones/:id/purge", "settings.manage"),
   route("DELETE", "/api/uploads/:id", "imports.manage"),
 
   route("GET", "/api/products", "data.read"),
@@ -170,7 +172,7 @@ describe("active AppModule route permissions", () => {
   it("matches the independent method and normalized-path inventory", () => {
     expect(discoveredRoutes.controllers).toBe(18);
     expect([...discoveredRoutes.routes.keys()].sort()).toEqual([...expectedRoutes.keys()].sort());
-    expect(discoveredRoutes.routes.size).toBe(126);
+    expect(discoveredRoutes.routes.size).toBe(128);
   });
 
   it("gives every handler exactly one explicit access contract with the expected permission", () => {

@@ -1,16 +1,31 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Prisma, ReportType } from "@prisma/client";
 import ExcelJS from "exceljs";
-import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { createHash, randomUUID } from "node:crypto";
 import { PrismaService } from "../common/prisma.service";
 import { parseDateRange } from "../common/date-range";
+import { safeExportCellValue } from "../common/safe-export-cell";
 import { MetricsService } from "../metrics/metrics.service";
+import {
+  configuredFileStorage,
+  configuredFileStorageForProvider
+} from "../storage/configured-file-storage";
+import {
+  FileStorage,
+  InvalidStorageKeyError,
+  StorageObjectNotFoundError
+} from "../storage/file-storage";
+import {
+  legacyLocalPathToKey,
+  parseStorageReference,
+  storageReference
+} from "../storage/storage-reference";
 
 @Injectable()
 export class ReportsService {
+  private fileStorage?: FileStorage;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly metricsService: MetricsService,
@@ -23,57 +38,102 @@ export class ReportsService {
   ) {
     const reportType = parseReportType(body.reportType);
     const range = parseDateRange(body.from, body.to);
+    const reportId = randomUUID();
+    const extension = reportType === ReportType.DAILY_HTML ? "html" : "xlsx";
+    const reference = this.reportReference(reportId, extension);
     const report = await this.prisma.reportExport.create({
       data: {
+        id: reportId,
         reportType,
         periodStart: range.fromDate,
         periodEnd: range.toDate,
         parameters: (body.parameters ?? {}) as Prisma.InputJsonObject,
+        filePath: reference,
         status: "CREATING",
         createdBy: actorId
       }
     });
 
-    const extension = reportType === ReportType.DAILY_HTML ? "html" : "xlsx";
-    const relativePath = await this.reportPath(report.id, extension);
-    const absolutePath = path.resolve(process.cwd(), relativePath);
-
-    if (extension === "html") {
-      const html = await this.renderHtml(range.from, range.to);
-      await writeFile(absolutePath, html, "utf8");
-    } else {
-      const workbook = await this.renderWorkbook(range.from, range.to, reportType);
-      await workbook.xlsx.writeFile(absolutePath);
+    let stored = false;
+    try {
+      const body = extension === "html"
+        ? Buffer.from(await this.renderHtml(range.from, range.to), "utf8")
+        : Buffer.from(await (await this.renderWorkbook(range.from, range.to, reportType)).xlsx.writeBuffer());
+      const parsed = this.explicitCurrentReference(reference);
+      const result = await this.storage.put({
+        key: parsed.key,
+        body,
+        expectedHashSha256: createHash("sha256").update(body).digest("hex")
+      });
+      stored = true;
+      return await this.prisma.reportExport.update({
+        where: { id: report.id },
+        data: {
+          fileHashSha256: result.hash,
+          status: "CREATED"
+        }
+      });
+    } catch {
+      if (stored) {
+        const parsed = this.explicitCurrentReference(reference);
+        await this.storage.delete(parsed.key).catch(() => undefined);
+      }
+      await this.prisma.reportExport.update({
+        where: { id: report.id },
+        data: { status: "FAILED", fileHashSha256: null }
+      }).catch(() => undefined);
+      throw new ServiceUnavailableException({
+        code: "REPORT_STORAGE_UNAVAILABLE",
+        message: "The report could not be stored and remains available for a safe retry."
+      });
     }
+  }
 
-    const hash = createHash("sha256").update(await readFile(absolutePath)).digest("hex");
-    return this.prisma.reportExport.update({
-      where: { id: report.id },
-      data: {
-        filePath: relativePath.replace(/\\/g, "/"),
-        fileHashSha256: hash,
-        status: "CREATED"
+  list() {
+    return this.prisma.reportExport.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        reportType: true,
+        periodStart: true,
+        periodEnd: true,
+        parameters: true,
+        fileHashSha256: true,
+        status: true,
+        createdBy: true,
+        createdAt: true
       }
     });
   }
 
-  list() {
-    return this.prisma.reportExport.findMany({ orderBy: { createdAt: "desc" }, take: 100 });
-  }
-
   async download(id: string) {
     const report = await this.prisma.reportExport.findUnique({ where: { id } });
-    if (!report?.filePath) {
+    if (!report?.filePath || report.status !== "CREATED") {
       throw new NotFoundException({ code: "REPORT_NOT_FOUND", message: "보고서 파일을 찾을 수 없습니다." });
     }
-    const absolutePath = path.resolve(process.cwd(), report.filePath);
     const extension = report.reportType === ReportType.DAILY_HTML ? "html" : "xlsx";
-    return {
-      absolutePath,
-      filename: `${report.reportType}-${report.periodStart.toISOString().slice(0, 10)}-${report.periodEnd
-        .toISOString()
-        .slice(0, 10)}.${extension}`
-    };
+    try {
+      const resolved = this.storageFromStoredReference(report.filePath);
+      const stored = await resolved.storage.getStream(resolved.key);
+      return {
+        ...stored,
+        contentType: extension === "html"
+          ? "text/html; charset=utf-8"
+          : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename: `${report.reportType}-${report.periodStart.toISOString().slice(0, 10)}-${report.periodEnd
+          .toISOString()
+          .slice(0, 10)}.${extension}`
+      };
+    } catch (error) {
+      if (error instanceof StorageObjectNotFoundError || error instanceof InvalidStorageKeyError) {
+        throw new NotFoundException({ code: "REPORT_NOT_FOUND", message: "보고서 파일을 찾을 수 없습니다." });
+      }
+      throw new ServiceUnavailableException({
+        code: "REPORT_STORAGE_UNAVAILABLE",
+        message: "The report storage service is temporarily unavailable."
+      });
+    }
   }
 
   private async renderHtml(from: string, to: string) {
@@ -103,7 +163,7 @@ export class ReportsService {
 <body>
   <h1>Meta Ads Performance Hub Report</h1>
   <p>선택 기간 기준 총 광고비는 ${fmt(summary.totals.spendKrw)}원, 구매수는 ${summary.totals.purchaseCount}건, 누적 CPA는 ${fmt(summary.totals.cpaKrw)}원입니다.</p>
-  <p>제품별로는 ${bestProduct?.product?.displayName ?? "-"}가 가장 높은 마진을 보였고, ${worstProduct?.product?.displayName ?? "-"}는 점검 후보입니다.</p>
+  <p>제품별로는 ${escapeHtml(String(bestProduct?.product?.displayName ?? "-"))}가 가장 높은 마진을 보였고, ${escapeHtml(String(worstProduct?.product?.displayName ?? "-"))}는 점검 후보입니다.</p>
   <p class="warn">미매칭 ${summary.health.unmatchedCount}건, 원가 기준 미설정 ${summary.health.missingCostRuleCount}개, CPA 기준 미설정 ${summary.health.missingCpaRuleCount}개</p>
   <h2>KPI</h2>
   <table><tbody>
@@ -168,13 +228,42 @@ export class ReportsService {
     return workbook;
   }
 
-  private async reportPath(reportId: string, extension: string) {
+  private reportReference(reportId: string, extension: string) {
     const now = new Date();
-    const storageDir = this.config.get<string>("REPORT_STORAGE_DIR") ?? "./storage/reports";
-    const targetDir = path.resolve(process.cwd(), storageDir, String(now.getFullYear()), String(now.getMonth() + 1).padStart(2, "0"));
-    await mkdir(targetDir, { recursive: true });
-    return path.relative(process.cwd(), path.join(targetDir, `${reportId}.${extension}`));
+    const key = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${reportId}.${extension}`;
+    return storageReference(this.storage.provider, key);
   }
+
+  private storageFromStoredReference(reference: string) {
+    const parsed = parseStorageReference(reference);
+    if (parsed) {
+      return {
+        key: parsed.key,
+        storage: configuredFileStorageForProvider(this.config, "reports", parsed.provider)
+      };
+    }
+    const storage = configuredFileStorageForProvider(this.config, "reports", "local");
+    if (!("rootPath" in storage) || typeof storage.rootPath !== "string") {
+      throw new InvalidStorageKeyError();
+    }
+    return {
+      key: legacyLocalPathToKey(reference, storage.rootPath),
+      storage
+    };
+  }
+
+  private explicitCurrentReference(reference: string) {
+    const parsed = parseStorageReference(reference);
+    if (!parsed || parsed.provider !== this.storage.provider) {
+      throw new InvalidStorageKeyError();
+    }
+    return parsed;
+  }
+
+  private get storage() {
+    return (this.fileStorage ??= configuredFileStorage(this.config, "reports"));
+  }
+
 }
 
 function parseReportType(value?: string): ReportType {
@@ -210,19 +299,19 @@ function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char] ?? char);
 }
 
-function addRows(sheet: ExcelJS.Worksheet, rows: unknown[][]) {
-  rows.forEach((row) => sheet.addRow(row));
+export function addRows(sheet: ExcelJS.Worksheet, rows: unknown[][]) {
+  rows.forEach((row) => sheet.addRow(row.map(safeExportCellValue)));
 }
 
-function addObjectRows(sheet: ExcelJS.Worksheet, rows: unknown[]) {
+export function addObjectRows(sheet: ExcelJS.Worksheet, rows: unknown[]) {
   if (rows.length === 0) {
     sheet.addRow(["No data"]);
     return;
   }
   const flattened = rows.map((row) => flatten(row));
   const columns = Array.from(new Set(flattened.flatMap((row) => Object.keys(row))));
-  sheet.addRow(columns);
-  flattened.forEach((row) => sheet.addRow(columns.map((column) => row[column] ?? "")));
+  sheet.addRow(columns.map(safeExportCellValue));
+  flattened.forEach((row) => sheet.addRow(columns.map((column) => safeExportCellValue(row[column] ?? ""))));
 }
 
 function flatten(value: unknown, prefix = ""): Record<string, string | number | boolean | null> {

@@ -16,7 +16,10 @@ export class ExchangeRatesService {
     private readonly config: ConfigService
   ) {}
 
-  async ensureUsdKrwRatesForDates(dates: Date[]): Promise<Map<string, ExchangeRate>> {
+  async ensureUsdKrwRatesForDates(
+    dates: Date[],
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ): Promise<Map<string, ExchangeRate>> {
     const uniqueDates = Array.from(new Set(dates.map((date) => formatDateOnly(date)))).sort();
     const rates = new Map<string, ExchangeRate>();
 
@@ -25,15 +28,18 @@ export class ExchangeRatesService {
       if (!date) {
         continue;
       }
-      rates.set(dateKey, await this.getUsdKrwRateForDate(date));
+      rates.set(dateKey, await this.getUsdKrwRateForDate(date, client));
     }
 
     return rates;
   }
 
-  async getUsdKrwRateForDate(date: Date): Promise<ExchangeRate> {
+  async getUsdKrwRateForDate(
+    date: Date,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ): Promise<ExchangeRate> {
     const rateDate = normalizeDateOnly(date);
-    const existing = await this.findStoredRateForDate(rateDate);
+    const existing = await this.findStoredRateForDate(rateDate, client);
     if (existing) {
       return existing;
     }
@@ -42,16 +48,16 @@ export class ExchangeRatesService {
     try {
       const exactRate = await this.fetchExactRateFromProvider(rateDate);
       if (exactRate) {
-        return this.upsertProviderRate(rateDate, exactRate, ExchangeRateFallbackType.EXACT);
+        return this.upsertProviderRate(rateDate, exactRate, ExchangeRateFallbackType.EXACT, client);
       }
     } catch (error) {
       providerError = error;
     }
 
     if (providerError) {
-      const latestStoredFallback = await this.findLatestStoredRate();
+      const latestStoredFallback = await this.findLatestStoredRate(client);
       if (latestStoredFallback) {
-        return this.upsertStoredFallbackRate(rateDate, latestStoredFallback, providerError);
+        return this.upsertStoredFallbackRate(rateDate, latestStoredFallback, providerError, client);
       }
       throw exchangeRateUnavailable(rateDate, providerError);
     }
@@ -59,41 +65,44 @@ export class ExchangeRatesService {
     try {
       const lookbackRate = await this.fetchPreviousRateFromProvider(rateDate);
       if (lookbackRate) {
-        return this.upsertProviderRate(rateDate, lookbackRate, ExchangeRateFallbackType.PREVIOUS_AVAILABLE);
+        return this.upsertProviderRate(rateDate, lookbackRate, ExchangeRateFallbackType.PREVIOUS_AVAILABLE, client);
       }
     } catch (error) {
       providerError = error;
-      const latestStoredFallback = await this.findLatestStoredRate();
+      const latestStoredFallback = await this.findLatestStoredRate(client);
       if (latestStoredFallback) {
-        return this.upsertStoredFallbackRate(rateDate, latestStoredFallback, providerError);
+        return this.upsertStoredFallbackRate(rateDate, latestStoredFallback, providerError, client);
       }
       throw exchangeRateUnavailable(rateDate, providerError);
     }
 
-    const storedFallback = await this.findLatestStoredRateOnOrBefore(rateDate);
+    const storedFallback = await this.findLatestStoredRateOnOrBefore(rateDate, client);
     if (storedFallback) {
-      return this.upsertStoredFallbackRate(rateDate, storedFallback, null);
+      return this.upsertStoredFallbackRate(rateDate, storedFallback, null, client);
     }
 
     try {
       const latestRate = await this.fetchLatestRateFromProvider();
       if (latestRate) {
-        return this.upsertProviderRate(rateDate, latestRate, ExchangeRateFallbackType.LATEST_AVAILABLE);
+        return this.upsertProviderRate(rateDate, latestRate, ExchangeRateFallbackType.LATEST_AVAILABLE, client);
       }
     } catch (error) {
       providerError = error;
-      const latestStoredFallback = await this.findLatestStoredRate();
+      const latestStoredFallback = await this.findLatestStoredRate(client);
       if (latestStoredFallback) {
-        return this.upsertStoredFallbackRate(rateDate, latestStoredFallback, providerError);
+        return this.upsertStoredFallbackRate(rateDate, latestStoredFallback, providerError, client);
       }
     }
 
     throw exchangeRateUnavailable(rateDate, providerError);
   }
 
-  async findLatestStoredRateOnOrBefore(date: Date): Promise<ExchangeRate | null> {
+  async findLatestStoredRateOnOrBefore(
+    date: Date,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ): Promise<ExchangeRate | null> {
     const rateDate = normalizeDateOnly(date);
-    return this.prisma.exchangeRate.findFirst({
+    return client.exchangeRate.findFirst({
       where: {
         baseCurrency: BASE_CURRENCY,
         quoteCurrency: QUOTE_CURRENCY,
@@ -104,8 +113,10 @@ export class ExchangeRatesService {
     });
   }
 
-  private async findLatestStoredRate(): Promise<ExchangeRate | null> {
-    return this.prisma.exchangeRate.findFirst({
+  private async findLatestStoredRate(
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ): Promise<ExchangeRate | null> {
+    return client.exchangeRate.findFirst({
       where: {
         baseCurrency: BASE_CURRENCY,
         quoteCurrency: QUOTE_CURRENCY,
@@ -123,8 +134,11 @@ export class ExchangeRatesService {
     return this.provider.fetchLatestRate();
   }
 
-  private async findStoredRateForDate(date: Date): Promise<ExchangeRate | null> {
-    return this.prisma.exchangeRate.findUnique({
+  private async findStoredRateForDate(
+    date: Date,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ): Promise<ExchangeRate | null> {
+    return client.exchangeRate.findUnique({
       where: {
         rateDate_baseCurrency_quoteCurrency_provider: {
           rateDate: normalizeDateOnly(date),
@@ -162,7 +176,8 @@ export class ExchangeRatesService {
   private upsertProviderRate(
     rateDate: Date,
     providerRate: ProviderRate,
-    fallbackType: ExchangeRateFallbackType
+    fallbackType: ExchangeRateFallbackType,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
   ): Promise<ExchangeRate> {
     const normalizedRateDate = normalizeDateOnly(rateDate);
     const data = {
@@ -177,7 +192,7 @@ export class ExchangeRatesService {
       fetchedAt: new Date()
     };
 
-    return this.prisma.exchangeRate.upsert({
+    return client.exchangeRate.upsert({
       where: {
         rateDate_baseCurrency_quoteCurrency_provider: {
           rateDate: normalizedRateDate,
@@ -200,7 +215,8 @@ export class ExchangeRatesService {
   private upsertStoredFallbackRate(
     rateDate: Date,
     storedFallback: ExchangeRate,
-    providerError: unknown
+    providerError: unknown,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
   ): Promise<ExchangeRate> {
     const normalizedRateDate = normalizeDateOnly(rateDate);
     const fallbackType =
@@ -224,7 +240,7 @@ export class ExchangeRatesService {
       fetchedAt: new Date()
     };
 
-    return this.prisma.exchangeRate.upsert({
+    return client.exchangeRate.upsert({
       where: {
         rateDate_baseCurrency_quoteCurrency_provider: {
           rateDate: normalizedRateDate,

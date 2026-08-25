@@ -183,6 +183,23 @@ enum SecurityAuditResult {
   @@map("security_audit_result")
 }
 
+enum StorageTombstoneDomain {
+  META_UPLOAD
+  REPORT
+
+  @@map("storage_tombstone_domain")
+}
+
+enum StorageTombstoneState {
+  PENDING
+  RETAINED
+  RESTORED
+  PURGED
+  FAILED
+
+  @@map("storage_tombstone_state")
+}
+
 model AppUser {
   id              String           @id @default(uuid()) @db.Uuid
   email           String?          @unique
@@ -218,6 +235,7 @@ model AppUser {
   invitedByUser        AppUser?             @relation("AppUserInviter", fields: [invitedBy], references: [id], onDelete: Restrict)
   invitedUsers         AppUser[]            @relation("AppUserInviter")
   securityAuditEvents  SecurityAuditEvent[] @relation("SecurityAuditActor")
+  storageTombstones    StorageTombstone[]    @relation("StorageTombstoneActor")
 
   @@index([invitedBy])
   @@index([inviteStatus, createdAt])
@@ -1453,6 +1471,33 @@ model ReportExport {
   @@index([reportType, periodStart, periodEnd])
   @@index([createdBy])
   @@map("report_exports")
+}
+
+model StorageTombstone {
+  id               String                @id @default(uuid()) @db.Uuid
+  domain           StorageTombstoneDomain
+  provider         String                @db.VarChar(32)
+  originalKey      String                @map("original_key") @db.VarChar(1024)
+  trashKey         String                @map("trash_key") @db.VarChar(1024)
+  hashSha256       String                @map("hash_sha256") @db.Char(64)
+  byteSize         BigInt                @map("byte_size")
+  businessRecordId String                @map("business_record_id") @db.Uuid
+  state            StorageTombstoneState @default(PENDING)
+  deletedAt        DateTime              @default(now()) @map("deleted_at") @db.Timestamptz(3)
+  purgeAfter       DateTime              @map("purge_after") @db.Timestamptz(3)
+  restoredAt       DateTime?             @map("restored_at") @db.Timestamptz(3)
+  purgedAt         DateTime?             @map("purged_at") @db.Timestamptz(3)
+  actorUserId      String?               @map("actor_user_id") @db.Uuid
+  failureCode      String?               @map("failure_code") @db.VarChar(64)
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  actor            AppUser?              @relation("StorageTombstoneActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@unique([domain, businessRecordId])
+  @@unique([provider, trashKey])
+  @@index([state, purgeAfter])
+  @@index([actorUserId, createdAt])
+  @@map("storage_tombstones")
 }
 
 model AppSetting {

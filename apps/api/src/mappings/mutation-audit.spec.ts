@@ -82,18 +82,36 @@ describe("required mutation security audit coverage", () => {
     const service = new UploadLifecycleService(
       {
         uploadBatch: {
-          findUnique: vi.fn(async () => ({ id: "batch-1", originalFilename: "upload.csv", storedFilePath: "uploads/file.csv" }))
+          findUnique: vi.fn(async () => ({
+            id: "batch-1",
+            originalFilename: "upload.csv",
+            storedFilePath: "uploads/file.csv",
+            fileHashSha256: "a".repeat(64),
+            status: "IMPORTED"
+          }))
         },
         securityAuditEvent: { create: auditCreate },
-        $transaction: transaction
+        $transaction: transaction.mockResolvedValue({
+          deletedAdMetricCount: 0,
+          deletedAdsetMetricCount: 0,
+          deletedRowCount: 0,
+          deletedErrorCount: 0,
+          restoredAdCurrentCount: 0,
+          restoredAdsetCurrentCount: 0,
+          deletedCreativePlacementCount: 0,
+          deletedCreativeAliasCount: 0,
+          deletedCreativeLogCount: 0,
+          deletedCreativeCount: 0,
+          deactivatedCreativeCount: 0
+        })
       } as never,
-      { deleteStoredUploadFile: vi.fn(async () => false) } as never
+      { retain: vi.fn(async () => { throw new Error("storage unavailable"); }) } as never
     );
 
     await expect(service.deleteUpload("batch-1", ACTOR_ID)).rejects.toMatchObject({
-      response: expect.objectContaining({ code: "UPLOAD_FILE_DELETE_RETRY_REQUIRED" })
+      response: expect.objectContaining({ code: "UPLOAD_FILE_RETENTION_RETRY_REQUIRED" })
     });
-    expect(transaction).not.toHaveBeenCalled();
+    expect(transaction).toHaveBeenCalledOnce();
     expect(auditCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: "META_UPLOAD_DELETE",

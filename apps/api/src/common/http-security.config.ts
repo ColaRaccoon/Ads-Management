@@ -1,6 +1,12 @@
 import { homedir } from "node:os";
 import path from "node:path";
 import { loadAuthConfig } from "../auth/auth.config";
+import { resolveUploadStructureLimits } from "../file-security/upload-preflight";
+import {
+  resolveCoupangBundleMaxTotalBytes,
+  resolveProfileMaxFileBytes,
+  UPLOAD_PROFILES
+} from "../file-security/upload-profiles";
 
 export const HTTP_SECURITY_CONFIG = Symbol("HTTP_SECURITY_CONFIG");
 
@@ -86,16 +92,51 @@ export function validateRuntimeEnvironment(
   }
 
   const storageProvider = (env.STORAGE_PROVIDER?.trim() || "local").toLowerCase();
-  if (storageProvider !== "local") {
-    throw new Error("STORAGE_PROVIDER is unsupported until the storage adapter is configured.");
+  if (storageProvider !== "local" && storageProvider !== "supabase") {
+    throw new Error("STORAGE_PROVIDER must be local or supabase.");
   }
   assertScopedLocalPath(env.UPLOAD_STORAGE_DIR, "UPLOAD_STORAGE_DIR");
   assertScopedLocalPath(env.REPORT_STORAGE_DIR, "REPORT_STORAGE_DIR");
+  const storageRetentionDays = boundedInteger(
+    env.SUPABASE_STORAGE_RETENTION_DAYS,
+    "SUPABASE_STORAGE_RETENTION_DAYS",
+    1,
+    365,
+    30
+  );
+  const storageTimeoutMs = boundedInteger(
+    env.SUPABASE_STORAGE_TIMEOUT_MS,
+    "SUPABASE_STORAGE_TIMEOUT_MS",
+    250,
+    60_000,
+    15_000
+  );
+  const storageMaxObjectBytes = boundedInteger(
+    env.SUPABASE_STORAGE_MAX_OBJECT_BYTES,
+    "SUPABASE_STORAGE_MAX_OBJECT_BYTES",
+    1_048_576,
+    268_435_456,
+    52_428_800
+  );
+  if (storageProvider === "supabase") {
+    const bucket = env.SUPABASE_STORAGE_BUCKET?.trim();
+    if (!bucket || !/^[a-z0-9][a-z0-9._-]{0,62}$/i.test(bucket)) {
+      throw new Error("SUPABASE_STORAGE_BUCKET is required and must be a valid private bucket id.");
+    }
+  }
+  for (const profile of Object.values(UPLOAD_PROFILES)) {
+    resolveProfileMaxFileBytes(profile, env);
+  }
+  resolveCoupangBundleMaxTotalBytes(env);
+  resolveUploadStructureLimits(env);
 
   return {
     ...input,
     PORT: String(port),
     STORAGE_PROVIDER: storageProvider,
+    SUPABASE_STORAGE_RETENTION_DAYS: String(storageRetentionDays),
+    SUPABASE_STORAGE_TIMEOUT_MS: String(storageTimeoutMs),
+    SUPABASE_STORAGE_MAX_OBJECT_BYTES: String(storageMaxObjectBytes),
     TRUST_PROXY_HOPS: String(http.trustProxyHops),
     READINESS_TIMEOUT_MS: String(http.readinessTimeoutMs),
     JSON_BODY_LIMIT_BYTES: String(http.jsonBodyLimitBytes),

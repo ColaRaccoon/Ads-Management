@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ConflictPolicy } from "@prisma/client";
+import { ConflictPolicy, Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { formatDateOnly } from "../domain/date-number";
 import { aggregateAdRows } from "./meta-adset-aggregates";
@@ -13,12 +13,16 @@ export class MetaAdsetAggregateService {
     private readonly metricVersionService: MetaMetricVersionService
   ) {}
 
-  async refreshAdsetAggregatesFromAdMetrics(batchId: string, snapshotDates: Date[]) {
+  async refreshAdsetAggregatesFromAdMetrics(
+    batchId: string,
+    snapshotDates: Date[],
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     if (snapshotDates.length === 0) {
       return 0;
     }
 
-    const metrics = await this.prisma.metaAdDailyMetric.findMany({
+    const metrics = await client.metaAdDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { in: snapshotDates }
@@ -35,7 +39,12 @@ export class MetaAdsetAggregateService {
     const includedAdsetKeys = new Set<string>();
     for (const rows of groups.values()) {
       const aggregate = aggregateAdRows(rows);
-      const result = await this.metricVersionService.importAdsetAggregateMetric(batchId, aggregate, ConflictPolicy.OVERWRITE);
+      const result = await this.metricVersionService.importAdsetAggregateMetric(
+        batchId,
+        aggregate,
+        ConflictPolicy.OVERWRITE,
+        client
+      );
       if (result.imported) {
         includedAdsetKeys.add(snapshotMetricKey(aggregate.metricDate, aggregate.metaAdsetId));
         importedCount += 1;
@@ -43,7 +52,10 @@ export class MetaAdsetAggregateService {
     }
 
     if (includedAdsetKeys.size > 0) {
-      await this.metricVersionService.deactivateMissingSnapshotMetrics({ snapshotDates, includedKeys: includedAdsetKeys });
+      await this.metricVersionService.deactivateMissingSnapshotMetrics(
+        { snapshotDates, includedKeys: includedAdsetKeys },
+        client
+      );
     }
     return importedCount;
   }

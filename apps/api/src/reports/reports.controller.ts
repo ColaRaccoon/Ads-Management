@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Res } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Res, StreamableFile } from "@nestjs/common";
 import { Response } from "express";
 import { ReportsService } from "./reports.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
@@ -26,8 +26,17 @@ export class ReportsController {
 
   @Get(":id/download")
   @RequirePermissions("data.read")
-  async download(@Param() params: ReportParamDto, @Res() response: Response) {
+  async download(@Param() params: ReportParamDto, @Res({ passthrough: true }) response: Response) {
     const download = await this.reportsService.download(params.id);
-    response.download(download.absolutePath, download.filename);
+    response.setHeader("Content-Type", download.contentType);
+    response.setHeader("Content-Length", String(download.size));
+    response.setHeader("Content-Disposition", contentDisposition(download.filename));
+    response.setHeader("X-Content-Type-Options", "nosniff");
+    return new StreamableFile(download.stream);
   }
+}
+
+function contentDisposition(filename: string) {
+  const ascii = filename.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 180) || "report";
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }

@@ -1,5 +1,11 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, SecurityAuditActorType, SecurityAuditResult } from "@prisma/client";
+import {
+  Prisma,
+  SecurityAuditActorType,
+  SecurityAuditResult,
+  StorageTombstoneDomain,
+  UploadStatus
+} from "@prisma/client";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { PrismaService } from "../common/prisma.service";
 import { CreativeNameParser } from "../domain/creative-name-parser";
@@ -14,8 +20,9 @@ import {
   uniqueAdsetMetricKeys,
   uniqueStrings
 } from "./upload-keys";
-import { UploadStorageService } from "./upload-storage.service";
 import { securityAuditData, writeSecurityAudit } from "../security-audit/security-audit.types";
+import { StorageTombstoneService } from "../storage/storage-tombstone.service";
+import { metaOriginalFileHashSha256 } from "./meta-original-storage-state";
 
 export const UPLOAD_DELETE_TRANSACTION_OPTIONS = {
   maxWait: 30_000,
@@ -28,13 +35,20 @@ export class UploadLifecycleService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly storageService: UploadStorageService
+    private readonly tombstoneService: StorageTombstoneService
   ) {}
 
   async deleteUpload(id: string, actorId?: string) {
     const batch = await this.prisma.uploadBatch.findUnique({
       where: { id },
-      select: { id: true, originalFilename: true, storedFilePath: true }
+      select: {
+        id: true,
+        originalFilename: true,
+        storedFilePath: true,
+        fileHashSha256: true,
+        columnSchema: true,
+        status: true
+      }
     });
     if (!batch) {
       throw new NotFoundException({ code: "UPLOAD_NOT_FOUND", message: "Upload batch not found." });
@@ -55,37 +69,11 @@ export class UploadLifecycleService {
       });
     }
 
-    const storedFileDeleted = batch.storedFilePath
-      ? await this.storageService.deleteStoredUploadFile(batch.storedFilePath)
-      : false;
-    if (batch.storedFilePath && !storedFileDeleted) {
-      if (actorId) {
-        await this.prisma.securityAuditEvent.create({
-          data: securityAuditData({
-            actorUserId: actorId,
-            actorType: SecurityAuditActorType.USER,
-            action: "META_UPLOAD_DELETE",
-            targetType: "META_UPLOAD_BATCH",
-            targetId: id,
-            result: SecurityAuditResult.PARTIAL,
-            beforeJson: { hasStoredFile: true },
-            afterJson: {
-              databaseReferencePreserved: true,
-              retryable: true,
-              failureCode: "FILE_DELETE_FAILED"
-            }
-          })
-        });
-      }
-      throw new ConflictException({
-        code: "UPLOAD_FILE_DELETE_RETRY_REQUIRED",
-        message: "The stored upload file could not be deleted. The upload reference was preserved for retry."
-      });
-    }
+    const originalFileHashSha256 = batch.storedFilePath
+      ? metaOriginalFileHashSha256(batch.columnSchema, batch.fileHashSha256)
+      : null;
 
-    let deleted;
-    try {
-      deleted = await this.prisma.$transaction(async (tx) => {
+    const deleted = await this.prisma.$transaction(async (tx) => {
       const adMetrics = await tx.metaAdDailyMetric.findMany({
         where: { uploadBatchId: id },
         select: {
@@ -127,7 +115,10 @@ export class UploadLifecycleService {
       const creativeCleanup = await this.cleanupCreativeDataAfterMetricDelete(tx, adMetrics);
       const deletedErrors = await tx.uploadRowError.deleteMany({ where: { uploadBatchId: id } });
       const deletedRows = await tx.uploadRow.deleteMany({ where: { uploadBatchId: id } });
-      await tx.uploadBatch.delete({ where: { id } });
+      await tx.uploadBatch.update({
+        where: { id },
+        data: { status: UploadStatus.CANCELLED }
+      });
 
       const result = {
         deletedAdMetricCount: deletedAdMetrics.count,
@@ -138,29 +129,25 @@ export class UploadLifecycleService {
         restoredAdsetCurrentCount,
         ...creativeCleanup
       };
-      if (actorId) {
-        await writeSecurityAudit(tx, {
-          actorUserId: actorId,
-          actorType: SecurityAuditActorType.USER,
-          action: "META_UPLOAD_DELETE",
-          targetType: "META_UPLOAD_BATCH",
-          targetId: id,
-          result: SecurityAuditResult.SUCCESS,
-          beforeJson: { hasStoredFile: Boolean(batch.storedFilePath) },
-          afterJson: {
-            deleted: true,
-            storedFileDeleted,
-            deletedAdMetricCount: result.deletedAdMetricCount,
-            deletedAdsetMetricCount: result.deletedAdsetMetricCount,
-            deletedRowCount: result.deletedRowCount,
-            deletedErrorCount: result.deletedErrorCount
-          }
-        });
-      }
       return result;
     }, UPLOAD_DELETE_TRANSACTION_OPTIONS);
-    } catch (error) {
-      if (actorId && batch.storedFilePath && storedFileDeleted) {
+
+    let storedFileRetained = false;
+    let tombstoneId: string | null = null;
+    try {
+      if (batch.storedFilePath) {
+        const retained = await this.tombstoneService.retain({
+          domain: StorageTombstoneDomain.META_UPLOAD,
+          businessRecordId: batch.id,
+          reference: batch.storedFilePath,
+          expectedHashSha256: originalFileHashSha256!,
+          actorUserId: actorId
+        });
+        storedFileRetained = retained.state === "RETAINED";
+        tombstoneId = retained.tombstoneId;
+      }
+    } catch {
+      if (actorId) {
         await this.prisma.securityAuditEvent.create({
           data: securityAuditData({
             actorUserId: actorId,
@@ -173,8 +160,56 @@ export class UploadLifecycleService {
             afterJson: {
               databaseReferencePreserved: true,
               retryable: true,
-              storedFileDeleted: true,
-              failureCode: "DATABASE_DELETE_FAILED"
+              failureCode: "FILE_RETENTION_FAILED"
+            }
+          })
+        });
+      }
+      throw new ConflictException({
+        code: "UPLOAD_FILE_RETENTION_RETRY_REQUIRED",
+        message: "The stored upload file could not be retained. The upload reference was preserved for retry."
+      });
+    }
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.uploadBatch.delete({ where: { id } });
+        if (actorId) {
+          await writeSecurityAudit(tx, {
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "META_UPLOAD_DELETE",
+            targetType: "META_UPLOAD_BATCH",
+            targetId: id,
+            result: SecurityAuditResult.SUCCESS,
+            beforeJson: { hasStoredFile: Boolean(batch.storedFilePath) },
+            afterJson: {
+              deleted: true,
+              storedFileRetained,
+              deletedAdMetricCount: deleted.deletedAdMetricCount,
+              deletedAdsetMetricCount: deleted.deletedAdsetMetricCount,
+              deletedRowCount: deleted.deletedRowCount,
+              deletedErrorCount: deleted.deletedErrorCount
+            }
+          });
+        }
+      }, UPLOAD_DELETE_TRANSACTION_OPTIONS);
+    } catch (error) {
+      if (actorId) {
+        await this.prisma.securityAuditEvent.create({
+          data: securityAuditData({
+            actorUserId: actorId,
+            actorType: SecurityAuditActorType.USER,
+            action: "META_UPLOAD_DELETE",
+            targetType: "META_UPLOAD_BATCH",
+            targetId: id,
+            result: SecurityAuditResult.PARTIAL,
+            beforeJson: { hasStoredFile: Boolean(batch.storedFilePath) },
+            afterJson: {
+              databaseReferencePreserved: true,
+              retryable: true,
+              storedFileRetained,
+              failureCode: "DATABASE_FINALIZE_FAILED"
             }
           })
         });
@@ -185,9 +220,18 @@ export class UploadLifecycleService {
     return {
       batchId: batch.id,
       originalFilename: normalizeUploadedFilename(batch.originalFilename),
-      storedFileDeleted,
+      storedFileRetained,
+      tombstoneId,
       ...deleted
     };
+  }
+
+  restoreStoredObject(tombstoneId: string, actorId: string) {
+    return this.tombstoneService.restore(tombstoneId, actorId);
+  }
+
+  purgeStoredObject(tombstoneId: string, actorId: string) {
+    return this.tombstoneService.purge(tombstoneId, actorId, true);
   }
 
   async restoreCurrentAdMetrics(tx: Prisma.TransactionClient, metrics: DeletedAdMetricKey[]) {

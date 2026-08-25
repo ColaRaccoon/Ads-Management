@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, UploadedFile, UseInterceptors } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
 import { ConflictPolicy } from "@prisma/client";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
+import { SecureUploadPipe } from "../file-security/secure-upload.pipe";
+import { UPLOAD_PROFILES, uploadFileInterceptor } from "../file-security/upload-profiles";
 import { UploadFormDto, UploadListQueryDto, UploadParamDto } from "./dto/upload-transport.dto";
 import { UploadsService } from "./uploads.service";
 
@@ -12,9 +13,9 @@ export class UploadsController {
 
   @Post("meta-ad-daily-csv")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.META_CSV))
   uploadMetaAdDailyCsv(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.META_CSV)) file: Express.Multer.File,
     @Body() body: UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
@@ -23,9 +24,9 @@ export class UploadsController {
 
   @Post("meta-adset-csv")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.META_CSV))
   uploadMetaAdsetCsv(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.META_CSV)) file: Express.Multer.File,
     @Body() body: UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
@@ -48,6 +49,18 @@ export class UploadsController {
   @RequirePermissions("data.read")
   errors(@Param() params: UploadParamDto) {
     return this.uploadsService.uploadErrors(params.id);
+  }
+
+  @Post("storage-tombstones/:id/restore")
+  @RequirePermissions("settings.manage")
+  restoreStoredObject(@Param() params: UploadParamDto, @CurrentUser() actor: AuthenticatedUser) {
+    return this.uploadsService.restoreStoredObject(params.id, actor.id);
+  }
+
+  @Post("storage-tombstones/:id/purge")
+  @RequirePermissions("settings.manage")
+  purgeStoredObject(@Param() params: UploadParamDto, @CurrentUser() actor: AuthenticatedUser) {
+    return this.uploadsService.purgeStoredObject(params.id, actor.id);
   }
 
   @Delete(":id")

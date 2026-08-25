@@ -1,3 +1,5 @@
+import { safeExportCellValue } from "./safe-export-cell";
+
 export type XlsxCellStyle =
   | "Text"
   | "Header"
@@ -286,20 +288,21 @@ function xlsxCell(ref: string, cell: XlsxCell, catalog: XlsxStyleCatalog) {
   const value = cell.value;
   const styleId = xlsxStyleId(cell, catalog);
   if (value === null || value === undefined) {
-    return xlsxStringCell(ref, "-", styleId);
+    return xlsxStringCell(ref, "-", styleId, false);
   }
   if (typeof value === "number") {
     if (!Number.isFinite(value)) {
-      return xlsxStringCell(ref, "-", styleId);
+      return xlsxStringCell(ref, "-", styleId, false);
     }
     return `<c r="${ref}" s="${styleId}"><v>${value}</v></c>`;
   }
   return xlsxStringCell(ref, value, styleId);
 }
 
-function xlsxStringCell(ref: string, value: string, styleId: number) {
-  const preserveSpace = /^\s|\s$/.test(value) ? ` xml:space="preserve"` : "";
-  return `<c r="${ref}" t="inlineStr" s="${styleId}"><is><t${preserveSpace}>${escapeXml(value)}</t></is></c>`;
+function xlsxStringCell(ref: string, value: string, styleId: number, protectFormula = true) {
+  const safeValue = protectFormula ? String(safeExportCellValue(value)) : value;
+  const preserveSpace = /^\s|\s$/.test(safeValue) ? ` xml:space="preserve"` : "";
+  return `<c r="${ref}" t="inlineStr" s="${styleId}"><is><t${preserveSpace}>${escapeXml(safeValue)}</t></is></c>`;
 }
 
 function xlsxStyleId(cell: XlsxCell, catalog: XlsxStyleCatalog) {

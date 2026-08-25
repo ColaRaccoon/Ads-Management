@@ -1,6 +1,15 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { AdStage, ConflictPolicy, MatchSource, Prisma, RowValidationStatus, UploadStatus } from "@prisma/client";
-import { createHash } from "node:crypto";
+import { BadRequestException, Injectable, ServiceUnavailableException } from "@nestjs/common";
+import {
+  AdStage,
+  ConflictPolicy,
+  MatchSource,
+  Prisma,
+  RowValidationStatus,
+  UploadBatch,
+  UploadLevel,
+  UploadStatus
+} from "@prisma/client";
+import { createHash, randomUUID } from "node:crypto";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { PrismaService } from "../common/prisma.service";
 import { formatDateOnly } from "../domain/date-number";
@@ -17,6 +26,15 @@ import {
 } from "./upload-keys";
 import { UploadStorageService } from "./upload-storage.service";
 import { UploadExchangeRateService } from "./upload-exchange-rate.service";
+import {
+  acquireMetaUploadMutationFence,
+  isRetryableMetaOriginalStoragePending,
+  META_UPLOAD_MUTATION_TRANSACTION_OPTIONS,
+  pendingMetaOriginalStorageSchema,
+  storedMetaOriginalStorageSchema
+} from "./meta-original-storage-state";
+
+const STORAGE_DOMAIN = "META_ADSET_DAILY" as const;
 
 @Injectable()
 export class MetaAdsetImportService {
@@ -41,64 +59,50 @@ export class MetaAdsetImportService {
 
     const fileHashSha256 = createHash("sha256").update(file.buffer).digest("hex");
     const duplicated = await this.prisma.uploadBatch.findUnique({ where: { fileHashSha256 } });
-    if (duplicated && conflictPolicy === ConflictPolicy.SKIP) {
-      return {
-        duplicate: true,
-        batchId: duplicated.id,
-        status: duplicated.status,
-        rowCount: duplicated.rowCount,
-        validRowCount: duplicated.validRowCount,
-        warningCount: duplicated.warningCount,
-        errorCount: duplicated.errorCount,
-        importedMetricCount: await this.prisma.metaAdsetDailyMetric.count({ where: { uploadBatchId: duplicated.id } }),
-        skippedDuplicateCount: 0,
-        unmatchedCount: await this.prisma.uploadRow.count({
-          where: { uploadBatchId: duplicated.id, validationStatus: RowValidationStatus.UNMATCHED }
-        }),
-        reportStart: duplicated.reportStart ? formatDateOnly(duplicated.reportStart) : null,
-        reportEnd: duplicated.reportEnd ? formatDateOnly(duplicated.reportEnd) : null,
-        snapshotHiddenMetricCount: 0
-      };
-    }
-    const batchFileHashSha256 = duplicated ? duplicateBatchHash(fileHashSha256, conflictPolicy) : fileHashSha256;
-
     const originalFilename = normalizeUploadedFilename(file.originalname);
     const { headers, rows } = this.csvParser.parseBuffer(file.buffer);
-    const storedFilePath = await this.storageService.storeOriginalFile(file, batchFileHashSha256, originalFilename);
-    const batch = await this.prisma.uploadBatch.create({
-      data: {
-        originalFilename,
-        storedFilePath,
-        fileHashSha256: batchFileHashSha256,
-        columnSchema: { columns: headers, count: headers.length, originalFileHashSha256: fileHashSha256 },
-        rowCount: rows.length,
-        conflictPolicy,
-        status: UploadStatus.VALIDATING,
-        uploadedBy: actorId
-      }
-    });
-
-    const headerValidation = CsvHeaderValidator.validate(headers);
-    if (!headerValidation.valid) {
-      await this.prisma.uploadRowError.createMany({
-        data: headerValidation.missingColumns.map((columnName) => ({
-          uploadBatchId: batch.id,
-          columnName,
-          severity: "ERROR",
-          errorCode: "MISSING_REQUIRED_COLUMN",
-          message: `필수 컬럼이 누락되었습니다: ${columnName}`
-        }))
-      });
-      await this.prisma.uploadBatch.update({
-        where: { id: batch.id },
-        data: { status: UploadStatus.FAILED, errorCount: headerValidation.missingColumns.length, validatedAt: new Date() }
-      });
-      throw new BadRequestException({
-        code: "CSV_HEADER_INVALID",
-        message: "필수 CSV 컬럼이 누락되었습니다.",
-        details: { batchId: batch.id, missingColumns: headerValidation.missingColumns }
+    let reservedBatch: UploadBatch | null = duplicated && conflictPolicy === ConflictPolicy.SKIP
+      ? await this.claimStoragePendingBatch(duplicated)
+      : null;
+    if (duplicated && conflictPolicy === ConflictPolicy.SKIP && !reservedBatch) {
+      return this.duplicateResult(duplicated);
+    }
+    if (!reservedBatch) {
+      const batchFileHashSha256 = duplicated ? duplicateBatchHash(fileHashSha256, conflictPolicy) : fileHashSha256;
+      const batchId = randomUUID();
+      const storedFilePath = this.storageService.prepareOriginalFileReference(batchFileHashSha256, new Date(), batchId);
+      const columnSchema = pendingMetaOriginalStorageSchema({
+        columns: headers,
+        count: headers.length,
+        originalFileHashSha256: fileHashSha256
+      }, STORAGE_DOMAIN);
+      reservedBatch = await this.prisma.uploadBatch.create({
+        data: {
+          id: batchId,
+          originalFilename,
+          storedFilePath,
+          fileHashSha256: batchFileHashSha256,
+          columnSchema,
+          rowCount: rows.length,
+          conflictPolicy,
+          status: UploadStatus.VALIDATING,
+          uploadedBy: actorId
+        }
       });
     }
+    if (!reservedBatch) throw new Error("Upload batch reservation failed.");
+    let batch: UploadBatch = reservedBatch;
+    const prepared = await this.prepareBatchWithFence(batch, file, headers, rows);
+    if (prepared.kind === "error") throw prepared.error;
+    if (prepared.kind === "lost") return this.currentDuplicateResult(batch.id);
+    batch = prepared.batch;
+    const { headerValidation } = prepared;
+
+    const outcome = await this.prisma.$transaction(async (tx) => {
+      await acquireMetaUploadMutationFence(tx, batch.id);
+      const current = await tx.uploadBatch.findUnique({ where: { id: batch.id } });
+      if (!current || !sameStorageOwnership(current, batch)) return { kind: "lost" as const };
+      batch = current;
 
     let validRowCount = 0;
     let warningCount = 0;
@@ -116,13 +120,18 @@ export class MetaAdsetImportService {
       sourceRowHash: hashRecord(rawRow)
     }));
 
-    await this.uploadExchangeRateService.ensureUsdKrwRates(
-      batch.id,
-      parsedRows
-        .filter(({ parsed }) => parsed.parsedRow && parsed.issues.length === 0)
-        .map(({ parsed }) => parsed.parsedRow?.metricDate)
-        .filter((date): date is Date => Boolean(date))
-    );
+    try {
+      await this.uploadExchangeRateService.ensureUsdKrwRates(
+        batch.id,
+        parsedRows
+          .filter(({ parsed }) => parsed.parsedRow && parsed.issues.length === 0)
+          .map(({ parsed }) => parsed.parsedRow?.metricDate)
+          .filter((date): date is Date => Boolean(date)),
+        tx
+      );
+    } catch (error) {
+      return { kind: "error" as const, error };
+    }
 
     for (const { rowNumber, rawRow, parsed, sourceRowHash } of parsedRows) {
       const parsedRow = parsed.parsedRow;
@@ -136,19 +145,23 @@ export class MetaAdsetImportService {
       if (parsedRow) {
         reportStart = minDate(reportStart, parsedRow.dateStart);
         reportEnd = maxDate(reportEnd, parsedRow.dateEnd);
-        const metaAdset = await this.entityWriterService.upsertAdset(parsedRow);
+        const metaAdset = await this.entityWriterService.upsertAdset(parsedRow, tx);
         metaAdsetId = metaAdset.id;
 
-        const productMatch = await this.mappingsService.matchProduct(metaAdset.id, parsedRow.adsetName, parsedRow.metricDate);
+        const productMatch = await this.mappingsService.matchProduct(
+          metaAdset.id, parsedRow.adsetName, parsedRow.metricDate, tx
+        );
         productId = productMatch.productId;
         productMatchSource = productMatch.source as MatchSource;
         productMatchRuleId = productMatch.matchRuleId;
 
-        const stageMatch = await this.mappingsService.matchStage(metaAdset.id, parsedRow.adsetName, parsedRow.metricDate);
+        const stageMatch = await this.mappingsService.matchStage(
+          metaAdset.id, parsedRow.adsetName, parsedRow.metricDate, tx
+        );
         stage = stageMatch.stage as AdStage;
         stageMatchSource = stageMatch.source as MatchSource;
 
-        await this.prisma.metaAdset.update({
+        await tx.metaAdset.update({
           where: { id: metaAdset.id },
           data: {
             currentProductId: productId,
@@ -175,7 +188,7 @@ export class MetaAdsetImportService {
         validRowCount += 1;
       }
 
-      const uploadRow = await this.prisma.uploadRow.create({
+      const uploadRow = await tx.uploadRow.create({
         data: {
           uploadBatchId: batch.id,
           rowNumber,
@@ -197,7 +210,7 @@ export class MetaAdsetImportService {
       });
 
       if (parsed.issues.length > 0) {
-        await this.prisma.uploadRowError.createMany({
+        await tx.uploadRowError.createMany({
           data: parsed.issues.map((issue) => ({
             uploadBatchId: batch.id,
             uploadRowId: uploadRow.id,
@@ -225,7 +238,7 @@ export class MetaAdsetImportService {
           stage,
           stageMatchSource,
           conflictPolicy
-        });
+        }, tx);
         importedMetricCount += result.imported ? 1 : 0;
         skippedDuplicateCount += result.skipped ? 1 : 0;
         if (result.imported || result.skipped) {
@@ -240,7 +253,7 @@ export class MetaAdsetImportService {
         ? await this.metricVersionService.deactivateMissingSnapshotMetrics({
             snapshotDates: Array.from(snapshotDatesByKey.values()),
             includedKeys: includedSnapshotKeys
-          })
+          }, tx)
         : 0;
 
     const status =
@@ -249,7 +262,7 @@ export class MetaAdsetImportService {
         : errorCount > 0
           ? UploadStatus.FAILED
           : UploadStatus.IMPORTED;
-    const updated = await this.prisma.uploadBatch.update({
+    const updated = await tx.uploadBatch.update({
       where: { id: batch.id },
       data: {
         status,
@@ -263,7 +276,7 @@ export class MetaAdsetImportService {
       }
     });
 
-    return {
+    return { kind: "success" as const, value: {
       batchId: updated.id,
       status: updated.status,
       rowCount: updated.rowCount,
@@ -276,7 +289,147 @@ export class MetaAdsetImportService {
       unmatchedCount: warningCount,
       reportStart: reportStart ? formatDateOnly(reportStart) : null,
       reportEnd: reportEnd ? formatDateOnly(reportEnd) : null
+    } };
+    }, META_UPLOAD_MUTATION_TRANSACTION_OPTIONS);
+    if (outcome.kind === "error") throw outcome.error;
+    if (outcome.kind === "lost") return this.currentDuplicateResult(batch.id);
+    return outcome.value;
+  }
+
+  private prepareBatchWithFence(
+    batch: UploadBatch,
+    file: Express.Multer.File,
+    headers: string[],
+    _rows: Array<Record<string, string>>
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await acquireMetaUploadMutationFence(tx, batch.id);
+      let current = await tx.uploadBatch.findUnique({ where: { id: batch.id } });
+      if (!current || !sameStorageOwnership(current, batch)) return { kind: "lost" as const };
+      try {
+        await this.storageService.putOriginalFile(file, current.storedFilePath!);
+      } catch {
+        await tx.uploadBatch.updateMany({
+          where: {
+            id: current.id,
+            columnSchema: { equals: current.columnSchema as Prisma.InputJsonValue }
+          },
+          data: { status: UploadStatus.FAILED, validatedAt: new Date() }
+        });
+        return {
+          kind: "error" as const,
+          error: new ServiceUnavailableException({
+            code: "UPLOAD_STORAGE_UNAVAILABLE",
+            message: "The upload could not be stored. The failed batch was preserved for a safe retry."
+          })
+        };
+      }
+      const storedSchema = storedMetaOriginalStorageSchema(current.columnSchema, STORAGE_DOMAIN);
+      const finalized = await tx.uploadBatch.updateMany({
+        where: {
+          id: current.id,
+          status: UploadStatus.VALIDATING,
+          columnSchema: { equals: current.columnSchema as Prisma.InputJsonValue }
+        },
+        data: { columnSchema: storedSchema }
+      });
+      if (finalized.count !== 1) return { kind: "lost" as const };
+      current = { ...current, columnSchema: storedSchema };
+
+      const headerValidation = CsvHeaderValidator.validate(headers);
+      if (!headerValidation.valid) {
+        await tx.uploadRowError.createMany({
+          data: headerValidation.missingColumns.map((columnName) => ({
+            uploadBatchId: current.id,
+            columnName,
+            severity: "ERROR",
+            errorCode: "MISSING_REQUIRED_COLUMN",
+            message: `필수 컬럼이 누락되었습니다: ${columnName}`
+          }))
+        });
+        await tx.uploadBatch.update({
+          where: { id: current.id },
+          data: {
+            status: UploadStatus.FAILED,
+            errorCount: headerValidation.missingColumns.length,
+            validatedAt: new Date()
+          }
+        });
+        return {
+          kind: "error" as const,
+          error: new BadRequestException({
+            code: "CSV_HEADER_INVALID",
+            message: "필수 CSV 컬럼이 누락되었습니다.",
+            details: { batchId: current.id, missingColumns: headerValidation.missingColumns }
+          })
+        };
+      }
+      return { kind: "ready" as const, batch: current, headerValidation };
+    }, META_UPLOAD_MUTATION_TRANSACTION_OPTIONS);
+  }
+
+  private async claimStoragePendingBatch(batch: UploadBatch) {
+    return this.prisma.$transaction(async (tx) => {
+      await acquireMetaUploadMutationFence(tx, batch.id);
+      const current = await tx.uploadBatch.findUnique({ where: { id: batch.id } });
+      if (
+        !current || current.level !== UploadLevel.ADSET || !current.storedFilePath ||
+        !isRetryableMetaOriginalStoragePending(current.columnSchema, STORAGE_DOMAIN, current.status)
+      ) return null;
+      const [rowCount, errorCount, adMetricCount, adsetMetricCount] = await Promise.all([
+        tx.uploadRow.count({ where: { uploadBatchId: current.id } }),
+        tx.uploadRowError.count({ where: { uploadBatchId: current.id } }),
+        tx.metaAdDailyMetric.count({ where: { uploadBatchId: current.id } }),
+        tx.metaAdsetDailyMetric.count({ where: { uploadBatchId: current.id } })
+      ]);
+      if (
+        rowCount > 0 || errorCount > 0 || adMetricCount > 0 || adsetMetricCount > 0 ||
+        current.validRowCount > 0 || current.warningCount > 0 || current.errorCount > 0 || current.importedAt
+      ) return null;
+      const claimedSchema = pendingMetaOriginalStorageSchema(current.columnSchema, STORAGE_DOMAIN);
+      const claimed = await tx.uploadBatch.updateMany({
+        where: {
+          id: current.id,
+          status: current.status,
+          columnSchema: { equals: current.columnSchema as Prisma.InputJsonValue }
+        },
+        data: { status: UploadStatus.VALIDATING, validatedAt: null, columnSchema: claimedSchema }
+      });
+      return claimed.count === 1
+        ? { ...current, status: UploadStatus.VALIDATING, validatedAt: null, columnSchema: claimedSchema }
+        : null;
+    }, META_UPLOAD_MUTATION_TRANSACTION_OPTIONS);
+  }
+
+  private async currentDuplicateResult(batchId: string) {
+    const current = await this.prisma.uploadBatch.findUnique({ where: { id: batchId } });
+    if (!current) throw new ServiceUnavailableException({ code: "UPLOAD_RETRY_UNAVAILABLE", message: "Upload retry state is unavailable." });
+    return this.duplicateResult(current);
+  }
+
+  private async duplicateResult(duplicated: UploadBatch) {
+    return {
+      duplicate: true,
+      batchId: duplicated.id,
+      status: duplicated.status,
+      rowCount: duplicated.rowCount,
+      validRowCount: duplicated.validRowCount,
+      warningCount: duplicated.warningCount,
+      errorCount: duplicated.errorCount,
+      importedMetricCount: await this.prisma.metaAdsetDailyMetric.count({ where: { uploadBatchId: duplicated.id } }),
+      skippedDuplicateCount: 0,
+      unmatchedCount: await this.prisma.uploadRow.count({
+        where: { uploadBatchId: duplicated.id, validationStatus: RowValidationStatus.UNMATCHED }
+      }),
+      reportStart: duplicated.reportStart ? formatDateOnly(duplicated.reportStart) : null,
+      reportEnd: duplicated.reportEnd ? formatDateOnly(duplicated.reportEnd) : null,
+      snapshotHiddenMetricCount: 0
     };
   }
 
+}
+
+function sameStorageOwnership(current: UploadBatch, expected: UploadBatch) {
+  return current.status === UploadStatus.VALIDATING &&
+    JSON.stringify(current.columnSchema) === JSON.stringify(expected.columnSchema);
 }

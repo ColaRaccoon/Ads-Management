@@ -1,9 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UseInterceptors } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
 import { ConflictPolicy } from "@prisma/client";
 import { Cafe24UploadsService } from "./cafe24-uploads.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
+import { SecureUploadPipe } from "../file-security/secure-upload.pipe";
+import { UPLOAD_PROFILES, uploadFileInterceptor } from "../file-security/upload-profiles";
 import {
   Cafe24ParamDto,
   Cafe24RematchQueryDto,
@@ -20,9 +21,9 @@ export class Cafe24UploadsController {
 
   @Post("uploads")
   @RequirePermissions("imports.manage")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.CAFE24_CSV))
   uploadCafe24Csv(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new SecureUploadPipe(UPLOAD_PROFILES.CAFE24_CSV)) file: Express.Multer.File,
     @Body() body: Cafe24UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {

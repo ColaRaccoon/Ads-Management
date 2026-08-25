@@ -12,9 +12,12 @@ import { DecisionClassifier } from "./decision-classifier";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { encode } from "iconv-lite";
 import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 
-const SAMPLE_AD_DAILY_CSV =
-  "C:/Users/seong/Downloads/Patima-group-파티마그룹-광고-2026.-6.-1.-~-2026.-6.-1. (1).csv";
+const SAMPLE_AD_DAILY_CSV = process.env.APPROVED_META_SAMPLE_PATH ?? "";
+const ORIGINAL_BUSINESS_ROOT = "C:\\Users\\seong\\Desktop\\workspace\\Meta-Ads-Performance";
+const SAMPLE_IS_APPROVED_COPY = Boolean(SAMPLE_AD_DAILY_CSV) &&
+  !isWithin(ORIGINAL_BUSINESS_ROOT, SAMPLE_AD_DAILY_CSV);
 
 describe("AdsetNameNormalizer", () => {
   it("trims, collapses spaces, and lowercases keys", () => {
@@ -187,23 +190,31 @@ describe("Meta ad daily CSV parser", () => {
     expect(parsed.parsedRow?.purchaseCount).toBe(3);
   });
 
-  it.runIf(existsSync(SAMPLE_AD_DAILY_CSV))("matches the provided June 1 Meta ad CSV summary", () => {
-    const parser = new MetaAdDailyCsvParser();
-    const preview = parser.preview(readFileSync(SAMPLE_AD_DAILY_CSV));
-    const keys = new Set(preview.sampleRows.map(dailyAdMetricKey));
+  it.runIf(SAMPLE_IS_APPROVED_COPY && existsSync(SAMPLE_AD_DAILY_CSV))(
+    "matches the explicitly approved development-copy Meta CSV summary",
+    () => {
+      const parser = new MetaAdDailyCsvParser();
+      const preview = parser.preview(readFileSync(SAMPLE_AD_DAILY_CSV));
+      const keys = new Set(preview.sampleRows.map(dailyAdMetricKey));
 
-    expect(preview.rowCount).toBe(38);
-    expect(preview.columnCount).toBe(32);
-    expect(preview.campaignCount).toBe(5);
-    expect(preview.adsetCount).toBe(16);
-    expect(preview.uniqueAdNameCount).toBe(33);
-    expect(preview.dailyAdKeyCount).toBe(38);
-    expect(preview.totalSpendUsd).toBe(142.46);
-    expect(preview.totalPurchases).toBe(13);
-    expect(preview.duplicateKeys).toHaveLength(0);
-    expect(keys.size).toBe(preview.sampleRows.length);
-  });
+      expect(preview.rowCount).toBe(38);
+      expect(preview.columnCount).toBe(32);
+      expect(preview.campaignCount).toBe(5);
+      expect(preview.adsetCount).toBe(16);
+      expect(preview.uniqueAdNameCount).toBe(33);
+      expect(preview.dailyAdKeyCount).toBe(38);
+      expect(preview.totalSpendUsd).toBe(142.46);
+      expect(preview.totalPurchases).toBe(13);
+      expect(preview.duplicateKeys).toHaveLength(0);
+      expect(keys.size).toBe(preview.sampleRows.length);
+    }
+  );
 });
+
+function isWithin(root: string, target: string) {
+  const relative = path.relative(path.resolve(root), path.resolve(target));
+  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+}
 
 function csvCell(value: unknown) {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;

@@ -39,4 +39,12 @@ export class UploadsService {
   deleteUpload(id: string, actorId?: string) {
     return this.lifecycleService.deleteUpload(id, actorId);
   }
+
+  restoreStoredObject(tombstoneId: string, actorId: string) {
+    return this.lifecycleService.restoreStoredObject(tombstoneId, actorId);
+  }
+
+  purgeStoredObject(tombstoneId: string, actorId: string) {
+    return this.lifecycleService.purgeStoredObject(tombstoneId, actorId);
+  }
 }

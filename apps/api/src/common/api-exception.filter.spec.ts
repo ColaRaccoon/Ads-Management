@@ -1,4 +1,4 @@
-import { ArgumentsHost, BadRequestException } from "@nestjs/common";
+import { ArgumentsHost, BadRequestException, ConflictException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
 import { ApiExceptionFilter } from "./api-exception.filter";
@@ -76,6 +76,40 @@ describe("ApiExceptionFilter sensitive error handling", () => {
       code: "RATE_LIMITED",
       details: { retryAfterSeconds: 17 }
     }));
+  });
+
+  it("allowlists only bounded bundle partial-failure field metadata", () => {
+    const response = responseFake();
+    new ApiExceptionFilter().catch(new ConflictException({
+      code: "COUPANG_BUNDLE_PARTIAL_FAILURE",
+      message: "The bundle was only partially imported. Retry the complete bundle with SKIP.",
+      details: {
+        completedFields: ["margin"],
+        failedField: "sales",
+        retryConflictPolicy: "SKIP",
+        filename: "private-orders.xlsx",
+        providerMessage: "private provider detail"
+      }
+    }), host(response));
+    expect(response.json).toHaveBeenCalledWith({
+      code: "COUPANG_BUNDLE_PARTIAL_FAILURE",
+      message: "The bundle was only partially imported. Retry the complete bundle with SKIP.",
+      details: {
+        completedFields: ["margin"],
+        failedField: "sales",
+        retryConflictPolicy: "SKIP"
+      },
+      requestId: "request-123"
+    });
+    expect(JSON.stringify(response.json.mock.calls)).not.toMatch(/private-orders|private provider/);
+
+    const invalidResponse = responseFake();
+    new ApiExceptionFilter().catch(new ConflictException({
+      code: "COUPANG_BUNDLE_PARTIAL_FAILURE",
+      message: "The bundle was only partially imported. Retry the complete bundle with SKIP.",
+      details: { completedFields: ["margin", "private"], failedField: "sales", retryConflictPolicy: "SKIP" }
+    }), host(invalidResponse));
+    expect(invalidResponse.json.mock.calls[0][0].details).toBeNull();
   });
 });
 

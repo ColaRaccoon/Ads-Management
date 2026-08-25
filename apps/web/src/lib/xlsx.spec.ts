@@ -265,6 +265,26 @@ describe("XLSX workbook generator", () => {
       sectionCount(readZipText(many, "xl/styles.xml"), "cellXfs")
     );
   });
+
+  it("STEP7-EVAL-011 escapes external formula strings while preserving numeric cells", () => {
+    const workbook = buildXlsxWorkbook({
+      sheetName: "안전",
+      rows: [[
+        { value: "=2+2", style: "Text" },
+        { value: "+cmd", style: "Text" },
+        { value: "-10+20", style: "Text" },
+        { value: "@SUM(A1:A2)", style: "Text" },
+        { value: -12, style: "Number" }
+      ]]
+    });
+    const sheet = readZipText(workbook, "xl/worksheets/sheet1.xml");
+
+    expect(sheet).toContain(`<t>&apos;=2+2</t>`);
+    expect(sheet).toContain(`<t>&apos;+cmd</t>`);
+    expect(sheet).toContain(`<t>&apos;-10+20</t>`);
+    expect(sheet).toContain(`<t>&apos;@SUM(A1:A2)</t>`);
+    expect(sheet).toMatch(/<c r="E1" s="\d+"><v>-12<\/v><\/c>/);
+  });
 });
 
 function readZipText(workbook: Uint8Array, entryName: string) {

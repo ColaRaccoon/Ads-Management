@@ -811,7 +811,7 @@ export class Cafe24UploadsService {
           validationErrors: [...input.validationErrors, ...policyWarnings] as unknown as Prisma.InputJsonValue,
           importVersion: storedState.importVersion,
           isCurrent: storedState.isCurrent,
-          rawRow: input.sanitizedRawRow as Prisma.InputJsonObject
+          rawRow: Prisma.DbNull
         }
       });
 

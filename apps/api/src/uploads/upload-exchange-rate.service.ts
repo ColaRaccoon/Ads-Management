@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { UploadStatus } from "@prisma/client";
+import { Prisma, UploadStatus } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { ExchangeRatesService } from "../exchange-rates/exchange-rates.service";
 
@@ -10,16 +10,20 @@ export class UploadExchangeRateService {
     private readonly exchangeRatesService: ExchangeRatesService
   ) {}
 
-  async ensureUsdKrwRates(batchId: string, metricDates: Date[]) {
+  async ensureUsdKrwRates(
+    batchId: string,
+    metricDates: Date[],
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     if (metricDates.length === 0) {
       return;
     }
 
     try {
-      await this.exchangeRatesService.ensureUsdKrwRatesForDates(metricDates);
+      await this.exchangeRatesService.ensureUsdKrwRatesForDates(metricDates, client);
     } catch (error) {
       const message = exchangeRateErrorMessage(error);
-      await this.prisma.uploadRowError.create({
+      await client.uploadRowError.create({
         data: {
           uploadBatchId: batchId,
           severity: "ERROR",
@@ -27,7 +31,7 @@ export class UploadExchangeRateService {
           message
         }
       });
-      await this.prisma.uploadBatch.update({
+      await client.uploadBatch.update({
         where: { id: batchId },
         data: { status: UploadStatus.FAILED, errorCount: 1, validatedAt: new Date() }
       });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ConflictPolicy, MatchSource, RowValidationStatus, UploadStatus } from "@prisma/client";
+import { ConflictPolicy, MatchSource, Prisma, RowValidationStatus, UploadStatus } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CAFE24_ORDER_COLUMN_ALIASES } from "../domain/cafe24-csv";
@@ -123,6 +123,7 @@ describe("Cafe24 upload current/version policy", () => {
       validationStatus: RowValidationStatus.ERROR,
       paymentMethod: "쿠폰,신용카드"
     });
+    expect(prisma.createCalls[0].data.rawRow).toBe(Prisma.DbNull);
   });
   it("stores parsed total order amount and preserves a missing legacy value as null", async () => {
     const parsedRow = {
@@ -307,6 +308,7 @@ describe("Cafe24UploadsService duplicate upload guard", () => {
     ).rejects.toMatchObject({ response: expect.objectContaining({ code: "CSV_HEADER_INVALID" }) });
 
     expect(create.mock.calls[0][0].data.uploadedBy).toBe(ACTOR_ID);
+    expect(create.mock.calls[0][0].data.storedFilePath).toBeNull();
   });
 
   it("treats a batch with fewer saved rows than parsed rows as incomplete", async () => {

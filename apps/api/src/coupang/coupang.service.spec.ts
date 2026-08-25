@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { ConflictPolicy, CoupangUploadSourceType, MatchSource, Prisma, RowValidationStatus } from "@prisma/client";
+import { ConflictPolicy, CoupangUploadSourceType, MatchSource, Prisma, RowValidationStatus, UploadStatus } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { toDateOnly } from "../domain/date-number";
@@ -314,6 +314,35 @@ describe("Coupang sales fee history corrections", () => {
 });
 
 describe("Coupang upload current/version policy", () => {
+  it("reuses a completed per-file batch before parsing on a bundle SKIP retry", async () => {
+    const findFirst = vi.fn(async () => ({
+      id: "margin-batch",
+      sourceType: CoupangUploadSourceType.MARGIN,
+      status: UploadStatus.IMPORTED,
+      rowCount: 2,
+      validRowCount: 2,
+      warningCount: 0,
+      errorCount: 0
+    }));
+    const service = new CoupangService({ coupangUploadBatch: { findFirst } } as never);
+
+    await expect((service as unknown as {
+      reusableDuplicate: (hash: string, sourceType: CoupangUploadSourceType, policy: ConflictPolicy) => Promise<unknown>;
+    }).reusableDuplicate("safe-hash", CoupangUploadSourceType.MARGIN, ConflictPolicy.SKIP)).resolves.toMatchObject({
+      duplicate: true,
+      batchId: "margin-batch",
+      status: UploadStatus.IMPORTED
+    });
+    expect(findFirst).toHaveBeenCalledWith({
+      where: {
+        fileHashSha256: "safe-hash",
+        sourceType: CoupangUploadSourceType.MARGIN,
+        status: { in: [UploadStatus.IMPORTED, UploadStatus.PARTIAL] }
+      },
+      orderBy: { uploadedAt: "desc" }
+    });
+  });
+
   it("keeps duplicate logical keys non-current on SKIP", () => {
     expect(
       resolveCoupangRowImportDecision({
@@ -359,6 +388,97 @@ describe("Coupang upload current/version policy", () => {
       isCurrent: false,
       supersedeExisting: false
     });
+  });
+});
+
+describe("STEP7-EVAL-005 Coupang SKIP reservation retry state", () => {
+  it("resumes a real per-file import after a post-reservation transient failure", async () => {
+    const prisma = fakeCoupangReservationRetryPrisma({ failFirstTransaction: true });
+    const service = new CoupangService(prisma as never);
+    const file = xlsxFile(await workbookBuffer([
+      coupangSalesHeaderRow(),
+      ["A-1", "Black", "Zero Bar", "seller", 100_000, 1, 1, 100_000, 1, 0, 0, 0]
+    ]));
+
+    await expect(service.importBundle({ sales: [file] }, { conflictPolicy: "SKIP" }, ACTOR_ID))
+      .rejects.toMatchObject({
+        status: 503,
+        response: { code: "COUPANG_IMPORT_RETRYABLE_FAILURE" }
+      });
+    expect(prisma.state.batch?.status).toBe(UploadStatus.FAILED);
+    expect((prisma.state.batch?.columnSchema as any)?._securityRetry).toMatchObject({ state: "TRANSIENT_FAILED" });
+
+    await expect(service.importBundle({ sales: [file] }, { conflictPolicy: "SKIP" }, ACTOR_ID))
+      .resolves.toMatchObject({ sales: { batchId: "retry-batch", validRowCount: 1 } });
+    expect(prisma.coupangUploadBatch.create).toHaveBeenCalledTimes(1);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(prisma.coupangSaleLine.create).toHaveBeenCalledTimes(1);
+    expect(prisma.state.batch?.status).toBe(UploadStatus.IMPORTED);
+  });
+
+  it("excludes concurrent active ownership and any persisted partial work from retry", async () => {
+    const buffer = await workbookBuffer([
+      coupangSalesHeaderRow(),
+      ["A-1", "Black", "Zero Bar", "seller", 100_000, 1, 1, 100_000, 1, 0, 0, 0]
+    ]);
+    const file = xlsxFile(buffer);
+    const fileHashSha256 = createHash("sha256").update(buffer).digest("hex");
+    const active = fakeCoupangReservationRetryPrisma({
+      existingBatch: retryBatchFixture(fileHashSha256, "RESERVED", UploadStatus.VALIDATING, 60_000)
+    });
+    await expect(new CoupangService(active as never).importSalesXlsx(file, { conflictPolicy: "SKIP" }, ACTOR_ID))
+      .rejects.toMatchObject({ status: 409, response: { code: "COUPANG_UPLOAD_IN_PROGRESS" } });
+    expect(active.$transaction).not.toHaveBeenCalled();
+    expect(active.coupangUploadBatch.create).not.toHaveBeenCalled();
+
+    const partial = fakeCoupangReservationRetryPrisma({
+      existingBatch: retryBatchFixture(fileHashSha256, "TRANSIENT_FAILED", UploadStatus.FAILED, -1),
+      saleArtifactCount: 1
+    });
+    await expect(new CoupangService(partial as never).importSalesXlsx(file, { conflictPolicy: "SKIP" }, ACTOR_ID))
+      .rejects.toMatchObject({ status: 409, response: { code: "COUPANG_UPLOAD_RETRY_NOT_ALLOWED" } });
+    expect(partial.$transaction).not.toHaveBeenCalled();
+    expect(partial.coupangUploadBatch.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("fences an expired owner so only the claimed attempt can commit domain work", async () => {
+    const fileHashSha256 = "a".repeat(64);
+    const staleBatch = retryBatchFixture(fileHashSha256, "RESERVED", UploadStatus.VALIDATING, -1);
+    const prisma = fakeCoupangReservationRetryPrisma({ existingBatch: staleBatch });
+    const service = new CoupangService(prisma as never);
+    const internals = service as unknown as {
+      claimCoupangRetryBatch: (
+        batch: typeof staleBatch,
+        sourceType: CoupangUploadSourceType,
+        actorId: string
+      ) => Promise<typeof staleBatch>;
+      finalizeCoupangReservation: (tx: any, batch: typeof staleBatch, data: Record<string, unknown>) => Promise<void>;
+    };
+    const claimedBatch = await internals.claimCoupangRetryBatch(
+      staleBatch,
+      CoupangUploadSourceType.SALES,
+      ACTOR_ID
+    );
+
+    await expect(prisma.$transaction(async (tx: any) => {
+      await tx.coupangSaleLine.create({ data: { uploadBatchId: staleBatch.id } });
+      await internals.finalizeCoupangReservation(tx, staleBatch, { status: UploadStatus.IMPORTED });
+    })).rejects.toMatchObject({
+      status: 409,
+      response: { code: "COUPANG_UPLOAD_RESERVATION_LOST" }
+    });
+    expect(prisma.state.saleArtifactCount).toBe(0);
+
+    await prisma.$transaction(async (tx: any) => {
+      await tx.coupangSaleLine.create({ data: { uploadBatchId: claimedBatch.id } });
+      await internals.finalizeCoupangReservation(tx, claimedBatch, {
+        status: UploadStatus.IMPORTED,
+        validRowCount: 1,
+        importedAt: new Date()
+      });
+    });
+    expect(prisma.state.saleArtifactCount).toBe(1);
+    expect(prisma.state.batch?.status).toBe(UploadStatus.IMPORTED);
   });
 });
 
@@ -3960,6 +4080,8 @@ describe("CoupangService sales import", () => {
     expect(Number(data.totalSalesKrw)).toBe(3_757_600);
     expect(Number(data.cancelAmountKrw)).toBe(-462_000);
     expect(Number(data.netSalesKrw)).toBe(3_295_600);
+    expect(data.rawRow).toBe(Prisma.DbNull);
+    expect(prisma.coupangUploadBatch.create.mock.calls[0][0].data.storedFilePath).toBeNull();
   });
 
   it.each([
@@ -4158,12 +4280,7 @@ describe("CoupangService rematch", () => {
       isCurrent: true,
       validationStatus: RowValidationStatus.VALID,
       validationErrors: [],
-      rawRow: expect.objectContaining({
-        aggregated: true,
-        sourceRowNumbers: [2, 3, 4],
-        sourceRowCount: 3,
-        adMetricKey: "2026-06-29:Campaign:Group:E-1:Spend Product 2-pack:C-1:-"
-      })
+      rawRow: Prisma.DbNull
     });
     expect(data.impressions).toBe(BigInt(60));
     expect(Number(data.adSpendKrw)).toBe(6000);
@@ -4242,12 +4359,7 @@ describe("CoupangService rematch", () => {
       rowNumber: 2,
       adName: "Spend Product A",
       adMetricKey: "2026-06-29:Campaign:Group:E-1:Spend Product A:C-1:-",
-      rawRow: expect.objectContaining({
-        aggregated: true,
-        sourceRowNumbers: [2, 3],
-        sourceRowCount: 2,
-        adMetricKey: "2026-06-29:Campaign:Group:E-1:Spend Product A:C-1:-"
-      })
+      rawRow: Prisma.DbNull
     });
     expect(Number(data.adSpendKrw)).toBe(3000);
   });
@@ -4526,7 +4638,8 @@ describe("CoupangService promotion import", () => {
       data: expect.objectContaining({
         validationStatus: RowValidationStatus.WARNING,
         matchSource: MatchSource.RULE,
-        promotionStatus: "취소"
+        promotionStatus: "취소",
+        rawRow: Prisma.DbNull
       })
     });
     expect(prisma.coupangUploadRowError.createMany).toHaveBeenCalledWith({
@@ -5185,7 +5298,9 @@ function fakeCoupangMarginImportPrisma() {
     $queryRaw: vi.fn(async () => []),
     coupangUploadBatch: {
       findFirst: vi.fn(async () => null),
+      findUnique: vi.fn(async () => null),
       create: vi.fn(async (args) => ({ id: "batch-margin-import", conflictPolicy: args.data.conflictPolicy, ...args.data })),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       update: vi.fn(async () => ({}))
     },
     coupangProduct: {
@@ -5312,7 +5427,9 @@ function fakeCoupangSalesImportPrisma() {
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
     coupangUploadBatch: {
       findFirst: vi.fn(async () => null),
+      findUnique: vi.fn(async () => null),
       create: vi.fn(async (args) => ({ id: "batch-sales-import", conflictPolicy: args.data.conflictPolicy, ...args.data })),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       update: vi.fn(async (args) => ({ id: args.where.id, ...args.data }))
     },
     coupangProductRule: {
@@ -5347,7 +5464,9 @@ function fakeCoupangAdsImportPrisma(options: { existingAdMetrics?: any[] } = {})
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => Promise<unknown>) => callback(prisma)),
     coupangUploadBatch: {
       findFirst: vi.fn(async () => null),
+      findUnique: vi.fn(async () => null),
       create: vi.fn(async (args) => ({ id: "batch-ads-import", conflictPolicy: args.data.conflictPolicy, ...args.data })),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       update: vi.fn(async (args) => ({ id: args.where.id, ...args.data }))
     },
     coupangProductRule: {
@@ -5832,6 +5951,154 @@ async function workbookBuffer(rows: unknown[][]) {
   rows.forEach((row) => sheet.addRow(row));
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
+}
+
+function xlsxFile(buffer: Buffer): Express.Multer.File {
+  return {
+    fieldname: "sales",
+    originalname: "sales.xlsx",
+    encoding: "7bit",
+    mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    size: buffer.length,
+    buffer
+  } as Express.Multer.File;
+}
+
+function retryBatchFixture(
+  fileHashSha256: string,
+  markerState: "RESERVED" | "TRANSIENT_FAILED",
+  status: UploadStatus,
+  leaseDeltaMs: number
+) {
+  return {
+    id: "retry-batch",
+    sourceType: CoupangUploadSourceType.SALES,
+    originalFilename: "sales.xlsx",
+    storedFilePath: null,
+    fileHashSha256,
+    dataStart: null,
+    dataEnd: null,
+    columnSchema: {
+      schemaVersion: 1,
+      _securityRetry: {
+        version: 1,
+        sourceType: CoupangUploadSourceType.SALES,
+        state: markerState,
+        attemptId: "22222222-2222-4222-8222-222222222222",
+        leaseExpiresAt: new Date(Date.now() + leaseDeltaMs).toISOString()
+      }
+    },
+    rowCount: 1,
+    validRowCount: 0,
+    warningCount: 0,
+    errorCount: 0,
+    conflictPolicy: ConflictPolicy.SKIP,
+    status,
+    uploadedBy: ACTOR_ID,
+    uploadedAt: new Date(),
+    validatedAt: null,
+    importedAt: null
+  };
+}
+
+function fakeCoupangReservationRetryPrisma(options: {
+  failFirstTransaction?: boolean;
+  existingBatch?: ReturnType<typeof retryBatchFixture>;
+  saleArtifactCount?: number;
+  rowErrorCount?: number;
+} = {}) {
+  let batch = options.existingBatch ? structuredClone(options.existingBatch) : null;
+  let saleArtifactCount = options.saleArtifactCount ?? 0;
+  let rowErrorCount = options.rowErrorCount ?? 0;
+  let transactionAttempts = 0;
+
+  const schemasEqual = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+  const batchDelegate = {
+    findFirst: vi.fn(async () => (
+      batch && (batch.status === UploadStatus.IMPORTED || batch.status === UploadStatus.PARTIAL) ? batch : null
+    )),
+    findUnique: vi.fn(async () => batch),
+    create: vi.fn(async ({ data }: any) => {
+      batch = {
+        ...retryBatchFixture(data.fileHashSha256, "RESERVED", UploadStatus.VALIDATING, 60 * 60 * 1000),
+        ...data,
+        id: "retry-batch"
+      };
+      return batch;
+    }),
+    updateMany: vi.fn(async ({ where, data }: any) => {
+      if (!batch || batch.id !== where.id ||
+          (where.status !== undefined && batch.status !== where.status) ||
+          (where.columnSchema?.equals !== undefined && !schemasEqual(batch.columnSchema, where.columnSchema.equals))) {
+        return { count: 0 };
+      }
+      batch = { ...batch, ...data };
+      return { count: 1 };
+    }),
+    update: vi.fn(async ({ where, data }: any) => {
+      if (!batch || batch.id !== where.id) throw new Error("synthetic missing batch");
+      batch = { ...batch, ...data };
+      return batch;
+    })
+  };
+  const prisma: any = {
+    $transaction: vi.fn(async (callback: (tx: any) => Promise<unknown>) => {
+      transactionAttempts += 1;
+      if (options.failFirstTransaction && transactionAttempts === 1) {
+        throw new Error("synthetic transient transaction failure");
+      }
+      const batchSnapshot = batch ? structuredClone(batch) : null;
+      const saleSnapshot = saleArtifactCount;
+      const rowErrorSnapshot = rowErrorCount;
+      try {
+        return await callback(prisma);
+      } catch (error) {
+        batch = batchSnapshot;
+        saleArtifactCount = saleSnapshot;
+        rowErrorCount = rowErrorSnapshot;
+        throw error;
+      }
+    }),
+    coupangUploadBatch: batchDelegate,
+    coupangProductRule: {
+      findMany: vi.fn(async () => [{
+        id: "rule-zero",
+        coupangProductId: "product-zero",
+        displayName: "Zero Bar",
+        includeKeywords: ["Zero Bar"],
+        excludeKeywords: [],
+        priority: 10,
+        validFrom: toDateOnly("2026-01-01")!,
+        validTo: null,
+        isActive: true
+      }])
+    },
+    coupangSaleLine: {
+      count: vi.fn(async () => saleArtifactCount),
+      findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+      create: vi.fn(async ({ data }: any) => {
+        saleArtifactCount += 1;
+        return { id: `sale-${saleArtifactCount}`, ...data };
+      })
+    },
+    coupangAdMetric: { count: vi.fn(async () => 0) },
+    coupangPromotionPrice: { count: vi.fn(async () => 0) },
+    coupangUploadRowError: {
+      count: vi.fn(async () => rowErrorCount),
+      createMany: vi.fn(async ({ data }: any) => {
+        rowErrorCount += Array.isArray(data) ? data.length : 0;
+        return { count: Array.isArray(data) ? data.length : 0 };
+      })
+    }
+  };
+  Object.defineProperty(prisma, "state", {
+    value: {
+      get batch() { return batch; },
+      get saleArtifactCount() { return saleArtifactCount; }
+    }
+  });
+  return prisma;
 }
 
 function fakeCoupangUnmatchedPrisma() {

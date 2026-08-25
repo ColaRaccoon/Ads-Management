@@ -628,11 +628,16 @@ export class MappingsService {
     });
   }
 
-  async matchProduct(metaAdsetId: string, adsetName: string, metricDate: Date) {
+  async matchProduct(
+    metaAdsetId: string,
+    adsetName: string,
+    metricDate: Date,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     const date = formatDateOnly(metricDate);
     const [histories, rules] = await Promise.all([
-      this.prisma.adsetProductHistory.findMany({ where: { metaAdsetId } }),
-      this.prisma.productMatchRule.findMany({
+      client.adsetProductHistory.findMany({ where: { metaAdsetId } }),
+      client.productMatchRule.findMany({
         where: { isActive: true, product: { is: { isActive: true } } },
         orderBy: { priority: "asc" }
       })
@@ -659,9 +664,14 @@ export class MappingsService {
     );
   }
 
-  async matchStage(metaAdsetId: string, adsetName: string, metricDate: Date) {
+  async matchStage(
+    metaAdsetId: string,
+    adsetName: string,
+    metricDate: Date,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     const date = formatDateOnly(metricDate);
-    const histories = await this.prisma.adsetStageHistory.findMany({ where: { metaAdsetId } });
+    const histories = await client.adsetStageHistory.findMany({ where: { metaAdsetId } });
     return new AdsetStageMatcher().match(
       adsetName,
       date,

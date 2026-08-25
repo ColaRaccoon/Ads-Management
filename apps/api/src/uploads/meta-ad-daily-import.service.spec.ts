@@ -1,8 +1,13 @@
 import { BadRequestException } from "@nestjs/common";
 import { AdStage, ConflictPolicy, MatchSource, UploadLevel, UploadStatus } from "@prisma/client";
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { META_AD_DAILY_CSV_COLUMNS } from "../domain/meta-ad-daily-csv";
 import { MetaAdDailyImportService } from "./meta-ad-daily-import.service";
+import {
+  pendingMetaOriginalStorageSchema,
+  storedMetaOriginalStorageSchema
+} from "./meta-original-storage-state";
 import { snapshotAdMetricKey } from "./upload-keys";
 
 const ACTOR_ID = "11111111-1111-4111-8111-111111111111";
@@ -103,12 +108,90 @@ describe("MetaAdDailyImportService validation contract", () => {
   });
 });
 
-function dailyImportHarness(options: { metricResult?: { imported: boolean; skipped: boolean } } = {}) {
+describe("MetaAdDailyImportService storage recovery", () => {
+  it("reuses a FAILED storage-pending batch and retries a missing object before importing", async () => {
+    const buffer = dailyCsv();
+    const duplicated = storageRecoveryBatch(buffer, UploadStatus.FAILED, "PENDING");
+    const harness = dailyImportHarness({ duplicated, storageObjectState: "missing" });
+
+    const result = await harness.service.importMetaAdDailyCsv(file(buffer), ConflictPolicy.SKIP, ACTOR_ID);
+
+    expect(result).toMatchObject({ batchId: "batch-1", status: UploadStatus.IMPORTED });
+    expect(result).not.toHaveProperty("duplicate");
+    expect(harness.batchCreates).toHaveLength(0);
+    expect(harness.putCalls).toEqual([{ reference: duplicated.storedFilePath, objectState: "missing" }]);
+  });
+
+  it("reclaims an expired STORED+VALIDATING zero-work batch and idempotently resumes import", async () => {
+    const buffer = dailyCsv();
+    const duplicated = storageRecoveryBatch(buffer, UploadStatus.VALIDATING, "STORED");
+    const harness = dailyImportHarness({ duplicated, storageObjectState: "existing" });
+
+    const result = await harness.service.importMetaAdDailyCsv(file(buffer), ConflictPolicy.SKIP, ACTOR_ID);
+
+    expect(result).toMatchObject({ batchId: "batch-1", status: UploadStatus.IMPORTED });
+    expect(result).not.toHaveProperty("duplicate");
+    expect(harness.batchCreates).toHaveLength(0);
+    expect(harness.putCalls).toEqual([{ reference: duplicated.storedFilePath, objectState: "existing" }]);
+  });
+
+  it("does not resume a stale storage marker once batch-owned domain work exists", async () => {
+    const buffer = dailyCsv();
+    const duplicated = storageRecoveryBatch(buffer, UploadStatus.VALIDATING, "STORED");
+    const harness = dailyImportHarness({ duplicated, sideEffectCounts: { rows: 1 } });
+
+    const result = await harness.service.importMetaAdDailyCsv(file(buffer), ConflictPolicy.SKIP, ACTOR_ID);
+
+    expect(result).toMatchObject({ duplicate: true, batchId: "batch-1" });
+    expect(harness.putCalls).toHaveLength(0);
+    expect(harness.processedMetricInputs).toHaveLength(0);
+  });
+
+  it("holds the batch fence while an old owner is delayed so a retry cannot become a second writer", async () => {
+    const buffer = dailyCsv();
+    const entered = deferred<void>();
+    const release = deferred<void>();
+    let delayed = false;
+    const harness = dailyImportHarness({
+      duplicated: storageRecoveryBatch(buffer, UploadStatus.VALIDATING, "STORED"),
+      serializeTransactions: true,
+      beforeDomainWriter: async () => {
+        if (delayed) return;
+        delayed = true;
+        entered.resolve();
+        await release.promise;
+      }
+    });
+
+    const oldOwner = harness.service.importMetaAdDailyCsv(file(buffer), ConflictPolicy.SKIP, ACTOR_ID);
+    await entered.promise;
+    let retrySettled = false;
+    const retry = harness.service.importMetaAdDailyCsv(file(buffer), ConflictPolicy.SKIP, ACTOR_ID)
+      .finally(() => { retrySettled = true; });
+    await Promise.resolve();
+    expect(retrySettled).toBe(false);
+    release.resolve();
+
+    const results = await Promise.all([oldOwner, retry]);
+    expect(results.filter((result) => "duplicate" in result && result.duplicate)).toHaveLength(1);
+    expect(harness.processedMetricInputs).toHaveLength(1);
+  });
+});
+
+function dailyImportHarness(options: {
+  metricResult?: { imported: boolean; skipped: boolean };
+  duplicated?: Record<string, unknown>;
+  storageObjectState?: "missing" | "existing";
+  sideEffectCounts?: { rows?: number; errors?: number; adMetrics?: number; adsetMetrics?: number };
+  serializeTransactions?: boolean;
+  beforeDomainWriter?: () => Promise<void>;
+} = {}) {
   const batchCreates: Record<string, unknown>[] = [];
   const batchUpdates: Record<string, unknown>[] = [];
   const rowErrorCreates: Array<Array<Record<string, unknown>>> = [];
   const processedMetricInputs: unknown[] = [];
   const aggregateCalls: Array<{ batchId: string; snapshotDates: Date[] }> = [];
+  const putCalls: Array<{ reference: string; objectState: "missing" | "existing" }> = [];
   let snapshotInput: { snapshotDates: Date[]; includedKeys: Set<string> } | null = null;
   const batch = {
     id: "batch-1",
@@ -119,36 +202,73 @@ function dailyImportHarness(options: { metricResult?: { imported: boolean; skipp
     warningCount: 0,
     errorCount: 0,
     reportStart: null,
-    reportEnd: null
+    reportEnd: null,
+    importedAt: null,
+    validatedAt: null
   };
+  let currentBatch: Record<string, unknown> | null = options.duplicated ? { ...options.duplicated } : null;
+  let transactionTail: Promise<void> = Promise.resolve();
   const prisma = {
     uploadBatch: {
-      findUnique: async () => null,
+      findUnique: async () => currentBatch,
       create: async ({ data }: { data: Record<string, unknown> }) => {
         batchCreates.push(data);
-        return { ...batch, ...data, id: batch.id };
+        currentBatch = { ...batch, ...data, id: batch.id };
+        return currentBatch;
       },
       update: async ({ data }: { data: Record<string, unknown> }) => {
         batchUpdates.push(data);
-        return { ...batch, ...data };
+        currentBatch = { ...batch, ...currentBatch, ...data };
+        return currentBatch;
+      },
+      updateMany: async ({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
+        if (!currentBatch || !matchesBatch(currentBatch, where)) return { count: 0 };
+        batchUpdates.push(data);
+        currentBatch = { ...currentBatch, ...data };
+        return { count: 1 };
       }
     },
     uploadRowError: {
       createMany: async ({ data }: { data: Array<Record<string, unknown>> }) => {
         rowErrorCreates.push(data);
         return { count: data.length };
-      }
+      },
+      count: async () => options.sideEffectCounts?.errors ?? 0
     },
     uploadRow: {
-      create: async () => ({ id: "upload-row-1" })
+      create: async () => ({ id: "upload-row-1" }),
+      count: async () => options.sideEffectCounts?.rows ?? 0
     },
+    metaAdDailyMetric: { count: async () => options.sideEffectCounts?.adMetrics ?? 0 },
+    metaAdsetDailyMetric: { count: async () => options.sideEffectCounts?.adsetMetrics ?? 0 },
     metaAdset: {
       update: async () => ({})
+    },
+    $executeRawUnsafe: async () => 0,
+    $queryRaw: async () => [],
+    $transaction: async <T>(work: (tx: unknown) => Promise<T>) => {
+      const previous = transactionTail;
+      let releaseTransaction!: () => void;
+      transactionTail = new Promise<void>((resolve) => { releaseTransaction = resolve; });
+      if (options.serializeTransactions) await previous;
+      try {
+        return await work(prisma);
+      } finally {
+        releaseTransaction();
+      }
     }
   };
-  const storage = { storeOriginalFile: async () => "storage/uploads/meta.csv" };
+  const storage = {
+    prepareOriginalFileReference: () => "local:test/meta-ad-daily",
+    putOriginalFile: async (_file: Express.Multer.File, reference: string) => {
+      putCalls.push({ reference, objectState: options.storageObjectState ?? "missing" });
+    }
+  };
   const entityWriter = {
-    upsertCampaign: async () => ({ id: "campaign-ref-1" }),
+    upsertCampaign: async () => {
+      await options.beforeDomainWriter?.();
+      return { id: "campaign-ref-1" };
+    },
     upsertAdsetFromAdDaily: async () => ({ id: "adset-ref-1", firstSeenOn: null }),
     upsertCreativeFromAdDaily: async () => ({
       creative: { id: "creative-1" },
@@ -186,6 +306,7 @@ function dailyImportHarness(options: { metricResult?: { imported: boolean; skipp
     rowErrorCreates,
     processedMetricInputs,
     aggregateCalls,
+    putCalls,
     get snapshotInput() { return snapshotInput; },
     service: new MetaAdDailyImportService(
       prisma as never,
@@ -197,6 +318,53 @@ function dailyImportHarness(options: { metricResult?: { imported: boolean; skipp
       exchangeRates as never
     )
   };
+}
+
+function storageRecoveryBatch(buffer: Buffer, status: UploadStatus, state: "PENDING" | "STORED") {
+  const pending = pendingMetaOriginalStorageSchema(
+    { columns: META_AD_DAILY_CSV_COLUMNS },
+    "META_AD_DAILY",
+    new Date(0),
+    "00000000-0000-4000-8000-000000000001"
+  );
+  const columnSchema = state === "STORED"
+    ? storedMetaOriginalStorageSchema(pending, "META_AD_DAILY")
+    : pending;
+  return {
+    id: "batch-1",
+    originalFilename: "meta.csv",
+    storedFilePath: "local:test/meta-ad-daily",
+    fileHashSha256: createHash("sha256").update(buffer).digest("hex"),
+    reportStart: null,
+    reportEnd: null,
+    level: UploadLevel.AD,
+    columnSchema,
+    rowCount: 1,
+    validRowCount: 0,
+    warningCount: 0,
+    errorCount: 0,
+    conflictPolicy: ConflictPolicy.SKIP,
+    status,
+    timezone: "Asia/Seoul",
+    uploadedBy: ACTOR_ID,
+    uploadedAt: new Date(0),
+    validatedAt: status === UploadStatus.FAILED ? new Date(0) : null,
+    importedAt: null,
+    note: null
+  };
+}
+
+function matchesBatch(batch: Record<string, unknown>, where: Record<string, unknown>) {
+  if (where.id && where.id !== batch.id) return false;
+  if (where.status && where.status !== batch.status) return false;
+  const jsonFilter = where.columnSchema as { equals?: unknown } | undefined;
+  return jsonFilter?.equals === undefined || JSON.stringify(jsonFilter.equals) === JSON.stringify(batch.columnSchema);
+}
+
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
 }
 
 function dailyCsv(rowCount = 1) {

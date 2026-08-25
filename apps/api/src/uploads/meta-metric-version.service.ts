@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ConflictPolicy } from "@prisma/client";
+import { ConflictPolicy, Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { DuplicatePolicyResolver } from "../domain/duplicate-policy";
 import { AdMetricImportInput, AdsetAggregateInput, MetricImportInput } from "./upload-contracts";
@@ -16,9 +16,12 @@ export class MetaMetricVersionService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async importAdDailyMetric(input: AdMetricImportInput) {
+  async importAdDailyMetric(
+    input: AdMetricImportInput,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     let skipped = false;
-    await this.prisma.$transaction(async (tx) => {
+    await this.withTransaction(client, async (tx) => {
       const existingRows = await tx.metaAdDailyMetric.findMany({
         where: {
           metricDate: input.parsedRow.metricDate,
@@ -58,9 +61,9 @@ export class MetaMetricVersionService {
     return { imported: !skipped, skipped };
   }
 
-  async importMetric(input: MetricImportInput) {
+  async importMetric(input: MetricImportInput, client: Prisma.TransactionClient | PrismaService = this.prisma) {
     let skipped = false;
-    await this.prisma.$transaction(async (tx) => {
+    await this.withTransaction(client, async (tx) => {
       const existingRows = await tx.metaAdsetDailyMetric.findMany({
         where: {
           metricDate: input.parsedRow.metricDate,
@@ -98,9 +101,14 @@ export class MetaMetricVersionService {
     return { imported: !skipped, skipped };
   }
 
-  async importAdsetAggregateMetric(batchId: string, input: AdsetAggregateInput, conflictPolicy: ConflictPolicy) {
+  async importAdsetAggregateMetric(
+    batchId: string,
+    input: AdsetAggregateInput,
+    conflictPolicy: ConflictPolicy,
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     let skipped = false;
-    await this.prisma.$transaction(async (tx) => {
+    await this.withTransaction(client, async (tx) => {
       const existingRows = await tx.metaAdsetDailyMetric.findMany({
         where: {
           metricDate: input.metricDate,
@@ -137,12 +145,15 @@ export class MetaMetricVersionService {
     return { imported: !skipped, skipped };
   }
 
-  async deactivateMissingSnapshotMetrics(input: { snapshotDates: Date[]; includedKeys: Set<string> }) {
+  async deactivateMissingSnapshotMetrics(
+    input: { snapshotDates: Date[]; includedKeys: Set<string> },
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     if (input.snapshotDates.length === 0 || input.includedKeys.size === 0) {
       return 0;
     }
 
-    const currentMetrics = await this.prisma.metaAdsetDailyMetric.findMany({
+    const currentMetrics = await client.metaAdsetDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { in: input.snapshotDates }
@@ -155,19 +166,22 @@ export class MetaMetricVersionService {
       return 0;
     }
 
-    const result = await this.prisma.metaAdsetDailyMetric.updateMany({
+    const result = await client.metaAdsetDailyMetric.updateMany({
       where: { id: { in: staleIds } },
       data: { isCurrent: false }
     });
     return result.count;
   }
 
-  async deactivateMissingAdSnapshotMetrics(input: { snapshotDates: Date[]; includedKeys: Set<string> }) {
+  async deactivateMissingAdSnapshotMetrics(
+    input: { snapshotDates: Date[]; includedKeys: Set<string> },
+    client: Prisma.TransactionClient | PrismaService = this.prisma
+  ) {
     if (input.snapshotDates.length === 0 || input.includedKeys.size === 0) {
       return 0;
     }
 
-    const currentMetrics = await this.prisma.metaAdDailyMetric.findMany({
+    const currentMetrics = await client.metaAdDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { in: input.snapshotDates }
@@ -188,10 +202,19 @@ export class MetaMetricVersionService {
       return 0;
     }
 
-    const result = await this.prisma.metaAdDailyMetric.updateMany({
+    const result = await client.metaAdDailyMetric.updateMany({
       where: { id: { in: staleIds } },
       data: { isCurrent: false }
     });
     return result.count;
+  }
+
+  private withTransaction<T>(
+    client: Prisma.TransactionClient | PrismaService,
+    work: (tx: Prisma.TransactionClient) => Promise<T>
+  ) {
+    return client === this.prisma
+      ? this.prisma.$transaction(work)
+      : work(client as Prisma.TransactionClient);
   }
 }
