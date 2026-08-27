@@ -21,6 +21,7 @@ export class HttpSecurityGuard implements CanActivate {
     const path = requestPath(request);
 
     if (path === "/api/health/live" || path === "/api/health/ready") return true;
+    await this.security.assertTrustedTransport(request);
     if (SAFE_METHODS.has(method)) {
       await this.security.assertGeneralRead(request);
       return true;

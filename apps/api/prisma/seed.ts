@@ -33,15 +33,6 @@ async function main() {
     });
   }
 
-  await prisma.appUser.upsert({
-    where: { email: "admin@meta-ads-performance.local" },
-    update: { name: "Admin" },
-    create: {
-      email: "admin@meta-ads-performance.local",
-      name: "Admin"
-    }
-  });
-
   for (const [key, valueJson, description] of settings) {
     await prisma.appSetting.upsert({
       where: { key },
@@ -91,8 +82,8 @@ async function main() {
 
 main()
   .then(async () => prisma.$disconnect())
-  .catch(async (error) => {
-    console.error(error);
+  .catch(async () => {
+    console.error("Seed failed.");
     await prisma.$disconnect();
     process.exit(1);
   });

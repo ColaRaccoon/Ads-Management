@@ -7,8 +7,10 @@ import {
   StorageProviderUnavailableError
 } from "./file-storage";
 import { SupabaseFileStorage } from "./supabase-file-storage";
+import { temporaryStorageBudget } from "./temporary-storage-budget";
 
 const SECRET = "sb_secret_synthetic-test-only";
+const API_KEY = "sb_publishable_synthetic-test-only";
 const BUCKET = "synthetic-private";
 const BODY = Buffer.from("synthetic-storage-object", "utf8");
 const HASH = createHash("sha256").update(BODY).digest("hex");
@@ -20,6 +22,7 @@ describe("SupabaseFileStorage", () => {
       expect(uploaded).toEqual(BODY);
       const headers = new Headers(init?.headers);
       expect(headers.get("authorization")).toBe(`Bearer ${SECRET}`);
+      expect(headers.get("apikey")).toBe(API_KEY);
       expect(headers.get("x-upsert")).toBe("false");
       expect(String(url)).toContain(`/storage/v1/object/${BUCKET}/uploads/2026/08/object`);
       expect(String(url)).not.toContain("/public/");
@@ -179,6 +182,22 @@ describe("SupabaseFileStorage", () => {
     expect(fetchImplementation).not.toHaveBeenCalled();
   });
 
+  it("releases the shared temporary lease after a spool failure", async () => {
+    const failingBody = Readable.from((async function* () {
+      yield Buffer.from("partial");
+      throw new Error("synthetic source failure");
+    })());
+    await expect(adapter(vi.fn() as unknown as typeof fetch).put({
+      key: "spool-failure",
+      body: failingBody,
+      maxBytes: BODY.length
+    })).rejects.toThrow();
+    const first = temporaryStorageBudget.acquire(1, 2);
+    const second = temporaryStorageBudget.acquire(1, 2);
+    first.release();
+    second.release();
+  });
+
   it("cancels status-only success, conflict, and error response bodies without reading them", async () => {
     const putSuccessCancel = vi.fn();
     const putSuccess = adapter(vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
@@ -212,7 +231,8 @@ function adapter(
 ) {
   return new SupabaseFileStorage({
     supabaseUrl: "https://synthetic.supabase.co",
-    secretKey: SECRET,
+    apiKey: API_KEY,
+    accessToken: SECRET,
     bucket: BUCKET,
     domain: "uploads",
     timeoutMs: overrides.timeoutMs ?? 1_000,

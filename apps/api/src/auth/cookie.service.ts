@@ -47,6 +47,16 @@ export class AuthCookieService {
     this.issueCsrfCookie(response);
   }
 
+  setLocalSessionCookies(response: Response, sessionToken: string) {
+    response.cookie(this.sessionCookieName, sessionToken, {
+      ...this.baseOptions(true),
+      maxAge: this.config.localSessionAbsoluteTtlMs
+    });
+    response.clearCookie(this.accessCookieName, this.baseOptions(true));
+    response.clearCookie(this.refreshCookieName, this.baseOptions(true));
+    this.issueCsrfCookie(response);
+  }
+
   setRefreshCookie(response: Response, refreshToken: string) {
     response.cookie(this.refreshCookieName, refreshToken, {
       ...this.baseOptions(true),
@@ -77,8 +87,13 @@ export class AuthCookieService {
     if (!handle || handle.length > 256) return null;
     const [sessionId, signature, extra] = handle.split(".");
     if (!sessionId || !signature || extra || !isUuid(sessionId)) return null;
-    const expected = this.mac("session", sessionId, this.config.sessionHandleSecret);
-    return safeEqual(signature, expected) ? sessionId : null;
+    return this.validMac(
+      "session",
+      sessionId,
+      signature,
+      this.config.sessionHandleSecret,
+      this.config.sessionHandlePreviousSecret
+    ) ? sessionId : null;
   }
 
   verifyCsrfToken(cookie: string | undefined, header: string | undefined) {
@@ -90,12 +105,17 @@ export class AuthCookieService {
     if (!Number.isSafeInteger(issuedAtMs) || ageMs < -30_000 || ageMs > this.config.csrfTtlMs) {
       return false;
     }
-    const expected = this.mac("csrf", `${issuedAtText}.${nonce}`, this.config.csrfSecret);
-    return safeEqual(signature, expected);
+    return this.validMac(
+      "csrf",
+      `${issuedAtText}.${nonce}`,
+      signature,
+      this.config.csrfSecret,
+      this.config.csrfPreviousSecret
+    );
   }
 
   authorizationVersion(appUserId: string, version: number) {
-    return this.mac("authz", `${appUserId}:${version}`, this.config.sessionHandleSecret);
+    return this.mac("authz", `${appUserId}:${version}`, this.config.authorizationVersionSecret);
   }
 
   private signSessionHandle(sessionId: string) {
@@ -107,7 +127,9 @@ export class AuthCookieService {
   }
 
   private name(baseName: string) {
-    return this.config.production ? `__Host-${baseName}` : baseName;
+    return this.config.production
+      ? `__Host-${this.config.cookieNamespace}-${baseName}`
+      : baseName;
   }
 
   private baseOptions(httpOnly: boolean) {
@@ -121,6 +143,18 @@ export class AuthCookieService {
 
   private mac(purpose: string, value: string, secret: string) {
     return createHmac("sha256", secret).update(`${purpose}\0${value}`, "utf8").digest("base64url");
+  }
+
+  private validMac(
+    purpose: string,
+    value: string,
+    signature: string,
+    current: string,
+    previous?: string
+  ) {
+    return [current, previous]
+      .filter((secret): secret is string => Boolean(secret))
+      .some((secret) => safeEqual(signature, this.mac(purpose, value, secret)));
   }
 }
 

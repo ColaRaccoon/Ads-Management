@@ -16,10 +16,15 @@ export class MetaAdsetMetricsReadService {
     private readonly decorationService: MetaAdsetMetricDecorationService
   ) {}
 
-  async productMetrics(from?: string, to?: string, deliveryStatusInput?: string) {
+  async productMetrics(
+    from?: string,
+    to?: string,
+    deliveryStatusInput?: string,
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
     const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
     const range = parseDateRange(from, to);
-    const decorated = (await this.decorationService.decoratedMetrics(range.fromDate, range.toDate, deliveryStatus)).filter(
+    const decorated = (await this.decorationService.decoratedMetrics(range.fromDate, range.toDate, deliveryStatus, client)).filter(
       (row) => row.metric.productId
     );
     const groups = groupBy(decorated, (row) => row.metric.productId ?? "unmatched");
@@ -48,7 +53,10 @@ export class MetaAdsetMetricsReadService {
     });
   }
 
-  async adsetMetrics(query: AdsetMetricQuery) {
+  async adsetMetrics(
+    query: AdsetMetricQuery,
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
     const range = parseDateRange(query.from, query.to);
     const deliveryStatus = parseDeliveryStatusFilter(query.deliveryStatus);
     const where: Prisma.MetaAdsetDailyMetricWhereInput = {
@@ -65,12 +73,12 @@ export class MetaAdsetMetricsReadService {
           }
         : {})
     };
-    const metrics = await this.prisma.metaAdsetDailyMetric.findMany({
+    const metrics = await client.metaAdsetDailyMetric.findMany({
       where,
       include: { product: true, metaAdset: true },
       orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
     });
-    const decorated = await this.decorationService.decorate(metrics);
+    const decorated = await this.decorationService.decorate(metrics, client);
     const groups = groupBy(decorated, (row) => row.metric.metaAdsetId);
     const rows = Array.from(groups.entries()).map(([metaAdsetId, items]) => {
       const aggregate = this.decorationService.aggregate(items);
@@ -96,7 +104,7 @@ export class MetaAdsetMetricsReadService {
       return rows;
     }
 
-    const decisionLogs = await this.prisma.decisionLog.findMany({
+    const decisionLogs = await client.decisionLog.findMany({
       where: {
         periodStart: range.fromDate,
         periodEnd: range.toDate,
@@ -108,10 +116,15 @@ export class MetaAdsetMetricsReadService {
     return rows.filter((row) => allowed.has(row.metaAdsetId));
   }
 
-  async unmatchedMetrics(from?: string, to?: string, deliveryStatusInput?: string) {
+  async unmatchedMetrics(
+    from?: string,
+    to?: string,
+    deliveryStatusInput?: string,
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
     const range = parseDateRange(from, to);
     const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
-    return this.prisma.metaAdsetDailyMetric.findMany({
+    return client.metaAdsetDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: range.fromDate, lte: range.toDate },

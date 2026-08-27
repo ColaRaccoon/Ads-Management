@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Inject, Injectable, Optional } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthService } from "./auth.service";
 import { AuthCookieService } from "./cookie.service";
@@ -9,13 +9,17 @@ import {
   INTERNAL_PROBE_ROUTE,
   PUBLIC_ROUTE
 } from "./route-decorators";
+import { AUTH_CONFIG, AuthConfig } from "./auth.config";
+import { LocalAuthService } from "./local-auth.service";
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
   constructor(
     private readonly authService: AuthService,
     private readonly cookies: AuthCookieService,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
+    @Optional() @Inject(AUTH_CONFIG) private readonly config?: AuthConfig,
+    @Optional() private readonly localAuth?: LocalAuthService
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -23,9 +27,15 @@ export class AuthenticationGuard implements CanActivate {
     if (access === PUBLIC_ROUTE || access === INTERNAL_PROBE_ROUTE) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const accessToken = this.cookies.readAccessToken(request);
-    if (!accessToken) throw authError("AUTHENTICATION_REQUIRED");
-    request.authenticatedUser = await this.authService.authenticateAccessToken(accessToken);
+    if (this.config?.provider === "local") {
+      const sessionToken = this.cookies.readSessionHandle(request);
+      if (!sessionToken || !this.localAuth) throw authError("AUTHENTICATION_REQUIRED");
+      request.authenticatedUser = await this.localAuth.authenticateSession(sessionToken);
+    } else {
+      const accessToken = this.cookies.readAccessToken(request);
+      if (!accessToken) throw authError("AUTHENTICATION_REQUIRED");
+      request.authenticatedUser = await this.authService.authenticateAccessToken(accessToken);
+    }
     return true;
   }
 }

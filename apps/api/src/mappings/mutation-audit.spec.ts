@@ -76,34 +76,23 @@ describe("required mutation security audit coverage", () => {
     expect(JSON.stringify(event)).not.toContain("sensitive-raw-value");
   });
 
-  it("preserves a Meta upload DB reference and records PARTIAL when file deletion fails", async () => {
+  it("preserves Meta upload business state and records a failed pre-transaction retention attempt", async () => {
     const auditCreate = vi.fn(async ({ data }) => data);
-    const transaction = vi.fn();
+    const batchModel = {
+      findUnique: vi.fn(async () => ({
+        id: "batch-1", originalFilename: "upload.csv", storedFilePath: "uploads/file.csv",
+        fileHashSha256: "a".repeat(64), columnSchema: {}, status: "IMPORTED"
+      }))
+    };
+    const transaction = vi.fn(async (work: (tx: unknown) => Promise<unknown>) => work({
+      $executeRawUnsafe: vi.fn(async () => 0), $queryRaw: vi.fn(async () => []),
+      uploadBatch: batchModel, storageTombstone: { findUnique: vi.fn(async () => null) }
+    }));
     const service = new UploadLifecycleService(
       {
-        uploadBatch: {
-          findUnique: vi.fn(async () => ({
-            id: "batch-1",
-            originalFilename: "upload.csv",
-            storedFilePath: "uploads/file.csv",
-            fileHashSha256: "a".repeat(64),
-            status: "IMPORTED"
-          }))
-        },
+        uploadBatch: batchModel,
         securityAuditEvent: { create: auditCreate },
-        $transaction: transaction.mockResolvedValue({
-          deletedAdMetricCount: 0,
-          deletedAdsetMetricCount: 0,
-          deletedRowCount: 0,
-          deletedErrorCount: 0,
-          restoredAdCurrentCount: 0,
-          restoredAdsetCurrentCount: 0,
-          deletedCreativePlacementCount: 0,
-          deletedCreativeAliasCount: 0,
-          deletedCreativeLogCount: 0,
-          deletedCreativeCount: 0,
-          deactivatedCreativeCount: 0
-        })
+        $transaction: transaction
       } as never,
       { retain: vi.fn(async () => { throw new Error("storage unavailable"); }) } as never
     );
@@ -111,18 +100,20 @@ describe("required mutation security audit coverage", () => {
     await expect(service.deleteUpload("batch-1", ACTOR_ID)).rejects.toMatchObject({
       response: expect.objectContaining({ code: "UPLOAD_FILE_RETENTION_RETRY_REQUIRED" })
     });
-    expect(transaction).toHaveBeenCalledOnce();
-    expect(auditCreate).toHaveBeenCalledWith({
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(auditCreate).toHaveBeenCalledTimes(2);
+    expect(auditCreate).toHaveBeenNthCalledWith(1, {
       data: expect.objectContaining({
         action: "META_UPLOAD_DELETE",
-        result: SecurityAuditResult.REQUESTED
+        result: SecurityAuditResult.REQUESTED,
+        afterJson: expect.objectContaining({ databaseReferencePreserved: true, retryable: true })
       })
     });
-    expect(auditCreate).toHaveBeenCalledWith({
+    expect(auditCreate).toHaveBeenNthCalledWith(2, {
       data: expect.objectContaining({
         action: "META_UPLOAD_DELETE",
-        result: SecurityAuditResult.PARTIAL,
-        afterJson: expect.objectContaining({ databaseReferencePreserved: true, retryable: true })
+        result: SecurityAuditResult.FAILURE,
+        afterJson: expect.objectContaining({ databaseChanged: false, failureCode: "FILE_RETENTION_FAILED" })
       })
     });
   });

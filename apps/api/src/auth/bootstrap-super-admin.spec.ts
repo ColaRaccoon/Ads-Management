@@ -54,8 +54,8 @@ describe("BootstrapSuperAdminService", () => {
 
   it("describes a DB target without credentials", () => {
     expect(describeDatabaseTarget(
-      "postgresql://user:secret@localhost:55432/database?schema=security"
-    )).toEqual({ host: "localhost", port: "55432", database: "database", schema: "security" });
+      "postgresql://user:secret@db.abcdefghijklmnopqrst.supabase.co:5432/database?schema=security"
+    )).toEqual({ host: "db.abcdefghijklmnopqrst.supabase.co", port: "5432", database: "database", schema: "security" });
   });
 });
 

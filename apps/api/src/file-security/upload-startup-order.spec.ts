@@ -9,7 +9,7 @@ import { preloadApiEnvironment } from "../common/environment-preload";
 
 const TEST_ENV = {
   APP_ENV: "development",
-  DATABASE_URL: "postgresql://app:password@127.0.0.1:55432/dev?schema=dev",
+  DATABASE_URL: "postgresql://app:password@db.abcdefghijklmnopqrst.supabase.co:5432/dev?schema=dev",
   PORT: "4200",
   STORAGE_PROVIDER: "local",
   UPLOAD_STORAGE_DIR: "./storage/security-dev/uploads",
@@ -21,6 +21,7 @@ const TEST_ENV = {
   SUPABASE_JWT_AUDIENCE: "authenticated",
   AUTH_COOKIE_SECURE: "false",
   AUTH_SESSION_HANDLE_SECRET: "4f68a2417e7c4fb7bf0663649c671b91406f6d7986061527f5e84a7894b6e45f",
+  AUTH_AUTHORIZATION_VERSION_SECRET: "8b3ca7f1a62e49cd9058d27e183bfa645e71c328f4a09d6be2c7351f680ad942",
   AUTH_CSRF_SECRET: "7c778290a780dd14e507ef0282c50aa5f6ee4d955e13ab76d19714226520ca44",
   APP_ALLOWED_ORIGINS: "http://localhost:3200",
   INTERNAL_PROBE_TOKEN: "aa35e635992217a3295b8690b6c4f01eeb3e6e309ebf9a9e7eb86c42e0f2cf9d"
@@ -64,7 +65,7 @@ describe.sequential("STEP7-EVAL-001 startup-order upload limits", () => {
       const { StartupUploadTestController, StartupUploadTestModule } =
         await import("./upload-startup-order.fixture");
       StartupUploadTestController.calls = 0;
-      app = await NestFactory.create(StartupUploadTestModule, { logger: false });
+      app = await NestFactory.create(StartupUploadTestModule, { logger: false, abortOnError: false });
       app.useGlobalFilters(new ApiExceptionFilter());
       await app.listen(0, "127.0.0.1");
       const address = app.getHttpServer().address() as AddressInfo;

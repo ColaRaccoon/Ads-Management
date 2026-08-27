@@ -1,5 +1,5 @@
 import { BadRequestException } from "@nestjs/common";
-import { AdStage, ConflictPolicy, MatchSource, UploadLevel, UploadStatus } from "@prisma/client";
+import { AdStage, ConflictPolicy, MatchSource, Prisma, UploadLevel, UploadStatus } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { META_AD_DAILY_CSV_COLUMNS } from "../domain/meta-ad-daily-csv";
@@ -109,6 +109,11 @@ describe("MetaAdDailyImportService validation contract", () => {
 });
 
 describe("MetaAdDailyImportService storage recovery", () => {
+  it("returns the winning SKIP batch when concurrent creates collide",async()=>{
+    const buffer=dailyCsv();const winner=storageRecoveryBatch(buffer,UploadStatus.IMPORTED,"STORED");const harness=dailyImportHarness({createRaceWinner:winner});
+    await expect(harness.service.importMetaAdDailyCsv(file(buffer),ConflictPolicy.SKIP,ACTOR_ID)).resolves.toMatchObject({duplicate:true,batchId:"batch-1",status:UploadStatus.IMPORTED});
+    expect(harness.processedMetricInputs).toHaveLength(0);
+  });
   it("reuses a FAILED storage-pending batch and retries a missing object before importing", async () => {
     const buffer = dailyCsv();
     const duplicated = storageRecoveryBatch(buffer, UploadStatus.FAILED, "PENDING");
@@ -185,6 +190,7 @@ function dailyImportHarness(options: {
   sideEffectCounts?: { rows?: number; errors?: number; adMetrics?: number; adsetMetrics?: number };
   serializeTransactions?: boolean;
   beforeDomainWriter?: () => Promise<void>;
+  createRaceWinner?: Record<string, unknown>;
 } = {}) {
   const batchCreates: Record<string, unknown>[] = [];
   const batchUpdates: Record<string, unknown>[] = [];
@@ -213,6 +219,7 @@ function dailyImportHarness(options: {
       findUnique: async () => currentBatch,
       create: async ({ data }: { data: Record<string, unknown> }) => {
         batchCreates.push(data);
+        if(options.createRaceWinner){currentBatch={...options.createRaceWinner};throw new Prisma.PrismaClientKnownRequestError("unique",{code:"P2002",clientVersion:"test"})}
         currentBatch = { ...batch, ...data, id: batch.id };
         return currentBatch;
       },

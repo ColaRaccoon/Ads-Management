@@ -4,8 +4,11 @@ export type UserLifecycleErrorCode =
   | "USER_NOT_FOUND"
   | "USER_EMAIL_EXISTS"
   | "USER_EMAIL_INVALID"
+  | "USERNAME_EXISTS"
+  | "USERNAME_INVALID"
   | "IDEMPOTENCY_KEY_INVALID"
   | "IDEMPOTENCY_KEY_CONFLICT"
+  | "IDEMPOTENCY_REPLAY"
   | "USER_UPDATE_EMPTY"
   | "SELF_LOCKOUT"
   | "LAST_ACTIVE_SUPER_ADMIN"
@@ -18,8 +21,11 @@ const contract: Record<UserLifecycleErrorCode, { status: HttpStatus; message: st
   USER_NOT_FOUND: { status: HttpStatus.NOT_FOUND, message: "The user was not found." },
   USER_EMAIL_EXISTS: { status: HttpStatus.CONFLICT, message: "A user with that email already exists." },
   USER_EMAIL_INVALID: { status: HttpStatus.BAD_REQUEST, message: "The email address is invalid." },
+  USERNAME_EXISTS: { status: HttpStatus.CONFLICT, message: "A user with that username already exists." },
+  USERNAME_INVALID: { status: HttpStatus.BAD_REQUEST, message: "The username is invalid." },
   IDEMPOTENCY_KEY_INVALID: { status: HttpStatus.BAD_REQUEST, message: "Idempotency-Key must be a UUID." },
   IDEMPOTENCY_KEY_CONFLICT: { status: HttpStatus.CONFLICT, message: "The idempotency key was used for another request." },
+  IDEMPOTENCY_REPLAY: { status: HttpStatus.CONFLICT, message: "This request already succeeded. Use the explicit password reset action if the setup token was lost." },
   USER_UPDATE_EMPTY: { status: HttpStatus.BAD_REQUEST, message: "At least one user field must be provided." },
   SELF_LOCKOUT: { status: HttpStatus.CONFLICT, message: "You cannot remove your own access." },
   LAST_ACTIVE_SUPER_ADMIN: { status: HttpStatus.CONFLICT, message: "The last active super administrator must be preserved." },

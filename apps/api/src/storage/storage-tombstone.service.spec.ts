@@ -111,6 +111,25 @@ describe("StorageTombstoneService", () => {
     expect(harness.findMany).toHaveBeenCalledOnce();
   });
 
+  it("does not purge the retained last copy while its Meta upload business record is active", async () => {
+    const root = await temporaryRoot();
+    const storage = new LocalFileStorage(root);
+    await storage.put({ key: "active/commit-unknown", body: BODY, expectedHashSha256: HASH });
+    const harness = prismaHarness({ activeMetaUpload: true });
+    const service = new StorageTombstoneService(harness.prisma as never, config(root));
+    const retained = await service.retain({
+      domain: StorageTombstoneDomain.META_UPLOAD,
+      businessRecordId: BUSINESS_ID,
+      reference: "local:active/commit-unknown",
+      expectedHashSha256: HASH
+    });
+
+    await expect(service.purge(retained.tombstoneId, ACTOR_ID, true)).rejects.toMatchObject({
+      response: expect.objectContaining({ code: "STORAGE_PURGE_BUSINESS_RECORD_ACTIVE" })
+    });
+    expect(await storage.exists(`trash/${retained.tombstoneId}`)).toBe(true);
+  });
+
   it("purges a verified active object after restore storage succeeds but DB finalization rolls back", async () => {
     const root = await temporaryRoot();
     const storage = new LocalFileStorage(root);
@@ -139,7 +158,11 @@ describe("StorageTombstoneService", () => {
   });
 });
 
-function prismaHarness(options: { failRetainedUpdateOnce?: boolean; failRestoreFinalizeOnce?: boolean } = {}) {
+function prismaHarness(options: {
+  failRetainedUpdateOnce?: boolean;
+  failRestoreFinalizeOnce?: boolean;
+  activeMetaUpload?: boolean;
+} = {}) {
   let row: Record<string, any> | null = null;
   let failRetainedUpdateOnce = options.failRetainedUpdateOnce ?? false;
   let failRestoreFinalizeOnce = options.failRestoreFinalizeOnce ?? false;
@@ -187,6 +210,11 @@ function prismaHarness(options: { failRetainedUpdateOnce?: boolean; failRestoreF
   const tx = {
     storageTombstone,
     securityAuditEvent,
+    uploadBatch: {
+      findUnique: vi.fn(async ({ where }: { where: { id: string } }) =>
+        options.activeMetaUpload && where.id === BUSINESS_ID ? { id: BUSINESS_ID } : null
+      )
+    },
     $executeRawUnsafe: vi.fn(async () => 0),
     $queryRaw: vi.fn(async () => [])
   };

@@ -26,4 +26,11 @@ describe("storage references", () => {
     expect(() => legacyLocalPathToKey(path.resolve(storageRoot, "..", "outside.xlsx"), storageRoot))
       .toThrow(InvalidStorageKeyError);
   });
+
+  it.each([
+    "active/file:stream", "active/trailing. ", "active/trailing.", "active/CON",
+    "active/nul.txt", "active/Com1.csv", "active/control\u001f.txt"
+  ])("rejects Windows-unsafe storage key %s", (key) => {
+    expect(() => storageReference("local", key)).toThrow(InvalidStorageKeyError);
+  });
 });

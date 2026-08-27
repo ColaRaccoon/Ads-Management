@@ -90,7 +90,7 @@ describe("UsersController", () => {
     httpSecurity.assertCsrfMutation.mockClear();
     let app: INestApplication | undefined;
     try {
-      app = await NestFactory.create(StrictUsersTestModule, { logger: false });
+      app = await NestFactory.create(StrictUsersTestModule, { logger: false, abortOnError: false });
       app.setGlobalPrefix("api");
       app.use((incomingRequest: { authenticatedUser?: typeof actor }, _response: unknown, next: () => void) => {
         incomingRequest.authenticatedUser = actor;

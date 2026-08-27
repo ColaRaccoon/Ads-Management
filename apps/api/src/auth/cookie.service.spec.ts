@@ -72,11 +72,60 @@ describe("AuthCookieService", () => {
     const response = { cookie: vi.fn() };
     cookies.setRefreshCookie(response as never, "rotated-refresh");
     expect(response.cookie).toHaveBeenCalledWith(
-      "__Host-meta_refresh",
+      "__Host-staging-meta_refresh",
       "rotated-refresh",
       expect.objectContaining({ httpOnly: true, secure: true, sameSite: "lax", path: "/" })
     );
     expect(response.cookie.mock.calls[0][2]).not.toHaveProperty("domain");
+  });
+
+  it("separates deployment cookie names and supports a two-phase secret rotation overlap", () => {
+    const oldConfig = config(true);
+    const newConfig = {
+      ...config(true),
+      cookieNamespace: "production",
+      sessionHandleSecret: "n".repeat(48),
+      sessionHandlePreviousSecret: oldConfig.sessionHandleSecret,
+      csrfSecret: "x".repeat(48),
+      csrfPreviousSecret: oldConfig.csrfSecret
+    } as AuthConfig;
+    const preparedOld = {
+      ...oldConfig,
+      sessionHandlePreviousSecret: newConfig.sessionHandleSecret,
+      csrfPreviousSecret: newConfig.csrfSecret
+    } as AuthConfig;
+    const oldCookies = new AuthCookieService(oldConfig);
+    const newCookies = new AuthCookieService(newConfig);
+    const rollbackCookies = new AuthCookieService(preparedOld);
+    const oldResponse = { cookie: vi.fn() };
+    const newResponse = { cookie: vi.fn() };
+    oldCookies.setAuthenticatedCookies(oldResponse as never, {
+      accessToken: "old-access",
+      refreshToken: "old-refresh",
+      expiresIn: 600,
+      sessionId: appSessionId
+    });
+    newCookies.setAuthenticatedCookies(newResponse as never, {
+      accessToken: "new-access",
+      refreshToken: "new-refresh",
+      expiresIn: 600,
+      sessionId: appSessionId
+    });
+    const oldHandle = oldResponse.cookie.mock.calls[2][1] as string;
+    const newHandle = newResponse.cookie.mock.calls[2][1] as string;
+    const oldCsrf = oldResponse.cookie.mock.calls[3][1] as string;
+    const newCsrf = newResponse.cookie.mock.calls[3][1] as string;
+
+    expect(newCookies.verifySessionHandle(oldHandle)).toBe(appSessionId);
+    expect(rollbackCookies.verifySessionHandle(newHandle)).toBe(appSessionId);
+    expect(newCookies.verifyCsrfToken(oldCsrf, oldCsrf)).toBe(true);
+    expect(rollbackCookies.verifyCsrfToken(newCsrf, newCsrf)).toBe(true);
+    expect(newCookies.authorizationVersion(appSessionId, 7))
+      .toBe(oldCookies.authorizationVersion(appSessionId, 7));
+    expect(rollbackCookies.authorizationVersion(appSessionId, 7))
+      .toBe(oldCookies.authorizationVersion(appSessionId, 7));
+    expect(oldCookies.accessCookieName).toBe("__Host-staging-meta_access");
+    expect(newCookies.accessCookieName).toBe("__Host-production-meta_access");
   });
 });
 
@@ -84,7 +133,9 @@ function config(production: boolean) {
   return {
     production,
     cookieSecure: production,
+    cookieNamespace: production ? "staging" : "",
     sessionHandleSecret: "s".repeat(48),
+    authorizationVersionSecret: "a".repeat(48),
     csrfSecret: "c".repeat(48),
     csrfTtlMs: 8 * 60 * 60 * 1000
   } as AuthConfig;

@@ -14,7 +14,8 @@ describe("MetaAdsetMetricsReadService response and query contract", () => {
       },
       aggregate: () => aggregate()
     };
-    const service = new MetaAdsetMetricsReadService({} as never, decoration as never);
+    const prisma = {};
+    const service = new MetaAdsetMetricsReadService(prisma as never, decoration as never);
 
     const result = await service.productMetrics("2026-08-10", "2026-08-11", "active");
 
@@ -36,7 +37,8 @@ describe("MetaAdsetMetricsReadService response and query contract", () => {
     expect(calls[0]).toEqual([
       new Date("2026-08-10T00:00:00.000Z"),
       new Date("2026-08-11T00:00:00.000Z"),
-      "active"
+      "active",
+      prisma
     ]);
   });
 

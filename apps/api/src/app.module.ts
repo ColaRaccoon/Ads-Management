@@ -20,6 +20,7 @@ import { HealthModule } from "./health/health.module";
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      ignoreEnvFile: true,
       validate: process.env.NODE_ENV === "test" ? undefined : validateRuntimeEnvironment
     }),
     CommonModule,

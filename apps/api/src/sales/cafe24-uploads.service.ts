@@ -65,7 +65,8 @@ export class Cafe24UploadsService {
     const originalFilename = normalizeUploadedFilename(file.originalname);
     const { headers, rows } = this.parser.parseBuffer(file.buffer);
     const previewSummary = this.parser.preview(file.buffer);
-    const batch = await this.prisma.cafe24UploadBatch.create({
+    let batch;
+    try { batch = await this.prisma.cafe24UploadBatch.create({
       data: {
         originalFilename,
         storedFilePath: null,
@@ -83,7 +84,11 @@ export class Cafe24UploadsService {
         status: UploadStatus.VALIDATING,
         uploadedBy: actorId
       }
-    });
+    }); } catch(error) {
+      if(conflictPolicy!==ConflictPolicy.SKIP||!isPrismaUniqueConflict(error))throw error;
+      const raced=await this.prisma.cafe24UploadBatch.findUnique({where:{fileHashSha256}});if(!raced)throw error;
+      return this.duplicateUploadSummary(raced.id);
+    }
 
     const headerValidation = Cafe24CsvHeaderValidator.validate(headers);
     if (!headerValidation.valid) {
@@ -1209,3 +1214,4 @@ function duplicatedValues(values: string[]) {
 function duplicateBatchHash(fileHashSha256: string, conflictPolicy: ConflictPolicy) {
   return createHash("sha256").update(`${fileHashSha256}:${conflictPolicy}:${Date.now()}:${Math.random()}`).digest("hex");
 }
+function isPrismaUniqueConflict(error:unknown){return error instanceof Prisma.PrismaClientKnownRequestError&&error.code==="P2002";}

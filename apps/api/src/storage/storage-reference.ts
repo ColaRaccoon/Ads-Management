@@ -27,7 +27,8 @@ export function normalizeStorageKey(key: string) {
     key.length > 1_024 ||
     key.includes("\0") ||
     key.includes("\\") ||
-    /^[A-Za-z]:/.test(key) ||
+    key.includes(":") ||
+    /[\u0000-\u001f\u007f]/.test(key) ||
     path.posix.isAbsolute(key)
   ) {
     throw new InvalidStorageKeyError();
@@ -38,7 +39,10 @@ export function normalizeStorageKey(key: string) {
     normalized === ".." ||
     normalized.startsWith("../") ||
     normalized !== key ||
-    normalized.split("/").some((segment) => !segment || segment === "." || segment === "..")
+    normalized.split("/").some((segment) =>
+      !segment || segment === "." || segment === ".." || /[. ]$/.test(segment) ||
+      /^(?:con|prn|aux|nul|clock\$|conin\$|conout\$|com[1-9]|lpt[1-9])(?:\.|$)/i.test(segment)
+    )
   ) {
     throw new InvalidStorageKeyError();
   }

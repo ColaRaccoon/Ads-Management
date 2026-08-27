@@ -14,3 +14,4 @@ apps/api/storage/security-dev/
 *.log
 *.tsbuildinfo
 .DS_Store
+deploy/staging.env

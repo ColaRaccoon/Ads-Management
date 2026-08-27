@@ -18,6 +18,7 @@ const config = {
   production: false,
   cookieSecure: false,
   sessionHandleSecret: "s".repeat(48),
+  authorizationVersionSecret: "a".repeat(48),
   csrfSecret: "c".repeat(48)
 } as AuthConfig;
 

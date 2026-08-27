@@ -168,7 +168,7 @@ function authMe(
   inviteStatus: "ACTIVE" | "VERIFIED_PENDING_PASSWORD" = "ACTIVE"
 ) {
   return {
-    user: { id: "user-1", email: "user@example.test", name: "Role User", role: "USER", isActive: true, inviteStatus },
+    user: { id: "user-1", username: null, email: "user@example.test", name: "Role User", role: "USER", isActive: true, inviteStatus },
     permissions,
     authorizationVersion
   };

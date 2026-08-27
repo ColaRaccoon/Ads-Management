@@ -17,16 +17,22 @@ import {
   StoredFile
 } from "./file-storage";
 import { normalizeStorageKey } from "./storage-reference";
+import {
+  DEFAULT_TEMP_STORAGE_BUDGET_BYTES,
+  temporaryStorageBudget
+} from "./temporary-storage-budget";
 
 export type SupabaseStorageDomain = "uploads" | "reports";
 
 export type SupabaseFileStorageOptions = {
   supabaseUrl: string;
-  secretKey: string;
+  apiKey: string;
+  accessToken: string;
   bucket: string;
   domain: SupabaseStorageDomain;
   timeoutMs?: number;
   maxObjectBytes?: number;
+  temporaryStorageBudgetBytes?: number;
   fetchImplementation?: typeof fetch;
 };
 
@@ -41,11 +47,13 @@ type StreamingRequestInit = Omit<RequestInit, "body"> & {
 export class SupabaseFileStorage implements FileStorage {
   readonly provider = "supabase";
   private readonly baseUrl: string;
-  private readonly secretKey: string;
+  private readonly apiKey: string;
+  private readonly accessToken: string;
   private readonly bucket: string;
   private readonly domain: SupabaseStorageDomain;
   private readonly timeoutMs: number;
   private readonly maxObjectBytes: number;
+  private readonly temporaryStorageBudgetBytes: number;
   private readonly fetchImplementation: typeof fetch;
 
   constructor(options: SupabaseFileStorageOptions) {
@@ -58,12 +66,14 @@ export class SupabaseFileStorage implements FileStorage {
     if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) {
       throw new Error("SUPABASE_URL must be a credential-free HTTPS origin for Supabase Storage.");
     }
-    if (!options.secretKey.trim()) throw new Error("SUPABASE_SECRET_KEY is required for Supabase Storage.");
+    if (!options.apiKey.trim()) throw new Error("A Supabase Storage API key is required.");
+    if (!options.accessToken.trim()) throw new Error("A Supabase Storage access token is required.");
     if (!/^[a-z0-9][a-z0-9._-]{0,62}$/i.test(options.bucket)) {
       throw new Error("SUPABASE_STORAGE_BUCKET is invalid.");
     }
     this.baseUrl = `${url.origin}/storage/v1`;
-    this.secretKey = options.secretKey;
+    this.apiKey = options.apiKey;
+    this.accessToken = options.accessToken;
     this.bucket = options.bucket;
     this.domain = options.domain;
     this.timeoutMs = checkedBound(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 250, 60_000, "timeout");
@@ -73,16 +83,29 @@ export class SupabaseFileStorage implements FileStorage {
       268_435_456,
       "object size"
     );
+    this.temporaryStorageBudgetBytes = checkedBound(
+      options.temporaryStorageBudgetBytes ?? DEFAULT_TEMP_STORAGE_BUDGET_BYTES,
+      1,
+      DEFAULT_TEMP_STORAGE_BUDGET_BYTES,
+      "temporary storage budget"
+    );
     this.fetchImplementation = options.fetchImplementation ?? fetch;
   }
 
   async put(input: FileStoragePutInput): Promise<StoredFile> {
     const key = normalizeStorageKey(input.key);
     const limit = Math.min(checkedLimit(input.maxBytes), this.maxObjectBytes);
+    let lease: ReturnType<typeof temporaryStorageBudget.acquire>;
+    try {
+      lease = temporaryStorageBudget.acquire(limit, this.temporaryStorageBudgetBytes);
+    } catch (error) {
+      if (input.body instanceof Readable && !input.body.destroyed) input.body.destroy();
+      throw error;
+    }
     const temporaryRoot = path.join(tmpdir(), `meta-storage-${randomUUID()}`);
     const temporaryPath = path.join(temporaryRoot, "object");
-    await mkdir(temporaryRoot, { recursive: false, mode: 0o700 });
     try {
+      await mkdir(temporaryRoot, { recursive: false, mode: 0o700 });
       const measured = await spoolAndHash(input.body, temporaryPath, limit);
       if (input.expectedHashSha256 && measured.hash !== normalizedHash(input.expectedHashSha256)) {
         throw new StorageIntegrityError();
@@ -111,6 +134,7 @@ export class SupabaseFileStorage implements FileStorage {
       throw mappedStatus(response.status);
     } finally {
       await rm(temporaryRoot, { recursive: true, force: true }).catch(() => undefined);
+      lease.release();
     }
   }
 
@@ -304,8 +328,8 @@ export class SupabaseFileStorage implements FileStorage {
 
   private headers(extra: HeadersInit = {}) {
     return {
-      apikey: this.secretKey,
-      authorization: `Bearer ${this.secretKey}`,
+      apikey: this.apiKey,
+      authorization: `Bearer ${this.accessToken}`,
       ...extra
     };
   }

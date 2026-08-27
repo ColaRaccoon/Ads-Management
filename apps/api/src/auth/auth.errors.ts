@@ -21,7 +21,7 @@ const messages: Record<AuthErrorCode, string> = {
   SESSION_INVALID: "The session is invalid.",
   ACCESS_TOKEN_EXPIRED: "The access token has expired.",
   SESSION_REVOKED: "The session has been revoked.",
-  INVALID_CREDENTIALS: "The email or password is invalid.",
+  INVALID_CREDENTIALS: "The username or password is invalid.",
   ACCOUNT_NOT_PROVISIONED: "The account is not provisioned.",
   ACCOUNT_INACTIVE: "The account is inactive.",
   ACCOUNT_ONBOARDING_REQUIRED: "Account onboarding must be completed.",

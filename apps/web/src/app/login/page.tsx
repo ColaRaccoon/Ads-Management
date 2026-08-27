@@ -8,7 +8,7 @@ import { useAuth } from "@/features/auth/use-auth";
 export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +19,11 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await auth.login(email, password);
+      await auth.login(username, password);
       const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
       router.replace(next);
     } catch {
-      setError("로그인할 수 없습니다. 이메일과 비밀번호를 확인하거나 관리자에게 문의해 주세요.");
+      setError("로그인할 수 없습니다. 사용자 이름과 비밀번호를 확인하거나 관리자에게 문의해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -34,15 +34,16 @@ export default function LoginPage() {
       <section className="auth-card" aria-labelledby="login-heading">
         <div className="auth-brand">Meta Ads Performance Hub</div>
         <h1 id="login-heading">로그인</h1>
-        <p>초대받은 업무 계정으로 로그인해 주세요.</p>
+        <p>발급된 로컬 업무 계정으로 로그인해 주세요.</p>
         <form className="auth-form" onSubmit={submit}>
           <label>
-            이메일
+            사용자 이름
             <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              type="text"
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              pattern="[A-Za-z][A-Za-z0-9._-]{2,31}"
               required
               disabled={isSubmitting}
             />

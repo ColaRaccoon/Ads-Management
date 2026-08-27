@@ -225,10 +225,12 @@ describe("Coupang sales fee history corrections", () => {
       shippingCostKrw: 0,
       otherCostKrw: 0
     });
-    expect(fixture.lockEvents).toEqual([
+    expect(fixture.lockEvents).toEqual(expect.arrayContaining([
+      "transaction-1:acquired",
+      "transaction-1:released",
       "transaction-2:acquired",
       "transaction-2:released"
-    ]);
+    ]));
     expect(fixture.purchase()).toMatchObject({
       salesFeeRateApplied: new Prisma.Decimal(0),
       coupangSalesFeeKrw: new Prisma.Decimal(0)
@@ -1293,6 +1295,60 @@ describe("Coupang manual-purchase quantity-based cost flow", () => {
     const entry = { coupangProductId: "product-1", quantity: 1 };
     await expect(service.replaceManualPurchasesForDate("2026-07-21", { entries: [entry, entry] }))
       .rejects.toMatchObject({ response: { code: "DUPLICATE_MANUAL_PURCHASE_PRODUCT" } });
+  });
+
+  it("locks the date and writes replacement audit attribution in the same transaction", async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
+    const auditCreate = vi.fn().mockResolvedValue({});
+    const fixture = manualPurchaseTransactionPrisma({
+      appSetting: { findUnique: vi.fn().mockResolvedValue(null) },
+      securityAuditEvent: { create: auditCreate }
+    }, {
+      findMany: vi.fn().mockResolvedValue([{ quantity: 1, salesAmountKrw: 10_000, totalCostKrw: 3_182 }]),
+      deleteMany
+    });
+    const service = new CoupangService(fixture.prisma as never);
+
+    await service.replaceManualPurchasesForDate("2026-07-21", { entries: [] }, "actor-1");
+
+    const lockSql = (fixture.transactionClient.$queryRaw.mock.calls as unknown as Array<[Prisma.Sql]>)[0]?.[0];
+    expect(String(lockSql.sql)).toContain("pg_advisory_xact_lock");
+    expect(lockSql.values).toContain("coupang-manual-purchase:2026-07-21");
+    expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        actorUserId: "actor-1",
+        action: "COUPANG_MANUAL_PURCHASES_REPLACED",
+        targetId: "2026-07-21"
+      })
+    }));
+    expect(fixture.transactionClient.$queryRaw.mock.invocationCallOrder[0])
+      .toBeLessThan(deleteMany.mock.invocationCallOrder[0]);
+    expect(deleteMany.mock.invocationCallOrder[0]).toBeLessThan(auditCreate.mock.invocationCallOrder[0]);
+  });
+
+  it("rechecks under the date lock before delete and audits the actor", async () => {
+    const row = { id: "manual-1", purchaseDate: new Date("2026-07-21T00:00:00.000Z") };
+    const findUnique = vi.fn().mockResolvedValue(row);
+    const remove = vi.fn().mockResolvedValue(row);
+    const auditCreate = vi.fn().mockResolvedValue({});
+    const fixture = manualPurchaseTransactionPrisma({ securityAuditEvent: { create: auditCreate } }, {
+      findUnique,
+      delete: remove
+    });
+    const service = new CoupangService(fixture.prisma as never);
+
+    await expect(service.deleteManualPurchase("manual-1", "actor-1"))
+      .resolves.toEqual({ id: "manual-1", date: "2026-07-21", deleted: true });
+
+    expect(findUnique).toHaveBeenCalledTimes(2);
+    const lockSql = (fixture.transactionClient.$queryRaw.mock.calls as unknown as Array<[Prisma.Sql]>)[0]?.[0];
+    expect(lockSql.values).toContain("coupang-manual-purchase:2026-07-21");
+    expect(auditCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ actorUserId: "actor-1", action: "COUPANG_MANUAL_PURCHASE_DELETED" })
+    }));
+    expect(fixture.transactionClient.$queryRaw.mock.invocationCallOrder[0])
+      .toBeLessThan(remove.mock.invocationCallOrder[0]);
+    expect(remove.mock.invocationCallOrder[0]).toBeLessThan(auditCreate.mock.invocationCallOrder[0]);
   });
 
   it("stores base-price sales and only the vendor fee as manual-purchase cost", async () => {

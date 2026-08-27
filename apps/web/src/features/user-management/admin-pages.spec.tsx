@@ -51,7 +51,7 @@ describe("super-admin management pages", () => {
     })] });
     renderPage(<UsersPage />, authValue(["users.manage"]));
 
-    expect(await screen.findByText("user@example.test")).toBeTruthy();
+    expect(await screen.findByText("local.user")).toBeTruthy();
     expect(screen.getByText("활성화 완료")).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/provider-subject-never-render|session-never-render|token-never-render/);
   });
@@ -64,18 +64,32 @@ describe("super-admin management pages", () => {
     renderPage(<UsersPage />, authValue(["users.manage"]));
     await screen.findByText("등록된 사용자가 없습니다.");
 
-    fireEvent.change(screen.getByLabelText("이메일"), { target: { value: " NEW@Example.Test " } });
+    fireEvent.change(screen.getByLabelText("사용자 이름"), { target: { value: " New.User " } });
     fireEvent.change(screen.getByLabelText("이름"), { target: { value: " 새 사용자 " } });
-    fireEvent.click(screen.getByRole("button", { name: "초대 보내기" }));
+    fireEvent.click(screen.getByRole("button", { name: "사용자 추가" }));
 
-    expect(await screen.findByText(/초대 제공자와 통신하지 못했습니다/)).toBeTruthy();
+    expect(await screen.findByText(/사용자 설정 요청을 처리하지 못했습니다/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "같은 요청 다시 시도" }));
     await waitFor(() => expect(apiMocks.request).toHaveBeenCalledTimes(2));
     const first = apiMocks.request.mock.calls[0][1];
     const second = apiMocks.request.mock.calls[1][1];
-    expect(first.body).toEqual({ email: "new@example.test", name: "새 사용자", role: "GUEST" });
+    expect(first.body).toEqual({ username: "new.user", name: "새 사용자", role: "GUEST" });
     expect(first.headers["Idempotency-Key"]).toMatch(/^[0-9a-f-]{36}$/i);
     expect(second.headers["Idempotency-Key"]).toBe(first.headers["Idempotency-Key"]);
+  });
+
+  it("recovers a lost invitation response by refreshing the committed user and hiding replay retry", async () => {
+    apiMocks.get.mockResolvedValueOnce({ items: [] }).mockResolvedValue({ items: [userSummary({ username: "recovered.user", inviteStatus: "INVITED" })] });
+    apiMocks.request.mockRejectedValue(new ApiError(409, "replay", "IDEMPOTENCY_REPLAY"));
+    renderPage(<UsersPage />, authValue(["users.manage"]));
+    await screen.findByText("등록된 사용자가 없습니다.");
+    fireEvent.change(screen.getByLabelText("사용자 이름"), { target: { value: "recovered.user" } });
+    fireEvent.change(screen.getByLabelText("이름"), { target: { value: "복구 사용자" } });
+    fireEvent.click(screen.getByRole("button", { name: "사용자 추가" }));
+
+    expect(await screen.findByText(/이미 처리되었습니다/)).toBeTruthy();
+    expect(await screen.findByText("recovered.user")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "같은 요청 다시 시도" })).toBeNull();
   });
 
   it("patches only changed lifecycle fields and refreshes the current authorization", async () => {
@@ -83,7 +97,7 @@ describe("super-admin management pages", () => {
     apiMocks.patch.mockResolvedValue(userSummary({ name: "변경 이름", role: "ADMIN" }));
     const auth = authValue(["users.manage"], "user-1");
     renderPage(<UsersPage />, auth);
-    await screen.findByText("user@example.test");
+    await screen.findByText("local.user");
 
     fireEvent.change(screen.getAllByLabelText("이름")[1], { target: { value: " 변경 이름 " } });
     fireEvent.change(screen.getAllByLabelText("역할", { selector: "select" })[1], { target: { value: "ADMIN" } });
@@ -98,19 +112,22 @@ describe("super-admin management pages", () => {
       items: [
         userSummary({
           id: "pending-stale",
-          email: "pending@example.test",
+          username: "pending.user",
+          email: null,
           inviteStatus: "PENDING_PROVIDER",
           reconciliationActions: ["CANCEL"]
         }),
         userSummary({
           id: "local-failure",
-          email: "local-failure@example.test",
+          username: "local.failure",
+          email: null,
           inviteStatus: "RECONCILE_REQUIRED",
           reconciliationActions: ["CANCEL"]
         }),
         userSummary({
           id: "password-pending",
-          email: "password-pending@example.test",
+          username: "password.pending",
+          email: null,
           inviteStatus: "VERIFIED_PENDING_PASSWORD",
           reconciliationActions: ["CANCEL"]
         })
@@ -118,15 +135,29 @@ describe("super-admin management pages", () => {
     });
     renderPage(<UsersPage />, authValue(["users.manage"]));
 
-    for (const email of ["pending@example.test", "local-failure@example.test"]) {
-      const card = (await screen.findByText(email)).closest("article");
+    for (const username of ["pending.user", "local.failure"]) {
+      const card = (await screen.findByText(username)).closest("article");
       expect(card).toBeTruthy();
-      expect(within(card!).queryByRole("button", { name: "재초대" })).toBeNull();
-      expect(within(card!).getByRole("button", { name: "초대 취소" })).toBeTruthy();
+      expect(within(card!).queryByRole("button", { name: "설정 코드 재발급" })).toBeNull();
+      expect(within(card!).getByRole("button", { name: "설정 요청 취소" })).toBeTruthy();
     }
-    const onboardingCard = (await screen.findByText("password-pending@example.test")).closest("article");
+    const onboardingCard = (await screen.findByText("password.pending")).closest("article");
     expect(onboardingCard).toBeTruthy();
-    expect(within(onboardingCard!).getByRole("button", { name: "초대 취소" })).toBeTruthy();
+    expect(within(onboardingCard!).getByRole("button", { name: "설정 요청 취소" })).toBeTruthy();
+  });
+
+  it("shows a newly issued setup code once and removes it from the DOM on close", async () => {
+    const setupToken="A".repeat(43);apiMocks.get.mockResolvedValue({items:[]});apiMocks.request.mockResolvedValue(userSummary({setupToken}));
+    renderPage(<UsersPage />,authValue(["users.manage"]));await screen.findByText("등록된 사용자가 없습니다.");
+    fireEvent.change(screen.getByLabelText("사용자 이름"),{target:{value:"local.user"}});fireEvent.change(screen.getByLabelText("이름"),{target:{value:"로컬 사용자"}});fireEvent.click(screen.getByRole("button",{name:"사용자 추가"}));
+    expect(await screen.findByText(setupToken)).toBeTruthy();expect(window.localStorage.length).toBe(0);expect(window.location.href).not.toContain(setupToken);
+    fireEvent.click(screen.getByRole("button",{name:"표시 닫기"}));expect(document.body.textContent).not.toContain(setupToken);
+  });
+
+  it("warns that reset revokes sessions and displays only the new one-time code", async () => {
+    const setupToken="B".repeat(43);apiMocks.get.mockResolvedValue({items:[userSummary()]});apiMocks.request.mockResolvedValue(userSummary({inviteStatus:"INVITED",setupToken}));const confirm=vi.spyOn(window,"confirm").mockReturnValue(true);
+    renderPage(<UsersPage />,authValue(["users.manage"]));await screen.findByText("local.user");fireEvent.click(screen.getByRole("button",{name:"비밀번호 재설정"}));
+    await waitFor(()=>expect(apiMocks.request).toHaveBeenCalledWith("/users/user-1/password-reset",{method:"POST"}));expect(confirm).toHaveBeenCalledWith(expect.stringMatching(/기존 세션을 폐기/));expect(await screen.findByText(setupToken)).toBeTruthy();
   });
 
   it("renders bounded safe audit summaries and encodes filters/cursors", async () => {
@@ -175,7 +206,7 @@ function renderPage(children: ReactNode, auth: AuthContextValue) {
 function authValue(permissions: AuthContextValue["permissions"], id = "admin-user"): AuthContextValue {
   const granted = new Set(permissions);
   return {
-    user: { id, email: "admin@example.test", name: "Admin", role: "SUPER_ADMIN", isActive: true, inviteStatus: "ACTIVE" },
+    user: { id, username: "local.admin", email: null, name: "Admin", role: "SUPER_ADMIN", isActive: true, inviteStatus: "ACTIVE" },
     permissions,
     isLoading: false,
     isAuthenticated: true,
@@ -192,7 +223,8 @@ function authValue(permissions: AuthContextValue["permissions"], id = "admin-use
 function userSummary(overrides: Record<string, unknown> = {}) {
   return {
     id: "user-1",
-    email: "user@example.test",
+    username: "local.user",
+    email: null,
     name: "기존 이름",
     role: "USER",
     isActive: true,

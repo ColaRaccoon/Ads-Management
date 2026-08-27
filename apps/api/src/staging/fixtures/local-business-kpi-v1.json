@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "meta": {
+    "cost": {
+      "salePriceKrw": 50000,
+      "vatKrw": 5000,
+      "productCostKrw": 15000,
+      "shippingKrw": 3000,
+      "extraCostKrw": 2000
+    },
+    "metric": {
+      "spendUsd": 20,
+      "purchaseCount": 2,
+      "exchangeRateKrwPerUsd": 1300
+    },
+    "cpaRule": {
+      "targetRatio": 0.8,
+      "watchRatio": 1.1,
+      "stopRatio": 1.25
+    },
+    "expected": {
+      "spendKrw": 26000,
+      "revenueKrw": 100000,
+      "grossCostKrw": 50000,
+      "marginKrw": 24000,
+      "cpaKrw": 13000,
+      "cpaUsd": 10,
+      "roas": 3.8461538461538463,
+      "contributionBeforeAdsKrw": 25000,
+      "breakEvenCpaKrw": 25000,
+      "targetCpaKrw": 20000,
+      "watchCpaKrw": 27500,
+      "stopCpaKrw": 31250
+    }
+  },
+  "cafe24": {
+    "baseCost": {
+      "salePriceKrw": 38900,
+      "vatKrw": 3890,
+      "productCostKrw": 9000,
+      "shippingKrw": 3000,
+      "extraCostKrw": 0
+    },
+    "override": {
+      "salePriceKrwOverride": 69000,
+      "productCostKrwOverride": 18000,
+      "shippingKrwOverride": 3000
+    },
+    "quantity": 2,
+    "adSpendUsd": 10,
+    "exchangeRateKrwPerUsd": 1300,
+    "expected": {
+      "source": "CAFE24_RULE_OVERRIDE",
+      "salePriceKrw": 69000,
+      "vatKrw": 6900,
+      "productCostKrw": 18000,
+      "shippingKrw": 3000,
+      "extraCostKrw": 0,
+      "revenueKrw": 138000,
+      "grossCostKrw": 55800,
+      "adSpendKrw": 13000,
+      "totalCostKrw": 68800,
+      "marginKrw": 69200,
+      "roas": 10.615384615384615,
+      "cpaKrw": 6500,
+      "marginRate": 0.5014492753623189
+    }
+  },
+  "coupang": {
+    "sales": {
+      "netSalesKrw": 100000,
+      "salesQuantity": 10,
+      "saleMethod": "seller"
+    },
+    "cost": {
+      "salePriceKrw": 10000,
+      "productCostKrw": 3000,
+      "sellerShippingFeeKrw": 1000,
+      "returnRate": 0.1,
+      "returnCostPerUnitKrw": 2000,
+      "extraCostKrw": 100
+    },
+    "ads": {
+      "adSpendKrw": 8000,
+      "adGeneratedSalesKrw": 60000,
+      "attributedConversionSalesKrw": 60000
+    },
+    "options": {
+      "salesFeeRate": 0.05,
+      "includeReturnCost": true
+    },
+    "expected": {
+      "netSalesKrw": 100000,
+      "productCostKrw": 30000,
+      "salesFeeKrw": 5000,
+      "shippingCostKrw": 10000,
+      "returnCostKrw": 2000,
+      "extraCostKrw": 1000,
+      "vatKrw": 9090.90909090909,
+      "adSpendKrw": 8000,
+      "totalCostKrw": 65090.90909090909,
+      "marginKrw": 34909.09090909091,
+      "marginRate": 0.3490909090909091,
+      "roas": 7.5,
+      "organicSalesKrw": 40000,
+      "warnings": []
+    }
+  }
+}

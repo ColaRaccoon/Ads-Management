@@ -2,8 +2,9 @@ import { createHash, randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PostgresSecurityRateLimiter } from "./postgres-security-rate-limiter";
+import { supabaseIntegrationEnabled } from "../common/supabase-integration-target";
 
-const integrationDescribe = integrationEnabled() ? describe : describe.skip;
+const integrationDescribe = supabaseIntegrationEnabled("RUN_RATE_LIMIT_DB_INTEGRATION", "DATABASE_URL") ? describe : describe.skip;
 
 integrationDescribe("distributed PostgreSQL rate limiter", () => {
   let prisma: PrismaClient;
@@ -36,19 +37,3 @@ integrationDescribe("distributed PostgreSQL rate limiter", () => {
     expect(persisted[0].count).toBe(25);
   });
 });
-
-function integrationEnabled() {
-  if (process.env.RUN_RATE_LIMIT_DB_INTEGRATION !== "true") return false;
-  const raw = process.env.DATABASE_URL;
-  if (!raw) throw new Error("DATABASE_URL is required for rate-limit integration tests.");
-  const target = new URL(raw);
-  if (
-    target.hostname !== "127.0.0.1" ||
-    target.port !== "55432" ||
-    target.pathname !== "/meta_ads_security_dev" ||
-    target.searchParams.get("schema") !== "meta_ads_security_dev"
-  ) {
-    throw new Error("Rate-limit integration tests require the isolated local security dev database.");
-  }
-  return true;
-}

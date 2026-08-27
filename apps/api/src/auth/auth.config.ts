@@ -1,17 +1,31 @@
 export const AUTH_CONFIG = Symbol("AUTH_CONFIG");
 
 export type AuthConfig = {
+  provider: "supabase" | "local";
   supabaseUrl: string;
   supabasePublishableKey: string;
   supabaseSecretKey: string;
   jwtIssuer: string;
   jwtAudience: string;
   cookieSecure: boolean;
+  cookieNamespace: string;
   sessionHandleSecret: string;
+  sessionHandlePreviousSecret?: string;
+  authorizationVersionSecret: string;
   csrfSecret: string;
+  csrfPreviousSecret?: string;
   csrfTtlMs: number;
   allowedOrigins: ReadonlySet<string>;
   production: boolean;
+  localSessionTokenSecret?: string;
+  localSetupTokenSecret?: string;
+  localRateLimitSecret?: string;
+  localSessionIdleTtlMs: number;
+  localSessionAbsoluteTtlMs: number;
+  localSessionRotationTtlMs: number;
+  localSetupTokenTtlMs: number;
+  localScryptConcurrency: number;
+  localScryptQueueLimit: number;
 };
 
 export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig {
@@ -21,11 +35,18 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     throw new Error("APP_ENV and NODE_ENV must not disagree.");
   }
   const production = (appEnvironment ?? nodeEnvironment) === "production";
-  const supabaseUrl = required(env, "SUPABASE_URL");
-  const jwtIssuer = required(env, "SUPABASE_JWT_ISSUER");
+  const provider = parseProvider(env.AUTH_PROVIDER);
+  const supabaseUrl = provider === "supabase" ? required(env, "SUPABASE_URL") : "";
+  const jwtIssuer = provider === "supabase" ? required(env, "SUPABASE_JWT_ISSUER") : "";
   const cookieSecure = parseBoolean(required(env, "AUTH_COOKIE_SECURE"), "AUTH_COOKIE_SECURE");
   const sessionHandleSecret = strongSecret(env, "AUTH_SESSION_HANDLE_SECRET");
+  const sessionHandlePreviousSecret = optionalStrongSecret(
+    env,
+    "AUTH_SESSION_HANDLE_PREVIOUS_SECRET"
+  );
+  const authorizationVersionSecret = strongSecret(env, "AUTH_AUTHORIZATION_VERSION_SECRET");
   const csrfSecret = strongSecret(env, "AUTH_CSRF_SECRET");
+  const csrfPreviousSecret = optionalStrongSecret(env, "AUTH_CSRF_PREVIOUS_SECRET");
   const csrfTtlMs = parseInteger(
     env.AUTH_CSRF_TTL_SECONDS,
     "AUTH_CSRF_TTL_SECONDS",
@@ -33,8 +54,17 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     86_400,
     28_800
   ) * 1000;
-  const supabasePublishableKey = required(env, "SUPABASE_PUBLISHABLE_KEY");
-  const supabaseSecretKey = required(env, "SUPABASE_SECRET_KEY");
+  const supabasePublishableKey = provider === "supabase" ? required(env, "SUPABASE_PUBLISHABLE_KEY") : "";
+  const supabaseSecretKey = provider === "supabase" ? required(env, "SUPABASE_SECRET_KEY") : "";
+  const localSessionTokenSecret = provider === "local"
+    ? strongSecret(env, "AUTH_LOCAL_SESSION_TOKEN_SECRET")
+    : undefined;
+  const localSetupTokenSecret = provider === "local"
+    ? strongSecret(env, "AUTH_LOCAL_SETUP_TOKEN_SECRET")
+    : undefined;
+  const localRateLimitSecret = provider === "local"
+    ? strongSecret(env, "AUTH_LOCAL_RATE_LIMIT_SECRET")
+    : undefined;
 
   if (production && !cookieSecure) {
     throw new Error("AUTH_COOKIE_SECURE must be true in production.");
@@ -45,38 +75,104 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
   if (
     sessionHandleSecret === supabasePublishableKey ||
     sessionHandleSecret === supabaseSecretKey ||
+    authorizationVersionSecret === supabasePublishableKey ||
+    authorizationVersionSecret === supabaseSecretKey ||
     csrfSecret === supabasePublishableKey ||
     csrfSecret === supabaseSecretKey
   ) {
     throw new Error("Application auth secrets must not reuse Supabase provider keys.");
   }
-  const allowedOrigins = parseAllowedOrigins(required(env, "APP_ALLOWED_ORIGINS"), production);
+  const allowedOrigins = parseAllowedOrigins(
+    required(env, "APP_ALLOWED_ORIGINS"),
+    production,
+    provider === "local"
+  );
+  const cookieNamespace = parseCookieNamespace(env.AUTH_COOKIE_NAMESPACE, production);
 
-  const parsedSupabaseUrl = new URL(supabaseUrl);
-  const parsedIssuer = new URL(jwtIssuer);
-  if (parsedSupabaseUrl.protocol !== "https:" || parsedIssuer.protocol !== "https:") {
-    throw new Error("Supabase URL and JWT issuer must use HTTPS.");
+  const independentlyManagedSecrets = [
+    sessionHandleSecret,
+    sessionHandlePreviousSecret,
+    authorizationVersionSecret,
+    csrfSecret,
+    csrfPreviousSecret,
+    supabasePublishableKey,
+    supabaseSecretKey,
+    localSessionTokenSecret,
+    localSetupTokenSecret,
+    localRateLimitSecret
+  ].filter((value): value is string => Boolean(value));
+  if (new Set(independentlyManagedSecrets).size !== independentlyManagedSecrets.length) {
+    throw new Error("Current, previous, CSRF, session, and Supabase secrets must all be different.");
   }
-  if (parsedIssuer.origin !== parsedSupabaseUrl.origin || parsedIssuer.pathname !== "/auth/v1") {
-    throw new Error("SUPABASE_JWT_ISSUER must be the configured project's /auth/v1 issuer.");
+
+  const parsedSupabaseUrl = provider === "supabase" ? new URL(supabaseUrl) : undefined;
+  const parsedIssuer = provider === "supabase" ? new URL(jwtIssuer) : undefined;
+  if (parsedSupabaseUrl && parsedIssuer) {
+    if (parsedSupabaseUrl.protocol !== "https:" || parsedIssuer.protocol !== "https:") {
+      throw new Error("Supabase URL and JWT issuer must use HTTPS.");
+    }
+    if (parsedIssuer.origin !== parsedSupabaseUrl.origin || parsedIssuer.pathname !== "/auth/v1") {
+      throw new Error("SUPABASE_JWT_ISSUER must be the configured project's /auth/v1 issuer.");
+    }
+  }
+  const localSessionIdleTtlMs = parseInteger(
+    env.AUTH_LOCAL_SESSION_IDLE_MINUTES,
+    "AUTH_LOCAL_SESSION_IDLE_MINUTES",
+    5,
+    1440,
+    30
+  ) * 60_000;
+  const localSessionAbsoluteTtlMs = parseInteger(
+    env.AUTH_LOCAL_SESSION_ABSOLUTE_HOURS,
+    "AUTH_LOCAL_SESSION_ABSOLUTE_HOURS",
+    1,
+    720,
+    12
+  ) * 3_600_000;
+  if (localSessionIdleTtlMs > localSessionAbsoluteTtlMs) {
+    throw new Error("AUTH_LOCAL_SESSION_IDLE_MINUTES must not exceed the absolute session lifetime.");
+  }
+  const localSessionRotationTtlMs = parseInteger(
+    env.AUTH_LOCAL_SESSION_ROTATION_MINUTES,
+    "AUTH_LOCAL_SESSION_ROTATION_MINUTES",
+    5,
+    1440,
+    15
+  ) * 60_000;
+  if (localSessionRotationTtlMs > localSessionAbsoluteTtlMs) {
+    throw new Error("AUTH_LOCAL_SESSION_ROTATION_MINUTES must not exceed the absolute session lifetime.");
   }
 
   return {
-    supabaseUrl: parsedSupabaseUrl.origin,
+    provider,
+    supabaseUrl: parsedSupabaseUrl?.origin ?? "",
     supabasePublishableKey,
     supabaseSecretKey,
-    jwtIssuer: parsedIssuer.toString().replace(/\/$/, ""),
-    jwtAudience: required(env, "SUPABASE_JWT_AUDIENCE"),
+    jwtIssuer: parsedIssuer?.toString().replace(/\/$/, "") ?? "",
+    jwtAudience: provider === "supabase" ? required(env, "SUPABASE_JWT_AUDIENCE") : "",
     cookieSecure,
+    cookieNamespace,
     sessionHandleSecret,
+    sessionHandlePreviousSecret,
+    authorizationVersionSecret,
     csrfSecret,
+    csrfPreviousSecret,
     csrfTtlMs,
     allowedOrigins,
-    production
+    production,
+    localSessionTokenSecret,
+    localSetupTokenSecret,
+    localRateLimitSecret,
+    localSessionIdleTtlMs,
+    localSessionAbsoluteTtlMs,
+    localSessionRotationTtlMs,
+    localSetupTokenTtlMs: parseInteger(env.AUTH_LOCAL_SETUP_TOKEN_HOURS, "AUTH_LOCAL_SETUP_TOKEN_HOURS", 1, 168, 24) * 3_600_000,
+    localScryptConcurrency: parseInteger(env.AUTH_LOCAL_SCRYPT_CONCURRENCY, "AUTH_LOCAL_SCRYPT_CONCURRENCY", 1, 8, 2),
+    localScryptQueueLimit: parseInteger(env.AUTH_LOCAL_SCRYPT_QUEUE_LIMIT, "AUTH_LOCAL_SCRYPT_QUEUE_LIMIT", 0, 64, 8)
   };
 }
 
-export function parseAllowedOrigins(value: string, production: boolean) {
+export function parseAllowedOrigins(value: string, production: boolean, allowLocalProduction = false) {
   const origins = value.split(",").map((entry) => entry.trim()).filter(Boolean);
   if (origins.length === 0) throw new Error("APP_ALLOWED_ORIGINS must not be empty.");
 
@@ -87,7 +183,7 @@ export function parseAllowedOrigins(value: string, production: boolean) {
       throw new Error("APP_ALLOWED_ORIGINS entries must be exact origins.");
     }
     if (
-      production &&
+      production && !allowLocalProduction &&
       (url.hostname === "localhost" ||
         url.hostname === "127.0.0.1" ||
         url.hostname === "[::1]" ||
@@ -102,6 +198,12 @@ export function parseAllowedOrigins(value: string, production: boolean) {
     return origin;
   });
   return new Set(parsed);
+}
+
+function parseProvider(value: string | undefined): "supabase" | "local" {
+  const normalized = value?.trim().toLowerCase() || "supabase";
+  if (normalized === "supabase" || normalized === "local") return normalized;
+  throw new Error("AUTH_PROVIDER must be supabase or local.");
 }
 
 function required(env: NodeJS.ProcessEnv, key: string) {
@@ -129,6 +231,23 @@ function strongSecret(env: NodeJS.ProcessEnv, key: string) {
     throw new Error(`${key} must be a high-entropy independently generated secret.`);
   }
   return value;
+}
+
+function optionalStrongSecret(env: NodeJS.ProcessEnv, key: string) {
+  if (!env[key]?.trim()) return undefined;
+  return strongSecret(env, key);
+}
+
+function parseCookieNamespace(value: string | undefined, production: boolean) {
+  const namespace = value?.trim().toLowerCase() ?? "";
+  if (!namespace) {
+    if (production) throw new Error("AUTH_COOKIE_NAMESPACE is required in production.");
+    return "";
+  }
+  if (!/^[a-z0-9](?:[a-z0-9-]{0,18}[a-z0-9])?$/.test(namespace)) {
+    throw new Error("AUTH_COOKIE_NAMESPACE must be a 1-20 character lowercase deployment id.");
+  }
+  return namespace;
 }
 
 function parseBoolean(value: string, key: string) {

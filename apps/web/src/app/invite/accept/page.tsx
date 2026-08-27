@@ -20,6 +20,7 @@ export default function InvitationAcceptPage() {
   const [state, setState] = useState<AcceptanceState>("initializing");
   const [message, setMessage] = useState<string | null>(null);
   const [activeSessionConflict, setActiveSessionConflict] = useState(false);
+  const [manualCode, setManualCode] = useState("");
 
   useLayoutEffect(() => {
     if (initialized.current) return;
@@ -34,11 +35,27 @@ export default function InvitationAcceptPage() {
       tokenHash.current = null;
       submitting.current = false;
       setState("restored");
-      setMessage("브라우저 기록에서 복원된 초대 화면은 다시 사용할 수 없습니다. 원래 초대 링크를 다시 열어 주세요.");
+      setMessage("브라우저 기록에서 복원된 설정 화면은 다시 사용할 수 없습니다. 원래 설정 코드 화면을 다시 열어 주세요.");
     };
     window.addEventListener("pageshow", onPageShow);
-    return () => window.removeEventListener("pageshow", onPageShow);
+    return () => {
+      tokenHash.current = null;
+      setManualCode("");
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, []);
+
+  function prepareManualCode() {
+    const normalized = manualCode.trim();
+    if (!/^[A-Za-z0-9_-]{32,128}$/.test(normalized)) {
+      setMessage("설정 코드 형식이 올바르지 않습니다.");
+      return;
+    }
+    tokenHash.current = normalized;
+    setManualCode("");
+    setMessage(null);
+    setState("ready");
+  }
 
   async function accept() {
     if (submitting.current || !tokenHash.current || state === "accepted") return;
@@ -66,14 +83,30 @@ export default function InvitationAcceptPage() {
     <main className="auth-screen">
       <section className="auth-card" aria-labelledby="invitation-heading">
         <div className="auth-brand">Meta Ads Performance Hub</div>
-        <h1 id="invitation-heading">업무 계정 초대 확인</h1>
+        <h1 id="invitation-heading">업무 계정 최초 설정</h1>
         {state === "initializing" ? (
-          <p aria-busy="true" aria-live="polite">초대 링크를 안전하게 준비하고 있습니다.</p>
+          <p aria-busy="true" aria-live="polite">일회용 설정 코드를 안전하게 준비하고 있습니다.</p>
         ) : (
-          <p>아래 버튼을 눌러야 초대 링크가 확인됩니다. 링크를 연 것만으로는 계정이 활성화되지 않습니다.</p>
+          <p>아래 버튼을 눌러야 설정 코드가 확인됩니다. 화면을 연 것만으로는 계정이 활성화되지 않습니다.</p>
         )}
         {state === "ready" ? (
-          <div className="read-only-notice">초대를 확인한 뒤 최초 비밀번호 설정 화면으로 이동합니다.</div>
+          <div className="read-only-notice">코드를 확인한 뒤 최초 비밀번호 설정 화면으로 이동합니다.</div>
+        ) : null}
+        {(state === "unavailable" || state === "restored") && !activeSessionConflict ? (
+          <div className="auth-form">
+            <label>
+              일회용 설정 코드
+              <input
+                type="password"
+                autoComplete="off"
+                value={manualCode}
+                onChange={(event) => setManualCode(event.target.value)}
+                minLength={32}
+                maxLength={128}
+              />
+            </label>
+            <button className="button primary" type="button" onClick={prepareManualCode}>코드 준비</button>
+          </div>
         ) : null}
         {message ? <div className="auth-error" role="alert">{message}</div> : null}
         {tokenHash.current ? (
@@ -83,7 +116,7 @@ export default function InvitationAcceptPage() {
             disabled={state === "submitting" || state === "accepted"}
             onClick={() => void accept()}
           >
-            {state === "submitting" ? "초대 확인 중…" : state === "error" ? "다시 시도" : "초대 수락"}
+            {state === "submitting" ? "설정 코드 확인 중…" : state === "error" ? "다시 시도" : "설정 코드 수락"}
           </button>
         ) : null}
         {activeSessionConflict ? (
@@ -97,7 +130,7 @@ export default function InvitationAcceptPage() {
           </Link>
         ) : null}
         {state !== "initializing" ? (
-          <p className="auth-help">초대 확인 값은 이 화면의 메모리에만 보관되며 주소와 브라우저 저장소에는 남기지 않습니다.</p>
+          <p className="auth-help">설정 코드는 이 화면의 메모리에만 보관되며 주소와 브라우저 저장소에는 남기지 않습니다.</p>
         ) : null}
       </section>
     </main>

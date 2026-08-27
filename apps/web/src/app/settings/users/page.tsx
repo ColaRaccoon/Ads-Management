@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { apiGet, apiPatch, apiRequest } from "@/lib/api";
+import { apiErrorCode, apiGet, apiPatch, apiRequest } from "@/lib/api";
 import { PermissionPage } from "@/components/permission-page";
 import { APP_ROLES, AppRole, roleLabel } from "@/features/auth/auth-types";
 import { useAuth } from "@/features/auth/use-auth";
@@ -31,11 +31,12 @@ function UsersPageContent() {
   const auth = useAuth();
   const queryClient = useQueryClient();
   const inviteInFlight = useRef(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<AppRole>("GUEST");
   const [attempt, setAttempt] = useState<InvitationAttempt | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [issuedSetupToken, setIssuedSetupToken] = useState<string | null>(null);
 
   const users = useQuery({
     queryKey: USERS_QUERY_KEY,
@@ -49,21 +50,34 @@ function UsersPageContent() {
     ]);
   };
 
+  useEffect(() => () => setIssuedSetupToken(null), []);
+
   const invitation = useMutation({
-    mutationFn: async (value: InvitationAttempt) => parseUserSummary(await apiRequest<unknown>(
-      "/users/invitations",
-      {
-        method: "POST",
-        headers: { "Idempotency-Key": value.idempotencyKey },
-        body: value.payload
-      }
-    )),
-    onSuccess: async () => {
+    mutationFn: async (value: InvitationAttempt) => {
+      const created = parseUserSummary(await apiRequest<unknown>(
+        "/users/invitations",
+        {
+          method: "POST",
+          headers: { "Idempotency-Key": value.idempotencyKey },
+          body: value.payload
+        }
+      ));
+      if (created.setupToken) setIssuedSetupToken(created.setupToken);
+      const { setupToken: _discarded, ...safe } = created;
+      return safe;
+    },
+    onSuccess: async (created) => {
       setAttempt(null);
-      setEmail("");
+      setUsername("");
       setName("");
       setRole("GUEST");
       await invalidateManagementQueries();
+    },
+    onError: async (error) => {
+      if (apiErrorCode(error) === "IDEMPOTENCY_REPLAY") {
+        setAttempt(null);
+        await invalidateManagementQueries();
+      }
     }
   });
 
@@ -76,7 +90,7 @@ function UsersPageContent() {
   function submitInvitation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (inviteInFlight.current) return;
-    const payload = normalizeInvitationPayload({ email, name, role });
+    const payload = normalizeInvitationPayload({ username, name, role });
     const validationError = validateInvitationPayload(payload);
     if (validationError) {
       setFormError(validationError);
@@ -99,23 +113,24 @@ function UsersPageContent() {
       <div className="page-title">
         <div>
           <h1>사용자 관리</h1>
-          <p>업무 계정을 초대하고 이름, 역할, 활성 상태와 초대 수명주기를 관리합니다.</p>
+          <p>로컬 업무 계정과 역할, 활성 상태, 최초 설정 수명주기를 관리합니다.</p>
         </div>
       </div>
 
       <div className="grid two security-admin-grid">
         <form className="panel security-invite-form" onSubmit={submitInvitation}>
-          <h2>사용자 초대</h2>
-          <p className="muted">초대 메일의 일회용 링크를 수락한 사용자가 최초 비밀번호를 설정하면 활성화됩니다.</p>
+          <h2>사용자 추가</h2>
+          <p className="muted">일회용 설정 코드는 생성 직후 한 번만 표시됩니다. 실제 사용자에게 안전한 별도 채널로 전달하세요.</p>
           <label>
-            이메일
+            사용자 이름
             <input
               className="input"
-              type="email"
+              type="text"
               autoComplete="off"
-              maxLength={320}
-              value={email}
-              onChange={(event) => { setEmail(event.target.value); resetAttempt(); }}
+              maxLength={32}
+              pattern="[A-Za-z][A-Za-z0-9._-]{2,31}"
+              value={username}
+              onChange={(event) => { setUsername(event.target.value); resetAttempt(); }}
               disabled={invitation.isPending}
               required
             />
@@ -146,9 +161,16 @@ function UsersPageContent() {
           </label>
           {formError ? <div className="auth-error" role="alert">{formError}</div> : null}
           {invitation.error ? <div className="auth-error" role="alert">{invitationErrorMessage(invitation.error)}</div> : null}
+          {issuedSetupToken ? (
+            <div className="auth-help" role="status">
+              <strong>일회용 설정 코드</strong>
+              <code>{issuedSetupToken}</code>
+              <button className="button" type="button" onClick={() => setIssuedSetupToken(null)}>표시 닫기</button>
+            </div>
+          ) : null}
           <div className="toolbar">
             <button className="button primary" type="submit" disabled={invitation.isPending}>
-              {invitation.isPending ? "초대 요청 중…" : "초대 보내기"}
+              {invitation.isPending ? "추가 중…" : "사용자 추가"}
             </button>
             {attempt && invitation.isError ? (
               <button className="button" type="button" onClick={() => runInvitation(attempt)}>
@@ -161,8 +183,8 @@ function UsersPageContent() {
         <div className="panel">
           <h2>수명주기 원칙</h2>
           <div className="security-lifecycle-list">
-            <span>초대 발송 → 링크 수락 → 최초 비밀번호 설정 → 활성화</span>
-            <span>일반 로그인은 이메일과 비밀번호만 사용</span>
+            <span>설정 코드 전달 → 코드 수락 → 최초 비밀번호 설정 → 활성화</span>
+            <span>일반 로그인은 사용자 이름과 비밀번호만 사용</span>
             <span>계정은 삭제하지 않고 비활성화하며 마지막 총관리자는 서버가 보호</span>
           </div>
         </div>
@@ -172,7 +194,7 @@ function UsersPageContent() {
         <div className="security-panel-heading">
           <div>
             <h2>등록 사용자</h2>
-            <p className="muted">provider 식별자, 세션 정보, 초대 확인 값은 표시하지 않습니다.</p>
+            <p className="muted">credential, 세션 정보, 저장된 설정 코드 hash는 표시하지 않습니다.</p>
           </div>
           <button className="button" type="button" disabled={users.isFetching} onClick={() => void users.refetch()}>
             {users.isFetching ? "새로고침 중…" : "새로고침"}
@@ -187,6 +209,7 @@ function UsersPageContent() {
               key={user.id}
               currentUserId={auth.user?.id ?? null}
               user={user}
+              onSetupToken={(token) => setIssuedSetupToken(token)}
               onChanged={async (changedUser) => {
                 await invalidateManagementQueries();
                 if (changedUser.id === auth.user?.id) await auth.refreshAuth();
@@ -203,10 +226,12 @@ function UserEditor({
   user,
   currentUserId,
   onChanged
+  ,onSetupToken
 }: {
   user: UserSummary;
   currentUserId: string | null;
   onChanged(user: UserSummary): Promise<void>;
+  onSetupToken(token: string): void;
 }) {
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState(user.role);
@@ -237,7 +262,7 @@ function UserEditor({
 
   const reconcile = useMutation({
     mutationFn: async (action: "RETRY_INVITATION" | "CANCEL") => {
-      if (action === "CANCEL" && !window.confirm(`${user.email} 초대를 취소할까요?`)) throw new Error("CANCELLED");
+      if (action === "CANCEL" && !window.confirm(`${user.username} 설정 요청을 취소할까요?`)) throw new Error("CANCELLED");
       return parseUserSummary(await apiRequest<unknown>(
         `/users/${encodeURIComponent(user.id)}/reconcile-invitation`,
         { method: "POST", body: { action } }
@@ -246,7 +271,26 @@ function UserEditor({
     onSuccess: onChanged
   });
 
-  const visibleError = [update.error, reconcile.error].find((error) => error && (error as Error).message !== "CANCELLED");
+  const passwordReset = useMutation({
+    mutationFn: async () => {
+      if (!window.confirm(`${user.username} 사용자의 기존 세션을 폐기하고 새 설정 코드를 발급할까요?`)) {
+        throw new Error("CANCELLED");
+      }
+      const changed = parseUserSummary(await apiRequest<unknown>(
+        `/users/${encodeURIComponent(user.id)}/password-reset`,
+        { method: "POST" }
+      ));
+      if (changed.setupToken) onSetupToken(changed.setupToken);
+      const { setupToken: _discarded, ...safe } = changed;
+      return safe;
+    },
+    onSuccess: async (changed) => {
+      await onChanged(changed);
+    }
+  });
+
+  const visibleError = [update.error, reconcile.error, passwordReset.error]
+    .find((error) => error && (error as Error).message !== "CANCELLED");
   const dirty = name.trim() !== user.name || role !== user.role || isActive !== user.isActive;
   const canRetry = user.reconciliationActions.includes("RETRY_INVITATION");
   const canCancel = user.reconciliationActions.includes("CANCEL");
@@ -255,12 +299,12 @@ function UserEditor({
     <article className="security-user-card">
       <div className="security-user-identity">
         <strong>{user.name}{user.id === currentUserId ? " (현재 계정)" : ""}</strong>
-        <span>{user.email}</span>
+        <span>{user.username}</span>
         <div className="toolbar">
           <span className={`badge ${user.isActive ? "scale" : "stop_candidate"}`}>{user.isActive ? "활성" : "비활성"}</span>
           <span className="security-status-chip">{inviteStatusLabel(user.inviteStatus)}</span>
         </div>
-        <small>최근 로그인 {formatTimestamp(user.lastLoginAt)} · 초대 {formatTimestamp(user.invitedAt)}</small>
+        <small>최근 로그인 {formatTimestamp(user.lastLoginAt)} · 설정 요청 {formatTimestamp(user.invitedAt)}</small>
       </div>
       <div className="security-user-fields">
         <label>
@@ -290,8 +334,13 @@ function UserEditor({
             setIsActive(user.isActive);
           }}>취소</button>
         ) : null}
-        {canRetry ? <button className="button" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("RETRY_INVITATION")}>재초대</button> : null}
-        {canCancel ? <button className="button danger" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("CANCEL")}>초대 취소</button> : null}
+        {canRetry ? <button className="button" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("RETRY_INVITATION")}>설정 코드 재발급</button> : null}
+        {canCancel ? <button className="button danger" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("CANCEL")}>설정 요청 취소</button> : null}
+        {user.id !== currentUserId ? (
+          <button className="button" type="button" disabled={passwordReset.isPending} onClick={() => passwordReset.mutate()}>
+            {passwordReset.isPending ? "재설정 중…" : "비밀번호 재설정"}
+          </button>
+        ) : null}
       </div>
     </article>
   );

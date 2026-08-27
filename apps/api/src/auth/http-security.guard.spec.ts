@@ -6,7 +6,8 @@ describe("HttpSecurityGuard", () => {
   it("applies shared read limits and signed CSRF/origin checks to domain mutations", async () => {
     const security = {
       assertGeneralRead: vi.fn(),
-      assertGeneralMutation: vi.fn()
+      assertGeneralMutation: vi.fn(),
+      assertTrustedTransport: vi.fn()
     };
     const guard = new HttpSecurityGuard(security as never);
     await expect(guard.canActivate(context("GET", "/api/products?take=10"))).resolves.toBe(true);
@@ -18,7 +19,7 @@ describe("HttpSecurityGuard", () => {
   });
 
   it("does not double-consume stricter auth/user policies and exempts health probes", async () => {
-    const security = { assertGeneralRead: vi.fn(), assertGeneralMutation: vi.fn() };
+    const security = { assertGeneralRead: vi.fn(), assertGeneralMutation: vi.fn(), assertTrustedTransport: vi.fn() };
     const guard = new HttpSecurityGuard(security as never);
     for (const [method, path] of [
       ["POST", "/api/auth/login"],
@@ -31,6 +32,7 @@ describe("HttpSecurityGuard", () => {
     }
     expect(security.assertGeneralRead).not.toHaveBeenCalled();
     expect(security.assertGeneralMutation).not.toHaveBeenCalled();
+    expect(security.assertTrustedTransport).toHaveBeenCalledTimes(3);
   });
 
   it("normalizes queryless paths and classifies all costly route groups", () => {

@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   RequestContextMiddleware,
+  safeRouteTemplate,
   shouldLogRequestCompletion
 } from "./request-context";
 
@@ -65,5 +66,35 @@ describe("request completion logging", () => {
     const payload = String(log.mock.calls[0]?.[0]);
     expect(payload).toContain('"path":"/api/health/ready"');
     expect(payload).not.toContain("must-not-log");
+  });
+
+  it("ignores a caller-provided request id and replaces every unmatched path with a constant", () => {
+    const response = new EventEmitter() as EventEmitter & Partial<Response>;
+    response.statusCode = 200;
+    response.setHeader = vi.fn();
+    const request = {
+      method: "GET",
+      originalUrl: "/api/reports/44b5b46a-d596-4a52-88b5-63f5f017ee0f?token=secret",
+      url: "/api/reports/44b5b46a-d596-4a52-88b5-63f5f017ee0f?token=secret",
+      get: vi.fn(() => "attacker-controlled-id")
+    } as unknown as Request;
+
+    new RequestContextMiddleware().use(request, response as Response, vi.fn());
+
+    const requestIdHeader = (response.setHeader as ReturnType<typeof vi.fn>).mock.calls
+      .find((call) => call[0] === "X-Request-Id")?.[1];
+    expect(requestIdHeader).toMatch(/^[0-9a-f-]{36}$/);
+    expect(requestIdHeader).not.toBe("attacker-controlled-id");
+    expect(safeRouteTemplate(request)).toBe("/:unmatched");
+    expect(safeRouteTemplate({ originalUrl: "/api/not-found/alice@example.com/private.xlsx" } as Request)).toBe("/:unmatched");
+  });
+
+  it("prefers the server route template over concrete parameter values", () => {
+    const request = {
+      baseUrl: "/api/users",
+      route: { path: "/:id" },
+      originalUrl: "/api/users/private-value"
+    } as unknown as Request;
+    expect(safeRouteTemplate(request)).toBe("/api/users/:id");
   });
 });

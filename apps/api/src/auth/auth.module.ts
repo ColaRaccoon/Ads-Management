@@ -17,6 +17,8 @@ import { SupabaseJwtVerifier } from "./supabase-jwt.verifier";
 import { PostgresSecurityRateLimiter } from "./postgres-security-rate-limiter";
 import { InternalProbeGuard } from "./internal-probe.guard";
 import { HttpSecurityGuard } from "./http-security.guard";
+import { LocalAuthService } from "./local-auth.service";
+import { LocalAuthMaintenanceService } from "./local-auth-maintenance.service";
 
 @Module({
   imports: [CommonModule],
@@ -31,20 +33,23 @@ import { HttpSecurityGuard } from "./http-security.guard";
     AuthCookieService,
     AuthRequestSecurityService,
     AuthService,
+    LocalAuthService,
+    LocalAuthMaintenanceService,
     AuthenticationGuard,
     InternalProbeGuard,
     PermissionGuard,
     HttpSecurityGuard,
+    { provide: APP_GUARD, useExisting: HttpSecurityGuard },
     { provide: APP_GUARD, useExisting: AuthenticationGuard },
     { provide: APP_GUARD, useExisting: InternalProbeGuard },
-    { provide: APP_GUARD, useExisting: PermissionGuard },
-    { provide: APP_GUARD, useExisting: HttpSecurityGuard }
+    { provide: APP_GUARD, useExisting: PermissionGuard }
   ],
   exports: [
     AUTH_CONFIG,
     IDENTITY_PROVIDER,
     AuthCookieService,
     AuthService,
+    LocalAuthService,
     AuthRequestSecurityService,
     AuthenticationGuard,
     InternalProbeGuard,

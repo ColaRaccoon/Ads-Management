@@ -1,9 +1,10 @@
-import { HttpException } from "@nestjs/common";
+import { CallHandler, ExecutionContext, HttpException, mixin, NestInterceptor, Type } from "@nestjs/common";
 import { FileFieldsInterceptor, FileInterceptor } from "@nestjs/platform-express";
 import type { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
 import type { Request } from "express";
 import multer from "multer";
 import { sanitizeUploadedFilename } from "../common/encoding";
+import { assertLocalEdgeBodyDigest } from "../auth/request-security.service";
 
 const MIB = 1024 * 1024;
 const REQUEST_UPLOAD_STATE = Symbol("request-upload-state");
@@ -121,18 +122,32 @@ export class UploadTransportError extends HttpException {
 }
 
 export function uploadFileInterceptor(profile: UploadProfile) {
-  return FileInterceptor("file", singleUploadMulterOptions(profile));
+  return withEdgeBodyBinding(FileInterceptor("file", singleUploadMulterOptions(profile)));
 }
 
 export function coupangBundleInterceptor() {
-  return FileFieldsInterceptor(
+  return withEdgeBodyBinding(FileFieldsInterceptor(
     [
       { name: "sales", maxCount: 1 },
       { name: "ads", maxCount: 1 },
       { name: "margin", maxCount: 1 }
     ],
     bundleUploadMulterOptions()
-  );
+  ));
+}
+
+function withEdgeBodyBinding(BaseInterceptor: Type<NestInterceptor>) {
+  class EdgeBodyBoundUploadInterceptor extends BaseInterceptor {
+    intercept(context: ExecutionContext, next: CallHandler) {
+      return super.intercept(context, {
+        handle: () => {
+          assertLocalEdgeBodyDigest(context.switchToHttp().getRequest<Request>());
+          return next.handle();
+        }
+      });
+    }
+  }
+  return mixin(EdgeBodyBoundUploadInterceptor);
 }
 
 export function singleUploadMulterOptions(

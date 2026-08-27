@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { AuthService } from "../auth/auth.service";
 import { lockInvitationState } from "./invite-state-machine";
 import { UsersService } from "./users.service";
+import { supabaseIntegrationEnabled } from "../common/supabase-integration-target";
 
 const enabled = integrationEnabled();
 const integrationDescribe = enabled ? describe : describe.skip;
@@ -402,17 +403,4 @@ function invitationProvider(options?: {
   };
 }
 
-function integrationEnabled() {
-  if (process.env.RUN_DB_INTEGRATION !== "true") return false;
-  const raw = process.env.TEST_DATABASE_URL;
-  if (!raw) throw new Error("TEST_DATABASE_URL is required for DB integration tests.");
-  const target = new URL(raw);
-  if (
-    target.hostname !== "127.0.0.1" || target.port !== "55432" ||
-    target.pathname !== "/meta_ads_security_test" ||
-    target.searchParams.get("schema") !== "meta_ads_security_test"
-  ) {
-    throw new Error("DB integration tests require the isolated local security test database.");
-  }
-  return true;
-}
+function integrationEnabled() { return supabaseIntegrationEnabled("RUN_DB_INTEGRATION", "TEST_DATABASE_URL"); }

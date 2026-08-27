@@ -135,6 +135,10 @@ describe("authenticated API request layer", () => {
   it("reads either development or __Host CSRF cookie without exposing HttpOnly tokens", () => {
     expect(csrfTokenFromCookieString("one=1; meta_csrf=dev.token; two=2")).toBe("dev.token");
     expect(csrfTokenFromCookieString("__Host-meta_csrf=prod.token")).toBe("prod.token");
+    expect(csrfTokenFromCookieString("__Host-staging-meta_csrf=staging.token"))
+      .toBe("staging.token");
+    expect(csrfTokenFromCookieString("__Host-UPPER-meta_csrf=invalid")).toBeNull();
+    expect(csrfTokenFromCookieString(`__Host-${"a".repeat(21)}-meta_csrf=invalid`)).toBeNull();
     expect(csrfTokenFromCookieString("meta_access=secret")).toBeNull();
   });
 

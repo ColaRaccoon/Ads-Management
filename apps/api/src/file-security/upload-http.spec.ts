@@ -67,7 +67,7 @@ describe("STEP7-EVAL-001/002 actual Nest multipart response contract", () => {
   let baseUrl: string;
 
   beforeAll(async () => {
-    app = await NestFactory.create(UploadSecurityTestModule, { logger: false });
+    app = await NestFactory.create(UploadSecurityTestModule, { logger: false, abortOnError: false });
     app.useGlobalFilters(new ApiExceptionFilter());
     await app.listen(0, "127.0.0.1");
     const address = app.getHttpServer().address() as AddressInfo;

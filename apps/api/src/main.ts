@@ -34,7 +34,12 @@ async function bootstrap() {
   );
 
   const port = Number(process.env.PORT ?? 4000);
-  await app.listen(port);
+  await app.listen(port, "127.0.0.1");
+  process.stdout.write(`${JSON.stringify({
+    event: "api.ready",
+    environmentId: httpSecurityConfig.deploymentEnvironmentId,
+    runtimeConfigFingerprint: httpSecurityConfig.runtimeConfigFingerprint
+  })}\n`);
 }
 
 void bootstrap();

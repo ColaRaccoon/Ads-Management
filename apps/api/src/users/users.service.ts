@@ -83,6 +83,7 @@ export class UsersService {
     if (!isUuid(requestId)) throw userLifecycleError("IDEMPOTENCY_KEY_INVALID");
     let normalizedEmail: string;
     try {
+      if (!body.email) throw new Error("email required for provider-backed invitations");
       normalizedEmail = normalizeEmail(body.email);
     } catch {
       throw userLifecycleError("USER_EMAIL_INVALID");

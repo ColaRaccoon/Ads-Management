@@ -20,10 +20,12 @@ export class SupabaseJwtVerifier {
     @Inject(AUTH_CONFIG) private readonly config: AuthConfig,
     @Optional() @Inject(SUPABASE_JWT_KEY_RESOLVER) keyResolver?: JWTVerifyGetKey
   ) {
-    this.keyResolver = keyResolver ?? createRemoteJWKSet(
-      new URL(`${config.jwtIssuer}/.well-known/jwks.json`),
-      { cacheMaxAge: 10 * 60_000, cooldownDuration: 30_000 }
-    );
+    this.keyResolver = keyResolver ?? (config.provider === "supabase"
+      ? createRemoteJWKSet(
+          new URL(`${config.jwtIssuer}/.well-known/jwks.json`),
+          { cacheMaxAge: 10 * 60_000, cooldownDuration: 30_000 }
+        )
+      : async () => { throw authError("AUTH_PROVIDER_UNAVAILABLE"); });
   }
 
   async verify(token: string): Promise<VerifiedAccessToken> {

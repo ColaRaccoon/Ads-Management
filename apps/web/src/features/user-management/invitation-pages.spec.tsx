@@ -33,7 +33,7 @@ describe("one-time invitation pages", () => {
 
     renderWithAuth(<StrictMode><InvitationAcceptPage /></StrictMode>, auth);
 
-    expect(await screen.findByRole("button", { name: "초대 수락" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "설정 코드 수락" })).toBeTruthy();
     expect(window.location.hash).toBe("");
     expect(replaceState).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(replaceState.mock.calls)).not.toContain("abcdefghijklmnopqrstuvwxyz012345");
@@ -47,7 +47,7 @@ describe("one-time invitation pages", () => {
     const auth = authValue("anonymous");
     vi.mocked(auth.acceptInvitation).mockImplementation(() => new Promise((done) => { resolve = () => done(authMe("VERIFIED_PENDING_PASSWORD")); }));
     renderWithAuth(<InvitationAcceptPage />, auth);
-    const button = await screen.findByRole("button", { name: "초대 수락" });
+    const button = await screen.findByRole("button", { name: "설정 코드 수락" });
 
     fireEvent.click(button);
     fireEvent.click(button);
@@ -66,7 +66,7 @@ describe("one-time invitation pages", () => {
       .mockResolvedValueOnce(authMe("VERIFIED_PENDING_PASSWORD"));
     renderWithAuth(<InvitationAcceptPage />, auth);
 
-    fireEvent.click(await screen.findByRole("button", { name: "초대 수락" }));
+    fireEvent.click(await screen.findByRole("button", { name: "설정 코드 수락" }));
     expect(await screen.findByText(/요청이 너무 많습니다/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
@@ -81,7 +81,7 @@ describe("one-time invitation pages", () => {
     vi.mocked(auth.acceptInvitation).mockRejectedValue(new ApiError(409, "raw account", "ACTIVE_SESSION_PRESENT"));
     renderWithAuth(<InvitationAcceptPage />, auth);
 
-    fireEvent.click(await screen.findByRole("button", { name: "초대 수락" }));
+    fireEvent.click(await screen.findByRole("button", { name: "설정 코드 수락" }));
     expect(await screen.findByText(/다른 계정으로 이미 로그인/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "현재 계정에서 로그아웃" })).toBeTruthy();
     expect(auth.logout).not.toHaveBeenCalled();
@@ -97,7 +97,7 @@ describe("one-time invitation pages", () => {
       );
       renderWithAuth(<InvitationAcceptPage />, auth);
 
-      fireEvent.click(await screen.findByRole("button", { name: "초대 수락" }));
+      fireEvent.click(await screen.findByRole("button", { name: "설정 코드 수락" }));
       expect(await screen.findByRole("button", { name: "현재 계정에서 로그아웃" })).toBeTruthy();
       expect(auth.logout).not.toHaveBeenCalled();
     }
@@ -107,21 +107,21 @@ describe("one-time invitation pages", () => {
     window.history.replaceState(null, "", "/invite/accept#token_hash=abcdefghijklmnopqrstuvwxyz012345");
     const auth = authValue("anonymous");
     renderWithAuth(<InvitationAcceptPage />, auth);
-    expect(await screen.findByRole("button", { name: "초대 수락" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "설정 코드 수락" })).toBeTruthy();
 
     const pageShow = new Event("pageshow");
     Object.defineProperty(pageShow, "persisted", { value: true });
     fireEvent(window, pageShow);
 
     expect(await screen.findByText(/브라우저 기록에서 복원된/)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "초대 수락" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "설정 코드 수락" })).toBeNull();
     expect(auth.acceptInvitation).not.toHaveBeenCalled();
   });
 
   it("mounts password inputs only for onboarding and prevents duplicate completion", async () => {
     const loading = authValue("loading");
     const { rerender } = renderWithAuth(<CompleteInvitationPage />, loading);
-    expect(screen.getByText("초대 설정 세션을 확인하고 있습니다.")).toBeTruthy();
+    expect(screen.getByText("최초 설정 세션을 확인하고 있습니다.")).toBeTruthy();
     expect(screen.queryByLabelText("새 비밀번호")).toBeNull();
 
     const onboarding = authValue("onboarding");
@@ -139,7 +139,7 @@ describe("one-time invitation pages", () => {
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/dashboard"));
   });
 
-  it("keeps ordinary login to exactly email and password inputs", () => {
+  it("keeps ordinary login to exactly username and password inputs", () => {
     renderWithAuth(<LoginPage />, authValue("anonymous"));
     const inputs = screen.getAllByRole("textbox").concat(screen.getByLabelText("비밀번호"));
     expect(inputs).toHaveLength(2);
@@ -159,7 +159,7 @@ function authValue(status: AuthContextValue["status"]): AuthContextValue {
   const authenticated = status === "authenticated";
   return {
     user: authenticated
-      ? { id: "active-user", email: "active@example.test", name: "Active", role: "USER", isActive: true, inviteStatus: "ACTIVE" }
+      ? { id: "active-user", username: "active.user", email: null, name: "Active", role: "USER", isActive: true, inviteStatus: "ACTIVE" }
       : null,
     permissions: authenticated ? ["data.read"] : [],
     isLoading: status === "loading",
@@ -176,7 +176,7 @@ function authValue(status: AuthContextValue["status"]): AuthContextValue {
 
 function authMe(inviteStatus: "VERIFIED_PENDING_PASSWORD" | "ACTIVE") {
   return {
-    user: { id: "invite-user", email: "invite@example.test", name: "Invite", role: "USER" as const, isActive: true, inviteStatus },
+    user: { id: "invite-user", username: "invite.user", email: null, name: "Invite", role: "USER" as const, isActive: true, inviteStatus },
     permissions: inviteStatus === "ACTIVE" ? ["data.read" as const] : [],
     authorizationVersion: "opaque-v1"
   };

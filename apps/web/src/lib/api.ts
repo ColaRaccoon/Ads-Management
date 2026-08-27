@@ -265,7 +265,11 @@ export function csrfTokenFromCookieString(cookieString: string) {
     const separator = part.indexOf("=");
     if (separator <= 0) continue;
     const name = part.slice(0, separator).trim();
-    if (name !== "meta_csrf" && name !== "__Host-meta_csrf") continue;
+    if (
+      name !== "meta_csrf" &&
+      name !== "__Host-meta_csrf" &&
+      !/^__Host-[a-z0-9](?:[a-z0-9-]{0,18}[a-z0-9])?-meta_csrf$/.test(name)
+    ) continue;
     try {
       return decodeURIComponent(part.slice(separator + 1).trim());
     } catch {

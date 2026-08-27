@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
-import { createReadStream, createWriteStream } from "node:fs";
-import { link, lstat, mkdir, realpath, rm, stat } from "node:fs/promises";
+import { constants, createReadStream, createWriteStream } from "node:fs";
+import { access, link, lstat, mkdir, realpath, rm, stat, statfs } from "node:fs/promises";
 import path from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -21,6 +21,18 @@ export class LocalFileStorage implements FileStorage {
 
   constructor(rootPath: string) {
     this.rootPath = path.resolve(rootPath);
+  }
+
+  async assertReady(minimumFreeBytes = 104_857_600) {
+    await assertNoReparseComponents(this.rootPath);
+    const metadata = await lstat(this.rootPath);
+    if (!metadata.isDirectory() || metadata.isSymbolicLink()) throw new InvalidStorageKeyError();
+    await realpath(this.rootPath);
+    await access(this.rootPath, constants.R_OK | constants.W_OK);
+    const volume = await statfs(this.rootPath, { bigint: true });
+    if (volume.bavail * volume.bsize < BigInt(minimumFreeBytes)) {
+      throw new StorageObjectTooLargeError();
+    }
   }
 
   async put(input: FileStoragePutInput): Promise<StoredFile> {
@@ -102,7 +114,9 @@ export class LocalFileStorage implements FileStorage {
   }
 
   private async safeTargetPath(key: string, createParent: boolean) {
+    await assertNoReparseComponents(this.rootPath);
     await mkdir(this.rootPath, { recursive: true, mode: 0o700 });
+    await assertNoReparseComponents(this.rootPath);
     const rootRealPath = await realpath(this.rootPath);
     const targetPath = path.resolve(this.rootPath, ...key.split("/"));
     const relative = path.relative(this.rootPath, targetPath);
@@ -115,7 +129,11 @@ export class LocalFileStorage implements FileStorage {
       throw new InvalidStorageKeyError();
     }
     const parentPath = path.dirname(targetPath);
-    if (createParent) await mkdir(parentPath, { recursive: true, mode: 0o700 });
+    if (createParent) {
+      await assertNoReparseComponents(parentPath);
+      await mkdir(parentPath, { recursive: true, mode: 0o700 });
+    }
+    await assertNoReparseComponents(parentPath);
     let parentRealPath: string;
     try {
       parentRealPath = await realpath(parentPath);
@@ -155,6 +173,24 @@ export class LocalFileStorage implements FileStorage {
       hash.update(chunk);
     }
     return { key, hash: hash.digest("hex"), size };
+  }
+}
+
+async function assertNoReparseComponents(target: string) {
+  const resolved = path.resolve(target);
+  const parsed = path.parse(resolved);
+  const relative = resolved.slice(parsed.root.length).split(path.sep).filter(Boolean);
+  let current = parsed.root;
+  for (const segment of relative) {
+    current = path.join(current, segment);
+    let metadata;
+    try {
+      metadata = await lstat(current);
+    } catch (error) {
+      if (isMissing(error)) continue;
+      throw error;
+    }
+    if (metadata.isSymbolicLink()) throw new InvalidStorageKeyError();
   }
 }
 

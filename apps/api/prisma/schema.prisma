@@ -202,6 +202,8 @@ enum StorageTombstoneState {
 
 model AppUser {
   id              String           @id @default(uuid()) @db.Uuid
+  username        String?          @unique @db.VarChar(64)
+  normalizedUsername String?       @unique @map("normalized_username") @db.VarChar(64)
   email           String?          @unique
   normalizedEmail String?          @unique @map("normalized_email")
   name            String
@@ -219,6 +221,9 @@ model AppUser {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   authSessions    AppAuthSession[]
+  localCredential LocalCredential?
+  localSetupTokens LocalAccountSetupToken[] @relation("LocalSetupTokenSubject")
+  localSetupTokensCreated LocalAccountSetupToken[] @relation("LocalSetupTokenCreator")
   creativeChangeLogs CreativeChangeLog[]  @relation("CreativeChangeLogCreator")
   productChangeLogs  ProductChangeLog[]   @relation("ProductChangeLogCreator")
   productMatchRules  ProductMatchRule[]   @relation("ProductMatchRuleCreator")
@@ -245,7 +250,13 @@ model AppUser {
 model AppAuthSession {
   id                String    @id @default(uuid()) @db.Uuid
   appUserId         String    @map("app_user_id") @db.Uuid
-  providerSessionId String    @unique @map("provider_session_id")
+  providerSessionId String?   @unique @map("provider_session_id")
+  localTokenHash    String?   @unique @map("local_token_hash") @db.Char(64)
+  previousLocalTokenHash String? @map("previous_local_token_hash") @db.Char(64)
+  previousTokenValidUntil DateTime? @map("previous_token_valid_until") @db.Timestamptz(3)
+  idleExpiresAt     DateTime? @map("idle_expires_at") @db.Timestamptz(3)
+  absoluteExpiresAt DateTime? @map("absolute_expires_at") @db.Timestamptz(3)
+  onboardingOnly    Boolean   @default(false) @map("onboarding_only")
   revokedAt         DateTime? @map("revoked_at")
   lastSeenAt        DateTime? @map("last_seen_at")
   refreshedAt       DateTime? @map("refreshed_at")
@@ -254,7 +265,43 @@ model AppAuthSession {
   appUser           AppUser   @relation(fields: [appUserId], references: [id], onDelete: Restrict)
 
   @@index([appUserId, revokedAt])
+  @@index([previousLocalTokenHash, previousTokenValidUntil])
   @@map("app_auth_sessions")
+}
+
+model LocalCredential {
+  appUserId       String   @id @map("app_user_id") @db.Uuid
+  algorithm       String   @default("scrypt") @db.VarChar(16)
+  version         Int      @default(1)
+  costN           Int      @map("cost_n")
+  blockSizeR      Int      @map("block_size_r")
+  parallelizationP Int     @map("parallelization_p")
+  keyLength       Int      @map("key_length")
+  salt            String   @db.VarChar(128)
+  passwordHash    String   @map("password_hash") @db.VarChar(256)
+  passwordChangedAt DateTime @default(now()) @map("password_changed_at") @db.Timestamptz(3)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  appUser         AppUser  @relation(fields: [appUserId], references: [id], onDelete: Restrict)
+
+  @@map("local_credentials")
+}
+
+model LocalAccountSetupToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  appUserId   String    @map("app_user_id") @db.Uuid
+  tokenHash   String    @unique @map("token_hash") @db.Char(64)
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt      DateTime? @map("used_at") @db.Timestamptz(3)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdBy   String?   @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  appUser     AppUser   @relation("LocalSetupTokenSubject", fields: [appUserId], references: [id], onDelete: Restrict)
+  creator     AppUser?  @relation("LocalSetupTokenCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([appUserId, expiresAt])
+  @@index([createdBy])
+  @@map("local_account_setup_tokens")
 }
 
 model SecurityRateLimitBucket {
@@ -268,6 +315,15 @@ model SecurityRateLimitBucket {
   @@id([keyHash, windowStart, windowMs])
   @@index([expiresAt])
   @@map("security_rate_limit_buckets")
+}
+
+model LocalEdgeRequestNonce {
+  nonceHash String   @id @map("nonce_hash") @db.Char(64)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@map("local_edge_request_nonces")
 }
 
 model SecurityAuditEvent {

@@ -9,7 +9,7 @@ export class HealthController {
   @Get("live")
   @Public()
   live() {
-    return { status: "live" };
+    return { status: "live", releaseId: process.env.LOCAL_RELEASE_ID ?? null };
   }
 
   @Get("ready")

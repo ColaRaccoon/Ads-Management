@@ -128,15 +128,18 @@ export class StorageTombstoneService {
           });
         }
         if (current.state === StorageTombstoneState.RETAINED) return safeResult(current);
-        if (current.state === StorageTombstoneState.RESTORED || current.state === StorageTombstoneState.PURGED) {
+        if (current.state === StorageTombstoneState.PURGED) {
           throw new ConflictException({
             code: "STORAGE_TOMBSTONE_STATE_CONFLICT",
             message: "The storage tombstone cannot be retained from its current state."
           });
         }
-        await this.completeRetention(resolved.storage, current);
+        const transition = current.state === StorageTombstoneState.RESTORED
+          ? await tx.storageTombstone.update({where:{id:current.id},data:{state:StorageTombstoneState.PENDING,deletedAt:new Date(),purgeAfter:new Date(Date.now()+this.retentionDays()*86_400_000),restoredAt:null,failureCode:null}})
+          : current;
+        await this.completeRetention(resolved.storage, transition);
         const retained = await tx.storageTombstone.update({
-          where: { id: current.id },
+          where: { id: transition.id },
           data: { state: StorageTombstoneState.RETAINED, failureCode: null }
         });
         return safeResult(retained);
@@ -241,6 +244,18 @@ export class StorageTombstoneService {
             code: "STORAGE_PURGE_NOT_DUE",
             message: "The object retention period has not expired."
           });
+        }
+        if (tombstone.domain === StorageTombstoneDomain.META_UPLOAD) {
+          const activeBusinessRecord = await tx.uploadBatch.findUnique({
+            where: { id: tombstone.businessRecordId },
+            select: { id: true }
+          });
+          if (activeBusinessRecord) {
+            throw new ConflictException({
+              code: "STORAGE_PURGE_BUSINESS_RECORD_ACTIVE",
+              message: "The retained upload is still referenced by an active business record."
+            });
+          }
         }
         const storage = this.storageForRow(tombstone.domain, tombstone.provider);
         const activeExists = await storage.exists(tombstone.originalKey);

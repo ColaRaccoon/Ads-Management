@@ -26,6 +26,7 @@ export type AuthenticatedUser = {
   id: string;
   authUserId: string;
   email: string | null;
+  username?: string | null;
   name: string;
   role: AppRole;
   inviteStatus: InviteStatus;
@@ -43,6 +44,7 @@ export type AuthUserResponse = {
   user: {
     id: string;
     email: string | null;
+    username?: string | null;
     name: string;
       role: AppRole;
       isActive: boolean;

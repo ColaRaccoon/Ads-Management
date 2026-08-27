@@ -3,6 +3,12 @@ import { ConfigService } from "@nestjs/config";
 import { Prisma, ReportType } from "@prisma/client";
 import ExcelJS from "exceljs";
 import { createHash, randomUUID } from "node:crypto";
+import { createReadStream, createWriteStream } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { PrismaService } from "../common/prisma.service";
 import { parseDateRange } from "../common/date-range";
 import { safeExportCellValue } from "../common/safe-export-cell";
@@ -14,6 +20,7 @@ import {
 import {
   FileStorage,
   InvalidStorageKeyError,
+  StorageIntegrityError,
   StorageObjectNotFoundError
 } from "../storage/file-storage";
 import {
@@ -21,6 +28,10 @@ import {
   parseStorageReference,
   storageReference
 } from "../storage/storage-reference";
+import {
+  DEFAULT_TEMP_STORAGE_BUDGET_BYTES,
+  temporaryStorageBudget
+} from "../storage/temporary-storage-budget";
 
 @Injectable()
 export class ReportsService {
@@ -115,9 +126,19 @@ export class ReportsService {
     const extension = report.reportType === ReportType.DAILY_HTML ? "html" : "xlsx";
     try {
       const resolved = this.storageFromStoredReference(report.filePath);
+      if (!report.fileHashSha256 || !/^[a-f0-9]{64}$/i.test(report.fileHashSha256)) {
+        throw new StorageIntegrityError();
+      }
       const stored = await resolved.storage.getStream(resolved.key);
+      const verified = await verifyDownloadBeforePublication(
+        stored,
+        report.fileHashSha256,
+        this.maxStoredReportBytes,
+        this.temporaryStorageBudgetBytes,
+        this.downloadMaxLifetimeMs
+      );
       return {
-        ...stored,
+        ...verified,
         contentType: extension === "html"
           ? "text/html; charset=utf-8"
           : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -129,6 +150,7 @@ export class ReportsService {
       if (error instanceof StorageObjectNotFoundError || error instanceof InvalidStorageKeyError) {
         throw new NotFoundException({ code: "REPORT_NOT_FOUND", message: "보고서 파일을 찾을 수 없습니다." });
       }
+      if (error instanceof StorageIntegrityError) throw reportIntegrityUnavailable();
       throw new ServiceUnavailableException({
         code: "REPORT_STORAGE_UNAVAILABLE",
         message: "The report storage service is temporarily unavailable."
@@ -137,13 +159,13 @@ export class ReportsService {
   }
 
   private async renderHtml(from: string, to: string) {
-    const [summary, products, adsets, unmatched, decisions] = await Promise.all([
-      this.metricsService.dashboardSummary(from, to),
-      this.metricsService.productMetrics(from, to),
-      this.metricsService.adsetMetrics({ from, to }),
-      this.metricsService.unmatchedMetrics(from, to),
-      this.prisma.decisionLog.findMany({ where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) }, take: 20 })
-    ]);
+    const [summary, products, adsets, unmatched, decisions] = await this.reportSnapshot((client) => Promise.all([
+      this.metricsService.dashboardSummary(from, to, undefined, undefined, client),
+      this.metricsService.productMetrics(from, to, undefined, client),
+      this.metricsService.adsetMetrics({ from, to }, client),
+      this.metricsService.unmatchedMetrics(from, to, undefined, client),
+      client.decisionLog.findMany({ where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) }, take: 20 })
+    ]));
     const bestProduct = products.sort((a, b) => (b.totals.marginKrw ?? -Infinity) - (a.totals.marginKrw ?? -Infinity))[0];
     const worstProduct = products.sort((a, b) => (a.totals.marginKrw ?? Infinity) - (b.totals.marginKrw ?? Infinity))[0];
     return `<!doctype html>
@@ -184,20 +206,20 @@ export class ReportsService {
   }
 
   private async renderWorkbook(from: string, to: string, reportType: ReportType) {
-    const [summary, products, adsets, unmatched, decisions, changeLogs] = await Promise.all([
-      this.metricsService.dashboardSummary(from, to),
-      this.metricsService.productMetrics(from, to),
-      this.metricsService.adsetMetrics({ from, to }),
-      this.metricsService.unmatchedMetrics(from, to),
-      this.prisma.decisionLog.findMany({
+    const [summary, products, adsets, unmatched, decisions, changeLogs] = await this.reportSnapshot((client) => Promise.all([
+      this.metricsService.dashboardSummary(from, to, undefined, undefined, client),
+      this.metricsService.productMetrics(from, to, undefined, client),
+      this.metricsService.adsetMetrics({ from, to }, client),
+      this.metricsService.unmatchedMetrics(from, to, undefined, client),
+      client.decisionLog.findMany({
         where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) },
         orderBy: { createdAt: "desc" }
       }),
-      this.prisma.changeLog.findMany({
+      client.changeLog.findMany({
         where: { actionDate: { gte: new Date(`${from}T00:00:00.000Z`), lte: new Date(`${to}T00:00:00.000Z`) } },
         orderBy: { actionDate: "desc" }
       })
-    ]);
+    ]));
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "Meta Ads Performance Hub";
@@ -234,6 +256,19 @@ export class ReportsService {
     return storageReference(this.storage.provider, key);
   }
 
+  private reportSnapshot<T>(work: (client: Prisma.TransactionClient) => Promise<T>) {
+    const transaction = (this.prisma as PrismaService & { $transaction?: PrismaService["$transaction"] }).$transaction;
+    if (typeof transaction !== "function") {
+      // Lightweight unit-test doubles do not expose Prisma transactions.
+      return work(this.prisma as unknown as Prisma.TransactionClient);
+    }
+    return this.prisma.$transaction(work, {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+      maxWait: 5_000,
+      timeout: 60_000
+    });
+  }
+
   private storageFromStoredReference(reference: string) {
     const parsed = parseStorageReference(reference);
     if (parsed) {
@@ -264,6 +299,99 @@ export class ReportsService {
     return (this.fileStorage ??= configuredFileStorage(this.config, "reports"));
   }
 
+  private get maxStoredReportBytes() {
+    const configured = Number(this.config.get<string>("SUPABASE_STORAGE_MAX_OBJECT_BYTES") ?? 52_428_800);
+    return Number.isSafeInteger(configured) && configured > 0 ? configured : 52_428_800;
+  }
+
+  private get temporaryStorageBudgetBytes() {
+    const configured = Number(
+      this.config.get<string>("TEMP_STORAGE_BUDGET_BYTES") ?? DEFAULT_TEMP_STORAGE_BUDGET_BYTES
+    );
+    return Number.isSafeInteger(configured) && configured > 0
+      ? configured
+      : DEFAULT_TEMP_STORAGE_BUDGET_BYTES;
+  }
+
+  private get downloadMaxLifetimeMs() {
+    const configured = Number(this.config.get<string>("REPORT_DOWNLOAD_MAX_LIFETIME_MS") ?? 300_000);
+    return Number.isSafeInteger(configured) && configured >= 1_000 && configured <= 300_000
+      ? configured
+      : 300_000;
+  }
+
+}
+
+function reportIntegrityUnavailable() {
+  return new ServiceUnavailableException({
+    code: "REPORT_STORAGE_INTEGRITY_FAILED",
+    message: "The stored report failed integrity verification."
+  });
+}
+
+async function verifyDownloadBeforePublication(
+  stored: Awaited<ReturnType<FileStorage["getStream"]>>,
+  expectedHashSha256: string,
+  maxBytes: number,
+  temporaryStorageBudgetBytes: number,
+  downloadMaxLifetimeMs: number
+) {
+  if (!Number.isSafeInteger(stored.size) || stored.size < 0 || stored.size > maxBytes) {
+    stored.stream.destroy();
+    throw new StorageIntegrityError();
+  }
+  let lease: ReturnType<typeof temporaryStorageBudget.acquire>;
+  try {
+    lease = temporaryStorageBudget.acquire(stored.size, temporaryStorageBudgetBytes);
+  } catch (error) {
+    stored.stream.destroy();
+    throw error;
+  }
+  let root: string | undefined;
+  try {
+    root = await mkdtemp(path.join(tmpdir(), "meta-report-download-"));
+    const target = path.join(root, "verified-object");
+    const hash = createHash("sha256");
+    let size = 0;
+    const measure = new Transform({
+      transform(chunk: Buffer, _encoding, callback) {
+        size += chunk.length;
+        if (size > maxBytes || size > stored.size) return callback(new StorageIntegrityError());
+        hash.update(chunk);
+        callback(null, chunk);
+      }
+    });
+    await pipeline(stored.stream, measure, createWriteStream(target, { flags: "wx", mode: 0o600 }));
+    if (size !== stored.size || hash.digest("hex") !== expectedHashSha256.toLowerCase()) {
+      throw new StorageIntegrityError();
+    }
+    const stream = createReadStream(target);
+    let cleaned = false;
+    let lifetimeTimer: NodeJS.Timeout | undefined;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      if (lifetimeTimer) clearTimeout(lifetimeTimer);
+      void rm(root as string, { recursive: true, force: true })
+        .catch(() => undefined)
+        .finally(() => lease.release());
+    };
+    lifetimeTimer = setTimeout(() => {
+      stream.destroy(new StorageIntegrityError());
+    }, downloadMaxLifetimeMs);
+    lifetimeTimer.unref();
+    stream.once("close", cleanup);
+    stream.once("error", cleanup);
+    return { stream, size };
+  } catch (error) {
+    try {
+      if (root) await rm(root, { recursive: true, force: true }).catch(() => undefined);
+    } finally {
+      lease.release();
+    }
+    if (error instanceof StorageIntegrityError) throw error;
+    throw new StorageIntegrityError();
+  }
 }
 
 function parseReportType(value?: string): ReportType {

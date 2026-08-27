@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   experimental: {
     // Meta CSV imports perform sequential writes to the remote database and
     // can legitimately take longer than Next's 30-second development proxy
@@ -8,22 +9,28 @@ const nextConfig = {
     proxyTimeout: 300_000
   },
   async rewrites() {
+    const apiTarget = process.env.NODE_ENV === "production"
+      ? `http://127.0.0.1:${internalPort(process.env.API_INTERNAL_PORT, 4200)}/api`
+      : process.env.API_PROXY_TARGET ?? "http://localhost:4100/api";
     return [{
       source: "/backend-api/:path*",
-      destination: `${process.env.API_PROXY_TARGET ?? "http://localhost:4100/api"}/:path*`
+      destination: `${apiTarget}/:path*`
     }];
   },
   async headers() {
     return [{
       source: "/:path*",
-      headers: securityHeaders(process.env.NODE_ENV === "production")
+      headers: securityHeaders(
+        process.env.NODE_ENV === "production",
+        process.env.HSTS_ENABLED === "true"
+      )
     }];
   }
 };
 
 export default nextConfig;
 
-export function securityHeaders(production) {
+export function securityHeaders(production, hstsEnabled = false) {
   const scriptSources = ["'self'", "'unsafe-inline'"];
   const connectSources = ["'self'"];
   if (!production) {
@@ -52,11 +59,21 @@ export function securityHeaders(production) {
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: "DENY" }
   ];
-  if (production) {
+  if (production && hstsEnabled) {
     headers.push({
       key: "Strict-Transport-Security",
-      value: "max-age=31536000; includeSubDomains"
+      value: "max-age=300"
     });
   }
   return headers;
+}
+
+function internalPort(value, fallback) {
+  const normalized = value?.trim() || String(fallback);
+  if (!/^\d+$/.test(normalized)) throw new Error("API_INTERNAL_PORT must be an integer.");
+  const port = Number(normalized);
+  if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) {
+    throw new Error("API_INTERNAL_PORT must be between 1024 and 65535.");
+  }
+  return port;
 }

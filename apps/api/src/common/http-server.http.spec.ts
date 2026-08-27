@@ -31,7 +31,7 @@ afterEach(async () => {
 
 describe("configured HTTP transport", () => {
   it("returns a stable 413 with request ID, no-store, and security headers", async () => {
-    app = await NestFactory.create(TransportTestModule, { bodyParser: false, logger: false });
+    app = await NestFactory.create(TransportTestModule, { bodyParser: false, logger: false, abortOnError: false });
     app.setGlobalPrefix("api");
     app.useGlobalFilters(new ApiExceptionFilter());
     configureHttpServer(app, {
@@ -55,14 +55,16 @@ describe("configured HTTP transport", () => {
       body: JSON.stringify({ value: "x".repeat(512) })
     });
     expect(response.status).toBe(413);
-    await expect(response.json()).resolves.toEqual({
+    const payload = await response.json() as { requestId: string };
+    expect(payload).toEqual({
       code: "PAYLOAD_TOO_LARGE",
       message: "The request payload is too large.",
       details: null,
-      requestId: "request-from-client"
+      requestId: expect.stringMatching(/^[0-9a-f-]{36}$/)
     });
     expect(response.headers.get("retry-after")).toBeNull();
-    expect(response.headers.get("x-request-id")).toBe("request-from-client");
+    expect(response.headers.get("x-request-id")).toBe(payload.requestId);
+    expect(payload.requestId).not.toBe("request-from-client");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
     expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
@@ -70,7 +72,7 @@ describe("configured HTTP transport", () => {
   });
 
   it("does not grant CORS to an origin outside the exact allowlist", async () => {
-    app = await NestFactory.create(TransportTestModule, { bodyParser: false, logger: false });
+    app = await NestFactory.create(TransportTestModule, { bodyParser: false, logger: false, abortOnError: false });
     app.setGlobalPrefix("api");
     configureHttpServer(app, {
       allowedOrigins: new Set(["https://app.example.com"])
@@ -133,7 +135,7 @@ describe("configured HTTP transport", () => {
 });
 
 async function createTransportApp(trustProxyHops: number) {
-  const instance = await NestFactory.create(TransportTestModule, { bodyParser: false, logger: false });
+  const instance = await NestFactory.create(TransportTestModule, { bodyParser: false, logger: false, abortOnError: false });
   instance.setGlobalPrefix("api");
   configureHttpServer(instance, {
     allowedOrigins: new Set(["http://localhost:3200"])

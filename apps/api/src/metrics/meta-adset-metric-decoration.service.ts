@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { numberFrom } from "../common/date-range";
 import { formatDateOnly, toDateOnly } from "../domain/date-number";
@@ -16,9 +17,14 @@ export class MetaAdsetMetricDecorationService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async decoratedMetrics(fromDate: Date, toDate: Date, deliveryStatusInput?: string) {
+  async decoratedMetrics(
+    fromDate: Date,
+    toDate: Date,
+    deliveryStatusInput?: string,
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
     const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
-    const metrics = await this.prisma.metaAdsetDailyMetric.findMany({
+    const metrics = await client.metaAdsetDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: fromDate, lte: toDate },
@@ -27,26 +33,29 @@ export class MetaAdsetMetricDecorationService {
       include: { product: true, metaAdset: true },
       orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
     });
-    return this.decorate(metrics);
+    return this.decorate(metrics, client);
   }
 
   aggregate(rows: DecoratedMetric[]) {
     return aggregateDecoratedMetrics(this.periodCalculator, rows);
   }
 
-  async decorate(metrics: MetricWithRelations[]): Promise<DecoratedMetric[]> {
+  async decorate(
+    metrics: MetricWithRelations[],
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ): Promise<DecoratedMetric[]> {
     const productIds = Array.from(new Set(metrics.map((metric) => metric.productId).filter(Boolean))) as string[];
     const metricDates = Array.from(new Set(metrics.map((metric) => formatDateOnly(metric.metricDate))));
     const [costRules, cpaRules, exchangeRates] = await Promise.all([
-      this.prisma.productCostRule.findMany({
+      client.productCostRule.findMany({
         where: { productId: { in: productIds } },
         orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
       }),
-      this.prisma.productCpaRule.findMany({
+      client.productCpaRule.findMany({
         where: { productId: { in: productIds } },
         orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
       }),
-      this.prisma.exchangeRate.findMany({
+      client.exchangeRate.findMany({
         where: {
           baseCurrency: "USD",
           quoteCurrency: "KRW",
@@ -56,7 +65,7 @@ export class MetaAdsetMetricDecorationService {
       })
     ]);
     const exchangeRateByDate = new Map(exchangeRates.map((rate) => [formatDateOnly(rate.rateDate), rate]));
-    const adsetPurchaseCounts = await this.correctedAdsetPurchaseCounts(metrics);
+    const adsetPurchaseCounts = await this.correctedAdsetPurchaseCounts(metrics, client);
     return metrics.map((metric) => {
       const metricDate = formatDateOnly(metric.metricDate);
       const spendUsd = numberFrom(metric.spendUsd);
@@ -162,14 +171,17 @@ export class MetaAdsetMetricDecorationService {
     });
   }
 
-  async correctedAdsetPurchaseCounts(metrics: MetricWithRelations[]) {
+  async correctedAdsetPurchaseCounts(
+    metrics: MetricWithRelations[],
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
     if (metrics.length === 0) {
       return new Map<string, number>();
     }
 
     const metricDates = Array.from(new Set(metrics.map((metric) => formatDateOnly(metric.metricDate))));
     const metaAdsetIds = Array.from(new Set(metrics.map((metric) => metric.metaAdsetId)));
-    const adMetrics = await this.prisma.metaAdDailyMetric.findMany({
+    const adMetrics = await client.metaAdDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { in: metricDates.map((date) => toDateOnly(date)).filter((date): date is Date => Boolean(date)) },

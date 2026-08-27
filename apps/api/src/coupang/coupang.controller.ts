@@ -281,15 +281,16 @@ export class CoupangController {
   @RequirePermissions("operations.run")
   replaceManualPurchasesForDate(
     @Param() params: CoupangManualPurchaseDateParamDto,
-    @Body() body: CoupangManualPurchasesBodyDto
+    @Body() body: CoupangManualPurchasesBodyDto,
+    @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.coupangService.replaceManualPurchasesForDate(params.date, body);
+    return this.coupangService.replaceManualPurchasesForDate(params.date, body, actor.id);
   }
 
   @Delete("manual-purchases/:id")
   @RequirePermissions("operations.run")
-  deleteManualPurchase(@Param() params: CoupangIdParamDto) {
-    return this.coupangService.deleteManualPurchase(params.id);
+  deleteManualPurchase(@Param() params: CoupangIdParamDto, @CurrentUser() actor: AuthenticatedUser) {
+    return this.coupangService.deleteManualPurchase(params.id, actor.id);
   }
 
   @Post("rematch")

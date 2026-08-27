@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="account-toolbar">
             <div className="account-summary">
               <strong>{user?.name ?? "사용자"}</strong>
-              <span>{user?.email ?? "이메일 없음"} · {roleLabel(user?.role)}</span>
+              <span>{user?.username ?? user?.email ?? "식별자 없음"} · {roleLabel(user?.role)}</span>
             </div>
             <button className="button" type="button" onClick={() => void logout()}>
               <LogOut size={15} />

@@ -1,10 +1,12 @@
 import { ConfigService } from "@nestjs/config";
 import { PrismaClient } from "@prisma/client";
+import { validateSupabaseDatabaseTarget } from "../common/supabase-database-target";
 import { StorageTombstoneService } from "./storage-tombstone.service";
 
 async function main() {
-  assertLocalDatabase(process.env.DATABASE_URL);
+  const target=validateSupabaseDatabaseTarget(process.env);
   const execute = process.argv.includes("--execute");
+  if(execute){requireArgument("approved","true");requireArgument("maintenance-confirmed","true");requireArgument("confirm-project-ref",target.projectRef);requireArgument("confirm-db-host",target.host);requireArgument("confirm-db-name",target.database);requireArgument("confirm-db-schema",target.schema);}
   const limit = parseLimit(process.argv.find((value) => value.startsWith("--limit=")));
   const prisma = new PrismaClient();
   try {
@@ -19,13 +21,7 @@ async function main() {
   }
 }
 
-function assertLocalDatabase(value: string | undefined) {
-  if (!value) throw new Error("DATABASE_URL is required.");
-  const url = new URL(value);
-  if (url.hostname !== "127.0.0.1" || url.port !== "55432") {
-    throw new Error("Storage retention maintenance is restricted to the loopback development database.");
-  }
-}
+function requireArgument(name:string,expected:string){const prefix=`--${name}=`;const value=process.argv.find((item)=>item.startsWith(prefix))?.slice(prefix.length);if(value!==expected)throw new Error(`--${name} confirmation is required.`);}
 
 function parseLimit(value: string | undefined) {
   if (!value) return 100;

@@ -18,7 +18,7 @@ export default function CompleteInvitationPage() {
     return (
       <main className="auth-screen">
         <section className="auth-card auth-loading" aria-busy="true" aria-live="polite">
-          초대 설정 세션을 확인하고 있습니다.
+          최초 설정 세션을 확인하고 있습니다.
         </section>
       </main>
     );
@@ -92,7 +92,7 @@ export default function CompleteInvitationPage() {
         <button className="button" type="button" disabled={isSubmitting} onClick={() => void auth.logout()}>
           설정을 중단하고 로그아웃
         </button>
-        <p className="auth-help">설정이 완료되면 이메일과 비밀번호만으로 로그인합니다.</p>
+        <p className="auth-help">설정이 완료되면 사용자 이름과 비밀번호로 로그인합니다.</p>
       </section>
     </main>
   );

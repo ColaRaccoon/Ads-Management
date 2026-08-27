@@ -3,8 +3,6 @@ import path from "node:path";
 import { preflightUploadFile, type UploadInspection } from "./upload-preflight";
 import { UPLOAD_PROFILES, type UploadProfileId } from "./upload-profiles";
 
-const DEFAULT_ORIGINAL_BUSINESS_ROOT = "C:\\Users\\seong\\Desktop\\workspace\\Meta-Ads-Performance";
-
 export type ExplicitMetadataInput = {
   absolutePath: string;
   profile: UploadProfileId;
@@ -34,13 +32,14 @@ export type UploadMetadataSummary = {
 
 export async function measureExplicitUploadMetadata(
   inputs: ExplicitMetadataInput[],
-  options: { approvedRoot: string; originalBusinessRoot?: string }
+  options: { approvedRoot: string; originalBusinessRoot: string }
 ): Promise<UploadMetadataSummary> {
   if (!path.isAbsolute(options.approvedRoot) || inputs.length === 0) {
     throw safeMeasurementError("METADATA_INPUT_INVALID");
   }
   const approvedRootLexical = path.resolve(options.approvedRoot);
-  const originalRoot = path.resolve(options.originalBusinessRoot ?? DEFAULT_ORIGINAL_BUSINESS_ROOT);
+  if (!path.isAbsolute(options.originalBusinessRoot)) throw safeMeasurementError("METADATA_INPUT_INVALID");
+  const originalRoot = path.resolve(options.originalBusinessRoot);
   if (isWithin(originalRoot, approvedRootLexical)) {
     throw safeMeasurementError("ORIGINAL_BUSINESS_ROOT_FORBIDDEN");
   }

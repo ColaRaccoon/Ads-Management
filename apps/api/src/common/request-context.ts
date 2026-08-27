@@ -10,8 +10,10 @@ export class RequestContextMiddleware implements NestMiddleware {
   private readonly logger = new Logger("HttpRequest");
 
   use(request: RequestWithContext, response: Response, next: NextFunction) {
-    const received = request.get("x-request-id");
-    const requestId = received && REQUEST_ID_PATTERN.test(received) ? received : randomUUID();
+    // The public edge is the first trusted request-id issuer. The API still
+    // creates its own identifier so a direct loopback caller cannot inject
+    // attacker-controlled text into logs or correlation fields.
+    const requestId = randomUUID();
     request.requestId = requestId;
     response.setHeader("X-Request-Id", requestId);
 
@@ -22,7 +24,7 @@ export class RequestContextMiddleware implements NestMiddleware {
 
     const started = process.hrtime.bigint();
     response.once("finish", () => {
-      const path = pathWithoutQuery(request.originalUrl || request.url);
+      const path = safeRouteTemplate(request);
       if (!shouldLogRequestCompletion(path, response.statusCode)) return;
       const durationMs = Number(process.hrtime.bigint() - started) / 1_000_000;
       this.logger.log(JSON.stringify({
@@ -58,4 +60,15 @@ export function shouldLogRequestCompletion(path: string, status: number) {
 
 function pathWithoutQuery(value: string) {
   return value.split("?", 1)[0];
+}
+
+export function safeRouteTemplate(request: Request) {
+  const routePath = (request.route as { path?: unknown } | undefined)?.path;
+  if (typeof routePath === "string" && routePath.startsWith("/") && routePath.length <= 200) {
+    const base = typeof request.baseUrl === "string" ? request.baseUrl : "";
+    return `${base}${routePath}`.slice(0, 256);
+  }
+  const unmatchedPath = pathWithoutQuery(request.originalUrl || request.url);
+  if (unmatchedPath === "/api/health/live" || unmatchedPath === "/api/health/ready") return unmatchedPath;
+  return "/:unmatched";
 }

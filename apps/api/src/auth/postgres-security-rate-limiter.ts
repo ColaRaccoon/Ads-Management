@@ -75,9 +75,9 @@ export class PostgresSecurityRateLimiter implements SecurityRateLimiter {
 
   private async removeExpiredBuckets() {
     try {
-      await this.prisma.securityRateLimitBucket.deleteMany({
-        where: { expiresAt: { lt: new Date() } }
-      });
+      await this.prisma.$executeRaw(Prisma.sql`
+        DELETE FROM "security_rate_limit_buckets" WHERE "expires_at" < clock_timestamp()
+      `);
     } catch {
       this.logger.warn("Expired distributed rate-limit buckets could not be removed.");
     }

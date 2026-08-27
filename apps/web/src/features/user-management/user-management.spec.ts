@@ -12,6 +12,12 @@ import {
 } from "./user-management";
 
 describe("user management boundary parsing", () => {
+  it("normalizes the local username invitation contract", () => {
+    const payload = normalizeInvitationPayload({ username: "  Local.User ", name: " 사용자 ", role: "GUEST" });
+    expect(payload).toEqual({ username: "local.user", name: "사용자", role: "GUEST" });
+    expect(validateInvitationPayload(payload)).toBeNull();
+  });
+
   it("normalizes invitations and creates RFC 4122 UUID idempotency keys", () => {
     const payload = normalizeInvitationPayload({ email: "  USER@Example.Test ", name: " 사용자 ", role: "GUEST" });
     expect(payload).toEqual({ email: "user@example.test", name: "사용자", role: "GUEST" });
@@ -51,6 +57,15 @@ describe("user management boundary parsing", () => {
     expect(JSON.stringify(users)).not.toContain("provider-subject-secret");
     expect(JSON.stringify(users)).not.toContain("provider-token-secret");
     expect(JSON.stringify(users)).not.toContain("never-render");
+  });
+
+  it("parses a native local user without an email fallback", () => {
+    const users = parseUsersResponse({ items: [{
+      id: "local-1", username: "local.user", email: null, name: "로컬 사용자", role: "USER",
+      isActive: true, inviteStatus: "ACTIVE", reconciliationActions: [], lastLoginAt: null,
+      invitedAt: null, createdAt: "2026-08-26T00:00:00.000Z", updatedAt: "2026-08-26T00:00:00.000Z"
+    }] });
+    expect(users[0]).toMatchObject({ username: "local.user", email: null });
   });
 
   it("fails closed on an unexpected reconciliation action", () => {

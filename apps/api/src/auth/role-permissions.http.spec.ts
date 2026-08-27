@@ -26,7 +26,9 @@ import { UploadsService } from "../uploads/uploads.service";
 import { SecurityAuditController } from "../security-audit/security-audit.controller";
 import { SecurityAuditService } from "../security-audit/security-audit.service";
 import { UsersController } from "../users/users.controller";
+import { LocalUsersService } from "../users/local-users.service";
 import { UsersService } from "../users/users.service";
+import { AUTH_CONFIG } from "./auth.config";
 import { authError } from "./auth.errors";
 import { AuthService } from "./auth.service";
 import { AuthenticationGuard } from "./authentication.guard";
@@ -155,12 +157,14 @@ const actorForwardingMutations = new Set([
   "POST /coupang/daily-report/categories",
   "PATCH /coupang/daily-report/categories/:id",
   "PUT /coupang/daily-report/categories/:id/products",
-  "DELETE /coupang/daily-report/categories/:id"
+  "DELETE /coupang/daily-report/categories/:id",
+  "PUT /coupang/manual-purchases/:date",
+  "DELETE /coupang/manual-purchases/:id"
 ]);
 
 const serviceInvocation = vi.fn().mockResolvedValue({});
 const serviceMock = new Proxy({}, {
-  get: () => serviceInvocation
+  get: (_target, property) => property === "then" ? undefined : serviceInvocation
 });
 
 @Module({
@@ -190,6 +194,8 @@ const serviceMock = new Proxy({}, {
     { provide: Cafe24CouponRulesService, useValue: serviceMock },
     { provide: CoupangService, useValue: serviceMock },
     { provide: UsersService, useValue: serviceMock },
+    { provide: LocalUsersService, useValue: serviceMock },
+    { provide: AUTH_CONFIG, useValue: { provider: "supabase" } },
     { provide: SecurityAuditService, useValue: serviceMock },
     {
       provide: AuthRequestSecurityService,
@@ -239,7 +245,7 @@ describe("role permissions through the Nest HTTP pipeline", () => {
   let baseUrl: string;
 
   beforeAll(async () => {
-    app = await NestFactory.create(RolePermissionHttpModule, { logger: false });
+    app = await NestFactory.create(RolePermissionHttpModule, { logger: false, abortOnError: false });
     // Vitest's fast transform does not emit constructor type metadata. Wire the
     // controller doubles explicitly so an allowed HTTP request reaches the
     // shared service spy, while the production build continues to use Nest DI.
@@ -266,7 +272,7 @@ describe("role permissions through the Nest HTTP pipeline", () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   it("covers every active business mutation independently", () => {
@@ -329,10 +335,20 @@ describe("role permissions through the Nest HTTP pipeline", () => {
         path: "/users/22222222-2222-4222-8222-222222222222/reconcile-invitation",
         body: { action: "CANCEL" }
       },
+      {
+        method: "POST",
+        path: "/users/22222222-2222-4222-8222-222222222222/password-reset",
+        body: undefined
+      },
       { method: "GET", path: "/security-audit?limit=20", body: undefined }
     ] as const;
     for (const route of routes) {
       serviceInvocation.mockClear();
+      if (route.path.endsWith("/password-reset")) {
+        Object.assign(app.get(UsersController), { config: { provider: "local" }, localUsers: serviceMock });
+      } else {
+        Object.assign(app.get(UsersController), { config: undefined, localUsers: undefined });
+      }
       const response = await fetch(`${baseUrl}/api${route.path}`, {
         method: route.method,
         headers: {

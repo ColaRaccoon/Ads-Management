@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { dateRangeDays, parseDateRange } from "../common/date-range";
 import { ComparisonCalculator } from "../domain/comparison-calculator";
@@ -17,14 +18,20 @@ export class DashboardMetricsService {
     private readonly decorationService: MetaAdsetMetricDecorationService
   ) {}
 
-  async dashboardSummary(from?: string, to?: string, compare?: string, deliveryStatusInput?: string) {
+  async dashboardSummary(
+    from?: string,
+    to?: string,
+    compare?: string,
+    deliveryStatusInput?: string,
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
     const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
     const range = parseDateRange(from, to);
-    const decorated = await this.decorationService.decoratedMetrics(range.fromDate, range.toDate, deliveryStatus);
+    const decorated = await this.decorationService.decoratedMetrics(range.fromDate, range.toDate, deliveryStatus, client);
     const aggregate = this.decorationService.aggregate(decorated);
     const selectedDays = dateRangeDays(range.from, range.to);
-    const health = await this.health(range.fromDate, range.toDate, decorated);
-    const decisions = await this.decisionSummary(range.fromDate, range.toDate);
+    const health = await this.health(range.fromDate, range.toDate, decorated, client);
+    const decisions = await this.decisionSummary(range.fromDate, range.toDate, client);
 
     const previousDayRange = shiftRange(range.toDate, range.toDate, -1);
     const previousSamePeriodRange = shiftRange(range.fromDate, range.toDate, -selectedDays);
@@ -33,16 +40,16 @@ export class DashboardMetricsService {
 
     const [previousDay, previousSamePeriod, firstDay, lastDay] = await Promise.all([
       this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(previousDayRange.fromDate, previousDayRange.toDate, deliveryStatus)
+        await this.decorationService.decoratedMetrics(previousDayRange.fromDate, previousDayRange.toDate, deliveryStatus, client)
       ),
       this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(previousSamePeriodRange.fromDate, previousSamePeriodRange.toDate, deliveryStatus)
+        await this.decorationService.decoratedMetrics(previousSamePeriodRange.fromDate, previousSamePeriodRange.toDate, deliveryStatus, client)
       ),
       this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(firstDayRange.fromDate, firstDayRange.toDate, deliveryStatus)
+        await this.decorationService.decoratedMetrics(firstDayRange.fromDate, firstDayRange.toDate, deliveryStatus, client)
       ),
       this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(lastDayRange.fromDate, lastDayRange.toDate, deliveryStatus)
+        await this.decorationService.decoratedMetrics(lastDayRange.fromDate, lastDayRange.toDate, deliveryStatus, client)
       )
     ]);
 
@@ -106,7 +113,12 @@ export class DashboardMetricsService {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  async health(fromDate: Date, toDate: Date, decorated: DecoratedMetric[]) {
+  async health(
+    fromDate: Date,
+    toDate: Date,
+    decorated: DecoratedMetric[],
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
     const unmatchedCount = decorated.filter((row) => row.ruleStatus === "UNMATCHED").length;
     const missingCostRuleProducts = new Set(
       decorated
@@ -123,7 +135,7 @@ export class DashboardMetricsService {
     const missingExchangeRateDates = new Set(
       decorated.filter((row) => row.ruleStatus === "MISSING_EXCHANGE_RATE").map((row) => row.metricDate)
     );
-    const uploadErrorCount = await this.prisma.uploadRowError.count({
+    const uploadErrorCount = await client.uploadRowError.count({
       where: { batch: { reportStart: { lte: toDate }, reportEnd: { gte: fromDate } } }
     });
     return {
@@ -135,8 +147,12 @@ export class DashboardMetricsService {
     };
   }
 
-  async decisionSummary(fromDate: Date, toDate: Date) {
-    const logs = await this.prisma.decisionLog.findMany({
+  async decisionSummary(
+    fromDate: Date,
+    toDate: Date,
+    client: PrismaService | Prisma.TransactionClient = this.prisma
+  ) {
+    const logs = await client.decisionLog.findMany({
       where: { periodStart: fromDate, periodEnd: toDate },
       orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
       take: 20

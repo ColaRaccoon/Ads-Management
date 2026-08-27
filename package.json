@@ -2,11 +2,19 @@
   "name": "meta-ads-performance-hub",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.9.4",
+  "engines": {
+    "node": ">=20.9.0 <25",
+    "npm": ">=10 <11"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
+    "local:package-release": "node deploy/local/package-local-release.mjs",
+    "local:verify-release": "node deploy/local/verify-local-release.mjs",
+    "local:recovery-kit": "node deploy/local/recovery-kit.mjs",
     "dev": "npm-run-all --parallel dev:api dev:web",
     "dev:api": "npm --workspace @meta-ads-performance/api run start:dev",
     "dev:web": "npm --workspace @meta-ads-performance/web run dev",
@@ -17,6 +25,17 @@
     "prisma:generate": "npm --workspace @meta-ads-performance/api run prisma:generate",
     "prisma:migrate": "npm --workspace @meta-ads-performance/api run prisma:migrate",
     "prisma:seed": "npm --workspace @meta-ads-performance/api run prisma:seed"
+  },
+  "overrides": {
+    "body-parser": "2.3.0",
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.18"
+    },
+    "minimatch@5.1.9": {
+      "brace-expansion": "2.1.4"
+    },
+    "nanoid": "3.3.18",
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5"

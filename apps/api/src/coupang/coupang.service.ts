@@ -2449,18 +2449,35 @@ export class CoupangService {
     return { period: { from: range.from, to: range.to }, rows: rows.map((row) => serializeManualPurchaseRow(row)) };
   }
 
-  async replaceManualPurchasesForDate(dateText: string, body: Record<string, unknown>) {
+  async replaceManualPurchasesForDate(dateText: string, body: Record<string, unknown>, actorId?: string) {
     const purchaseDate = asDateOnly(dateText);
     const normalizedDate = formatDateOnly(purchaseDate);
     const entries = parseManualPurchaseEntries(body.entries);
     const productIds = uniqueNonEmpty(entries.map((entry) => entry.coupangProductId));
 
     return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw(Prisma.sql`
+        SELECT pg_advisory_xact_lock(hashtextextended(${`coupang-manual-purchase:${normalizedDate}`}, 0))::text AS lock_result
+      `);
+      const beforeRows = actorId ? await tx.coupangManualPurchase.findMany({
+        where: { purchaseDate },
+        select: { quantity: true, salesAmountKrw: true, totalCostKrw: true }
+      }) : [];
       const vendorFeePerUnitKrw = manualPurchaseVendorFeeFromBody(body.vendorFeePerUnitKrw)
         ?? (await this.manualPurchaseVendorFeePerUnitKrw(tx));
 
       if (entries.length === 0) {
         await tx.coupangManualPurchase.deleteMany({ where: { purchaseDate } });
+        if (actorId) await writeSecurityAudit(tx, {
+          actorUserId: actorId,
+          actorType: SecurityAuditActorType.USER,
+          action: "COUPANG_MANUAL_PURCHASES_REPLACED",
+          targetType: "COUPANG_MANUAL_PURCHASE_DATE",
+          targetId: normalizedDate,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: manualPurchaseAuditSummary(beforeRows),
+          afterJson: manualPurchaseAuditSummary([])
+        });
         return { date: normalizedDate, selectedOptionCount: 0, totalQuantity: 0, totalSalesAmountKrw: 0, totalCostKrw: 0, rows: [] };
       }
 
@@ -2567,6 +2584,16 @@ export class CoupangService {
         orderBy: [{ productDisplayName: "asc" }]
       });
       const serializedRows = rows.map((row) => serializeManualPurchaseRow(row));
+      if (actorId) await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_MANUAL_PURCHASES_REPLACED",
+        targetType: "COUPANG_MANUAL_PURCHASE_DATE",
+        targetId: normalizedDate,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: manualPurchaseAuditSummary(beforeRows),
+        afterJson: manualPurchaseAuditSummary(rows)
+      });
       return {
         date: normalizedDate,
         selectedOptionCount: rows.length,
@@ -2578,13 +2605,37 @@ export class CoupangService {
     }, COUPANG_TRANSACTION_OPTIONS);
   }
 
-  async deleteManualPurchase(id: string) {
-    const row = await this.prisma.coupangManualPurchase.findUnique({ where: { id }, select: { id: true, purchaseDate: true } });
-    if (!row) {
-      throw new NotFoundException({ code: "COUPANG_MANUAL_PURCHASE_NOT_FOUND", message: "Manual purchase row was not found." });
-    }
-    await this.prisma.coupangManualPurchase.delete({ where: { id } });
-    return { id, date: formatDateOnly(row.purchaseDate), deleted: true };
+  async deleteManualPurchase(id: string, actorId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const candidate = await tx.coupangManualPurchase.findUnique({
+        where: { id }, select: { id: true, purchaseDate: true }
+      });
+      if (!candidate) {
+        throw new NotFoundException({ code: "COUPANG_MANUAL_PURCHASE_NOT_FOUND", message: "Manual purchase row was not found." });
+      }
+      const date = formatDateOnly(candidate.purchaseDate);
+      await tx.$queryRaw(Prisma.sql`
+        SELECT pg_advisory_xact_lock(hashtextextended(${`coupang-manual-purchase:${date}`}, 0))::text AS lock_result
+      `);
+      const row = await tx.coupangManualPurchase.findUnique({
+        where: { id }, select: { id: true, purchaseDate: true }
+      });
+      if (!row) {
+        throw new NotFoundException({ code: "COUPANG_MANUAL_PURCHASE_NOT_FOUND", message: "Manual purchase row was not found." });
+      }
+      await tx.coupangManualPurchase.delete({ where: { id } });
+      if (actorId) await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "COUPANG_MANUAL_PURCHASE_DELETED",
+        targetType: "COUPANG_MANUAL_PURCHASE",
+        targetId: id,
+        result: SecurityAuditResult.SUCCESS,
+        beforeJson: { id, date },
+        afterJson: { deleted: true }
+      });
+      return { id, date, deleted: true };
+    }, COUPANG_TRANSACTION_OPTIONS);
   }
 
   private async manualPurchaseVendorFeePerUnitKrw(client: Pick<Prisma.TransactionClient, "appSetting"> = this.prisma) {
@@ -5439,6 +5490,21 @@ function manualPurchaseFieldError(productId: string, field: string, expectation:
     productId,
     field
   });
+}
+
+function manualPurchaseAuditSummary(rows: Array<{
+  quantity: number;
+  salesAmountKrw: unknown;
+  totalCostKrw: unknown;
+}>) {
+  return {
+    rowCount: rows.length,
+    totalQuantity: rows.reduce((sum, row) => sum + row.quantity, 0),
+    totalSalesAmountKrw: rows.reduce((sum, row) => sum + numberFrom(row.salesAmountKrw), 0),
+    totalCostKrw: roundManualPurchaseMoney(
+      rows.reduce((sum, row) => sum + numberFrom(row.totalCostKrw), 0)
+    )
+  } satisfies Prisma.InputJsonObject;
 }
 
 function serializeManualPurchaseRow(row: {

@@ -14,7 +14,9 @@ afterEach(async () => {
 describe("STEP7-EVAL-013 explicit metadata measurement safety", () => {
   it("reports aggregate metadata without file names, paths, or cell contents", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "step7-metadata-"));
+    const forbiddenRoot = await mkdtemp(path.join(tmpdir(), "step7-forbidden-"));
     temporaryRoots.push(root);
+    temporaryRoots.push(forbiddenRoot);
     const sensitiveMarker = "SYNTHETIC_PRIVATE_CELL_MARKER";
     const csvPath = path.join(root, "private-orders.csv");
     const xlsxPath = path.join(root, "private-sales.xlsx");
@@ -24,7 +26,7 @@ describe("STEP7-EVAL-013 explicit metadata measurement safety", () => {
     const result = await measureExplicitUploadMetadata([
       { profile: "META_CSV", absolutePath: csvPath },
       { profile: "COUPANG_SALES_XLSX", absolutePath: xlsxPath }
-    ], { approvedRoot: root });
+    ], { approvedRoot: root, originalBusinessRoot: forbiddenRoot });
     const serialized = JSON.stringify(result);
 
     expect(result).toMatchObject({ fileCount: 2 });

@@ -31,7 +31,7 @@ const ACTIVE_CONTROLLER_INVENTORY: ControllerInventory[] = [
   { file: "sales/sales-metrics.controller.ts", routes: 3, body: 0, query: 3, param: 0, files: 0 },
   { file: "security-audit/security-audit.controller.ts", routes: 1, body: 0, query: 1, param: 0, files: 0 },
   { file: "uploads/uploads.controller.ts", routes: 8, body: 2, query: 1, param: 5, files: 2 },
-  { file: "users/users.controller.ts", routes: 4, body: 3, query: 0, param: 2, files: 0 }
+  { file: "users/users.controller.ts", routes: 5, body: 3, query: 0, param: 3, files: 0 }
 ];
 
 const SRC_ROOT = path.resolve(__dirname, "..");
@@ -57,7 +57,7 @@ const ACTIVE_DTO_FILES = [
 ] as const;
 
 describe("active transport input inventory", () => {
-  it("keeps the literal 128-route / 153-input inventory in sync", () => {
+  it("keeps the literal 129-route / 154-input inventory in sync", () => {
     const totals = { routes: 0, body: 0, query: 0, param: 0, files: 0 };
     for (const expected of ACTIVE_CONTROLLER_INVENTORY) {
       const source = fs.readFileSync(path.join(SRC_ROOT, expected.file), "utf8");
@@ -78,8 +78,8 @@ describe("active transport input inventory", () => {
       for (const key of Object.keys(totals) as Array<keyof typeof totals>) totals[key] += actual[key];
     }
     expect(ACTIVE_CONTROLLER_INVENTORY).toHaveLength(18);
-    expect(totals).toEqual({ routes: 128, body: 52, query: 48, param: 44, files: 9 });
-    expect(totals.body + totals.query + totals.param + totals.files).toBe(153);
+    expect(totals).toEqual({ routes: 129, body: 52, query: 48, param: 45, files: 9 });
+    expect(totals.body + totals.query + totals.param + totals.files).toBe(154);
   });
 
   it("has zero raw Body/Query/Param inputs in the active controller graph", () => {
@@ -96,7 +96,7 @@ describe("active transport input inventory", () => {
 
       const propertyParams = source.match(/@Param\(\s*["'][^"']+["'][^)]*\)/g) ?? [];
       if (expected.file === "users/users.controller.ts") {
-        expect(propertyParams).toHaveLength(2);
+        expect(propertyParams).toHaveLength(3);
         for (const decorator of propertyParams) expect(decorator).toContain("ParseUUIDPipe");
         expect(matches(source, /@Param\(\)\s+\w+\s*:\s*[A-Za-z0-9_]*Dto\b/g)).toBe(0);
       } else {
@@ -163,7 +163,7 @@ describe("active transport input inventory", () => {
       visit(sourceFile);
     }
     expect(ACTIVE_DTO_FILES).toHaveLength(18);
-    expect(undefinedOnlyCount).toBe(157);
+    expect(undefinedOnlyCount).toBe(161);
     expect(explicitNullableCount).toBe(37);
   });
 });

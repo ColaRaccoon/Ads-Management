@@ -5,6 +5,7 @@ import { APP_GUARD, Reflector } from "@nestjs/core";
 import { describe, expect, it, vi } from "vitest";
 import { AppModule } from "../app.module";
 import { AuthModule } from "./auth.module";
+import { authError } from "./auth.errors";
 import { AuthenticationGuard } from "./authentication.guard";
 import { PermissionGuard } from "./permission.guard";
 import {
@@ -26,6 +27,7 @@ const expectedRoutes = new Map<string, ExpectedAccess>([
   route("GET", "/api/users", "users.manage"),
   route("POST", "/api/users/invitations", "users.manage"),
   route("PATCH", "/api/users/:id", "users.manage"),
+  route("POST", "/api/users/:id/password-reset", "users.manage"),
   route("POST", "/api/users/:id/reconcile-invitation", "users.manage"),
   route("GET", "/api/security-audit", "audit.read"),
   route("GET", "/api/health/live", "public"),
@@ -157,22 +159,22 @@ const expectedRoutes = new Map<string, ExpectedAccess>([
 const discoveredRoutes = discoverRoutes(AppModule);
 
 describe("active AppModule route permissions", () => {
-  it("registers authentication then authorization as ordered global guards", () => {
+  it("rejects an untrusted transport before authentication and authorization", () => {
     const globalGuards = (Reflect.getMetadata(MODULE_METADATA.PROVIDERS, AuthModule) ?? [])
       .filter((provider: { provide?: unknown }) => provider?.provide === APP_GUARD)
       .map((provider: { useExisting?: Type<unknown> }) => provider.useExisting?.name);
     expect(globalGuards).toEqual([
+      "HttpSecurityGuard",
       "AuthenticationGuard",
       "InternalProbeGuard",
-      "PermissionGuard",
-      "HttpSecurityGuard"
+      "PermissionGuard"
     ]);
   });
 
   it("matches the independent method and normalized-path inventory", () => {
     expect(discoveredRoutes.controllers).toBe(18);
     expect([...discoveredRoutes.routes.keys()].sort()).toEqual([...expectedRoutes.keys()].sort());
-    expect(discoveredRoutes.routes.size).toBe(128);
+    expect(discoveredRoutes.routes.size).toBe(129);
   });
 
   it("gives every handler exactly one explicit access contract with the expected permission", () => {
@@ -263,6 +265,38 @@ describe("role permission guard matrix for every active method/path", () => {
           expect.objectContaining({ code: "PERMISSION_DENIED", status: 403 })
         );
       }
+    }
+  });
+
+  it.each(["INACTIVE", "SETUP_PENDING"] as const)("enforces %s on every read, download, preview, and mutation route", async (state) => {
+    const localAuth = {
+      authenticateSession: vi.fn(async () => {
+        if (state === "INACTIVE") throw authError("SESSION_INVALID");
+        return { permissions: [], inviteStatus: "VERIFIED_PENDING_PASSWORD" };
+      })
+    };
+    const authenticate = new AuthenticationGuard(
+      {} as never,
+      { readSessionHandle: vi.fn().mockReturnValue("opaque-local-session") } as never,
+      new Reflector(),
+      { provider: "local" } as never,
+      localAuth as never
+    );
+    const authorize = new PermissionGuard(new Reflector());
+    for (const [key, expected] of expectedRoutes) {
+      const context = contextFor(discoveredRoutes.routes.get(key)!.handler, {});
+      if (expected === "public" || expected === "internal-probe") {
+        await expect(authenticate.canActivate(context), key).resolves.toBe(true);
+        continue;
+      }
+      if (state === "INACTIVE") {
+        await expect(authenticate.canActivate(context), key).rejects.toMatchObject({ code: "SESSION_INVALID" });
+        continue;
+      }
+      await expect(authenticate.canActivate(context), key).resolves.toBe(true);
+      const allowed = expected === "authenticated";
+      if (allowed) expect(authorize.canActivate(context), key).toBe(true);
+      else expect(() => authorize.canActivate(context), key).toThrow(expect.objectContaining({ code: "PERMISSION_DENIED" }));
     }
   });
 });

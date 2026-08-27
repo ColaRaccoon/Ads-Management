@@ -18,8 +18,6 @@ async function main() {
     databasePort: target.port,
     databaseName: target.database,
     databaseSchema: target.schema,
-    authUserId,
-    email,
     mode: apply ? "apply" : "dry-run"
   });
 
@@ -41,7 +39,7 @@ async function main() {
       email,
       dryRun: !apply
     });
-    console.info("Super-admin bootstrap completed", result);
+    console.info("Super-admin bootstrap completed", { action: result.action, dryRun: result.dryRun });
   } finally {
     await prisma.$disconnect();
   }

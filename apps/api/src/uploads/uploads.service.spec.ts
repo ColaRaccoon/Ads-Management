@@ -273,6 +273,8 @@ function parseAdRow(videoValues: Record<string, string> = {}): ParsedMetaAdDaily
 async function captureAdMetricCreateData(parsedRow: ParsedMetaAdDailyRow) {
   let createData: Record<string, unknown> | null = null;
   const transaction = {
+    $executeRawUnsafe: async () => 0,
+    $queryRaw: async () => [],
     metaAdDailyMetric: {
       findMany: async () => [],
       create: async ({ data }: { data: Record<string, unknown> }) => {
@@ -419,11 +421,14 @@ function metricHistoryHarness(parsedRow: ParsedMetaAdDailyRow, previousVideoCoun
     delete: async () => ({})
   };
   const transaction = {
+    $executeRawUnsafe: async () => 0,
+    $queryRaw: async () => [],
     metaAdDailyMetric,
     metaAdsetDailyMetric: emptyVersionedMetricModel,
     uploadRowError: { deleteMany: async () => ({ count: 0 }) },
     uploadRow: { deleteMany: async () => ({ count: 0 }) },
-    uploadBatch
+    uploadBatch,
+    storageTombstone: { findUnique: async () => null }
   };
   const prisma = {
     uploadBatch,

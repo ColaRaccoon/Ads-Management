@@ -6,8 +6,9 @@ import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { LocalFileStorage } from "./local-file-storage";
 import { StorageTombstoneService } from "./storage-tombstone.service";
+import { supabaseIntegrationEnabled } from "../common/supabase-integration-target";
 
-const integrationDescribe = integrationEnabled() ? describe : describe.skip;
+const integrationDescribe = supabaseIntegrationEnabled("RUN_STORAGE_DB_INTEGRATION", "DATABASE_URL") ? describe : describe.skip;
 
 integrationDescribe("storage tombstone PostgreSQL lifecycle", () => {
   let prisma: PrismaClient;
@@ -104,19 +105,3 @@ integrationDescribe("storage tombstone PostgreSQL lifecycle", () => {
     expect(await storage.exists("active/transition-race")).toBe(row.state === StorageTombstoneState.RESTORED);
   });
 });
-
-function integrationEnabled() {
-  if (process.env.RUN_STORAGE_DB_INTEGRATION !== "true") return false;
-  const raw = process.env.DATABASE_URL;
-  if (!raw) throw new Error("DATABASE_URL is required for storage integration tests.");
-  const target = new URL(raw);
-  if (
-    target.hostname !== "127.0.0.1" ||
-    target.port !== "55432" ||
-    target.pathname !== "/meta_ads_security_dev" ||
-    target.searchParams.get("schema") !== "meta_ads_security_dev"
-  ) {
-    throw new Error("Storage integration tests require the isolated local security dev database.");
-  }
-  return true;
-}

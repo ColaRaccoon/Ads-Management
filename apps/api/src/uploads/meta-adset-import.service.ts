@@ -76,7 +76,7 @@ export class MetaAdsetImportService {
         count: headers.length,
         originalFileHashSha256: fileHashSha256
       }, STORAGE_DOMAIN);
-      reservedBatch = await this.prisma.uploadBatch.create({
+      try { reservedBatch = await this.prisma.uploadBatch.create({
         data: {
           id: batchId,
           originalFilename,
@@ -88,7 +88,12 @@ export class MetaAdsetImportService {
           status: UploadStatus.VALIDATING,
           uploadedBy: actorId
         }
-      });
+      }); } catch(error) {
+        if(conflictPolicy!==ConflictPolicy.SKIP||!isPrismaUniqueConflict(error))throw error;
+        const raced=await this.prisma.uploadBatch.findUnique({where:{fileHashSha256}});if(!raced)throw error;
+        reservedBatch=await this.claimStoragePendingBatch(raced);
+        if(!reservedBatch)return this.duplicateResult(raced);
+      }
     }
     if (!reservedBatch) throw new Error("Upload batch reservation failed.");
     let batch: UploadBatch = reservedBatch;
@@ -433,3 +438,4 @@ function sameStorageOwnership(current: UploadBatch, expected: UploadBatch) {
   return current.status === UploadStatus.VALIDATING &&
     JSON.stringify(current.columnSchema) === JSON.stringify(expected.columnSchema);
 }
+function isPrismaUniqueConflict(error:unknown){return error instanceof Prisma.PrismaClientKnownRequestError&&error.code==="P2002";}

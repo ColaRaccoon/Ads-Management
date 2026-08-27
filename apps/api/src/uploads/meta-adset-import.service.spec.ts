@@ -1,5 +1,5 @@
 import { BadRequestException } from "@nestjs/common";
-import { AdStage, ConflictPolicy, MatchSource, UploadLevel, UploadStatus } from "@prisma/client";
+import { AdStage, ConflictPolicy, MatchSource, Prisma, UploadLevel, UploadStatus } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { META_ADSET_REQUIRED_COLUMNS } from "../domain/meta-csv";
@@ -73,6 +73,11 @@ describe("MetaAdsetImportService contract", () => {
 });
 
 describe("MetaAdsetImportService storage recovery", () => {
+  it("returns the winning SKIP batch when concurrent creates collide",async()=>{
+    const buffer=adsetCsv();const winner=storageRecoveryBatch(buffer,UploadStatus.IMPORTED,"STORED");const harness=adsetImportHarness({createRaceWinner:winner});
+    await expect(harness.service.importMetaAdsetCsv(file(buffer),ConflictPolicy.SKIP,ACTOR_ID)).resolves.toMatchObject({duplicate:true,batchId:"batch-1",status:UploadStatus.IMPORTED});
+    expect(harness.metricInputs).toHaveLength(0);
+  });
   it("reuses a FAILED storage-pending batch and retries a missing object before importing", async () => {
     const buffer = adsetCsv();
     const duplicated = storageRecoveryBatch(buffer, UploadStatus.FAILED, "PENDING");
@@ -148,6 +153,7 @@ function adsetImportHarness(options: {
   sideEffectCounts?: { rows?: number; errors?: number; adMetrics?: number; metrics?: number };
   serializeTransactions?: boolean;
   beforeDomainWriter?: () => Promise<void>;
+  createRaceWinner?: Record<string, unknown>;
 } = {}) {
   const batchCreates: Record<string, unknown>[] = [];
   const batchUpdates: Record<string, unknown>[] = [];
@@ -172,6 +178,7 @@ function adsetImportHarness(options: {
       findUnique: async () => currentBatch,
       create: async ({ data }: { data: Record<string, unknown> }) => {
         batchCreates.push(data);
+        if(options.createRaceWinner){currentBatch={...options.createRaceWinner};throw new Prisma.PrismaClientKnownRequestError("unique",{code:"P2002",clientVersion:"test"})}
         currentBatch = { ...batch, ...data, id: batch.id };
         return currentBatch;
       },

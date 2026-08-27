@@ -28,6 +28,7 @@ export type AuthInviteStatus = (typeof AUTH_INVITE_STATUSES)[number];
 
 export type AuthUser = {
   id: string;
+  username?: string | null;
   email: string | null;
   name: string;
   role: AppRole;
@@ -76,6 +77,7 @@ export function parseAuthMe(value: unknown): AuthMe {
   const authorizationVersion = value.authorizationVersion;
   if (
     typeof user.id !== "string" || user.id.length === 0 ||
+    (typeof user.username !== "string" && user.username !== null && user.username !== undefined) ||
     (typeof user.email !== "string" && user.email !== null) ||
     typeof user.name !== "string" ||
     typeof user.role !== "string" || !roleSet.has(user.role) ||
@@ -90,6 +92,7 @@ export function parseAuthMe(value: unknown): AuthMe {
   return {
     user: {
       id: user.id,
+      username: typeof user.username === "string" ? user.username : null,
       email: user.email,
       name: user.name,
       role: user.role as AppRole,

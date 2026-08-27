@@ -12,10 +12,65 @@ const config = {
   production: false,
   cookieSecure: false,
   sessionHandleSecret: "s".repeat(48),
+  authorizationVersionSecret: "a".repeat(48),
   csrfSecret: "c".repeat(48)
 } as AuthConfig;
 
 describe("AuthController", () => {
+  it("uses the username-only local login contract and writes only local session cookies", async () => {
+    const localAuth = { login: vi.fn().mockResolvedValue({ response: localResponseBody(), sessionToken: "opaque-local-session" }) };
+    const cookies = { setLocalSessionCookies: vi.fn() };
+    const security = { assertLoginRequest: vi.fn() };
+    const controller = new AuthController({} as never, cookies as never, security as never, { ...config, provider: "local" }, localAuth as never);
+    const response = responseFake();
+    await expect(controller.login({ username: "Local.User", password: "password" }, requestFake(), response as never))
+      .resolves.toEqual(localResponseBody());
+    expect(security.assertLoginRequest).toHaveBeenCalledWith(expect.anything(), "local.user");
+    expect(localAuth.login).toHaveBeenCalledWith("local.user", "password");
+    expect(cookies.setLocalSessionCookies).toHaveBeenCalledWith(response, "opaque-local-session");
+    await expect(controller.login({ email: "local@example.test", password: "password" }, requestFake(), response as never))
+      .rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
+  });
+
+  it("preserves local cookies on a refresh race and rotates them only after success", async () => {
+    const cookies = {
+      readRefreshToken: vi.fn(), readSessionHandle: vi.fn().mockReturnValue("old-session"),
+      clearAuthenticationCookies: vi.fn(), setLocalSessionCookies: vi.fn()
+    };
+    const security = { assertMutationOrigin: vi.fn(), assertSessionCsrfAndRate: vi.fn() };
+    const localAuth = { refresh: vi.fn().mockRejectedValueOnce(authError("REFRESH_RACE_RETRY")).mockResolvedValueOnce({ response: localResponseBody(), sessionToken: "new-session" }) };
+    const controller = new AuthController({} as never, cookies as never, security as never, { ...config, provider: "local" }, localAuth as never);
+    await expect(controller.refresh(requestFake(), responseFake() as never)).rejects.toMatchObject({ code: "REFRESH_RACE_RETRY" });
+    expect(cookies.clearAuthenticationCookies).not.toHaveBeenCalled();
+    await expect(controller.refresh(requestFake(), responseFake() as never)).resolves.toEqual(localResponseBody());
+    expect(cookies.setLocalSessionCookies).toHaveBeenCalledWith(expect.anything(), "new-session");
+    expect(security.assertMutationOrigin).toHaveBeenCalledTimes(2);
+    expect(security.assertSessionCsrfAndRate).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps local setup, password completion and logout on the session-cookie boundary", async () => {
+    const cookies = {
+      readSessionHandle: vi.fn().mockReturnValue("browser-session"), setLocalSessionCookies: vi.fn(),
+      clearAuthenticationCookies: vi.fn()
+    };
+    const security = { assertInvitationAccept: vi.fn(), assertCsrfMutation: vi.fn(), assertSessionMutation: vi.fn() };
+    const localAuth = {
+      hasActiveBrowserSession: vi.fn().mockResolvedValue(false),
+      acceptSetupToken: vi.fn().mockResolvedValue({ response: localResponseBody("VERIFIED_PENDING_PASSWORD"), sessionToken: "onboarding-session" }),
+      completeInitialPassword: vi.fn().mockResolvedValue({ response: localResponseBody(), sessionToken: "active-session" }),
+      logout: vi.fn().mockResolvedValue(undefined)
+    };
+    const controller = new AuthController({} as never, cookies as never, security as never, { ...config, provider: "local" }, localAuth as never);
+    await controller.acceptInvitation({ tokenHash: "a".repeat(64) }, requestFake(), responseFake() as never);
+    expect(cookies.setLocalSessionCookies).toHaveBeenCalledWith(expect.anything(), "onboarding-session");
+    await controller.setInitialPassword({ password: "strong-password" }, { id: "local-user" } as never, requestFake(), responseFake() as never);
+    expect(security.assertCsrfMutation).toHaveBeenCalledWith(expect.anything(), "password");
+    expect(cookies.setLocalSessionCookies).toHaveBeenCalledWith(expect.anything(), "active-session");
+    await controller.logout(requestFake(), responseFake() as never);
+    expect(localAuth.logout).toHaveBeenCalledWith("browser-session");
+    expect(cookies.clearAuthenticationCookies).toHaveBeenCalledOnce();
+  });
+
   it("sets secure cookie contract without returning provider tokens", async () => {
     const authService = {
       login: vi.fn().mockResolvedValue({
@@ -249,6 +304,13 @@ function responseBody() {
     },
     permissions: ["data.read"],
     authorizationVersion: "opaque"
+  };
+}
+
+function localResponseBody(inviteStatus: "ACTIVE" | "VERIFIED_PENDING_PASSWORD" = "ACTIVE") {
+  return {
+    user: { id: "local-user", username: "local.user", email: null, name: "Local User", role: "USER", isActive: true, inviteStatus },
+    permissions: inviteStatus === "ACTIVE" ? ["data.read"] : [], authorizationVersion: "opaque-local"
   };
 }
 

@@ -82,3 +82,74 @@ describe("STEP7 report HTML safety", () => {
     expect(html).toContain("&lt;img src=x onerror=&quot;synthetic-marker&quot;&gt;");
   });
 });
+
+describe("security step 8 change-log report linkage", () => {
+  it("carries a created change log and its related decision into the exported workbook", async () => {
+    const relatedDecisionId = "33333333-3333-4333-8333-333333333333";
+    const prisma = {
+      decisionLog: { findMany: vi.fn(async () => [{ id: relatedDecisionId, decision: "SCALE" }]) },
+      changeLog: { findMany: vi.fn(async () => [{
+        id: "44444444-4444-4444-8444-444444444444",
+        actionType: "SCALE",
+        reason: "synthetic regression",
+        relatedDecisionId
+      }]) }
+    };
+    const metrics = {
+      dashboardSummary: vi.fn(async () => ({
+        totals: { spendUsd: 10, spendKrw: 16_000, purchaseCount: 2, cpaKrw: 8_000, revenueKrw: 30_000, marginKrw: 6_000 },
+        health: { unmatchedCount: 0, missingCostRuleCount: 0, missingCpaRuleCount: 0 }
+      })),
+      productMetrics: vi.fn(async () => []),
+      adsetMetrics: vi.fn(async () => []),
+      unmatchedMetrics: vi.fn(async () => [])
+    };
+    const service = new ReportsService(prisma as never, metrics as never, {} as never);
+
+    const workbook = await (service as unknown as {
+      renderWorkbook(from: string, to: string, type: "CHANGE_LOG_XLSX"): Promise<ExcelJS.Workbook>;
+    }).renderWorkbook("2026-08-01", "2026-08-02", "CHANGE_LOG_XLSX");
+    const serialized = await workbook.xlsx.writeBuffer();
+    const reloaded = new ExcelJS.Workbook();
+    await reloaded.xlsx.load(serialized as never);
+    const sheet = reloaded.getWorksheet("Change Logs");
+    expect(sheet?.rowCount).toBe(2);
+    expect(sheet?.getRow(1).values).toContain("relatedDecisionId");
+    expect(sheet?.getRow(2).values).toContain(relatedDecisionId);
+    expect(reloaded.getWorksheet("Decisions")?.getRow(2).values).toContain(relatedDecisionId);
+  });
+});
+
+describe("local report snapshot consistency", () => {
+  it("uses one RepeatableRead transaction client for KPI, decisions, and change logs", async () => {
+    const tx = {
+      decisionLog: { findMany: vi.fn(async () => []) },
+      changeLog: { findMany: vi.fn(async () => []) }
+    };
+    const transaction = vi.fn(async (work: (client: typeof tx) => Promise<unknown>, options: unknown) => {
+      expect(options).toEqual(expect.objectContaining({ isolationLevel: "RepeatableRead" }));
+      return work(tx);
+    });
+    const metrics = {
+      dashboardSummary: vi.fn(async () => ({
+        totals: { spendUsd: 0, spendKrw: 0, purchaseCount: 0, cpaKrw: 0, revenueKrw: 0, marginKrw: 0 },
+        health: { unmatchedCount: 0, missingCostRuleCount: 0, missingCpaRuleCount: 0 }
+      })),
+      productMetrics: vi.fn(async () => []),
+      adsetMetrics: vi.fn(async () => []),
+      unmatchedMetrics: vi.fn(async () => [])
+    };
+    const service = new ReportsService({ $transaction: transaction } as never, metrics as never, {} as never);
+
+    await (service as unknown as {
+      renderWorkbook(from: string, to: string, type: "CHANGE_LOG_XLSX"): Promise<ExcelJS.Workbook>;
+    }).renderWorkbook("2026-08-01", "2026-08-02", "CHANGE_LOG_XLSX");
+
+    expect(transaction).toHaveBeenCalledOnce();
+    for (const call of [
+      metrics.dashboardSummary, metrics.productMetrics, metrics.adsetMetrics, metrics.unmatchedMetrics
+    ]) expect(call.mock.calls[0]).toContain(tx);
+    expect(tx.decisionLog.findMany).toHaveBeenCalledOnce();
+    expect(tx.changeLog.findMany).toHaveBeenCalledOnce();
+  });
+});

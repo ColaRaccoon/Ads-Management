@@ -1,5 +1,6 @@
 import { NotFoundException, ServiceUnavailableException, StreamableFile } from "@nestjs/common";
 import { ReportType } from "@prisma/client";
+import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -14,6 +15,7 @@ const REPORT_ID = "22222222-2222-4222-8222-222222222222";
 const roots: string[] = [];
 
 afterEach(async () => {
+  vi.useRealTimers();
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
@@ -92,6 +94,7 @@ describe("ReportsService durable storage", () => {
     const report = {
       ...reportRow(),
       status: "CREATED",
+      fileHashSha256: stored.hash,
       filePath: path.join(root, ...stored.key.split("/"))
     };
     const service = new ReportsService(
@@ -103,6 +106,99 @@ describe("ReportsService durable storage", () => {
     const download = await service.download(REPORT_ID);
     expect(download.size).toBe(Buffer.byteLength("legacy report"));
     expect(await collect(download.stream)).toBe("legacy report");
+  });
+
+  it("fails a third concurrent spool closed and releases the shared lease on stream close", async () => {
+    const root = await temporaryRoot();
+    const storage = new LocalFileStorage(root);
+    const body = Buffer.from("budgeted report");
+    const stored = await storage.put({ key: "2026/08/budgeted.html", body });
+    const report = {
+      ...reportRow(),
+      status: "CREATED",
+      fileHashSha256: stored.hash,
+      filePath: `local:${stored.key}`
+    };
+    const service = new ReportsService(
+      { reportExport: { findUnique: vi.fn(async () => report) } } as never,
+      {} as never,
+      config({ REPORT_STORAGE_DIR: root, TEMP_STORAGE_BUDGET_BYTES: "100" })
+    );
+
+    const first = await service.download(REPORT_ID);
+    const second = await service.download(REPORT_ID);
+    const saturated = await rejected(service.download(REPORT_ID));
+    expect(saturated).toBeInstanceOf(ServiceUnavailableException);
+    expect((saturated as ServiceUnavailableException).getResponse()).toMatchObject({
+      code: "REPORT_STORAGE_UNAVAILABLE"
+    });
+
+    await Promise.all([destroyAndWait(first.stream), destroyAndWait(second.stream)]);
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    const retry = await service.download(REPORT_ID);
+    expect(await collect(retry.stream)).toBe(body.toString("utf8"));
+  });
+
+  it("destroys a slow report stream at the absolute lifetime and releases its lease", async () => {
+    const root = await temporaryRoot();
+    const storage = new LocalFileStorage(root);
+    const body = Buffer.from("slow report");
+    const stored = await storage.put({ key: "2026/08/slow.html", body });
+    const report = {
+      ...reportRow(),
+      status: "CREATED",
+      fileHashSha256: stored.hash,
+      filePath: `local:${stored.key}`
+    };
+    const service = new ReportsService(
+      { reportExport: { findUnique: vi.fn(async () => report) } } as never,
+      {} as never,
+      config({
+        REPORT_STORAGE_DIR: root,
+        TEMP_STORAGE_BUDGET_BYTES: "100",
+        REPORT_DOWNLOAD_MAX_LIFETIME_MS: "1000"
+      })
+    );
+
+    vi.useFakeTimers();
+    const download = await service.download(REPORT_ID);
+    const failed = new Promise<Error>((resolve) => download.stream.once("error", resolve));
+    const closed = new Promise<void>((resolve) => download.stream.once("close", () => resolve()));
+    await vi.advanceTimersByTimeAsync(1_001);
+    await expect(failed).resolves.toBeInstanceOf(Error);
+    await closed;
+    vi.useRealTimers();
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    const retry = await service.download(REPORT_ID);
+    expect(await collect(retry.stream)).toBe(body.toString("utf8"));
+  });
+
+  it("refuses a same-size corrupted report before publishing response bytes", async () => {
+    const root = await temporaryRoot();
+    const expected = Buffer.from("expected-report");
+    const corrupted = Buffer.from("corruptd-report");
+    const stored = await new LocalFileStorage(root).put({
+      key: "2026/08/corrupt.html",
+      body: corrupted
+    });
+    const report = {
+      ...reportRow(),
+      status: "CREATED",
+      filePath: `local:${stored.key}`,
+      fileHashSha256: createHash("sha256").update(expected).digest("hex")
+    };
+    const service = new ReportsService(
+      { reportExport: { findUnique: vi.fn(async () => report) } } as never,
+      {} as never,
+      config({ REPORT_STORAGE_DIR: root })
+    );
+
+    const error = await rejected(service.download(REPORT_ID));
+    expect(error).toBeInstanceOf(ServiceUnavailableException);
+    expect((error as ServiceUnavailableException).getResponse()).toMatchObject({
+      code: "REPORT_STORAGE_INTEGRITY_FAILED"
+    });
   });
 
   it("rejects a legacy report path outside the configured report root", async () => {
@@ -209,4 +305,19 @@ async function collect(stream: Readable) {
   const chunks: Buffer[] = [];
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
   return Buffer.concat(chunks).toString("utf8");
+}
+
+async function destroyAndWait(stream: Readable) {
+  const closed = new Promise<void>((resolve) => stream.once("close", () => resolve()));
+  stream.destroy();
+  await closed;
+}
+
+async function rejected(promise: Promise<unknown>) {
+  try {
+    await promise;
+  } catch (error) {
+    return error;
+  }
+  throw new Error("Expected promise to reject");
 }

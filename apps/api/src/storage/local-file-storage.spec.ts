@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, readdir, rm, symlink } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -19,6 +19,14 @@ afterEach(async () => {
 });
 
 describe("LocalFileStorage", () => {
+  it("probes an existing non-reparse root without creating files", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "local-storage-ready-"));
+    try {
+      const storage = new LocalFileStorage(root);
+      await expect(storage.assertReady(1)).resolves.toBeUndefined();
+      await expect(readdir(root)).resolves.toEqual([]);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
   it("puts and streams an object with stable size and SHA-256 metadata", async () => {
     const root = await temporaryRoot();
     const storage = new LocalFileStorage(root);
@@ -115,6 +123,22 @@ describe("LocalFileStorage", () => {
 
     await expect(storage.put({ key: "linked/object", body: Buffer.from("x") }))
       .rejects.toBeInstanceOf(InvalidStorageKeyError);
+  });
+
+  it("rejects a reparse ancestor before creating any directory through it", async () => {
+    const parent = await temporaryRoot();
+    const outside = await temporaryRoot();
+    const junction = path.join(parent, "junction");
+    try {
+      await symlink(outside, junction, "junction");
+    } catch (error) {
+      if (error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "EPERM") return;
+      throw error;
+    }
+    const storage = new LocalFileStorage(path.join(junction, "must-not-be-created"));
+    await expect(storage.put({ key: "object", body: Buffer.from("x") }))
+      .rejects.toBeInstanceOf(InvalidStorageKeyError);
+    await expect(stat(path.join(outside, "must-not-be-created"))).rejects.toMatchObject({ code: "ENOENT" });
   });
 
   it("returns false for a missing delete and keeps missing reads distinct", async () => {

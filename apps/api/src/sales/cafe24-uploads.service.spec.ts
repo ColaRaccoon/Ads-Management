@@ -282,6 +282,12 @@ describe("Cafe24UploadsService rematch", () => {
 });
 
 describe("Cafe24UploadsService duplicate upload guard", () => {
+  it("returns the winning SKIP batch when concurrent creates collide",async()=>{
+    const winner={id:"race-winner",status:UploadStatus.IMPORTED,rowCount:0,validRowCount:0,warningCount:0,errorCount:0,orderStart:null,orderEnd:null,columnSchema:{schemaVersion:2,previewSummary:null},importedAt:new Date()};let winnerVisible=false;
+    const prisma={cafe24UploadBatch:{findMany:vi.fn(async()=>[]),findUnique:vi.fn(async({where}:any)=>where.id?winner:winnerVisible?winner:null),create:vi.fn(async()=>{winnerVisible=true;throw new Prisma.PrismaClientKnownRequestError("unique",{code:"P2002",clientVersion:"test"})})},cafe24OrderLine:{count:vi.fn(async()=>0)}};
+    const service=new Cafe24UploadsService(prisma as never,{} as never);(service as unknown as{parser:{parseBuffer:()=>unknown;preview:()=>unknown}}).parser={parseBuffer:()=>({headers:[],rows:[]}),preview:()=>({rowCount:0})};
+    await expect(service.importCafe24Csv({originalname:"orders.csv",buffer:Buffer.from("race")} as Express.Multer.File,ConflictPolicy.SKIP,ACTOR_ID)).resolves.toMatchObject({duplicate:true,batchId:"race-winner",status:UploadStatus.IMPORTED});
+  });
   it("attributes a newly created batch to the authenticated actor", async () => {
     const create = vi.fn(async ({ data }) => ({ id: "batch-actor", ...data }));
     const prisma = {

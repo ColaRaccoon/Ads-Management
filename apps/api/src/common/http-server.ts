@@ -1,5 +1,6 @@
 import { INestApplication } from "@nestjs/common";
 import { json, NextFunction, Request, Response, urlencoded } from "express";
+import { createHash } from "node:crypto";
 import helmet from "helmet";
 import { AuthConfig } from "../auth/auth.config";
 import { HttpSecurityConfig } from "./http-security.config";
@@ -20,6 +21,7 @@ export function configureHttpServer(
 
   const requestContext = new RequestContextMiddleware();
   app.use(requestContext.use.bind(requestContext));
+  app.use(trackRawRequestBodyDigest);
   app.enableCors({
     origin(
       origin: string | undefined,
@@ -62,4 +64,22 @@ export function configureHttpServer(
     extended: false,
     parameterLimit: 100
   }));
+}
+
+export type RawBodyDigestRequest = Request & {
+  localRawBodySha256?: string;
+  localRawBodyDigestComplete?: boolean;
+  localExpectedEdgeBodySha256?: string;
+};
+
+export function trackRawRequestBodyDigest(request: RawBodyDigestRequest, _response: Response, next: NextFunction) {
+  const hasFramedBody=request.headers["transfer-encoding"]!==undefined||Number(request.headers["content-length"]??"0")>0;
+  if(!hasFramedBody){request.localRawBodySha256=createHash("sha256").digest("hex");request.localRawBodyDigestComplete=true;next();return}
+  const hash=createHash("sha256");let completed=false;const originalEmit=request.emit.bind(request);
+  request.emit=((event:string|symbol,...args:unknown[])=>{
+    if(event==="data"&&!completed&&args[0]!==undefined)hash.update(Buffer.isBuffer(args[0])?args[0]:Buffer.from(args[0] as ArrayBuffer));
+    if(event==="end"&&!completed){completed=true;request.localRawBodySha256=hash.digest("hex");request.localRawBodyDigestComplete=true}
+    return originalEmit(event,...args);
+  }) as Request["emit"];
+  next();
 }

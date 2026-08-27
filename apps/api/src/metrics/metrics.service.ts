@@ -1,4 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "../common/prisma.service";
 import { DashboardMetricsService } from "./dashboard-metrics.service";
 import { MetaAdMetricsReadService } from "./meta-ad-metrics-read.service";
 import { MetaAdsetMetricDecorationService } from "./meta-adset-metric-decoration.service";
@@ -28,20 +30,20 @@ export class MetricsService {
     private readonly decorationService: MetaAdsetMetricDecorationService
   ) {}
 
-  dashboardSummary(from?: string, to?: string, compare?: string, deliveryStatusInput?: string) {
-    return this.dashboardMetricsService.dashboardSummary(from, to, compare, deliveryStatusInput);
+  dashboardSummary(from?: string, to?: string, compare?: string, deliveryStatusInput?: string, client?: PrismaService | Prisma.TransactionClient) {
+    return this.dashboardMetricsService.dashboardSummary(from, to, compare, deliveryStatusInput, client);
   }
 
   dashboardTrends(from?: string, to?: string, groupBy = "date", deliveryStatusInput?: string) {
     return this.dashboardMetricsService.dashboardTrends(from, to, groupBy, deliveryStatusInput);
   }
 
-  productMetrics(from?: string, to?: string, deliveryStatusInput?: string) {
-    return this.adsetMetricsReadService.productMetrics(from, to, deliveryStatusInput);
+  productMetrics(from?: string, to?: string, deliveryStatusInput?: string, client?: PrismaService | Prisma.TransactionClient) {
+    return this.adsetMetricsReadService.productMetrics(from, to, deliveryStatusInput, client);
   }
 
-  adsetMetrics(query: AdsetMetricQuery) {
-    return this.adsetMetricsReadService.adsetMetrics(query);
+  adsetMetrics(query: AdsetMetricQuery, client?: PrismaService | Prisma.TransactionClient) {
+    return this.adsetMetricsReadService.adsetMetrics(query, client);
   }
 
   campaignMetrics(query: CampaignMetricQuery) {
@@ -72,8 +74,8 @@ export class MetricsService {
     return this.adMetricsReadService.adsetsForCampaign(metaCampaignId, from, to, deliveryStatusInput);
   }
 
-  unmatchedMetrics(from?: string, to?: string, deliveryStatusInput?: string) {
-    return this.adsetMetricsReadService.unmatchedMetrics(from, to, deliveryStatusInput);
+  unmatchedMetrics(from?: string, to?: string, deliveryStatusInput?: string, client?: PrismaService | Prisma.TransactionClient) {
+    return this.adsetMetricsReadService.unmatchedMetrics(from, to, deliveryStatusInput, client);
   }
 
   decoratedMetrics(fromDate: Date, toDate: Date, deliveryStatusInput?: string) {
