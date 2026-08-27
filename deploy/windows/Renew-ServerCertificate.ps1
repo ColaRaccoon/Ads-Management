@@ -1,0 +1,66 @@
+#Requires -Version 7.2
+[CmdletBinding()]
+param(
+  [ValidateSet('Plan','Issue','Verify','Rollback')][string]$Action='Plan',
+  [string]$Hostname,[string]$OutputRoot,[string]$OfflineCaPfxPath,[string]$ExpectedOfflineCaPfxSha256,[string]$OfflineCaPasswordEscrowPath,[string]$ExpectedOfflineCaPasswordEscrowSha256,
+  [string]$CaCertificatePath,[string]$ExpectedCaCertificateSha256,[string]$ExpectedCaThumbprint,
+  [string]$FileSystemEvidencePath,[string]$ExpectedFileSystemEvidenceSha256,[string]$ExpectedFilesystemDescriptorDigest,
+  [string]$NodePath,[string]$ExpectedNodeSha256,[string]$VerifierScriptPath,[string]$ExpectedVerifierScriptSha256,
+  [ValidateSet('Issue','Rollback')][string]$PlannedAction,[string]$ApprovedPlanSha256,[switch]$Approved
+)
+$ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'approval-plan.ps1')
+if($PSVersionTable.PSVersion.Major-lt7){throw'POWERSHELL_7_REQUIRED_FOR_PKCS8_EXPORT'}
+function NoReparse([string]$Path){$cursor=Get-Item -LiteralPath ([IO.Path]::GetFullPath($Path)) -Force;while($cursor){if($cursor.Attributes-band[IO.FileAttributes]::ReparsePoint){throw'RENEWAL_REPARSE_REJECTED'};$cursor=$cursor.Parent}}
+function Root([string]$Value){if(-not[IO.Path]::IsPathFullyQualified($Value)){throw'RENEWAL_ROOT_MUST_BE_ABSOLUTE'};$root=[IO.Path]::GetFullPath($Value).TrimEnd('\');if($root-eq[IO.Path]::GetPathRoot($root)-or-not(Test-Path -LiteralPath $root -PathType Container)){throw'RENEWAL_ROOT_INVALID'};NoReparse $root;return$root}
+function Under([string]$Path,[string[]]$Roots){$full=[IO.Path]::GetFullPath($Path);return@($Roots|Where-Object{$root=[IO.Path]::GetFullPath([string]$_).TrimEnd('\');$full-ieq$root-or$full.StartsWith($root+'\',[StringComparison]::OrdinalIgnoreCase)}).Count-gt0}
+function Hash([string]$Path){return(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()}
+function Pinned([string]$Path,[string]$Expected,[string]$Code){if($Expected-notmatch'^[A-Fa-f0-9]{64}$'-or(Hash $Path)-cne$Expected.ToLowerInvariant()){throw$Code}}
+function Write-Pem([string]$Label,[byte[]]$Bytes,[string]$Path){$body=[Convert]::ToBase64String($Bytes,[Base64FormattingOptions]::InsertLineBreaks);[IO.File]::WriteAllText($Path,"-----BEGIN $Label-----`r`n$body`r`n-----END $Label-----`r`n",[Text.Encoding]::ASCII)}
+function Assert-AdminOnlyFile([string]$Path){NoReparse $Path;$acl=Get-Acl -LiteralPath $Path;if(-not$acl.AreAccessRulesProtected-or@($acl.Access).Count-ne2-or$acl.Owner.Translate([Security.Principal.SecurityIdentifier]).Value-notin@('S-1-5-18','S-1-5-32-544')){throw'OFFLINE_CA_ACL_INVALID'};foreach($rule in $acl.Access){$sid=$rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value;if($sid-notin@('S-1-5-18','S-1-5-32-544')-or$rule.AccessControlType-ne'Allow'-or$rule.FileSystemRights-ne[Security.AccessControl.FileSystemRights]::FullControl-or$rule.IsInherited){throw'OFFLINE_CA_ACL_INVALID'}}}
+function Cleanup([string]$Root){$targets=@(@('server.cer','server.pem','server-key.pem','renewal-manifest.json')|ForEach-Object{Join-Path $Root $_});foreach($target in $targets){if(Test-Path -LiteralPath $target){Remove-Item -LiteralPath $target -Force -ErrorAction Stop}};if(@($targets|Where-Object{Test-Path -LiteralPath $_}).Count-ne0){throw'RENEWAL_PARTIAL_CLEANUP_FAILED'}}
+function New-RenewalApprovalPlan([string]$IntendedAction){
+  if($IntendedAction-notin@('Issue','Rollback')){throw'PLANNED_ACTION_REQUIRED'}
+  if($Hostname-notmatch'^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$'-or$ExpectedCaThumbprint-notmatch'^[A-Fa-f0-9]{40}$'){throw'RENEWAL_PLAN_CERTIFICATE_IDENTITY_INVALID'}
+  $parameters=[ordered]@{hostname=$Hostname;outputRoot=(Get-ApprovalPath $OutputRoot 'RENEWAL_PLAN_OUTPUT_ROOT_REQUIRED');offlineCaPfxPath=(Get-ApprovalPath $OfflineCaPfxPath 'RENEWAL_PLAN_PFX_PATH_REQUIRED');offlineCaPfxSha256=(Get-ApprovalHash $ExpectedOfflineCaPfxSha256 'RENEWAL_PLAN_PFX_HASH_REQUIRED');offlineCaPasswordEscrowPath=(Get-ApprovalPath $OfflineCaPasswordEscrowPath 'RENEWAL_PLAN_ESCROW_PATH_REQUIRED');offlineCaPasswordEscrowSha256=(Get-ApprovalHash $ExpectedOfflineCaPasswordEscrowSha256 'RENEWAL_PLAN_ESCROW_HASH_REQUIRED');caCertificatePath=(Get-ApprovalPath $CaCertificatePath 'RENEWAL_PLAN_CA_PATH_REQUIRED');caCertificateSha256=(Get-ApprovalHash $ExpectedCaCertificateSha256 'RENEWAL_PLAN_CA_HASH_REQUIRED');caThumbprint=$ExpectedCaThumbprint.ToUpperInvariant();filesystemEvidencePath=(Get-ApprovalPath $FileSystemEvidencePath 'RENEWAL_PLAN_FILESYSTEM_EVIDENCE_PATH_REQUIRED');filesystemEvidenceSha256=(Get-ApprovalHash $ExpectedFileSystemEvidenceSha256 'RENEWAL_PLAN_FILESYSTEM_EVIDENCE_HASH_REQUIRED');filesystemDescriptorDigest=(Get-ApprovalHash $ExpectedFilesystemDescriptorDigest 'RENEWAL_PLAN_FILESYSTEM_DESCRIPTOR_REQUIRED');nodePath=(Get-ApprovalPath $NodePath 'RENEWAL_PLAN_NODE_PATH_REQUIRED');nodeSha256=(Get-ApprovalHash $ExpectedNodeSha256 'RENEWAL_PLAN_NODE_HASH_REQUIRED');verifierScriptPath=(Get-ApprovalPath $VerifierScriptPath 'RENEWAL_PLAN_VERIFIER_PATH_REQUIRED');verifierScriptSha256=(Get-ApprovalHash $ExpectedVerifierScriptSha256 'RENEWAL_PLAN_VERIFIER_HASH_REQUIRED')}
+  $target="Exact renewal artifacts for hostname $Hostname under $($parameters.outputRoot), signed by CA $($parameters.caThumbprint)"
+  $impact=if($IntendedAction-eq'Issue'){'Reads the encrypted offline CA material without exposing it, issues one exact-host certificate, and leaves active certificate/client trust unchanged'}else{'Removes only the exact renewal output artifacts; active certificate and client trust remain unchanged'}
+  $rollback=if($IntendedAction-eq'Issue'){'Remove only the exact renewal artifacts using a separately approved Rollback plan'}else{'Issue a replacement only through a new approved Issue plan'}
+  return New-ApprovalPlan $PSCommandPath $IntendedAction $parameters $target $impact $rollback
+}
+if($Action-eq'Plan'){New-RenewalApprovalPlan $PlannedAction|ConvertTo-Json -Depth 12;exit 0}
+$renewalMutation=if($Action-in@('Issue','Rollback')){$Action}else{$null};if($renewalMutation){Assert-ApprovedPlan (New-RenewalApprovalPlan $renewalMutation) ([bool]$Approved) $ApprovedPlanSha256}
+$root=Root $OutputRoot;$manifestPath=Join-Path $root'renewal-manifest.json';Pinned $FileSystemEvidencePath $ExpectedFileSystemEvidenceSha256 'FILESYSTEM_EVIDENCE_HASH_MISMATCH';$fs=Get-Content -Raw -LiteralPath $FileSystemEvidencePath|ConvertFrom-Json
+if($fs.result-ne'PASS'-or-not$fs.exactAcl-or$fs.descriptorDigest-cne$ExpectedFilesystemDescriptorDigest-or$ExpectedFilesystemDescriptorDigest-notmatch'^[0-9a-f]{64}$'-or-not(Under $root $fs.classRoots.EDGE_READ)-or-not(Under $OfflineCaPfxPath $fs.classRoots.ADMIN_ONLY)-or-not(Under $OfflineCaPasswordEscrowPath $fs.classRoots.ADMIN_ONLY)-or-not(Under $CaCertificatePath $fs.classRoots.EDGE_READ)){throw'RENEWAL_FILESYSTEM_EVIDENCE_REJECTED'}
+foreach($file in @($OfflineCaPfxPath,$OfflineCaPasswordEscrowPath,$CaCertificatePath)){if(-not(Test-Path -LiteralPath $file -PathType Leaf)){throw'RENEWAL_CA_FILE_MISSING'};NoReparse $file}
+Pinned $OfflineCaPfxPath $ExpectedOfflineCaPfxSha256 'OFFLINE_CA_PFX_HASH_MISMATCH';Pinned $OfflineCaPasswordEscrowPath $ExpectedOfflineCaPasswordEscrowSha256 'OFFLINE_CA_ESCROW_HASH_MISMATCH'
+Assert-AdminOnlyFile $OfflineCaPfxPath;Assert-AdminOnlyFile $OfflineCaPasswordEscrowPath
+if($ExpectedCaThumbprint-notmatch'^[A-Fa-f0-9]{40}$'-or$ExpectedCaCertificateSha256-notmatch'^[A-Fa-f0-9]{64}$'-or(Get-FileHash -LiteralPath $CaCertificatePath -Algorithm SHA256).Hash-ine$ExpectedCaCertificateSha256){throw'EXPECTED_CA_IDENTITY_INVALID'};$expectedThumb=$ExpectedCaThumbprint.ToUpperInvariant()
+if($Action-eq'Rollback'){Cleanup $root;[pscustomobject]@{Result='ROLLED_BACK';ExistingActiveCertificateChanged=$false;ClientTrustChanged=$false}|ConvertTo-Json;exit 0}
+if($Action-eq'Issue'){
+  if($Hostname-notmatch'^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$'){throw'HOSTNAME_REQUIRED'}
+  if(Get-ChildItem -LiteralPath $root -Force|Select-Object -First 1){throw'RENEWAL_TARGET_NOT_EMPTY'}
+  $password=[IO.File]::ReadAllText($OfflineCaPasswordEscrowPath,[Text.Encoding]::UTF8);if($password-notmatch'^[A-Za-z0-9_-]{43}$'){throw'OFFLINE_CA_PASSWORD_INVALID'}
+  $certificates=New-Object Security.Cryptography.X509Certificates.X509Certificate2Collection;$server=$null;$completed=$false
+  try{
+    $certificates.Import($OfflineCaPfxPath,$password,[Security.Cryptography.X509Certificates.X509KeyStorageFlags]::EphemeralKeySet);$ca=@($certificates|Where-Object{$_.Thumbprint-ieq$expectedThumb-and$_.HasPrivateKey});if($ca.Count-ne1){throw'OFFLINE_CA_THUMBPRINT_OR_PRIVATE_KEY_MISMATCH'}
+    $basic=@($ca[0].Extensions|Where-Object{$_.Oid.Value-eq'2.5.29.19'});if($basic.Count-ne1-or-not$basic[0].CertificateAuthority-or$ca[0].NotAfter-le(Get-Date).AddDays(397)){throw'OFFLINE_CA_CONSTRAINT_OR_LIFETIME_INVALID'}
+    if(Test-Path -LiteralPath "Cert:\CurrentUser\My\$expectedThumb"){throw'CA_PRESENT_IN_ONLINE_STORE'}
+    $server=New-SelfSignedCertificate -Type Custom -Subject "CN=$Hostname" -DnsName $Hostname -Signer $ca[0] -KeyAlgorithm RSA -KeyLength 3072 -HashAlgorithm SHA256 -KeyExportPolicy Exportable -KeyUsage DigitalSignature,KeyEncipherment -CertStoreLocation 'Cert:\CurrentUser\My' -NotAfter (Get-Date).AddDays(397) -TextExtension @('2.5.29.19={critical}{text}ca=0','2.5.29.37={critical}{text}1.3.6.1.5.5.7.3.1')
+    Export-Certificate -Cert $server -FilePath(Join-Path $root'server.cer') -Type CERT|Out-Null;Write-Pem 'CERTIFICATE' ($server.Export([Security.Cryptography.X509Certificates.X509ContentType]::Cert)) (Join-Path $root'server.pem')
+    $rsa=[Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($server);try{Write-Pem 'PRIVATE KEY' ($rsa.ExportPkcs8PrivateKey()) (Join-Path $root'server-key.pem')}finally{$rsa.Dispose()}
+    $manifest=[ordered]@{version=2;hostname=$Hostname;caThumbprint=$expectedThumb;caCertificateSha256=$ExpectedCaCertificateSha256.ToLowerInvariant();serverThumbprint=$server.Thumbprint;serverNotBefore=$server.NotBefore.ToUniversalTime().ToString('o');serverNotAfter=$server.NotAfter.ToUniversalTime().ToString('o');renewAfter=$server.NotAfter.ToUniversalTime().AddDays(-60).ToString('o');createdAt=(Get-Date).ToUniversalTime().ToString('o');files=@{certificate=(Get-FileHash -LiteralPath(Join-Path $root'server.pem') -Algorithm SHA256).Hash.ToLowerInvariant();privateKey=(Get-FileHash -LiteralPath(Join-Path $root'server-key.pem') -Algorithm SHA256).Hash.ToLowerInvariant()}};[IO.File]::WriteAllText($manifestPath,($manifest|ConvertTo-Json -Depth 4),(New-Object Text.UTF8Encoding($false)));$completed=$true
+  }finally{
+    $password=$null;foreach($certificate in $certificates){$certificate.Dispose()};$serverThumb=if($server){$server.Thumbprint}else{$null};$cleanupFailure=$null
+    try{if($serverThumb){Remove-Item -LiteralPath "Cert:\CurrentUser\My\$serverThumb" -ErrorAction Stop};if((Get-ChildItem Cert:\CurrentUser\My|Where-Object{$_.Thumbprint-in@($expectedThumb,$serverThumb)}).Count-ne0){throw'ONLINE_CERTIFICATE_KEY_CLEANUP_FAILED'}}catch{$cleanupFailure=$_}
+    if(-not$completed){try{Cleanup $root}catch{if(-not$cleanupFailure){$cleanupFailure=$_}}}
+    if($cleanupFailure){throw$cleanupFailure}
+  }
+  [pscustomobject]@{Result='ISSUED';SameCa=$true;CaImportedEphemerally=$true;OnlineStoreClean=$true;ExistingActiveCertificateChanged=$false;ClientTrustChanged=$false;RenewBefore=$manifest.renewAfter}|ConvertTo-Json;exit 0
+}
+foreach($file in @($manifestPath,$NodePath,$VerifierScriptPath,(Join-Path $root'server.pem'),(Join-Path $root'server-key.pem'))){if(-not(Test-Path -LiteralPath $file -PathType Leaf)){throw'RENEWAL_VERIFY_FILE_MISSING'};NoReparse $file}
+Pinned $NodePath $ExpectedNodeSha256 'NODE_HASH_MISMATCH';Pinned $VerifierScriptPath $ExpectedVerifierScriptSha256 'TLS_VERIFIER_HASH_MISMATCH';if(-not(Under $NodePath $fs.classRoots.SHARED_RUNTIME)-or-not(Under $VerifierScriptPath $fs.classRoots.SHARED_RUNTIME)){throw'RENEWAL_VERIFIER_OUTSIDE_SHARED_RUNTIME'}
+$manifest=Get-Content -Raw -LiteralPath $manifestPath|ConvertFrom-Json
+if($manifest.version-ne2-or$manifest.caThumbprint-cne$expectedThumb-or$manifest.caCertificateSha256-cne$ExpectedCaCertificateSha256.ToLowerInvariant()-or$manifest.hostname-cne$Hostname-or(Get-FileHash -LiteralPath(Join-Path $root'server.pem') -Algorithm SHA256).Hash.ToLowerInvariant()-cne$manifest.files.certificate-or(Get-FileHash -LiteralPath(Join-Path $root'server-key.pem') -Algorithm SHA256).Hash.ToLowerInvariant()-cne$manifest.files.privateKey-or[datetime]$manifest.renewAfter-le(Get-Date).ToUniversalTime()){throw'RENEWAL_MANIFEST_OR_HASH_INVALID'}
+$result=&$NodePath $VerifierScriptPath $CaCertificatePath (Join-Path $root'server.pem') (Join-Path $root'server-key.pem') $Hostname;if($LASTEXITCODE-ne0-or($result|ConvertFrom-Json).result-ne'PASS'){throw'RENEWAL_CRYPTOGRAPHIC_VERIFY_FAILED'}
+[pscustomobject]@{Result='PASS';SameCa=$true;HostnameMatched=$true;PrivateKeyMatched=$true;RenewalWindowValid=$true;OnlineStoreClean=$true}|ConvertTo-Json

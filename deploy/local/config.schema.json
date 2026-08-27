@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/meta-ads-performance/local-runtime.schema.json",
+  "title": "Meta Ads Performance local runtime configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "deploymentMode", "internalPorts", "database", "data", "release", "lan", "tls", "hostSecurity", "backup"],
+  "properties": {
+    "version": { "const": 1 },
+    "deploymentMode": { "const": "local_lan" },
+    "internalPorts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["web", "api"],
+      "properties": {
+        "web": { "const": 3200 },
+        "api": { "const": 4200 }
+      }
+    },
+    "database": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider", "projectRef", "connectionMode", "host", "port", "name", "runtimeUser", "migrationUser", "backupUser", "restoreUser", "schema", "caCertificatePath", "caCertificateSha256", "boundaryEvidencePath"],
+      "properties": {
+        "provider": { "const": "supabase_postgres" },
+        "projectRef": { "type": ["string", "null"], "pattern": "^[a-z]{20}$" },
+        "connectionMode": { "type": ["string", "null"], "enum": ["direct", "session_pooler", null] },
+        "host": { "type": ["string", "null"] },
+        "port": { "type": ["integer", "null"], "enum": [5432, null] },
+        "name": { "type": ["string", "null"] },
+        "runtimeUser": { "type": ["string", "null"] },
+        "migrationUser": { "type": ["string", "null"] },
+        "backupUser": { "type": ["string", "null"] },
+        "restoreUser": { "type": ["string", "null"] },
+        "schema": { "type": ["string", "null"] },
+        "caCertificatePath": { "type": ["string", "null"] },
+        "caCertificateSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "boundaryEvidencePath": { "type": ["string", "null"] }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root"],
+      "properties": { "root": { "type": ["string", "null"] } }
+    },
+    "release": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "migrationDigest"],
+      "properties": {
+        "id": { "type": ["string", "null"] },
+        "migrationDigest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "lan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "hostname", "bindAddress", "allowedCidrs", "expectedClientCount", "expectedClientSetDigest"],
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "hostname": { "type": ["string", "null"] },
+        "bindAddress": { "type": ["string", "null"] },
+        "allowedCidrs": { "type": "array", "description": "One exact private IPv4 /32 entry per approved client; subnet-wide ranges are forbidden.", "items": { "type": "string", "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}/32$" }, "uniqueItems": true },
+        "expectedClientCount": { "type": ["integer", "null"], "minimum": 1, "maximum": 10000 },
+        "expectedClientSetDigest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "tls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caCertificatePath", "serverCertificatePath", "serverPrivateKeyPath", "clientTrustVerified", "clientTrustEvidencePath", "hstsEnabled"],
+      "properties": {
+        "caCertificatePath": { "type": ["string", "null"] },
+        "serverCertificatePath": { "type": ["string", "null"] },
+        "serverPrivateKeyPath": { "type": ["string", "null"] },
+        "clientTrustVerified": { "type": "boolean", "default": false },
+        "clientTrustEvidencePath": { "type": ["string", "null"] },
+        "hstsEnabled": { "type": "boolean", "default": false }
+      }
+    },
+    "hostSecurity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["filesystemEvidencePath", "firewallEvidencePath", "edgeSigningPublicKeyPath", "edgeSigningPrivateKeyPath", "nodeProgramPath", "nodeProgramSha256", "edgeServiceSid"],
+      "properties": {
+        "filesystemEvidencePath": { "type": ["string", "null"] },
+        "firewallEvidencePath": { "type": ["string", "null"] },
+        "edgeSigningPublicKeyPath": { "type": ["string", "null"] },
+        "edgeSigningPrivateKeyPath": { "type": ["string", "null"] },
+        "nodeProgramPath": { "type": ["string", "null"] },
+        "nodeProgramSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "edgeServiceSid": { "type": ["string", "null"] }
+      }
+    },
+    "backup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "dailyTime", "rpoHours", "rtoHours", "physicalTargetEvidencePath", "scheduledTaskEvidencePath", "latestBackupEvidencePath", "restoreEvidencePath", "recoveryEvidencePath", "backupReceiptPublicKeyPath", "restoreReceiptPublicKeyPath"],
+      "properties": {
+        "root": { "type": ["string", "null"] },
+        "dailyTime": { "type": ["string", "null"], "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$" },
+        "rpoHours": { "const": 24 },
+        "rtoHours": { "const": 4 },
+        "physicalTargetEvidencePath": { "type": ["string", "null"] },
+        "scheduledTaskEvidencePath": { "type": ["string", "null"] },
+        "latestBackupEvidencePath": { "type": ["string", "null"] },
+        "restoreEvidencePath": { "type": ["string", "null"] },
+        "recoveryEvidencePath": { "type": ["string", "null"] },
+        "backupReceiptPublicKeyPath": { "type": ["string", "null"] },
+        "restoreReceiptPublicKeyPath": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

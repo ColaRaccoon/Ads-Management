@@ -1,0 +1,57 @@
+name: meta-ads-security-step8
+services:
+  release:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    env_file:
+      - path: ./staging.env
+        required: true
+    expose:
+      - "3200"
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3200/backend-api/health/ready',{headers:{'x-internal-probe-token':process.env.INTERNAL_PROBE_TOKEN}}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+    networks:
+      - private
+      - egress
+  edge:
+    build:
+      context: ..
+      dockerfile: deploy/edge.Dockerfile
+    environment:
+      PORT: "8080"
+      UPSTREAM_ORIGIN: "http://release:3200"
+      EXTERNAL_PROTO: "http"
+      MAINTENANCE_FILE: "/run/maintenance/enabled"
+    ports:
+      - "127.0.0.1:3300:8080"
+    read_only: true
+    volumes:
+      - maintenance_state:/run/maintenance
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    init: true
+    restart: unless-stopped
+    networks:
+      - private
+networks:
+  private:
+    internal: true
+  egress:
+volumes:
+  maintenance_state:

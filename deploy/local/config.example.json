@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "deploymentMode": "local_lan",
+  "internalPorts": { "web": 3200, "api": 4200 },
+  "database": {
+    "provider": "supabase_postgres",
+    "projectRef": null,
+    "connectionMode": null,
+    "host": null,
+    "port": null,
+    "name": null,
+    "runtimeUser": null,
+    "migrationUser": null,
+    "backupUser": null,
+    "restoreUser": null,
+    "schema": null,
+    "caCertificatePath": null,
+    "caCertificateSha256": null,
+    "boundaryEvidencePath": null
+  },
+  "data": { "root": null },
+  "release": { "id": null, "migrationDigest": null },
+  "lan": { "enabled": false, "hostname": null, "bindAddress": null, "allowedCidrs": [], "expectedClientCount": null, "expectedClientSetDigest": null },
+  "tls": {
+    "caCertificatePath": null,
+    "serverCertificatePath": null,
+    "serverPrivateKeyPath": null,
+    "clientTrustVerified": false,
+    "clientTrustEvidencePath": null,
+    "hstsEnabled": false
+  },
+  "hostSecurity": {
+    "filesystemEvidencePath": null,
+    "firewallEvidencePath": null,
+    "edgeSigningPublicKeyPath": null,
+    "edgeSigningPrivateKeyPath": null,
+    "nodeProgramPath": null,
+    "nodeProgramSha256": null,
+    "edgeServiceSid": null
+  },
+  "backup": {
+    "root": null,
+    "dailyTime": null,
+    "rpoHours": 24,
+    "rtoHours": 4,
+    "physicalTargetEvidencePath": null,
+    "scheduledTaskEvidencePath": null,
+    "latestBackupEvidencePath": null,
+    "restoreEvidencePath": null,
+    "recoveryEvidencePath": null,
+    "backupReceiptPublicKeyPath": null,
+    "restoreReceiptPublicKeyPath": null
+  }
+}
