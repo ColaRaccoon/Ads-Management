@@ -13,7 +13,7 @@ param(
   [string]$ExpectedFilesystemDescriptorDigest,
   [string]$OfflineCaPfxPath,
   [string]$OfflineCaPasswordEscrowPath,
-  [ValidateSet('Apply','Rollback')][string]$PlannedAction,[string]$ApprovedPlanSha256,[switch]$Approved
+  [ValidateSet('Apply','Rollback')][string]$PlannedAction,[string]$ApprovedPlanSha256,[string]$ApprovalNonce,[string]$ApprovalIssuedAt,[string]$ApprovalExpiresAt,[string]$ApprovalInstanceId,[string]$ApprovalLedgerPath,[switch]$Approved
 )
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
@@ -23,18 +23,18 @@ function Assert-SafeExistingRoot([string]$Value){
   if(-not[IO.Path]::IsPathFullyQualified($Value)){throw 'CERTIFICATE_ROOT_MUST_BE_ABSOLUTE'}
   $root=[IO.Path]::GetFullPath($Value).TrimEnd('\');if($root-eq[IO.Path]::GetPathRoot($root)-or-not(Test-Path -LiteralPath $root -PathType Container)){throw 'CERTIFICATE_ROOT_INVALID'}
   Assert-NoReparseAncestors $root
-  return$root
+  return $root
 }
 function Write-Pem([string]$Label,[byte[]]$Bytes,[string]$Path){$body=[Convert]::ToBase64String($Bytes,[Base64FormattingOptions]::InsertLineBreaks);[IO.File]::WriteAllText($Path,"-----BEGIN $Label-----`r`n$body`r`n-----END $Label-----`r`n",[Text.Encoding]::ASCII)}
-function Under([string]$Path,[string[]]$Roots){$full=[IO.Path]::GetFullPath($Path);return@($Roots|Where-Object{$root=[IO.Path]::GetFullPath([string]$_).TrimEnd('\');$full-ieq$root-or$full.StartsWith($root+'\',[StringComparison]::OrdinalIgnoreCase)}).Count-gt0}
+function Under([string]$Path,[string[]]$Roots){$full=[IO.Path]::GetFullPath($Path);return @($Roots|Where-Object{$root=[IO.Path]::GetFullPath([string]$_).TrimEnd('\');$full-ieq$root-or$full.StartsWith($root+'\',[StringComparison]::OrdinalIgnoreCase)}).Count-gt0}
 function Hash([string]$Path){return(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()}
-function Assert-Pinned([string]$Path,[string]$Expected,[string]$Code){if(-not(Test-Path -LiteralPath $Path -PathType Leaf)-or$Expected-notmatch'^[A-Fa-f0-9]{64}$'-or(Hash $Path)-cne$Expected.ToLowerInvariant()){throw$Code};Assert-NoReparseAncestors $Path}
+function Assert-Pinned([string]$Path,[string]$Expected,[string]$Code){if(-not(Test-Path -LiteralPath $Path -PathType Leaf)-or$Expected-notmatch'^[A-Fa-f0-9]{64}$'-or(Hash $Path)-cne$Expected.ToLowerInvariant()){throw $Code};Assert-NoReparseAncestors $Path}
 function Assert-AdminOnlyRoot([string]$Path){$root=Split-Path -Parent ([IO.Path]::GetFullPath($Path));if(-not(Test-Path -LiteralPath $root -PathType Container)-or(Get-Volume -FilePath $root).FileSystem-ne'NTFS'){throw 'OFFLINE_CA_ROOT_INVALID'};Assert-NoReparseAncestors $root;$acl=Get-Acl -LiteralPath $root;if(-not$acl.AreAccessRulesProtected-or$acl.Owner.Translate([Security.Principal.SecurityIdentifier]).Value-notin@('S-1-5-18','S-1-5-32-544')){throw 'OFFLINE_CA_ROOT_ACL_INVALID'};foreach($rule in $acl.Access){$sid=$rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value;if($sid-notin@('S-1-5-18','S-1-5-32-544')-or$rule.AccessControlType-ne'Allow'-or$rule.FileSystemRights-ne[Security.AccessControl.FileSystemRights]::FullControl){throw 'OFFLINE_CA_ROOT_ACL_INVALID'}}}
 function Protect-AdminOnlyFile([string]$Path){$security=New-Object Security.AccessControl.FileSecurity;$admin=New-Object Security.Principal.SecurityIdentifier('S-1-5-32-544');$security.SetOwner($admin);$security.SetAccessRuleProtection($true,$false);foreach($sid in @('S-1-5-18','S-1-5-32-544')){$rule=New-Object Security.AccessControl.FileSystemAccessRule((New-Object Security.Principal.SecurityIdentifier($sid)),[Security.AccessControl.FileSystemRights]::FullControl,[Security.AccessControl.AccessControlType]::Allow);$security.AddAccessRule($rule)|Out-Null};Set-Acl -LiteralPath $Path -AclObject $security}
-function Cleanup-Generated([string]$Root){$targets=@('internal-ca.cer','server.cer','server.pem','server-key.pem','certificate-manifest.json'|ForEach-Object{Join-Path $Root $_})+@($OfflineCaPfxPath,$OfflineCaPasswordEscrowPath);foreach($target in $targets){if(Test-Path -LiteralPath $target){Remove-Item -LiteralPath $target -Force -ErrorAction Stop}};if(@($targets|Where-Object{Test-Path -LiteralPath $_}).Count-ne0){throw'CERTIFICATE_PARTIAL_CLEANUP_FAILED'}}
+function Cleanup-Generated([string]$Root){$targets=@('internal-ca.cer','server.cer','server.pem','server-key.pem','certificate-manifest.json'|ForEach-Object{Join-Path $Root $_})+@($OfflineCaPfxPath,$OfflineCaPasswordEscrowPath);foreach($target in $targets){if(Test-Path -LiteralPath $target){Remove-Item -LiteralPath $target -Force -ErrorAction Stop}};if(@($targets|Where-Object{Test-Path -LiteralPath $_}).Count-ne0){throw 'CERTIFICATE_PARTIAL_CLEANUP_FAILED'}}
 function New-InternalCaApprovalPlan([string]$IntendedAction){
-  if($IntendedAction-notin@('Apply','Rollback')){throw'PLANNED_ACTION_REQUIRED'}
-  if($Hostname-notmatch'^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$'){throw'CA_PLAN_HOSTNAME_REQUIRED'}
+  if($IntendedAction-notin@('Apply','Rollback')){throw 'PLANNED_ACTION_REQUIRED'}
+  if($Hostname-notmatch'^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$'){throw 'CA_PLAN_HOSTNAME_REQUIRED'}
   $parameters=[ordered]@{hostname=$Hostname;certificateRoot=(Get-ApprovalPath $CertificateRoot 'CA_PLAN_CERTIFICATE_ROOT_REQUIRED');offlineCaPfxPath=(Get-ApprovalPath $OfflineCaPfxPath 'CA_PLAN_PFX_PATH_REQUIRED');offlineCaPasswordEscrowPath=(Get-ApprovalPath $OfflineCaPasswordEscrowPath 'CA_PLAN_ESCROW_PATH_REQUIRED');nodePath=(Get-ApprovalPath $NodePath 'CA_PLAN_NODE_PATH_REQUIRED');nodeSha256=(Get-ApprovalHash $ExpectedNodeSha256 'CA_PLAN_NODE_HASH_REQUIRED');verifierScriptPath=(Get-ApprovalPath $VerifierScriptPath 'CA_PLAN_VERIFIER_PATH_REQUIRED');verifierScriptSha256=(Get-ApprovalHash $ExpectedVerifierScriptSha256 'CA_PLAN_VERIFIER_HASH_REQUIRED');filesystemEvidencePath=(Get-ApprovalPath $FileSystemEvidencePath 'CA_PLAN_FILESYSTEM_EVIDENCE_PATH_REQUIRED');filesystemEvidenceSha256=(Get-ApprovalHash $ExpectedFileSystemEvidenceSha256 'CA_PLAN_FILESYSTEM_EVIDENCE_HASH_REQUIRED');filesystemDescriptorDigest=(Get-ApprovalHash $ExpectedFilesystemDescriptorDigest 'CA_PLAN_FILESYSTEM_DESCRIPTOR_REQUIRED')}
   $target="Exact internal CA/server certificate artifacts for hostname $Hostname under $($parameters.certificateRoot), with offline CA escrow at $($parameters.offlineCaPfxPath)"
   $impact=if($IntendedAction-eq'Apply'){'Creates one internal CA and exact-host server certificate, exports the encrypted CA key to the admin-only path, and removes transient online private keys'}else{'Removes only the exact generated certificate and offline escrow artifacts; client trust is not changed'}
@@ -69,9 +69,9 @@ if($Action-eq'Apply'){
     $completed=$true
   }finally{
     $passwordText=$null;$offlineCaExportPassword=$null;$createdThumbprints=@(@($server,$ca)|Where-Object{$_}|ForEach-Object{$_.Thumbprint});$cleanupFailure=$null
-    try{foreach($thumbprint in $createdThumbprints){Remove-Item -LiteralPath "Cert:\CurrentUser\My\$thumbprint" -ErrorAction Stop};$remaining=@(Get-ChildItem Cert:\CurrentUser\My|Where-Object{$_.Thumbprint-in$createdThumbprints});if($remaining.Count-ne0){throw'ONLINE_PRIVATE_KEY_CLEANUP_FAILED'}}catch{$cleanupFailure=$_}
+    try{foreach($thumbprint in $createdThumbprints){Remove-Item -LiteralPath "Cert:\CurrentUser\My\$thumbprint" -ErrorAction Stop};$remaining=@(Get-ChildItem Cert:\CurrentUser\My|Where-Object{$_.Thumbprint-in$createdThumbprints});if($remaining.Count-ne0){throw 'ONLINE_PRIVATE_KEY_CLEANUP_FAILED'}}catch{$cleanupFailure=$_}
     if(-not$completed){try{Cleanup-Generated $root}catch{if(-not$cleanupFailure){$cleanupFailure=$_}}}
-    if($cleanupFailure){throw$cleanupFailure}
+    if($cleanupFailure){throw $cleanupFailure}
   }
   [pscustomobject]@{Result='CREATED';CaPrivateKeyRetainedOffline=$true;RenewBefore=$manifest.renewAfter;ClientTrustInstalled=$false;LanOpened=$false}|ConvertTo-Json;exit 0
 }
@@ -79,13 +79,13 @@ if($Action-eq'Rollback'){Cleanup-Generated $root;[pscustomobject]@{Result='ROLLE
 if(-not(Test-Path -LiteralPath $manifestPath -PathType Leaf)){throw 'CERTIFICATE_MANIFEST_NOT_FOUND'};$manifest=Get-Content -Raw -LiteralPath $manifestPath|ConvertFrom-Json
 if($Action-eq'Verify'){
   foreach($file in @($NodePath,$VerifierScriptPath,$OfflineCaPfxPath,$OfflineCaPasswordEscrowPath,(Join-Path $root 'internal-ca.cer'),(Join-Path $root 'server.pem'),(Join-Path $root 'server-key.pem'))){if(-not(Test-Path -LiteralPath $file -PathType Leaf)){throw 'CERTIFICATE_VERIFY_FILE_MISSING'};Assert-NoReparseAncestors $file}
-  Assert-Pinned $NodePath $ExpectedNodeSha256 'NODE_HASH_MISMATCH';Assert-Pinned $VerifierScriptPath $ExpectedVerifierScriptSha256 'TLS_VERIFIER_HASH_MISMATCH';if(-not(Under $NodePath $fs.classRoots.SHARED_RUNTIME)-or-not(Under $VerifierScriptPath $fs.classRoots.SHARED_RUNTIME)){throw'CERTIFICATE_VERIFIER_OUTSIDE_SHARED_RUNTIME'}
+  Assert-Pinned $NodePath $ExpectedNodeSha256 'NODE_HASH_MISMATCH';Assert-Pinned $VerifierScriptPath $ExpectedVerifierScriptSha256 'TLS_VERIFIER_HASH_MISMATCH';if(-not(Under $NodePath $fs.classRoots.SHARED_RUNTIME)-or-not(Under $VerifierScriptPath $fs.classRoots.SHARED_RUNTIME)){throw 'CERTIFICATE_VERIFIER_OUTSIDE_SHARED_RUNTIME'}
   if((Get-FileHash -LiteralPath(Join-Path $root 'internal-ca.cer') -Algorithm SHA256).Hash.ToLowerInvariant()-cne$manifest.files.ca-or(Get-FileHash -LiteralPath(Join-Path $root 'server.pem') -Algorithm SHA256).Hash.ToLowerInvariant()-cne$manifest.files.certificate-or(Get-FileHash -LiteralPath(Join-Path $root 'server-key.pem') -Algorithm SHA256).Hash.ToLowerInvariant()-cne$manifest.files.privateKey){throw 'CERTIFICATE_FILE_HASH_MISMATCH'}
   $result=&$NodePath $VerifierScriptPath (Join-Path $root 'internal-ca.cer') (Join-Path $root 'server.pem') (Join-Path $root 'server-key.pem') $manifest.hostname;if($LASTEXITCODE-ne0){throw 'CERTIFICATE_CRYPTOGRAPHIC_VERIFY_FAILED'}
   $verified=$result|ConvertFrom-Json;if($verified.result-ne'PASS'){throw 'CERTIFICATE_CRYPTOGRAPHIC_VERIFY_FAILED'}
-  $passwordText=[IO.File]::ReadAllText($OfflineCaPasswordEscrowPath,[Text.Encoding]::UTF8);if($passwordText-notmatch'^[A-Za-z0-9_-]{43}$'){throw'OFFLINE_CA_ESCROW_PASSWORD_INVALID'};$caPublic=New-Object Security.Cryptography.X509Certificates.X509Certificate2((Join-Path $root 'internal-ca.cer'));$collection=New-Object Security.Cryptography.X509Certificates.X509Certificate2Collection
-  try{$collection.Import($OfflineCaPfxPath,$passwordText,[Security.Cryptography.X509Certificates.X509KeyStorageFlags]::EphemeralKeySet);$privateCa=@($collection|Where-Object{$_.HasPrivateKey-and$_.Thumbprint-ieq$caPublic.Thumbprint});if($privateCa.Count-ne1){throw'OFFLINE_CA_PFX_DECRYPT_OR_KEY_MATCH_FAILED'}}finally{foreach($certificate in $collection){$certificate.Dispose()};$caPublic.Dispose();$passwordText=$null}
+  $passwordText=[IO.File]::ReadAllText($OfflineCaPasswordEscrowPath,[Text.Encoding]::UTF8);if($passwordText-notmatch'^[A-Za-z0-9_-]{43}$'){throw 'OFFLINE_CA_ESCROW_PASSWORD_INVALID'};$caPublic=New-Object Security.Cryptography.X509Certificates.X509Certificate2((Join-Path $root 'internal-ca.cer'));$collection=New-Object Security.Cryptography.X509Certificates.X509Certificate2Collection
+  try{$collection.Import($OfflineCaPfxPath,$passwordText,[Security.Cryptography.X509Certificates.X509KeyStorageFlags]::EphemeralKeySet);$privateCa=@($collection|Where-Object{$_.HasPrivateKey-and$_.Thumbprint-ieq$caPublic.Thumbprint});if($privateCa.Count-ne1){throw 'OFFLINE_CA_PFX_DECRYPT_OR_KEY_MATCH_FAILED'}}finally{foreach($certificate in $collection){$certificate.Dispose()};$caPublic.Dispose();$passwordText=$null}
   if((Get-FileHash -LiteralPath $OfflineCaPfxPath -Algorithm SHA256).Hash.ToLowerInvariant()-cne$manifest.files.offlineCaPfx-or[datetime]$manifest.renewAfter-le(Get-Date).ToUniversalTime()){throw 'OFFLINE_CA_ESCROW_OR_RENEWAL_INVALID'}
   [pscustomobject]@{Result='PASS';CaPrivateKeyRetainedOffline=$true;HostnameMatched=$true;PrivateKeyMatched=$true;RenewalWindowValid=$true;ClientTrustInstalled=$false}|ConvertTo-Json;exit 0
 }
-throw'CERTIFICATE_ACTION_INVALID'
+throw 'CERTIFICATE_ACTION_INVALID'

@@ -99,7 +99,7 @@ describe("local native deployment artifacts", () => {
 
   it("keeps every Windows host mutation behind Plan plus explicit approval", async () => {
     const approvalContract = await file("deploy/windows/approval-plan.ps1");
-    for (const field of ["scriptSha256", "approvalContractSha256", "exactParameters", "planSha256"]) {
+    for (const field of ["scriptSha256", "approvalContractSha256", "exactParameters", "planSha256", "approvalNonce", "approvalIssuedAt", "approvalExpiresAt", "approvalInstanceId", "approvalLedgerPath", "Use-ApprovalInstance", "APPROVAL_PLAN_REPLAY_REJECTED"]) {
       expect(approvalContract).toContain(field);
     }
     expect(approvalContract).toContain("APPROVED_PLAN_SHA256_REQUIRED");
@@ -108,10 +108,10 @@ describe("local native deployment artifacts", () => {
       "Manage-Acl.ps1", "Manage-ClientTrust.ps1", "Manage-Firewall.ps1", "Manage-Service.ps1",
       "Switch-LocalRelease.ps1", "New-InternalCa.ps1", "Renew-ServerCertificate.ps1",
       "Activate-ServerCertificate.ps1", "Stage-LegacyLocalStorage.ps1", "Manage-LegacyQuiesce.ps1",
-      "Manage-SupabaseMigration.ps1", "Manage-BackupSchedule.ps1", "Manage-PrincipalRights.ps1",
+      "Manage-SupabaseMigration.ps1", "Manage-SupabaseRollbackRestore.ps1", "Manage-BackupSchedule.ps1", "Manage-PrincipalRights.ps1",
       "Restore-Verify.ps1", "Manage-Maintenance.ps1", "Manage-RecoveryKit.ps1",
       "Merge-ClientTrustEvidence.ps1", "Test-BackupTarget.ps1", "Test-SupabaseDatabaseBoundary.ps1",
-      "New-LegacyRunningBaseline.ps1", "Test-InitialCutoverCompatibility.ps1",
+      "New-LegacyRunningBaseline.ps1", "Test-InitialCutoverCompatibility.ps1", "Backup-Local.ps1", "Publish-BackupReceipt.ps1",
       "Test-ReleaseCompatibility.ps1", "Test-RebootReadiness.ps1", "Publish-RestoreEvidence.ps1"
     ];
     for (const name of exactPlanScripts) {
@@ -123,13 +123,9 @@ describe("local native deployment artifacts", () => {
       expect(source, name).toContain("New-ApprovalPlan");
       expect(source, name).toContain("Assert-ApprovedPlan");
     }
-    const legacyApprovalScripts = [
-      "Backup-Local.ps1"
-    ];
-    for (const name of legacyApprovalScripts) {
+    for (const name of exactPlanScripts) {
       const source = await file(`deploy/windows/${name}`);
-      expect(source, name).toContain("Plan");
-      expect(source, name).toMatch(/EXPLICIT_APPROVAL_REQUIRED/);
+      expect(source, name).toContain("ApprovalNonce");expect(source, name).toContain("ApprovalLedgerPath");
     }
   });
 
@@ -138,20 +134,27 @@ describe("local native deployment artifacts", () => {
     const script = path.join(root, "deploy/windows/Manage-Firewall.ps1");
     const planned = spawnSync("pwsh.exe", ["-NoProfile", "-File", script, "-Action", "Plan", "-PlannedAction", "Rollback", "-RuleName", "MetaAdsPlanFixtureA"], { cwd: root, encoding: "utf8" });
     expect(planned.status, planned.stderr).toBe(0);
-    const plan = JSON.parse(planned.stdout) as { planSha256: string };
+    const plan = JSON.parse(planned.stdout) as { planSha256: string; approvalNonce: string; approvalIssuedAt: string; approvalExpiresAt: string; approvalInstanceId: string; approvalLedgerPath: string };
     expect(plan.planSha256).toMatch(lowerSha256);
     const approvedOnly = spawnSync("pwsh.exe", ["-NoProfile", "-File", script, "-Action", "Rollback", "-RuleName", "MetaAdsPlanFixtureA", "-Approved"], { cwd: root, encoding: "utf8" });
     expect(approvedOnly.status).not.toBe(0);
-    expect(`${approvedOnly.stdout}\n${approvedOnly.stderr}`).toContain("APPROVED_PLAN_SHA256_REQUIRED");
-    const drifted = spawnSync("pwsh.exe", ["-NoProfile", "-File", script, "-Action", "Rollback", "-RuleName", "MetaAdsPlanFixtureB", "-Approved", "-ApprovedPlanSha256", plan.planSha256], { cwd: root, encoding: "utf8" });
+    expect(`${approvedOnly.stdout}\n${approvedOnly.stderr}`).toContain("APPROVAL_INSTANCE_FIELDS_REQUIRED");
+    const drifted = spawnSync("pwsh.exe", ["-NoProfile", "-File", script, "-Action", "Rollback", "-RuleName", "MetaAdsPlanFixtureB", "-Approved", "-ApprovedPlanSha256", plan.planSha256, "-ApprovalNonce", plan.approvalNonce, "-ApprovalIssuedAt", plan.approvalIssuedAt, "-ApprovalExpiresAt", plan.approvalExpiresAt, "-ApprovalInstanceId", plan.approvalInstanceId, "-ApprovalLedgerPath", plan.approvalLedgerPath], { cwd: root, encoding: "utf8" });
     expect(drifted.status).not.toBe(0);
     expect(`${drifted.stdout}\n${drifted.stderr}`).toContain("APPROVED_PLAN_MISMATCH");
   }, 20_000);
 
+  it("forbids ambiguous return/throw tokens and exercises return plus one-time approval runtime on PS7 and Windows PowerShell 5.1",async()=>{
+    const windowsRoot=path.join(root,"deploy/windows");const {readdir}=await import("node:fs/promises");const names=(await readdir(windowsRoot)).filter((name)=>name.endsWith(".ps1"));
+    for(const name of new Set(names)){const source=await file(`deploy/windows/${name}`);expect(source,name).not.toMatch(/\b(?:return|throw)(?=[$@\['"])/)}
+    if(process.platform!=="win32")return;const contract=path.join(windowsRoot,"approval-plan.runtime.test.ps1");
+    for(const shell of ["pwsh.exe","powershell.exe"]){const result=spawnSync(shell,["-NoProfile","-ExecutionPolicy","Bypass","-File",contract],{cwd:root,encoding:"utf8"});expect(result.status,`${shell}: ${result.stderr}`).toBe(0);expect(JSON.parse(result.stdout).result).toBe("PASS")}
+  },30_000);
+
   it("hash-pins certificate and rollback executors and has an honest first-cutover path",async()=>{
-    const[create,renew,activate,switcher,baseline,stage,quiesce,backup,restore,initial,migration]=await Promise.all([file("deploy/windows/New-InternalCa.ps1"),file("deploy/windows/Renew-ServerCertificate.ps1"),file("deploy/windows/Activate-ServerCertificate.ps1"),file("deploy/windows/Switch-LocalRelease.ps1"),file("deploy/windows/New-LegacyRunningBaseline.ps1"),file("deploy/windows/Stage-LegacyLocalStorage.ps1"),file("deploy/windows/Manage-LegacyQuiesce.ps1"),file("deploy/windows/Backup-Local.ps1"),file("deploy/windows/Restore-Verify.ps1"),file("deploy/windows/Test-InitialCutoverCompatibility.ps1"),file("deploy/windows/Manage-SupabaseMigration.ps1")]);
+    const[create,renew,activate,switcher,baseline,stage,quiesce,backup,restore,initial,migration,rollbackRestore]=await Promise.all([file("deploy/windows/New-InternalCa.ps1"),file("deploy/windows/Renew-ServerCertificate.ps1"),file("deploy/windows/Activate-ServerCertificate.ps1"),file("deploy/windows/Switch-LocalRelease.ps1"),file("deploy/windows/New-LegacyRunningBaseline.ps1"),file("deploy/windows/Stage-LegacyLocalStorage.ps1"),file("deploy/windows/Manage-LegacyQuiesce.ps1"),file("deploy/windows/Backup-Local.ps1"),file("deploy/windows/Restore-Verify.ps1"),file("deploy/windows/Test-InitialCutoverCompatibility.ps1"),file("deploy/windows/Manage-SupabaseMigration.ps1"),file("deploy/windows/Manage-SupabaseRollbackRestore.ps1")]);
     for(const source of[create,renew,activate]){expect(source).toContain("ExpectedNodeSha256");expect(source).toContain("SHARED_RUNTIME")}
-    expect(switcher).toContain("ROLLBACK_EXECUTOR_OUTSIDE_SHARED_RUNTIME");expect(baseline).toContain("repository_local_ntfs");expect(baseline).toContain("localReleaseManifestApplicable=$false");expect(baseline).toContain("CurrentDirectory");expect(baseline).toContain("launchIdentityMatchesProtectedRestartSpec=$true");expect(stage).toContain("sourceDestinationHashesVerified");expect(stage).toContain("cloudStorageCalled=$false");expect(quiesce).toContain("attestationType='legacy-quiesce'");expect(quiesce).toContain("restartCanonicalDigest");expect(quiesce).toContain("LegacyBusinessHealthSmokeVerified=$true");expect(quiesce).toContain("DATABASE_ROLLBACK_EVIDENCE_REQUIRED");expect(backup).toContain("storage-reference-conversion.sql");expect(backup).toContain("storageReferenceZeroVerified");expect(restore).toContain("LEGACY_BASELINE");expect(restore).toContain("Invoke-TargetLegacyDataProjectionSmoke");expect(restore).toContain("actualLegacyCodeExecuted=($PreviousReleaseKind-eq'LOCAL_RELEASE')");expect(initial).toContain("legacyLocalRoleMatrixNotClaimed");expect(initial).toContain("SIGNED_DATABASE_RESTORE_THEN_EXACT_LEGACY_RESTART");expect(initial).toContain("rollbackCodeCompatible=$false");expect(migration).toContain("MIGRATION_LEGACY_NOT_QUIESCED");expect(migration).toContain("InvokeConversion");
+    expect(switcher).toContain("ROLLBACK_EXECUTOR_OUTSIDE_SHARED_RUNTIME");expect(baseline).toContain("repository_local_ntfs");expect(baseline).toContain("localReleaseManifestApplicable=$false");expect(baseline).toContain("CurrentDirectory");expect(baseline).toContain("launchIdentityMatchesProtectedRestartSpec=$true");expect(stage).toContain("sourceDestinationHashesVerified");expect(stage).toContain("cloudStorageCalled=$false");expect(quiesce).toContain("attestationType='legacy-quiesce'");expect(quiesce).toContain("restartCanonicalDigest");expect(quiesce).toContain("LegacyBusinessHealthSmokeVerified=$true");expect(quiesce).toContain("DatabaseRollbackPublicKeyPath");expect(backup).toContain("storage-reference-conversion.sql");expect(backup).toContain("storageReferenceZeroVerified");expect(restore).toContain("LEGACY_BASELINE");expect(restore).toContain("Invoke-TargetLegacyDataProjectionSmoke");expect(restore).toContain("actualLegacyCodeExecuted=($PreviousReleaseKind-eq'LOCAL_RELEASE')");expect(initial).toContain("QuiesceReceiptPublicKeyPath");expect(initial).toContain("RestoreReceiptPublicKeyPath");expect(initial).toContain("BackupReceiptPublicKeyPath");expect(initial).toContain("legacyLocalRoleMatrixNotClaimed");expect(initial).toContain("SIGNED_DATABASE_RESTORE_THEN_EXACT_LEGACY_RESTART");expect(initial).toContain("rollbackCodeCompatible=$false");expect(migration).toContain("MIGRATION_LEGACY_NOT_QUIESCED");expect(migration).toContain("QuiesceReceiptPublicKeyPath");expect(migration).toContain("InvokeConversion");for(const token of ["legacy-database-rollback","productionDatabaseRestored=$true","maintenanceVerified=$true","drainVerified=$true","businessKpiVerified=$true","storageHashVerified=$true","processTreeKillOnDeadline=$true","Assert-ApprovedPlan"]){expect(rollbackRestore).toContain(token)}
   });
 
   it("binds client trust evidence to an enabled local interface and its exact approved /32 plan",async()=>{
@@ -192,10 +195,23 @@ describe("local native deployment artifacts", () => {
       file("deploy/local/recovery-kit.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Test-RebootReadiness.ps1"),file("deploy/local/runtime-config.mjs")
     ]);
     expect(tool).toContain("manifestSha256");expect(tool).toContain("files: payload.files.map");
-    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("sourcePathsDisclosed=$false");
+    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("EscrowWorksheetPath");expect(recovery).toContain("ExpectedEscrowWorksheetSha256");expect(recovery).toContain("BaseStream.ReadAsync");expect(recovery).toContain("Stop-RecoveryProcessTree");expect(recovery).toContain("version=5");expect(recovery).not.toContain("version=4");expect(recovery).toContain("sourcePathsDisclosed=$false");
     expect(schedule).toContain("$task.Triggers[0].Enabled -eq $true");expect(schedule).toContain("dailyTriggerEnabled=$true");expect(schedule).toContain("recurringInvocationPlanBound=$true");expect(schedule).toContain("runtimeConfigSha256=$ExpectedRuntimeConfigSha256");
     expect(reboot).toContain("not[bool]$task.Triggers[0].Enabled");expect(reboot).toContain("backupDailyTriggerEnabled");expect(reboot).toContain("runtimeConfigSha256=(FileHash $configPath)");
     expect(runtime).toContain("evidence.dailyTriggerEnabled === true");
+  });
+
+  it("binds backup authority and keeps receipt signing outside the backup principal",async()=>{
+    const [backup,schedule,acl,publisher,semantic,generic,runtime,recovery]=await Promise.all([
+      file("deploy/windows/Backup-Local.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Manage-Acl.ps1"),file("deploy/windows/Publish-BackupReceipt.ps1"),file("deploy/local/sign-backup-receipt.mjs"),file("deploy/local/sign-attestation.mjs"),file("deploy/local/runtime-config.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1")
+    ]);
+    expect(backup).not.toContain("if (-not $Approved)");expect(backup).toContain("New-BackupApprovalPlan");expect(backup).toContain("Assert-ScheduledAuthorization");expect(backup).toContain("ExpectedRuntimeConfigSha256");expect(backup).toContain("ExpectedBackupTargetEvidenceSha256");expect(backup).toContain("ExpectedBackupTargetFingerprint");expect(backup).toContain("ExpectedBackupRoot");
+    expect(schedule).not.toContain("'-Approved'");expect(schedule).not.toContain("BackupReceiptPrivateKeyPath");expect(schedule).toContain("ExpectedScheduledAuthorizationSha256");expect(schedule).toContain("scheduledAuthorizationBound=$true");
+    expect(backup).not.toContain("BackupReceiptPrivateKeyPath");expect(backup).not.toContain("ATTESTATION_SIGNER_HASH_MISMATCH");expect(backup).toContain("COMPLETE_PENDING_SIGNER");
+    expect(acl).toContain("SignerAccount");expect(acl).toContain("SIGNER_ONLY");expect(acl).toContain("signerSid=$script:SignerSid");expect(recovery).toContain("'backup-receipt-private-key'='SIGNER_ONLY'");
+    expect(publisher).toContain("BACKUP_RECEIPT_SIGNER_IDENTITY_REJECTED");expect(publisher).toContain("classRoots.SIGNER_ONLY");expect(publisher).toContain("ExpectedSemanticSignerSha256");
+    for(const token of ["BACKUP_MANIFEST_HASH_MISMATCH","BACKUP_DUMP_MISMATCH","STORAGE_PAYLOAD_SET_MISMATCH","BACKUP_HMAC_INVALID","artifactVerificationDigest","signerIndependentArtifactVerification"]){expect(semantic).toContain(token)}
+    expect(generic).not.toContain('"backup-latest",');expect(runtime).toContain("evidence.signerIndependentArtifactVerification === true");expect(runtime).toContain("evidence.artifactVerificationDigest");
   });
 
   it("bounds manual and scheduled backups by one four-hour deadline and signed size caps",async()=>{

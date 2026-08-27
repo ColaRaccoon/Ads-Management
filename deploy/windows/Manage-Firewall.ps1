@@ -8,26 +8,26 @@ param(
   [string]$EdgeServiceName='MetaAdsPerformanceEdge',
   [string]$RuleName='MetaAdsPerformance-Https443-PrivateLan',
   [string]$DisplayName='Meta Ads Performance HTTPS 443',
-  [ValidateSet('Apply','Rollback','VerifyEvidence')][string]$PlannedAction,[string]$ApprovedPlanSha256,[switch]$Approved
+  [ValidateSet('Apply','Rollback','VerifyEvidence')][string]$PlannedAction,[string]$ApprovedPlanSha256,[string]$ApprovalNonce,[string]$ApprovalIssuedAt,[string]$ApprovalExpiresAt,[string]$ApprovalInstanceId,[string]$ApprovalLedgerPath,[switch]$Approved
 )
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
 
 function Resolve-Sid([string]$Account){if(-not$Account){throw 'DEDICATED_EDGE_ACCOUNT_REQUIRED'};return([Security.Principal.NTAccount]$Account).Translate([Security.Principal.SecurityIdentifier]).Value}
-function Ipv4Number([string]$Address){$parts=$Address.Split('.');if($parts.Count-ne4){throw 'IPV4_INVALID'};[uint64]$value=0;foreach($part in $parts){$octet=0;if(-not[int]::TryParse($part,[ref]$octet)-or$octet-lt0-or$octet-gt255){throw 'IPV4_INVALID'};$value=($value*256)+$octet};return$value}
-function IsPrivateIpv4([string]$Address){try{$parts=$Address.Split('.')|ForEach-Object{[int]$_};return$parts.Count-eq4-and($parts[0]-eq10-or($parts[0]-eq172-and$parts[1]-ge16-and$parts[1]-le31)-or($parts[0]-eq192-and$parts[1]-eq168))}catch{return$false}}
+function Ipv4Number([string]$Address){$parts=$Address.Split('.');if($parts.Count-ne4){throw 'IPV4_INVALID'};[uint64]$value=0;foreach($part in $parts){$octet=0;if(-not[int]::TryParse($part,[ref]$octet)-or$octet-lt0-or$octet-gt255){throw 'IPV4_INVALID'};$value=($value*256)+$octet};return $value}
+function IsPrivateIpv4([string]$Address){try{$parts=$Address.Split('.')|ForEach-Object{[int]$_};return $parts.Count-eq4-and($parts[0]-eq10-or($parts[0]-eq172-and$parts[1]-ge16-and$parts[1]-le31)-or($parts[0]-eq192-and$parts[1]-eq168))}catch{return $false}}
 function Validate-Cidr([string]$Cidr){$parts=$Cidr.Split('/');if($parts.Count-ne2-or-not(IsPrivateIpv4 $parts[0])-or$parts[1]-cne'32'){throw 'EXACT_CLIENT_IPV4_32_REQUIRED'}}
-function FullFile([string]$Path,[string]$Code){if(-not$Path-or-not(Test-Path -LiteralPath $Path -PathType Leaf)){throw $Code};return[IO.Path]::GetFullPath($Path)}
+function FullFile([string]$Path,[string]$Code){if(-not$Path-or-not(Test-Path -LiteralPath $Path -PathType Leaf)){throw $Code};return [IO.Path]::GetFullPath($Path)}
 function Touches-ProtectedPort($PortFilter){
   $protected=@(443,3200,4200,5432,55432,6543)
   $ports=@($PortFilter.LocalPort|ForEach-Object{([string]$_).Split(',')}|ForEach-Object{$_.Trim()}|Where-Object{$_})
   foreach($entry in $ports){
-    if($entry-eq'Any'){return$true}
-    if($entry-match'^(\d+)-(\d+)$'){$first=[int]$Matches[1];$last=[int]$Matches[2];if($first-gt$last){return$true};if($protected|Where-Object{$_-ge$first-and$_-le$last}){return$true};continue}
-    $number=0;if([int]::TryParse($entry,[ref]$number)){if($number-in$protected){return$true};continue}
-    return$true
+    if($entry-eq'Any'){return $true}
+    if($entry-match'^(\d+)-(\d+)$'){$first=[int]$Matches[1];$last=[int]$Matches[2];if($first-gt$last){return $true};if($protected|Where-Object{$_-ge$first-and$_-le$last}){return $true};continue}
+    $number=0;if([int]::TryParse($entry,[ref]$number)){if($number-in$protected){return $true};continue}
+    return $true
   }
-  return$false
+  return $false
 }
 function Conflicting-AllowRules([string]$IntendedName){
   $conflicts=New-Object 'System.Collections.Generic.List[string]'
@@ -37,7 +37,7 @@ function Conflicting-AllowRules([string]$IntendedName){
       if(Touches-ProtectedPort $portFilter){$conflicts.Add([string]$candidate.Name)|Out-Null;break}
     }
   }
-  return@($conflicts|Sort-Object -Unique)
+  return @($conflicts|Sort-Object -Unique)
 }
 function Get-InboundPolicyState {
   $profiles=@(Get-NetFirewallProfile -Profile Domain,Private,Public -ErrorAction Stop)
@@ -47,15 +47,15 @@ function Get-InboundPolicyState {
     $name=[string]$profile.Name
     $state[$name]=[ordered]@{enabled=[bool]$profile.Enabled;defaultInboundAction=[string]$profile.DefaultInboundAction}
   }
-  return[pscustomobject]@{Profiles=$profiles;State=$state;AllProfilesEnabled=(@($profiles|Where-Object{-not[bool]$_.Enabled}).Count-eq0);AllDefaultInboundBlocked=(@($profiles|Where-Object{[string]$_.DefaultInboundAction-ne'Block'}).Count-eq0)}
+  return [pscustomobject]@{Profiles=$profiles;State=$state;AllProfilesEnabled=(@($profiles|Where-Object{-not[bool]$_.Enabled}).Count-eq0);AllDefaultInboundBlocked=(@($profiles|Where-Object{[string]$_.DefaultInboundAction-ne'Block'}).Count-eq0)}
 }
 function New-FirewallApprovalPlan([string]$IntendedAction){
-  if($IntendedAction-notin@('Apply','Rollback','VerifyEvidence')){throw'PLANNED_ACTION_REQUIRED'}
-  if($RuleName-notmatch'^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'){throw'FIREWALL_PLAN_RULE_NAME_INVALID'}
+  if($IntendedAction-notin@('Apply','Rollback','VerifyEvidence')){throw 'PLANNED_ACTION_REQUIRED'}
+  if($RuleName-notmatch'^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'){throw 'FIREWALL_PLAN_RULE_NAME_INVALID'}
   $parameters=[ordered]@{ruleName=$RuleName}
   if($IntendedAction-ne'Rollback'){
-    if($EdgeServiceName-cne'MetaAdsPerformanceEdge'-or-not$EdgeServiceAccount){throw'FIREWALL_PLAN_SERVICE_INVALID'}
-    if(-not(IsPrivateIpv4 $LanBindAddress)){throw'FIREWALL_PLAN_BIND_ADDRESS_INVALID'}
+    if($EdgeServiceName-cne'MetaAdsPerformanceEdge'-or-not$EdgeServiceAccount){throw 'FIREWALL_PLAN_SERVICE_INVALID'}
+    if(-not(IsPrivateIpv4 $LanBindAddress)){throw 'FIREWALL_PLAN_BIND_ADDRESS_INVALID'}
     $cidrs=Get-ApprovalSorted $AllowedCidrs 'FIREWALL_PLAN_CLIENT_CIDRS_REQUIRED';foreach($cidr in $cidrs){Validate-Cidr $cidr}
     $parameters=[ordered]@{ruleName=$RuleName;displayName=$DisplayName;edgeServiceName=$EdgeServiceName;edgeServiceAccount=$EdgeServiceAccount;lanBindAddress=$LanBindAddress;allowedClientCidrs=$cidrs;nodeProgramPath=(Get-ApprovalPath $NodeProgramPath 'FIREWALL_PLAN_NODE_PATH_REQUIRED');nodeProgramSha256=(Get-ApprovalHash $ExpectedNodeSha256 'FIREWALL_PLAN_NODE_HASH_REQUIRED');localPort=443;profiles=@('Domain','Private');edgeTraversal='Block'}
     if($IntendedAction-eq'VerifyEvidence'){$parameters.evidenceOutputPath=Get-ApprovalPath $EvidenceOutputPath 'FIREWALL_PLAN_EVIDENCE_PATH_REQUIRED'}
@@ -71,9 +71,9 @@ if($Action-eq'Plan'){
 $firewallMutation=if($Action-in@('Apply','Rollback')){$Action}elseif($Action-eq'Verify'-and$EvidenceOutputPath){'VerifyEvidence'}else{$null}
 if($firewallMutation){Assert-ApprovedPlan (New-FirewallApprovalPlan $firewallMutation) ([bool]$Approved) $ApprovedPlanSha256}
 if($Action-eq'Rollback'){
-  $existing=@(Get-NetFirewallRule -Name $RuleName -ErrorAction SilentlyContinue);if($existing.Count-gt1){throw'FIREWALL_RULE_CARDINALITY_INVALID'}
+  $existing=@(Get-NetFirewallRule -Name $RuleName -ErrorAction SilentlyContinue);if($existing.Count-gt1){throw 'FIREWALL_RULE_CARDINALITY_INVALID'}
   if($existing.Count-eq1){Remove-NetFirewallRule -Name $RuleName -ErrorAction Stop}
-  if(Get-NetFirewallRule -Name $RuleName -ErrorAction SilentlyContinue){throw'FIREWALL_ROLLBACK_VERIFY_FAILED'}
+  if(Get-NetFirewallRule -Name $RuleName -ErrorAction SilentlyContinue){throw 'FIREWALL_ROLLBACK_VERIFY_FAILED'}
   [pscustomobject]@{Result=if($existing.Count){'ROLLED_BACK'}else{'ROLLED_BACK_ABSENT'};RemovedRuleName=$RuleName;RouterChanged=$false}|ConvertTo-Json;exit 0
 }
 $node=FullFile $NodeProgramPath 'NODE_PROGRAM_NOT_FOUND'
@@ -83,7 +83,7 @@ if(-not$AllowedCidrs-or$AllowedCidrs.Count-eq0){throw 'ALLOWED_CIDRS_REQUIRED'}
 foreach($cidr in $AllowedCidrs){Validate-Cidr $cidr}
 $edgeSid=Resolve-Sid $EdgeServiceAccount
 if($edgeSid-in@('S-1-5-18','S-1-5-19','S-1-5-20','S-1-1-0','S-1-5-11','S-1-5-32-545')){throw 'DEDICATED_EDGE_ACCOUNT_REQUIRED'}
-if($EdgeServiceName-cne'MetaAdsPerformanceEdge'){throw'EDGE_SERVICE_NAME_INVALID'}
+if($EdgeServiceName-cne'MetaAdsPerformanceEdge'){throw 'EDGE_SERVICE_NAME_INVALID'}
 $rule=Get-NetFirewallRule -Name $RuleName -ErrorAction SilentlyContinue
 $policy=Get-InboundPolicyState
 
@@ -91,7 +91,7 @@ if($Action-eq'Verify'){
   $pass=$false;$conflicts=Conflicting-AllowRules $RuleName
   if($rule-and@($rule).Count-eq1){
     $ports=@($rule|Get-NetFirewallPortFilter);$addresses=@($rule|Get-NetFirewallAddressFilter);$apps=@($rule|Get-NetFirewallApplicationFilter);$services=@($rule|Get-NetFirewallServiceFilter);$interfaces=@($rule|Get-NetFirewallInterfaceFilter)
-    if($ports.Count-ne1-or$addresses.Count-ne1-or$apps.Count-ne1-or$services.Count-ne1-or$interfaces.Count-ne1){throw'FIREWALL_FILTER_CARDINALITY_INVALID'}
+    if($ports.Count-ne1-or$addresses.Count-ne1-or$apps.Count-ne1-or$services.Count-ne1-or$interfaces.Count-ne1){throw 'FIREWALL_FILTER_CARDINALITY_INVALID'}
     $port=$ports[0];$address=$addresses[0];$app=$apps[0];$service=$services[0];$interface=$interfaces[0]
     $actualRemote=@($address.RemoteAddress|Sort-Object);$expectedRemote=@($AllowedCidrs|Sort-Object)
     $pass=$rule.Enabled-eq'True'-and$rule.Direction-eq'Inbound'-and$rule.Action-eq'Allow'-and([string]$rule.Profile)-eq'Domain, Private'-and

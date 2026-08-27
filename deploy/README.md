@@ -94,7 +94,7 @@ These steps are safe before approval:
    manifest hash and migration digest without modifying the release afterward.
 3. Run `node deploy/local/verify-local-release.mjs --root=<RELEASE_ROOT>
    --manifest-sha256=<HASH>` whenever the release is transferred.
-4. Create the data-root directory layout and the three local non-admin account
+4. Create the data-root directory layout and four distinct local non-admin account
    names in an installation worksheet only. Passwords are never worksheet data.
 5. For service, firewall, ACL, principal rights, backup schedule, maintenance,
    recovery kit, restore, client trust, CA issue/renew/activate, production
@@ -102,13 +102,17 @@ These steps are safe before approval:
    evidence-writing Verify/Merge/Measure/Publish action, run
    `-Action Plan -PlannedAction <exact-mutation>` with every final non-secret
    argument. Retain the JSON containing `exactParameters`, target, impact,
-   rollback, script/contract hashes, and `planSha256`. Review and approve that
-   exact plan immediately before execution. The mutation command must repeat the
-   identical arguments and add both `-Approved` and
-   `-ApprovedPlanSha256 <planSha256>`; a changed path, account, hostname, bind IP,
+   rollback, script/contract hashes, CSPRNG `approvalNonce`, issued/expiry times,
+   `approvalInstanceId`, ADMIN_ONLY `approvalLedgerPath`, and `planSha256`. Review
+   and approve that exact plan immediately before execution. The mutation command
+   must repeat the identical arguments and add `-Approved`,
+   `-ApprovedPlanSha256 <planSha256>`, and the five approval-instance fields from
+   that Plan; a changed path, account, hostname, bind IP,
    client `/32`, release/manifest/evidence hash, or Supabase project/host/database/
-   schema produces `APPROVED_PLAN_MISMATCH` before any host or DB state is read or
-   changed. `-Approved` alone is never sufficient. Credential/password contents
+   schema produces `APPROVED_PLAN_MISMATCH` before mutation. Approval expires in
+   ten minutes and the plan instance is atomically consumed in its ADMIN_ONLY
+   ledger before the first mutation; replay and partial-failure reuse are rejected.
+   `-Approved` alone is never sufficient. Credential/password contents
    are never plan fields; only their exact protected path and expected file hash
    may be included. Generate a new Plan for rollback/finalize or evidence-writing
    Verify actions instead of reusing an Apply plan.
@@ -280,13 +284,22 @@ and time are configured, the schedule must not run and readiness remains false.
    `DaysInterval=1`, `Trigger.Enabled=true`, the configured local time, an enabled
    task, start-when-available, the four-hour limit, and exact hashes for the
    runtime config, action and immutable release. The approved schedule plan binds
-   the complete recurring `Backup-Local.ps1` invocation; changing any delegated
-   path, hash, database identity, cap or release requires a new plan.
+   the complete recurring `Backup-Local.ps1` invocation plus an admin-signed,
+   maximum-31-day schedule authorization. The invocation binds the exact runtime
+   config hash, backup-target evidence hash/fingerprint/root, ACL class, executor
+   hashes and size/deadline caps; changing any value requires a new authorization
+   and schedule plan. Bare `-Approved` is never delegated to the backup account.
 3. `Backup-Local.ps1` verifies live disk/NAS identity, encryption and ACL drift,
    then makes a Supabase database dump with the backup role plus the local
    storage manifest. The migration digest is computed only from the verified
-   immutable release. Receipts are signed and contain hashes/metadata, never
-   rows, file contents, or credentials.
+   immutable release. It publishes only an immutable `receipt-request.json` next
+   to the completed artifacts and cannot read the receipt private key or modify
+   `BACKUP_RECEIPT`. `Publish-BackupReceipt.ps1` runs under the fourth distinct
+   signer account: the key is in `SIGNER_ONLY`, and the semantic signer
+   independently re-hashes the manifest, HMAC, bounded dump and exact storage
+   inventory before publishing the signed latest receipt. Generic attestation
+   signing refuses `backup-latest`. Receipts contain hashes/metadata, never rows,
+   file contents, or credentials.
 4. `Restore-Verify.ps1` must run as the dedicated unprivileged restore verifier
    against a separately approved, existing isolated Supabase restore database
    and scratch filesystem. The isolated database may be a different database in
@@ -312,6 +325,10 @@ and time are configured, the schedule must not run and readiness remains false.
    logs, database rows, or payload bytes.
 6. Only a fresh signed backup and a successful signed restore receipt make
    `operationalReady` true. A configured schedule alone is insufficient.
+
+Backup, restore/rehearsal, and legacy-quiesce attestations use distinct Ed25519
+key pairs. Every consuming Plan binds the exact public-key path and SHA-256;
+substituting another attestation domain's otherwise valid public key is rejected.
 
 If the physical/NAS target is not yet selected, the correct result is a warning,
 no scheduled backup, and `operationalReady=false`—never a repository or same-disk
@@ -381,8 +398,16 @@ Production database migration and process switching are separate approvals.
    `Manage-SupabaseMigration.ps1 -PreviousReleaseKind LEGACY_BASELINE` rechecks
    their absence and, only after a fresh immediate production-migration approval,
    applies the signed reference conversion before the target Prisma migration.
-   Rollback after that point is the separately approved signed database restore,
-   followed by `Manage-LegacyQuiesce.ps1 -Action Rollback` using the exact restart
+   Rollback after that point uses `Manage-SupabaseRollbackRestore.ps1`: create a
+   fresh `Apply` Plan bound to the exact production Supabase project/host/database/
+   schema, maintenance/drain, migration journal, signed legacy backup chain,
+   executor/credential/key hashes and output. Apply keeps 3100/4100 quiesced,
+   enforces one four-hour deadline with bounded concurrent child output and
+   process-tree kill, restores the baseline schema, verifies KPI and the unchanged
+   repository-local storage inventories, and signs `legacy-database-rollback`
+   with the restore key. A separately approved `VerifyEvidence` Plan rechecks the
+   signed receipt and live hashes. Only then is the rollback receipt supplied to
+   `Manage-LegacyQuiesce.ps1 -Action Rollback` using the exact restart
    specification. Rollback must reproduce the protected launch identity and pass
    the same bounded legacy health smoke before it reports success. It never
    records `rollbackCodeCompatible=true` for this first cutover.
@@ -429,15 +454,19 @@ Recovery order is:
    payloads;
 2. on the current host, use `Manage-RecoveryKit.ps1 -Action VerifyExtract` to
    recheck current source hashes and remove the ephemeral extraction. On a clean
-   replacement PC, use `-DisasterRecovery` with only the escrow kit, the offline
-   worksheet's expected kit/manifest/runtime/install/inventory hashes, hash-pinned
+   replacement PC, use `-DisasterRecovery` with only the escrow kit and its
+   separately copied escrow worksheet, the worksheet's expected
+   kit/manifest/runtime/install/inventory hashes, hash-pinned
    offline Node/tool executors, and an existing empty `ADMIN_ONLY` scratch root.
-   Disaster verification authenticates and bounded-extracts the exact 13-file
+   The kit tool's stdout/stderr are drained concurrently under a bounded buffer;
+   timeout kills the complete process tree. Disaster verification authenticates
+   and bounded-extracts the exact 13-file
    internal inventory, retains it for recovery, and neither requires nor emits
    any original source path;
 3. restore to an isolated target and verify the signed receipt;
 4. obtain immediate approval for the exact production restore target, impact,
-   and rollback; perform the controlled restore;
+   and rollback; run the Plan/Apply/Verify sequence above without reusing an
+   approval instance;
 5. verify database boundary, four-role/inactive/setup-pending matrix, KPI
    aggregates, storage-reference and file hashes, release health, and RTO;
 6. reopen only after client trust, firewall, and HTTPS checks pass.

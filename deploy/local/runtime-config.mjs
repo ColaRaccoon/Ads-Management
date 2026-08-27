@@ -151,7 +151,7 @@ function validClientTrustEvidence(evidence, tls, lan, now) {
 function validBackupTargetEvidence(evidence, backup, dataRoot, filesystemEvidence, now) {
   if (!backup.physicalTargetEvidencePath || !evidence || !plainObject(evidence)) return false;
   if (evidence.result !== "PASS" || evidence.dataRoot !== path.resolve(dataRoot) || evidence.backupRoot !== path.resolve(backup.root)) return false;
-  if (evidence.version !== 5 || evidence.backupWriterSid !== filesystemEvidence?.backupSid || !evidence.appServiceDenied || !evidence.edgeServiceDenied || !evidence.separateBackupWriter ||
+  if (evidence.version !== 6 || evidence.backupWriterSid !== filesystemEvidence?.backupSid || evidence.signerReaderSid !== filesystemEvidence?.signerSid || evidence.separateReceiptSigner !== true || !evidence.appServiceDenied || !evidence.edgeServiceDenied || !evidence.separateBackupWriter ||
       evidence.aclProtected !== true || evidence.exactAcl !== true || evidence.encryptedAtRestOrTransport !== true || !new Set(["BITLOCKER_FULLY_ENCRYPTED","SMB_3_1_1_ENCRYPTED"]).has(evidence.encryptionProof) || !recentTimestamp(evidence.completedAt, now, 30 * 24 * 3600_000)) return false;
   return evidence.targetType === "NAS" || (evidence.targetType === "LOCAL_DISK" &&
     Number.isInteger(evidence.dataDiskNumber) && Number.isInteger(evidence.backupDiskNumber) &&
@@ -160,16 +160,16 @@ function validBackupTargetEvidence(evidence, backup, dataRoot, filesystemEvidenc
 
 function validBackupScheduleEvidence(evidence, backup, targetEvidence, filesystemEvidence, runtimeConfigSha256, now) {
   if (evidence?.runtimeConfigSha256 !== runtimeConfigSha256 || evidence?.runtimeReadinessBound !== true || evidence?.recurringInvocationPlanBound !== true) return false;
-  return Boolean(backup.scheduledTaskEvidencePath && evidence?.version === 5 && evidence?.result === "PASS" && evidence.taskName === "Meta Ads Performance Daily Backup" &&
-    evidence.dailyTime === backup.dailyTime && evidence.separatePrincipal === true && evidence.scriptHashVerified === true &&
-    evidence.dailyTriggerVerified === true && evidence.dailyTriggerEnabled === true && evidence.daysInterval === 1 && Number.isSafeInteger(evidence.maximumDatabaseDumpBytes) && evidence.maximumDatabaseDumpBytes >= 1048576 && evidence.maximumDatabaseDumpBytes <= 274877906944 && evidence.maximumBackupDurationSeconds === 14400 && evidence.backupSafetyMarginBytes === 1073741824 && evidence.databaseSizePreflightRequired === true && evidence.databaseDumpRealtimeCapRequired === true && evidence.databaseDumpFinalCapRequired === true && evidence.hardDeadlineRequired === true && evidence.processTreeKillOnDeadlineRequired === true && evidence.incompleteStagingCleanupRequired === true && evidence.signerHashVerified === true && evidence.executorHashesVerified === true && evidence.powerShell7Verified === true && typeof evidence.powerShellPath === "string" && [evidence.powerShellSha256,evidence.actionArgumentsSha256,evidence.backupScriptSha256,evidence.releaseVerifierSha256,evidence.releaseManifestSha256,evidence.attestationSignerSha256,evidence.nodeSha256,evidence.psqlSha256,evidence.pgDumpSha256,evidence.executorSetDigest,evidence.filesystemEvidenceSha256].every((value)=>/^[0-9a-f]{64}$/.test(value??"")) && evidence.executorSetDigest === sha256Tuple(evidence.nodeSha256,evidence.psqlSha256,evidence.pgDumpSha256) && evidence.enabled === true && evidence.startWhenAvailable === true && evidence.backupSid === targetEvidence?.backupWriterSid && evidence.backupSid === filesystemEvidence?.backupSid &&
+  return Boolean(backup.scheduledTaskEvidencePath && evidence?.version === 6 && evidence?.result === "PASS" && evidence.taskName === "Meta Ads Performance Daily Backup" &&
+    evidence.dailyTime === backup.dailyTime && evidence.separatePrincipal === true && evidence.scriptHashVerified === true && evidence.scheduledAuthorizationBound === true && /^[0-9a-f]{64}$/.test(evidence.scheduledAuthorizationSha256 ?? "") && /^[0-9a-f]{64}$/.test(evidence.backupTargetEvidenceSha256 ?? "") && evidence.backupTargetFingerprint === backupTargetFingerprint(targetEvidence) && path.resolve(evidence.backupRoot ?? "") === path.resolve(backup.root) &&
+    evidence.dailyTriggerVerified === true && evidence.dailyTriggerEnabled === true && evidence.daysInterval === 1 && Number.isSafeInteger(evidence.maximumDatabaseDumpBytes) && evidence.maximumDatabaseDumpBytes >= 1048576 && evidence.maximumDatabaseDumpBytes <= 274877906944 && evidence.maximumBackupDurationSeconds === 14400 && evidence.backupSafetyMarginBytes === 1073741824 && evidence.databaseSizePreflightRequired === true && evidence.databaseDumpRealtimeCapRequired === true && evidence.databaseDumpFinalCapRequired === true && evidence.hardDeadlineRequired === true && evidence.processTreeKillOnDeadlineRequired === true && evidence.incompleteStagingCleanupRequired === true && evidence.receiptSigningDelegatedToDistinctSigner === true && evidence.signerHashVerified === false && evidence.executorHashesVerified === true && evidence.powerShell7Verified === true && typeof evidence.powerShellPath === "string" && [evidence.powerShellSha256,evidence.actionArgumentsSha256,evidence.backupScriptSha256,evidence.releaseVerifierSha256,evidence.releaseManifestSha256,evidence.attestationVerifierSha256,evidence.nodeSha256,evidence.psqlSha256,evidence.pgDumpSha256,evidence.executorSetDigest,evidence.filesystemEvidenceSha256].every((value)=>/^[0-9a-f]{64}$/.test(value??"")) && evidence.executorSetDigest === sha256Tuple(evidence.nodeSha256,evidence.psqlSha256,evidence.pgDumpSha256) && evidence.enabled === true && evidence.startWhenAvailable === true && evidence.backupSid === targetEvidence?.backupWriterSid && evidence.backupSid === filesystemEvidence?.backupSid &&
     recentTimestamp(evidence.completedAt, now, 30 * 24 * 3600_000));
 }
 function validLatestBackupEvidence(evidence, publicKey, release, backup, dataRoot, database, targetEvidence, scheduleEvidence, now) {
   const targetFingerprint = backupTargetFingerprint(targetEvidence);
   const configFingerprint = backupConfigFingerprint(release, backup, dataRoot, database, targetFingerprint);
-  return Boolean(backup.latestBackupEvidencePath && evidence?.version === 5 && evidence?.result === "COMPLETE" &&
-    evidence.attestationType === "backup-latest" && verifyAttestation(evidence, publicKey) &&
+  return Boolean(backup.latestBackupEvidencePath && evidence?.version === 6 && evidence?.result === "COMPLETE" &&
+    evidence.attestationType === "backup-latest" && verifyAttestation(evidence, publicKey) && evidence.signerIndependentArtifactVerification === true && /^[0-9a-f]{64}$/.test(evidence.artifactVerificationDigest ?? "") &&
     typeof evidence.backupId === "string" && /^[0-9A-Za-z-]{20,80}$/.test(evidence.backupId) &&
     evidence.releaseId === release.id && evidence.sourceDataRoot === path.resolve(dataRoot) && evidence.backupRoot === path.resolve(backup.root) &&
     evidence.databaseProvider === "supabase_postgres" && evidence.databaseProjectRef === database.projectRef && evidence.databaseHost === database.host && evidence.databasePort === database.port &&
@@ -189,7 +189,7 @@ function validRelease(release) {
 }
 function backupTargetFingerprint(evidence) {
   if (!plainObject(evidence)) return null;
-  return createHash("sha256").update(["5",evidence.result,evidence.targetType,evidence.dataRoot,evidence.backupRoot,evidence.dataDiskUniqueId ?? "",evidence.backupDiskUniqueId ?? "",evidence.nasServer ?? "",evidence.nasShare ?? "",evidence.backupWriterSid,evidence.encryptionProof,evidence.retentionControl,evidence.completedAt].join("\n")).digest("hex");
+  return createHash("sha256").update(["6",evidence.result,evidence.targetType,evidence.dataRoot,evidence.backupRoot,evidence.dataDiskUniqueId ?? "",evidence.backupDiskUniqueId ?? "",evidence.nasServer ?? "",evidence.nasShare ?? "",evidence.backupWriterSid,evidence.signerReaderSid,evidence.encryptionProof,evidence.retentionControl,evidence.completedAt].join("\n")).digest("hex");
 }
 function backupConfigFingerprint(release, backup, dataRoot, database, targetFingerprint) {
   if (!targetFingerprint) return null;
@@ -197,7 +197,7 @@ function backupConfigFingerprint(release, backup, dataRoot, database, targetFing
 }
 function validFilesystemEvidence(evidence, config, dataRoot, runtimeConfigPath, now) {
   const roots = evidence?.classRoots;
-  const requiredClasses = ["CORE_MODIFY","CORE_READ","EDGE_MODIFY","EDGE_READ","SHARED_RUNTIME","ADMIN_EVIDENCE","BACKUP_RECEIPT","BACKUP_ONLY","ADMIN_ONLY"];
+  const requiredClasses = ["CORE_MODIFY","CORE_READ","EDGE_MODIFY","EDGE_READ","SHARED_RUNTIME","ADMIN_EVIDENCE","BACKUP_RECEIPT","BACKUP_ONLY","SIGNER_ONLY","ADMIN_ONLY"];
   if (!plainObject(roots) || Object.keys(roots).sort().join("|") !== [...requiredClasses].sort().join("|") ||
       requiredClasses.some((name) => !Array.isArray(roots[name]) || roots[name].length === 0 || roots[name].some((root) => typeof root !== "string" || !path.isAbsolute(root)))) return false;
   const adminEvidencePaths = [config.hostSecurity.filesystemEvidencePath, config.database.boundaryEvidencePath,
@@ -212,9 +212,9 @@ function validFilesystemEvidence(evidence, config, dataRoot, runtimeConfigPath, 
     (!config.backup.latestBackupEvidencePath || classContains(config.backup.latestBackupEvidencePath,roots.BACKUP_RECEIPT));
   return covered && evidence?.result === "PASS" && path.resolve(evidence.dataRoot ?? "") === path.resolve(dataRoot) &&
     evidence.nonReparse === true && evidence.leastPrivilege === true && evidence.exactAcl === true && evidence.filesystem === "NTFS" &&
-    /^[A-Z0-9-]+$/.test(evidence.coreServiceSid ?? "") && /^[A-Z0-9-]+$/.test(evidence.edgeServiceSid ?? "") && /^[A-Z0-9-]+$/.test(evidence.backupSid ?? "") &&
+    /^[A-Z0-9-]+$/.test(evidence.coreServiceSid ?? "") && /^[A-Z0-9-]+$/.test(evidence.edgeServiceSid ?? "") && /^[A-Z0-9-]+$/.test(evidence.backupSid ?? "") && /^[A-Z0-9-]+$/.test(evidence.signerSid ?? "") &&
     evidence.edgeServiceSid === config.hostSecurity.edgeServiceSid &&
-    new Set([evidence.coreServiceSid,evidence.edgeServiceSid,evidence.backupSid]).size === 3 &&
+    new Set([evidence.coreServiceSid,evidence.edgeServiceSid,evidence.backupSid,evidence.signerSid]).size === 4 &&
     typeof evidence.descriptorDigest === "string" && /^[0-9a-f]{64}$/.test(evidence.descriptorDigest) &&
     recentTimestamp(evidence.completedAt, now, 30 * 24 * 3600_000);
 }

@@ -97,7 +97,7 @@ function assertBreakGlassOperationalEvidence(args: Map<string,string>, target: S
   const approvalDigest=createHash("sha256").update(approvalId,"utf8").digest("hex");
   if(maintenance.version!==1||maintenance.enabled!==true||maintenance.releaseId!==releaseId||maintenance.approvalIdDigest!==approvalDigest||!fresh(maintenanceAt,now,24*3600_000)) throw new Error("BREAK_GLASS_MAINTENANCE_REJECTED");
   if(drain.version!==1||drain.result!=="DRAINED"||drain.activeRequests!==0||!Number.isInteger(drain.processId)||!fresh(drainAt,now,30_000)||!processExists(Number(drain.processId))) throw new Error("BREAK_GLASS_DRAIN_REJECTED");
-  if(backup.version!==5||backup.attestationType!=="backup-latest"||backup.result!=="COMPLETE"||backup.databaseProjectRef!==target.projectRef||backup.databaseHost!==target.host||backup.databasePort!==5432||backup.databaseName!==target.database||backup.databaseSchema!==target.schema||backup.backupId!==requiredArgument(args,"prechange-backup-id")||!fresh(backupAt,now,24*3600_000)) throw new Error("BREAK_GLASS_BACKUP_REJECTED");
+  if(backup.version!==6||backup.signerIndependentArtifactVerification!==true||!/^[0-9a-f]{64}$/.test(String(backup.artifactVerificationDigest??""))||backup.attestationType!=="backup-latest"||backup.result!=="COMPLETE"||backup.databaseProjectRef!==target.projectRef||backup.databaseHost!==target.host||backup.databasePort!==5432||backup.databaseName!==target.database||backup.databaseSchema!==target.schema||backup.backupId!==requiredArgument(args,"prechange-backup-id")||!fresh(backupAt,now,24*3600_000)) throw new Error("BREAK_GLASS_BACKUP_REJECTED");
   assertSignedAttestation(backup,publicKeyPath);
 }
 

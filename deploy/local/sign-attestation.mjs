@@ -7,7 +7,7 @@ const inputBytes = readFileSync(inputPath);
 if (inputBytes.length === 0 || inputBytes.length > 1_048_576) throw new Error("ATTESTATION_INPUT_SIZE_INVALID");
 const value = JSON.parse(inputBytes.toString("utf8"));
 if (!plainObject(value) || "signingKeyId" in value || "attestationSignature" in value ||
-    !new Set(["backup-latest", "restore-verification", "release-compatibility", "legacy-quiesce", "legacy-database-rollback"]).has(value.attestationType)) {
+    !new Set(["backup-schedule-authorization", "restore-verification", "release-compatibility", "legacy-quiesce", "legacy-database-rollback"]).has(value.attestationType)) {
   throw new Error("ATTESTATION_INPUT_INVALID");
 }
 const privateKey = createPrivateKey(readFileSync(privateKeyPath));

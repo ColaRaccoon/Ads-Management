@@ -62,20 +62,48 @@ export async function verifyRuntimeClosure(rootValue, filesValue) {
   }
   for(const app of ["api","web"]){
     const appRoot=path.join(root,app);const packagePath=path.join(appRoot,"package.json");
-    await assertPackageDependencies(packagePath,appRoot,root);
+    await assertPackageDependencies(packagePath,appRoot,root,root,names);
     const packageManifests=files.filter((item)=>item.relative.startsWith(`${app}/node_modules/`)&&item.relative.endsWith("/package.json"));
     if(packageManifests.length<1)fail("RELEASE_RUNTIME_DEPENDENCIES_MISSING");
-    for(const item of packageManifests)await assertPackageDependencies(item.full,path.dirname(item.full),appRoot);
+    for(const item of packageManifests)await assertPackageDependencies(item.full,path.dirname(item.full),appRoot,root,names);
   }
 }
 
-async function assertPackageDependencies(packagePath, packageDirectory, boundaryRoot){
+async function assertPackageDependencies(packagePath, packageDirectory, boundaryRoot, releaseRoot, names){
   let value;try{value=JSON.parse((await boundedRead(packagePath,1024*1024)).toString("utf8"));}catch{fail("RELEASE_PACKAGE_MANIFEST_INVALID")}
   if(!plainObject(value)||!plainObject(value.dependencies??{}))fail("RELEASE_PACKAGE_MANIFEST_INVALID");
   for(const dependency of Object.keys(value.dependencies??{})){
     if(!/^(@[a-z0-9._-]+\/)?[a-z0-9._-]+$/i.test(dependency)||!await dependencyManifestExists(packageDirectory,boundaryRoot,dependency))fail(`RELEASE_DEPENDENCY_CLOSURE_MISSING:${dependency}`);
   }
+  assertPackageEntrypoints(value,packagePath,releaseRoot,names);
 }
+
+function assertPackageEntrypoints(value,packagePath,releaseRoot,names){
+  const targets=[];
+  for(const key of ["main","module"]){if(typeof value[key]==="string")targets.push(value[key]);}
+  collectRuntimeTargets(value.exports,targets);
+  if(typeof value.browser==="string")targets.push(value.browser);else if(plainObject(value.browser))for(const candidate of Object.values(value.browser))if(typeof candidate==="string")targets.push(candidate);
+  if(typeof value.bin==="string")targets.push(value.bin);else if(plainObject(value.bin))for(const candidate of Object.values(value.bin))if(typeof candidate==="string")targets.push(candidate);
+  if(plainObject(value.binary)&&typeof value.binary.module_path==="string"&&typeof value.binary.module_name==="string")targets.push(`${value.binary.module_path}/${value.binary.module_name}.node`.replace(/\{[^}]+\}/g,"*"));
+  const packagePrefix=path.relative(releaseRoot,path.dirname(packagePath)).split(path.sep).join("/");
+  for(const target of new Set(targets))assertPackagedEntrypoint(packagePrefix,target,names);
+}
+function collectRuntimeTargets(value,targets,key=""){
+  if(typeof value==="string"){if(key!=="types")targets.push(value);return}
+  if(Array.isArray(value)){for(const child of value)collectRuntimeTargets(child,targets,key);return}
+  if(plainObject(value))for(const [childKey,child] of Object.entries(value))collectRuntimeTargets(child,targets,childKey);
+}
+function assertPackagedEntrypoint(packagePrefix,target,names){
+  if(typeof target!=="string"||target.length<1||target.length>1024||target.includes("\\")||path.posix.isAbsolute(target))fail("RELEASE_PACKAGE_ENTRYPOINT_INVALID");
+  const normalized=path.posix.normalize(target.replace(/^\.\//,""));if(normalized===".."||normalized.startsWith("../"))fail("RELEASE_PACKAGE_ENTRYPOINT_INVALID");
+  const candidate=`${packagePrefix}/${normalized}`;
+  if(candidate.includes("*")){
+    const expression=new RegExp(`^${candidate.split("*").map(escapeRegExp).join("[^/]*")}$`);if(![...names].some((name)=>expression.test(name)))fail(`RELEASE_PACKAGE_ENTRYPOINT_MISSING:${target}`);return;
+  }
+  const alternatives=[candidate,`${candidate}.js`,`${candidate}.cjs`,`${candidate}.mjs`,`${candidate}.json`,`${candidate}.node`,`${candidate}/index.js`,`${candidate}/index.cjs`,`${candidate}/index.mjs`,`${candidate}/index.node`];
+  if(!alternatives.some((name)=>names.has(name)))fail(`RELEASE_PACKAGE_ENTRYPOINT_MISSING:${target}`);
+}
+function escapeRegExp(value){return value.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
 async function dependencyManifestExists(start,boundary,dependency){
   let cursor=path.resolve(start);const limit=path.resolve(boundary);
   while(cursor===limit||cursor.startsWith(`${limit}${path.sep}`)){
