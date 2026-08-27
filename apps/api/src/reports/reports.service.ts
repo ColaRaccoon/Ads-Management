@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Prisma, ReportType } from "@prisma/client";
+import { Prisma, ReportExport, ReportType } from "@prisma/client";
 import ExcelJS from "exceljs";
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
@@ -20,6 +20,7 @@ import {
 import {
   FileStorage,
   InvalidStorageKeyError,
+  StoredFile,
   StorageIntegrityError,
   StorageObjectNotFoundError
 } from "../storage/file-storage";
@@ -65,7 +66,7 @@ export class ReportsService {
       }
     });
 
-    let stored = false;
+    let stored: StoredFile | undefined;
     try {
       const body = extension === "html"
         ? Buffer.from(await this.renderHtml(range.from, range.to), "utf8")
@@ -76,7 +77,7 @@ export class ReportsService {
         body,
         expectedHashSha256: createHash("sha256").update(body).digest("hex")
       });
-      stored = true;
+      stored = result;
       return await this.prisma.reportExport.update({
         where: { id: report.id },
         data: {
@@ -86,13 +87,14 @@ export class ReportsService {
       });
     } catch {
       if (stored) {
-        const parsed = this.explicitCurrentReference(reference);
-        await this.storage.delete(parsed.key).catch(() => undefined);
+        const committed = await this.reconcileStoredReport(report.id, reference, stored);
+        if (committed) return committed;
+      } else {
+        await this.prisma.reportExport.update({
+          where: { id: report.id },
+          data: { status: "FAILED", fileHashSha256: null }
+        }).catch(() => undefined);
       }
-      await this.prisma.reportExport.update({
-        where: { id: report.id },
-        data: { status: "FAILED", fileHashSha256: null }
-      }).catch(() => undefined);
       throw new ServiceUnavailableException({
         code: "REPORT_STORAGE_UNAVAILABLE",
         message: "The report could not be stored and remains available for a safe retry."
@@ -267,6 +269,91 @@ export class ReportsService {
       maxWait: 5_000,
       timeout: 60_000
     });
+  }
+
+  private async reconcileStoredReport(reportId: string, reference: string, stored: StoredFile) {
+    let current: ReportExport | null;
+    try {
+      current = await this.prisma.reportExport.findUnique({ where: { id: reportId } });
+    } catch {
+      return null;
+    }
+
+    const committed = await this.confirmCommittedStoredReport(current, reference, stored);
+    if (committed) return committed;
+    if (!current || current.filePath !== reference) return null;
+
+    if (current.status === "CREATING" && current.fileHashSha256 === null) {
+      try {
+        await this.prisma.reportExport.updateMany({
+          where: { id: reportId, status: "CREATING", filePath: reference, fileHashSha256: null },
+          data: { status: "FAILED", fileHashSha256: null }
+        });
+      } catch {
+        // The FAILED transition can have the same commit/ack ambiguity. The
+        // second read below is the authority; never delete before it confirms.
+      }
+      try {
+        current = await this.prisma.reportExport.findUnique({ where: { id: reportId } });
+      } catch {
+        return null;
+      }
+      const committedAfterRace = await this.confirmCommittedStoredReport(current, reference, stored);
+      if (committedAfterRace) return committedAfterRace;
+    }
+
+    if (
+      current?.status === "FAILED" &&
+      current.filePath === reference &&
+      current.fileHashSha256 === null
+    ) {
+      await this.storage.delete(stored.key).catch(() => undefined);
+    }
+    return null;
+  }
+
+  private async confirmCommittedStoredReport(
+    report: ReportExport | null,
+    reference: string,
+    stored: StoredFile
+  ) {
+    if (
+      !report || report.status !== "CREATED" || report.filePath !== reference ||
+      report.fileHashSha256?.toLowerCase() !== stored.hash.toLowerCase()
+    ) return null;
+    const parsed = parseStorageReference(reference);
+    if (!parsed || parsed.provider !== this.storage.provider || parsed.key !== stored.key) return null;
+    return await this.storedObjectMatches(stored) ? report : null;
+  }
+
+  private async storedObjectMatches(expected: StoredFile) {
+    let stream: Awaited<ReturnType<FileStorage["getStream"]>>["stream"] | undefined;
+    try {
+      const actual = await this.storage.getStream(expected.key);
+      stream = actual.stream;
+      if (
+        !Number.isSafeInteger(expected.size) || expected.size < 0 ||
+        actual.size !== expected.size
+      ) {
+        stream.destroy();
+        return false;
+      }
+      const hash = createHash("sha256");
+      let size = 0;
+      for await (const chunk of stream) {
+        const bytes = Buffer.from(chunk);
+        size += bytes.length;
+        if (size > expected.size) {
+          stream.destroy();
+          return false;
+        }
+        hash.update(bytes);
+      }
+      return size === expected.size && hash.digest("hex") === expected.hash.toLowerCase();
+    } catch {
+      stream?.destroy();
+      return false;
+    }
   }
 
   private storageFromStoredReference(reference: string) {

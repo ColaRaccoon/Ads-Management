@@ -57,34 +57,63 @@ describe("ReportsService durable storage", () => {
     expect(updates.at(-1)).toEqual({ status: "FAILED", fileHashSha256: null });
   });
 
-  it("cleans a stored report and retains a FAILED reference when the final DB update fails", async () => {
-    const update = vi.fn()
-      .mockRejectedValueOnce(new Error("final DB failure"))
-      .mockResolvedValueOnce({ status: "FAILED" });
-    const storage = {
-      provider: "local",
-      put: vi.fn(async ({ key }: { key: string }) => ({ key, hash: "a".repeat(64), size: 10 })),
-      delete: vi.fn(async () => true),
-      getStream: vi.fn(),
-      exists: vi.fn()
-    };
-    const service = new ReportsService(
-      {
-        reportExport: {
-          create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => ({ ...reportRow(), ...data })),
-          update
-        },
-        decisionLog: { findMany: vi.fn(async () => []) }
-      } as never,
-      safeMetrics() as never,
-      config()
-    );
-    (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+  it("keeps the payload and returns success when CREATED committed but its acknowledgement was lost", async () => {
+    const harness = reportCommitAmbiguityHarness("COMMITTED");
 
-    await expect(service.export(exportBody(), ACTOR_ID)).rejects.toBeInstanceOf(ServiceUnavailableException);
-    expect(storage.put).toHaveBeenCalledOnce();
-    expect(storage.delete).toHaveBeenCalledOnce();
-    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ data: { status: "FAILED", fileHashSha256: null } }));
+    const result = await harness.service.export(exportBody(), ACTOR_ID);
+    expect(result).toMatchObject({
+      status: "CREATED",
+      fileHashSha256: harness.expectedHash
+    });
+    expect(harness.storage.getStream).toHaveBeenCalledOnce();
+    expect(harness.storage.delete).not.toHaveBeenCalled();
+    expect(harness.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("confirms FAILED after a rolled-back CREATED update before deleting the payload once", async () => {
+    const events: string[] = [];
+    const harness = reportCommitAmbiguityHarness("ROLLED_BACK", events);
+
+    const error = await rejected(harness.service.export(exportBody(), ACTOR_ID));
+    expect(error).toBeInstanceOf(ServiceUnavailableException);
+    expect((error as ServiceUnavailableException).getResponse()).toMatchObject({ code: "REPORT_STORAGE_UNAVAILABLE" });
+    expect(events).toEqual(["put", "created-update-error", "read-creating", "mark-failed", "read-failed", "delete"]);
+    expect(harness.storage.delete).toHaveBeenCalledOnce();
+    expect(harness.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ status: "CREATING", fileHashSha256: null }),
+      data: { status: "FAILED", fileHashSha256: null }
+    }));
+  });
+
+  it("re-reads FAILED and cleans once when the FAILED transition acknowledgement is also lost", async () => {
+    const events: string[] = [];
+    const harness = reportCommitAmbiguityHarness("ROLLED_BACK", events, { failedTransitionAckLost: true });
+
+    const error = await rejected(harness.service.export(exportBody(), ACTOR_ID));
+    expect(error).toBeInstanceOf(ServiceUnavailableException);
+    expect(events).toEqual(["put", "created-update-error", "read-creating", "mark-failed", "read-failed", "delete"]);
+    expect(harness.updateMany).toHaveBeenCalledOnce();
+    expect(harness.storage.delete).toHaveBeenCalledOnce();
+  });
+
+  it("preserves the payload when the fresh reconciliation read is unavailable", async () => {
+    const harness = reportCommitAmbiguityHarness("UNAVAILABLE");
+
+    const error = await rejected(harness.service.export(exportBody(), ACTOR_ID));
+    expect(error).toBeInstanceOf(ServiceUnavailableException);
+    expect((error as ServiceUnavailableException).getResponse()).toMatchObject({ code: "REPORT_STORAGE_UNAVAILABLE" });
+    expect(harness.storage.delete).not.toHaveBeenCalled();
+    expect(harness.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not accept or clean up a CREATED row until the stored byte size and hash match", async () => {
+    const harness = reportCommitAmbiguityHarness("COMMITTED", [], { reportedSizeDelta: 1 });
+
+    const error = await rejected(harness.service.export(exportBody(), ACTOR_ID));
+    expect(error).toBeInstanceOf(ServiceUnavailableException);
+    expect(harness.storage.getStream).toHaveBeenCalledOnce();
+    expect(harness.storage.delete).not.toHaveBeenCalled();
+    expect(harness.updateMany).not.toHaveBeenCalled();
   });
 
   it("streams a contained legacy local report without buffering it into the service", async () => {
@@ -292,6 +321,84 @@ function safeMetrics() {
     productMetrics: async () => [],
     adsetMetrics: async () => [],
     unmatchedMetrics: async () => []
+  };
+}
+
+function reportCommitAmbiguityHarness(
+  outcome: "COMMITTED" | "ROLLED_BACK" | "UNAVAILABLE",
+  events: string[] = [],
+  options: { reportedSizeDelta?: number; failedTransitionAckLost?: boolean } = {}
+) {
+  let createdData: Record<string, unknown> = {};
+  let databaseStatus: "CREATING" | "CREATED" | "FAILED" = "CREATING";
+  let storedBody = Buffer.alloc(0);
+  let storedHash = "";
+
+  const update = vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+    if (data.status === "CREATED") {
+      if (outcome === "COMMITTED") databaseStatus = "CREATED";
+      events.push("created-update-error");
+      throw new Error("final DB acknowledgement unavailable");
+    }
+    return { ...reportRow(), ...createdData, ...data };
+  });
+  const findUnique = vi.fn(async () => {
+    if (outcome === "UNAVAILABLE") throw new Error("fresh DB read unavailable");
+    events.push(databaseStatus === "CREATING" ? "read-creating" : databaseStatus === "FAILED" ? "read-failed" : "read-created");
+    return {
+      ...reportRow(),
+      ...createdData,
+      status: databaseStatus,
+      fileHashSha256: databaseStatus === "CREATED" ? storedHash : null
+    };
+  });
+  const updateMany = vi.fn(async () => {
+    events.push("mark-failed");
+    databaseStatus = "FAILED";
+    if (options.failedTransitionAckLost) throw new Error("FAILED transition acknowledgement unavailable");
+    return { count: 1 };
+  });
+  const storage = {
+    provider: "local",
+    put: vi.fn(async ({ key, body }: { key: string; body: Buffer }) => {
+      events.push("put");
+      storedBody = Buffer.from(body);
+      storedHash = createHash("sha256").update(storedBody).digest("hex");
+      return { key, hash: storedHash, size: storedBody.length };
+    }),
+    delete: vi.fn(async () => {
+      events.push("delete");
+      return true;
+    }),
+    getStream: vi.fn(async () => ({
+      stream: Readable.from(storedBody),
+      size: storedBody.length + (options.reportedSizeDelta ?? 0)
+    })),
+    exists: vi.fn()
+  };
+  const service = new ReportsService(
+    {
+      reportExport: {
+        create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+          createdData = data;
+          return { ...reportRow(), ...data };
+        }),
+        update,
+        updateMany,
+        findUnique
+      },
+      decisionLog: { findMany: vi.fn(async () => []) }
+    } as never,
+    safeMetrics() as never,
+    config()
+  );
+  (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+  return {
+    service,
+    storage,
+    updateMany,
+    findUnique,
+    get expectedHash() { return storedHash; }
   };
 }
 
