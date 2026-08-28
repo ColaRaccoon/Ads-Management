@@ -109,12 +109,18 @@ function assertPackageEntrypoints(value,packagePath,releaseRoot,names){
   // main field nor an exports map defines the package root.  A release that
   // omits that implicit file can otherwise pass closure verification and fail
   // only on a clean host during require("package").
-  if(isInstalledDependency&&typeof value.main!=="string"&&value.exports===undefined&&Array.isArray(value.files)&&value.files.some((entry)=>entry==="index.js"||entry==="./index.js"))targets.push("./index.js");
+  if(isInstalledDependency&&typeof value.main!=="string"&&value.exports===undefined&&!explicitlyNonCommonJsPackage(value))targets.push("./index.js");
   if(typeof value.main!=="string")collectRuntimeTargets(value.exports,targets);
   if(typeof value.browser==="string"&&value.browser.length)targets.push(value.browser);else if(plainObject(value.browser))for(const candidate of Object.values(value.browser))if(typeof candidate==="string"&&candidate.length)targets.push(candidate);
   if(typeof value.bin==="string"&&value.bin.length)targets.push(value.bin);else if(plainObject(value.bin))for(const candidate of Object.values(value.bin))if(typeof candidate==="string"&&candidate.length)targets.push(candidate);
   if(plainObject(value.binary)&&typeof value.binary.module_path==="string"&&typeof value.binary.module_name==="string")targets.push(`${value.binary.module_path}/${value.binary.module_name}.node`.replace(/\{[^}]+\}/g,"*"));
   for(const target of new Set(targets))assertPackagedEntrypoint(packagePrefix,target,names);
+}
+function explicitlyNonCommonJsPackage(value){
+  if(typeof value.name==="string"&&value.name.startsWith("@types/"))return true;
+  if(typeof value.name==="string"&&value.name.startsWith("@esbuild/")&&Array.isArray(value.os)&&Array.isArray(value.cpu))return true;
+  if(!Array.isArray(value.files)||value.files.length===0)return false;
+  return value.files.every((entry)=>typeof entry==="string"&&(/^(?:licen[cs]e|readme|history|authors)(?:\.|$)/i.test(entry)||/\.(?:json|d\.ts|js\.flow)$/i.test(entry)||entry==="*.d.ts"));
 }
 function collectRuntimeTargets(value,targets,key=""){
   if(typeof value==="string"){if(key!=="types"&&value.length)targets.push(value);return}
