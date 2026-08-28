@@ -4,7 +4,9 @@ const sha256 = /^[0-9a-f]{64}$/;
 export const SUPABASE_DATABASE_BOUNDARY_V6_FIELDS = [
   "version", "result", "provider", "projectRef", "connectionMode", "host", "port", "sslMode",
   "tlsVerified", "hostnameVerified", "caVerified", "caCertificateSha256", "psqlSha256",
-  "executorHashesVerified", "pgStatSsl", "tlsProtocol", "tlsCipher", "sslEnforcementVerified",
+  "executorHashesVerified", "boundedChildProcesses", "processTreeKillOnDeadline",
+  "maximumVerificationDurationSeconds", "maximumChildOutputBytes", "elapsedSeconds",
+  "pgConnectTimeoutSeconds", "statementTimeoutMilliseconds", "pgStatSsl", "tlsProtocol", "tlsCipher", "sslEnforcementVerified",
   "publicRemoteEndpoint", "runtimeDdlDenied", "roleAttributesRestricted", "boundedConnectionLimits",
   "scramCredentialsVerified", "runtimeObjectOwnershipDenied", "roleMembershipsAbsent",
   "privilegeContractVerified", "sequencePrivilegesVerified", "functionEscalationAbsent",
@@ -16,7 +18,8 @@ export const SUPABASE_DATABASE_BOUNDARY_V6_FIELDS = [
   "backupRoleDigest", "restoreRoleDigest", "completedAt"
 ] as const;
 const trueFields = [
-  "tlsVerified", "hostnameVerified", "caVerified", "executorHashesVerified", "pgStatSsl",
+  "tlsVerified", "hostnameVerified", "caVerified", "executorHashesVerified", "boundedChildProcesses",
+  "processTreeKillOnDeadline", "pgStatSsl",
   "sslEnforcementVerified", "publicRemoteEndpoint", "runtimeDdlDenied", "roleAttributesRestricted",
   "boundedConnectionLimits", "scramCredentialsVerified", "runtimeObjectOwnershipDenied",
   "roleMembershipsAbsent", "privilegeContractVerified", "sequencePrivilegesVerified",
@@ -63,6 +66,15 @@ export function assertSupabaseDatabaseBoundaryEvidenceV6(
       evidence.host !== binding.host || evidence.port !== 5432 || evidence.databaseName !== binding.databaseName ||
       evidence.databaseSchema !== binding.databaseSchema || evidence.databaseUser !== binding.runtimeUser ||
       evidence.sslMode !== "verify-full" || !trueFields.every((field) => evidence[field] === true) ||
+      !Number.isInteger(evidence.maximumVerificationDurationSeconds) ||
+      (evidence.maximumVerificationDurationSeconds as number) < 60 ||
+      (evidence.maximumVerificationDurationSeconds as number) > 1_800 ||
+      !Number.isInteger(evidence.maximumChildOutputBytes) ||
+      (evidence.maximumChildOutputBytes as number) < 1_024 ||
+      (evidence.maximumChildOutputBytes as number) > 1_048_576 ||
+      !Number.isInteger(evidence.elapsedSeconds) || (evidence.elapsedSeconds as number) < 0 ||
+      (evidence.elapsedSeconds as number) > (evidence.maximumVerificationDurationSeconds as number) ||
+      evidence.pgConnectTimeoutSeconds !== 15 || evidence.statementTimeoutMilliseconds !== 60_000 ||
       !digestFields.every((field) => typeof evidence[field] === "string" && sha256.test(evidence[field])) ||
       !new Set(["TLSv1.2", "TLSv1.3"]).has(String(evidence.tlsProtocol)) ||
       typeof evidence.tlsCipher !== "string" || evidence.tlsCipher.length === 0 || evidence.tlsCipher.length > 256 ||

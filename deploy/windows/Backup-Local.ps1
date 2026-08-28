@@ -16,7 +16,12 @@ param(
   [string]$DatabaseSchema,
   [string]$DatabaseUser,
   [string]$PgPassFile,
+  [string]$ExpectedPgPassSha256,
   [string]$BackupIntegrityKeyFile,
+  [string]$ExpectedBackupIntegrityKeySha256,
+  [string]$ExpectedBackupReceiptPrivateKeySha256,
+  [string]$ReceiptPublisherPath,[string]$ExpectedReceiptPublisherSha256,
+  [string]$SemanticSignerPath,[string]$ExpectedSemanticSignerSha256,
   [string]$NodePath,
   [string]$ExpectedNodeSha256,
   [string]$ReleaseRoot,
@@ -37,6 +42,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
+. (Join-Path $PSScriptRoot 'nas-identity.ps1')
 $script:BackupDeadline=$null
 $script:BackupStopwatch=$null
 $script:BackupMaximumMilliseconds=[long]0
@@ -92,7 +98,8 @@ function Sha256Text([string]$Value) {
 function BackupContractParameters {
   return [ordered]@{
     backupMode=$BackupMode;runtimeConfigPath=(Get-ApprovalPath $RuntimeConfigPath 'BACKUP_PLAN_RUNTIME_PATH_REQUIRED');runtimeConfigSha256=(Get-ApprovalHash $ExpectedRuntimeConfigSha256 'BACKUP_PLAN_RUNTIME_HASH_REQUIRED');backupTargetEvidenceSha256=(Get-ApprovalHash $ExpectedBackupTargetEvidenceSha256 'BACKUP_PLAN_TARGET_EVIDENCE_HASH_REQUIRED');backupTargetFingerprint=(Get-ApprovalHash $ExpectedBackupTargetFingerprint 'BACKUP_PLAN_TARGET_FINGERPRINT_REQUIRED');backupRoot=(Get-ApprovalPath $ExpectedBackupRoot 'BACKUP_PLAN_ROOT_REQUIRED')
-    pgDumpPath=(Get-ApprovalPath $PgDumpPath 'BACKUP_PLAN_PGDUMP_PATH_REQUIRED');pgDumpSha256=(Get-ApprovalHash $ExpectedPgDumpSha256 'BACKUP_PLAN_PGDUMP_HASH_REQUIRED');psqlPath=(Get-ApprovalPath $PsqlPath 'BACKUP_PLAN_PSQL_PATH_REQUIRED');psqlSha256=(Get-ApprovalHash $ExpectedPsqlSha256 'BACKUP_PLAN_PSQL_HASH_REQUIRED');databaseName=$DatabaseName;databaseSchema=$DatabaseSchema;databaseUser=$DatabaseUser;pgPassFile=(Get-ApprovalPath $PgPassFile 'BACKUP_PLAN_PGPASS_REQUIRED');backupIntegrityKeyFile=(Get-ApprovalPath $BackupIntegrityKeyFile 'BACKUP_PLAN_INTEGRITY_KEY_REQUIRED')
+    pgDumpPath=(Get-ApprovalPath $PgDumpPath 'BACKUP_PLAN_PGDUMP_PATH_REQUIRED');pgDumpSha256=(Get-ApprovalHash $ExpectedPgDumpSha256 'BACKUP_PLAN_PGDUMP_HASH_REQUIRED');psqlPath=(Get-ApprovalPath $PsqlPath 'BACKUP_PLAN_PSQL_PATH_REQUIRED');psqlSha256=(Get-ApprovalHash $ExpectedPsqlSha256 'BACKUP_PLAN_PSQL_HASH_REQUIRED');databaseName=$DatabaseName;databaseSchema=$DatabaseSchema;databaseUser=$DatabaseUser;pgPassFile=(Get-ApprovalPath $PgPassFile 'BACKUP_PLAN_PGPASS_REQUIRED');pgPassSha256=(Get-ApprovalHash $ExpectedPgPassSha256 'BACKUP_PLAN_PGPASS_HASH_REQUIRED');backupIntegrityKeyFile=(Get-ApprovalPath $BackupIntegrityKeyFile 'BACKUP_PLAN_INTEGRITY_KEY_REQUIRED');backupIntegrityKeySha256=(Get-ApprovalHash $ExpectedBackupIntegrityKeySha256 'BACKUP_PLAN_INTEGRITY_KEY_HASH_REQUIRED');backupReceiptPrivateKeySha256=(Get-ApprovalHash $ExpectedBackupReceiptPrivateKeySha256 'BACKUP_PLAN_RECEIPT_PRIVATE_KEY_HASH_REQUIRED')
+    receiptPublisherPath=(Get-ApprovalPath $ReceiptPublisherPath 'BACKUP_PLAN_RECEIPT_PUBLISHER_PATH_REQUIRED');receiptPublisherSha256=(Get-ApprovalHash $ExpectedReceiptPublisherSha256 'BACKUP_PLAN_RECEIPT_PUBLISHER_HASH_REQUIRED');semanticSignerPath=(Get-ApprovalPath $SemanticSignerPath 'BACKUP_PLAN_SEMANTIC_SIGNER_PATH_REQUIRED');semanticSignerSha256=(Get-ApprovalHash $ExpectedSemanticSignerSha256 'BACKUP_PLAN_SEMANTIC_SIGNER_HASH_REQUIRED')
     nodePath=(Get-ApprovalPath $NodePath 'BACKUP_PLAN_NODE_PATH_REQUIRED');nodeSha256=(Get-ApprovalHash $ExpectedNodeSha256 'BACKUP_PLAN_NODE_HASH_REQUIRED');releaseRoot=(Get-ApprovalPath $ReleaseRoot 'BACKUP_PLAN_RELEASE_ROOT_REQUIRED');releaseManifestSha256=(Get-ApprovalHash $ExpectedReleaseManifestSha256 'BACKUP_PLAN_RELEASE_HASH_REQUIRED');releaseVerifierPath=(Get-ApprovalPath $ReleaseVerifierPath 'BACKUP_PLAN_RELEASE_VERIFIER_REQUIRED');releaseVerifierSha256=(Get-ApprovalHash $ExpectedReleaseVerifierSha256 'BACKUP_PLAN_RELEASE_VERIFIER_HASH_REQUIRED');filesystemEvidencePath=(Get-ApprovalPath $FileSystemEvidencePath 'BACKUP_PLAN_FILESYSTEM_EVIDENCE_REQUIRED');filesystemEvidenceSha256=(Get-ApprovalHash $ExpectedFileSystemEvidenceSha256 'BACKUP_PLAN_FILESYSTEM_EVIDENCE_HASH_REQUIRED');maximumDatabaseDumpBytes=$MaximumDatabaseDumpBytes;maximumBackupDurationSeconds=$MaximumBackupDurationSeconds
   }
 }
@@ -104,8 +111,8 @@ function New-BackupApprovalPlan {
 function Assert-ScheduledAuthorization {
   foreach($pair in @(@($ScheduledAuthorizationPath,$ExpectedScheduledAuthorizationSha256,'SCHEDULE_AUTHORIZATION_HASH_MISMATCH'),@($ScheduleAuthorizationPublicKeyPath,$ExpectedScheduleAuthorizationPublicKeySha256,'SCHEDULE_AUTHORIZATION_PUBLIC_KEY_HASH_MISMATCH'),@($AttestationVerifierPath,$ExpectedAttestationVerifierSha256,'ATTESTATION_VERIFIER_HASH_MISMATCH'))){Assert-PinnedFile $pair[0] $pair[1] $pair[2]}
   $result=Invoke-BoundedProcess $NodePath @($AttestationVerifierPath,$ScheduleAuthorizationPublicKeyPath,$ScheduledAuthorizationPath,'backup-schedule-authorization') 300000 1048576 'SCHEDULE_AUTHORIZATION_SIGNATURE_REJECTED';$result|Out-Null
-  $authorization=Read-DeadlineBoundText $ScheduledAuthorizationPath|ConvertFrom-Json;$keys=@($authorization.PSObject.Properties.Name|Sort-Object);$required=@('attestationSignature','attestationType','authorizationExpiresAt','authorizationIssuedAt','contractSha256','result','signingKeyId','taskName','version')|Sort-Object
-  if(($keys-join"`n")-cne($required-join"`n")-or$authorization.version-ne1-or$authorization.attestationType-cne'backup-schedule-authorization'-or$authorization.result-cne'APPROVED'-or$authorization.contractSha256-cne(BackupContractSha256)-or$authorization.taskName-cne'Meta Ads Performance Daily Backup'){throw 'SCHEDULE_AUTHORIZATION_CONTENT_REJECTED'}
+  $authorization=Read-DeadlineBoundText $ScheduledAuthorizationPath|ConvertFrom-Json;$keys=@($authorization.PSObject.Properties.Name|Sort-Object);$required=@('attestationSignature','attestationType','authorizationExpiresAt','authorizationInstanceId','authorizationIssuedAt','authorizationNonce','backupIntegrityKeySha256','backupReceiptPrivateKeySha256','contractSha256','pgPassSha256','receiptPublisherSha256','result','semanticSignerSha256','signingKeyId','taskName','version')|Sort-Object
+  if(($keys-join"`n")-cne($required-join"`n")-or$authorization.version-ne2-or$authorization.attestationType-cne'backup-schedule-authorization'-or$authorization.result-cne'APPROVED'-or$authorization.contractSha256-cne(BackupContractSha256)-or$authorization.taskName-cne'Meta Ads Performance Daily Backup'-or$authorization.authorizationNonce-notmatch'^[0-9a-f]{64}$'-or$authorization.authorizationInstanceId-notmatch'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'-or$authorization.pgPassSha256-cne$ExpectedPgPassSha256.ToLowerInvariant()-or$authorization.backupIntegrityKeySha256-cne$ExpectedBackupIntegrityKeySha256.ToLowerInvariant()-or$authorization.backupReceiptPrivateKeySha256-cne$ExpectedBackupReceiptPrivateKeySha256.ToLowerInvariant()-or$authorization.receiptPublisherSha256-cne$ExpectedReceiptPublisherSha256.ToLowerInvariant()-or$authorization.semanticSignerSha256-cne$ExpectedSemanticSignerSha256.ToLowerInvariant()){throw 'SCHEDULE_AUTHORIZATION_CONTENT_REJECTED'}
   try{$issued=[datetimeoffset]::Parse([string]$authorization.authorizationIssuedAt,[Globalization.CultureInfo]::InvariantCulture,[Globalization.DateTimeStyles]::RoundtripKind);$expires=[datetimeoffset]::Parse([string]$authorization.authorizationExpiresAt,[Globalization.CultureInfo]::InvariantCulture,[Globalization.DateTimeStyles]::RoundtripKind)}catch{throw 'SCHEDULE_AUTHORIZATION_TIME_INVALID'}
   $now=[datetimeoffset]::UtcNow;if($expires-le$issued-or($expires-$issued).TotalDays-gt31-or$now-lt$issued.AddMinutes(-5)-or$now-gt$expires){throw 'SCHEDULE_AUTHORIZATION_EXPIRED'}
 }
@@ -128,7 +135,7 @@ function Assert-CurrentBackupTarget($Evidence,[string]$DataRoot,[string]$Root){
   foreach($rule in $acl.Access){$sid=$rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value;$rights=if($sid-in@($system,$admin)){[Security.AccessControl.FileSystemRights]::FullControl}elseif($sid-eq$Evidence.backupWriterSid){[Security.AccessControl.FileSystemRights]'Modify,Synchronize'}elseif($sid-eq$Evidence.signerReaderSid){[Security.AccessControl.FileSystemRights]'ReadAndExecute,Synchronize'}else{$null};if($null-eq$rights-or$rule.AccessControlType-ne'Allow'-or$rule.FileSystemRights-ne$rights-or$rule.IsInherited-or$rule.InheritanceFlags-ne$inherit-or$rule.PropagationFlags-ne[Security.AccessControl.PropagationFlags]::None){throw 'BACKUP_TARGET_ACL_DRIFT'}}
   $dataVolume=Get-Volume -FilePath $DataRoot;if(-not$dataVolume.DriveLetter){throw 'BACKUP_DATA_VOLUME_IDENTITY_UNAVAILABLE'};$dataPartition=Get-Partition -DriveLetter $dataVolume.DriveLetter;$dataDisk=Get-Disk -Number $dataPartition.DiskNumber
   if([string]$dataDisk.UniqueId-cne[string]$Evidence.dataDiskUniqueId-or[int]$dataDisk.Number-ne[int]$Evidence.dataDiskNumber){throw 'BACKUP_DATA_DISK_IDENTITY_DRIFT'}
-  if($Evidence.targetType-eq'LOCAL_DISK'){$volume=Get-Volume -FilePath $Root;if(-not$volume.DriveLetter){throw 'BACKUP_TARGET_VOLUME_IDENTITY_UNAVAILABLE'};$partition=Get-Partition -DriveLetter $volume.DriveLetter;$disk=Get-Disk -Number $partition.DiskNumber;if([string]$disk.UniqueId-cne[string]$Evidence.backupDiskUniqueId-or[int]$disk.Number-ne[int]$Evidence.backupDiskNumber-or$disk.Number-eq$dataDisk.Number){throw 'BACKUP_TARGET_IDENTITY_DRIFT'};$bitlocker=Get-BitLockerVolume -MountPoint ($volume.DriveLetter+':') -ErrorAction Stop;if([string]$bitlocker.ProtectionStatus-ne'On'-or[string]$bitlocker.VolumeStatus-ne'FullyEncrypted'){throw 'BACKUP_TARGET_ENCRYPTION_DRIFT'}}elseif($Evidence.targetType-eq'NAS'){$connections=@(Get-SmbConnection -ServerName ([string]$Evidence.nasServer)-ErrorAction Stop|Where-Object{$_.ShareName-ceq[string]$Evidence.nasShare});if($connections.Count-ne1-or-not$connections[0].Encrypted-or[version]$connections[0].Dialect-lt[version]'3.1.1'){throw 'BACKUP_TARGET_ENCRYPTION_DRIFT'}}else{throw 'BACKUP_TARGET_TYPE_INVALID'}
+  if($Evidence.targetType-eq'LOCAL_DISK'){$volume=Get-Volume -FilePath $Root;if(-not$volume.DriveLetter){throw 'BACKUP_TARGET_VOLUME_IDENTITY_UNAVAILABLE'};$partition=Get-Partition -DriveLetter $volume.DriveLetter;$disk=Get-Disk -Number $partition.DiskNumber;if([string]$disk.UniqueId-cne[string]$Evidence.backupDiskUniqueId-or[int]$disk.Number-ne[int]$Evidence.backupDiskNumber-or$disk.Number-eq$dataDisk.Number){throw 'BACKUP_TARGET_IDENTITY_DRIFT'};$bitlocker=Get-BitLockerVolume -MountPoint ($volume.DriveLetter+':') -ErrorAction Stop;if([string]$bitlocker.ProtectionStatus-ne'On'-or[string]$bitlocker.VolumeStatus-ne'FullyEncrypted'){throw 'BACKUP_TARGET_ENCRYPTION_DRIFT'}}elseif($Evidence.targetType-eq'NAS'){$identity=Get-StableRemoteNasIdentity ([string]$Evidence.nasServer) ([string]$Evidence.nasShare);if($Evidence.nasLocalAliasRejected-ne$true-or$Evidence.nasServerIdentitySha256-notmatch'^[0-9a-f]{64}$'-or$identity.IdentitySha256-cne[string]$Evidence.nasServerIdentitySha256){throw 'BACKUP_TARGET_REMOTE_IDENTITY_DRIFT'};$connections=@(Get-SmbConnection -ServerName ([string]$Evidence.nasServer)-ErrorAction Stop|Where-Object{$_.ShareName-ceq[string]$Evidence.nasShare});if($connections.Count-ne1-or-not$connections[0].Encrypted-or[version]$connections[0].Dialect-lt[version]'3.1.1'){throw 'BACKUP_TARGET_ENCRYPTION_DRIFT'}}else{throw 'BACKUP_TARGET_TYPE_INVALID'}
 }
 function ConfigFingerprint($Config,[string]$DataRoot,[string]$BackupRoot,[string]$TargetFingerprint) {
   return Sha256Text -Value (@('2',$Config.release.id,$Config.release.migrationDigest,$DataRoot,$BackupRoot,$Config.backup.dailyTime,$Config.database.provider,$Config.database.projectRef,$Config.database.connectionMode,$Config.database.host,[string]$Config.database.port,$Config.database.name,$Config.database.runtimeUser,$Config.database.migrationUser,$Config.database.backupUser,$Config.database.restoreUser,$Config.database.schema,$Config.database.caCertificateSha256,'24','4',$TargetFingerprint) -join "`n")
@@ -226,6 +233,7 @@ function Invoke-BoundedProcess([string]$File,[string[]]$Arguments,[int]$MaximumM
 }
 function DatabaseArguments([string]$Sql) { return @("--host=$databaseHost","--port=$databasePort","--username=$databaseConnectionUser","--dbname=$DatabaseName",'--no-password','--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$Sql") }
 function Invoke-DatabaseQuery([string]$Sql,[int]$MaximumOutputChars,[string]$Code,$CompanionState=$null) {
+  Assert-PinnedFile $PgPassFile $ExpectedPgPassSha256 'PGPASS_HASH_MISMATCH'
   $run=Invoke-BoundedProcess $PsqlPath (DatabaseArguments $Sql) 120000 $MaximumOutputChars $Code $null -1 $CompanionState 1048576
   return ([string]$run.Output).Trim()
 }
@@ -300,12 +308,12 @@ function LegacyReferenceKey([string]$Reference,[string]$Domain,$Baseline){
 }
 
 if ($Action -eq 'Plan') { New-BackupApprovalPlan|ConvertTo-Json -Depth 12;exit 0 }
-if($AuthorizationMode-eq'OneTime'){Assert-ApprovedPlan (New-BackupApprovalPlan) ([bool]$Approved) $ApprovedPlanSha256}else{if($Approved-or$ApprovedPlanSha256){throw 'SCHEDULED_BACKUP_MUST_NOT_USE_BARE_APPROVAL'};Assert-ScheduledAuthorization}
 $started=Get-Date
 $script:BackupDeadline=$started.AddSeconds($MaximumBackupDurationSeconds)
 $script:BackupStopwatch=[Diagnostics.Stopwatch]::StartNew()
 $script:BackupMaximumMilliseconds=[long]$MaximumBackupDurationSeconds*1000
-$requiredFiles=@($RuntimeConfigPath,$PgDumpPath,$PsqlPath,$PgPassFile,$BackupIntegrityKeyFile,$NodePath,$FileSystemEvidencePath)
+if($AuthorizationMode-eq'OneTime'){Assert-ApprovedPlan (New-BackupApprovalPlan) ([bool]$Approved) $ApprovedPlanSha256}else{if($Approved-or$ApprovedPlanSha256){throw 'SCHEDULED_BACKUP_MUST_NOT_USE_BARE_APPROVAL'};Assert-ScheduledAuthorization}
+$requiredFiles=@($RuntimeConfigPath,$PgDumpPath,$PsqlPath,$PgPassFile,$BackupIntegrityKeyFile,$ReceiptPublisherPath,$SemanticSignerPath,$NodePath,$FileSystemEvidencePath)
 if($AuthorizationMode-eq'Scheduled'){$requiredFiles+=@($ScheduledAuthorizationPath,$ScheduleAuthorizationPublicKeyPath,$AttestationVerifierPath)}
 if($BackupMode-eq'LOCAL_RELEASE'){$requiredFiles+=@($ReleaseVerifierPath)}else{$requiredFiles+=@($LegacyBaselineEvidencePath,$LegacyStorageStageEvidencePath)}
 foreach ($file in $requiredFiles) {
@@ -318,9 +326,13 @@ Assert-PinnedFile $NodePath $ExpectedNodeSha256 'NODE_HASH_MISMATCH'
 Assert-PinnedFile $RuntimeConfigPath $ExpectedRuntimeConfigSha256 'RUNTIME_CONFIG_HASH_MISMATCH'
 Assert-PinnedFile $PsqlPath $ExpectedPsqlSha256 'PSQL_HASH_MISMATCH'
 Assert-PinnedFile $PgDumpPath $ExpectedPgDumpSha256 'PG_DUMP_HASH_MISMATCH'
+Assert-PinnedFile $PgPassFile $ExpectedPgPassSha256 'PGPASS_HASH_MISMATCH'
+Assert-PinnedFile $BackupIntegrityKeyFile $ExpectedBackupIntegrityKeySha256 'BACKUP_INTEGRITY_KEY_HASH_MISMATCH'
+Assert-PinnedFile $ReceiptPublisherPath $ExpectedReceiptPublisherSha256 'RECEIPT_PUBLISHER_HASH_MISMATCH'
+Assert-PinnedFile $SemanticSignerPath $ExpectedSemanticSignerSha256 'SEMANTIC_SIGNER_HASH_MISMATCH'
 Assert-PinnedFile $FileSystemEvidencePath $ExpectedFileSystemEvidenceSha256 'FILESYSTEM_EVIDENCE_HASH_MISMATCH'
 $fs=Read-DeadlineBoundText $FileSystemEvidencePath|ConvertFrom-Json
-$sharedExecutors=@($NodePath,$PsqlPath,$PgDumpPath);if($AuthorizationMode-eq'Scheduled'){$sharedExecutors+=$AttestationVerifierPath};if($BackupMode-eq'LOCAL_RELEASE'){$sharedExecutors+=$ReleaseVerifierPath}
+$sharedExecutors=@($NodePath,$PsqlPath,$PgDumpPath,$ReceiptPublisherPath,$SemanticSignerPath);if($AuthorizationMode-eq'Scheduled'){$sharedExecutors+=$AttestationVerifierPath};if($BackupMode-eq'LOCAL_RELEASE'){$sharedExecutors+=$ReleaseVerifierPath}
 if($fs.result-ne'PASS'-or-not$fs.exactAcl-or@($sharedExecutors|Where-Object{-not(UnderAny $_ $fs.classRoots.SHARED_RUNTIME)}).Count){throw 'BACKUP_EXECUTOR_OUTSIDE_SHARED_RUNTIME'}
 if(-not(UnderAny $RuntimeConfigPath $fs.classRoots.SHARED_RUNTIME)){throw 'BACKUP_RUNTIME_CONFIG_CLASS_REJECTED'}
 $legacyBaseline=$null;$legacyStage=$null;$releaseRootFull=$null
@@ -400,6 +412,7 @@ try {
   $snapshotOwner = $null
   $conversionSql=$null;$conversionReferenceCount=0;$conversionUpdateCount=0
   try {
+    Assert-PinnedFile $PgPassFile $ExpectedPgPassSha256 'PGPASS_HASH_MISMATCH'
     $env:PGPASSFILE = [IO.Path]::GetFullPath($PgPassFile)
     $env:PGSSLMODE='verify-full';$env:PGSSLROOTCERT=$databaseCa
     $databaseSizeText=Invoke-DatabaseQuery 'SELECT pg_database_size(current_database())' 1024 'DATABASE_SIZE_PREFLIGHT_FAILED'
@@ -411,6 +424,7 @@ try {
       [long]$requiredFreeBytes=$sourceTotalBytes+$MaximumDatabaseDumpBytes+$script:BackupSafetyMarginBytes
       if([long]$volume.SizeRemaining-lt$requiredFreeBytes){throw 'BACKUP_TARGET_FREE_SPACE_INSUFFICIENT'}
     }
+    Assert-PinnedFile $PgPassFile $ExpectedPgPassSha256 'PGPASS_HASH_MISMATCH'
     $snapshotOwner = Start-BoundedProcessState $PsqlPath @("--host=$databaseHost","--port=$databasePort","--username=$databaseConnectionUser","--dbname=$DatabaseName",'--no-password','--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--file=$snapshotSqlPath")
     $snapshotId = $null
     $snapshotAcquireDeadline=(Get-Date).AddSeconds(30);if($script:BackupDeadline-lt$snapshotAcquireDeadline){$snapshotAcquireDeadline=$script:BackupDeadline}
@@ -425,6 +439,7 @@ try {
       if(-not$snapshotId-and(Get-Date)-ge$snapshotAcquireDeadline){throw 'SNAPSHOT_EXPORT_TIMEOUT'}
       if (-not $snapshotId) { Start-Sleep -Milliseconds 100 }
     }
+    Assert-PinnedFile $PgPassFile $ExpectedPgPassSha256 'PGPASS_HASH_MISMATCH'
     Invoke-BoundedProcess $PgDumpPath @("--host=$databaseHost","--port=$databasePort","--username=$databaseConnectionUser","--dbname=$DatabaseName",'--no-password','--format=tar','--compress=0',"--snapshot=$snapshotId","--schema=$DatabaseSchema",'--no-owner','--no-privileges',"--file=$dumpPath") ([int]($MaximumBackupDurationSeconds*1000)) 1048576 'PG_DUMP_FAILED' $dumpPath $MaximumDatabaseDumpBytes $snapshotOwner 1048576|Out-Null
     $dumpItem=Get-Item -LiteralPath $dumpPath -Force
     if($dumpItem.Length-lt1024-or$dumpItem.Length-gt$MaximumDatabaseDumpBytes){throw 'DATABASE_DUMP_FINAL_SIZE_INVALID'}
@@ -522,6 +537,7 @@ try {
   $fileCount = $storageManifest.Count
   $measured = $storageManifest | Measure-Object -Property size -Sum
   $totalBytes = if ($null -eq $measured.Sum) { [long]0 } else { [long]$measured.Sum }
+  Assert-PinnedFile $BackupIntegrityKeyFile $ExpectedBackupIntegrityKeySha256 'BACKUP_INTEGRITY_KEY_HASH_MISMATCH'
   $integrityKeyId=IntegrityKeyId $BackupIntegrityKeyFile
   $executorSetDigest=Sha256Text -Value (@($ExpectedNodeSha256.ToLowerInvariant(),$ExpectedPsqlSha256.ToLowerInvariant(),$ExpectedPgDumpSha256.ToLowerInvariant())-join"`n")
   $manifestSourceRoot=if($BackupMode-eq'LEGACY_BASELINE'){[string]$legacyBaseline.legacySourceRoot}else{$dataRoot};$manifestReleaseId=[string]$releaseResult.releaseId
@@ -532,14 +548,13 @@ try {
     targetEvidenceFingerprint=$targetFingerprint; configFingerprint=$configFingerprint; fileCount=$fileCount; totalBytes=$totalBytes; integrityAlgorithm='HMAC-SHA256'; integrityKeyId=$integrityKeyId
     nodeSha256=$ExpectedNodeSha256.ToLowerInvariant();psqlSha256=$ExpectedPsqlSha256.ToLowerInvariant();pgDumpSha256=$ExpectedPgDumpSha256.ToLowerInvariant();executorSetDigest=$executorSetDigest;filesystemEvidenceSha256=$ExpectedFileSystemEvidenceSha256.ToLowerInvariant()
   }
+  Assert-PinnedFile $BackupIntegrityKeyFile $ExpectedBackupIntegrityKeySha256 'BACKUP_INTEGRITY_KEY_HASH_MISMATCH'
   $signature = HmacFile -KeyFile $BackupIntegrityKeyFile -Value (SignatureInput $manifest);$manifest.integritySignature=$signature
   Write-Utf8NoBom -Path (Join-Path $staging 'backup-manifest.json') -Value ($manifest | ConvertTo-Json -Depth 4)
   $manifestHash = Deadline-BoundFileHash (Join-Path $staging 'backup-manifest.json') 65536
   $receiptRequestPath=Join-Path $staging 'receipt-request.json'
   Write-Utf8NoBom -Path $receiptRequestPath -Value ([ordered]@{
-    attestationType='backup-latest'; version=6; result='COMPLETE'; backupId=$backupId; backupMode=$BackupMode;releaseId=$manifestReleaseId; sourceDataRoot=$manifestSourceRoot; backupRoot=$backupRoot; databaseProvider='supabase_postgres';databaseProjectRef=$config.database.projectRef;databaseHost=$databaseHost;databasePort=$databasePort;databaseName=$DatabaseName; databaseSchema=$DatabaseSchema;
-    migrationDigest=$migrationDigest; appliedMigrationDigest=$appliedMigrationDigest;databaseDumpBytes=[long]$dumpItem.Length;maximumDatabaseDumpBytes=$MaximumDatabaseDumpBytes;maximumBackupDurationSeconds=$MaximumBackupDurationSeconds;backupSafetyMarginBytes=$script:BackupSafetyMarginBytes;elapsedSeconds=$elapsedSeconds;databaseSizePreflightVerified=$true;databaseDumpRealtimeCapEnforced=$true;databaseDumpFinalCapVerified=$true;hardDeadlineEnforced=$true;processTreeKillOnDeadline=$true;incompleteStagingCleanupContract=$true; storageReferenceDigest=$storageReferenceDigest;storageReferenceConversionSha256=$conversionHash;storageReferenceCount=$conversionReferenceCount;storageReferenceZeroVerified=($conversionReferenceCount-eq0);legacyBaselineSha256=$manifest.legacyBaselineSha256;legacyStorageStageEvidenceSha256=$manifest.legacyStorageStageEvidenceSha256;targetEvidenceFingerprint=$targetFingerprint; configFingerprint=$configFingerprint;
-    manifestSha256=$manifestHash; integrityKeyId=$integrityKeyId; integritySignature=$signature; nodeSha256=$ExpectedNodeSha256.ToLowerInvariant();psqlSha256=$ExpectedPsqlSha256.ToLowerInvariant();pgDumpSha256=$ExpectedPgDumpSha256.ToLowerInvariant();executorSetDigest=$executorSetDigest;filesystemEvidenceSha256=$ExpectedFileSystemEvidenceSha256.ToLowerInvariant(); completedAt=$createdAt
+    attestationType='backup-latest';version=6;result='COMPLETE';backupId=$backupId;backupRoot=$backupRoot;manifestSha256=$manifestHash;targetEvidenceFingerprint=$targetFingerprint;backupContractSha256=(BackupContractSha256);pgPassSha256=$ExpectedPgPassSha256.ToLowerInvariant();backupIntegrityKeySha256=$ExpectedBackupIntegrityKeySha256.ToLowerInvariant();backupReceiptPrivateKeySha256=$ExpectedBackupReceiptPrivateKeySha256.ToLowerInvariant();receiptPublisherSha256=$ExpectedReceiptPublisherSha256.ToLowerInvariant();semanticSignerSha256=$ExpectedSemanticSignerSha256.ToLowerInvariant();completedAt=$createdAt
   } | ConvertTo-Json)
   Assert-BackupDeadline
   Assert-TreeHasNoReparsePoint -Path $staging

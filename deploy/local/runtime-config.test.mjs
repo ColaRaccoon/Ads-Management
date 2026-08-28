@@ -288,7 +288,10 @@ function trustedEvidence(now, value, backupRoot) {
     backupReceiptPublicKey: backupReceiptKeys.publicKey.export({ type: "spki", format: "pem" }),
     restoreReceiptPublicKey: restoreReceiptKeys.publicKey.export({ type: "spki", format: "pem" })
   };
-  Object.assign(result.backupScheduleEvidence,{runtimeConfigSha256,runtimeReadinessBound:true,recurringInvocationPlanBound:true});
+  const backupPins={pgPassSha256:"0".repeat(64),backupIntegrityKeySha256:"1".repeat(64),backupReceiptPrivateKeySha256:"2".repeat(64),receiptPublisherSha256:"3".repeat(64),semanticSignerSha256:"4".repeat(64)};
+  Object.assign(result.backupScheduleEvidence,{runtimeConfigSha256,runtimeReadinessBound:true,recurringInvocationPlanBound:true,scheduledAuthorizationVersion:2,signerHashVerified:true,boundedChildProcesses:true,...backupPins});
+  const {signingKeyId: _signingKeyId,attestationSignature: _attestationSignature,...unsignedBackup}=result.latestBackupEvidence;
+  result.latestBackupEvidence=signed({...unsignedBackup,...backupPins},backupReceiptKeys);
   return result;
 }
 
@@ -308,7 +311,7 @@ function filesystemEvidence(completedAt) {
       CORE_MODIFY: [path.join(dataRoot,"storage")], CORE_READ: [path.join(dataRoot,"core-config")],
       EDGE_MODIFY: [path.join(dataRoot,"logs","edge")], EDGE_READ: [path.join(dataRoot,"runtime-control"),path.join(dataRoot,"certs"),path.join(dataRoot,"edge-private")],
       SHARED_RUNTIME: [path.join(dataRoot,"public-keys")], ADMIN_EVIDENCE: [path.join(dataRoot,"evidence")],
-      BACKUP_RECEIPT: [path.join(dataRoot,"backup-receipt")], BACKUP_ONLY: [path.join(dataRoot,"backup-secrets")], SIGNER_ONLY: [path.join(dataRoot,"signer-only")], ADMIN_ONLY: [path.join(dataRoot,"admin-only")]
+      BACKUP_RECEIPT: [path.join(dataRoot,"backup-receipt")], BACKUP_ONLY: [path.join(dataRoot,"backup-secrets")], SIGNER_ONLY: [path.join(dataRoot,"signer-only")], SIGNER_STATE: [path.join(dataRoot,"signer-state")], ADMIN_ONLY: [path.join(dataRoot,"admin-only")]
     },
     descriptorDigest: "b".repeat(64), completedAt
   };

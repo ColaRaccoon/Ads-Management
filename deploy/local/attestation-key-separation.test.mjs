@@ -9,7 +9,7 @@ import { spawnSync } from "node:child_process";
 test("backup, restore, and quiesce attestations accept only their distinct pinned public key",async()=>{
   const root=await mkdtemp(path.join(tmpdir(),"attestation-keys-"));
   const signer=path.join(import.meta.dirname,"sign-attestation.mjs");const verifier=path.join(import.meta.dirname,"verify-attestation.mjs");
-  const domains=["backup-schedule-authorization","restore-verification","legacy-quiesce"];
+  const domains=["backup-signer-authorization","backup-schedule-authorization","restore-verification","legacy-quiesce"];
   const keys=[];
   for(const domain of domains){
     const pair=generateKeyPairSync("ed25519");const privatePath=path.join(root,`${domain}.private.pem`);const publicPath=path.join(root,`${domain}.public.pem`);const unsignedPath=path.join(root,`${domain}.unsigned.json`);const signedPath=path.join(root,`${domain}.signed.json`);

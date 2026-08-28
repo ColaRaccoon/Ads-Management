@@ -45,7 +45,10 @@ function sourceEvidence(projectRef="zyxwvutsrqponmlkjihg",host=`db.${projectRef}
   writeFileSync(boundaryPath,JSON.stringify({
     version:6,result:"PASS",provider:"supabase_postgres",projectRef,connectionMode:"direct",host,port:5432,
     sslMode:"verify-full",tlsVerified:true,hostnameVerified:true,caVerified:true,caCertificateSha256,
-    psqlSha256:"2".repeat(64),executorHashesVerified:true,pgStatSsl:true,tlsProtocol:"TLSv1.3",tlsCipher:"TLS_AES_256_GCM_SHA384",
+    psqlSha256:"2".repeat(64),executorHashesVerified:true,boundedChildProcesses:true,
+    processTreeKillOnDeadline:true,maximumVerificationDurationSeconds:600,maximumChildOutputBytes:1_048_576,
+    elapsedSeconds:42,pgConnectTimeoutSeconds:15,statementTimeoutMilliseconds:60_000,
+    pgStatSsl:true,tlsProtocol:"TLSv1.3",tlsCipher:"TLS_AES_256_GCM_SHA384",
     sslEnforcementVerified:true,publicRemoteEndpoint:true,runtimeDdlDenied:true,roleAttributesRestricted:true,
     boundedConnectionLimits:true,scramCredentialsVerified:true,runtimeObjectOwnershipDenied:true,roleMembershipsAbsent:true,
     privilegeContractVerified:true,sequencePrivilegesVerified:true,functionEscalationAbsent:true,defaultPrivilegesVerified:true,

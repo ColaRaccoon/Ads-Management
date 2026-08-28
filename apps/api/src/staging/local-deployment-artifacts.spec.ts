@@ -182,23 +182,31 @@ describe("local native deployment artifacts", () => {
       file("deploy/windows/Test-SupabaseDatabaseBoundary.ps1"),file("deploy/windows/Backup-Local.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Manage-RecoveryKit.ps1"),
       file("deploy/windows/Publish-RestoreEvidence.ps1"),file("deploy/windows/Test-ReleaseCompatibility.ps1"),file("deploy/windows/Restore-Verify.ps1"),file("deploy/local/runtime-config.mjs")
     ]);
-    expect(database).toContain("ExpectedPsqlSha256");expect(database).toContain("Assert-PsqlPinned");expect(database).toContain("classRoots.SHARED_RUNTIME");
+    expect(database).toContain("ExpectedPsqlSha256");expect(database).toContain("Assert-PsqlPinned");expect(database).toContain("classRoots.SHARED_RUNTIME");expect(database).toContain("[Diagnostics.ProcessStartInfo]::new()");expect(database).toContain("BaseStream.ReadAsync");expect(database).toContain("$Process.Kill($true)");expect(database).toContain("PGCONNECT_TIMEOUT");expect(database).not.toContain("&$PsqlPath");
     for(const source of[backup,schedule]){expect(source).toContain("ExpectedNodeSha256");expect(source).toContain("ExpectedPsqlSha256");expect(source).toContain("ExpectedPgDumpSha256");expect(source).toContain("executorSetDigest");expect(source).toContain("classRoots.SHARED_RUNTIME")}
     for(const source of[recovery,publish,compatibility,restore]){expect(source).toContain("ExpectedNodeSha256");expect(source).toContain("classRoots.SHARED_RUNTIME")}
     expect(restore).toContain("ExpectedPgRestoreSha256");expect(restore).toContain("ExpectedPsqlSha256");expect(restore).toContain("restoreExecutorSetDigest");expect(restore).toContain("UNPINNED_RESTORE_EXECUTABLE_REJECTED");
-    expect(schedule).toContain("'-ExpectedNodeSha256',$ExpectedNodeSha256");expect(schedule).toContain("'-ExpectedPsqlSha256',$ExpectedPsqlSha256");expect(schedule).toContain("'-ExpectedPgDumpSha256',$ExpectedPgDumpSha256");
+    expect(schedule).toContain("'-ExpectedNodeSha256',$ExpectedNodeSha256");expect(schedule).toContain("'-ExpectedPsqlSha256',$ExpectedPsqlSha256");expect(schedule).toContain("'-ExpectedPgDumpSha256',$ExpectedPgDumpSha256");expect(schedule).toContain("Invoke-ScheduleBounded");expect(schedule).toContain("BaseStream.ReadAsync");expect(schedule).toContain("$Process.Kill($true)");expect(schedule).not.toContain("&$NodePath");
     expect(runtime).toContain("evidence.executorSetDigest === sha256Tuple");expect(runtime).toContain("evidence.restoreExecutorSetDigest === sha256Tuple");expect(runtime).toContain("evidence.nodeSha256 === scheduleEvidence?.nodeSha256");
   });
 
   it("supports source-independent authenticated disaster extraction and an enabled plan-bound daily trigger",async()=>{
-    const [tool,recovery,schedule,reboot,runtime]=await Promise.all([
-      file("deploy/local/recovery-kit.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Test-RebootReadiness.ps1"),file("deploy/local/runtime-config.mjs")
+    const [tool,recovery,recoveryTree,schedule,reboot,runtime]=await Promise.all([
+      file("deploy/local/recovery-kit.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1"),file("deploy/windows/recovery-process-tree.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Test-RebootReadiness.ps1"),file("deploy/local/runtime-config.mjs")
     ]);
     expect(tool).toContain("manifestSha256");expect(tool).toContain("files: payload.files.map");
-    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("EscrowWorksheetPath");expect(recovery).toContain("ExpectedEscrowWorksheetSha256");expect(recovery).toContain("BaseStream.ReadAsync");expect(recovery).toContain("Stop-RecoveryProcessTree");expect(recovery).toContain("version=5");expect(recovery).not.toContain("version=4");expect(recovery).toContain("sourcePathsDisclosed=$false");
+    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("EscrowWorksheetPath");expect(recovery).toContain("ExpectedEscrowWorksheetSha256");expect(recovery).toContain("BaseStream.ReadAsync");expect(recovery).toContain("Stop-VerifiedRecoveryProcessTree");expect(recovery).toContain("version=5");expect(recovery).not.toContain("version=4");expect(recovery).toContain("sourcePathsDisclosed=$false");
+    expect(recoveryTree).toContain("$Process.Kill($true)");expect(recoveryTree).toContain("WaitForExit");expect(recoveryTree).toContain("RECOVERY_KIT_TOOL_DESCENDANT_EXIT_UNCONFIRMED");
+    if(process.platform==="win32"){const processTreeTest=spawnSync("pwsh.exe",["-NoProfile","-ExecutionPolicy","Bypass","-File",path.join(root,"deploy/windows/recovery-process-tree.runtime.test.ps1")],{cwd:root,encoding:"utf8",timeout:20_000});expect(processTreeTest.status,processTreeTest.stderr).toBe(0);expect(JSON.parse(processTreeTest.stdout).stubbornDescendantTerminated).toBe(true)}
     expect(schedule).toContain("$task.Triggers[0].Enabled -eq $true");expect(schedule).toContain("dailyTriggerEnabled=$true");expect(schedule).toContain("recurringInvocationPlanBound=$true");expect(schedule).toContain("runtimeConfigSha256=$ExpectedRuntimeConfigSha256");
     expect(reboot).toContain("not[bool]$task.Triggers[0].Enabled");expect(reboot).toContain("backupDailyTriggerEnabled");expect(reboot).toContain("runtimeConfigSha256=(FileHash $configPath)");
     expect(runtime).toContain("evidence.dailyTriggerEnabled === true");
+  },20_000);
+
+  it("preserves the live schema behind a durable rollback journal and rejects local NAS aliases",async()=>{
+    const [rollback,target,nas]=await Promise.all([file("deploy/windows/Manage-SupabaseRollbackRestore.ps1"),file("deploy/windows/Test-BackupTarget.ps1"),file("deploy/windows/nas-identity.ps1")]);
+    for(const token of["state='INTENT'","PRESERVED_ORIGINAL_RESTORE_IN_PROGRESS","FAILED_MAINTENANCE_REQUIRED","COMPLETE_MAINTENANCE_REQUIRED","ALTER SCHEMA $quotedSchema RENAME TO $quotedPreserved","ROLLBACK_AUTOMATIC_PRESERVED_SCHEMA_RECOVERY","allReadsAndHashesDeadlineBound=$true","edgeProcessStartedAt","edgeIdentityDigest","drainCompletedAt","$Process.Kill($true)","WaitForExit"]){expect(rollback).toContain(token)}
+    expect(target).toContain("nasServerIdentitySha256");expect(target).toContain("NAS_REMOTE_IDENTITY_DRIFT");expect(nas).toContain("NAS_SERVER_RESOLVES_TO_CURRENT_HOST");expect(nas).toContain("Get-NetIPAddress");expect(nas).toContain("GetHostAddresses");
   });
 
   it("binds backup authority and keeps receipt signing outside the backup principal",async()=>{
@@ -206,11 +214,11 @@ describe("local native deployment artifacts", () => {
       file("deploy/windows/Backup-Local.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Manage-Acl.ps1"),file("deploy/windows/Publish-BackupReceipt.ps1"),file("deploy/local/sign-backup-receipt.mjs"),file("deploy/local/sign-attestation.mjs"),file("deploy/local/runtime-config.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1")
     ]);
     expect(backup).not.toContain("if (-not $Approved)");expect(backup).toContain("New-BackupApprovalPlan");expect(backup).toContain("Assert-ScheduledAuthorization");expect(backup).toContain("ExpectedRuntimeConfigSha256");expect(backup).toContain("ExpectedBackupTargetEvidenceSha256");expect(backup).toContain("ExpectedBackupTargetFingerprint");expect(backup).toContain("ExpectedBackupRoot");
-    expect(schedule).not.toContain("'-Approved'");expect(schedule).not.toContain("BackupReceiptPrivateKeyPath");expect(schedule).toContain("ExpectedScheduledAuthorizationSha256");expect(schedule).toContain("scheduledAuthorizationBound=$true");
+    expect(schedule).not.toContain("'-Approved'");expect(schedule).not.toContain("BackupReceiptPrivateKeyPath");expect(schedule).toContain("ExpectedScheduledAuthorizationSha256");expect(schedule).toContain("scheduledAuthorizationBound=$true");expect(schedule).toContain("scheduledAuthorizationVersion=2");expect(schedule).toContain("ExpectedBackupReceiptPrivateKeySha256");
     expect(backup).not.toContain("BackupReceiptPrivateKeyPath");expect(backup).not.toContain("ATTESTATION_SIGNER_HASH_MISMATCH");expect(backup).toContain("COMPLETE_PENDING_SIGNER");
-    expect(acl).toContain("SignerAccount");expect(acl).toContain("SIGNER_ONLY");expect(acl).toContain("signerSid=$script:SignerSid");expect(recovery).toContain("'backup-receipt-private-key'='SIGNER_ONLY'");
-    expect(publisher).toContain("BACKUP_RECEIPT_SIGNER_IDENTITY_REJECTED");expect(publisher).toContain("classRoots.SIGNER_ONLY");expect(publisher).toContain("ExpectedSemanticSignerSha256");
-    for(const token of ["BACKUP_MANIFEST_HASH_MISMATCH","BACKUP_DUMP_MISMATCH","STORAGE_PAYLOAD_SET_MISMATCH","BACKUP_HMAC_INVALID","artifactVerificationDigest","signerIndependentArtifactVerification"]){expect(semantic).toContain(token)}
+    expect(acl).toContain("SignerAccount");expect(acl).toContain("SIGNER_ONLY");expect(acl).toContain("SIGNER_STATE");expect(acl).toContain("signerSid=$script:SignerSid");expect(recovery).toContain("'backup-receipt-private-key'='SIGNER_ONLY'");
+    for(const token of ["backup-signer-authorization","Assert-ApprovedPlan","SIGNER_PUBLISH_MUST_NOT_USE_ADMIN_LEDGER","SignerReplayLedgerRoot","CreateNew","ExpectedReceiptRequestSha256","BACKUP_RECEIPT_REQUEST_CHANGED_BEFORE_PUBLISH","ExpectedPgPassSha256","ExpectedBackupIntegrityKeySha256","ExpectedBackupReceiptPrivateKeySha256","classRoots.SIGNER_ONLY","classRoots.SIGNER_STATE","BACKUP_RECEIPT_SIGNER_IDENTITY_REJECTED"]){expect(publisher).toContain(token)}
+    for(const token of ["requestKeys","manifestKeys","exactObject","BACKUP_MANIFEST_HASH_MISMATCH","BACKUP_DUMP_MISMATCH","STORAGE_PAYLOAD_SET_MISMATCH","BACKUP_HMAC_INVALID","LEGACY_STORAGE_CONVERSION_HASH_MISMATCH","artifactVerificationDigest","signerIndependentArtifactVerification","BACKUP_RECEIPT_KEY_DOMAIN_REUSE_REJECTED"]){expect(semantic).toContain(token)}
     expect(generic).not.toContain('"backup-latest",');expect(runtime).toContain("evidence.signerIndependentArtifactVerification === true");expect(runtime).toContain("evidence.artifactVerificationDigest");
   });
 
@@ -220,6 +228,7 @@ describe("local native deployment artifacts", () => {
     ]);
     expect(backup).toContain("[ValidateSet(14400)][int]$MaximumBackupDurationSeconds=14400");
     expect(backup).toContain("$script:BackupDeadline=$started.AddSeconds($MaximumBackupDurationSeconds)");
+    expect(backup.lastIndexOf("$script:BackupDeadline=$started.AddSeconds($MaximumBackupDurationSeconds)")).toBeLessThan(backup.indexOf("if($AuthorizationMode-eq'OneTime')"));
     expect(backup).toContain("[Diagnostics.ProcessStartInfo]::new()");
     expect(backup).toContain("$Process.Kill($true)");
     expect(backup).not.toContain("& $PgDumpPath");

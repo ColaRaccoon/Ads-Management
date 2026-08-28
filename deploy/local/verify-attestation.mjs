@@ -2,7 +2,7 @@ import { createHash, createPublicKey, verify } from "node:crypto";
 import { lstatSync, readFileSync } from "node:fs";
 
 const [publicKeyPath, evidencePath, expectedType] = process.argv.slice(2);
-if (!publicKeyPath || !evidencePath || !new Set(["backup-latest", "backup-schedule-authorization", "restore-verification", "release-compatibility", "legacy-quiesce", "legacy-database-rollback"]).has(expectedType)) fail();
+if (!publicKeyPath || !evidencePath || !new Set(["backup-latest", "backup-signer-authorization", "backup-schedule-authorization", "restore-verification", "release-compatibility", "legacy-quiesce", "legacy-database-rollback"]).has(expectedType)) fail();
 
 try {
   for (const candidate of [publicKeyPath, evidencePath]) {

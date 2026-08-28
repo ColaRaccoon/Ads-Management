@@ -195,7 +195,7 @@ the step being approved. Approval for one step does not authorize another.
 1. **Principal rights** — `Manage-PrincipalRights.ps1` assigns service logon and
    explicit interactive/remote/network logon denial to the three exact local
    principals. Rollback restores the prior policy backup.
-2. **NTFS ACL** — `Manage-Acl.ps1` applies nine disjoint access classes and
+2. **NTFS ACL** — `Manage-Acl.ps1` applies eleven disjoint access classes and
    verifies every descendant. Rollback restores hash-pinned DACL and owner data.
 3. **Database boundary read-only check** —
    `Test-SupabaseDatabaseBoundary.ps1` verifies TLS, credentials, roles, schema,
@@ -277,8 +277,12 @@ and time are configured, the schedule must not run and readiness remains false.
 
 1. `Test-BackupTarget.ps1` accepts only an exact protected ACL on a different
    BitLocker-encrypted physical disk, or an administratively confirmed encrypted
-   SMB 3.1.1 NAS with snapshots/versioning. Core and Edge are denied; the
-   dedicated backup principal is the only application writer.
+   SMB 3.1.1 NAS with snapshots/versioning. A UNC server that is localhost, the
+   current hostname, a local interface address, or any alias resolving to a local
+   interface is rejected. The approval plan and evidence bind a stable digest of
+   the normalized remote server/share and its resolved remote address set. Core
+   and Edge are denied; the dedicated backup principal is the only application
+   writer.
 2. `Manage-BackupSchedule.ps1` creates the exact daily task under that principal
    only after approval. Verification requires the Windows daily-trigger class,
    `DaysInterval=1`, `Trigger.Enabled=true`, the configured local time, an enabled
@@ -287,19 +291,28 @@ and time are configured, the schedule must not run and readiness remains false.
    the complete recurring `Backup-Local.ps1` invocation plus an admin-signed,
    maximum-31-day schedule authorization. The invocation binds the exact runtime
    config hash, backup-target evidence hash/fingerprint/root, ACL class, executor
-   hashes and size/deadline caps; changing any value requires a new authorization
-   and schedule plan. Bare `-Approved` is never delegated to the backup account.
+   hashes, PgPass/integrity/receipt-key hashes and size/deadline caps; changing any
+   value requires a new authorization and schedule plan. The schedule authorization
+   is v2 and carries its own CSPRNG nonce and instance identifier. Bare `-Approved`
+   is never delegated to the backup account.
 3. `Backup-Local.ps1` verifies live disk/NAS identity, encryption and ACL drift,
    then makes a Supabase database dump with the backup role plus the local
    storage manifest. The migration digest is computed only from the verified
    immutable release. It publishes only an immutable `receipt-request.json` next
    to the completed artifacts and cannot read the receipt private key or modify
-   `BACKUP_RECEIPT`. `Publish-BackupReceipt.ps1` runs under the fourth distinct
-   signer account: the key is in `SIGNER_ONLY`, and the semantic signer
-   independently re-hashes the manifest, HMAC, bounded dump and exact storage
-   inventory before publishing the signed latest receipt. Generic attestation
-   signing refuses `backup-latest`. Receipts contain hashes/metadata, never rows,
-   file contents, or credentials.
+   `BACKUP_RECEIPT`. Before a one-time publish, an administrator consumes an exact
+   ADMIN_ONLY plan and issues a signed, request-hash-bound authorization lasting no
+   more than 15 minutes. Scheduled publication consumes the v2 admin-signed schedule
+   authorization instead. `Publish-BackupReceipt.ps1` then runs under the fourth
+   distinct, non-admin signer account: the key is read-only in `SIGNER_ONLY`, while
+   immutable request copies and the independent one-use replay ledger are confined
+   to `SIGNER_STATE`. It rechecks the publisher, semantic signer, PgPass, integrity
+   key and receipt-key hashes immediately before signing. The semantic signer
+   independently re-hashes the exact v6 manifest, HMAC, bounded dump, storage
+   inventory and any legacy reference-conversion artifact before publishing the
+   signed latest receipt. Generic attestation signing refuses `backup-latest`.
+   Receipts are constructed from an allowlist and contain hashes/metadata, never
+   rows, file contents, credentials or unknown request fields.
 4. `Restore-Verify.ps1` must run as the dedicated unprivileged restore verifier
    against a separately approved, existing isolated Supabase restore database
    and scratch filesystem. The isolated database may be a different database in
@@ -401,12 +414,23 @@ Production database migration and process switching are separate approvals.
    Rollback after that point uses `Manage-SupabaseRollbackRestore.ps1`: create a
    fresh `Apply` Plan bound to the exact production Supabase project/host/database/
    schema, maintenance/drain, migration journal, signed legacy backup chain,
-   executor/credential/key hashes and output. Apply keeps 3100/4100 quiesced,
-   enforces one four-hour deadline with bounded concurrent child output and
-   process-tree kill, restores the baseline schema, verifies KPI and the unchanged
-   repository-local storage inventories, and signs `legacy-database-rollback`
-   with the restore key. A separately approved `VerifyEvidence` Plan rechecks the
-   signed receipt and live hashes. Only then is the rollback receipt supplied to
+    executor/credential/key hashes, durable rollback journal, fresh drain and the
+    current Edge PID/start time/executable/command/release/listener identity. Apply
+    keeps 3100/4100 quiesced and writes a flushed atomic `INTENT` before the first
+    mutation. In one transaction it renames the current schema to an approval-
+    instance-specific preserved schema; it never drops that pre-rollback schema.
+    The signed archive then recreates a pristine target schema. Apply restores the
+    runtime-role grants, verifies them, KPI, and unchanged repository-local storage
+    inventories, while every stream/hash/child/cleanup shares one monotonic four-
+    hour deadline and verified process-tree termination. It retains the preserved
+    schema, writes `COMPLETE_MAINTENANCE_REQUIRED`, and signs
+    `legacy-database-rollback` with the restore key. On any failure after INTENT it
+    transactionally drops only the partial restored target and renames the
+    preserved original back when possible; otherwise it atomically writes
+    `FAILED_MAINTENANCE_REQUIRED` and the preserved schema must remain untouched.
+    Maintenance and quiesce remain mandatory in either case. A separately approved
+    `VerifyEvidence` Plan rechecks the journal, receipt, role grants and live hashes.
+    Only then is the rollback receipt supplied to
    `Manage-LegacyQuiesce.ps1 -Action Rollback` using the exact restart
    specification. Rollback must reproduce the protected launch identity and pass
    the same bounded legacy health smoke before it reports success. It never
@@ -459,7 +483,8 @@ Recovery order is:
    kit/manifest/runtime/install/inventory hashes, hash-pinned
    offline Node/tool executors, and an existing empty `ADMIN_ONLY` scratch root.
    The kit tool's stdout/stderr are drained concurrently under a bounded buffer;
-   timeout kills the complete process tree. Disaster verification authenticates
+    timeout kills the complete process tree, waits a bounded interval, and fails
+    hard unless the root and every snapshotted descendant are absent. Disaster verification authenticates
    and bounded-extracts the exact 13-file
    internal inventory, retains it for recovery, and neither requires nor emits
    any original source path;

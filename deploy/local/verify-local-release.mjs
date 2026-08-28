@@ -80,12 +80,18 @@ async function assertPackageDependencies(packagePath, packageDirectory, boundary
 
 function assertPackageEntrypoints(value,packagePath,releaseRoot,names){
   const targets=[];
+  const packagePrefix=path.relative(releaseRoot,path.dirname(packagePath)).split(path.sep).join("/");
+  const isInstalledDependency=packagePrefix.split("/").includes("node_modules");
   for(const key of ["main","module"]){if(typeof value[key]==="string")targets.push(value[key]);}
+  // CommonJS package resolution falls back to index.js only when neither a
+  // main field nor an exports map defines the package root.  A release that
+  // omits that implicit file can otherwise pass closure verification and fail
+  // only on a clean host during require("package").
+  if(isInstalledDependency&&typeof value.main!=="string"&&value.exports===undefined)targets.push("./index.js");
   collectRuntimeTargets(value.exports,targets);
   if(typeof value.browser==="string")targets.push(value.browser);else if(plainObject(value.browser))for(const candidate of Object.values(value.browser))if(typeof candidate==="string")targets.push(candidate);
   if(typeof value.bin==="string")targets.push(value.bin);else if(plainObject(value.bin))for(const candidate of Object.values(value.bin))if(typeof candidate==="string")targets.push(candidate);
   if(plainObject(value.binary)&&typeof value.binary.module_path==="string"&&typeof value.binary.module_name==="string")targets.push(`${value.binary.module_path}/${value.binary.module_name}.node`.replace(/\{[^}]+\}/g,"*"));
-  const packagePrefix=path.relative(releaseRoot,path.dirname(packagePath)).split(path.sep).join("/");
   for(const target of new Set(targets))assertPackagedEntrypoint(packagePrefix,target,names);
 }
 function collectRuntimeTargets(value,targets,key=""){
