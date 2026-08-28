@@ -1,5 +1,5 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { link, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -28,7 +28,7 @@ describe("local bootstrap authorization", () => {
     });
     expect(() => loaded.consume()).toThrow("BOOTSTRAP_AUTHORIZATION_REPLAY_REJECTED");
 
-    await writeFile(fixture.requestPath, JSON.stringify({ version: 1, username: "local.admin" }), { flag: "wx", mode: 0o600 });
+    await writeFile(fixture.requestPath, fixture.requestBytes, { flag: "wx", mode: 0o600 });
     const replay = loadBootstrapMutationAuthorization(fixture.input);
     expect(() => replay.consume()).toThrow("BOOTSTRAP_AUTHORIZATION_REPLAY_REJECTED");
   });
@@ -42,6 +42,32 @@ describe("local bootstrap authorization", () => {
     expect(() => loadBootstrapMutationAuthorization(drifted.input)).toThrow("BOOTSTRAP_FILESYSTEM_EVIDENCE_INVALID");
   });
 
+  it("rechecks the authorization expiry with a fresh clock immediately before atomic consumption", async () => {
+    const issuedAt = Date.now() - 1_000;
+    const fixture = await authorizationFixture({ issuedAt, expiresAt: issuedAt + 5_000 });
+    let now = issuedAt + 2_000;
+    Object.assign(fixture.input, { clock: () => now });
+    const loaded = loadBootstrapMutationAuthorization(fixture.input);
+    now = issuedAt + 5_001;
+    expect(() => loaded.consume()).toThrow("BOOTSTRAP_AUTHORIZATION_EXPIRED");
+    await expect(readFile(fixture.requestPath, "utf8")).resolves.toContain("local.admin");
+    await expect(readFile(fixture.ledgerPath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it("rejects a cross-key public verifier and hard-linked verifier input", async () => {
+    const crossKey = await authorizationFixture();
+    const other = generateKeyPairSync("ed25519").publicKey.export({ type: "spki", format: "pem" });
+    await writeFile(crossKey.publicKeyPath, other);
+    crossKey.input.expectedAuthorizationPublicKeySha256 = sha256(Buffer.from(other));
+    expect(() => loadBootstrapMutationAuthorization(crossKey.input)).toThrow("BOOTSTRAP_AUTHORIZATION_SIGNING_KEY_NOT_PINNED");
+
+    const hardLinked = await authorizationFixture();
+    const linked = `${hardLinked.publicKeyPath}.link`;
+    await link(hardLinked.publicKeyPath, linked);
+    hardLinked.input.authorizationPublicKeyPath = linked;
+    expect(() => loadBootstrapMutationAuthorization(hardLinked.input)).toThrow("BOOTSTRAP_AUTHORIZATION_PUBLIC_KEY_INVALID");
+  });
+
   it("removes username argv support from the production bootstrap CLI", async () => {
     const cli = await readFile(path.join(__dirname, "bootstrap-local-super-admin.cli.ts"), "utf8");
     expect(cli).not.toContain('requiredArgument(args, "username")');
@@ -49,6 +75,17 @@ describe("local bootstrap authorization", () => {
     expect(cli).toContain("BOOTSTRAP_USERNAME_ARGV_FORBIDDEN");
     expect(cli).toContain('requiredArgument(args, "bootstrap-request-file")');
     expect(cli).toContain("loadBootstrapMutationAuthorization");
+    const legacyCli = await readFile(path.join(__dirname, "bootstrap-super-admin.cli.ts"), "utf8");
+    expect(legacyCli).toContain("LEGACY_SUPABASE_AUTH_BOOTSTRAP_DISABLED");
+    expect(legacyCli).not.toMatch(/auth-user-id|confirm-email|SupabaseAuthAdapter|process\.argv/);
+    const packageJson = JSON.parse(await readFile(path.join(__dirname, "../../package.json"), "utf8"));
+    expect(packageJson.scripts).not.toHaveProperty("auth:bootstrap-super-admin");
+    expect(packageJson.scripts.build).toBe("node scripts/build.mjs");
+    const buildScript = await readFile(path.join(__dirname, "../../scripts/build.mjs"), "utf8");
+    expect(buildScript).toContain("rmSync(outputRoot, { recursive: true, force: true })");
+    expect(buildScript).toContain("rmSync(buildInfoPath, { force: true })");
+    const buildConfig = JSON.parse(await readFile(path.join(__dirname, "../../tsconfig.build.json"), "utf8"));
+    expect(buildConfig.exclude).toContain("src/auth/bootstrap-super-admin.cli.ts");
   });
 });
 
@@ -60,7 +97,17 @@ async function authorizationFixture(time: { issuedAt?: number; expiresAt?: numbe
   const authorizationPath = path.join(adminRoot, "authorization.json"), ledgerPath = path.join(adminRoot, "authorization.consumed");
   const publicKeyPath = path.join(sharedRoot, "bootstrap-authorization-public.pem");
   const runtimePath = path.join(root, "runtime.json"), filesystemPath = path.join(root, "filesystem.json"), boundaryPath = path.join(root, "boundary.json");
-  const requestBytes = Buffer.from(JSON.stringify({ version: 1, username: "local.admin" }));
+  const pair = generateKeyPairSync("ed25519");
+  const publicBytes = pair.publicKey.export({ type: "spki", format: "pem" }); await writeFile(publicKeyPath, publicBytes);
+  const privateBytes = pair.privateKey.export({ type: "pkcs8", format: "pem" });
+  const signingKeyId = sha256(pair.publicKey.export({ type: "spki", format: "der" }));
+  const requestBytes = Buffer.from(JSON.stringify({
+    version: 2,
+    username: "local.admin",
+    authorizationPrivateKeySha256: sha256(Buffer.from(privateBytes)),
+    authorizationPublicKeySha256: sha256(Buffer.from(publicBytes)),
+    signingKeyId
+  }));
   await writeFile(requestPath, requestBytes, { mode: 0o600 });
   const filesystem = {
     result: "PASS", exactAcl: true, dataRoot, descriptorDigest: "d".repeat(64),
@@ -73,8 +120,6 @@ async function authorizationFixture(time: { issuedAt?: number; expiresAt?: numbe
   };
   const runtimeBytes = Buffer.from(JSON.stringify(runtime)); await writeFile(runtimePath, runtimeBytes);
   const boundaryBytes = Buffer.from(JSON.stringify({ version: 6, result: "PASS" })); await writeFile(boundaryPath, boundaryBytes);
-  const pair = generateKeyPairSync("ed25519");
-  const publicBytes = pair.publicKey.export({ type: "spki", format: "pem" }); await writeFile(publicKeyPath, publicBytes);
   const issuedAt = time.issuedAt ?? Date.now() - 1_000, expiresAt = time.expiresAt ?? Date.now() + 9 * 60_000;
   const unsigned = {
     attestationType: "local-bootstrap-authorization", version: 1, result: "APPROVED", mode: "bootstrap",
@@ -88,12 +133,12 @@ async function authorizationFixture(time: { issuedAt?: number; expiresAt?: numbe
     maintenanceEvidenceSha256: null, drainEvidenceSha256: null, prechangeBackupEvidenceSha256: null,
     authorizationNonce: "a".repeat(64), authorizationInstanceId: "12345678-1234-4123-8123-123456789abc",
     authorizationIssuedAt: new Date(issuedAt).toISOString(), authorizationExpiresAt: new Date(expiresAt).toISOString(),
-    signingKeyId: sha256(pair.publicKey.export({ type: "spki", format: "der" }))
+    signingKeyId
   };
   const authorizationBytes = Buffer.from(JSON.stringify({ ...unsigned, attestationSignature: sign(null, Buffer.from(canonicalJson(unsigned)), pair.privateKey).toString("base64url") }));
   await writeFile(authorizationPath, authorizationBytes, { mode: 0o600 });
   return {
-    requestPath, ledgerPath, filesystemPath,
+    requestPath, requestBytes, ledgerPath, filesystemPath, publicKeyPath,
     input: {
       mode: "bootstrap" as const, requestPath, expectedRequestSha256: sha256(requestBytes), authorizationPath,
       expectedAuthorizationSha256: sha256(authorizationBytes), authorizationPublicKeyPath: publicKeyPath,

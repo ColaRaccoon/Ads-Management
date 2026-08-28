@@ -88,6 +88,10 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     provider === "local"
   );
   const cookieNamespace = parseCookieNamespace(env.AUTH_COOKIE_NAMESPACE, production);
+  const localLanDeployment = env.DEPLOYMENT_MODE?.trim().toLowerCase() === "local_lan";
+  if (localLanDeployment && provider !== "local") {
+    throw new Error("local_lan deployments require AUTH_PROVIDER=local.");
+  }
 
   const independentlyManagedSecrets = [
     sessionHandleSecret,

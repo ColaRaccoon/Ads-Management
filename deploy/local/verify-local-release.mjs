@@ -12,7 +12,10 @@ export const REQUIRED_RELEASE_FILES = Object.freeze([
   "web/server.js","web/package.json","web/.next/BUILD_ID","web/.next/required-server-files.json",
   "deploy/local/launch-local-bundle.mjs","deploy/local/start-edge.mjs","deploy/local/https-edge.mjs",
   "deploy/local/runtime-config.mjs","deploy/local/api-config.mjs","deploy/local/verify-tls-material.mjs",
-  "deploy/local/verify-local-release.mjs","deploy/local/verify-runtime-readiness.mjs"
+  "deploy/local/verify-local-release.mjs","deploy/local/verify-runtime-readiness.mjs","deploy/local/verify-attestation.mjs","deploy/local/verify-https-release.mjs"
+]);
+export const FORBIDDEN_RELEASE_FILES = Object.freeze([
+  "api/dist/auth/bootstrap-super-admin.cli.js"
 ]);
 
 export async function verifyLocalRelease(rootValue, expectedManifestSha256) {
@@ -44,6 +47,7 @@ export async function verifyLocalRelease(rootValue, expectedManifestSha256) {
 
 export async function verifyRuntimeClosure(rootValue, filesValue) {
   const root=path.resolve(rootValue);const files=filesValue??await inventory(root,true);const names=new Set(files.map((item)=>item.relative));
+  for(const name of FORBIDDEN_RELEASE_FILES)if(names.has(name))fail(`RELEASE_FORBIDDEN_LEGACY_AUTH_EXECUTABLE:${name}`);
   for(const name of REQUIRED_RELEASE_FILES)if(!names.has(name))fail(`RELEASE_REQUIRED_FILE_MISSING:${name}`);
   if(![...names].some((name)=>name.startsWith("web/.next/server/"))||![...names].some((name)=>name.startsWith("web/.next/static/")))fail("RELEASE_WEB_RUNTIME_ASSETS_MISSING");
   const engineNames=[...names].filter((name)=>/^api\/node_modules\/\.prisma\/client\/(?:lib)?query_engine[^/]*\.(?:node|dll\.node|so\.node|dylib\.node)$/.test(name));

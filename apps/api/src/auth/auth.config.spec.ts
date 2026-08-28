@@ -92,6 +92,11 @@ describe("auth config", () => {
     expect(local.allowedOrigins.has("https://127.0.0.1:3200")).toBe(true);
   });
 
+  it("hard-disables Supabase Auth for local_lan even outside production", () => {
+    expect(() => loadAuthConfig({ ...base, DEPLOYMENT_MODE: "local_lan" }))
+      .toThrow("require AUTH_PROVIDER=local");
+  });
+
   it("rejects local session rotation beyond the absolute lifetime", () => {
     const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY,
       SUPABASE_JWT_ISSUER, SUPABASE_JWT_AUDIENCE, ...common } = base;

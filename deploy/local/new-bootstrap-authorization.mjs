@@ -1,5 +1,5 @@
 import { createHash, createPrivateKey, createPublicKey, randomBytes, randomUUID, sign } from "node:crypto";
-import { lstatSync, readFileSync, writeFileSync } from "node:fs";
+import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const args = new Map();
@@ -20,21 +20,40 @@ const boundaryPath = absolute("database-boundary-evidence");
 const outputTokenPath = absolute("setup-token-output");
 const ledgerPath = absolute("ledger");
 const privateKeyPath = absolute("private-key");
+const publicKeyPath = absolute("public-key");
 const outputPath = absolute("output");
-const requestBytes = bounded(requestPath, 4 * 1024);
-const runtimeBytes = bounded(runtimePath, 1024 * 1024);
-const filesystemBytes = bounded(filesystemPath, 1024 * 1024);
-const boundaryBytes = bounded(boundaryPath, 64 * 1024);
+const expectedRequestSha256 = shaArgument("expected-request-sha256");
+const expectedRuntimeSha256 = shaArgument("expected-runtime-config-sha256");
+const expectedFilesystemSha256 = shaArgument("expected-filesystem-evidence-sha256");
+const expectedBoundarySha256 = shaArgument("expected-database-boundary-evidence-sha256");
+const expectedPrivateKeySha256 = shaArgument("expected-private-key-sha256");
+const expectedPublicKeySha256 = shaArgument("expected-public-key-sha256");
+const expectedSigningKeyId = shaArgument("expected-signing-key-id");
+const expectedFilesystemDescriptorDigest = shaArgument("expected-filesystem-descriptor-digest");
+const requestBytes = bounded(requestPath, 4 * 1024, expectedRequestSha256);
+const runtimeBytes = bounded(runtimePath, 1024 * 1024, expectedRuntimeSha256);
+const filesystemBytes = bounded(filesystemPath, 1024 * 1024, expectedFilesystemSha256);
+const boundaryBytes = bounded(boundaryPath, 64 * 1024, expectedBoundarySha256);
 const request = parse(requestBytes), runtime = parse(runtimeBytes), filesystem = parse(filesystemBytes);
-exactKeys(request, ["username", "version"]);
+exactKeys(request, ["authorizationPrivateKeySha256", "authorizationPublicKeySha256", "signingKeyId", "username", "version"]);
 const username = normalizeUsername(request.username);
 const database = object(runtime.database), release = object(runtime.release), hostSecurity = object(runtime.hostSecurity);
-if (request.version !== 1 || database.provider !== "supabase_postgres" || database.port !== 5432 ||
+const roots = object(filesystem.classRoots);
+if (request.version !== 2 || request.authorizationPrivateKeySha256 !== expectedPrivateKeySha256 ||
+    request.authorizationPublicKeySha256 !== expectedPublicKeySha256 || request.signingKeyId !== expectedSigningKeyId ||
+    database.provider !== "supabase_postgres" || database.port !== 5432 ||
     !/^[a-z]{20}$/.test(String(database.projectRef ?? "")) || !["direct", "session_pooler"].includes(String(database.connectionMode ?? "")) ||
     !/^[a-z][a-z0-9_]{0,62}$/.test(String(database.name ?? "")) || !/^[a-z][a-z0-9_]{0,62}$/.test(String(database.schema ?? "")) ||
     !/^[a-z0-9][a-z0-9._-]{0,62}$/.test(String(release.id ?? "")) || filesystem.result !== "PASS" || filesystem.exactAcl !== true ||
-    !/^[0-9a-f]{64}$/.test(String(filesystem.descriptorDigest ?? "")) || path.resolve(String(hostSecurity.filesystemEvidencePath ?? "")) !== filesystemPath ||
+    filesystem.descriptorDigest !== expectedFilesystemDescriptorDigest || path.resolve(String(hostSecurity.filesystemEvidencePath ?? "")) !== filesystemPath ||
     path.resolve(String(database.boundaryEvidencePath ?? "")) !== boundaryPath) fail("BOOTSTRAP_AUTHORIZATION_INPUT_BINDING_INVALID");
+for (const name of ["SIGNER_ONLY", "ADMIN_ONLY", "SHARED_RUNTIME", "ADMIN_EVIDENCE"]) classRoots(roots, name);
+for (const candidate of [requestPath, outputTokenPath, ledgerPath, outputPath]) requireClass(candidate, roots.ADMIN_ONLY, "BOOTSTRAP_AUTHORIZATION_ADMIN_ONLY_REQUIRED");
+requireClass(privateKeyPath, roots.SIGNER_ONLY, "BOOTSTRAP_AUTHORIZATION_PRIVATE_KEY_CLASS_REJECTED");
+requireClass(publicKeyPath, roots.SHARED_RUNTIME, "BOOTSTRAP_AUTHORIZATION_PUBLIC_KEY_CLASS_REJECTED");
+requireClass(runtimePath, roots.SHARED_RUNTIME, "BOOTSTRAP_AUTHORIZATION_RUNTIME_CLASS_REJECTED");
+for (const candidate of [filesystemPath, boundaryPath]) requireClass(candidate, roots.ADMIN_EVIDENCE, "BOOTSTRAP_AUTHORIZATION_EVIDENCE_CLASS_REJECTED");
+for (const output of [outputTokenPath, ledgerPath, outputPath]) assertSafeOutput(output);
 
 const recovery = mode === "recover";
 const maintenancePath = optionalAbsolute("maintenance-evidence", recovery);
@@ -42,9 +61,14 @@ const drainPath = optionalAbsolute("drain-evidence", recovery);
 const backupPath = optionalAbsolute("prechange-backup-evidence", recovery);
 const issuedAt = new Date();
 const expiresAt = new Date(issuedAt.valueOf() + 10 * 60_000);
-const privateKey = createPrivateKey(bounded(privateKeyPath, 16 * 1024));
+const privateKeyBytes = bounded(privateKeyPath, 16 * 1024, expectedPrivateKeySha256);
+const publicKeyBytes = bounded(publicKeyPath, 16 * 1024, expectedPublicKeySha256);
+const privateKey = createPrivateKey(privateKeyBytes);
 if (privateKey.asymmetricKeyType !== "ed25519") fail("BOOTSTRAP_AUTHORIZATION_PRIVATE_KEY_INVALID");
 const signingKeyId = sha256(createPublicKey(privateKey).export({ type: "spki", format: "der" }));
+const publicKey = createPublicKey(publicKeyBytes);
+if (publicKey.asymmetricKeyType !== "ed25519" || signingKeyId !== expectedSigningKeyId ||
+    sha256(publicKey.export({ type: "spki", format: "der" })) !== signingKeyId) fail("BOOTSTRAP_AUTHORIZATION_SIGNING_KEY_MISMATCH");
 const value = {
   attestationType: "local-bootstrap-authorization",
   version: 1,
@@ -81,10 +105,16 @@ process.stdout.write(`${JSON.stringify({ result: "AUTHORIZED", authorizationSha2
 
 function absolute(name) { const value = args.get(name); if (!value || !path.isAbsolute(value)) fail("BOOTSTRAP_AUTHORIZATION_ARGUMENT_INVALID"); return path.resolve(value); }
 function optionalAbsolute(name, required) { const value = args.get(name); if (!value) { if (required) fail("BOOTSTRAP_RECOVERY_EVIDENCE_REQUIRED"); return null; } if (!path.isAbsolute(value)) fail("BOOTSTRAP_AUTHORIZATION_ARGUMENT_INVALID"); return path.resolve(value); }
-function bounded(file, maximum) { const stat = lstatSync(file); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || stat.size < 1 || stat.size > maximum) fail("BOOTSTRAP_AUTHORIZATION_INPUT_INVALID"); const bytes = readFileSync(file); if (bytes.length !== stat.size) fail("BOOTSTRAP_AUTHORIZATION_INPUT_CHANGED"); return bytes; }
+function shaArgument(name) { const value = args.get(name); if (!/^[0-9a-f]{64}$/.test(String(value ?? ""))) fail("BOOTSTRAP_AUTHORIZATION_ARGUMENT_INVALID"); return value; }
+function bounded(file, maximum, expected) { assertNoReparseComponents(file); const before = lstatSync(file); if (!before.isFile() || before.isSymbolicLink() || before.nlink !== 1 || before.size < 1 || before.size > maximum) fail("BOOTSTRAP_AUTHORIZATION_INPUT_INVALID"); const handle = openSync(file, constants.O_RDONLY); try { const opened = fstatSync(handle), bytes = readFileSync(handle), after = lstatSync(file); if (opened.size !== before.size || after.size !== before.size || bytes.length !== before.size || opened.mtimeMs !== before.mtimeMs || after.mtimeMs !== before.mtimeMs || (expected && sha256(bytes) !== expected)) fail("BOOTSTRAP_AUTHORIZATION_INPUT_CHANGED"); return bytes; } finally { closeSync(handle); } }
 function parse(bytes) { try { const value = JSON.parse(bytes.toString("utf8")); if (!value || typeof value !== "object" || Array.isArray(value)) fail("BOOTSTRAP_AUTHORIZATION_JSON_INVALID"); return value; } catch { fail("BOOTSTRAP_AUTHORIZATION_JSON_INVALID"); } }
 function object(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
 function exactKeys(value, keys) { if (Object.keys(value).sort().join("\n") !== [...keys].sort().join("\n")) fail("BOOTSTRAP_REQUEST_KEYS_INVALID"); }
+function classRoots(value, name) { const items = value[name]; if (!Array.isArray(items) || items.length < 1 || items.some((item) => typeof item !== "string" || !path.isAbsolute(item))) fail("BOOTSTRAP_AUTHORIZATION_FILESYSTEM_CLASSES_INVALID"); return items; }
+function requireClass(candidate, values, code) { if (!values.some((root) => sameOrNested(candidate, root))) fail(code); }
+function sameOrNested(candidate, root) { const relative = path.relative(path.resolve(root), path.resolve(candidate)); return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative)); }
+function assertSafeOutput(value) { assertNoReparseComponents(path.dirname(value)); const parent = lstatSync(path.dirname(value)); if (!parent.isDirectory() || parent.isSymbolicLink()) fail("BOOTSTRAP_AUTHORIZATION_OUTPUT_PARENT_INVALID"); }
+function assertNoReparseComponents(value) { const full = path.resolve(value), parsed = path.parse(full); let current = parsed.root; for (const segment of full.slice(parsed.root.length).split(path.sep).filter(Boolean)) { current = path.join(current, segment); try { if (lstatSync(current).isSymbolicLink()) fail("BOOTSTRAP_AUTHORIZATION_REPARSE_REJECTED"); } catch (error) { if (error?.code === "ENOENT") continue; throw error; } } }
 function normalizeUsername(value) { if (typeof value !== "string") fail("BOOTSTRAP_USERNAME_INVALID"); const normalized = value.normalize("NFKC").toLowerCase(); if (!/^[a-z][a-z0-9._-]{2,31}$/.test(normalized)) fail("BOOTSTRAP_USERNAME_INVALID"); return normalized; }
 function pathSha256(value) { const normalized = path.resolve(value).replace(/[\\/]+$/, ""); return sha256(Buffer.from(process.platform === "win32" ? normalized.toLowerCase() : normalized, "utf8")); }
 function sha256(value) { return createHash("sha256").update(value).digest("hex"); }

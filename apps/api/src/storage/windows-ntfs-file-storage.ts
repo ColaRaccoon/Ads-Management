@@ -1,7 +1,6 @@
 import { spawn, ChildProcess, ChildProcessWithoutNullStreams } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { rmSync } from "node:fs";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { Readable } from "node:stream";
@@ -22,7 +21,7 @@ const DEFAULT_OPERATION_TIMEOUT_MS = 300_000;
 const DEFAULT_COMPILE_TIMEOUT_MS = 60_000;
 const PROCESS_TREE_EXIT_TIMEOUT_MS = 10_000;
 const META_LINE = /^META ([0-9]+)\r?$/;
-let helperAssemblyPromise: Promise<string> | undefined;
+let helperAssemblyPromise: Promise<HelperAssembly> | undefined;
 
 export type WindowsNtfsFileStorageOptions = {
   operationTimeoutMs?: number;
@@ -39,6 +38,29 @@ type ManagedHelper = {
   clearDeadline: () => void;
   terminate: (error?: Error) => Promise<void>;
 };
+
+type HelperAssembly = Readonly<{ base64: string; sha256: string }>;
+
+// Built from WINDOWS_TREE_KILL_SOURCE for the Windows/.NET Framework runtime.
+// Keeping this small, hash-pinned helper in-process removes Add-Type/csc from
+// the failure-cleanup path, including failures while the main helper compiles.
+const PREBUILT_TREE_KILL_ASSEMBLY: HelperAssembly = Object.freeze({
+  sha256: "2a00fc4f457f4aa63c11e23194c4de15224727550eb77aa6b5b40250e37df5de",
+  base64: [
+    "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",
+    "AAABAPcCAAACAP4CAAABAPcCAAABAAsDAAACABMDAAABAGwCAAACAB0DAAABAGwCAgACACUDAAABAGwCAAACABMDAAABAPcDAAACAPwDIQDXAo0AKQDXApEAMQDXAo0AOQDXApYACQDXAo0AQQAIBKkADADXAo0AFADXAo0ADAAoBL8AFAAsBMUAHABABNQAJABdBOYALABpBPgADABzBL8ALAB8BP0AFACEBAIBJACNBAkBYQCiBI0ANADXAhMBPADXAiMBNADMBCkBNACEBDMBNADRBDkBHADXAo0AgQDiBGQBiQDXAo0AkQAfBWoBoQA5BXEBHAAsBMUAHACEBAIBHABABb8AgQBMBSYAoQBRBZ8BgQDXApEAqQDXAq0BuQDXArMByQDXAo0ACQAEAA0ACQAIABIACQAMABcACQAQABwACQAUACEALgATAL0BLgAbAMYBowArARIAIAC5Aa4APQF3AYkBkgGjAcwDsgC4AM0A3wDxAA0BHQFAAQMA/gABAEQBBQAXAQEARAEHACcBAQBAAQkANgEBAEABCwBCAQEAQAENAFIBAQBAAQ8AYwEBAAABEQB3AQEABIAAAAAAAAAAAAAAAAAAAAAAiQMAAAQAAAAAAAAAAAAAAAEAZwAAAAAABAAAAAAAAAAAAAAAAQASBAAAAAADAAIABAACAAUAAgAAAAA8TW9kdWxlPgBtZXRhLXRyZWUta2lsbC1jZmQ3MjgzOWZmZGQ0YzE0YTk0MzA1MmVmNmE3Y2NjYy5kbGwATWV0YU50ZnNUcmVlS2lsbABQ",
+    "Uk9DRVNTRU5UUlkzMgBGSUxFVElNRQBtc2NvcmxpYgBTeXN0ZW0AT2JqZWN0AFZhbHVlVHlwZQBUSDMyQ1NfU05BUFBST0NFU1MAUFJPQ0VTU19URVJNSU5BVEUAUFJPQ0VTU19RVUVSWV9MSU1JVEVEX0lORk9STUFUSU9OAFNZTkNIUk9OSVpFAFdBSVRfT0JKRUNUXzAASU5WQUxJRF9IQU5ETEVfVkFMVUUAQ3JlYXRlVG9vbGhlbHAzMlNuYXBzaG90AFByb2Nlc3MzMkZpcnN0VwBQcm9jZXNzMzJOZXh0VwBPcGVuUHJvY2VzcwBHZXRQcm9jZXNzVGltZXMAVGVybWluYXRlUHJvY2VzcwBXYWl0Rm9yU2luZ2xlT2JqZWN0AENsb3NlSGFuZGxlAEtpbGwAU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMARGljdGlvbmFyeWAyAFNuYXBzaG90AERlcHRoAFRyeUNyZWF0aW9uVGltZQBUZXJtaW5hdGVBbmRXYWl0AGR3U2l6ZQBjbnRVc2FnZQB0aDMyUHJvY2Vzc0lEAHRoMzJEZWZhdWx0SGVhcElEAHRoMzJNb2R1bGVJRABjbnRUaHJlYWRzAHRoMzJQYXJlbnRQcm9jZXNzSUQAcGNQcmlDbGFzc0Jhc2UAZHdGbGFncwBzekV4ZUZpbGUATG93AEhpZ2gAZmxhZ3MAcHJvY2Vzc0lkAHNuYXBzaG90AGVudHJ5AGFjY2VzcwBpbmhlcml0SGFuZGxlAHByb2Nlc3MAY3JlYXRp",
+    "b24AU3lzdGVtLlJ1bnRpbWUuSW50ZXJvcFNlcnZpY2VzAE91dEF0dHJpYnV0ZQAuY3RvcgBleGl0AGtlcm5lbAB1c2VyAGV4aXRDb2RlAGhhbmRsZQBtaWxsaXNlY29uZHMAcm9vdFBpZAB0aW1lb3V0TXMAcGFyZW50cwB2YWx1ZQBTeXN0ZW0uUnVudGltZS5Db21waWxlclNlcnZpY2VzAENvbXBpbGF0aW9uUmVsYXhhdGlvbnNBdHRyaWJ1dGUAUnVudGltZUNvbXBhdGliaWxpdHlBdHRyaWJ1dGUAbWV0YS10cmVlLWtpbGwtY2ZkNzI4MzlmZmRkNGMxNGE5NDMwNTJlZjZhN2NjY2MARGxsSW1wb3J0QXR0cmlidXRlAGtlcm5lbDMyLmRsbAA8PmNfX0Rpc3BsYXlDbGFzczEAPEtpbGw+Yl9fMABsZWZ0AHJpZ2h0AEludDMyAENvbXBhcmVUbwBTeXN0ZW0uQ29yZQBIYXNoU2V0YDEAQWRkAHNldF9JdGVtAEVudW1lcmF0b3IAR2V0RW51bWVyYXRvcgBLZXlWYWx1ZVBhaXJgMgBnZXRfQ3VycmVudABnZXRfVmFsdWUAQ29udGFpbnMAZ2V0X0tleQBnZXRfSXRlbQBNb3ZlTmV4dABJRGlzcG9zYWJsZQBEaXNwb3NlAExpc3RgMQBJRW51bWVyYWJsZWAxAENvbXBhcmlzb25gMQBTb3J0AGdldF9Db3VudABJbnRQdHIAb3BfRXF1YWxpdHkASW52YWxpZE9wZXJhdGlvbkV4",
+    "Y2VwdGlvbgBUeXBlAFJ1bnRpbWVUeXBlSGFuZGxlAEdldFR5cGVGcm9tSGFuZGxlAE1hcnNoYWwAU2l6ZU9mAENvbnRhaW5zS2V5AFplcm8AR2V0TGFzdFdpbjMyRXJyb3IALmNjdG9yAFN0cnVjdExheW91dEF0dHJpYnV0ZQBMYXlvdXRLaW5kAE1hcnNoYWxBc0F0dHJpYnV0ZQBVbm1hbmFnZWRUeXBlAENvbXBpbGVyR2VuZXJhdGVkQXR0cmlidXRlAAAAAyAAAAAAAMX84LT6Fa9Ls3q4U+KMFuIACLd6XFYZNOCJAgYJBAIAAAAEAQAAAAQAEAAABAAAEAAEAAAAAAIGGAUAAhgJCQcAAgIYEBEMBgADGAkCCRAABQIYEBEQEBEQEBEQEBEQBQACAhgJBQACCRgJBAABAhgFAAIICAgIAAAVEg0CCQkKAAIICRUSDQIJCQYAAgIJEAoFAAIICQgCBggCBg4DIAABBCABAQgEIAEBDgcGFRINAgkJBSACCAkJBCABCAgDBwEIBRUSJQEJBhUSDQIJCgUgAQITAAcgAgETABMBBhUSDQIJCQogABURKQITABMBBhURKQIJCQogABURLQITABMBBhURLQIJCQQgABMBBCAAEwAGIAETARMAAyAAAgUVEjUBCQkgAQEVEjkBEwAFFRI9AQkFIAIBHBgJIAEBFRI9ARMABSABEwAIAyAACCYHDBUSJQEJFRINAgkKCgIVES0CCQkKFRI1AQkICBIUCBURKQIJCQUAAgIYGAYAARJJEU0FAAEIEkkR",
+    "BwQVEg0CCQkYEQwVEg0CCQkIBwIIFRIlAQkMBwYYERAREBEQERACAwAACAUHAxgJCAMAAAEFIAEBEVkFIAEBEWEDF4EECAEACAAAAAAAHgEAAQBUAhZXcmFwTm9uRXhjZXB0aW9uVGhyb3dzAQAAAFgxAAAAAAAAAAAAAG4xAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgMQAAAAAAAAAAX0NvckRsbE1haW4AbXNjb3JlZS5kbGwAAAAAAP8lACAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAEAAAABgAAIAAAAAAAAAAAAAAAAAAAAEAAQAAADAAAIAAAAAAAAAAAAAAAAAAAAEAAAAAAEgAAABYQAAA5AIAAAAAAAAAAAAA5AI0AAAAVgBTAF8AVgBFAFIAUwBJAE8ATgBfAEkATgBGAE8AAAAAAL0E7/4AAAEAAAAAAAAAAAAAAAAAAAAAAD8AAAAAAAAABAAAAAIAAAAAAAAAAAAAAAAAAABEAAAAAQBWAGEAcgBGAGkAbABlAEkAbgBmAG8AAAAAACQABAAAAFQAcgBhAG4AcwBsAGEAdABpAG8AbgAAAAAAAACwBEQCAAABAFMAdAByAGkAbgBnAEYAaQBsAGUASQBuAGYA",
+    "bwAAACACAAABADAAMAAwADAAMAA0AGIAMAAAACwAAgABAEYAaQBsAGUARABlAHMAYwByAGkAcAB0AGkAbwBuAAAAAAAgAAAAMAAIAAEARgBpAGwAZQBWAGUAcgBzAGkAbwBuAAAAAAAwAC4AMAAuADAALgAwAAAAiAA0AAEASQBuAHQAZQByAG4AYQBsAE4AYQBtAGUAAABtAGUAdABhAC0AdAByAGUAZQAtAGsAaQBsAGwALQBjAGYAZAA3ADIAOAAzADkAZgBmAGQAZAA0AGMAMQA0AGEAOQA0ADMAMAA1ADIAZQBmADYAYQA3AGMAYwBjAGMALgBkAGwAbAAAACgAAgABAEwAZQBnAGEAbABDAG8AcAB5AHIAaQBnAGgAdAAAACAAAACQADQAAQBPAHIAaQBnAGkAbgBhAGwARgBpAGwAZQBuAGEAbQBlAAAAbQBlAHQAYQAtAHQAcgBlAGUALQBrAGkAbABsAC0AYwBmAGQANwAyADgAMwA5AGYAZgBkAGQANABjADEANABhADkANAAzADAANQAyAGUAZgA2AGEANwBjAGMAYwBjAC4AZABsAGwAAAA0AAgAAQBQAHIAbwBkAHUAYwB0AFYAZQByAHMAaQBvAG4AAAAwAC4AMAAuADAALgAwAAAAOAAIAAEAQQBzAHMAZQBtAGIAbAB5ACAAVgBlAHIAcwBpAG8AbgAAADAALgAwAC4AMAAuADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAwAAACAMQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+  ].join("")
+});
 
 /**
  * Windows-specific NTFS operations. Node's fs API does not expose
@@ -142,7 +164,9 @@ export class WindowsNtfsFileStorage {
     const assembly = await helperAssembly(systemRoot, executable, this.compileTimeoutMs, this.options.onChildStart);
     const command = [
       "$ErrorActionPreference='Stop'",
-      "[Reflection.Assembly]::Load([Convert]::FromBase64String($env:META_NTFS_HELPER_ASSEMBLY))|Out-Null",
+      "$bytes=[Convert]::FromBase64String($env:META_NTFS_HELPER_ASSEMBLY)",
+      "$sha=[Security.Cryptography.SHA256]::Create();try{$actual=-join@($sha.ComputeHash($bytes)|ForEach-Object{$_.ToString('x2')})}finally{$sha.Dispose()};if($actual-cne$env:META_NTFS_HELPER_ASSEMBLY_SHA256){throw 'Native helper hash mismatch.'}",
+      "[Reflection.Assembly]::Load($bytes)|Out-Null",
       "[NtfsStorageHelper]::Run()",
       "exit [Environment]::ExitCode"
     ].join(";");
@@ -154,7 +178,8 @@ export class WindowsNtfsFileStorage {
         WINDIR: systemRoot,
         TEMP: process.env.TEMP ?? "",
         TMP: process.env.TMP ?? "",
-        META_NTFS_HELPER_ASSEMBLY: assembly,
+        META_NTFS_HELPER_ASSEMBLY: assembly.base64,
+        META_NTFS_HELPER_ASSEMBLY_SHA256: assembly.sha256,
         META_NTFS_OPERATION: operation,
         META_NTFS_ROOT: this.rootPath,
         META_NTFS_KEY: key,
@@ -163,7 +188,7 @@ export class WindowsNtfsFileStorage {
       }
     });
     this.options.onChildStart?.(child.pid ?? -1, operation);
-    return managedHelper(child, systemRoot, this.operationTimeoutMs);
+    return managedHelper(child, systemRoot, this.operationTimeoutMs, assembly);
   }
 }
 
@@ -173,13 +198,13 @@ function helperAssembly(systemRoot: string, executable: string, timeoutMs: numbe
 }
 
 async function compileHelperAssembly(systemRoot: string, executable: string, timeoutMs: number, onChildStart?: (processId: number, operation: string) => void) {
-  const source = Buffer.from(NTFS_HELPER_SOURCE, "utf8").toString("base64");
+  const source = Buffer.from(`${NTFS_HELPER_SOURCE}\n${WINDOWS_TREE_KILL_SOURCE}`, "utf8").toString("base64");
   const outputPath = path.win32.join(process.env.TEMP ?? process.env.TMP ?? systemRoot, `meta-ntfs-helper-${randomUUID()}.dll`);
   const command = [
     "$ErrorActionPreference='Stop'",
     "$source=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:META_NTFS_HELPER_SOURCE))",
     "$output=$env:META_NTFS_HELPER_OUTPUT",
-    "try{Add-Type -TypeDefinition $source -Language CSharp -OutputAssembly $output;$bytes=[IO.File]::ReadAllBytes($output);$loaded=[Reflection.Assembly]::Load($bytes);if(-not $loaded.GetType('NtfsStorageHelper',$false,$false)){throw 'Native helper type is missing.'};[Console]::Out.Write([Convert]::ToBase64String($bytes))}finally{Remove-Item -LiteralPath $output -Force -ErrorAction SilentlyContinue}"
+    "try{Add-Type -TypeDefinition $source -Language CSharp -OutputAssembly $output;$bytes=[IO.File]::ReadAllBytes($output);$loaded=[Reflection.Assembly]::Load($bytes);if(-not $loaded.GetType('NtfsStorageHelper',$false,$false)-or-not $loaded.GetType('MetaNtfsTreeKill',$false,$false)){throw 'Native helper type is missing.'};[Console]::Out.Write([Convert]::ToBase64String($bytes))}finally{Remove-Item -LiteralPath $output -Force -ErrorAction SilentlyContinue}"
   ].join(";");
   const child = spawn(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
     windowsHide: true,
@@ -205,7 +230,7 @@ async function compileHelperAssembly(systemRoot: string, executable: string, tim
     if (code !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(output)) throw new StorageIntegrityError();
     const bytes = Buffer.from(output, "base64");
     if (bytes.length < 1_024 || bytes.length > MAX_HELPER_ASSEMBLY_BYTES) throw new StorageIntegrityError();
-    return output;
+    return Object.freeze({ base64: output, sha256: createHash("sha256").update(bytes).digest("hex") });
   } catch (error) {
     await managed.terminate(error instanceof Error ? error : new StorageIntegrityError()).catch(() => undefined);
     throw error;
@@ -215,7 +240,7 @@ async function compileHelperAssembly(systemRoot: string, executable: string, tim
   }
 }
 
-function managedHelper(child: ChildProcessWithoutNullStreams, systemRoot: string, timeoutMs: number): ManagedHelper {
+function managedHelper(child: ChildProcessWithoutNullStreams, systemRoot: string, timeoutMs: number, killerAssembly: HelperAssembly = PREBUILT_TREE_KILL_ASSEMBLY): ManagedHelper {
   const controller = new AbortController();
   const deadlineAt = performance.now() + timeoutMs;
   let rejectDeadline!: (error: Error) => void;
@@ -237,7 +262,7 @@ function managedHelper(child: ChildProcessWithoutNullStreams, systemRoot: string
       if (child.stdin && !child.stdin.destroyed) child.stdin.destroy(error);
       if (child.stdout && !child.stdout.destroyed) child.stdout.destroy(error);
       if (child.stderr && !child.stderr.destroyed) child.stderr.destroy(error);
-      await terminateWindowsProcessTree(child, systemRoot, PROCESS_TREE_EXIT_TIMEOUT_MS);
+      await terminateWindowsProcessTree(child, systemRoot, PROCESS_TREE_EXIT_TIMEOUT_MS, killerAssembly);
     })();
     return termination;
   };
@@ -258,40 +283,49 @@ async function bounded<T>(managed: ManagedHelper, operation: Promise<T>) {
   return Promise.race([operation, managed.deadline]);
 }
 
-export async function terminateWindowsProcessTree(child: ChildProcess, systemRoot: string, timeoutMs = PROCESS_TREE_EXIT_TIMEOUT_MS) {
+export async function terminateWindowsProcessTree(child: ChildProcess, systemRoot: string, timeoutMs = PROCESS_TREE_EXIT_TIMEOUT_MS, assembly: HelperAssembly = PREBUILT_TREE_KILL_ASSEMBLY) {
   if (child.exitCode !== null) return;
   const pid = child.pid;
   if (!pid || !Number.isSafeInteger(pid) || pid <= 0 || !path.win32.isAbsolute(systemRoot)) throw new StorageIntegrityError();
-  const executable = path.win32.join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
-  const command = "$null=Add-Type -TypeDefinition $env:META_NTFS_TREE_KILL_SOURCE -Language CSharp;[Environment]::Exit([MetaNtfsTreeKill]::Kill([int]$env:META_NTFS_ROOT_PID,[int]$env:META_NTFS_TIMEOUT_MS))";
-  const killer = spawn(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
-    windowsHide: true,
-    stdio: ["pipe", "pipe", "pipe"],
-    env: {
-      SystemRoot: systemRoot,
-      WINDIR: systemRoot,
-      TEMP: tmpdir(),
-      TMP: tmpdir(),
-      META_NTFS_ROOT_PID: String(pid),
-      META_NTFS_TIMEOUT_MS: String(timeoutMs),
-      META_NTFS_TREE_KILL_SOURCE: WINDOWS_TREE_KILL_SOURCE
+  let killed = false;
+  const candidates = [assembly, PREBUILT_TREE_KILL_ASSEMBLY].filter((candidate, index, values) =>
+    index === values.findIndex((item) => item.sha256 === candidate.sha256 && item.base64 === candidate.base64));
+  for (const candidate of candidates) {
+    if (killed || child.exitCode !== null || !/^[A-Za-z0-9+/]+={0,2}$/.test(candidate.base64) || !/^[0-9a-f]{64}$/.test(candidate.sha256)) continue;
+    const executable = path.win32.join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+    const command = "$bytes=[Convert]::FromBase64String($env:META_NTFS_HELPER_ASSEMBLY);$sha=[Security.Cryptography.SHA256]::Create();try{$actual=-join@($sha.ComputeHash($bytes)|ForEach-Object{$_.ToString('x2')})}finally{$sha.Dispose()};if($actual -cne $env:META_NTFS_HELPER_ASSEMBLY_SHA256){exit 90};$loaded=[Reflection.Assembly]::Load($bytes);$killerType=$loaded.GetType('MetaNtfsTreeKill',$false,$false);if($null -eq $killerType){exit 91};$method=$killerType.GetMethod('Kill');if($null -eq $method){exit 92};$result=$method.Invoke($null,@([int]$env:META_NTFS_ROOT_PID,[int]$env:META_NTFS_TIMEOUT_MS));[Environment]::Exit([int]$result)";
+    killed = await runBoundedKiller(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
+      SystemRoot: systemRoot, WINDIR: systemRoot, TEMP: process.env.TEMP ?? "", TMP: process.env.TMP ?? "",
+      META_NTFS_ROOT_PID: String(pid), META_NTFS_TIMEOUT_MS: String(timeoutMs),
+      META_NTFS_HELPER_ASSEMBLY: candidate.base64, META_NTFS_HELPER_ASSEMBLY_SHA256: candidate.sha256
+    }, timeoutMs, true);
+  }
+  if (!killed && child.exitCode === null) {
+    const taskkill = path.win32.join(systemRoot, "System32", "taskkill.exe");
+    for (let attempt = 0; attempt < 2 && child.exitCode === null; attempt += 1) {
+      killed = await runBoundedKiller(taskkill, ["/PID", String(pid), "/T", "/F"], { SystemRoot: systemRoot, WINDIR: systemRoot }, timeoutMs, false);
+      if (killed) break;
     }
-  });
-  killer.stdin.end();
-  const result = Promise.all([childExit(killer), collectBounded(killer.stdout, 64), collectBounded(killer.stderr)]);
-  let values: [number, string, string];
-  try { values = await promiseWithTimeout(result, timeoutMs); }
-  catch (error) { if (killer.exitCode === null) killer.kill("SIGKILL"); throw error; }
-  if (values[0] !== 0 || values[1] !== "") throw new StorageIntegrityError();
+  }
   const childCode = await waitForExit(child, timeoutMs).catch(() => null);
   if (childCode === null || child.exitCode === null) throw new StorageIntegrityError();
 }
 
-const WINDOWS_TREE_KILL_SOURCE = String.raw`
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+async function runBoundedKiller(executable: string, args: string[], env: NodeJS.ProcessEnv, timeoutMs: number, requireSilent: boolean) {
+  const killer = spawn(executable, args, { windowsHide: true, stdio: ["ignore", "pipe", "pipe"], env });
+  const result = Promise.all([childExit(killer), collectBounded(killer.stdout, 4 * 1024), collectBounded(killer.stderr, 4 * 1024)]);
+  try {
+    const [code, output, errorOutput] = await promiseWithTimeout(result, timeoutMs);
+    return code === 0 && (!requireSilent || (output === "" && errorOutput === ""));
+  } catch {
+    void result.catch(() => undefined);
+    if (killer.exitCode === null) killer.kill("SIGKILL");
+    await waitForExit(killer, timeoutMs).catch(() => null);
+    return false;
+  }
+}
 
+const WINDOWS_TREE_KILL_SOURCE = String.raw`
 public static class MetaNtfsTreeKill {
   private const uint TH32CS_SNAPPROCESS = 0x00000002;
   private const uint PROCESS_TERMINATE = 0x0001;
@@ -461,6 +495,7 @@ async function waitForMetadata(managed: ManagedHelper) {
 }
 
 function childExit(child: ChildProcess) {
+  if (child.exitCode !== null) return Promise.resolve(child.exitCode);
   return new Promise<number>((resolve, reject) => {
     child.once("error", () => reject(new StorageIntegrityError()));
     child.once("exit", (code) => resolve(code ?? 1));

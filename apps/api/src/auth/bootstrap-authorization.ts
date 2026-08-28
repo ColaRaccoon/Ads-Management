@@ -60,6 +60,7 @@ export type BootstrapAuthorizationInput = {
   releaseId: string;
   dataRoot: string;
   now?: number;
+  clock?: () => number;
 };
 
 export type LoadedBootstrapAuthorization = {
@@ -80,7 +81,7 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
   const ledgerPath = requiredAbsolute(input.ledgerPath, "BOOTSTRAP_AUTHORIZATION_LEDGER_PATH_REQUIRED");
   assertContained(authorizationPath, context.adminRoots, "BOOTSTRAP_AUTHORIZATION_NOT_ADMIN_ONLY");
   assertContained(ledgerPath, context.adminRoots, "BOOTSTRAP_LEDGER_NOT_ADMIN_ONLY");
-  assertContained(publicKeyPath, [...context.adminRoots, ...context.sharedRuntimeRoots], "BOOTSTRAP_AUTHORIZATION_KEY_NOT_TRUSTED");
+  assertContained(publicKeyPath, context.sharedRuntimeRoots, "BOOTSTRAP_AUTHORIZATION_KEY_NOT_TRUSTED");
   assertNoReparseComponents(path.dirname(ledgerPath));
 
   const authorizationBytes = readPinnedFile(
@@ -100,6 +101,9 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
   const publicKey = createPublicKey(publicKeyBytes);
   if (publicKey.asymmetricKeyType !== "ed25519") throw new Error("BOOTSTRAP_AUTHORIZATION_PUBLIC_KEY_INVALID");
   const signingKeyId = sha256(publicKey.export({ type: "spki", format: "der" }));
+  if (sha256(publicKeyBytes) !== context.authorizationPublicKeySha256 || signingKeyId !== context.signingKeyId) {
+    throw new Error("BOOTSTRAP_AUTHORIZATION_SIGNING_KEY_NOT_PINNED");
+  }
   const signature = authorization.attestationSignature;
   const unsigned = { ...authorization };
   delete unsigned.attestationSignature;
@@ -111,11 +115,7 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
 
   const issuedAt = Date.parse(String(authorization.authorizationIssuedAt ?? ""));
   const expiresAt = Date.parse(String(authorization.authorizationExpiresAt ?? ""));
-  const now = input.now ?? Date.now();
-  if (!Number.isFinite(issuedAt) || !Number.isFinite(expiresAt) || expiresAt <= issuedAt ||
-      expiresAt - issuedAt > 10 * 60_000 || issuedAt > now + 60_000 || expiresAt < now) {
-    throw new Error("BOOTSTRAP_AUTHORIZATION_EXPIRED");
-  }
+  assertAuthorizationTimeWindow(issuedAt, expiresAt, observedNow(input));
   if (authorization.attestationType !== "local-bootstrap-authorization" || authorization.version !== 1 ||
       authorization.result !== "APPROVED" || authorization.mode !== input.mode ||
       authorization.authorizationNonce === undefined || !SHA256.test(String(authorization.authorizationNonce)) ||
@@ -147,6 +147,8 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
     usernameSha256: context.usernameSha256,
     consume() {
       if (consumed) throw new Error("BOOTSTRAP_AUTHORIZATION_REPLAY_REJECTED");
+      const consumedAt = input.clock?.() ?? Date.now();
+      assertAuthorizationTimeWindow(issuedAt, expiresAt, consumedAt);
       const currentRequest = readPinnedFile(input.requestPath, context.requestSha256, 4 * 1024, "BOOTSTRAP_REQUEST_CHANGED");
       if (sha256(currentRequest) !== context.requestSha256) throw new Error("BOOTSTRAP_REQUEST_CHANGED");
       let handle: number | undefined;
@@ -160,7 +162,7 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
           authorizationSha256,
           mode: input.mode,
           usernameSha256: context.usernameSha256,
-          consumedAt: new Date(input.now ?? Date.now()).toISOString()
+          consumedAt: new Date(consumedAt).toISOString()
         }), "utf8");
         writeFileSync(handle, record);
         fsyncSync(handle);
@@ -175,6 +177,17 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
       }
     }
   };
+}
+
+function observedNow(input: BootstrapAuthorizationInput) {
+  return input.clock?.() ?? input.now ?? Date.now();
+}
+
+function assertAuthorizationTimeWindow(issuedAt: number, expiresAt: number, now: number) {
+  if (!Number.isFinite(now) || !Number.isFinite(issuedAt) || !Number.isFinite(expiresAt) || expiresAt <= issuedAt ||
+      expiresAt - issuedAt > 10 * 60_000 || issuedAt > now + 60_000 || expiresAt < now) {
+    throw new Error("BOOTSTRAP_AUTHORIZATION_EXPIRED");
+  }
 }
 
 function loadTrustedContext(input: BootstrapAuthorizationInput) {
@@ -213,10 +226,23 @@ function loadTrustedContext(input: BootstrapAuthorizationInput) {
   readPinnedFile(boundaryPath, input.expectedDatabaseBoundaryEvidenceSha256, 64 * 1024, "BOOTSTRAP_DATABASE_BOUNDARY_CHANGED");
   const requestBytes = readPinnedFile(requestPath, requiredSha256(input.expectedRequestSha256, "BOOTSTRAP_REQUEST_SHA256_REQUIRED"), 4 * 1024, "BOOTSTRAP_REQUEST_INVALID");
   const request = parseObject(requestBytes, "BOOTSTRAP_REQUEST_INVALID");
-  exactKeys(request, ["username", "version"], "BOOTSTRAP_REQUEST_KEYS_INVALID");
-  if (request.version !== 1 || typeof request.username !== "string") throw new Error("BOOTSTRAP_REQUEST_INVALID");
+  exactKeys(request, ["authorizationPrivateKeySha256", "authorizationPublicKeySha256", "signingKeyId", "username", "version"], "BOOTSTRAP_REQUEST_KEYS_INVALID");
+  if (request.version !== 2 || typeof request.username !== "string" ||
+      typeof request.authorizationPrivateKeySha256 !== "string" || !SHA256.test(request.authorizationPrivateKeySha256) ||
+      typeof request.authorizationPublicKeySha256 !== "string" || !SHA256.test(request.authorizationPublicKeySha256) ||
+      typeof request.signingKeyId !== "string" || !SHA256.test(request.signingKeyId)) throw new Error("BOOTSTRAP_REQUEST_INVALID");
   const username = normalizeUsername(request.username);
-  return { username, usernameSha256: sha256(Buffer.from(username, "utf8")), requestSha256: sha256(requestBytes), runtimeConfigSha256, filesystemEvidenceSha256, adminRoots, sharedRuntimeRoots };
+  return {
+    username,
+    usernameSha256: sha256(Buffer.from(username, "utf8")),
+    requestSha256: sha256(requestBytes),
+    authorizationPublicKeySha256: request.authorizationPublicKeySha256,
+    signingKeyId: request.signingKeyId,
+    runtimeConfigSha256,
+    filesystemEvidenceSha256,
+    adminRoots,
+    sharedRuntimeRoots
+  };
 }
 
 function readPinnedFile(value: string, expected: string, maximum: number, code: string) {

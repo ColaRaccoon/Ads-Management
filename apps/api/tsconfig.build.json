@@ -12,5 +12,5 @@
   "watchOptions": {
     "excludeDirectories": ["dist", "node_modules", "storage"]
   },
-  "exclude": ["src/**/*.spec.ts", "dist", "node_modules", "prisma/**/*.ts"]
+  "exclude": ["src/**/*.spec.ts", "src/auth/bootstrap-super-admin.cli.ts", "dist", "node_modules", "prisma/**/*.ts"]
 }

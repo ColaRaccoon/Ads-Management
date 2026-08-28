@@ -21,7 +21,7 @@ test("package and verify cover the complete release tree and reject extras",asyn
     "web/.next/BUILD_ID","web/.next/required-server-files.json","web/.next/server/app.js",
     "web/.next/static/chunks/app.js","web/node_modules/pkg/index.js","web/node_modules/pkg/cli.js","web/node_modules/pkg/native/addon.node","web/node_modules/pkg/package.json",
     "deploy/local/launch-local-bundle.mjs","deploy/local/start-edge.mjs","deploy/local/https-edge.mjs",
-    "deploy/local/runtime-config.mjs","deploy/local/api-config.mjs","deploy/local/verify-tls-material.mjs","deploy/local/verify-local-release.mjs","deploy/local/verify-runtime-readiness.mjs"
+    "deploy/local/runtime-config.mjs","deploy/local/api-config.mjs","deploy/local/verify-tls-material.mjs","deploy/local/verify-local-release.mjs","deploy/local/verify-runtime-readiness.mjs","deploy/local/verify-attestation.mjs","deploy/local/verify-https-release.mjs"
   ]){const full=path.join(root,...name.split("/"));await mkdir(path.dirname(full),{recursive:true});const dependencyPackage=name.endsWith("node_modules/pkg/package.json");const body=name.endsWith("package.json")?JSON.stringify(dependencyPackage?{name:"pkg",main:"./index.js",exports:{".":"./index.js"},bin:{pkg:"./cli.js"},binary:{module_path:"./native",module_name:"addon"},dependencies:{}}:{name:"fixture",dependencies:name==="api/package.json"||name==="web/package.json"?{pkg:"1.0.0"}:{}}):name.endsWith("required-server-files.json")?JSON.stringify({files:[".next/BUILD_ID",".next/server/app.js"]}):name.endsWith("index.js")?"module.exports='cold-start-ok';":name.endsWith("cli.js")?"process.stdout.write('cli-ok');":`fixture:${name}`;await writeFile(full,body);}
   const packaged=spawnSync(process.execPath,[path.join(import.meta.dirname,"package-local-release.mjs"),`--root=${root}`,"--release-id=release-test"],{encoding:"utf8"});
   assert.equal(packaged.status,0,packaged.stderr);const result=await verifyLocalRelease(root);assert.equal(result.releaseId,"release-test");
@@ -32,6 +32,7 @@ test("package and verify cover the complete release tree and reject extras",asyn
   await writeFile(path.join(root,"api/node_modules/pkg/package.json"),JSON.stringify({name:"pkg",dependencies:{}}));await rm(path.join(root,"api/node_modules/pkg/index.js"));await assert.rejects(()=>verifyRuntimeClosure(root),/RELEASE_PACKAGE_ENTRYPOINT_MISSING:\.\/index\.js/);
   await writeFile(path.join(root,"api/node_modules/pkg/index.js"),"module.exports='source-free-default-entrypoint-ok';");assert.equal(spawnSync(process.execPath,["-e",`require(${JSON.stringify(path.join(root,"api/node_modules/pkg"))})`],{encoding:"utf8"}).status,0);
   await writeFile(path.join(root,"api/node_modules/pkg/package.json"),JSON.stringify({name:"pkg",main:"./index.js",exports:{".":"./index.js"},bin:{pkg:"./cli.js"},binary:{module_path:"./native",module_name:"addon"},dependencies:{}}));
+  const forbidden=path.join(root,"api/dist/auth/bootstrap-super-admin.cli.js");await writeFile(forbidden,"process.exitCode=1;");await assert.rejects(()=>verifyRuntimeClosure(root),/RELEASE_FORBIDDEN_LEGACY_AUTH_EXECUTABLE/);await rm(forbidden);
   await writeFile(path.join(root,"unexpected.js"),"tamper");await assert.rejects(()=>verifyLocalRelease(root),/RELEASE_FILE_SET_MISMATCH/);
 });
 

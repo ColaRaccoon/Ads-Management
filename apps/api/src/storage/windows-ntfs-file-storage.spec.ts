@@ -29,23 +29,38 @@ describe.skipIf(process.platform !== "win32")("WindowsNtfsFileStorage helper lif
   }, 90_000);
 
   it("kills and verifies a stubborn descendant process tree", async () => {
-    const root = await temporaryRoot();
-    const childPidPath = path.join(root, "child.pid");
-    const systemRoot = process.env.SystemRoot ?? process.env.WINDIR ?? "";
-    const executable = path.win32.join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
-    const command = "$child=Start-Process -FilePath $env:STUBBORN_PS -ArgumentList @('-NoProfile','-Command','Start-Sleep -Seconds 300') -PassThru;[IO.File]::WriteAllText($env:STUBBORN_PID,[string]$child.Id);Start-Sleep -Seconds 300";
-    const parent = spawn(executable, ["-NoProfile", "-NonInteractive", "-Command", command], {
-      windowsHide: true,
-      stdio: "ignore",
-      env: { SystemRoot: systemRoot, WINDIR: systemRoot, STUBBORN_PS: executable, STUBBORN_PID: childPidPath }
-    });
-    const descendantPid = Number(await waitForFile(childPidPath, 10_000));
-    expect(descendantPid).toBeGreaterThan(0);
+    const { parent, descendantPid, systemRoot } = await stubbornTree();
     await terminateWindowsProcessTree(parent, systemRoot, 10_000);
     expect(parent.exitCode).not.toBeNull();
     await expect(waitUntilExited(descendantPid, 5_000)).resolves.toBeUndefined();
   }, 30_000);
+
+  it("falls back to a bounded native tree kill when the in-memory killer cannot load", async () => {
+    const { parent, descendantPid, systemRoot } = await stubbornTree();
+    await terminateWindowsProcessTree(parent, systemRoot, 10_000, {
+      base64: Buffer.from("invalid-native-killer", "utf8").toString("base64"),
+      sha256: "0".repeat(64)
+    });
+    expect(parent.exitCode).not.toBeNull();
+    await expect(waitUntilExited(descendantPid, 5_000)).resolves.toBeUndefined();
+  }, 30_000);
 });
+
+async function stubbornTree() {
+  const root = await temporaryRoot();
+  const childPidPath = path.join(root, "child.pid");
+  const systemRoot = process.env.SystemRoot ?? process.env.WINDIR ?? "";
+  const executable = path.win32.join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+  const command = "$child=Start-Process -FilePath $env:STUBBORN_PS -ArgumentList @('-NoProfile','-Command','Start-Sleep -Seconds 300') -PassThru;[IO.File]::WriteAllText($env:STUBBORN_PID,[string]$child.Id);Start-Sleep -Seconds 300";
+  const parent = spawn(executable, ["-NoProfile", "-NonInteractive", "-Command", command], {
+    windowsHide: true,
+    stdio: "ignore",
+    env: { SystemRoot: systemRoot, WINDIR: systemRoot, STUBBORN_PS: executable, STUBBORN_PID: childPidPath }
+  });
+  const descendantPid = Number(await waitForFile(childPidPath, 10_000));
+  expect(descendantPid).toBeGreaterThan(0);
+  return { parent, descendantPid, systemRoot };
+}
 
 async function temporaryRoot() {
   const root = await mkdtemp(path.join(tmpdir(), "ntfs-helper-lifecycle-"));
