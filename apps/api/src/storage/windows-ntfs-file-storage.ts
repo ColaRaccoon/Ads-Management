@@ -41,26 +41,38 @@ type ManagedHelper = {
 
 type HelperAssembly = Readonly<{ base64: string; sha256: string }>;
 
-// Built from WINDOWS_TREE_KILL_SOURCE for the Windows/.NET Framework runtime.
-// Keeping this small, hash-pinned helper in-process removes Add-Type/csc from
-// the failure-cleanup path, including failures while the main helper compiles.
-const PREBUILT_TREE_KILL_ASSEMBLY: HelperAssembly = Object.freeze({
-  sha256: "2a00fc4f457f4aa63c11e23194c4de15224727550eb77aa6b5b40250e37df5de",
-  base64: [
-    "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",
-    "AAABAPcCAAACAP4CAAABAPcCAAABAAsDAAACABMDAAABAGwCAAACAB0DAAABAGwCAgACACUDAAABAGwCAAACABMDAAABAPcDAAACAPwDIQDXAo0AKQDXApEAMQDXAo0AOQDXApYACQDXAo0AQQAIBKkADADXAo0AFADXAo0ADAAoBL8AFAAsBMUAHABABNQAJABdBOYALABpBPgADABzBL8ALAB8BP0AFACEBAIBJACNBAkBYQCiBI0ANADXAhMBPADXAiMBNADMBCkBNACEBDMBNADRBDkBHADXAo0AgQDiBGQBiQDXAo0AkQAfBWoBoQA5BXEBHAAsBMUAHACEBAIBHABABb8AgQBMBSYAoQBRBZ8BgQDXApEAqQDXAq0BuQDXArMByQDXAo0ACQAEAA0ACQAIABIACQAMABcACQAQABwACQAUACEALgATAL0BLgAbAMYBowArARIAIAC5Aa4APQF3AYkBkgGjAcwDsgC4AM0A3wDxAA0BHQFAAQMA/gABAEQBBQAXAQEARAEHACcBAQBAAQkANgEBAEABCwBCAQEAQAENAFIBAQBAAQ8AYwEBAAABEQB3AQEABIAAAAAAAAAAAAAAAAAAAAAAiQMAAAQAAAAAAAAAAAAAAAEAZwAAAAAABAAAAAAAAAAAAAAAAQASBAAAAAADAAIABAACAAUAAgAAAAA8TW9kdWxlPgBtZXRhLXRyZWUta2lsbC1jZmQ3MjgzOWZmZGQ0YzE0YTk0MzA1MmVmNmE3Y2NjYy5kbGwATWV0YU50ZnNUcmVlS2lsbABQ",
-    "Uk9DRVNTRU5UUlkzMgBGSUxFVElNRQBtc2NvcmxpYgBTeXN0ZW0AT2JqZWN0AFZhbHVlVHlwZQBUSDMyQ1NfU05BUFBST0NFU1MAUFJPQ0VTU19URVJNSU5BVEUAUFJPQ0VTU19RVUVSWV9MSU1JVEVEX0lORk9STUFUSU9OAFNZTkNIUk9OSVpFAFdBSVRfT0JKRUNUXzAASU5WQUxJRF9IQU5ETEVfVkFMVUUAQ3JlYXRlVG9vbGhlbHAzMlNuYXBzaG90AFByb2Nlc3MzMkZpcnN0VwBQcm9jZXNzMzJOZXh0VwBPcGVuUHJvY2VzcwBHZXRQcm9jZXNzVGltZXMAVGVybWluYXRlUHJvY2VzcwBXYWl0Rm9yU2luZ2xlT2JqZWN0AENsb3NlSGFuZGxlAEtpbGwAU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMARGljdGlvbmFyeWAyAFNuYXBzaG90AERlcHRoAFRyeUNyZWF0aW9uVGltZQBUZXJtaW5hdGVBbmRXYWl0AGR3U2l6ZQBjbnRVc2FnZQB0aDMyUHJvY2Vzc0lEAHRoMzJEZWZhdWx0SGVhcElEAHRoMzJNb2R1bGVJRABjbnRUaHJlYWRzAHRoMzJQYXJlbnRQcm9jZXNzSUQAcGNQcmlDbGFzc0Jhc2UAZHdGbGFncwBzekV4ZUZpbGUATG93AEhpZ2gAZmxhZ3MAcHJvY2Vzc0lkAHNuYXBzaG90AGVudHJ5AGFjY2VzcwBpbmhlcml0SGFuZGxlAHByb2Nlc3MAY3JlYXRp",
-    "b24AU3lzdGVtLlJ1bnRpbWUuSW50ZXJvcFNlcnZpY2VzAE91dEF0dHJpYnV0ZQAuY3RvcgBleGl0AGtlcm5lbAB1c2VyAGV4aXRDb2RlAGhhbmRsZQBtaWxsaXNlY29uZHMAcm9vdFBpZAB0aW1lb3V0TXMAcGFyZW50cwB2YWx1ZQBTeXN0ZW0uUnVudGltZS5Db21waWxlclNlcnZpY2VzAENvbXBpbGF0aW9uUmVsYXhhdGlvbnNBdHRyaWJ1dGUAUnVudGltZUNvbXBhdGliaWxpdHlBdHRyaWJ1dGUAbWV0YS10cmVlLWtpbGwtY2ZkNzI4MzlmZmRkNGMxNGE5NDMwNTJlZjZhN2NjY2MARGxsSW1wb3J0QXR0cmlidXRlAGtlcm5lbDMyLmRsbAA8PmNfX0Rpc3BsYXlDbGFzczEAPEtpbGw+Yl9fMABsZWZ0AHJpZ2h0AEludDMyAENvbXBhcmVUbwBTeXN0ZW0uQ29yZQBIYXNoU2V0YDEAQWRkAHNldF9JdGVtAEVudW1lcmF0b3IAR2V0RW51bWVyYXRvcgBLZXlWYWx1ZVBhaXJgMgBnZXRfQ3VycmVudABnZXRfVmFsdWUAQ29udGFpbnMAZ2V0X0tleQBnZXRfSXRlbQBNb3ZlTmV4dABJRGlzcG9zYWJsZQBEaXNwb3NlAExpc3RgMQBJRW51bWVyYWJsZWAxAENvbXBhcmlzb25gMQBTb3J0AGdldF9Db3VudABJbnRQdHIAb3BfRXF1YWxpdHkASW52YWxpZE9wZXJhdGlvbkV4",
-    "Y2VwdGlvbgBUeXBlAFJ1bnRpbWVUeXBlSGFuZGxlAEdldFR5cGVGcm9tSGFuZGxlAE1hcnNoYWwAU2l6ZU9mAENvbnRhaW5zS2V5AFplcm8AR2V0TGFzdFdpbjMyRXJyb3IALmNjdG9yAFN0cnVjdExheW91dEF0dHJpYnV0ZQBMYXlvdXRLaW5kAE1hcnNoYWxBc0F0dHJpYnV0ZQBVbm1hbmFnZWRUeXBlAENvbXBpbGVyR2VuZXJhdGVkQXR0cmlidXRlAAAAAyAAAAAAAMX84LT6Fa9Ls3q4U+KMFuIACLd6XFYZNOCJAgYJBAIAAAAEAQAAAAQAEAAABAAAEAAEAAAAAAIGGAUAAhgJCQcAAgIYEBEMBgADGAkCCRAABQIYEBEQEBEQEBEQEBEQBQACAhgJBQACCRgJBAABAhgFAAIICAgIAAAVEg0CCQkKAAIICRUSDQIJCQYAAgIJEAoFAAIICQgCBggCBg4DIAABBCABAQgEIAEBDgcGFRINAgkJBSACCAkJBCABCAgDBwEIBRUSJQEJBhUSDQIJCgUgAQITAAcgAgETABMBBhUSDQIJCQogABURKQITABMBBhURKQIJCQogABURLQITABMBBhURLQIJCQQgABMBBCAAEwAGIAETARMAAyAAAgUVEjUBCQkgAQEVEjkBEwAFFRI9AQkFIAIBHBgJIAEBFRI9ARMABSABEwAIAyAACCYHDBUSJQEJFRINAgkKCgIVES0CCQkKFRI1AQkICBIUCBURKQIJCQUAAgIYGAYAARJJEU0FAAEIEkkR",
-    "BwQVEg0CCQkYEQwVEg0CCQkIBwIIFRIlAQkMBwYYERAREBEQERACAwAACAUHAxgJCAMAAAEFIAEBEVkFIAEBEWEDF4EECAEACAAAAAAAHgEAAQBUAhZXcmFwTm9uRXhjZXB0aW9uVGhyb3dzAQAAAFgxAAAAAAAAAAAAAG4xAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgMQAAAAAAAAAAX0NvckRsbE1haW4AbXNjb3JlZS5kbGwAAAAAAP8lACAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAEAAAABgAAIAAAAAAAAAAAAAAAAAAAAEAAQAAADAAAIAAAAAAAAAAAAAAAAAAAAEAAAAAAEgAAABYQAAA5AIAAAAAAAAAAAAA5AI0AAAAVgBTAF8AVgBFAFIAUwBJAE8ATgBfAEkATgBGAE8AAAAAAL0E7/4AAAEAAAAAAAAAAAAAAAAAAAAAAD8AAAAAAAAABAAAAAIAAAAAAAAAAAAAAAAAAABEAAAAAQBWAGEAcgBGAGkAbABlAEkAbgBmAG8AAAAAACQABAAAAFQAcgBhAG4AcwBsAGEAdABpAG8AbgAAAAAAAACwBEQCAAABAFMAdAByAGkAbgBnAEYAaQBsAGUASQBuAGYA",
-    "bwAAACACAAABADAAMAAwADAAMAA0AGIAMAAAACwAAgABAEYAaQBsAGUARABlAHMAYwByAGkAcAB0AGkAbwBuAAAAAAAgAAAAMAAIAAEARgBpAGwAZQBWAGUAcgBzAGkAbwBuAAAAAAAwAC4AMAAuADAALgAwAAAAiAA0AAEASQBuAHQAZQByAG4AYQBsAE4AYQBtAGUAAABtAGUAdABhAC0AdAByAGUAZQAtAGsAaQBsAGwALQBjAGYAZAA3ADIAOAAzADkAZgBmAGQAZAA0AGMAMQA0AGEAOQA0ADMAMAA1ADIAZQBmADYAYQA3AGMAYwBjAGMALgBkAGwAbAAAACgAAgABAEwAZQBnAGEAbABDAG8AcAB5AHIAaQBnAGgAdAAAACAAAACQADQAAQBPAHIAaQBnAGkAbgBhAGwARgBpAGwAZQBuAGEAbQBlAAAAbQBlAHQAYQAtAHQAcgBlAGUALQBrAGkAbABsAC0AYwBmAGQANwAyADgAMwA5AGYAZgBkAGQANABjADEANABhADkANAAzADAANQAyAGUAZgA2AGEANwBjAGMAYwBjAC4AZABsAGwAAAA0AAgAAQBQAHIAbwBkAHUAYwB0AFYAZQByAHMAaQBvAG4AAAAwAC4AMAAuADAALgAwAAAAOAAIAAEAQQBzAHMAZQBtAGIAbAB5ACAAVgBlAHIAcwBpAG8AbgAAADAALgAwAC4AMAAuADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAwAAACAMQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-  ].join("")
+
+
+
+const JOB_GUARD_ASSEMBLY_BASE64 = "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PgBqb2JndWFyZC5kbGwATWV0YU50ZnNKb2JHdWFyZABJT19DT1VOVEVSUwBKT0JPQkpFQ1RfQkFTSUNfTElNSVRfSU5GT1JNQVRJT04ASk9CT0JKRUNUX0VYVEVOREVEX0xJTUlUX0lORk9STUFUSU9OAG1zY29ybGliAFN5c3RlbQBPYmplY3QAVmFsdWVUeXBlAEpPQl9PQkpFQ1RfTElNSVRfS0lMTF9PTl9KT0JfQ0xPU0UAU3luYwBqb2IAQ3JlYXRlSm9iT2JqZWN0AFNldEluZm9ybWF0aW9uSm9iT2JqZWN0AEFzc2lnblByb2Nlc3NUb0pvYk9iamVjdABDbG9zZUhhbmRsZQBBdHRhY2hDdXJyZW50UHJvY2VzcwBSZWFkT3BlcmF0aW9uQ291bnQAV3JpdGVPcGVyYXRpb25Db3VudABPdGhlck9wZXJhdGlvbkNvdW50AFJlYWRUcmFuc2ZlckNvdW50AFdyaXRlVHJhbnNmZXJDb3VudABPdGhlclRyYW5zZmVyQ291bnQAUGVyUHJvY2Vzc1VzZXJUaW1lTGltaXQAUGVySm9iVXNlclRpbWVMaW1pdABMaW1pdEZsYWdzAE1pbmltdW1Xb3JraW5nU2V0U2l6ZQBNYXhpbXVtV29ya2luZ1NldFNpemUAQWN0aXZlUHJvY2Vzc0xpbWl0AEFmZmluaXR5AFByaW9yaXR5Q2xhc3MAU2NoZWR1bGluZ0NsYXNzAEJhc2ljTGltaXRJbmZvcm1hdGlvbgBJb0luZm8AUHJvY2Vzc01lbW9yeUxpbWl0AEpvYk1lbW9yeUxpbWl0AFBlYWtQcm9jZXNzTWVtb3J5VXNlZABQZWFrSm9iTWVtb3J5VXNlZABhdHRyaWJ1dGVzAG5hbWUAaGFuZGxlAGluZm9DbGFzcwBpbmZvAGxlbmd0aABwcm9jZXNzAFN5c3RlbS5SdW50aW1lLkNvbXBpbGVyU2VydmljZXMAQ29tcGlsYXRpb25SZWxheGF0aW9uc0F0dHJpYnV0ZQAuY3RvcgBSdW50aW1lQ29tcGF0aWJpbGl0eUF0dHJpYnV0ZQBqb2JndWFyZABTeXN0ZW0uUnVudGltZS5JbnRlcm9wU2VydmljZXMARGxsSW1wb3J0QXR0cmlidXRlAGtlcm5lbDMyLmRsbABTeXN0ZW0uVGhyZWFkaW5nAE1vbml0b3IARW50ZXIASW50UHRyAFplcm8Ab3BfSW5lcXVhbGl0eQBvcF9FcXVhbGl0eQBUeXBlAFJ1bnRpbWVUeXBlSGFuZGxlAEdldFR5cGVGcm9tSGFuZGxlAE1hcnNoYWwAU2l6ZU9mAEFsbG9jSEdsb2JhbABTdHJ1Y3R1cmVUb1B0cgBTeXN0ZW0uRGlhZ25vc3RpY3MAUHJvY2VzcwBHZXRDdXJyZW50UHJvY2VzcwBnZXRfSGFuZGxlAElEaXNwb3NhYmxlAERpc3Bvc2UARnJlZUhHbG9iYWwARXhpdAAuY2N0b3IAU3RydWN0TGF5b3V0QXR0cmlidXRlAExheW91dEtpbmQAAAMgAAAAAAAzxInaJsTWTaJlYwzmS/xYAAi3elxWGTTgiQIGCQQAIAAAAgYcAgYYBQACGBgOBwAEAhgIGAkFAAICGBgEAAECGAMAAAICBgsCBgoCBhkDBhEQAwYRDAQgAQEIAyAAAQQgAQEOBgACARwQAgYAARIhESUFAAEIEiEEAAEYCAgQAQMBHgAYAgQKAREUBAAAEi0DIAAYBAABARgEAAEBHAwHCBgIGBEUEi0CAhwDAAABBSABARE5CAEACAAAAAAAHgEAAQBUAhZXcmFwTm9uRXhjZXB0aW9uVGhyb3dzAQAAALAqAAAAAAAAAAAAAM4qAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAKgAAAAAAAAAAAAAAAAAAAABfQ29yRGxsTWFpbgBtc2NvcmVlLmRsbAAAAAAA/yUAIAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAEAAAABgAAIAAAAAAAAAAAAAAAAAAAAEAAQAAADAAAIAAAAAAAAAAAAAAAAAAAAEAAAAAAEgAAABYQAAATAIAAAAAAAAAAAAATAI0AAAAVgBTAF8AVgBFAFIAUwBJAE8ATgBfAEkATgBGAE8AAAAAAL0E7/4AAAEAAAAAAAAAAAAAAAAAAAAAAD8AAAAAAAAABAAAAAIAAAAAAAAAAAAAAAAAAABEAAAAAQBWAGEAcgBGAGkAbABlAEkAbgBmAG8AAAAAACQABAAAAFQAcgBhAG4AcwBsAGEAdABpAG8AbgAAAAAAAACwBKwBAAABAFMAdAByAGkAbgBnAEYAaQBsAGUASQBuAGYAbwAAAIgBAAABADAAMAAwADAAMAA0AGIAMAAAACwAAgABAEYAaQBsAGUARABlAHMAYwByAGkAcAB0AGkAbwBuAAAAAAAgAAAAMAAIAAEARgBpAGwAZQBWAGUAcgBzAGkAbwBuAAAAAAAwAC4AMAAuADAALgAwAAAAPAANAAEASQBuAHQAZQByAG4AYQBsAE4AYQBtAGUAAABqAG8AYgBnAHUAYQByAGQALgBkAGwAbAAAAAAAKAACAAEATABlAGcAYQBsAEMAbwBwAHkAcgBpAGcAaAB0AAAAIAAAAEQADQABAE8AcgBpAGcAaQBuAGEAbABGAGkAbABlAG4AYQBtAGUAAABqAG8AYgBnAHUAYQByAGQALgBkAGwAbAAAAAAANAAIAAEAUAByAG8AZAB1AGMAdABWAGUAcgBzAGkAbwBuAAAAMAAuADAALgAwAC4AMAAAADgACAABAEEAcwBzAGUAbQBiAGwAeQAgAFYAZQByAHMAaQBvAG4AAAAwAC4AMAAuADAALgAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAwAAADgOgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
+
+// Hash-pinned .NET Framework assembly exposing only
+// MetaNtfsJobGuard.AttachCurrentProcess(). The static Job handle deliberately
+// remains open for the helper lifetime; KILL_ON_JOB_CLOSE reaps descendants.
+const PREBUILT_JOB_GUARD_ASSEMBLY: HelperAssembly = Object.freeze({
+  sha256: "4a73a82e40b9610497f10bc53901cadfbf03586d98a9f63554197245e6d26fae",
+  base64: JOB_GUARD_ASSEMBLY_BASE64
 });
+
+function jobGuardPowerShell() {
+  return [
+    "$jobBytes=[Convert]::FromBase64String($env:META_NTFS_JOB_GUARD_ASSEMBLY)",
+    "$jobSha=[Security.Cryptography.SHA256]::Create();try{$jobActual=-join@($jobSha.ComputeHash($jobBytes)|ForEach-Object{$_.ToString('x2')})}finally{$jobSha.Dispose()};if($jobActual-cne$env:META_NTFS_JOB_GUARD_SHA256){throw 'Job guard hash mismatch.'}",
+    "$jobAssembly=[Reflection.Assembly]::Load($jobBytes);$jobType=$jobAssembly.GetType('MetaNtfsJobGuard',$false,$false);if($null-eq$jobType){throw 'Job guard type missing.'}",
+    "$jobMethod=$jobType.GetMethod('AttachCurrentProcess');if($null-eq$jobMethod-or-not[bool]$jobMethod.Invoke($null,@())){throw 'Job guard attach failed.'}"
+  ];
+}
+
+export function windowsJobGuardInvocationForTesting() {
+  return Object.freeze({
+    command: jobGuardPowerShell().join(";"),
+    environment: Object.freeze({
+      META_NTFS_JOB_GUARD_ASSEMBLY: PREBUILT_JOB_GUARD_ASSEMBLY.base64,
+      META_NTFS_JOB_GUARD_SHA256: PREBUILT_JOB_GUARD_ASSEMBLY.sha256
+    })
+  });
+}
 
 /**
  * Windows-specific NTFS operations. Node's fs API does not expose
@@ -164,6 +176,7 @@ export class WindowsNtfsFileStorage {
     const assembly = await helperAssembly(systemRoot, executable, this.compileTimeoutMs, this.options.onChildStart);
     const command = [
       "$ErrorActionPreference='Stop'",
+      ...jobGuardPowerShell(),
       "$bytes=[Convert]::FromBase64String($env:META_NTFS_HELPER_ASSEMBLY)",
       "$sha=[Security.Cryptography.SHA256]::Create();try{$actual=-join@($sha.ComputeHash($bytes)|ForEach-Object{$_.ToString('x2')})}finally{$sha.Dispose()};if($actual-cne$env:META_NTFS_HELPER_ASSEMBLY_SHA256){throw 'Native helper hash mismatch.'}",
       "[Reflection.Assembly]::Load($bytes)|Out-Null",
@@ -180,6 +193,8 @@ export class WindowsNtfsFileStorage {
         TMP: process.env.TMP ?? "",
         META_NTFS_HELPER_ASSEMBLY: assembly.base64,
         META_NTFS_HELPER_ASSEMBLY_SHA256: assembly.sha256,
+        META_NTFS_JOB_GUARD_ASSEMBLY: PREBUILT_JOB_GUARD_ASSEMBLY.base64,
+        META_NTFS_JOB_GUARD_SHA256: PREBUILT_JOB_GUARD_ASSEMBLY.sha256,
         META_NTFS_OPERATION: operation,
         META_NTFS_ROOT: this.rootPath,
         META_NTFS_KEY: key,
@@ -188,7 +203,7 @@ export class WindowsNtfsFileStorage {
       }
     });
     this.options.onChildStart?.(child.pid ?? -1, operation);
-    return managedHelper(child, systemRoot, this.operationTimeoutMs, assembly);
+    return managedHelper(child, systemRoot, this.operationTimeoutMs);
   }
 }
 
@@ -198,13 +213,14 @@ function helperAssembly(systemRoot: string, executable: string, timeoutMs: numbe
 }
 
 async function compileHelperAssembly(systemRoot: string, executable: string, timeoutMs: number, onChildStart?: (processId: number, operation: string) => void) {
-  const source = Buffer.from(`${NTFS_HELPER_SOURCE}\n${WINDOWS_TREE_KILL_SOURCE}`, "utf8").toString("base64");
+  const source = Buffer.from(NTFS_HELPER_SOURCE, "utf8").toString("base64");
   const outputPath = path.win32.join(process.env.TEMP ?? process.env.TMP ?? systemRoot, `meta-ntfs-helper-${randomUUID()}.dll`);
   const command = [
     "$ErrorActionPreference='Stop'",
+    ...jobGuardPowerShell(),
     "$source=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:META_NTFS_HELPER_SOURCE))",
     "$output=$env:META_NTFS_HELPER_OUTPUT",
-    "try{Add-Type -TypeDefinition $source -Language CSharp -OutputAssembly $output;$bytes=[IO.File]::ReadAllBytes($output);$loaded=[Reflection.Assembly]::Load($bytes);if(-not $loaded.GetType('NtfsStorageHelper',$false,$false)-or-not $loaded.GetType('MetaNtfsTreeKill',$false,$false)){throw 'Native helper type is missing.'};[Console]::Out.Write([Convert]::ToBase64String($bytes))}finally{Remove-Item -LiteralPath $output -Force -ErrorAction SilentlyContinue}"
+    "try{Add-Type -TypeDefinition $source -Language CSharp -OutputAssembly $output;$bytes=[IO.File]::ReadAllBytes($output);$loaded=[Reflection.Assembly]::Load($bytes);if(-not $loaded.GetType('NtfsStorageHelper',$false,$false)){throw 'Native helper type is missing.'};[Console]::Out.Write([Convert]::ToBase64String($bytes))}finally{Remove-Item -LiteralPath $output -Force -ErrorAction SilentlyContinue}"
   ].join(";");
   const child = spawn(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
     windowsHide: true,
@@ -215,7 +231,9 @@ async function compileHelperAssembly(systemRoot: string, executable: string, tim
       TEMP: process.env.TEMP ?? "",
       TMP: process.env.TMP ?? "",
       META_NTFS_HELPER_SOURCE: source,
-      META_NTFS_HELPER_OUTPUT: outputPath
+      META_NTFS_HELPER_OUTPUT: outputPath,
+      META_NTFS_JOB_GUARD_ASSEMBLY: PREBUILT_JOB_GUARD_ASSEMBLY.base64,
+      META_NTFS_JOB_GUARD_SHA256: PREBUILT_JOB_GUARD_ASSEMBLY.sha256
     }
   });
   child.stdin.end();
@@ -240,7 +258,7 @@ async function compileHelperAssembly(systemRoot: string, executable: string, tim
   }
 }
 
-function managedHelper(child: ChildProcessWithoutNullStreams, systemRoot: string, timeoutMs: number, killerAssembly: HelperAssembly = PREBUILT_TREE_KILL_ASSEMBLY): ManagedHelper {
+function managedHelper(child: ChildProcessWithoutNullStreams, systemRoot: string, timeoutMs: number): ManagedHelper {
   const controller = new AbortController();
   const deadlineAt = performance.now() + timeoutMs;
   let rejectDeadline!: (error: Error) => void;
@@ -262,7 +280,7 @@ function managedHelper(child: ChildProcessWithoutNullStreams, systemRoot: string
       if (child.stdin && !child.stdin.destroyed) child.stdin.destroy(error);
       if (child.stdout && !child.stdout.destroyed) child.stdout.destroy(error);
       if (child.stderr && !child.stderr.destroyed) child.stderr.destroy(error);
-      await terminateWindowsProcessTree(child, systemRoot, PROCESS_TREE_EXIT_TIMEOUT_MS, killerAssembly);
+      await terminateWindowsProcessTree(child, systemRoot, PROCESS_TREE_EXIT_TIMEOUT_MS);
     })();
     return termination;
   };
@@ -283,157 +301,20 @@ async function bounded<T>(managed: ManagedHelper, operation: Promise<T>) {
   return Promise.race([operation, managed.deadline]);
 }
 
-export async function terminateWindowsProcessTree(child: ChildProcess, systemRoot: string, timeoutMs = PROCESS_TREE_EXIT_TIMEOUT_MS, assembly: HelperAssembly = PREBUILT_TREE_KILL_ASSEMBLY) {
-  if (child.exitCode !== null) return;
-  const pid = child.pid;
-  if (!pid || !Number.isSafeInteger(pid) || pid <= 0 || !path.win32.isAbsolute(systemRoot)) throw new StorageIntegrityError();
-  let killed = false;
-  const candidates = [assembly, PREBUILT_TREE_KILL_ASSEMBLY].filter((candidate, index, values) =>
-    index === values.findIndex((item) => item.sha256 === candidate.sha256 && item.base64 === candidate.base64));
-  for (const candidate of candidates) {
-    if (killed || child.exitCode !== null || !/^[A-Za-z0-9+/]+={0,2}$/.test(candidate.base64) || !/^[0-9a-f]{64}$/.test(candidate.sha256)) continue;
-    const executable = path.win32.join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
-    const command = "$bytes=[Convert]::FromBase64String($env:META_NTFS_HELPER_ASSEMBLY);$sha=[Security.Cryptography.SHA256]::Create();try{$actual=-join@($sha.ComputeHash($bytes)|ForEach-Object{$_.ToString('x2')})}finally{$sha.Dispose()};if($actual -cne $env:META_NTFS_HELPER_ASSEMBLY_SHA256){exit 90};$loaded=[Reflection.Assembly]::Load($bytes);$killerType=$loaded.GetType('MetaNtfsTreeKill',$false,$false);if($null -eq $killerType){exit 91};$method=$killerType.GetMethod('Kill');if($null -eq $method){exit 92};$result=$method.Invoke($null,@([int]$env:META_NTFS_ROOT_PID,[int]$env:META_NTFS_TIMEOUT_MS));[Environment]::Exit([int]$result)";
-    killed = await runBoundedKiller(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
-      SystemRoot: systemRoot, WINDIR: systemRoot, TEMP: process.env.TEMP ?? "", TMP: process.env.TMP ?? "",
-      META_NTFS_ROOT_PID: String(pid), META_NTFS_TIMEOUT_MS: String(timeoutMs),
-      META_NTFS_HELPER_ASSEMBLY: candidate.base64, META_NTFS_HELPER_ASSEMBLY_SHA256: candidate.sha256
-    }, timeoutMs, true);
-  }
-  if (!killed && child.exitCode === null) {
-    const taskkill = path.win32.join(systemRoot, "System32", "taskkill.exe");
-    for (let attempt = 0; attempt < 2 && child.exitCode === null; attempt += 1) {
-      killed = await runBoundedKiller(taskkill, ["/PID", String(pid), "/T", "/F"], { SystemRoot: systemRoot, WINDIR: systemRoot }, timeoutMs, false);
-      if (killed) break;
-    }
+export async function terminateWindowsProcessTree(child: ChildProcess, systemRoot: string, timeoutMs = PROCESS_TREE_EXIT_TIMEOUT_MS) {
+  if (!path.win32.isAbsolute(systemRoot)) throw new StorageIntegrityError();
+  if (!hasExited(child)) {
+    let signaled = false;
+    try { signaled = child.kill("SIGKILL"); } catch { throw new StorageIntegrityError(); }
+    if (!signaled && !hasExited(child)) throw new StorageIntegrityError();
   }
   const childCode = await waitForExit(child, timeoutMs).catch(() => null);
-  if (childCode === null || child.exitCode === null) throw new StorageIntegrityError();
+  if (childCode === null || !hasExited(child)) throw new StorageIntegrityError();
 }
 
-async function runBoundedKiller(executable: string, args: string[], env: NodeJS.ProcessEnv, timeoutMs: number, requireSilent: boolean) {
-  const killer = spawn(executable, args, { windowsHide: true, stdio: ["ignore", "pipe", "pipe"], env });
-  const result = Promise.all([childExit(killer), collectBounded(killer.stdout, 4 * 1024), collectBounded(killer.stderr, 4 * 1024)]);
-  try {
-    const [code, output, errorOutput] = await promiseWithTimeout(result, timeoutMs);
-    return code === 0 && (!requireSilent || (output === "" && errorOutput === ""));
-  } catch {
-    void result.catch(() => undefined);
-    if (killer.exitCode === null) killer.kill("SIGKILL");
-    await waitForExit(killer, timeoutMs).catch(() => null);
-    return false;
-  }
+function hasExited(child: ChildProcess) {
+  return child.exitCode !== null || child.signalCode !== null;
 }
-
-const WINDOWS_TREE_KILL_SOURCE = String.raw`
-public static class MetaNtfsTreeKill {
-  private const uint TH32CS_SNAPPROCESS = 0x00000002;
-  private const uint PROCESS_TERMINATE = 0x0001;
-  private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
-  private const uint SYNCHRONIZE = 0x00100000;
-  private const uint WAIT_OBJECT_0 = 0;
-  private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
-
-  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-  private struct PROCESSENTRY32 {
-    public uint dwSize, cntUsage, th32ProcessID;
-    public IntPtr th32DefaultHeapID;
-    public uint th32ModuleID, cntThreads, th32ParentProcessID;
-    public int pcPriClassBase;
-    public uint dwFlags;
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile;
-  }
-
-  [StructLayout(LayoutKind.Sequential)]
-  private struct FILETIME { public uint Low; public uint High; }
-
-  [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint processId);
-  [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)] private static extern bool Process32FirstW(IntPtr snapshot, ref PROCESSENTRY32 entry);
-  [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)] private static extern bool Process32NextW(IntPtr snapshot, ref PROCESSENTRY32 entry);
-  [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr OpenProcess(uint access, bool inheritHandle, uint processId);
-  [DllImport("kernel32.dll", SetLastError = true)] private static extern bool GetProcessTimes(IntPtr process, out FILETIME creation, out FILETIME exit, out FILETIME kernel, out FILETIME user);
-  [DllImport("kernel32.dll", SetLastError = true)] private static extern bool TerminateProcess(IntPtr process, uint exitCode);
-  [DllImport("kernel32.dll", SetLastError = true)] private static extern uint WaitForSingleObject(IntPtr handle, uint milliseconds);
-  [DllImport("kernel32.dll")] private static extern bool CloseHandle(IntPtr handle);
-
-  public static int Kill(int rootPid, int timeoutMs) {
-    try {
-      if (rootPid <= 0 || timeoutMs < 100) return 20;
-      var parents = Snapshot();
-      var descendants = new HashSet<uint>();
-      var creationTimes = new Dictionary<uint, long>();
-      long rootCreated;
-      if (!TryCreationTime((uint)rootPid, out rootCreated)) return 24;
-      descendants.Add((uint)rootPid);
-      creationTimes[(uint)rootPid] = rootCreated;
-      bool changed;
-      do {
-        changed = false;
-        foreach (var item in parents) {
-          if (!descendants.Contains(item.Value) || descendants.Contains(item.Key)) continue;
-          long childCreated;
-          // Parent PIDs survive in orphan metadata and can later be reused. A
-          // process older than the live parent handle is not its descendant.
-          if (!TryCreationTime(item.Key, out childCreated) || childCreated < creationTimes[item.Value]) continue;
-          if (descendants.Add(item.Key)) { creationTimes[item.Key] = childCreated; changed = true; }
-        }
-      } while (changed);
-      var ordered = new List<uint>(descendants);
-      // Terminate parents first so a hostile/stuck helper cannot create more
-      // descendants while the already-snapshotted leaves are being reaped.
-      ordered.Sort((left, right) => Depth(left, parents).CompareTo(Depth(right, parents)));
-      for (int index = 0; index < ordered.Count; index++) {
-        int terminated = TerminateAndWait(ordered[index], timeoutMs);
-        if (terminated != 0) return 30 + (index * 10) + terminated;
-      }
-      return 0;
-    } catch { return 23; }
-  }
-
-  private static Dictionary<uint, uint> Snapshot() {
-    var result = new Dictionary<uint, uint>();
-    IntPtr snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (snapshot == INVALID_HANDLE_VALUE) throw new InvalidOperationException();
-    try {
-      var entry = new PROCESSENTRY32();
-      entry.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
-      if (!Process32FirstW(snapshot, ref entry)) throw new InvalidOperationException();
-      do { result[entry.th32ProcessID] = entry.th32ParentProcessID; } while (Process32NextW(snapshot, ref entry));
-      return result;
-    } finally { CloseHandle(snapshot); }
-  }
-
-  private static int Depth(uint processId, Dictionary<uint, uint> parents) {
-    int depth = 0;
-    var seen = new HashSet<uint>();
-    while (parents.ContainsKey(processId) && seen.Add(processId)) { processId = parents[processId]; depth++; }
-    return depth;
-  }
-
-  private static bool TryCreationTime(uint processId, out long value) {
-    value = 0;
-    IntPtr process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
-    if (process == IntPtr.Zero) return false;
-    try {
-      FILETIME created, exited, kernel, user;
-      if (!GetProcessTimes(process, out created, out exited, out kernel, out user)) return false;
-      value = ((long)created.High << 32) | created.Low;
-      return value > 0;
-    } finally { CloseHandle(process); }
-  }
-
-  private static int TerminateAndWait(uint processId, int timeoutMs) {
-    IntPtr process = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, false, processId);
-    if (process == IntPtr.Zero) return Marshal.GetLastWin32Error() == 87 ? 0 : 1;
-    try {
-      uint state = WaitForSingleObject(process, 0);
-      if (state == WAIT_OBJECT_0) return 0;
-      if (!TerminateProcess(process, 1)) return WaitForSingleObject(process, (uint)timeoutMs) == WAIT_OBJECT_0 ? 0 : 2;
-      return WaitForSingleObject(process, (uint)timeoutMs) == WAIT_OBJECT_0 ? 0 : 3;
-    } finally { CloseHandle(process); }
-  }
-
-}`;
 
 function promiseWithTimeout<T>(operation: Promise<T>, timeoutMs: number) {
   return new Promise<T>((resolve, reject) => {
@@ -444,7 +325,7 @@ function promiseWithTimeout<T>(operation: Promise<T>, timeoutMs: number) {
 }
 
 function waitForExit(child: ChildProcess, timeoutMs: number) {
-  if (child.exitCode !== null) return Promise.resolve(child.exitCode);
+  if (hasExited(child)) return Promise.resolve(child.exitCode ?? 1);
   return new Promise<number>((resolve, reject) => {
     const timer = setTimeout(() => { cleanup(); reject(new StorageIntegrityError()); }, timeoutMs);
     timer.unref();
