@@ -1,6 +1,9 @@
 import { spawn, ChildProcess, ChildProcessWithoutNullStreams } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
@@ -15,8 +18,27 @@ import {
 
 const MAX_HELPER_OUTPUT_BYTES = 16 * 1024;
 const MAX_HELPER_ASSEMBLY_BYTES = 512 * 1024;
+const DEFAULT_OPERATION_TIMEOUT_MS = 300_000;
+const DEFAULT_COMPILE_TIMEOUT_MS = 60_000;
+const PROCESS_TREE_EXIT_TIMEOUT_MS = 10_000;
 const META_LINE = /^META ([0-9]+)\r?$/;
 let helperAssemblyPromise: Promise<string> | undefined;
+
+export type WindowsNtfsFileStorageOptions = {
+  operationTimeoutMs?: number;
+  compileTimeoutMs?: number;
+  onChildStart?: (processId: number, operation: string) => void;
+};
+
+type ManagedHelper = {
+  child: ChildProcessWithoutNullStreams;
+  systemRoot: string;
+  controller: AbortController;
+  deadlineAt: number;
+  deadline: Promise<never>;
+  clearDeadline: () => void;
+  terminate: (error?: Error) => Promise<void>;
+};
 
 /**
  * Windows-specific NTFS operations. Node's fs API does not expose
@@ -26,7 +48,12 @@ let helperAssemblyPromise: Promise<string> | undefined;
  * LocalFileStorage; only the native check/use boundary lives here.
  */
 export class WindowsNtfsFileStorage {
-  constructor(private readonly rootPath: string) {}
+  private readonly operationTimeoutMs: number;
+  private readonly compileTimeoutMs: number;
+  constructor(private readonly rootPath: string, private readonly options: WindowsNtfsFileStorageOptions = {}) {
+    this.operationTimeoutMs = checkedTimeout(options.operationTimeoutMs, DEFAULT_OPERATION_TIMEOUT_MS);
+    this.compileTimeoutMs = checkedTimeout(options.compileTimeoutMs, DEFAULT_COMPILE_TIMEOUT_MS);
+  }
 
   async assertReady() {
     await this.runJson("ready", "");
@@ -42,13 +69,28 @@ export class WindowsNtfsFileStorage {
   }
 
   async getStream(key: string): Promise<StoredFileStream> {
-    const child = await this.start("get", key, "", Number.MAX_SAFE_INTEGER);
+    const managed = await this.start("get", key, "", Number.MAX_SAFE_INTEGER);
+    const { child } = managed;
     child.stdin.end();
-    const metadata = await waitForMetadata(child);
+    const metadata = await bounded(managed, waitForMetadata(managed));
+    let ended = false;
+    child.stdout.once("end", () => { ended = true; });
+    const originalDestroy = child.stdout._destroy.bind(child.stdout);
+    child.stdout._destroy = (error, callback) => {
+      originalDestroy(error, (destroyError) => {
+        if (ended || child.exitCode !== null || managed.controller.signal.aborted) return callback(destroyError);
+        void managed.terminate(error ?? new StorageIntegrityError()).then(
+          () => callback(destroyError),
+          () => callback(new StorageIntegrityError())
+        );
+      });
+    };
     child.once("exit", (code) => {
+      managed.clearDeadline();
       if (code !== 0 && !child.stdout.destroyed) child.stdout.destroy(new StorageIntegrityError());
     });
     child.once("error", () => {
+      managed.clearDeadline();
       if (!child.stdout.destroyed) child.stdout.destroy(new StorageIntegrityError());
     });
     return { stream: child.stdout, size: metadata.size };
@@ -73,20 +115,23 @@ export class WindowsNtfsFileStorage {
     maximum = Number.MAX_SAFE_INTEGER,
     body?: Buffer | Readable
   ) {
-    const child = await this.start(operation, key, expectedHash, maximum);
+    const managed = await this.start(operation, key, expectedHash, maximum);
+    const { child } = managed;
     const stdout = collectBounded(child.stdout);
     const stderr = collectBounded(child.stderr);
     const exited = childExit(child);
     try {
       if (body === undefined) child.stdin.end();
-      else await pipeline(Buffer.isBuffer(body) ? Readable.from(body) : body, child.stdin);
-      const [code, output, errorOutput] = await Promise.all([exited, stdout, stderr]);
+      else await bounded(managed, pipeline(Buffer.isBuffer(body) ? Readable.from(body) : body, child.stdin));
+      const [code, output, errorOutput] = await bounded(managed, Promise.all([exited, stdout, stderr]));
       if (code !== 0) throw helperError(errorOutput);
       try { return JSON.parse(output); }
       catch { throw new StorageIntegrityError(); }
     } catch (error) {
-      if (!child.killed) child.kill();
+      await managed.terminate(error instanceof Error ? error : new StorageIntegrityError()).catch(() => undefined);
       throw error;
+    } finally {
+      managed.clearDeadline();
     }
   }
 
@@ -94,14 +139,14 @@ export class WindowsNtfsFileStorage {
     const systemRoot = process.env.SystemRoot ?? process.env.WINDIR ?? "";
     if (!path.win32.isAbsolute(systemRoot)) throw new StorageIntegrityError();
     const executable = path.win32.join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
-    const assembly = await helperAssembly(systemRoot, executable);
+    const assembly = await helperAssembly(systemRoot, executable, this.compileTimeoutMs, this.options.onChildStart);
     const command = [
       "$ErrorActionPreference='Stop'",
       "[Reflection.Assembly]::Load([Convert]::FromBase64String($env:META_NTFS_HELPER_ASSEMBLY))|Out-Null",
       "[NtfsStorageHelper]::Run()",
       "exit [Environment]::ExitCode"
     ].join(";");
-    return spawn(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
+    const child = spawn(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
       windowsHide: true,
       stdio: ["pipe", "pipe", "pipe"],
       env: {
@@ -117,52 +162,281 @@ export class WindowsNtfsFileStorage {
         META_NTFS_MAXIMUM_BYTES: String(maximum)
       }
     });
+    this.options.onChildStart?.(child.pid ?? -1, operation);
+    return managedHelper(child, systemRoot, this.operationTimeoutMs);
   }
 }
 
-function helperAssembly(systemRoot: string, executable: string) {
-  helperAssemblyPromise ??= compileHelperAssembly(systemRoot, executable);
+function helperAssembly(systemRoot: string, executable: string, timeoutMs: number, onChildStart?: (processId: number, operation: string) => void) {
+  helperAssemblyPromise ??= compileHelperAssembly(systemRoot, executable, timeoutMs, onChildStart);
   return helperAssemblyPromise;
 }
 
-async function compileHelperAssembly(systemRoot: string, executable: string) {
+async function compileHelperAssembly(systemRoot: string, executable: string, timeoutMs: number, onChildStart?: (processId: number, operation: string) => void) {
   const source = Buffer.from(NTFS_HELPER_SOURCE, "utf8").toString("base64");
+  const outputPath = path.win32.join(process.env.TEMP ?? process.env.TMP ?? systemRoot, `meta-ntfs-helper-${randomUUID()}.dll`);
   const command = [
     "$ErrorActionPreference='Stop'",
     "$source=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:META_NTFS_HELPER_SOURCE))",
-    "$output=[IO.Path]::Combine($env:TEMP,'meta-ntfs-helper-'+[Guid]::NewGuid().ToString('N')+'.dll')",
+    "$output=$env:META_NTFS_HELPER_OUTPUT",
     "try{Add-Type -TypeDefinition $source -Language CSharp -OutputAssembly $output;$bytes=[IO.File]::ReadAllBytes($output);$loaded=[Reflection.Assembly]::Load($bytes);if(-not $loaded.GetType('NtfsStorageHelper',$false,$false)){throw 'Native helper type is missing.'};[Console]::Out.Write([Convert]::ToBase64String($bytes))}finally{Remove-Item -LiteralPath $output -Force -ErrorAction SilentlyContinue}"
   ].join(";");
   const child = spawn(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
     windowsHide: true,
-    stdio: ["ignore", "pipe", "pipe"],
+    stdio: ["pipe", "pipe", "pipe"],
     env: {
       SystemRoot: systemRoot,
       WINDIR: systemRoot,
       TEMP: process.env.TEMP ?? "",
       TMP: process.env.TMP ?? "",
-      META_NTFS_HELPER_SOURCE: source
+      META_NTFS_HELPER_SOURCE: source,
+      META_NTFS_HELPER_OUTPUT: outputPath
     }
   });
-  const [code, output] = await Promise.all([
-    childExit(child),
-    collectBounded(child.stdout, MAX_HELPER_ASSEMBLY_BYTES),
-    collectBounded(child.stderr)
-  ]);
-  if (code !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(output)) throw new StorageIntegrityError();
-  const bytes = Buffer.from(output, "base64");
-  if (bytes.length < 1_024 || bytes.length > MAX_HELPER_ASSEMBLY_BYTES) throw new StorageIntegrityError();
-  return output;
+  child.stdin.end();
+  onChildStart?.(child.pid ?? -1, "compile");
+  const managed = managedHelper(child, systemRoot, timeoutMs);
+  try {
+    const [code, output] = await bounded(managed, Promise.all([
+      childExit(child),
+      collectBounded(child.stdout, MAX_HELPER_ASSEMBLY_BYTES),
+      collectBounded(child.stderr)
+    ]));
+    if (code !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(output)) throw new StorageIntegrityError();
+    const bytes = Buffer.from(output, "base64");
+    if (bytes.length < 1_024 || bytes.length > MAX_HELPER_ASSEMBLY_BYTES) throw new StorageIntegrityError();
+    return output;
+  } catch (error) {
+    await managed.terminate(error instanceof Error ? error : new StorageIntegrityError()).catch(() => undefined);
+    throw error;
+  } finally {
+    managed.clearDeadline();
+    rmSync(outputPath, { force: true });
+  }
 }
 
-async function waitForMetadata(child: ChildProcessWithoutNullStreams) {
+function managedHelper(child: ChildProcessWithoutNullStreams, systemRoot: string, timeoutMs: number): ManagedHelper {
+  const controller = new AbortController();
+  const deadlineAt = performance.now() + timeoutMs;
+  let rejectDeadline!: (error: Error) => void;
+  let timer: NodeJS.Timeout | undefined;
+  let termination: Promise<void> | undefined;
+  let cleared = false;
+  const deadline = new Promise<never>((_resolve, reject) => { rejectDeadline = reject; });
+  void deadline.catch(() => undefined);
+  const managed = {} as ManagedHelper;
+  const clearDeadline = () => {
+    if (cleared) return;
+    cleared = true;
+    if (timer) clearTimeout(timer);
+  };
+  const terminate = (error = new StorageIntegrityError()) => {
+    termination ??= (async () => {
+      clearDeadline();
+      if (!controller.signal.aborted) controller.abort(error);
+      if (child.stdin && !child.stdin.destroyed) child.stdin.destroy(error);
+      if (child.stdout && !child.stdout.destroyed) child.stdout.destroy(error);
+      if (child.stderr && !child.stderr.destroyed) child.stderr.destroy(error);
+      await terminateWindowsProcessTree(child, systemRoot, PROCESS_TREE_EXIT_TIMEOUT_MS);
+    })();
+    return termination;
+  };
+  Object.assign(managed, { child, systemRoot, controller, deadlineAt, deadline, clearDeadline, terminate });
+  child.stdout?.on("error", () => undefined);
+  child.stderr?.on("error", () => undefined);
+  timer = setTimeout(() => {
+    const error = new StorageIntegrityError();
+    rejectDeadline(error);
+    void terminate(error).catch(() => undefined);
+  }, timeoutMs);
+  timer.unref();
+  return managed;
+}
+
+async function bounded<T>(managed: ManagedHelper, operation: Promise<T>) {
+  if (managed.controller.signal.aborted || performance.now() >= managed.deadlineAt) throw new StorageIntegrityError();
+  return Promise.race([operation, managed.deadline]);
+}
+
+export async function terminateWindowsProcessTree(child: ChildProcess, systemRoot: string, timeoutMs = PROCESS_TREE_EXIT_TIMEOUT_MS) {
+  if (child.exitCode !== null) return;
+  const pid = child.pid;
+  if (!pid || !Number.isSafeInteger(pid) || pid <= 0 || !path.win32.isAbsolute(systemRoot)) throw new StorageIntegrityError();
+  const executable = path.win32.join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+  const command = "$null=Add-Type -TypeDefinition $env:META_NTFS_TREE_KILL_SOURCE -Language CSharp;[Environment]::Exit([MetaNtfsTreeKill]::Kill([int]$env:META_NTFS_ROOT_PID,[int]$env:META_NTFS_TIMEOUT_MS))";
+  const killer = spawn(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], {
+    windowsHide: true,
+    stdio: ["pipe", "pipe", "pipe"],
+    env: {
+      SystemRoot: systemRoot,
+      WINDIR: systemRoot,
+      TEMP: tmpdir(),
+      TMP: tmpdir(),
+      META_NTFS_ROOT_PID: String(pid),
+      META_NTFS_TIMEOUT_MS: String(timeoutMs),
+      META_NTFS_TREE_KILL_SOURCE: WINDOWS_TREE_KILL_SOURCE
+    }
+  });
+  killer.stdin.end();
+  const result = Promise.all([childExit(killer), collectBounded(killer.stdout, 64), collectBounded(killer.stderr)]);
+  let values: [number, string, string];
+  try { values = await promiseWithTimeout(result, timeoutMs); }
+  catch (error) { if (killer.exitCode === null) killer.kill("SIGKILL"); throw error; }
+  if (values[0] !== 0 || values[1] !== "") throw new StorageIntegrityError();
+  const childCode = await waitForExit(child, timeoutMs).catch(() => null);
+  if (childCode === null || child.exitCode === null) throw new StorageIntegrityError();
+}
+
+const WINDOWS_TREE_KILL_SOURCE = String.raw`
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
+public static class MetaNtfsTreeKill {
+  private const uint TH32CS_SNAPPROCESS = 0x00000002;
+  private const uint PROCESS_TERMINATE = 0x0001;
+  private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+  private const uint SYNCHRONIZE = 0x00100000;
+  private const uint WAIT_OBJECT_0 = 0;
+  private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+
+  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+  private struct PROCESSENTRY32 {
+    public uint dwSize, cntUsage, th32ProcessID;
+    public IntPtr th32DefaultHeapID;
+    public uint th32ModuleID, cntThreads, th32ParentProcessID;
+    public int pcPriClassBase;
+    public uint dwFlags;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
+  private struct FILETIME { public uint Low; public uint High; }
+
+  [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint processId);
+  [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)] private static extern bool Process32FirstW(IntPtr snapshot, ref PROCESSENTRY32 entry);
+  [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)] private static extern bool Process32NextW(IntPtr snapshot, ref PROCESSENTRY32 entry);
+  [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr OpenProcess(uint access, bool inheritHandle, uint processId);
+  [DllImport("kernel32.dll", SetLastError = true)] private static extern bool GetProcessTimes(IntPtr process, out FILETIME creation, out FILETIME exit, out FILETIME kernel, out FILETIME user);
+  [DllImport("kernel32.dll", SetLastError = true)] private static extern bool TerminateProcess(IntPtr process, uint exitCode);
+  [DllImport("kernel32.dll", SetLastError = true)] private static extern uint WaitForSingleObject(IntPtr handle, uint milliseconds);
+  [DllImport("kernel32.dll")] private static extern bool CloseHandle(IntPtr handle);
+
+  public static int Kill(int rootPid, int timeoutMs) {
+    try {
+      if (rootPid <= 0 || timeoutMs < 100) return 20;
+      var parents = Snapshot();
+      var descendants = new HashSet<uint>();
+      var creationTimes = new Dictionary<uint, long>();
+      long rootCreated;
+      if (!TryCreationTime((uint)rootPid, out rootCreated)) return 24;
+      descendants.Add((uint)rootPid);
+      creationTimes[(uint)rootPid] = rootCreated;
+      bool changed;
+      do {
+        changed = false;
+        foreach (var item in parents) {
+          if (!descendants.Contains(item.Value) || descendants.Contains(item.Key)) continue;
+          long childCreated;
+          // Parent PIDs survive in orphan metadata and can later be reused. A
+          // process older than the live parent handle is not its descendant.
+          if (!TryCreationTime(item.Key, out childCreated) || childCreated < creationTimes[item.Value]) continue;
+          if (descendants.Add(item.Key)) { creationTimes[item.Key] = childCreated; changed = true; }
+        }
+      } while (changed);
+      var ordered = new List<uint>(descendants);
+      // Terminate parents first so a hostile/stuck helper cannot create more
+      // descendants while the already-snapshotted leaves are being reaped.
+      ordered.Sort((left, right) => Depth(left, parents).CompareTo(Depth(right, parents)));
+      for (int index = 0; index < ordered.Count; index++) {
+        int terminated = TerminateAndWait(ordered[index], timeoutMs);
+        if (terminated != 0) return 30 + (index * 10) + terminated;
+      }
+      return 0;
+    } catch { return 23; }
+  }
+
+  private static Dictionary<uint, uint> Snapshot() {
+    var result = new Dictionary<uint, uint>();
+    IntPtr snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) throw new InvalidOperationException();
+    try {
+      var entry = new PROCESSENTRY32();
+      entry.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
+      if (!Process32FirstW(snapshot, ref entry)) throw new InvalidOperationException();
+      do { result[entry.th32ProcessID] = entry.th32ParentProcessID; } while (Process32NextW(snapshot, ref entry));
+      return result;
+    } finally { CloseHandle(snapshot); }
+  }
+
+  private static int Depth(uint processId, Dictionary<uint, uint> parents) {
+    int depth = 0;
+    var seen = new HashSet<uint>();
+    while (parents.ContainsKey(processId) && seen.Add(processId)) { processId = parents[processId]; depth++; }
+    return depth;
+  }
+
+  private static bool TryCreationTime(uint processId, out long value) {
+    value = 0;
+    IntPtr process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
+    if (process == IntPtr.Zero) return false;
+    try {
+      FILETIME created, exited, kernel, user;
+      if (!GetProcessTimes(process, out created, out exited, out kernel, out user)) return false;
+      value = ((long)created.High << 32) | created.Low;
+      return value > 0;
+    } finally { CloseHandle(process); }
+  }
+
+  private static int TerminateAndWait(uint processId, int timeoutMs) {
+    IntPtr process = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, false, processId);
+    if (process == IntPtr.Zero) return Marshal.GetLastWin32Error() == 87 ? 0 : 1;
+    try {
+      uint state = WaitForSingleObject(process, 0);
+      if (state == WAIT_OBJECT_0) return 0;
+      if (!TerminateProcess(process, 1)) return WaitForSingleObject(process, (uint)timeoutMs) == WAIT_OBJECT_0 ? 0 : 2;
+      return WaitForSingleObject(process, (uint)timeoutMs) == WAIT_OBJECT_0 ? 0 : 3;
+    } finally { CloseHandle(process); }
+  }
+
+}`;
+
+function promiseWithTimeout<T>(operation: Promise<T>, timeoutMs: number) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new StorageIntegrityError()), timeoutMs);
+    timer.unref();
+    operation.then((value) => { clearTimeout(timer); resolve(value); }, (error) => { clearTimeout(timer); reject(error); });
+  });
+}
+
+function waitForExit(child: ChildProcess, timeoutMs: number) {
+  if (child.exitCode !== null) return Promise.resolve(child.exitCode);
+  return new Promise<number>((resolve, reject) => {
+    const timer = setTimeout(() => { cleanup(); reject(new StorageIntegrityError()); }, timeoutMs);
+    timer.unref();
+    const exit = (code: number | null) => { cleanup(); resolve(code ?? 1); };
+    const error = () => { cleanup(); reject(new StorageIntegrityError()); };
+    const cleanup = () => { clearTimeout(timer); child.off("exit", exit); child.off("error", error); };
+    child.once("exit", exit);
+    child.once("error", error);
+  });
+}
+
+function checkedTimeout(value: number | undefined, fallback: number) {
+  const timeout = value ?? fallback;
+  if (!Number.isSafeInteger(timeout) || timeout < 100 || timeout > 600_000) throw new StorageIntegrityError();
+  return timeout;
+}
+
+async function waitForMetadata(managed: ManagedHelper) {
+  const { child } = managed;
   let stderr = Buffer.alloc(0);
   return new Promise<{ size: number }>((resolve, reject) => {
     let settled = false;
     const fail = (error: Error) => {
       if (settled) return;
       settled = true;
-      if (!child.killed) child.kill();
+      void managed.terminate(error).catch(() => undefined);
       reject(error);
     };
     child.stderr.on("data", (chunk: Buffer) => {
@@ -294,7 +568,7 @@ public static class NtfsStorageHelper {
       if(op=="delete"){Delete(root,key);return;}
       Fail("INVALID");
     } catch(Exception error) {
-      string code=error is HelperException?error.Message:"INVALID";
+      string code=error is HelperException?error.Message:"INTEGRITY";
       Console.Error.WriteLine("ERR "+code);Environment.ExitCode=1;
     }
   }

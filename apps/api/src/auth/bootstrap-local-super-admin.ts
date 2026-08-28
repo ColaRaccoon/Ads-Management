@@ -39,7 +39,7 @@ export class BootstrapLocalSuperAdminService {
     };
   }
 
-  async apply(usernameInput: string, setupToken: string) {
+  async apply(usernameInput: string, setupToken: string, beforeMutation?: () => void | Promise<void>) {
     const username = normalizeUsername(usernameInput);
     if (!/^[A-Za-z0-9_-]{43}$/.test(setupToken)) throw new Error("BOOTSTRAP_SETUP_TOKEN_INVALID");
     const secret = this.config.localSetupTokenSecret;
@@ -51,6 +51,7 @@ export class BootstrapLocalSuperAdminService {
       if (await tx.appUser.count({ where: localIdentityWhere() }) !== 0) {
         throw new Error("BOOTSTRAP_REQUIRES_EMPTY_LOCAL_IDENTITY_SET");
       }
+      await beforeMutation?.();
       const user = await tx.appUser.create({
         data: {
           username,
@@ -90,7 +91,7 @@ export class BootstrapLocalSuperAdminService {
     return { usersCreated: 1 };
   }
 
-  async recover(usernameInput: string, setupToken: string) {
+  async recover(usernameInput: string, setupToken: string, beforeMutation?: () => void | Promise<void>) {
     const username = normalizeUsername(usernameInput);
     if (!/^[A-Za-z0-9_-]{43}$/.test(setupToken)) throw new Error("BOOTSTRAP_SETUP_TOKEN_INVALID");
     const secret = this.config.localSetupTokenSecret;
@@ -112,6 +113,7 @@ export class BootstrapLocalSuperAdminService {
       if (!user || user.role !== AppRole.SUPER_ADMIN || !user.isActive || (!unfinishedBootstrap && !activeBreakGlass)) {
         throw new Error("BOOTSTRAP_RECOVERY_STATE_REJECTED");
       }
+      await beforeMutation?.();
       await tx.$executeRaw(Prisma.sql`
         UPDATE "local_account_setup_tokens" SET "revoked_at" = clock_timestamp()
         WHERE "app_user_id" = ${user.id}::uuid AND "used_at" IS NULL AND "revoked_at" IS NULL

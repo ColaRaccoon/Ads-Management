@@ -19,6 +19,23 @@ describe("BootstrapLocalSuperAdminService", () => {
       .resolves.toMatchObject({ canApply: false });
   });
 
+  it("consumes the one-shot authorization after the locked state check and before the first bootstrap write", async () => {
+    const created = { id: userId };
+    const tx = {
+      $executeRaw: vi.fn().mockResolvedValue(1),
+      appUser: { count: vi.fn().mockResolvedValue(0), create: vi.fn().mockResolvedValue(created) },
+      securityAuditEvent: { create: vi.fn().mockResolvedValue({}) }
+    };
+    const prisma = { $transaction: vi.fn(async (work: (client: typeof tx) => unknown) => work(tx)) };
+    const consume = vi.fn();
+    await expect(new BootstrapLocalSuperAdminService(prisma as never, config as never)
+      .apply("local.admin", "A".repeat(43), consume)).resolves.toEqual({ usersCreated: 1 });
+    expect(tx.appUser.count).toHaveBeenCalledOnce();
+    expect(consume).toHaveBeenCalledOnce();
+    expect(consume.mock.invocationCallOrder[0]).toBeGreaterThan(tx.appUser.count.mock.invocationCallOrder[0]);
+    expect(consume.mock.invocationCallOrder[0]).toBeLessThan(tx.appUser.create.mock.invocationCallOrder[0]);
+  });
+
   it("recovers only the single unfinished bootstrap account and revokes old tokens and sessions atomically", async () => {
     const unfinished = {
       id: userId, username: "local.admin", role: AppRole.SUPER_ADMIN, isActive: true,
@@ -56,8 +73,11 @@ describe("BootstrapLocalSuperAdminService", () => {
       securityAuditEvent: { create: vi.fn().mockResolvedValue({}) }
     };
     const prisma = { $transaction: vi.fn(async (work: (client: typeof tx) => unknown) => work(tx)) };
+    const consume = vi.fn();
     await expect(new BootstrapLocalSuperAdminService(prisma as never, config as never)
-      .recover("local.admin", "B".repeat(43))).resolves.toMatchObject({ setupTokensReissued: 1 });
+      .recover("local.admin", "B".repeat(43), consume)).resolves.toMatchObject({ setupTokensReissued: 1 });
+    expect(consume).toHaveBeenCalledOnce();
+    expect(consume.mock.invocationCallOrder[0]).toBeLessThan(tx.localCredential.delete.mock.invocationCallOrder[0]);
     expect(tx.localCredential.delete).toHaveBeenCalledWith({ where: { appUserId: userId } });
     expect(tx.securityAuditEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
       action: "LOCAL_SUPER_ADMIN_BREAK_GLASS_RECOVERY"

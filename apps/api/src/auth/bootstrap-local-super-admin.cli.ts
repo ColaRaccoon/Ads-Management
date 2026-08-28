@@ -7,15 +7,58 @@ import { PrismaService } from "../common/prisma.service";
 import { assertSupabaseDatabaseBoundaryEvidenceV6 } from "../common/supabase-database-boundary-evidence";
 import { SupabaseDatabaseTarget, validateSupabaseDatabaseTarget } from "../common/supabase-database-target";
 import { loadAuthConfig } from "./auth.config";
+import {
+  BootstrapAuthorizationInput,
+  loadBootstrapMutationAuthorization,
+  loadBootstrapRequest
+} from "./bootstrap-authorization";
 import { BootstrapLocalSuperAdminService } from "./bootstrap-local-super-admin";
 
 async function main() {
   preloadApiEnvironment();
   const args = parseArguments(process.argv.slice(2));
-  const username = requiredArgument(args, "username");
   const target = validateSupabaseDatabaseTarget(process.env);
   const apply = args.has("apply");
   const recovery = args.has("recover");
+  const runtimeConfigPath = path.resolve(requiredArgument(args, "runtime-config-file"));
+  if (runtimeConfigPath !== path.resolve(requiredEnvironment("LOCAL_RUNTIME_CONFIG_PATH"))) {
+    throw new Error("BOOTSTRAP_RUNTIME_CONFIG_PATH_INVALID");
+  }
+  const tokenFile = path.resolve(requiredArgument(args, "setup-token-file"));
+  const authorizationInput: BootstrapAuthorizationInput = {
+    mode: recovery ? "recover" : "bootstrap",
+    requestPath: path.resolve(requiredArgument(args, "bootstrap-request-file")),
+    expectedRequestSha256: requiredArgument(args, "confirm-bootstrap-request-sha256"),
+    authorizationPath: args.get("authorization-file"),
+    expectedAuthorizationSha256: args.get("confirm-authorization-sha256"),
+    authorizationPublicKeyPath: args.get("authorization-public-key-file"),
+    expectedAuthorizationPublicKeySha256: args.get("confirm-authorization-public-key-sha256"),
+    ledgerPath: args.get("authorization-ledger-file"),
+    runtimeConfigPath,
+    expectedRuntimeConfigSha256: requiredArgument(args, "confirm-runtime-config-sha256"),
+    filesystemEvidencePath: path.resolve(requiredArgument(args, "filesystem-evidence-file")),
+    expectedFilesystemEvidenceSha256: requiredArgument(args, "confirm-filesystem-evidence-sha256"),
+    expectedFilesystemDescriptorDigest: requiredArgument(args, "confirm-filesystem-digest"),
+    databaseBoundaryEvidencePath: path.resolve(requiredArgument(args, "database-boundary-evidence-file")),
+    expectedDatabaseBoundaryEvidenceSha256: requiredArgument(args, "confirm-database-boundary-sha256"),
+    setupTokenOutputPath: tokenFile,
+    maintenanceEvidenceSha256: recovery ? requiredArgument(args, "confirm-maintenance-flag-sha256") : null,
+    drainEvidenceSha256: recovery ? requiredArgument(args, "confirm-drain-state-sha256") : null,
+    prechangeBackupEvidenceSha256: recovery ? requiredArgument(args, "confirm-latest-backup-sha256") : null,
+    database: {
+      projectRef: target.projectRef,
+      connectionMode: target.connectionMode,
+      host: target.host,
+      port: Number(target.port),
+      name: target.database,
+      schema: target.schema
+    },
+    releaseId: requiredEnvironment("LOCAL_RELEASE_ID"),
+    dataRoot: requiredEnvironment("APP_DATA_ROOT")
+  };
+  const mutationAuthorization = apply ? loadBootstrapMutationAuthorization(authorizationInput) : null;
+  const authorizedRequest = mutationAuthorization ?? loadBootstrapRequest(authorizationInput);
+  const username = authorizedRequest.username;
   process.stdout.write(`${JSON.stringify({
     event: "local-bootstrap.plan",
     databaseProvider: "supabase_postgres",
@@ -44,32 +87,33 @@ async function main() {
     requireConfirmation(args, "confirm-project-ref", target.projectRef);
     requireConfirmation(args, "confirm-db-name", target.database);
     requireConfirmation(args, "confirm-db-schema", target.schema);
-    assertDatabaseBoundaryEvidence(requiredArgument(args,"database-boundary-evidence-file"),requiredArgument(args,"confirm-database-boundary-sha256"),target);
+    assertDatabaseBoundaryEvidence(authorizationInput.databaseBoundaryEvidencePath,authorizationInput.expectedDatabaseBoundaryEvidenceSha256,target);
     if (recoveryInspection?.recoveryKind === "ACTIVE_BREAK_GLASS") {
-      assertBreakGlassOperationalEvidence(args, target, requiredEnvironment("APP_DATA_ROOT"), requiredEnvironment("LOCAL_RELEASE_ID"),requiredEnvironment("LOCAL_RUNTIME_CONFIG_PATH"));
+      assertBreakGlassOperationalEvidence(args, target, authorizationInput.dataRoot, authorizationInput.releaseId,runtimeConfigPath);
     }
-    const tokenFile = approvedTokenPath(
-      requiredArgument(args, "setup-token-file"),
-      requiredEnvironment("APP_DATA_ROOT"),
-      requiredArgument(args, "filesystem-evidence-file"),
-      requiredArgument(args, "confirm-filesystem-digest")
-    );
-    const handle = openSync(tokenFile, "wx", 0o600);
+    let handle: number | undefined;
     let committed = false;
     try {
       const setupToken = randomBytes(32).toString("base64url");
-      writeFileSync(handle, JSON.stringify({
-        version: 1,
-        purpose: recoveryInspection?.recoveryKind === "ACTIVE_BREAK_GLASS" ? "SUPER_ADMIN_RECOVERY" : "INITIAL_SETUP",
-        setupToken,
-        expiresAt: new Date(Date.now() + loadAuthConfig().localSetupTokenTtlMs).toISOString()
-      }), { encoding: "utf8" });
-      if (recovery) await service.recover(username, setupToken);
-      else await service.apply(username, setupToken);
+      const consume = async () => {
+        if (!mutationAuthorization) throw new Error("BOOTSTRAP_AUTHORIZATION_REQUIRED");
+        mutationAuthorization.consume();
+        handle = openSync(tokenFile, "wx", 0o600);
+        writeFileSync(handle, JSON.stringify({
+          version: 1,
+          purpose: recoveryInspection?.recoveryKind === "ACTIVE_BREAK_GLASS" ? "SUPER_ADMIN_RECOVERY" : "INITIAL_SETUP",
+          setupToken,
+          expiresAt: new Date(Date.now() + loadAuthConfig().localSetupTokenTtlMs).toISOString()
+        }), { encoding: "utf8" });
+      };
+      if (recovery) await service.recover(username, setupToken, consume);
+      else await service.apply(username, setupToken, consume);
       committed = true;
     } finally {
-      closeSync(handle);
-      if (!committed) unlinkSync(tokenFile);
+      if (handle !== undefined) closeSync(handle);
+      if (!committed) {
+        try { unlinkSync(tokenFile); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+      }
     }
     process.stdout.write(`${JSON.stringify({ event: "local-bootstrap.complete", usersCreated: recovery ? 0 : 1, setupTokensReissued: recovery ? 1 : 0 })}\n`);
   } finally {
@@ -132,43 +176,6 @@ function assertDatabaseBoundaryEvidence(value: string, expectedSha256: string, t
   });
 }
 
-function approvedTokenPath(value: string, dataRootValue: string, evidencePathValue: string, expectedDigest: string) {
-  if (!path.isAbsolute(value)) throw new Error("--setup-token-file must be absolute.");
-  const resolved = path.resolve(value);
-  const handoffRoot = path.resolve(dataRootValue, "bootstrap-handoff");
-  if (path.dirname(resolved) !== handoffRoot) {
-    throw new Error("--setup-token-file must be directly below APP_DATA_ROOT/bootstrap-handoff.");
-  }
-  assertNoReparseComponents(handoffRoot);
-  const root = lstatSync(handoffRoot);
-  if (!root.isDirectory() || root.isSymbolicLink()) throw new Error("BOOTSTRAP_HANDOFF_ROOT_INVALID");
-  const evidencePath = path.resolve(evidencePathValue);
-  const evidenceStat = lstatSync(evidencePath);
-  if (!evidenceStat.isFile() || evidenceStat.isSymbolicLink() || evidenceStat.size > 64 * 1024) {
-    throw new Error("FILESYSTEM_EVIDENCE_INVALID");
-  }
-  const evidence = JSON.parse(readFileSync(evidencePath, "utf8")) as {
-    result?: string; dataRoot?: string; descriptorDigest?: string; completedAt?: string;
-    classRoots?: { ADMIN_ONLY?: unknown };
-  };
-  const adminRoots = Array.isArray(evidence.classRoots?.ADMIN_ONLY)
-    ? evidence.classRoots.ADMIN_ONLY.filter((item): item is string => typeof item === "string")
-    : [];
-  const completedAt = Date.parse(evidence.completedAt ?? "");
-  if (evidence.result !== "PASS" || path.resolve(evidence.dataRoot ?? "") !== path.resolve(dataRootValue) ||
-      evidence.descriptorDigest !== expectedDigest || !/^[0-9a-f]{64}$/.test(expectedDigest) ||
-      !adminRoots.some((rootPath) => sameOrNested(handoffRoot, rootPath)) ||
-      !Number.isFinite(completedAt) || completedAt > Date.now() + 5 * 60_000 || completedAt < Date.now() - 24 * 3600_000) {
-    throw new Error("BOOTSTRAP_HANDOFF_ACL_EVIDENCE_REJECTED");
-  }
-  return resolved;
-}
-
-function sameOrNested(candidate: string, root: string) {
-  const relative = path.relative(path.resolve(root), path.resolve(candidate));
-  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
-}
-
 function assertNoReparseComponents(target: string) {
   const parsed = path.parse(target);
   let current = parsed.root;
@@ -194,8 +201,11 @@ function parseArguments(argv: string[]) {
   for (const argument of argv) {
     if (!argument.startsWith("--")) throw new Error("Arguments must use --name=value format.");
     const separator = argument.indexOf("=");
-    if (separator === -1) parsed.set(argument.slice(2), "true");
-    else parsed.set(argument.slice(2, separator), argument.slice(separator + 1));
+    const name = separator === -1 ? argument.slice(2) : argument.slice(2, separator);
+    if (name === "username") throw new Error("BOOTSTRAP_USERNAME_ARGV_FORBIDDEN");
+    if (parsed.has(name)) throw new Error("BOOTSTRAP_ARGUMENT_DUPLICATE");
+    if (separator === -1) parsed.set(name, "true");
+    else parsed.set(name, argument.slice(separator + 1));
   }
   return parsed;
 }
@@ -208,15 +218,6 @@ function requiredArgument(args: Map<string, string>, name: string) {
 
 function requireConfirmation(args: Map<string, string>, name: string, expected: string) {
   if (args.get(name) !== expected) throw new Error(`--${name} does not match the inspected target.`);
-}
-
-function requireLiteral(args: Map<string, string>, name: string, expected: string) {
-  if (args.get(name) !== expected) throw new Error(`--${name}=${expected} is required.`);
-}
-
-function requirePattern(args: Map<string, string>, name: string, pattern: RegExp) {
-  const value = args.get(name) ?? "";
-  if (!pattern.test(value)) throw new Error(`--${name} is invalid.`);
 }
 
 if (require.main === module) {
