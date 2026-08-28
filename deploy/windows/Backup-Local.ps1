@@ -45,8 +45,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
 $nasIdentityHelper=if($NasIdentityHelperPath){[IO.Path]::GetFullPath($NasIdentityHelperPath)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'nas-identity.ps1'))}
 $helperCursor=if(Test-Path -LiteralPath $nasIdentityHelper -PathType Leaf){Get-Item -LiteralPath $nasIdentityHelper -Force}else{$null};while($helperCursor){if($helperCursor.Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'NAS_IDENTITY_HELPER_REPARSE_REJECTED'};$helperCursor=$helperCursor.Parent}
-if(-not(Test-Path -LiteralPath $nasIdentityHelper -PathType Leaf)-or$ExpectedNasIdentityHelperSha256-notmatch'^[A-Fa-f0-9]{64}$'-or(Get-FileHash -LiteralPath $nasIdentityHelper -Algorithm SHA256).Hash-ine$ExpectedNasIdentityHelperSha256){throw 'NAS_IDENTITY_HELPER_HASH_MISMATCH'}
-. $nasIdentityHelper
+. (Import-PinnedHelperScriptBlock $nasIdentityHelper $ExpectedNasIdentityHelperSha256 'NAS_IDENTITY_HELPER_HASH_MISMATCH')
 $script:BackupDeadline=$null
 $script:BackupStopwatch=$null
 $script:BackupMaximumMilliseconds=[long]0

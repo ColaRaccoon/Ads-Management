@@ -14,7 +14,7 @@ param(
 )
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
-$edgeDrainHelper=if($EdgeDrainHelperPath){[IO.Path]::GetFullPath($EdgeDrainHelperPath)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'edge-drain-identity.ps1'))};if($ExpectedEdgeDrainHelperSha256-notmatch'^[A-Fa-f0-9]{64}$'-or-not(Test-Path -LiteralPath $edgeDrainHelper -PathType Leaf)-or(Get-FileHash -LiteralPath $edgeDrainHelper -Algorithm SHA256).Hash.ToLowerInvariant()-cne$ExpectedEdgeDrainHelperSha256.ToLowerInvariant()){throw 'EDGE_DRAIN_HELPER_HASH_MISMATCH'};. $edgeDrainHelper
+$edgeDrainHelper=if($EdgeDrainHelperPath){[IO.Path]::GetFullPath($EdgeDrainHelperPath)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'edge-drain-identity.ps1'))};. (Import-PinnedHelperScriptBlock $edgeDrainHelper $ExpectedEdgeDrainHelperSha256 'EDGE_DRAIN_HELPER_HASH_MISMATCH')
 $edgeService='MetaAdsPerformanceEdge'
 function Existing([string]$Path,[bool]$Directory,[string]$Code){$kind=if($Directory){'Container'}else{'Leaf'};if(-not$Path-or-not(Test-Path -LiteralPath $Path -PathType $kind)){throw $Code};$full=[IO.Path]::GetFullPath($Path).TrimEnd('\');$cursor=Get-Item -LiteralPath $full -Force;while($cursor){if($cursor.Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'CERTIFICATE_ACTIVATION_REPARSE_REJECTED'};$cursor=$cursor.Parent};return $full}
 function Hash([string]$Path){return(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()}

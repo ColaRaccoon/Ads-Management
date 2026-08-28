@@ -3,6 +3,22 @@ $script:ApprovalPlanContractPath=[IO.Path]::GetFullPath($PSCommandPath)
 function Get-ApprovalFileSha256([string]$Path){$stream=[IO.File]::OpenRead([IO.Path]::GetFullPath($Path));$sha=[Security.Cryptography.SHA256]::Create();try{return ([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose();$stream.Dispose()}}
 $script:ApprovalPlanContractSha256=Get-ApprovalFileSha256 $script:ApprovalPlanContractPath
 
+function Import-PinnedHelperScriptBlock([string]$Path,[string]$ExpectedSha256,[string]$Code){
+  if($ExpectedSha256-notmatch'^[A-Fa-f0-9]{64}$'){throw $Code};$full=[IO.Path]::GetFullPath($Path)
+  if(-not(Test-Path -LiteralPath $full -PathType Leaf)){throw $Code};$cursor=Get-Item -LiteralPath $full -Force
+  while($cursor){if($cursor.Attributes-band[IO.FileAttributes]::ReparsePoint){throw $Code};$cursor=$cursor.Parent}
+  $stream=[IO.File]::Open($full,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+  try{
+    $opened=Get-Item -LiteralPath $full -Force;if($opened.Attributes-band[IO.FileAttributes]::ReparsePoint-or$stream.Length-lt1-or$stream.Length-gt1048576){throw $Code}
+    $bytes=New-Object byte[] ([int]$stream.Length);$offset=0
+    while($offset-lt$bytes.Length){$read=$stream.Read($bytes,$offset,$bytes.Length-$offset);if($read-le0){throw $Code};$offset+=$read}
+    $sha=[Security.Cryptography.SHA256]::Create();try{$actual=([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+    if($actual-cne$ExpectedSha256.ToLowerInvariant()){throw $Code}
+    try{$text=(New-Object Text.UTF8Encoding($false,$true)).GetString($bytes)}catch{throw $Code}
+    return [ScriptBlock]::Create($text)
+  }finally{$stream.Dispose();if($bytes){[Array]::Clear($bytes,0,$bytes.Length)}}
+}
+
 function Get-ApprovalSha256([string]$Value){
   $sha=[Security.Cryptography.SHA256]::Create()
   try{return ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Value))).Replace('-','').ToLowerInvariant())}finally{$sha.Dispose()}

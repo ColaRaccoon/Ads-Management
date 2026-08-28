@@ -13,8 +13,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
 $nasIdentityHelper=if($NasIdentityHelperPath){[IO.Path]::GetFullPath($NasIdentityHelperPath)}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'nas-identity.ps1'))}
 $helperCursor=if(Test-Path -LiteralPath $nasIdentityHelper -PathType Leaf){Get-Item -LiteralPath $nasIdentityHelper -Force}else{$null};while($helperCursor){if($helperCursor.Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'NAS_IDENTITY_HELPER_REPARSE_REJECTED'};$helperCursor=$helperCursor.Parent}
-if(-not(Test-Path -LiteralPath $nasIdentityHelper -PathType Leaf)-or$ExpectedNasIdentityHelperSha256-notmatch'^[A-Fa-f0-9]{64}$'-or(Get-FileHash -LiteralPath $nasIdentityHelper -Algorithm SHA256).Hash-ine$ExpectedNasIdentityHelperSha256){throw 'NAS_IDENTITY_HELPER_HASH_MISMATCH'}
-. $nasIdentityHelper
+. (Import-PinnedHelperScriptBlock $nasIdentityHelper $ExpectedNasIdentityHelperSha256 'NAS_IDENTITY_HELPER_HASH_MISMATCH')
 $systemSid='S-1-5-18';$administratorsSid='S-1-5-32-544';$backupOperatorsSid='S-1-5-32-551'
 function Resolve-Sid([string]$Account){if(-not$Account){throw 'BACKUP_ACCOUNT_REQUIRED'};return([Security.Principal.NTAccount]$Account).Translate([Security.Principal.SecurityIdentifier]).Value}
 function Assert-NotReparse([string]$Path){$cursor=Get-Item -LiteralPath ([IO.Path]::GetFullPath($Path)) -Force;while($cursor){if($cursor.Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'BACKUP_TARGET_REPARSE_REJECTED'};$cursor=$cursor.Parent}}
