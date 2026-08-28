@@ -59,7 +59,7 @@ describe(
     expect(await storage.exists(`trash/${retained.tombstoneId}`)).toBe(false);
   });
 
-  it("recovers idempotently when storage retention succeeds before the DB finalize update fails", async () => {
+  it("restores the active object without a client retry when storage retention succeeds before DB finalize", async () => {
     const root = await temporaryRoot();
     const storage = new LocalFileStorage(root);
     await storage.put({ key: "active/retry", body: BODY, expectedHashSha256: HASH });
@@ -75,12 +75,74 @@ describe(
     await expect(service.retain(input)).rejects.toMatchObject({
       response: expect.objectContaining({ code: "STORAGE_RETENTION_RETRY_REQUIRED" })
     });
-    expect(harness.row?.state).toBe(StorageTombstoneState.FAILED);
-    expect(await storage.exists("active/retry")).toBe(false);
-    expect(await storage.exists(`trash/${harness.row!.id}`)).toBe(true);
+    expect(harness.row?.state).toBe(StorageTombstoneState.RESTORED);
+    await expectExactObject(storage, "active/retry");
+    expect(await storage.exists(`trash/${harness.row!.id}`)).toBe(false);
 
     await expect(service.retain(input)).resolves.toMatchObject({ state: StorageTombstoneState.RETAINED });
     expect(harness.row?.state).toBe(StorageTombstoneState.RETAINED);
+  });
+
+  it("returns success when RETAINED committed and only the transaction acknowledgement was lost", async () => {
+    const root = await temporaryRoot();
+    const storage = new LocalFileStorage(root);
+    await storage.put({ key: "active/committed", body: BODY, expectedHashSha256: HASH });
+    const harness = prismaHarness({ retainCommitOutcome: "COMMITTED_ACK_LOST" });
+    const service = new StorageTombstoneService(harness.prisma as never, config(root));
+
+    await expect(service.retain({
+      domain: StorageTombstoneDomain.META_UPLOAD,
+      businessRecordId: BUSINESS_ID,
+      reference: "local:active/committed",
+      expectedHashSha256: HASH
+    })).resolves.toMatchObject({ state: StorageTombstoneState.RETAINED });
+
+    expect(harness.row?.state).toBe(StorageTombstoneState.RETAINED);
+    expect(await storage.exists("active/committed")).toBe(false);
+    await expectExactObject(storage, `trash/${harness.row!.id}`);
+    expect(harness.transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it("restores exact active bytes when the RETAINED transaction rolled back after moving storage", async () => {
+    const root = await temporaryRoot();
+    const storage = new LocalFileStorage(root);
+    await storage.put({ key: "active/rolled-back", body: BODY, expectedHashSha256: HASH });
+    const harness = prismaHarness({ retainCommitOutcome: "ROLLED_BACK_ACK_LOST" });
+    const service = new StorageTombstoneService(harness.prisma as never, config(root));
+
+    await expect(service.retain({
+      domain: StorageTombstoneDomain.META_UPLOAD,
+      businessRecordId: BUSINESS_ID,
+      reference: "local:active/rolled-back",
+      expectedHashSha256: HASH
+    })).rejects.toMatchObject({
+      response: expect.objectContaining({ code: "STORAGE_RETENTION_RETRY_REQUIRED" })
+    });
+
+    expect(harness.row?.state).toBe(StorageTombstoneState.RESTORED);
+    await expectExactObject(storage, "active/rolled-back");
+    expect(await storage.exists(`trash/${harness.row!.id}`)).toBe(false);
+  });
+
+  it("keeps an exact active copy when the RETAINED outcome cannot be read back", async () => {
+    const root = await temporaryRoot();
+    const storage = new LocalFileStorage(root);
+    await storage.put({ key: "active/unknown", body: BODY, expectedHashSha256: HASH });
+    const harness = prismaHarness({ retainCommitOutcome: "UNKNOWN" });
+    const service = new StorageTombstoneService(harness.prisma as never, config(root));
+
+    await expect(service.retain({
+      domain: StorageTombstoneDomain.META_UPLOAD,
+      businessRecordId: BUSINESS_ID,
+      reference: "local:active/unknown",
+      expectedHashSha256: HASH
+    })).rejects.toMatchObject({
+      response: expect.objectContaining({ code: "STORAGE_RETENTION_RETRY_REQUIRED" })
+    });
+
+    expect(harness.row?.state).toBe(StorageTombstoneState.FAILED);
+    await expectExactObject(storage, "active/unknown");
+    await expectExactObject(storage, `trash/${harness.row!.id}`);
   });
 
   it("rejects hash/provider confusion and leaves the active object untouched", async () => {
@@ -166,10 +228,13 @@ function prismaHarness(options: {
   failRetainedUpdateOnce?: boolean;
   failRestoreFinalizeOnce?: boolean;
   activeMetaUpload?: boolean;
+  retainCommitOutcome?: "COMMITTED_ACK_LOST" | "ROLLED_BACK_ACK_LOST" | "UNKNOWN";
 } = {}) {
   let row: Record<string, any> | null = null;
   let failRetainedUpdateOnce = options.failRetainedUpdateOnce ?? false;
   let failRestoreFinalizeOnce = options.failRestoreFinalizeOnce ?? false;
+  let retainCommitOutcome = options.retainCommitOutcome;
+  let reconciliationUnavailable = false;
   const dueIds: string[] = [];
   const update = vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
     if (!row || row.id !== where.id) throw new Error("tombstone missing");
@@ -222,24 +287,37 @@ function prismaHarness(options: {
     $executeRawUnsafe: vi.fn(async () => 0),
     $queryRaw: vi.fn(async () => [])
   };
+  const transaction = vi.fn(async (callback: (client: typeof tx) => Promise<unknown>) => {
+    if (reconciliationUnavailable) {
+      reconciliationUnavailable = false;
+      throw new Error("synthetic reconciliation unavailable");
+    }
+    const before = row ? { ...row } : null;
+    const result = await callback(tx);
+    if (retainCommitOutcome && row?.state === StorageTombstoneState.RETAINED) {
+      const outcome = retainCommitOutcome;
+      retainCommitOutcome = undefined;
+      if (outcome !== "COMMITTED_ACK_LOST") row = before;
+      if (outcome === "UNKNOWN") reconciliationUnavailable = true;
+      throw new Error(`synthetic retain ${outcome.toLowerCase()}`);
+    }
+    if (failRestoreFinalizeOnce && row?.state === StorageTombstoneState.RESTORED) {
+      failRestoreFinalizeOnce = false;
+      row = before;
+      throw new Error("synthetic restore transaction commit failure");
+    }
+    return result;
+  });
   const prisma = {
     storageTombstone,
     securityAuditEvent,
-    $transaction: vi.fn(async (callback: (client: typeof tx) => Promise<unknown>) => {
-      const before = row ? { ...row } : null;
-      const result = await callback(tx);
-      if (failRestoreFinalizeOnce && row?.state === StorageTombstoneState.RESTORED) {
-        failRestoreFinalizeOnce = false;
-        row = before;
-        throw new Error("synthetic restore transaction commit failure");
-      }
-      return result;
-    })
+    $transaction: transaction
   };
   return {
     prisma,
     dueIds,
     findMany,
+    transaction,
     get row() { return row; }
   };
 }
@@ -258,4 +336,14 @@ async function temporaryRoot() {
   const root = await mkdtemp(path.join(tmpdir(), "storage-tombstone-"));
   roots.push(root);
   return root;
+}
+
+async function expectExactObject(storage: LocalFileStorage, key: string) {
+  const stored = await storage.getStream(key);
+  const chunks: Buffer[] = [];
+  for await (const chunk of stored.stream) chunks.push(Buffer.from(chunk));
+  const body = Buffer.concat(chunks);
+  expect(body).toEqual(BODY);
+  expect(body).toHaveLength(stored.size);
+  expect(createHash("sha256").update(body).digest("hex")).toBe(HASH);
 }

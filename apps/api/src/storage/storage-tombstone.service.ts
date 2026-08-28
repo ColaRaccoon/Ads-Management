@@ -31,6 +31,19 @@ export type RetainStorageObjectInput = {
 
 type ResolvedObject = { provider: string; key: string; storage: FileStorage };
 
+type RetentionTombstone = {
+  id: string;
+  provider: string;
+  originalKey: string;
+  trashKey: string;
+  hashSha256: string;
+  byteSize: bigint;
+  state: StorageTombstoneState;
+  purgeAfter: Date;
+  restoredAt: Date | null;
+  purgedAt: Date | null;
+};
+
 const STORAGE_TRANSITION_TRANSACTION_OPTIONS = {
   maxWait: 30_000,
   timeout: 300_000
@@ -117,17 +130,11 @@ export class StorageTombstoneService {
       return await this.prisma.$transaction(async (tx) => {
         await acquireTombstoneTransitionFence(tx, tombstone.id);
         const current = await requireTombstone(tx, tombstone.id);
-        if (
-          current.provider !== resolved.provider ||
-          current.originalKey !== resolved.key ||
-          current.hashSha256 !== expectedHash
-        ) {
-          throw new ConflictException({
-            code: "STORAGE_TOMBSTONE_CONFLICT",
-            message: "The retained object does not match the existing storage tombstone."
-          });
+        this.assertSameRetentionObject(current, tombstone, resolved, expectedHash);
+        if (current.state === StorageTombstoneState.RETAINED) {
+          await this.completeRetention(resolved.storage, current);
+          return safeResult(current);
         }
-        if (current.state === StorageTombstoneState.RETAINED) return safeResult(current);
         if (current.state === StorageTombstoneState.PURGED) {
           throw new ConflictException({
             code: "STORAGE_TOMBSTONE_STATE_CONFLICT",
@@ -146,16 +153,32 @@ export class StorageTombstoneService {
       }, STORAGE_TRANSITION_TRANSACTION_OPTIONS);
     } catch (error) {
       if (error instanceof ConflictException || error instanceof NotFoundException) throw error;
-      await this.prisma.storageTombstone.updateMany({
-        where: {
-          id: tombstone.id,
-          state: { in: [StorageTombstoneState.PENDING, StorageTombstoneState.FAILED] }
-        },
-        data: { state: StorageTombstoneState.FAILED, failureCode: "RETENTION_TRANSITION_FAILED" }
-      }).catch(() => undefined);
+      try {
+        const reconciled = await this.reconcileRetentionFailure(
+          tombstone as RetentionTombstone,
+          resolved,
+          expectedHash
+        );
+        if (reconciled.outcome === "COMMITTED") return reconciled.result;
+      } catch {
+        try {
+          // A database outcome that cannot be read must not leave an active
+          // business reference pointing at a missing object. The retained
+          // copy is immutable and is safe to publish back under the exact
+          // expected hash and size even if the DB transaction did commit.
+          await this.ensureActiveCopy(resolved.storage, tombstone as RetentionTombstone);
+        } catch {
+          await this.recordRetentionFailure(tombstone.id, input.actorUserId, true);
+          throw new ServiceUnavailableException({
+            code: "STORAGE_RETENTION_COMPENSATION_REQUIRED",
+            message: "The retention outcome is unknown and the active object could not be verified."
+          });
+        }
+      }
+      await this.recordRetentionFailure(tombstone.id, input.actorUserId, false);
       throw new ServiceUnavailableException({
         code: "STORAGE_RETENTION_RETRY_REQUIRED",
-        message: "The object could not be retained. Its database reference remains available for retry."
+        message: "The object was not retained. Its active hash-verified copy remains available."
       });
     }
   }
@@ -345,6 +368,119 @@ export class StorageTombstoneService {
     if (!activeDeleted && await storage.exists(tombstone.originalKey)) {
       throw new Error("active object delete did not complete");
     }
+  }
+
+  private async reconcileRetentionFailure(
+    expected: RetentionTombstone,
+    resolved: ResolvedObject,
+    expectedHash: string
+  ): Promise<
+    | { outcome: "COMMITTED"; result: ReturnType<typeof safeResult> }
+    | { outcome: "ROLLED_BACK" }
+  > {
+    return this.prisma.$transaction(async (tx) => {
+      await acquireTombstoneTransitionFence(tx, expected.id);
+      const current = await requireTombstone(tx, expected.id);
+      this.assertSameRetentionObject(current, expected, resolved, expectedHash);
+
+      if (current.state === StorageTombstoneState.RETAINED) {
+        await this.completeRetention(resolved.storage, current);
+        return { outcome: "COMMITTED", result: safeResult(current) } as const;
+      }
+      if (current.state === StorageTombstoneState.PURGED) {
+        throw new ConflictException({
+          code: "STORAGE_TOMBSTONE_STATE_CONFLICT",
+          message: "The storage tombstone cannot be reconciled after it was purged."
+        });
+      }
+
+      await this.ensureActiveCopy(resolved.storage, current);
+      const trashDeleted = await resolved.storage.delete(current.trashKey);
+      if (!trashDeleted && await resolved.storage.exists(current.trashKey)) {
+        throw new Error("retained copy cleanup did not complete after active copy restoration");
+      }
+      await inspectObject(resolved.storage, current.originalKey, current.hashSha256, current.byteSize);
+      await tx.storageTombstone.update({
+        where: { id: current.id },
+        data: {
+          state: StorageTombstoneState.RESTORED,
+          restoredAt: new Date(),
+          failureCode: null
+        }
+      });
+      return { outcome: "ROLLED_BACK" } as const;
+    }, STORAGE_TRANSITION_TRANSACTION_OPTIONS);
+  }
+
+  private assertSameRetentionObject(
+    current: RetentionTombstone,
+    expected: RetentionTombstone,
+    resolved: ResolvedObject,
+    expectedHash: string
+  ) {
+    if (
+      current.provider !== resolved.provider ||
+      current.originalKey !== resolved.key ||
+      current.hashSha256 !== expectedHash ||
+      current.trashKey !== expected.trashKey ||
+      current.byteSize !== expected.byteSize
+    ) {
+      throw new ConflictException({
+        code: "STORAGE_TOMBSTONE_CONFLICT",
+        message: "The retained object does not match the existing storage tombstone."
+      });
+    }
+  }
+
+  private async ensureActiveCopy(storage: FileStorage, tombstone: RetentionTombstone) {
+    if (await storage.exists(tombstone.originalKey)) {
+      await inspectObject(storage, tombstone.originalKey, tombstone.hashSha256, tombstone.byteSize);
+      return;
+    }
+    const retained = await storage.getStream(tombstone.trashKey);
+    assertExpectedSize(retained.size, tombstone.byteSize);
+    const restored = await storage.put({
+      key: tombstone.originalKey,
+      body: retained.stream,
+      expectedHashSha256: tombstone.hashSha256,
+      maxBytes: toSafeNumber(tombstone.byteSize)
+    });
+    assertExpectedSize(restored.size, tombstone.byteSize);
+    await inspectObject(storage, tombstone.originalKey, tombstone.hashSha256, tombstone.byteSize);
+  }
+
+  private async recordRetentionFailure(id: string, actorUserId: string | undefined, compensationFailed: boolean) {
+    await Promise.all([
+      this.prisma.storageTombstone.updateMany({
+        where: {
+          id,
+          state: { in: [StorageTombstoneState.PENDING, StorageTombstoneState.FAILED] }
+        },
+        data: {
+          state: StorageTombstoneState.FAILED,
+          failureCode: compensationFailed
+            ? "RETENTION_COMPENSATION_FAILED"
+            : "RETENTION_TRANSITION_FAILED"
+        }
+      }).catch(() => undefined),
+      this.prisma.securityAuditEvent.create({
+        data: securityAuditData({
+          actorUserId,
+          actorType: actorUserId ? SecurityAuditActorType.USER : SecurityAuditActorType.SYSTEM,
+          action: "STORAGE_OBJECT_TRANSITION",
+          targetType: "STORAGE_TOMBSTONE",
+          targetId: id,
+          result: SecurityAuditResult.PARTIAL,
+          afterJson: {
+            retryable: !compensationFailed,
+            activeCopyVerified: !compensationFailed,
+            failureCode: compensationFailed
+              ? "RETENTION_COMPENSATION_FAILED"
+              : "RETENTION_TRANSITION_FAILED"
+          }
+        })
+      }).catch(() => undefined)
+    ]);
   }
 
   private resolveReference(domain: StorageTombstoneDomain, reference: string): ResolvedObject {

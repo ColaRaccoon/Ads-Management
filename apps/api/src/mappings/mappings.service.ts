@@ -122,97 +122,57 @@ export class MappingsService {
     const standaloneAdMetrics = unmatchedAdMetrics.filter(
       (metric) => !adsetMetricKeys.has(adsetDateKey(metric.metaAdsetRefId, metric.metricDate))
     );
-    const metaAdsetIds = Array.from(new Set([
-      ...metrics.map((metric) => metric.metaAdsetId),
-      ...standaloneAdMetrics.map((metric) => metric.metaAdsetRefId)
-    ]));
-    const sourceMetaAdsetIds = Array.from(new Set(metrics.map((metric) => metric.metaAdsetId)));
-    const sourceMetricDates = Array.from(
-      new Map(metrics.map((metric) => [formatDateOnly(metric.metricDate), metric.metricDate])).values()
-    );
-    const [histories, rules, adMetrics] = await Promise.all([
-      this.prisma.adsetProductHistory.findMany({ where: { metaAdsetId: { in: metaAdsetIds } } }),
-      this.prisma.productMatchRule.findMany({
-        where: { isActive: true, product: { is: { isActive: true } } },
-        orderBy: { priority: "asc" }
-      }),
-      this.prisma.metaAdDailyMetric.findMany({
-        where: {
-          isCurrent: true,
-          metaAdsetRefId: { in: sourceMetaAdsetIds },
-          metricDate: { in: sourceMetricDates }
-        },
-        select: {
-          id: true,
-          uploadRowId: true,
-          metaAdsetRefId: true,
-          metricDate: true,
-          adNameSnapshot: true,
-          adsetNameSnapshot: true,
-          campaignNameSnapshot: true,
-          productId: true,
-          productMatchSource: true,
-          productMatchRuleId: true
-        },
-        orderBy: [{ metricDate: "asc" }, { adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
-      })
-    ]);
-    const historiesByAdset = new Map<string, typeof histories>();
-    for (const history of histories) {
-      historiesByAdset.set(history.metaAdsetId, [...(historiesByAdset.get(history.metaAdsetId) ?? []), history]);
-    }
-    const adMetricsByAdsetDate = new Map<string, typeof adMetrics>();
-    for (const adMetric of adMetrics) {
-      const key = adsetDateKey(adMetric.metaAdsetRefId, adMetric.metricDate);
-      adMetricsByAdsetDate.set(key, [...(adMetricsByAdsetDate.get(key) ?? []), adMetric]);
-    }
-    const matcher = new AdsetProductMatcher();
-    const activeRules = rules.map((rule) => ({
-      id: rule.id,
-      productId: rule.productId,
-      matchType: rule.matchType,
-      pattern: rule.pattern,
-      patternKey: rule.patternKey,
-      priority: rule.priority,
-      validFrom: formatDateOnly(rule.validFrom),
-      validTo: rule.validTo ? formatDateOnly(rule.validTo) : null,
-      isActive: rule.isActive
-    }));
-
     let rematchedCount = 0;
     let rematchedAdMetricCount = 0;
     let rematchedByRuleCount = 0;
     let rematchedByManualCount = 0;
     let rematchedStandaloneAdMetricCount = 0;
-    const affectedAdsetIds = new Set<string>();
+    let concurrentlyResolvedAdsetCount = 0;
+    let concurrentlyResolvedStandaloneAdCount = 0;
 
     for (const metric of metrics) {
-      const metricDate = formatDateOnly(metric.metricDate);
-      const historiesForMetric = (historiesByAdset.get(metric.metaAdsetId) ?? []).map((history) => ({
-        productId: history.productId,
-        effectiveFrom: formatDateOnly(history.effectiveFrom),
-        effectiveTo: history.effectiveTo ? formatDateOnly(history.effectiveTo) : null
-      }));
-      const sourceRows = adMetricsByAdsetDate.get(adsetDateKey(metric.metaAdsetId, metric.metricDate)) ?? [];
-
-      if (sourceRows.length === 0) {
-        const result = matcher.match(metric.adsetName, metricDate, historiesForMetric, activeRules);
-        if (!result.productId) {
-          continue;
+      const outcome = await this.prisma.$transaction(async (tx) => {
+        await acquireMetaAdsetMappingFences(tx, [metric.metaAdsetId]);
+        const currentMetric = await tx.metaAdsetDailyMetric.findUnique({
+          where: { id: metric.id },
+          select: {
+            id: true, metricDate: true, adsetName: true, metaAdsetId: true,
+            uploadRowId: true, isCurrent: true, productId: true
+          }
+        });
+        if (!currentMetric?.isCurrent || currentMetric.productId) {
+          return { ...emptyMetaRematchOutcome(), resolvedAdset: 1 };
         }
+        const { matcher, histories, rules } = await this.freshProductMatchInputs(tx, currentMetric.metaAdsetId);
+        const metricDate = formatDateOnly(currentMetric.metricDate);
+        const sourceRows = await tx.metaAdDailyMetric.findMany({
+          where: {
+            isCurrent: true,
+            metaAdsetRefId: currentMetric.metaAdsetId,
+            metricDate: currentMetric.metricDate
+          },
+          select: {
+            id: true, uploadRowId: true, metaAdsetRefId: true, metricDate: true,
+            adNameSnapshot: true, adsetNameSnapshot: true, campaignNameSnapshot: true,
+            productId: true, productMatchSource: true, productMatchRuleId: true
+          },
+          orderBy: [{ adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
+        });
 
-        await this.prisma.$transaction(async (tx) => {
+        if (sourceRows.length === 0) {
+          const result = matcher.match(currentMetric.adsetName, metricDate, histories, rules);
+          if (!result.productId) return emptyMetaRematchOutcome();
           await tx.metaAdsetDailyMetric.update({
-            where: { id: metric.id },
+            where: { id: currentMetric.id },
             data: {
               productId: result.productId,
               productMatchSource: result.source as MatchSource,
               productMatchRuleId: result.matchRuleId ?? null
             }
           });
-          if (metric.uploadRowId) {
+          if (currentMetric.uploadRowId) {
             await tx.uploadRow.update({
-              where: { id: metric.uploadRowId },
+              where: { id: currentMetric.uploadRowId },
               data: {
                 productId: result.productId,
                 productMatchSource: result.source as MatchSource,
@@ -227,55 +187,38 @@ export class MappingsService {
               actorType: SecurityAuditActorType.USER,
               action: "META_MAPPING_REMATCH",
               targetType: "META_ADSET_DAILY_METRIC",
-              targetId: metric.id,
+              targetId: currentMetric.id,
               result: SecurityAuditResult.SUCCESS,
               beforeJson: { matched: false },
               afterJson: { matched: true, source: result.source }
             });
           }
-        });
-
-        rematchedCount += 1;
-        rematchedByRuleCount += result.source === "RULE" ? 1 : 0;
-        rematchedByManualCount += result.source === "MANUAL" ? 1 : 0;
-        affectedAdsetIds.add(metric.metaAdsetId);
-        continue;
-      }
-
-      const sourceMatches = sourceRows.map((row) => {
-        if (row.productId) {
+          await this.refreshCurrentAdsetProduct(tx, currentMetric.metaAdsetId, actorId);
           return {
-            id: row.id,
-            uploadRowId: row.uploadRowId,
-            productId: row.productId,
-            source: row.productMatchSource,
-            matchRuleId: row.productMatchRuleId,
-            shouldUpdate: false
+            adset: 1, ad: 0,
+            rule: result.source === MatchSource.RULE ? 1 : 0,
+            manual: result.source === MatchSource.MANUAL ? 1 : 0,
+            resolvedAdset: 0, resolvedAd: 0
           };
         }
-        const result = matcher.match(
-          sourceRowMatchText(row),
-          metricDate,
-          historiesForMetric,
-          activeRules
-        );
-        return {
-          id: row.id,
-          uploadRowId: row.uploadRowId,
-          productId: result.productId,
-          source: result.source as MatchSource,
-          matchRuleId: result.matchRuleId,
-          shouldUpdate: Boolean(result.productId)
-        };
-      });
 
-      const matchedSourceRows = sourceMatches.filter((row) => row.shouldUpdate && row.productId);
-      const aggregateMatch = aggregateSourceProductMatch(sourceMatches);
-      if (matchedSourceRows.length === 0 && !aggregateMatch) {
-        continue;
-      }
-
-      await this.prisma.$transaction(async (tx) => {
+        const sourceMatches = sourceRows.map((row) => {
+          if (row.productId) {
+            return {
+              id: row.id, uploadRowId: row.uploadRowId, productId: row.productId,
+              source: row.productMatchSource, matchRuleId: row.productMatchRuleId, shouldUpdate: false
+            };
+          }
+          const result = matcher.match(sourceRowMatchText(row), metricDate, histories, rules);
+          return {
+            id: row.id, uploadRowId: row.uploadRowId, productId: result.productId,
+            source: result.source as MatchSource, matchRuleId: result.matchRuleId,
+            shouldUpdate: Boolean(result.productId)
+          };
+        });
+        const matchedSourceRows = sourceMatches.filter((row) => row.shouldUpdate && row.productId);
+        const aggregateMatch = aggregateSourceProductMatch(sourceMatches);
+        if (matchedSourceRows.length === 0 && !aggregateMatch) return emptyMetaRematchOutcome();
         for (const sourceRow of matchedSourceRows) {
           await tx.metaAdDailyMetric.update({
             where: { id: sourceRow.id },
@@ -300,16 +243,16 @@ export class MappingsService {
 
         if (aggregateMatch) {
           await tx.metaAdsetDailyMetric.update({
-            where: { id: metric.id },
+            where: { id: currentMetric.id },
             data: {
               productId: aggregateMatch.productId,
               productMatchSource: aggregateMatch.source,
               productMatchRuleId: aggregateMatch.matchRuleId
             }
           });
-          if (metric.uploadRowId) {
+          if (currentMetric.uploadRowId) {
             await tx.uploadRow.update({
-              where: { id: metric.uploadRowId },
+              where: { id: currentMetric.uploadRowId },
               data: {
                 productId: aggregateMatch.productId,
                 productMatchSource: aggregateMatch.source,
@@ -325,7 +268,7 @@ export class MappingsService {
             actorType: SecurityAuditActorType.USER,
             action: "META_MAPPING_REMATCH",
             targetType: "META_ADSET_DAILY_METRIC",
-            targetId: metric.id,
+            targetId: currentMetric.id,
             result: SecurityAuditResult.SUCCESS,
             beforeJson: { matchedAdMetricCount: 0, matchedAdset: false },
             afterJson: {
@@ -334,45 +277,56 @@ export class MappingsService {
             }
           });
         }
-      });
-
-      rematchedAdMetricCount += matchedSourceRows.length;
-      rematchedByRuleCount += matchedSourceRows.filter((row) => row.source === MatchSource.RULE).length;
-      rematchedByManualCount += matchedSourceRows.filter((row) => row.source === MatchSource.MANUAL).length;
-      if (aggregateMatch) {
-        rematchedCount += 1;
-        if (matchedSourceRows.length === 0) {
-          rematchedByRuleCount += aggregateMatch.source === MatchSource.RULE ? 1 : 0;
-          rematchedByManualCount += aggregateMatch.source === MatchSource.MANUAL ? 1 : 0;
+        if (aggregateMatch) {
+          await this.refreshCurrentAdsetProduct(tx, currentMetric.metaAdsetId, actorId);
         }
-        affectedAdsetIds.add(metric.metaAdsetId);
-      }
+        return {
+          adset: aggregateMatch ? 1 : 0,
+          ad: matchedSourceRows.length,
+          rule: matchedSourceRows.filter((row) => row.source === MatchSource.RULE).length +
+            (aggregateMatch && matchedSourceRows.length === 0 && aggregateMatch.source === MatchSource.RULE ? 1 : 0),
+          manual: matchedSourceRows.filter((row) => row.source === MatchSource.MANUAL).length +
+            (aggregateMatch && matchedSourceRows.length === 0 && aggregateMatch.source === MatchSource.MANUAL ? 1 : 0),
+          resolvedAdset: 0, resolvedAd: 0
+        };
+      });
+      rematchedCount += outcome.adset;
+      rematchedAdMetricCount += outcome.ad;
+      rematchedByRuleCount += outcome.rule;
+      rematchedByManualCount += outcome.manual;
+      concurrentlyResolvedAdsetCount += outcome.resolvedAdset;
     }
 
     for (const adMetric of standaloneAdMetrics) {
-      const metricDate = formatDateOnly(adMetric.metricDate);
-      const historiesForMetric = (historiesByAdset.get(adMetric.metaAdsetRefId) ?? []).map((history) => ({
-        productId: history.productId,
-        effectiveFrom: formatDateOnly(history.effectiveFrom),
-        effectiveTo: history.effectiveTo ? formatDateOnly(history.effectiveTo) : null
-      }));
-      const result = matcher.match(sourceRowMatchText(adMetric), metricDate, historiesForMetric, activeRules);
-      if (!result.productId) {
-        continue;
-      }
-
-      await this.prisma.$transaction(async (tx) => {
-        await tx.metaAdDailyMetric.update({
+      const outcome = await this.prisma.$transaction(async (tx) => {
+        await acquireMetaAdsetMappingFences(tx, [adMetric.metaAdsetRefId]);
+        const currentMetric = await tx.metaAdDailyMetric.findUnique({
           where: { id: adMetric.id },
+          select: {
+            id: true, uploadRowId: true, metaAdsetRefId: true, metricDate: true,
+            adNameSnapshot: true, adsetNameSnapshot: true, campaignNameSnapshot: true,
+            productId: true, isCurrent: true
+          }
+        });
+        if (!currentMetric?.isCurrent || currentMetric.productId) {
+          return { ...emptyMetaRematchOutcome(), resolvedAd: 1 };
+        }
+        const { matcher, histories, rules } = await this.freshProductMatchInputs(tx, currentMetric.metaAdsetRefId);
+        const result = matcher.match(
+          sourceRowMatchText(currentMetric), formatDateOnly(currentMetric.metricDate), histories, rules
+        );
+        if (!result.productId) return emptyMetaRematchOutcome();
+        await tx.metaAdDailyMetric.update({
+          where: { id: currentMetric.id },
           data: {
             productId: result.productId,
             productMatchSource: result.source as MatchSource,
             productMatchRuleId: result.matchRuleId ?? null
           }
         });
-        if (adMetric.uploadRowId) {
+        if (currentMetric.uploadRowId) {
           await tx.uploadRow.updateMany({
-            where: { id: adMetric.uploadRowId, productId: null },
+            where: { id: currentMetric.uploadRowId, productId: null },
             data: {
               productId: result.productId,
               productMatchSource: result.source as MatchSource,
@@ -387,42 +341,24 @@ export class MappingsService {
             actorType: SecurityAuditActorType.USER,
             action: "META_MAPPING_REMATCH",
             targetType: "META_AD_DAILY_METRIC",
-            targetId: adMetric.id,
+            targetId: currentMetric.id,
             result: SecurityAuditResult.SUCCESS,
             beforeJson: { matched: false },
             afterJson: { matched: true, source: result.source }
           });
         }
+        return {
+          adset: 0, ad: 1,
+          rule: result.source === MatchSource.RULE ? 1 : 0,
+          manual: result.source === MatchSource.MANUAL ? 1 : 0,
+          resolvedAdset: 0, resolvedAd: 0
+        };
       });
-
-      rematchedAdMetricCount += 1;
-      rematchedStandaloneAdMetricCount += 1;
-      rematchedByRuleCount += result.source === "RULE" ? 1 : 0;
-      rematchedByManualCount += result.source === "MANUAL" ? 1 : 0;
-    }
-
-    for (const metaAdsetId of affectedAdsetIds) {
-      const latest = await this.prisma.metaAdsetDailyMetric.findFirst({
-        where: { metaAdsetId, isCurrent: true, productId: { not: null } },
-        orderBy: { metricDate: "desc" },
-        select: { productId: true }
-      });
-      if (latest?.productId) {
-        await this.prisma.$transaction(async (tx) => {
-          await tx.metaAdset.update({ where: { id: metaAdsetId }, data: { currentProductId: latest.productId } });
-          if (actorId) {
-            await writeSecurityAudit(tx, {
-              actorUserId: actorId,
-              actorType: SecurityAuditActorType.USER,
-              action: "META_MAPPING_REMATCH_CURRENT_PRODUCT",
-              targetType: "META_ADSET",
-              targetId: metaAdsetId,
-              result: SecurityAuditResult.SUCCESS,
-              afterJson: { productId: latest.productId }
-            });
-          }
-        });
-      }
+      rematchedAdMetricCount += outcome.ad;
+      rematchedStandaloneAdMetricCount += outcome.ad;
+      rematchedByRuleCount += outcome.rule;
+      rematchedByManualCount += outcome.manual;
+      concurrentlyResolvedStandaloneAdCount += outcome.resolvedAd;
     }
 
     if (actorId && rematchedCount === 0 && rematchedAdMetricCount === 0) {
@@ -443,7 +379,8 @@ export class MappingsService {
       rematchedByRuleCount,
       rematchedByManualCount,
       stillUnmatchedCount:
-        metrics.length - rematchedCount + standaloneAdMetrics.length - rematchedStandaloneAdMetricCount,
+        metrics.length - rematchedCount - concurrentlyResolvedAdsetCount +
+        standaloneAdMetrics.length - rematchedStandaloneAdMetricCount - concurrentlyResolvedStandaloneAdCount,
       range: range ? { from: range.from, to: range.to } : null
     };
   }
@@ -454,6 +391,7 @@ export class MappingsService {
     const effectiveTo = body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : null;
     return this.prisma.$transaction(async (tx) => {
     const metaAdset = await this.resolveAdset(body, tx);
+    await acquireMetaAdsetMappingFences(tx, [metaAdset.id]);
     await this.ensureProduct(productId, tx);
 
     const history = await tx.adsetProductHistory.create({
@@ -552,6 +490,7 @@ export class MappingsService {
     const effectiveTo = body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : null;
     return this.prisma.$transaction(async (tx) => {
     const metaAdset = await this.resolveAdset(body, tx);
+    await acquireMetaAdsetMappingFences(tx, [metaAdset.id]);
 
     const history = await tx.adsetStageHistory.create({
       data: {
@@ -626,6 +565,56 @@ export class MappingsService {
     });
     return { history, rematchedMetricCount, rematchedAdMetricCount };
     });
+  }
+
+  private async freshProductMatchInputs(tx: Prisma.TransactionClient, metaAdsetId: string) {
+    const [histories, rules] = await Promise.all([
+      tx.adsetProductHistory.findMany({ where: { metaAdsetId } }),
+      tx.productMatchRule.findMany({
+        where: { isActive: true, product: { is: { isActive: true } } },
+        orderBy: { priority: "asc" }
+      })
+    ]);
+    return {
+      matcher: new AdsetProductMatcher(),
+      histories: histories.map((history) => ({
+        productId: history.productId,
+        effectiveFrom: formatDateOnly(history.effectiveFrom),
+        effectiveTo: history.effectiveTo ? formatDateOnly(history.effectiveTo) : null
+      })),
+      rules: rules.map((rule) => ({
+        id: rule.id, productId: rule.productId, matchType: rule.matchType,
+        pattern: rule.pattern, patternKey: rule.patternKey, priority: rule.priority,
+        validFrom: formatDateOnly(rule.validFrom),
+        validTo: rule.validTo ? formatDateOnly(rule.validTo) : null,
+        isActive: rule.isActive
+      }))
+    };
+  }
+
+  private async refreshCurrentAdsetProduct(
+    tx: Prisma.TransactionClient,
+    metaAdsetId: string,
+    actorId?: string
+  ) {
+    const latest = await tx.metaAdsetDailyMetric.findFirst({
+      where: { metaAdsetId, isCurrent: true, productId: { not: null } },
+      orderBy: { metricDate: "desc" },
+      select: { productId: true }
+    });
+    if (!latest?.productId) return;
+    await tx.metaAdset.update({ where: { id: metaAdsetId }, data: { currentProductId: latest.productId } });
+    if (actorId) {
+      await writeSecurityAudit(tx, {
+        actorUserId: actorId,
+        actorType: SecurityAuditActorType.USER,
+        action: "META_MAPPING_REMATCH_CURRENT_PRODUCT",
+        targetType: "META_ADSET",
+        targetId: metaAdsetId,
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: { productId: latest.productId }
+      });
+    }
   }
 
   async matchProduct(
@@ -773,6 +762,21 @@ type RematchSourceProduct = {
   source: MatchSource;
   matchRuleId: string | null;
 };
+
+export async function acquireMetaAdsetMappingFences(
+  tx: Pick<Prisma.TransactionClient, "$queryRaw">,
+  metaAdsetIds: readonly string[]
+) {
+  for (const metaAdsetId of Array.from(new Set(metaAdsetIds)).sort()) {
+    await tx.$queryRaw(Prisma.sql`
+      SELECT pg_advisory_xact_lock(hashtextextended(${`meta-adset-mapping:${metaAdsetId}`}, 0))::text AS lock_result
+    `);
+  }
+}
+
+function emptyMetaRematchOutcome() {
+  return { adset: 0, ad: 0, rule: 0, manual: 0, resolvedAdset: 0, resolvedAd: 0 };
+}
 
 function metaRuleAuditSnapshot(rule: {
   id: string;

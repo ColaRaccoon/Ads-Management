@@ -10,6 +10,7 @@ describe("MappingsService actor attribution", () => {
     const adsetProductHistoryCreate = vi.fn(async ({ data }) => data);
     const adsetStageHistoryCreate = vi.fn(async ({ data }) => data);
     const prisma = {
+      $queryRaw: vi.fn(async (_query: unknown) => []),
       product: { findUnique: vi.fn(async () => ({ id: "product-1", isActive: true })) },
       productMatchRule: { create: productMatchRuleCreate },
       metaAdset: {
@@ -54,5 +55,12 @@ describe("MappingsService actor attribution", () => {
     expect(productMatchRuleCreate.mock.calls[0][0].data.createdBy).toBe(ACTOR_ID);
     expect(adsetProductHistoryCreate.mock.calls[0][0].data.createdBy).toBe(ACTOR_ID);
     expect(adsetStageHistoryCreate.mock.calls[0][0].data.createdBy).toBe(ACTOR_ID);
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    expect(prisma.$queryRaw.mock.calls.map(([query]) =>
+      (query as { values: unknown[] }).values[0]
+    )).toEqual([
+      "meta-adset-mapping:adset-1",
+      "meta-adset-mapping:adset-1"
+    ]);
   });
 });
