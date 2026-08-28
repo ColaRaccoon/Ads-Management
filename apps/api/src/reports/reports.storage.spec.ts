@@ -216,6 +216,28 @@ describe("ReportsService durable storage", () => {
     expect(storage.delete).not.toHaveBeenCalled();
   });
 
+  it("paginates through more than 1,000 stale CREATING rows without starving the final row", async () => {
+    const rows = Array.from({ length: 1_001 }, (_, index) => ({
+      id: index.toString().padStart(4, "0"),
+      filePath: null
+    }));
+    const reportExport = {
+      findMany: vi.fn(async ({ where }: { where: { id?: { gt: string } } }) => {
+        const start = where.id ? rows.findIndex((row) => row.id > where.id!.gt) : 0;
+        return start < 0 ? [] : rows.slice(start, start + 1_000);
+      }),
+      updateMany: vi.fn(async () => ({ count: 1 })),
+      findUnique: vi.fn(async () => ({ ...reportRow(), status: "FAILED", fileHashSha256: null }))
+    };
+    const service = new ReportsService({ reportExport } as never, {} as never, config());
+
+    await expect(service.reconcileStaleCreatingReports(new Date())).resolves.toEqual({
+      scanned: 1_001, created: 0, failed: 1_001, unresolved: 0
+    });
+    expect(reportExport.findMany).toHaveBeenCalledTimes(2);
+    expect(reportExport.updateMany).toHaveBeenCalledTimes(1_001);
+  });
+
   it.each([
     ["COMMITTED", { scanned: 1, created: 1, failed: 0, unresolved: 0 }, false],
     ["ROLLED_BACK", { scanned: 1, created: 0, failed: 1, unresolved: 0 }, true],

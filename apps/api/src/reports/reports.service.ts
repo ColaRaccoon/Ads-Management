@@ -61,15 +61,25 @@ export class ReportsService implements OnApplicationBootstrap {
    * finalize; startup rows cannot belong to such a live request.
    */
   async reconcileStaleCreatingReports(cutoff = this.serviceStartedAt) {
-    const candidates = await this.prisma.reportExport.findMany({
-      where: { status: "CREATING", createdAt: { lt: cutoff } },
-      orderBy: { id: "asc" },
-      take: 1_000,
-      select: { id: true, filePath: true }
-    });
-    const result = { scanned: candidates.length, created: 0, failed: 0, unresolved: 0 };
+    const result = { scanned: 0, created: 0, failed: 0, unresolved: 0 };
+    let afterId: string | undefined;
 
-    for (const candidate of candidates) {
+    while (true) {
+      const candidates = await this.prisma.reportExport.findMany({
+        where: {
+          status: "CREATING",
+          createdAt: { lt: cutoff },
+          ...(afterId ? { id: { gt: afterId } } : {})
+        },
+        orderBy: { id: "asc" },
+        take: 1_000,
+        select: { id: true, filePath: true }
+      });
+      if (candidates.length === 0) break;
+      result.scanned += candidates.length;
+      if (result.scanned > 100_000) throw new Error("REPORT_RECONCILIATION_LIMIT_EXCEEDED");
+
+      for (const candidate of candidates) {
       if (!candidate.filePath) {
         const status = await this.confirmMissingCreatingReport(candidate.id, null);
         result[status] += 1;
@@ -122,6 +132,9 @@ export class ReportsService implements OnApplicationBootstrap {
         }
       }
       result[status] += 1;
+      }
+      afterId = candidates[candidates.length - 1].id;
+      if (candidates.length < 1_000) break;
     }
     return result;
   }
