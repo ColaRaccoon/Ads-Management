@@ -58,7 +58,8 @@ Start from `deploy/local/config.example.json` and validate against
 Required choices are the exact existing Supabase project reference, direct or
 session-pooler host on port 5432, database/schema, four distinct restricted DB
 roles (runtime/migration/backup/restore), pinned CA file/hash, release ID/digest,
-OS application-data root, and three distinct non-admin Windows principals. The
+OS application-data root, and four distinct non-admin Windows principals
+(Core, Edge, Backup, and receipt Signer). The
 restore role may authenticate only to the isolated restore database and must
 have no CONNECT, schema, object, or membership path into the production
 database. LAN hostname, private bind IP,
@@ -92,6 +93,8 @@ These steps are safe before approval:
    dependencies. Run `node deploy/local/package-local-release.mjs
    --root=<RELEASE_ROOT> --release-id=<RELEASE_ID>` once. Record the returned
    manifest hash and migration digest without modifying the release afterward.
+   Packaging parses the staged Windows host bundle and runs the staged
+   source-free cold-start contract before it writes manifest v4.
 3. Run `node deploy/local/verify-local-release.mjs --root=<RELEASE_ROOT>
    --manifest-sha256=<HASH>` whenever the release is transferred.
 4. Create the data-root directory layout and four distinct local non-admin account
@@ -159,10 +162,19 @@ local launchers. Do not copy source `.env` files or any key/pgpass material.
   deploy/local/verify-tls-material.mjs
   deploy/local/verify-local-release.mjs
   deploy/local/verify-runtime-readiness.mjs
+  deploy/local/verify-attestation.mjs
+  deploy/local/verify-https-release.mjs
+  deploy/local/smoke-local-release.mjs
+  deploy/windows/...             # exact 37 PS1 + 2 service XML host bundle
 ```
 
 The packager inventories every file, rejects secret-like paths and reparse
-points, and creates the manifest with exclusive-create semantics. The manifest
+points, rejects `api/src`, `web/src`, and `.git`, and creates the manifest with
+exclusive-create semantics. Manifest v4 binds a digest of the exact Windows host
+file set and a digest of the cold-start contract. The staged smoke syntax-checks
+all entrypoints, proves missing production config fails closed, executes the
+seven-state role matrix, starts the packaged Prisma CLI, and starts the packaged
+Web server only on loopback. The manifest
 binds the target OS, CPU architecture and Node modules ABI because the Prisma
 engine is native; a bundle may be rebuilt on another supported Windows PC but a
 native bundle from a different platform/architecture/ABI is rejected. Transfer
@@ -326,12 +338,14 @@ and time are configured, the schedule must not run and readiness remains false.
    config hash, backup-target evidence hash/fingerprint/root, ACL class, executor
    hashes, PgPass/integrity/receipt-key hashes and size/deadline caps; changing any
    value requires a new authorization and schedule plan. The schedule authorization
-   is v2 and carries its own CSPRNG nonce and instance identifier. Bare `-Approved`
+   is v3, also binds the exact NAS-identity helper hash, and carries its own CSPRNG
+   nonce and instance identifier. Bare `-Approved`
    is never delegated to the backup account.
    Runtime readiness hashes the exact backup-target evidence bytes and requires the
    schedule receipt to bind that hash. Its target fingerprint includes the stable
    NAS server/share/address-set identity, resolved-address count, local-alias
-   rejection, share-ACL confirmation and retention control; any drift closes
+   rejection, share-ACL confirmation, retention control, and the hash-pinned
+   NAS-identity helper; any drift closes
    readiness and requires a new target verification and schedule approval.
 3. `Backup-Local.ps1` verifies live disk/NAS identity, encryption and ACL drift,
    then makes a Supabase database dump with the backup role plus the local
@@ -340,14 +354,15 @@ and time are configured, the schedule must not run and readiness remains false.
    to the completed artifacts and cannot read the receipt private key or modify
    `BACKUP_RECEIPT`. Before a one-time publish, an administrator consumes an exact
    ADMIN_ONLY plan and issues a signed, request-hash-bound authorization lasting no
-   more than 15 minutes. Scheduled publication consumes the v2 admin-signed schedule
+   more than 15 minutes. Scheduled publication consumes the v3 admin-signed schedule
    authorization instead. `Publish-BackupReceipt.ps1` then runs under the fourth
    distinct, non-admin signer account: the key is read-only in `SIGNER_ONLY`, while
    immutable request copies and the independent one-use replay ledger are confined
    to `SIGNER_STATE`. It rechecks the publisher, semantic signer, PgPass, integrity
    key and receipt-key hashes immediately before signing. The semantic signer
    independently re-hashes the exact v6 manifest, HMAC, bounded dump, storage
-   inventory and any legacy reference-conversion artifact before publishing the
+   inventory, the NAS-identity helper binding, and any legacy reference-conversion
+   artifact before publishing the
    signed latest receipt. Generic attestation signing refuses `backup-latest`.
    Receipts are constructed from an allowlist and contain hashes/metadata, never
    rows, file contents, credentials or unknown request fields.
