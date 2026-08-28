@@ -1,5 +1,5 @@
 import {
-  AppRole, ConflictPolicy, DecisionType, InviteStatus, Prisma, PrismaClient,
+  AppRole, ConflictPolicy, DecisionType, InviteStatus, MatchSource, MatchType, Prisma, PrismaClient,
   ReportType, SecurityAuditActorType, SecurityAuditResult, UploadLevel, UploadStatus
 } from "@prisma/client";
 import { createHash, randomUUID } from "node:crypto";
@@ -138,6 +138,52 @@ integrationDescribe("synthetic business flow on an isolated Supabase project", (
     },{timeout:120_000})).rejects.toBeInstanceOf(RollbackRehearsal);
     expect(await prisma.securityAuditEvent.count({where:{targetId:runId}})).toBe(0);
   },150_000);
+
+  it("keeps manual legacy adoption behind the same advisory fence held by rematch", async () => {
+    const runId=randomUUID();
+    const date=new Date("2026-08-25T00:00:00.000Z");
+    const actor=await prisma.appUser.create({data:{username:`mapping_lock_${runId}`,normalizedUsername:`mapping_lock_${runId}`,name:"Mapping lock rehearsal",role:AppRole.ADMIN,inviteStatus:InviteStatus.ACTIVE}});
+    const ruleProduct=await prisma.product.create({data:{code:`RULE-${runId}`,name:"Rule product",displayName:"Rule product"}});
+    const manualProduct=await prisma.product.create({data:{code:`MANUAL-${runId}`,name:"Manual product",displayName:"Manual product"}});
+    const adset=await prisma.metaAdset.create({data:{adsetName:`Legacy lock ${runId}`,adsetNameKey:`legacy lock ${runId}`}});
+    const batch=await prisma.uploadBatch.create({data:{originalFilename:"mapping-lock.csv",fileHashSha256:createHash("sha256").update(runId).digest("hex"),level:UploadLevel.ADSET,columnSchema:{fixtureVersion:1},rowCount:1,validRowCount:1,conflictPolicy:ConflictPolicy.SKIP,status:UploadStatus.IMPORTED,uploadedBy:actor.id}});
+    const metric=await prisma.metaAdsetDailyMetric.create({data:{uploadBatchId:batch.id,metaAdsetId:adset.id,metricDate:date,dateStart:date,dateEnd:date,adsetName:adset.adsetName,adsetNameKey:adset.adsetNameKey,spendUsd:1,resultCount:1,rawRow:{fixtureVersion:1},isCurrent:true}});
+    const rule=await prisma.productMatchRule.create({data:{productId:ruleProduct.id,matchType:MatchType.CONTAINS,pattern:runId,patternKey:runId,priority:1,validFrom:new Date("2026-08-01T00:00:00.000Z"),createdBy:actor.id}});
+    const rematchAtRowUpdate=deferred<void>();const releaseRematch=deferred<void>();
+    let legacyRowUpdateEntered=false;
+    let rematchPromise:Promise<unknown>|undefined;let manualPromise:Promise<unknown>|undefined;
+    try{
+      const rematchPrisma=interceptMetaAdsetTransactions(prisma,async(args)=>{
+        if(args.data?.currentProductId===ruleProduct.id){rematchAtRowUpdate.resolve();await releaseRematch.promise;}
+      });
+      const manualPrisma=interceptMetaAdsetTransactions(prisma,async(args)=>{
+        if(args.data?.externalAdsetId===`external-${runId}`)legacyRowUpdateEntered=true;
+      });
+      rematchPromise=new MappingsService(rematchPrisma as never).rematchCurrentMetrics({from:"2026-08-25",to:"2026-08-25"});
+      await rematchAtRowUpdate.promise;
+      manualPromise=new MappingsService(manualPrisma as never).createManualProductMapping({externalAdsetId:`external-${runId}`,adsetName:adset.adsetName,productId:manualProduct.id,effectiveFrom:"2026-08-25",applyCurrentMetrics:true},actor.id);
+      await waitForAdvisoryWait(prisma);
+      expect(legacyRowUpdateEntered).toBe(false);
+      releaseRematch.resolve();
+      await expect(rematchPromise).resolves.toMatchObject({rematchedCount:1});
+      await expect(manualPromise).resolves.toMatchObject({rematchedMetricCount:1});
+      await expect(prisma.metaAdsetDailyMetric.findUnique({where:{id:metric.id}})).resolves.toMatchObject({productId:manualProduct.id,productMatchSource:MatchSource.MANUAL});
+      await expect(prisma.metaAdset.findUnique({where:{id:adset.id}})).resolves.toMatchObject({externalAdsetId:`external-${runId}`,currentProductId:manualProduct.id});
+    }finally{
+      releaseRematch.resolve();
+      await Promise.allSettled([rematchPromise,manualPromise].filter((value):value is Promise<unknown>=>Boolean(value)));
+      await prisma.$transaction(async(tx)=>{
+        await tx.adsetProductHistory.deleteMany({where:{metaAdsetId:adset.id}});
+        await tx.metaAdsetDailyMetric.deleteMany({where:{id:metric.id}});
+        await tx.productMatchRule.deleteMany({where:{id:rule.id}});
+        await tx.metaAdset.update({where:{id:adset.id},data:{currentProductId:null}}).catch(()=>undefined);
+        await tx.uploadBatch.deleteMany({where:{id:batch.id}});
+        await tx.metaAdset.deleteMany({where:{id:adset.id}});
+        await tx.product.deleteMany({where:{id:{in:[ruleProduct.id,manualProduct.id]}}});
+        await tx.appUser.update({where:{id:actor.id},data:{isActive:false,deactivatedAt:new Date()}});
+      });
+    }
+  },120_000);
 });
 
 function transactionScopedPrisma<T extends object>(transaction:T){
@@ -145,6 +191,30 @@ function transactionScopedPrisma<T extends object>(transaction:T){
   proxy=new Proxy(transaction,{get(target,property){if(property==="$transaction")return async(callback:(client:T)=>unknown)=>callback(proxy);const value=Reflect.get(target,property,target);return typeof value==="function"?value.bind(target):value}});
   return proxy;
 }
+
+function interceptMetaAdsetTransactions(prisma:PrismaClient,beforeUpdate:(args:any)=>Promise<void>){
+  return new Proxy(prisma,{get(target,property){
+    if(property==="$transaction")return async(work:(tx:unknown)=>unknown,options?:unknown)=>target.$transaction(async(tx)=>{
+      let scoped:any;
+      const metaAdset=new Proxy(tx.metaAdset,{get(delegate,operation){const value=Reflect.get(delegate,operation,delegate);if(operation==="update")return async(args:any)=>{await beforeUpdate(args);return value.call(delegate,args)};return typeof value==="function"?value.bind(delegate):value}});
+      scoped=new Proxy(tx,{get(client,key){if(key==="metaAdset")return metaAdset;if(key==="$transaction")return async(callback:(nested:unknown)=>unknown)=>callback(scoped);const value=Reflect.get(client,key,client);return typeof value==="function"?value.bind(client):value}});
+      return work(scoped);
+    },options as never);
+    const value=Reflect.get(target,property,target);return typeof value==="function"?value.bind(target):value;
+  }});
+}
+
+async function waitForAdvisoryWait(prisma:PrismaClient){
+  const deadline=Date.now()+5_000;
+  while(Date.now()<deadline){
+    const rows=await prisma.$queryRaw<Array<{waiting:bigint}>>(Prisma.sql`SELECT count(*) AS waiting FROM pg_locks WHERE locktype='advisory' AND NOT granted`);
+    if(Number(rows[0]?.waiting??0)>0)return;
+    await new Promise((resolve)=>setTimeout(resolve,25));
+  }
+  throw new Error("MAPPING_ADVISORY_WAIT_NOT_OBSERVED");
+}
+
+function deferred<T>(){let resolve!:(value:T|PromiseLike<T>)=>void;const promise=new Promise<T>((done)=>{resolve=done});return{promise,resolve};}
 
 function multerFile(originalname:string,buffer:Buffer):Express.Multer.File{return{fieldname:"file",originalname,encoding:"7bit",mimetype:"application/octet-stream",size:buffer.length,buffer} as Express.Multer.File;}
 function csvCell(value:string){return`"${value.replace(/"/g,'""')}"`;}

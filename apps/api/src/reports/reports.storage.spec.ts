@@ -7,6 +7,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LocalFileStorage } from "../storage/local-file-storage";
+import { StorageObjectNotFoundError } from "../storage/file-storage";
 import { ReportsController } from "./reports.controller";
 import { ReportsService } from "./reports.service";
 
@@ -114,6 +115,119 @@ describe("ReportsService durable storage", () => {
     expect(harness.storage.getStream).toHaveBeenCalledOnce();
     expect(harness.storage.delete).not.toHaveBeenCalled();
     expect(harness.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("fails and removes an exact payload from a restored put-before-finalize CREATING snapshot", async () => {
+    const body = Buffer.from("stale report payload", "utf8");
+    const reference = "local:2026/08/stale-report.html";
+    let status: "CREATING" | "CREATED" | "FAILED" = "CREATING";
+    let databaseHash: string | null = null;
+    const events = ["payload-published", "backup-snapshot-creating"];
+    const reportExport = {
+      findMany: vi.fn(async () => [{ id: REPORT_ID, filePath: reference }]),
+      updateMany: vi.fn(async ({ data }: { data: { status: "CREATED" | "FAILED"; fileHashSha256: string | null } }) => {
+        events.push(data.status === "CREATED" ? "reconcile-created" : "reconcile-failed");
+        status = data.status;
+        databaseHash = data.fileHashSha256;
+        return { count: 1 };
+      }),
+      findUnique: vi.fn(async () => ({
+        ...reportRow(), filePath: reference, status, fileHashSha256: databaseHash
+      }))
+    };
+    const storage = {
+      provider: "local",
+      getStream: vi.fn(async () => ({ stream: Readable.from(body), size: body.length })),
+      delete: vi.fn(async () => true)
+    };
+    const service = new ReportsService(
+      { reportExport } as never, {} as never, config()
+    );
+    (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+
+    await expect(service.reconcileStaleCreatingReports(new Date())).resolves.toEqual({
+      scanned: 1, created: 0, failed: 1, unresolved: 0
+    });
+    expect(databaseHash).toBeNull();
+    expect(events).toEqual([
+      "payload-published", "backup-snapshot-creating", "reconcile-failed"
+    ]);
+    expect(storage.delete).toHaveBeenCalledOnce();
+  });
+
+  it("fails and removes an exact contained legacy payload before first-cutover path conversion", async () => {
+    const root = await temporaryRoot();
+    const localStorage = new LocalFileStorage(root);
+    const stored = await localStorage.put({
+      key: "2026/08/legacy-creating.html",
+      body: Buffer.from("legacy creating report", "utf8")
+    });
+    const legacyPath = path.join(root, ...stored.key.split("/"));
+    let status: "CREATING" | "FAILED" = "CREATING";
+    let databaseHash: string | null = null;
+    const reportExport = {
+      findMany: vi.fn(async () => [{ id: REPORT_ID, filePath: legacyPath }]),
+      updateMany: vi.fn(async ({ data }: {
+        data: { status: "FAILED"; fileHashSha256: null }
+      }) => {
+        status = data.status;
+        databaseHash = data.fileHashSha256;
+        return { count: 1 };
+      }),
+      findUnique: vi.fn(async () => ({
+        ...reportRow(), filePath: legacyPath, status, fileHashSha256: databaseHash
+      }))
+    };
+    const service = new ReportsService(
+      { reportExport } as never,
+      {} as never,
+      config({ REPORT_STORAGE_DIR: root })
+    );
+
+    await expect(service.reconcileStaleCreatingReports(new Date())).resolves.toEqual({
+      scanned: 1, created: 0, failed: 1, unresolved: 0
+    });
+    expect(databaseHash).toBeNull();
+    await expect(localStorage.getStream(stored.key)).rejects.toBeInstanceOf(StorageObjectNotFoundError);
+  });
+
+  it("marks a restored stale CREATING row FAILED only after the exact payload is absent", async () => {
+    const reference = "local:2026/08/missing-report.html";
+    let status: "CREATING" | "FAILED" = "CREATING";
+    const reportExport = {
+      findMany: vi.fn(async () => [{ id: REPORT_ID, filePath: reference }]),
+      updateMany: vi.fn(async ({ data }: { data: { status: "FAILED" } }) => {
+        status = data.status;
+        return { count: 1 };
+      }),
+      findUnique: vi.fn(async () => ({ ...reportRow(), filePath: reference, status, fileHashSha256: null }))
+    };
+    const storage = {
+      provider: "local",
+      getStream: vi.fn(async () => { throw new StorageObjectNotFoundError(); }),
+      delete: vi.fn(async () => true)
+    };
+    const service = new ReportsService({ reportExport } as never, {} as never, config());
+    (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+
+    await expect(service.reconcileStaleCreatingReports(new Date())).resolves.toEqual({
+      scanned: 1, created: 0, failed: 1, unresolved: 0
+    });
+    expect(storage.delete).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["COMMITTED", { scanned: 1, created: 1, failed: 0, unresolved: 0 }, false],
+    ["ROLLED_BACK", { scanned: 1, created: 0, failed: 1, unresolved: 0 }, true],
+    ["UNAVAILABLE", { scanned: 1, created: 0, failed: 0, unresolved: 1 }, false]
+  ] as const)("reconciles stale CREATED finalize acknowledgement outcome %s", async (outcome, expected, deleted) => {
+    const harness = staleCreatingAckHarness(outcome);
+
+    await expect(harness.service.reconcileStaleCreatingReports(new Date())).resolves.toEqual(expected);
+    expect(harness.storage.delete).toHaveBeenCalledTimes(deleted ? 1 : 0);
+    if (outcome === "UNAVAILABLE") {
+      expect(harness.status()).toBe("CREATING");
+    }
   });
 
   it("streams a contained legacy local report without buffering it into the service", async () => {
@@ -400,6 +514,39 @@ function reportCommitAmbiguityHarness(
     findUnique,
     get expectedHash() { return storedHash; }
   };
+}
+
+function staleCreatingAckHarness(outcome: "COMMITTED" | "ROLLED_BACK" | "UNAVAILABLE") {
+  const body = Buffer.from("stale acknowledgement payload", "utf8");
+  const reference = "local:2026/08/stale-ack.html";
+  let status: "CREATING" | "CREATED" | "FAILED" = "CREATING";
+  let databaseHash: string | null = null;
+  const reportExport = {
+    findMany: vi.fn(async () => [{ id: REPORT_ID, filePath: reference }]),
+    updateMany: vi.fn(async ({ data }: { data: { status: "FAILED"; fileHashSha256: null } }) => {
+      if (outcome === "COMMITTED") {
+        status = "CREATED";
+        databaseHash = createHash("sha256").update(body).digest("hex");
+        return { count: 0 };
+      }
+      if (outcome === "UNAVAILABLE") throw new Error("FAILED transition acknowledgement unavailable");
+      status = "FAILED";
+      databaseHash = data.fileHashSha256;
+      return { count: 1 };
+    }),
+    findUnique: vi.fn(async () => {
+      if (outcome === "UNAVAILABLE") throw new Error("fresh DB read unavailable");
+      return { ...reportRow(), filePath: reference, status, fileHashSha256: databaseHash };
+    })
+  };
+  const storage = {
+    provider: "local",
+    getStream: vi.fn(async () => ({ stream: Readable.from(body), size: body.length })),
+    delete: vi.fn(async () => true)
+  };
+  const service = new ReportsService({ reportExport } as never, {} as never, config());
+  (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+  return { service, storage, status: () => status };
 }
 
 async function temporaryRoot() {

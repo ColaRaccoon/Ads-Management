@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  OnApplicationBootstrap,
+  ServiceUnavailableException
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Prisma, ReportExport, ReportType } from "@prisma/client";
 import ExcelJS from "exceljs";
@@ -35,14 +41,90 @@ import {
 } from "../storage/temporary-storage-budget";
 
 @Injectable()
-export class ReportsService {
+export class ReportsService implements OnApplicationBootstrap {
   private fileStorage?: FileStorage;
+  private readonly serviceStartedAt = new Date();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly metricsService: MetricsService,
     private readonly config: ConfigService
   ) {}
+
+  async onApplicationBootstrap() {
+    await this.reconcileStaleCreatingReports(this.serviceStartedAt);
+  }
+
+  /**
+   * Reconciles only rows that pre-date this service process. An in-process
+   * export may legitimately be between its atomic payload publish and its DB
+   * finalize; startup rows cannot belong to such a live request.
+   */
+  async reconcileStaleCreatingReports(cutoff = this.serviceStartedAt) {
+    const candidates = await this.prisma.reportExport.findMany({
+      where: { status: "CREATING", createdAt: { lt: cutoff } },
+      orderBy: { id: "asc" },
+      take: 1_000,
+      select: { id: true, filePath: true }
+    });
+    const result = { scanned: candidates.length, created: 0, failed: 0, unresolved: 0 };
+
+    for (const candidate of candidates) {
+      if (!candidate.filePath) {
+        const status = await this.confirmMissingCreatingReport(candidate.id, null);
+        result[status] += 1;
+        continue;
+      }
+
+      const inspected = await this.inspectCreatingReport(candidate.filePath);
+      if (inspected === "MISSING") {
+        const status = await this.confirmMissingCreatingReport(candidate.id, candidate.filePath);
+        result[status] += 1;
+        continue;
+      }
+      if (!inspected) {
+        result.unresolved += 1;
+        continue;
+      }
+
+      try {
+        // A stale CREATING row has no committed expected hash. Never bless the
+        // bytes found at its path as a successful report. A concurrent/lost-ACK
+        // finalize may still win this conditional update and is recognized by
+        // the fresh read below using its DB-persisted hash.
+        await this.prisma.reportExport.updateMany({
+          where: {
+            id: candidate.id,
+            status: "CREATING",
+            filePath: candidate.filePath,
+            fileHashSha256: null
+          },
+          data: { status: "FAILED", fileHashSha256: null }
+        });
+      } catch {
+        // A fresh read plus exact byte verification below is authoritative.
+      }
+      const status = await this.readReportStatus(
+        candidate.id,
+        candidate.filePath,
+        inspected.stored,
+        inspected.storage
+      );
+      if (status === "failed") {
+        if (!await this.storedObjectMatches(inspected.stored, inspected.storage)) {
+          result.unresolved += 1;
+          continue;
+        }
+        const deleted = await inspected.storage.delete(inspected.stored.key);
+        if (!deleted && await inspected.storage.exists(inspected.stored.key)) {
+          result.unresolved += 1;
+          continue;
+        }
+      }
+      result[status] += 1;
+    }
+    return result;
+  }
 
   async export(
     body: { reportType?: string; from?: string; to?: string; parameters?: Record<string, unknown> },
@@ -271,7 +353,12 @@ export class ReportsService {
     });
   }
 
-  private async reconcileStoredReport(reportId: string, reference: string, stored: StoredFile) {
+  private async reconcileStoredReport(
+    reportId: string,
+    reference: string,
+    stored: StoredFile,
+    storage = this.storage
+  ) {
     let current: ReportExport | null;
     try {
       current = await this.prisma.reportExport.findUnique({ where: { id: reportId } });
@@ -279,7 +366,7 @@ export class ReportsService {
       return null;
     }
 
-    const committed = await this.confirmCommittedStoredReport(current, reference, stored);
+    const committed = await this.confirmCommittedStoredReport(current, reference, stored, storage);
     if (committed) return committed;
     if (!current || current.filePath !== reference) return null;
 
@@ -298,7 +385,12 @@ export class ReportsService {
       } catch {
         return null;
       }
-      const committedAfterRace = await this.confirmCommittedStoredReport(current, reference, stored);
+      const committedAfterRace = await this.confirmCommittedStoredReport(
+        current,
+        reference,
+        stored,
+        storage
+      );
       if (committedAfterRace) return committedAfterRace;
     }
 
@@ -307,29 +399,108 @@ export class ReportsService {
       current.filePath === reference &&
       current.fileHashSha256 === null
     ) {
-      await this.storage.delete(stored.key).catch(() => undefined);
+      if (await this.storedObjectMatches(stored, storage)) {
+        await storage.delete(stored.key).catch(() => undefined);
+      }
     }
     return null;
+  }
+
+  private async inspectCreatingReport(
+    reference: string
+  ): Promise<{ stored: StoredFile; storage: FileStorage } | "MISSING" | null> {
+    let stream: Awaited<ReturnType<FileStorage["getStream"]>>["stream"] | undefined;
+    try {
+      const resolved = this.reconciliationStorageFromStoredReference(reference);
+      const actual = await resolved.storage.getStream(resolved.key);
+      stream = actual.stream;
+      if (
+        !Number.isSafeInteger(actual.size) || actual.size < 0 ||
+        actual.size > this.maxStoredReportBytes
+      ) {
+        stream.destroy();
+        return null;
+      }
+      const hash = createHash("sha256");
+      let size = 0;
+      for await (const chunk of stream) {
+        const bytes = Buffer.from(chunk);
+        size += bytes.length;
+        if (size > actual.size || size > this.maxStoredReportBytes) {
+          stream.destroy();
+          return null;
+        }
+        hash.update(bytes);
+      }
+      if (size !== actual.size) return null;
+      return {
+        stored: { key: resolved.key, hash: hash.digest("hex"), size },
+        storage: resolved.storage
+      };
+    } catch (error) {
+      stream?.destroy();
+      if (error instanceof StorageObjectNotFoundError || error instanceof InvalidStorageKeyError) {
+        return "MISSING";
+      }
+      return null;
+    }
+  }
+
+  private async confirmMissingCreatingReport(reportId: string, reference: string | null) {
+    try {
+      await this.prisma.reportExport.updateMany({
+        where: { id: reportId, status: "CREATING", filePath: reference, fileHashSha256: null },
+        data: { status: "FAILED", fileHashSha256: null }
+      });
+    } catch {
+      // The following read resolves a lost acknowledgement without guessing.
+    }
+    return this.readReportStatus(reportId);
+  }
+
+  private async readReportStatus(
+    reportId: string,
+    reference?: string,
+    expected?: StoredFile,
+    storage = this.storage
+  ): Promise<"created" | "failed" | "unresolved"> {
+    try {
+      const current = await this.prisma.reportExport.findUnique({ where: { id: reportId } });
+      if (
+        current?.status === "CREATED" && reference && expected &&
+        await this.confirmCommittedStoredReport(current, reference, expected, storage)
+      ) return "created";
+      if (current?.status === "FAILED") return "failed";
+    } catch {
+      // Preserve payload and CREATING state when the DB outcome is unavailable.
+    }
+    return "unresolved";
   }
 
   private async confirmCommittedStoredReport(
     report: ReportExport | null,
     reference: string,
-    stored: StoredFile
+    stored: StoredFile,
+    storage = this.storage
   ) {
     if (
       !report || report.status !== "CREATED" || report.filePath !== reference ||
       report.fileHashSha256?.toLowerCase() !== stored.hash.toLowerCase()
     ) return null;
-    const parsed = parseStorageReference(reference);
-    if (!parsed || parsed.provider !== this.storage.provider || parsed.key !== stored.key) return null;
-    return await this.storedObjectMatches(stored) ? report : null;
+    let resolved: { key: string; storage: FileStorage };
+    try {
+      resolved = this.reconciliationStorageFromStoredReference(reference);
+    } catch {
+      return null;
+    }
+    if (resolved.storage.provider !== storage.provider || resolved.key !== stored.key) return null;
+    return await this.storedObjectMatches(stored, storage) ? report : null;
   }
 
-  private async storedObjectMatches(expected: StoredFile) {
+  private async storedObjectMatches(expected: StoredFile, storage = this.storage) {
     let stream: Awaited<ReturnType<FileStorage["getStream"]>>["stream"] | undefined;
     try {
-      const actual = await this.storage.getStream(expected.key);
+      const actual = await storage.getStream(expected.key);
       stream = actual.stream;
       if (
         !Number.isSafeInteger(expected.size) || expected.size < 0 ||
@@ -372,6 +543,14 @@ export class ReportsService {
       key: legacyLocalPathToKey(reference, storage.rootPath),
       storage
     };
+  }
+
+  private reconciliationStorageFromStoredReference(reference: string) {
+    const parsed = parseStorageReference(reference);
+    if (parsed?.provider === this.storage.provider) {
+      return { key: parsed.key, storage: this.storage };
+    }
+    return this.storageFromStoredReference(reference);
   }
 
   private explicitCurrentReference(reference: string) {

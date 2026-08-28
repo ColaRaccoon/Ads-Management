@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
 import {
   AdStage,
   MatchSource,
@@ -391,7 +391,6 @@ export class MappingsService {
     const effectiveTo = body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : null;
     return this.prisma.$transaction(async (tx) => {
     const metaAdset = await this.resolveAdset(body, tx);
-    await acquireMetaAdsetMappingFences(tx, [metaAdset.id]);
     await this.ensureProduct(productId, tx);
 
     const history = await tx.adsetProductHistory.create({
@@ -490,7 +489,6 @@ export class MappingsService {
     const effectiveTo = body.effectiveTo ? asDateOnly(String(body.effectiveTo)) : null;
     return this.prisma.$transaction(async (tx) => {
     const metaAdset = await this.resolveAdset(body, tx);
-    await acquireMetaAdsetMappingFences(tx, [metaAdset.id]);
 
     const history = await tx.adsetStageHistory.create({
       data: {
@@ -674,7 +672,7 @@ export class MappingsService {
 
   private async resolveAdset(
     body: Record<string, unknown>,
-    client: Pick<Prisma.TransactionClient, "metaAdset"> = this.prisma
+    client: Prisma.TransactionClient
   ) {
     const metaAdsetId = optionalString(body.metaAdsetId);
     if (metaAdsetId) {
@@ -682,14 +680,22 @@ export class MappingsService {
       if (!found) {
         throw new BadRequestException({ code: "ADSET_NOT_FOUND", message: "광고세트를 찾을 수 없습니다." });
       }
-      return found;
+      await acquireMetaAdsetMappingFences(client, [found.id]);
+      const fresh = await client.metaAdset.findUnique({ where: { id: found.id } });
+      if (!fresh) throw adsetIdentityChanged();
+      return fresh;
     }
 
     const externalAdsetId = optionalString(body.externalAdsetId) ?? optionalString(body.metaAdsetExternalId);
     if (externalAdsetId) {
       const found = await client.metaAdset.findFirst({ where: { platform: "META", externalAdsetId } });
       if (found) {
-        return found;
+        await acquireMetaAdsetMappingFences(client, [found.id]);
+        const fresh = await client.metaAdset.findUnique({ where: { id: found.id } });
+        if (!fresh || fresh.platform !== "META" || fresh.externalAdsetId !== externalAdsetId) {
+          throw adsetIdentityChanged();
+        }
+        return fresh;
       }
 
       const adsetNameForExternalId = optionalString(body.adsetName);
@@ -704,8 +710,19 @@ export class MappingsService {
       });
       const legacy = bestAdsetCandidate(legacyCandidates);
       if (legacy) {
+        // resolveAdset used to update this row before taking the mapping fence.
+        // Rematch takes the opposite order (fence, then row), which allowed an
+        // exact row-lock/advisory-lock deadlock. Always fence the read-only
+        // candidate first, then re-read and mutate it under that fence.
+        await acquireMetaAdsetMappingFences(client, [legacy.id]);
+        const fresh = await client.metaAdset.findUnique({ where: { id: legacy.id } });
+        if (!fresh || fresh.platform !== "META") throw adsetIdentityChanged();
+        if (fresh.externalAdsetId === externalAdsetId) return fresh;
+        if (fresh.externalAdsetId !== null || fresh.adsetNameKey !== adsetNameKey) {
+          throw adsetIdentityChanged();
+        }
         return client.metaAdset.update({
-          where: { id: legacy.id },
+          where: { id: fresh.id },
           data: {
             externalAdsetId,
             adsetName: AdsetNameNormalizer.normalizeName(adsetNameForExternalId),
@@ -714,7 +731,7 @@ export class MappingsService {
         });
       }
 
-      return client.metaAdset.create({
+      const created = await client.metaAdset.create({
         data: {
           platform: "META",
           externalAdsetId,
@@ -722,6 +739,8 @@ export class MappingsService {
           adsetNameKey
         }
       });
+      await acquireMetaAdsetMappingFences(client, [created.id]);
+      return created;
     }
 
     const adsetName = requiredString(body.adsetName, "adsetName");
@@ -732,15 +751,22 @@ export class MappingsService {
     });
     const existing = bestAdsetCandidate(candidates);
     if (existing) {
-      return existing;
+      await acquireMetaAdsetMappingFences(client, [existing.id]);
+      const fresh = await client.metaAdset.findUnique({ where: { id: existing.id } });
+      if (!fresh || fresh.platform !== "META" || fresh.adsetNameKey !== adsetNameKey) {
+        throw adsetIdentityChanged();
+      }
+      return fresh;
     }
-    return client.metaAdset.create({
+    const created = await client.metaAdset.create({
       data: {
         platform: "META",
         adsetName: AdsetNameNormalizer.normalizeName(adsetName),
         adsetNameKey
       }
     });
+    await acquireMetaAdsetMappingFences(client, [created.id]);
+    return created;
   }
 
   private async ensureProduct(
@@ -772,6 +798,13 @@ export async function acquireMetaAdsetMappingFences(
       SELECT pg_advisory_xact_lock(hashtextextended(${`meta-adset-mapping:${metaAdsetId}`}, 0))::text AS lock_result
     `);
   }
+}
+
+function adsetIdentityChanged() {
+  return new ConflictException({
+    code: "ADSET_IDENTITY_CHANGED_RETRY_REQUIRED",
+    message: "The Meta adset identity changed concurrently. Retry the mapping operation."
+  });
 }
 
 function emptyMetaRematchOutcome() {

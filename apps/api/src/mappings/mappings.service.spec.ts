@@ -154,6 +154,62 @@ describe("MappingsService rematch", () => {
     expect(lockQueries.map((query) => (query as { values?: unknown[] }).values?.[0]))
       .toEqual(["meta-adset-mapping:adset-race", "meta-adset-mapping:adset-race"]);
   });
+
+  it("waits behind a rematch advisory fence before adopting and row-locking a legacy adset", async () => {
+    const manualFenceWaiting = deferred<void>();
+    const releaseRematchFence = deferred<void>();
+    const events = ["rematch-advisory-held"];
+    const legacy = {
+      id: "adset-legacy", platform: "META", externalAdsetId: null,
+      adsetName: "Legacy set", adsetNameKey: "legacy set",
+      lastSeenOn: date("2026-06-10"), createdAt: date("2026-01-01")
+    };
+    let current = { ...legacy };
+    const update = vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      events.push(data.externalAdsetId ? "legacy-row-update" : "current-product-update");
+      current = { ...current, ...data };
+      return current;
+    });
+    const tx = {
+      $queryRaw: vi.fn(async () => {
+        events.push("manual-advisory-wait");
+        manualFenceWaiting.resolve();
+        await releaseRematchFence.promise;
+        events.push("manual-advisory-acquired");
+        return [];
+      }),
+      metaAdset: {
+        findFirst: vi.fn(async () => null),
+        findMany: vi.fn(async () => [legacy]),
+        findUnique: vi.fn(async () => ({ ...current })),
+        update
+      },
+      product: { findUnique: vi.fn(async () => ({ id: "product-manual", isActive: true })) },
+      adsetProductHistory: {
+        create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => ({ id: "history-legacy", ...data }))
+      },
+      securityAuditEvent: { create: vi.fn(async ({ data }: { data: unknown }) => data) }
+    };
+    const service = new MappingsService({
+      $transaction: vi.fn(async (work: (client: typeof tx) => Promise<unknown>) => work(tx))
+    } as never);
+
+    const manual = service.createManualProductMapping({
+      externalAdsetId: "external-legacy", adsetName: "Legacy set",
+      productId: "product-manual", effectiveFrom: "2026-06-11"
+    }, "actor-manual");
+    await manualFenceWaiting.promise;
+
+    expect(update).not.toHaveBeenCalled();
+    expect(events).toEqual(["rematch-advisory-held", "manual-advisory-wait"]);
+
+    releaseRematchFence.resolve();
+    await expect(manual).resolves.toMatchObject({ history: { metaAdsetId: "adset-legacy" } });
+    expect(events).toEqual([
+      "rematch-advisory-held", "manual-advisory-wait", "manual-advisory-acquired",
+      "legacy-row-update", "current-product-update"
+    ]);
+  });
 });
 
 function fakePrisma(options: {
