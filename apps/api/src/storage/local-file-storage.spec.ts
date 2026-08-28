@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises";
+import { link, mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { Readable } from "node:stream";
+import { PassThrough, Readable } from "node:stream";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   InvalidStorageKeyError,
@@ -39,6 +39,8 @@ describe("LocalFileStorage", () => {
       expectedHashSha256,
       maxBytes: body.length
     });
+    expect(await readdir(path.join(root, "2026", "08"))).toEqual(["report-id.xlsx"]);
+    expect(await readFile(path.join(root, ...stored.key.split("/")))).toEqual(body);
     const downloaded = await storage.getStream(stored.key);
 
     expect(stored).toEqual({ key: "2026/08/report-id.xlsx", hash: expectedHashSha256, size: body.length });
@@ -113,6 +115,7 @@ describe("LocalFileStorage", () => {
     const root = await temporaryRoot();
     const outside = await temporaryRoot();
     await mkdir(outside, { recursive: true });
+    await writeFile(path.join(outside, "object"), "outside object");
     try {
       await symlink(outside, path.join(root, "linked"), "junction");
     } catch (error) {
@@ -123,7 +126,90 @@ describe("LocalFileStorage", () => {
 
     await expect(storage.put({ key: "linked/object", body: Buffer.from("x") }))
       .rejects.toBeInstanceOf(InvalidStorageKeyError);
+    await expect(storage.getStream("linked/object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+    await expect(storage.delete("linked/object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+    await expect(storage.exists("linked/object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+    await expect(readFile(path.join(outside, "object"), "utf8")).resolves.toBe("outside object");
   });
+
+  it.skipIf(process.platform !== "win32")(
+    "rejects a leaf symlink for read, existence, and handle-based deletion",
+    async () => {
+      const root = await temporaryRoot();
+      const outside = await temporaryRoot();
+      const outsideFile = path.join(outside, "outside-object");
+      await writeFile(outsideFile, "outside object");
+      try {
+        await symlink(outsideFile, path.join(root, "linked-object"), "file");
+      } catch (error) {
+        if (isWindowsSymlinkPrivilegeError(error)) return;
+        throw error;
+      }
+      const storage = new LocalFileStorage(root);
+
+      await expect(storage.getStream("linked-object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+      await expect(storage.exists("linked-object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+      await expect(storage.delete("linked-object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+      await expect(readFile(outsideFile, "utf8")).resolves.toBe("outside object");
+    }
+  );
+
+  it.skipIf(process.platform !== "win32")(
+    "rejects a same-volume hard link so an outside file cannot be read or deleted",
+    async () => {
+      const root = await temporaryRoot();
+      const outside = await temporaryRoot();
+      const outsideFile = path.join(outside, "outside-object");
+      await writeFile(outsideFile, "outside object");
+      await link(outsideFile, path.join(root, "hard-linked-object"));
+      const storage = new LocalFileStorage(root);
+
+      await expect(storage.getStream("hard-linked-object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+      await expect(storage.exists("hard-linked-object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+      await expect(storage.delete("hard-linked-object")).rejects.toBeInstanceOf(InvalidStorageKeyError);
+      await expect(readFile(outsideFile, "utf8")).resolves.toBe("outside object");
+    }
+  );
+
+  it.skipIf(process.platform !== "win32")(
+    "holds parent and leaf handles while streaming so same-user rename and delete races fail closed",
+    async () => {
+      const root = await temporaryRoot();
+      const storage = new LocalFileStorage(root);
+      const body = Buffer.alloc(4 * 1024 * 1024, 0x5a);
+      await storage.put({ key: "read-lease/object", body });
+      const opened = await storage.getStream("read-lease/object");
+      const parent = path.join(root, "read-lease");
+      const target = path.join(parent, "object");
+
+      await expectWindowsLeaseBlocked(() => rename(parent, path.join(root, "moved-read-lease")));
+      await expectWindowsLeaseBlocked(() => rm(target, { force: false }));
+      expect(await collect(opened.stream)).toEqual(body);
+      await expect(stat(path.join(root, "moved-read-lease"))).rejects.toMatchObject({ code: "ENOENT" });
+    },
+    60_000
+  );
+
+  it.skipIf(process.platform !== "win32")(
+    "holds parent handles throughout a streaming atomic publish",
+    async () => {
+      const root = await temporaryRoot();
+      const storage = new LocalFileStorage(root);
+      const body = new PassThrough();
+      const put = storage.put({ key: "write-lease/object", body });
+      const parent = path.join(root, "write-lease");
+      await waitForPendingFile(parent);
+
+      try {
+        await expectWindowsLeaseBlocked(() => rename(parent, path.join(root, "moved-write-lease")));
+      } finally {
+        body.end("published object");
+      }
+      await expect(put).resolves.toMatchObject({ key: "write-lease/object", size: 16 });
+      await expect(readFile(path.join(parent, "object"), "utf8")).resolves.toBe("published object");
+      await expect(stat(path.join(root, "moved-write-lease"))).rejects.toMatchObject({ code: "ENOENT" });
+    }
+  );
 
   it("rejects a reparse ancestor before creating any directory through it", async () => {
     const parent = await temporaryRoot();
@@ -159,4 +245,32 @@ async function collect(stream: Readable) {
   const chunks: Buffer[] = [];
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
   return Buffer.concat(chunks);
+}
+
+function isWindowsSymlinkPrivilegeError(error: unknown) {
+  return error instanceof Error && "code" in error &&
+    ["EPERM", "EACCES", "UNKNOWN"].includes(String((error as NodeJS.ErrnoException).code));
+}
+
+async function expectWindowsLeaseBlocked(operation: () => Promise<unknown>) {
+  let failure: unknown;
+  try { await operation(); }
+  catch (error) { failure = error; }
+  expect(failure).toBeInstanceOf(Error);
+  expect(["EPERM", "EACCES", "EBUSY"]).toContain(String((failure as NodeJS.ErrnoException).code));
+}
+
+async function waitForPendingFile(parent: string) {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    try {
+      if ((await readdir(parent)).some((name) => name.startsWith(".pending-"))) return;
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT")) {
+        throw error;
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  throw new Error("The Windows storage helper did not open its pending file in time.");
 }

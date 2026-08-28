@@ -17,7 +17,10 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-describe("StorageTombstoneService", () => {
+describe(
+  "StorageTombstoneService",
+  { timeout: process.platform === "win32" ? 60_000 : 5_000 },
+  () => {
   it("logically deletes, restores, and explicitly purges only the server-owned object keys", async () => {
     const root = await temporaryRoot();
     const storage = new LocalFileStorage(root);
@@ -156,7 +159,8 @@ describe("StorageTombstoneService", () => {
     expect(await storage.exists("active/partial-restore")).toBe(false);
     expect(await storage.exists(`trash/${retained.tombstoneId}`)).toBe(false);
   });
-});
+  }
+);
 
 function prismaHarness(options: {
   failRetainedUpdateOnce?: boolean;

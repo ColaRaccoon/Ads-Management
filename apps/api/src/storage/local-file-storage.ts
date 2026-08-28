@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
-import { constants, createReadStream, createWriteStream } from "node:fs";
-import { access, link, lstat, mkdir, realpath, rm, stat, statfs } from "node:fs/promises";
+import { constants } from "node:fs";
+import { access, link, lstat, mkdir, open, realpath, rm, statfs } from "node:fs/promises";
 import path from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -14,16 +14,25 @@ import {
   StoredFile
 } from "./file-storage";
 import { normalizeStorageKey } from "./storage-reference";
+import { WindowsNtfsFileStorage } from "./windows-ntfs-file-storage";
 
 export class LocalFileStorage implements FileStorage {
   readonly provider = "local";
   readonly rootPath: string;
+  private readonly windows?: WindowsNtfsFileStorage;
 
   constructor(rootPath: string) {
     this.rootPath = path.resolve(rootPath);
+    if (process.platform === "win32") this.windows = new WindowsNtfsFileStorage(this.rootPath);
   }
 
   async assertReady(minimumFreeBytes = 104_857_600) {
+    if (this.windows) {
+      await this.windows.assertReady();
+      const volume = await statfs(this.rootPath, { bigint: true });
+      if (volume.bavail * volume.bsize < BigInt(minimumFreeBytes)) throw new StorageObjectTooLargeError();
+      return;
+    }
     await assertNoReparseComponents(this.rootPath);
     const metadata = await lstat(this.rootPath);
     if (!metadata.isDirectory() || metadata.isSymbolicLink()) throw new InvalidStorageKeyError();
@@ -37,6 +46,7 @@ export class LocalFileStorage implements FileStorage {
 
   async put(input: FileStoragePutInput): Promise<StoredFile> {
     const key = normalizeStorageKey(input.key);
+    if (this.windows) return this.windows.put({ ...input, key });
     const targetPath = await this.safeTargetPath(key, true);
     const temporaryPath = path.join(path.dirname(targetPath), `.pending-${randomUUID()}`);
     const hash = createHash("sha256");
@@ -56,11 +66,21 @@ export class LocalFileStorage implements FileStorage {
     });
 
     try {
-      await pipeline(
-        Buffer.isBuffer(input.body) ? Readable.from(input.body) : input.body,
-        integrity,
-        createWriteStream(temporaryPath, { flags: "wx", mode: 0o600 })
+      const pending = await open(
+        temporaryPath,
+        constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowFlag(),
+        0o600
       );
+      try {
+        await pipeline(
+          Buffer.isBuffer(input.body) ? Readable.from(input.body) : input.body,
+          integrity,
+          pending.createWriteStream({ autoClose: false })
+        );
+        await pending.sync();
+      } finally {
+        await pending.close();
+      }
       const digest = hash.digest("hex");
       if (input.expectedHashSha256 && digest !== input.expectedHashSha256.toLowerCase()) {
         throw new StorageIntegrityError();
@@ -82,17 +102,20 @@ export class LocalFileStorage implements FileStorage {
 
   async getStream(key: string) {
     const normalizedKey = normalizeStorageKey(key);
+    if (this.windows) return this.windows.getStream(normalizedKey);
     const targetPath = await this.safeTargetPath(normalizedKey, false);
-    const fileStat = await this.regularFileStat(targetPath);
+    const opened = await this.openRegularFile(targetPath);
     return {
-      stream: createReadStream(targetPath),
-      size: fileStat.size
+      stream: opened.handle.createReadStream(),
+      size: opened.metadata.size
     };
   }
 
   async delete(key: string) {
+    const normalizedKey = normalizeStorageKey(key);
+    if (this.windows) return this.windows.delete(normalizedKey);
     try {
-      const targetPath = await this.safeTargetPath(normalizeStorageKey(key), false);
+      const targetPath = await this.safeTargetPath(normalizedKey, false);
       await this.regularFileStat(targetPath);
       await rm(targetPath, { force: false });
       return true;
@@ -103,8 +126,10 @@ export class LocalFileStorage implements FileStorage {
   }
 
   async exists(key: string) {
+    const normalizedKey = normalizeStorageKey(key);
+    if (this.windows) return this.windows.exists(normalizedKey);
     try {
-      const targetPath = await this.safeTargetPath(normalizeStorageKey(key), false);
+      const targetPath = await this.safeTargetPath(normalizedKey, false);
       await this.regularFileStat(targetPath);
       return true;
     } catch (error) {
@@ -153,12 +178,22 @@ export class LocalFileStorage implements FileStorage {
   }
 
   private async regularFileStat(targetPath: string) {
+    const opened = await this.openRegularFile(targetPath);
+    await opened.handle.close();
+    return opened.metadata;
+  }
+
+  private async openRegularFile(targetPath: string) {
+    let handle;
     try {
-      const linkStat = await lstat(targetPath);
-      if (!linkStat.isFile() || linkStat.isSymbolicLink()) throw new InvalidStorageKeyError();
-      return await stat(targetPath);
+      handle = await open(targetPath, constants.O_RDONLY | noFollowFlag());
+      const metadata = await handle.stat();
+      if (!metadata.isFile() || metadata.nlink !== 1) throw new InvalidStorageKeyError();
+      return { handle, metadata };
     } catch (error) {
+      await handle?.close().catch(() => undefined);
       if (isMissing(error)) throw new StorageObjectNotFoundError();
+      if (isNoFollowViolation(error)) throw new InvalidStorageKeyError();
       throw error;
     }
   }
@@ -167,13 +202,22 @@ export class LocalFileStorage implements FileStorage {
     const hash = createHash("sha256");
     let size = 0;
     const limit = checkedLimit(maxBytes);
-    for await (const chunk of createReadStream(targetPath)) {
-      size += chunk.length;
-      if (size > limit) throw new StorageObjectTooLargeError();
-      hash.update(chunk);
+    const opened = await this.openRegularFile(targetPath);
+    try {
+      for await (const chunk of opened.handle.createReadStream({ autoClose: false })) {
+        size += chunk.length;
+        if (size > limit) throw new StorageObjectTooLargeError();
+        hash.update(chunk);
+      }
+    } finally {
+      await opened.handle.close();
     }
     return { key, hash: hash.digest("hex"), size };
   }
+}
+
+function noFollowFlag() {
+  return constants.O_NOFOLLOW ?? 0;
 }
 
 async function assertNoReparseComponents(target: string) {
@@ -206,4 +250,9 @@ function isMissing(error: unknown): error is NodeJS.ErrnoException {
 
 function isAlreadyExists(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "EEXIST";
+}
+
+function isNoFollowViolation(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error &&
+    ["ELOOP", "EMLINK"].includes(String((error as NodeJS.ErrnoException).code));
 }
