@@ -11,6 +11,7 @@ import { validateLocalRuntimeConfig } from "./runtime-config.mjs";
 
 export function createLocalHttpsEdge(rawConfig, options = {}) {
   const config = validateLocalRuntimeConfig(rawConfig, options);
+  if(!/^[0-9a-f]{64}$/.test(options.runtimeConfigSha256??""))throw new Error("RUNTIME_CONFIG_HASH_REQUIRED");
   if (!config.network.lanReady) throw new Error("LAN_NOT_READY");
   if (!config.readiness.operationalReady) throw new Error("OPERATIONAL_READINESS_REQUIRED");
   const hostname = config.lan.hostname.toLowerCase();
@@ -26,11 +27,14 @@ export function createLocalHttpsEdge(rawConfig, options = {}) {
       !configuredEdgePublic.export({ type: "spki", format: "der" }).equals(derivedEdgePublic.export({ type: "spki", format: "der" }))) {
     throw new Error("EDGE_SIGNING_KEY_PAIR_MISMATCH");
   }
+  const edgeSigningKeyId=createHash("sha256").update(configuredEdgePublic.export({type:"spki",format:"der"})).digest("hex");
+  const nodeExecutableSha256=createHash("sha256").update(readFileSync(process.execPath)).digest("hex");
   const frozenEdgeConfig = edgeImmutableFingerprint(rawConfig);
   const maintenanceFlag = path.join(config.data.root, "runtime-control", "maintenance.enabled");
   const drainStatePath = path.join(config.data.root, "logs", "edge", "drain-state.json");
   const requestSpoolRoot = path.join(config.data.root, "logs", "edge", "request-spool");
   prepareRequestSpool(requestSpoolRoot);
+  try{if(existsSync(drainStatePath))unlinkSync(drainStatePath)}catch{throw new Error("STALE_DRAIN_STATE_REMOVE_FAILED")}
   let activeRequests = 0;
   let activeRequestBodies = 0;
   const requestsByClient = new Map();
@@ -63,7 +67,7 @@ export function createLocalHttpsEdge(rawConfig, options = {}) {
       readinessCache = { result: currentReadiness(frozenEdgeConfig, options), expiresAt: Date.now() + 2_000 };
     }
     if (!readinessCache.result) return reject(outgoing, 503);
-    if (existsSync(maintenanceFlag)) return reject(outgoing, 503);
+    if (existsSync(maintenanceFlag)) return reject(outgoing, 503, { "x-local-release-id": config.release.id });
     if ((requestsByClient.get(remoteAddress) ?? 0) >= 8) return reject(outgoing, 503);
     const contentLength = parseContentLength(incoming.headers["content-length"]);
     if (contentLength > 64 * 1024 * 1024) return reject(outgoing, 413);
@@ -141,11 +145,20 @@ export function createLocalHttpsEdge(rawConfig, options = {}) {
   function publishDrainState(){
     try{
       if(!existsSync(maintenanceFlag)||activeRequests!==0){if(existsSync(drainStatePath))unlinkSync(drainStatePath);return;}
+      if(existsSync(drainStatePath))return;
       const temporary=`${drainStatePath}.${process.pid}.pending`;
-      writeFileSync(temporary,JSON.stringify({version:1,result:"DRAINED",processId:process.pid,activeRequests:0,completedAt:new Date().toISOString()}),{encoding:"utf8",flag:"w"});
+      const unsigned={attestationType:"edge-drain",version:2,result:"DRAINED",processId:process.pid,releaseId:config.release.id,runtimeConfigSha256:options.runtimeConfigSha256,nodeExecutableSha256,listenerAddress:config.lan.bindAddress,listenerPort:443,activeRequests:0,completedAt:new Date().toISOString()};
+      const state={...unsigned,signingKeyId:edgeSigningKeyId,attestationSignature:sign(null,Buffer.from(canonicalJson(unsigned),"utf8"),edgeSigningKey).toString("base64url")};
+      writeFileSync(temporary,JSON.stringify(state),{encoding:"utf8",flag:"w"});
       renameSync(temporary,drainStatePath);
     }catch{}
   }
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") return `{${Object.keys(value).sort().map((key)=>`${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
+  return JSON.stringify(value);
 }
 
 export function startLocalHttpsEdge(rawConfig, options = {}) {
@@ -329,4 +342,4 @@ export function takePerClientToken(map,key,rate,burst,{now=Date.now(),maximumEnt
   current.tokens-=1;map.set(key,current);return true
 }
 function takeGlobalToken(bucket){const now=Date.now();bucket.tokens=Math.min(120,bucket.tokens+(now-bucket.at)*60/1000);bucket.at=now;if(bucket.tokens<1)return false;bucket.tokens-=1;return true}
-function reject(response, status) { if (!response.headersSent) response.writeHead(status, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", connection: "close" }); response.end("Request rejected.\n"); }
+function reject(response, status, extraHeaders = {}) { if (!response.headersSent) response.writeHead(status, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", connection: "close", ...extraHeaders }); response.end("Request rejected.\n"); }

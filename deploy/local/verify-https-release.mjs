@@ -20,7 +20,7 @@ const result=await new Promise((resolve)=>{
       try{
         const raw=peer?.raw;
         const certificateMatches=raw&&createHash("sha256").update(raw).digest("hex")===expectedCertificateSha256&&new X509Certificate(raw).checkHost(hostname,{wildcards:false})===hostname;
-        if(expectedStatus===503)resolve(response.statusCode===503&&body==="Request rejected.\n"&&response.headers["cache-control"]==="no-store"&&certificateMatches);
+        if(expectedStatus===503)resolve(response.statusCode===503&&body==="Request rejected.\n"&&response.headers["cache-control"]==="no-store"&&response.headers["x-local-release-id"]===releaseId&&certificateMatches);
         else{const value=JSON.parse(body);resolve(response.statusCode===200&&value.status==="live"&&value.releaseId===releaseId&&certificateMatches)}
       }catch{resolve(false)}
     });

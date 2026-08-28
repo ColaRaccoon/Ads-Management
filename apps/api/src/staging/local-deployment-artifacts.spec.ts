@@ -11,6 +11,11 @@ const extractStorageReferenceSql = (source: string) => {
   if (!match) throw new Error("STORAGE_REFERENCE_SQL_NOT_FOUND");
   return match[1];
 };
+const extractStorageTransitionSql = (source: string) => {
+  const match = source.match(/function StorageTransitionSql \{ return "([^"]+)" \}/);
+  if (!match) throw new Error("STORAGE_TRANSITION_SQL_NOT_FOUND");
+  return match[1];
+};
 const normalizeSql = (sql: string) => sql.replace(/\s+/g, "");
 const lowerSha256 = /^[0-9a-f]{64}$/;
 const selectMetaPayloadHash = (row: { fileHashSha256: string; columnSchema: Record<string, unknown> }) => {
@@ -95,6 +100,18 @@ describe("local native deployment artifacts", () => {
         columnSchema: { originalFileHashSha256: invalid }
       })).toThrow("INVALID_META_PAYLOAD_HASH");
     }
+  });
+
+  it("uses one fail-closed transition query that blocks report CREATING snapshots", async () => {
+    const [backup, restore] = await Promise.all([
+      file("deploy/windows/Backup-Local.ps1"), file("deploy/windows/Restore-Verify.ps1")
+    ]);
+    const backupSql = extractStorageTransitionSql(backup);
+    const restoreSql = extractStorageTransitionSql(restore);
+
+    expect(normalizeSql(backupSql)).toBe(normalizeSql(restoreSql));
+    expect(backupSql).toContain("storage_tombstones WHERE state::text IN ('PENDING','FAILED')");
+    expect(backupSql).toContain("report_exports WHERE status::text = 'CREATING'");
   });
 
   it("keeps every Windows host mutation behind Plan plus explicit approval", async () => {
@@ -195,13 +212,23 @@ describe("local native deployment artifacts", () => {
       file("deploy/local/recovery-kit.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1"),file("deploy/windows/recovery-process-tree.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Test-RebootReadiness.ps1"),file("deploy/local/runtime-config.mjs")
     ]);
     expect(tool).toContain("manifestSha256");expect(tool).toContain("files: payload.files.map");
-    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("EscrowWorksheetPath");expect(recovery).toContain("ExpectedEscrowWorksheetSha256");expect(recovery).toContain("BaseStream.ReadAsync");expect(recovery).toContain("Stop-VerifiedRecoveryProcessTree");expect(recovery).toContain("version=5");expect(recovery).not.toContain("version=4");expect(recovery).toContain("sourcePathsDisclosed=$false");expect(runtime).toContain("disasterRecoveryEvidencePath");expect(runtime).toContain("currentRecoveryVerified && disasterRecoveryVerified");
+    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("EscrowWorksheetPath");expect(recovery).toContain("ExpectedEscrowWorksheetSha256");expect(recovery).toContain("BaseStream.ReadAsync");expect(recovery).toContain("Stop-VerifiedRecoveryProcessTree");expect(recovery).toContain("version=6");expect(recovery).not.toContain("version=4");expect(recovery).toContain("sourcePathsDisclosed=$false");expect(recovery).toContain("RECOVERY_DISASTER_MUST_RUN_ON_DISTINCT_HOST");expect(recovery).toContain("Get-StableRemoteNasIdentity");expect(recovery).toContain("ExpectedHostInstanceHelperSha256");expect(recovery).toContain("ExpectedNasIdentityHelperSha256");expect(runtime).toContain("disasterRecoveryEvidencePath");expect(runtime).toContain("currentRecoveryVerified && disasterRecoveryVerified");expect(runtime).toContain("verificationHostInstanceDigest !== evidence.sourceHostInstanceDigest");
     expect(recoveryTree).toContain("$Process.Kill($true)");expect(recoveryTree).toContain("WaitForExit");expect(recoveryTree).toContain("RECOVERY_KIT_TOOL_DESCENDANT_EXIT_UNCONFIRMED");
     if(process.platform==="win32"){const processTreeTest=spawnSync("pwsh.exe",["-NoProfile","-ExecutionPolicy","Bypass","-File",path.join(root,"deploy/windows/recovery-process-tree.runtime.test.ps1")],{cwd:root,encoding:"utf8",timeout:20_000});expect(processTreeTest.status,processTreeTest.stderr).toBe(0);expect(JSON.parse(processTreeTest.stdout).stubbornDescendantTerminated).toBe(true)}
     expect(schedule).toContain("$task.Triggers[0].Enabled -eq $true");expect(schedule).toContain("dailyTriggerEnabled=$true");expect(schedule).toContain("recurringInvocationPlanBound=$true");expect(schedule).toContain("runtimeConfigSha256=$ExpectedRuntimeConfigSha256");
     expect(reboot).toContain("not[bool]$task.Triggers[0].Enabled");expect(reboot).toContain("backupDailyTriggerEnabled");expect(reboot).toContain("runtimeConfigSha256=(FileHash $configPath)");
     expect(runtime).toContain("evidence.dailyTriggerEnabled === true");
   },20_000);
+
+  it("binds signed fresh Edge identity to mutation plans and uses a bounded pinned HTTPS release probe",async()=>{
+    const [edge,verifier,helper,switcher,migration,certificate]=await Promise.all([file("deploy/local/https-edge.mjs"),file("deploy/local/verify-attestation.mjs"),file("deploy/windows/edge-drain-identity.ps1"),file("deploy/windows/Switch-LocalRelease.ps1"),file("deploy/windows/Manage-SupabaseMigration.ps1"),file("deploy/windows/Activate-ServerCertificate.ps1")]);
+    expect(edge).toContain('attestationType:"edge-drain"');expect(edge).toContain("attestationSignature");expect(verifier).toContain('"edge-drain"');
+    for(const token of["Get-EdgeServiceTreeIds","EdgeProcessStartedAt","nodeExecutableSha256","CommandLineSha256","LocalPort 443","EDGE_DRAIN_PROCESS_ID_MISMATCH","EDGE_DRAIN_ACTION_TIME_IDENTITY_CHANGED","Invoke-EdgeDrainSignatureVerifier"]){expect(helper).toContain(token)}
+    for(const source of[switcher,migration,certificate]){expect(source).toContain("Assert-ExactEdgeDrainIdentity");expect(source).toContain("currentDrainIdentityDigest");expect(source).toContain("ExpectedEdgeSigningPublicKeySha256");expect(source).toContain("ExpectedDrainStateSha256")}
+    expect(switcher).toContain("Assert-ExactHttpsReleaseProbe");expect(helper).toContain("HTTPS_PROBE_TIMEOUT");expect(edge).toContain('"x-local-release-id": config.release.id');expect(switcher).toContain("RELEASE_SWITCH_ROLLED_BACK");expect(switcher).toContain("RELEASE_ROLLBACK_FAILED_TARGET_RECOVERED");
+    if(process.platform==="win32"){const identityTest=spawnSync("pwsh.exe",["-NoProfile","-ExecutionPolicy","Bypass","-File",path.join(root,"deploy/windows/edge-drain-identity.runtime.test.ps1")],{cwd:root,encoding:"utf8",timeout:20_000});expect(identityTest.status,identityTest.stderr).toBe(0);expect(JSON.parse(identityTest.stdout).listenerOwnerMismatchRejected).toBe(true)}
+    if(process.platform==="win32"){const nasTest=spawnSync("pwsh.exe",["-NoProfile","-ExecutionPolicy","Bypass","-File",path.join(root,"deploy/windows/nas-identity.runtime.test.ps1")],{cwd:root,encoding:"utf8",timeout:20_000});expect(nasTest.status,nasTest.stderr).toBe(0);expect(JSON.parse(nasTest.stdout).localhostRejected).toBe(true)}
+  },25_000);
 
   it("preserves the live schema behind a durable rollback journal and rejects local NAS aliases",async()=>{
     const [rollback,target,nas]=await Promise.all([file("deploy/windows/Manage-SupabaseRollbackRestore.ps1"),file("deploy/windows/Test-BackupTarget.ps1"),file("deploy/windows/nas-identity.ps1")]);

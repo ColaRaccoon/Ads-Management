@@ -205,9 +205,15 @@ the step being approved. Approval for one step does not authorize another.
    the hash-pinned Core and Edge wrappers with both services Manual/stopped. A
    reboot cannot implicitly start them. This does not stop or reconfigure
    `3100`/`4100`.
-5. **Bootstrap** — while loopback-only, place `{ "version": 1, "username":
-   "..." }` in a newly created ADMIN_ONLY request file using an interactive
-   editor or hidden prompt. The username is never accepted in argv. Run the
+5. **Bootstrap** — while loopback-only, place a version 2 request containing
+   `username`, `authorizationPrivateKeySha256`,
+   `authorizationPublicKeySha256`, and `signingKeyId` in a newly created
+   ADMIN_ONLY file using an interactive editor or hidden prompt. The username is
+   never accepted in argv. The private key is readable only from SIGNER_ONLY;
+   its Ed25519 public key is hash-pinned in SHARED_RUNTIME. Runtime files belong
+   to SHARED_RUNTIME, the filesystem/database-boundary evidence to
+   ADMIN_EVIDENCE, and request/authorization/ledger/setup-token outputs to
+   ADMIN_ONLY. Run the
    compiled `api/dist/auth/bootstrap-local-super-admin.cli.js` from the verified
    release in dry-run mode with the request file/hash, runtime config/hash,
    filesystem evidence/hash/descriptor digest, database-boundary evidence/hash,
@@ -219,11 +225,14 @@ the step being approved. Approval for one step does not authorize another.
    setup-token path, impact, and rollback, then obtain the database-mutation
    approval. Only after that approval, run
    `deploy/local/new-bootstrap-authorization.mjs` with `--mode=bootstrap`, the
-   exact request/runtime/filesystem/boundary/setup-token paths, a fresh unused
-   ADMIN_ONLY ledger path, the protected Ed25519 private-key path, and a new
-   ADMIN_ONLY authorization output path. Pass the resulting authorization hash,
-   public-key path/hash and ledger path to the CLI together with `--apply` and
-   the exact database confirmations. The CLI verifies the signed ten-minute
+   exact request/runtime/filesystem/boundary/setup-token paths and their expected
+   hashes, the filesystem descriptor digest, private/public key paths and hashes,
+   expected signing key ID, a fresh unused ADMIN_ONLY ledger path, and a new
+   ADMIN_ONLY authorization output path. The producer rejects reparse/hard-link,
+   filesystem-class, key-pair, or hash drift. Pass the resulting authorization
+   hash, public-key path/hash and ledger path to the CLI together with `--apply`
+   and the exact database confirmations. The CLI verifies the pinned signer and
+   signed ten-minute
    authorization, consumes it with create-new semantics immediately before the
    first DB write, deletes the request, and writes the one-time setup token only
    to the evidenced handoff directory. A failed or repeated attempt requires a
@@ -287,7 +296,9 @@ Client trust is established before the server listens on the LAN:
 All CA, renewal and activation commands hash-pin Node and their verifier scripts
 and require those executors to be covered by the `SHARED_RUNTIME` ACL evidence.
 Certificate rotation uses `Activate-ServerCertificate.ps1`. It requires
-maintenance plus a fresh zero-request drain, swaps only hash-pinned same-CA
+maintenance plus a fresh Edge-signed zero-request drain bound to the exact
+service tree PID/start time, Node/command/release/runtime identity and 443
+listener owner, swaps only hash-pinned same-CA
 server files, restarts only Edge, verifies HTTPS by direct bind address with SNI,
 and automatically restores the prior files on failure. Apply, rollback, and
 finalize each require immediate approval; client trust-store state is unchanged.
@@ -473,7 +484,9 @@ Production database migration and process switching are separate approvals.
    invoking the exact target Prisma migration digest, and requires a new immediate
    production-migration approval. It uses the dedicated migration role, pinned
    CA, pinned Node/Prisma/verifier, exact ACL classes, previous-release backup,
-   maintenance, drain and compatibility evidence. Apply stops at
+   maintenance, signed exact-Edge drain identity and compatibility evidence.
+   The Plan, action-time check, and durable journal reject a restarted process,
+   wrong listener owner, command/release drift, or stale drain. Apply stops at
    `APPLIED_PENDING_BOUNDARY`; it cannot claim final PASS.
 5. Produce fresh post-migration database-boundary evidence, verify the exact
    applied migration chain, then run `Manage-SupabaseMigration.ps1 -Action
@@ -489,10 +502,14 @@ Production database migration and process switching are separate approvals.
    release root, manifest, runtime/API path and live process identity. The durable
    journal binds both prior and target XML/process identities. Apply, rollback and
    finalize Plans also bind the current Core/Edge XML hashes, PID/start times and
-   process identity digests, so an approval cannot be reused after service drift.
+    process identity digests, plus the signed drain snapshot and exact 443
+    listener owner, so an approval cannot be reused after service drift.
    Prior XML/config copies and journal updates use write-through file flush plus
    atomic same-directory replacement. On failure it
-   automatically restores and restarts both prior services. Explicit rollback
+    runs the hash-pinned bounded HTTPS verifier against the exact private bind
+    address, SNI hostname, CA, server certificate and expected release response.
+    Probe failure is an Apply failure and automatically restores and HTTPS-probes
+    both prior services. Explicit rollback
    verifies the old full manifest and both hash-pinned XML files before starting.
    Finalize removes only rollback artifacts after an approval.
 8. Disable maintenance only after role matrix, KPI, storage hash, backup and
@@ -523,17 +540,25 @@ Recovery order is:
    separately copied escrow worksheet, the worksheet's expected
    kit/manifest/runtime/install/inventory hashes, hash-pinned
    offline Node/tool executors, and an existing empty `ADMIN_ONLY` scratch root.
-   The kit tool's stdout/stderr are drained concurrently under a bounded buffer;
+    The kit tool's stdout/stderr are drained concurrently under a bounded buffer;
     timeout kills the complete process tree, waits a bounded interval, and fails
     hard unless the root and every snapshotted descendant are absent. Disaster verification authenticates
    and bounded-extracts the exact 13-file
    internal inventory, retains it for recovery, and neither requires nor emits
     any original source path;
+   every recovery execution also hash-pins the process-tree, host-instance and
+   NAS-identity helpers before dot-sourcing them, and the approval plan binds
+   those exact helper paths and hashes;
    write the current-host and clean-PC results to two distinct ADMIN_EVIDENCE
    paths configured as `recoveryEvidencePath` and
-   `disasterRecoveryEvidencePath`. Operational readiness requires both v5 receipts
-   to bind the same kit, escrow worksheet, manifest, runtime, install, inventory,
-   credential and executor identities. Current-host-only evidence is insufficient.
+    `disasterRecoveryEvidencePath`. Operational readiness requires both v6 receipts
+    to bind the same kit, escrow worksheet, manifest, runtime, install, inventory,
+    credential, executor and stable escrow identities. The offline worksheet
+    carries only a one-way host-instance digest (never a raw hostname or IP) and
+    the disaster verifier must produce a different host digest. A same-host drill
+    is rejected. UNC escrow is resolved through the NAS identity validator, so
+    localhost, the current hostname/interface, CNAME/local aliases, and identity
+    drift fail closed. Current-host-only evidence is insufficient.
 3. restore to an isolated target and verify the signed receipt;
 4. obtain immediate approval for the exact production restore target, impact,
    and rollback; run the Plan/Apply/Verify sequence above without reusing an
