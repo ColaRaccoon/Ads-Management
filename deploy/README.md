@@ -205,15 +205,37 @@ the step being approved. Approval for one step does not authorize another.
    the hash-pinned Core and Edge wrappers with both services Manual/stopped. A
    reboot cannot implicitly start them. This does not stop or reconfigure
    `3100`/`4100`.
-5. **Bootstrap** — while loopback-only, run the local bootstrap CLI interactively
-   as an authorized administrator. Exactly one `SUPER_ADMIN` username can be
-   created. No password is accepted on the command line or written to output.
-   Use the compiled
-   `api/dist/auth/bootstrap-local-super-admin.cli.js` from the verified release,
-   with `CONFIG_PATH` pointing at the separately protected API config. Dry-run
-   first; apply requires exact project/host/database/schema and evidence hashes.
-   Afterward, users are created from the management screen and complete a
-   one-time setup token; tokens are not emailed.
+5. **Bootstrap** — while loopback-only, place `{ "version": 1, "username":
+   "..." }` in a newly created ADMIN_ONLY request file using an interactive
+   editor or hidden prompt. The username is never accepted in argv. Run the
+   compiled `api/dist/auth/bootstrap-local-super-admin.cli.js` from the verified
+   release in dry-run mode with the request file/hash, runtime config/hash,
+   filesystem evidence/hash/descriptor digest, database-boundary evidence/hash,
+   and the intended ADMIN_ONLY setup-token path. Dry-run does not accept or
+   consume an authorization.
+
+   Immediately before an apply, present the exact Supabase project/host/database/
+   schema, normalized username digest, release/runtime/evidence hashes, target
+   setup-token path, impact, and rollback, then obtain the database-mutation
+   approval. Only after that approval, run
+   `deploy/local/new-bootstrap-authorization.mjs` with `--mode=bootstrap`, the
+   exact request/runtime/filesystem/boundary/setup-token paths, a fresh unused
+   ADMIN_ONLY ledger path, the protected Ed25519 private-key path, and a new
+   ADMIN_ONLY authorization output path. Pass the resulting authorization hash,
+   public-key path/hash and ledger path to the CLI together with `--apply` and
+   the exact database confirmations. The CLI verifies the signed ten-minute
+   authorization, consumes it with create-new semantics immediately before the
+   first DB write, deletes the request, and writes the one-time setup token only
+   to the evidenced handoff directory. A failed or repeated attempt requires a
+   new request, ledger path, approval and authorization; never delete or reuse a
+   consumed ledger record.
+
+   `--recover` follows the same sequence with `--mode=recover` and additionally
+   binds the fresh maintenance, drain and pre-change backup evidence files and
+   hashes. It always requires a new immediate approval. Exactly one bootstrap
+   `SUPER_ADMIN` can be created; later users are created from the management
+   screen and complete a one-time setup token. No password or token is emailed,
+   placed in argv, or written to logs.
 6. **Separate process start** — immediately before `Manage-Service.ps1 -Action
    Start`, present the exact services, bind state, impact and `Stop` rollback and
    obtain process-transition approval. A prepared LAN-disabled configuration
@@ -295,6 +317,11 @@ and time are configured, the schedule must not run and readiness remains false.
    value requires a new authorization and schedule plan. The schedule authorization
    is v2 and carries its own CSPRNG nonce and instance identifier. Bare `-Approved`
    is never delegated to the backup account.
+   Runtime readiness hashes the exact backup-target evidence bytes and requires the
+   schedule receipt to bind that hash. Its target fingerprint includes the stable
+   NAS server/share/address-set identity, resolved-address count, local-alias
+   rejection, share-ACL confirmation and retention control; any drift closes
+   readiness and requires a new target verification and schedule approval.
 3. `Backup-Local.ps1` verifies live disk/NAS identity, encryption and ACL drift,
    then makes a Supabase database dump with the backup role plus the local
    storage manifest. The migration digest is computed only from the verified
@@ -415,8 +442,10 @@ Production database migration and process switching are separate approvals.
    fresh `Apply` Plan bound to the exact production Supabase project/host/database/
    schema, maintenance/drain, migration journal, signed legacy backup chain,
     executor/credential/key hashes, durable rollback journal, fresh drain and the
-    current Edge PID/start time/executable/command/release/listener identity. Apply
-    keeps 3100/4100 quiesced and writes a flushed atomic `INTENT` before the first
+     current Edge PID/start time/executable/command/release/listener identity, and
+     the exact signed `legacy-quiesce` evidence and type-specific public-key hashes.
+     It rechecks the baseline PIDs, restart digest, evidence freshness, and writer/
+     listener absence immediately before INTENT. Apply keeps 3100/4100 quiesced and writes a flushed atomic `INTENT` before the first
     mutation. In one transaction it renames the current schema to an approval-
     instance-specific preserved schema; it never drops that pre-rollback schema.
     The signed archive then recreates a pristine target schema. Apply restores the
@@ -428,6 +457,11 @@ Production database migration and process switching are separate approvals.
     transactionally drops only the partial restored target and renames the
     preserved original back when possible; otherwise it atomically writes
     `FAILED_MAINTENANCE_REQUIRED` and the preserved schema must remain untouched.
+    Because a client failure can make COMMIT acknowledgement uncertain, every
+    boundary failure freshly queries both schema names. It treats `0|1` and `1|1`
+    as committed/partial states, transactionally restores the preserved original,
+    verifies `1|0`, and journals the observed state; it never trusts only the child
+    exit result to decide whether mutation occurred.
     Maintenance and quiesce remain mandatory in either case. A separately approved
     `VerifyEvidence` Plan rechecks the journal, receipt, role grants and live hashes.
     Only then is the rollback receipt supplied to
@@ -449,10 +483,17 @@ Production database migration and process switching are separate approvals.
    before target readiness is asserted.
 7. `Switch-LocalRelease.ps1` requires the finalized migration evidence whenever
    the migration digest changes and verifies the target's signed operational-
-   readiness evidence before it stops only Core. It atomically switches stable
-   config and service generation, verifies live readiness, and preserves hash-
-   pinned prior artifacts. On failure it automatically restores the prior
-   release. Explicit rollback verifies the old full manifest before starting it.
+   readiness evidence. Under maintenance and a fresh drain it stops Edge then
+   Core, atomically switches stable config plus both service XML generations,
+   starts Core then Edge, and verifies each exact Node executable, launcher,
+   release root, manifest, runtime/API path and live process identity. The durable
+   journal binds both prior and target XML/process identities. Apply, rollback and
+   finalize Plans also bind the current Core/Edge XML hashes, PID/start times and
+   process identity digests, so an approval cannot be reused after service drift.
+   Prior XML/config copies and journal updates use write-through file flush plus
+   atomic same-directory replacement. On failure it
+   automatically restores and restarts both prior services. Explicit rollback
+   verifies the old full manifest and both hash-pinned XML files before starting.
    Finalize removes only rollback artifacts after an approval.
 8. Disable maintenance only after role matrix, KPI, storage hash, backup and
    signed runtime-readiness checks pass. Removal is followed by a hash-pinned,
@@ -487,7 +528,12 @@ Recovery order is:
     hard unless the root and every snapshotted descendant are absent. Disaster verification authenticates
    and bounded-extracts the exact 13-file
    internal inventory, retains it for recovery, and neither requires nor emits
-   any original source path;
+    any original source path;
+   write the current-host and clean-PC results to two distinct ADMIN_EVIDENCE
+   paths configured as `recoveryEvidencePath` and
+   `disasterRecoveryEvidencePath`. Operational readiness requires both v5 receipts
+   to bind the same kit, escrow worksheet, manifest, runtime, install, inventory,
+   credential and executor identities. Current-host-only evidence is insufficient.
 3. restore to an isolated target and verify the signed receipt;
 4. obtain immediate approval for the exact production restore target, impact,
    and rollback; run the Plan/Apply/Verify sequence above without reusing an

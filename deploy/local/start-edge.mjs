@@ -8,11 +8,14 @@ const configPath = process.env.LOCAL_RUNTIME_CONFIG_PATH;
 if (!configPath) throw new Error("LOCAL_RUNTIME_CONFIG_PATH is required.");
 const config = readJson(configPath);
 const releaseRoot = fileURLToPath(new URL("../..", import.meta.url));
-const evidence = () => ({
+const evidence = () => {
+  const backupTargetSnapshot = readEvidenceSnapshot(config.backup?.physicalTargetEvidencePath);
+  return ({
   runtimeConfigPath: configPath,
   releaseRoot,
   clientTrustEvidence: readEvidence(config.tls?.clientTrustEvidencePath),
-  backupTargetEvidence: readEvidence(config.backup?.physicalTargetEvidencePath),
+  backupTargetEvidence: backupTargetSnapshot?.value ?? null,
+  backupTargetEvidenceSha256: backupTargetSnapshot?.sha256 ?? null,
   backupScheduleEvidence: readEvidence(config.backup?.scheduledTaskEvidencePath),
   latestBackupEvidence: readEvidence(config.backup?.latestBackupEvidencePath),
   filesystemEvidence: readEvidence(config.hostSecurity?.filesystemEvidencePath),
@@ -20,16 +23,23 @@ const evidence = () => ({
   firewallEvidence: readEvidence(config.hostSecurity?.firewallEvidencePath),
   restoreEvidence: readEvidence(config.backup?.restoreEvidencePath)
   ,recoveryEvidence: readEvidence(config.backup?.recoveryEvidencePath)
+  ,disasterRecoveryEvidence: readEvidence(config.backup?.disasterRecoveryEvidencePath)
   ,runtimeConfigSha256: createHash("sha256").update(readFileSync(configPath)).digest("hex")
   ,backupReceiptPublicKey: readKey(config.backup?.backupReceiptPublicKeyPath)
   ,restoreReceiptPublicKey: readKey(config.backup?.restoreReceiptPublicKeyPath)
 });
+};
 await startLocalHttpsEdge(config, { ...evidence(), readinessProvider: () => ({ rawConfig: readJson(configPath), evidence: evidence() }) });
 process.stdout.write(`${JSON.stringify({ event: "https-edge.ready", port: 443 })}\n`);
 
 function readEvidence(value) {
   if (typeof value !== "string" || !value) return null;
   return readJson(value);
+}
+function readEvidenceSnapshot(value) {
+  if (typeof value !== "string" || !value) return null;
+  const bytes = readBoundedRegularFile(value, 1_048_576, "LOCAL_EVIDENCE");
+  return { value: JSON.parse(bytes.toString("utf8")), sha256: createHash("sha256").update(bytes).digest("hex") };
 }
 function readJson(value) {
   const bytes = readBoundedRegularFile(value, 1_048_576, "LOCAL_EVIDENCE");

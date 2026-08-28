@@ -8,7 +8,8 @@ import { inventory, verifyLocalRelease, verifyRuntimeClosure } from "./verify-lo
 
 test("inventory rejects an oversized sparse artifact before hashing it",async()=>{
   const root=await mkdtemp(path.join(tmpdir(),"local-release-oversized-"));const file=path.join(root,"oversized.bin");
-  await writeFile(file,"");await truncate(file,1_073_741_825);await assert.rejects(()=>inventory(root),/RELEASE_FILE_INVALID/);
+  try { await writeFile(file,"");await truncate(file,1_073_741_825);await assert.rejects(()=>inventory(root),/RELEASE_FILE_INVALID/); }
+  finally { await rm(root,{recursive:true,force:true}); }
 });
 
 test("package and verify cover the complete release tree and reject extras",async()=>{

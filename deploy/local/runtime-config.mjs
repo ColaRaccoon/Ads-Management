@@ -15,7 +15,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
   exactObject(input.lan, ["enabled", "hostname", "bindAddress", "allowedCidrs", "expectedClientCount", "expectedClientSetDigest"]);
   exactObject(input.tls, ["caCertificatePath", "serverCertificatePath", "serverPrivateKeyPath", "clientTrustVerified", "clientTrustEvidencePath", "hstsEnabled"]);
   exactObject(input.hostSecurity, ["filesystemEvidencePath", "firewallEvidencePath", "edgeSigningPublicKeyPath", "edgeSigningPrivateKeyPath", "nodeProgramPath", "nodeProgramSha256", "edgeServiceSid"]);
-  exactObject(input.backup, ["root", "dailyTime", "rpoHours", "rtoHours", "physicalTargetEvidencePath", "scheduledTaskEvidencePath", "latestBackupEvidencePath", "restoreEvidencePath", "recoveryEvidencePath", "backupReceiptPublicKeyPath", "restoreReceiptPublicKeyPath"]);
+  exactObject(input.backup, ["root", "dailyTime", "rpoHours", "rtoHours", "physicalTargetEvidencePath", "scheduledTaskEvidencePath", "latestBackupEvidencePath", "restoreEvidencePath", "recoveryEvidencePath", "disasterRecoveryEvidencePath", "backupReceiptPublicKeyPath", "restoreReceiptPublicKeyPath"]);
 
   const dataRoot = resolveDataRoot(input.data.root, options.env);
   if (options.releaseRoot && (sameOrNested(dataRoot, options.releaseRoot) || sameOrNested(options.releaseRoot, dataRoot))) fail("DATA_ROOT_MUST_BE_OUTSIDE_RELEASE");
@@ -26,7 +26,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
   if (input.backup.rpoHours !== 24 || input.backup.rtoHours !== 4) fail("RECOVERY_OBJECTIVES_INVALID");
   const now = options.now instanceof Date ? options.now.getTime() : Date.now();
   const backupTargetVerified = validBackupTargetEvidence(options.backupTargetEvidence, input.backup, dataRoot, options.filesystemEvidence, now);
-  const backupScheduleVerified = validBackupScheduleEvidence(options.backupScheduleEvidence, input.backup, options.backupTargetEvidence, options.filesystemEvidence, options.runtimeConfigSha256, now);
+  const backupScheduleVerified = validBackupScheduleEvidence(options.backupScheduleEvidence, input.backup, options.backupTargetEvidence, options.backupTargetEvidenceSha256, options.filesystemEvidence, options.runtimeConfigSha256, now);
   const latestBackupVerified = validLatestBackupEvidence(options.latestBackupEvidence, options.backupReceiptPublicKey, input.release, input.backup, dataRoot, input.database, options.backupTargetEvidence, options.backupScheduleEvidence, now);
   const backupConfigured = Boolean(input.backup.root && input.backup.dailyTime && backupTargetVerified && backupScheduleVerified && latestBackupVerified);
   if (Boolean(input.backup.root) !== Boolean(input.backup.dailyTime)) fail("BACKUP_ROOT_AND_TIME_REQUIRED_TOGETHER");
@@ -37,7 +37,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
       fail("BACKUP_MUST_NOT_SHARE_DATA_ROOT");
     }
     if (options.releaseRoot && (sameOrNested(input.backup.root, options.releaseRoot) || sameOrNested(options.releaseRoot, input.backup.root))) fail("BACKUP_ROOT_MUST_BE_OUTSIDE_RELEASE");
-    for (const key of ["physicalTargetEvidencePath", "scheduledTaskEvidencePath", "restoreEvidencePath", "recoveryEvidencePath"]) {
+    for (const key of ["physicalTargetEvidencePath", "scheduledTaskEvidencePath", "restoreEvidencePath", "recoveryEvidencePath", "disasterRecoveryEvidencePath"]) {
       requireAbsoluteLocalPath(input.backup[key], "BACKUP_EVIDENCE_PATH_REQUIRED");
       if (!sameOrNested(input.backup[key], path.join(dataRoot, "evidence"))) fail("BACKUP_EVIDENCE_MUST_USE_SHARED_READINESS_ROOT");
     }
@@ -112,7 +112,9 @@ export function validateLocalRuntimeConfig(input, options = {}) {
   if (tls.hstsEnabled && !lanReady) fail("HSTS_REQUIRES_TRUSTED_LAN");
 
   const restoreVerified = validRestoreEvidence(options.restoreEvidence, options.restoreReceiptPublicKey, input.backup, input.release, dataRoot, input.database, options.backupTargetEvidence, options.filesystemEvidence, now);
-  const recoveryVerified = validRecoveryEvidence(options.recoveryEvidence, options.runtimeConfigSha256, options.databaseBoundaryEvidence, options.latestBackupEvidence, now);
+  const currentRecoveryVerified = validCurrentRecoveryEvidence(options.recoveryEvidence, options.runtimeConfigSha256, options.databaseBoundaryEvidence, options.latestBackupEvidence, now);
+  const disasterRecoveryVerified = validDisasterRecoveryEvidence(options.disasterRecoveryEvidence, options.recoveryEvidence, options.runtimeConfigSha256, options.databaseBoundaryEvidence, options.latestBackupEvidence, now);
+  const recoveryVerified = currentRecoveryVerified && disasterRecoveryVerified;
   const databaseVerified = validDatabaseBoundaryEvidence(options.databaseBoundaryEvidence, database, now);
   return Object.freeze({
     ...input,
@@ -132,6 +134,8 @@ export function validateLocalRuntimeConfig(input, options = {}) {
       backupScheduleVerified,
       latestBackupVerified,
       restoreVerified,
+      currentRecoveryVerified,
+      disasterRecoveryVerified,
       recoveryVerified,
       databaseVerified,
       operationalReady: databaseVerified && backupConfigured && restoreVerified && recoveryVerified && lanReady
@@ -153,15 +157,18 @@ function validBackupTargetEvidence(evidence, backup, dataRoot, filesystemEvidenc
   if (evidence.result !== "PASS" || evidence.dataRoot !== path.resolve(dataRoot) || evidence.backupRoot !== path.resolve(backup.root)) return false;
   if (evidence.version !== 6 || evidence.backupWriterSid !== filesystemEvidence?.backupSid || evidence.signerReaderSid !== filesystemEvidence?.signerSid || evidence.separateReceiptSigner !== true || !evidence.appServiceDenied || !evidence.edgeServiceDenied || !evidence.separateBackupWriter ||
       evidence.aclProtected !== true || evidence.exactAcl !== true || evidence.encryptedAtRestOrTransport !== true || !new Set(["BITLOCKER_FULLY_ENCRYPTED","SMB_3_1_1_ENCRYPTED"]).has(evidence.encryptionProof) || !recentTimestamp(evidence.completedAt, now, 30 * 24 * 3600_000)) return false;
-  return evidence.targetType === "NAS" || (evidence.targetType === "LOCAL_DISK" &&
-    Number.isInteger(evidence.dataDiskNumber) && Number.isInteger(evidence.backupDiskNumber) &&
-    evidence.dataDiskNumber !== evidence.backupDiskNumber && evidence.dataDiskUniqueId !== evidence.backupDiskUniqueId);
+  if (evidence.targetType === "NAS") return typeof evidence.nasServer === "string" && validHostname(evidence.nasServer) && typeof evidence.nasShare === "string" && /^[^\\/:*?"<>|\x00-\x1f]{1,80}$/.test(evidence.nasShare) &&
+    /^[0-9a-f]{64}$/.test(evidence.nasServerIdentitySha256 ?? "") && Number.isInteger(evidence.nasResolvedAddressCount) && evidence.nasResolvedAddressCount > 0 && evidence.nasResolvedAddressCount <= 64 &&
+    evidence.nasLocalAliasRejected === true && evidence.nasShareAclAdministrativelyConfirmed === true && evidence.retentionControl === "SNAPSHOT_OR_VERSIONING";
+  return evidence.targetType === "LOCAL_DISK" && Number.isInteger(evidence.dataDiskNumber) && Number.isInteger(evidence.backupDiskNumber) &&
+    evidence.dataDiskNumber !== evidence.backupDiskNumber && evidence.dataDiskUniqueId !== evidence.backupDiskUniqueId && evidence.nasServer === null && evidence.nasShare === null &&
+    evidence.nasServerIdentitySha256 === null && evidence.nasResolvedAddressCount === null && evidence.nasLocalAliasRejected === false && evidence.nasShareAclAdministrativelyConfirmed === false && evidence.retentionControl === "OFFLINE_ROTATION";
 }
 
-function validBackupScheduleEvidence(evidence, backup, targetEvidence, filesystemEvidence, runtimeConfigSha256, now) {
+function validBackupScheduleEvidence(evidence, backup, targetEvidence, targetEvidenceSha256, filesystemEvidence, runtimeConfigSha256, now) {
   if (evidence?.runtimeConfigSha256 !== runtimeConfigSha256 || evidence?.runtimeReadinessBound !== true || evidence?.recurringInvocationPlanBound !== true) return false;
   return Boolean(backup.scheduledTaskEvidencePath && evidence?.version === 6 && evidence?.result === "PASS" && evidence.taskName === "Meta Ads Performance Daily Backup" &&
-    evidence.dailyTime === backup.dailyTime && evidence.separatePrincipal === true && evidence.scriptHashVerified === true && evidence.scheduledAuthorizationVersion === 2 && evidence.scheduledAuthorizationBound === true && /^[0-9a-f]{64}$/.test(evidence.scheduledAuthorizationSha256 ?? "") && /^[0-9a-f]{64}$/.test(evidence.backupTargetEvidenceSha256 ?? "") && evidence.backupTargetFingerprint === backupTargetFingerprint(targetEvidence) && path.resolve(evidence.backupRoot ?? "") === path.resolve(backup.root) &&
+    evidence.dailyTime === backup.dailyTime && evidence.separatePrincipal === true && evidence.scriptHashVerified === true && evidence.scheduledAuthorizationVersion === 2 && evidence.scheduledAuthorizationBound === true && /^[0-9a-f]{64}$/.test(evidence.scheduledAuthorizationSha256 ?? "") && /^[0-9a-f]{64}$/.test(targetEvidenceSha256 ?? "") && evidence.backupTargetEvidenceSha256 === targetEvidenceSha256 && evidence.backupTargetFingerprint === backupTargetFingerprint(targetEvidence) && path.resolve(evidence.backupRoot ?? "") === path.resolve(backup.root) &&
     evidence.dailyTriggerVerified === true && evidence.dailyTriggerEnabled === true && evidence.daysInterval === 1 && Number.isSafeInteger(evidence.maximumDatabaseDumpBytes) && evidence.maximumDatabaseDumpBytes >= 1048576 && evidence.maximumDatabaseDumpBytes <= 274877906944 && evidence.maximumBackupDurationSeconds === 14400 && evidence.backupSafetyMarginBytes === 1073741824 && evidence.databaseSizePreflightRequired === true && evidence.databaseDumpRealtimeCapRequired === true && evidence.databaseDumpFinalCapRequired === true && evidence.hardDeadlineRequired === true && evidence.processTreeKillOnDeadlineRequired === true && evidence.incompleteStagingCleanupRequired === true && evidence.receiptSigningDelegatedToDistinctSigner === true && evidence.signerHashVerified === true && evidence.executorHashesVerified === true && evidence.boundedChildProcesses === true && evidence.powerShell7Verified === true && typeof evidence.powerShellPath === "string" && [evidence.powerShellSha256,evidence.actionArgumentsSha256,evidence.backupScriptSha256,evidence.releaseVerifierSha256,evidence.releaseManifestSha256,evidence.attestationVerifierSha256,evidence.nodeSha256,evidence.psqlSha256,evidence.pgDumpSha256,evidence.pgPassSha256,evidence.backupIntegrityKeySha256,evidence.backupReceiptPrivateKeySha256,evidence.receiptPublisherSha256,evidence.semanticSignerSha256,evidence.executorSetDigest,evidence.filesystemEvidenceSha256].every((value)=>/^[0-9a-f]{64}$/.test(value??"")) && evidence.executorSetDigest === sha256Tuple(evidence.nodeSha256,evidence.psqlSha256,evidence.pgDumpSha256) && evidence.enabled === true && evidence.startWhenAvailable === true && evidence.backupSid === targetEvidence?.backupWriterSid && evidence.backupSid === filesystemEvidence?.backupSid &&
     recentTimestamp(evidence.completedAt, now, 30 * 24 * 3600_000));
 }
@@ -189,7 +196,7 @@ function validRelease(release) {
 }
 function backupTargetFingerprint(evidence) {
   if (!plainObject(evidence)) return null;
-  return createHash("sha256").update(["6",evidence.result,evidence.targetType,evidence.dataRoot,evidence.backupRoot,evidence.dataDiskUniqueId ?? "",evidence.backupDiskUniqueId ?? "",evidence.nasServer ?? "",evidence.nasShare ?? "",evidence.backupWriterSid,evidence.signerReaderSid,evidence.encryptionProof,evidence.retentionControl,evidence.completedAt].join("\n")).digest("hex");
+  return createHash("sha256").update(["7",evidence.result,evidence.targetType,evidence.dataRoot,evidence.backupRoot,evidence.dataDiskUniqueId ?? "",evidence.backupDiskUniqueId ?? "",evidence.nasServer ?? "",evidence.nasShare ?? "",evidence.nasServerIdentitySha256 ?? "",String(evidence.nasResolvedAddressCount ?? ""),String(evidence.nasLocalAliasRejected === true),String(evidence.nasShareAclAdministrativelyConfirmed === true),evidence.backupWriterSid,evidence.signerReaderSid,evidence.encryptionProof,evidence.retentionControl,evidence.completedAt].join("\n")).digest("hex");
 }
 function backupConfigFingerprint(release, backup, dataRoot, database, targetFingerprint) {
   if (!targetFingerprint) return null;
@@ -203,7 +210,7 @@ function validFilesystemEvidence(evidence, config, dataRoot, runtimeConfigPath, 
   const adminEvidencePaths = [config.hostSecurity.filesystemEvidencePath, config.database.boundaryEvidencePath,
     config.hostSecurity.firewallEvidencePath,
     config.tls.clientTrustEvidencePath, config.backup.physicalTargetEvidencePath, config.backup.scheduledTaskEvidencePath,
-    config.backup.restoreEvidencePath,config.backup.recoveryEvidencePath].filter(Boolean);
+    config.backup.restoreEvidencePath,config.backup.recoveryEvidencePath,config.backup.disasterRecoveryEvidencePath].filter(Boolean);
   const covered = classContains(path.join(dataRoot,"storage"),roots.CORE_MODIFY) &&
     classContains(path.join(dataRoot,"runtime-control"),roots.EDGE_READ) &&
     [config.tls.serverPrivateKeyPath,config.hostSecurity.edgeSigningPrivateKeyPath].filter(Boolean).every((item)=>classContains(item,roots.EDGE_READ)) &&
@@ -283,16 +290,26 @@ function validateDatabase(value) {
   requireAbsoluteLocalPath(value.boundaryEvidencePath, "DATABASE_BOUNDARY_EVIDENCE_PATH_REQUIRED");
 }
 
-function validRecoveryEvidence(evidence, runtimeConfigSha256, databaseEvidence, latestBackupEvidence, now) {
-  return evidence?.version === 5 && evidence?.result === "PASS" && evidence.exactInventory === true && evidence.authenticatedExtract === true && evidence.boundedExtract === true && evidence.currentInstallBound === true && evidence.currentSourceHashesVerified === true && evidence.disasterRecoveryVerified === false && evidence.sourcePathsDisclosed === false && evidence.extractionRetained === false &&
+function validCurrentRecoveryEvidence(evidence, runtimeConfigSha256, databaseEvidence, latestBackupEvidence, now) {
+  return evidence?.version === 5 && evidence?.result === "PASS" && evidence.proofType === "current-host-recovery" && evidence.recoveryContractDigest === recoveryContractFingerprint(evidence) && evidence.exactInventory === true && evidence.authenticatedExtract === true && evidence.boundedExtract === true && evidence.currentInstallBound === true && evidence.currentSourceHashesVerified === true && evidence.disasterRecoveryVerified === false && evidence.sourcePathsDisclosed === false && evidence.extractionRetained === false &&
     evidence.localCopyPresent === true && evidence.escrowCopyPresent === true && evidence.escrowSeparated === true && evidence.copiesMatch === true &&
-    evidence.adminOnlyAcl === true && evidence.testExtractRemoved === true && evidence.pfxPrivateKeyVerified === true && evidence.caIdentityVerified === true &&
+    evidence.adminOnlyAcl === true && evidence.testExtractRemoved === true && evidence.pfxPrivateKeyVerified === true && evidence.caIdentityVerified === true && evidence.boundedConcurrentChildOutput === true && evidence.processTreeKillOnDeadline === true &&
     typeof runtimeConfigSha256 === "string" && /^[0-9a-f]{64}$/.test(runtimeConfigSha256) && evidence.runtimeConfigSha256 === runtimeConfigSha256 &&
-    /^[0-9a-f]{64}$/.test(evidence.inventoryDigest ?? "") && /^[0-9a-f]{64}$/.test(evidence.kitId ?? "") && evidence.localKitSha256 === evidence.escrowKitSha256 && evidence.kitId === evidence.localKitSha256 &&
+    [evidence.inventoryDigest,evidence.kitId,evidence.kitSha256,evidence.localKitSha256,evidence.escrowKitSha256,evidence.worksheetSha256,evidence.localWorksheetSha256,evidence.escrowWorksheetSha256].every((value)=>/^[0-9a-f]{64}$/.test(value??"")) && evidence.kitId === evidence.kitSha256 && evidence.localKitSha256 === evidence.escrowKitSha256 && evidence.kitId === evidence.localKitSha256 && evidence.worksheetSha256 === evidence.localWorksheetSha256 && evidence.worksheetSha256 === evidence.escrowWorksheetSha256 &&
     /^[0-9a-f]{64}$/.test(evidence.manifestSha256 ?? "") && evidence.databaseCredentialInventoryDigest === databaseEvidence?.credentialInventoryDigest &&
     [evidence.nodeSha256,evidence.toolSha256,evidence.executorSetDigest].every((value)=>/^[0-9a-f]{64}$/.test(value??"")) && evidence.executorSetDigest === sha256Tuple(evidence.nodeSha256,evidence.toolSha256) && evidence.nodeSha256 === latestBackupEvidence?.nodeSha256 &&
     evidence.backupIntegrityKeySha256 === latestBackupEvidence?.integrityKeyId && recentTimestamp(evidence.completedAt, now, 30 * 24 * 3600_000);
 }
+function validDisasterRecoveryEvidence(evidence, currentEvidence, runtimeConfigSha256, databaseEvidence, latestBackupEvidence, now) {
+  return evidence?.version === 5 && evidence?.result === "PASS" && evidence.proofType === "clean-pc-disaster-recovery" && evidence.recoveryContractDigest === recoveryContractFingerprint(evidence) && evidence.exactInventory === true && evidence.authenticatedExtract === true && evidence.boundedExtract === true && evidence.currentInstallBound === false && evidence.currentSourceHashesVerified === false && evidence.disasterRecoveryVerified === true && evidence.sourcePathsDisclosed === false && evidence.extractionRetained === true &&
+    evidence.localCopyPresent === false && evidence.escrowCopyPresent === true && evidence.escrowWorksheetPresent === true && evidence.escrowSeparated === false && evidence.copiesMatch === false && evidence.adminOnlyAcl === true && evidence.testExtractRemoved === false && evidence.pfxPrivateKeyVerified === true && evidence.caIdentityVerified === false && evidence.boundedConcurrentChildOutput === true && evidence.processTreeKillOnDeadline === true &&
+    typeof runtimeConfigSha256 === "string" && /^[0-9a-f]{64}$/.test(runtimeConfigSha256) && evidence.runtimeConfigSha256 === runtimeConfigSha256 &&
+    [evidence.inventoryDigest,evidence.kitId,evidence.kitSha256,evidence.manifestSha256,evidence.worksheetSha256,evidence.escrowWorksheetSha256,evidence.escrowKitSha256].every((value)=>/^[0-9a-f]{64}$/.test(value??"")) && evidence.kitId === evidence.kitSha256 && evidence.kitId === evidence.escrowKitSha256 && evidence.worksheetSha256 === evidence.escrowWorksheetSha256 &&
+    evidence.databaseCredentialInventoryDigest === databaseEvidence?.credentialInventoryDigest && [evidence.nodeSha256,evidence.toolSha256,evidence.executorSetDigest].every((value)=>/^[0-9a-f]{64}$/.test(value??"")) && evidence.executorSetDigest === sha256Tuple(evidence.nodeSha256,evidence.toolSha256) && evidence.nodeSha256 === latestBackupEvidence?.nodeSha256 && evidence.backupIntegrityKeySha256 === latestBackupEvidence?.integrityKeyId &&
+    currentEvidence?.version === 5 && evidence.recoveryContractDigest === currentEvidence.recoveryContractDigest && evidence.kitId === currentEvidence.kitId && evidence.manifestSha256 === currentEvidence.manifestSha256 && evidence.installId === currentEvidence.installId && evidence.runtimeConfigSha256 === currentEvidence.runtimeConfigSha256 && evidence.inventoryDigest === currentEvidence.inventoryDigest && evidence.databaseCredentialInventoryDigest === currentEvidence.databaseCredentialInventoryDigest && evidence.backupIntegrityKeySha256 === currentEvidence.backupIntegrityKeySha256 && evidence.executorSetDigest === currentEvidence.executorSetDigest && evidence.escrowWorksheetSha256 === currentEvidence.escrowWorksheetSha256 &&
+    recentTimestamp(evidence.completedAt, now, 30 * 24 * 3600_000);
+}
+function recoveryContractFingerprint(evidence) { return sha256Tuple("recovery-pair-v1",evidence?.kitId,evidence?.manifestSha256,evidence?.runtimeConfigSha256,evidence?.installId,evidence?.inventoryDigest,evidence?.escrowWorksheetSha256,evidence?.executorSetDigest); }
 function validRestoreEvidence(evidence, publicKey, backup, release, dataRoot, database, targetEvidence, filesystemEvidence, now) {
   if (!backup.restoreEvidencePath || !evidence || !plainObject(evidence)) return false;
   const targetFingerprint = backupTargetFingerprint(targetEvidence);

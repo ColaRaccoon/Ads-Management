@@ -93,7 +93,7 @@
     "backup": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["root", "dailyTime", "rpoHours", "rtoHours", "physicalTargetEvidencePath", "scheduledTaskEvidencePath", "latestBackupEvidencePath", "restoreEvidencePath", "recoveryEvidencePath", "backupReceiptPublicKeyPath", "restoreReceiptPublicKeyPath"],
+      "required": ["root", "dailyTime", "rpoHours", "rtoHours", "physicalTargetEvidencePath", "scheduledTaskEvidencePath", "latestBackupEvidencePath", "restoreEvidencePath", "recoveryEvidencePath", "disasterRecoveryEvidencePath", "backupReceiptPublicKeyPath", "restoreReceiptPublicKeyPath"],
       "properties": {
         "root": { "type": ["string", "null"] },
         "dailyTime": { "type": ["string", "null"], "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$" },
@@ -104,6 +104,7 @@
         "latestBackupEvidencePath": { "type": ["string", "null"] },
         "restoreEvidencePath": { "type": ["string", "null"] },
         "recoveryEvidencePath": { "type": ["string", "null"] },
+        "disasterRecoveryEvidencePath": { "type": ["string", "null"] },
         "backupReceiptPublicKeyPath": { "type": ["string", "null"] },
         "restoreReceiptPublicKeyPath": { "type": ["string", "null"] }
       }

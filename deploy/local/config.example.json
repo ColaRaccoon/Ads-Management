@@ -48,6 +48,7 @@
     "latestBackupEvidencePath": null,
     "restoreEvidencePath": null,
     "recoveryEvidencePath": null,
+    "disasterRecoveryEvidencePath": null,
     "backupReceiptPublicKeyPath": null,
     "restoreReceiptPublicKeyPath": null
   }

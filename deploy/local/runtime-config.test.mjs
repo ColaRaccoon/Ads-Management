@@ -20,7 +20,7 @@ const base = () => ({
   lan: { enabled: false, hostname: null, bindAddress: null, allowedCidrs: [], expectedClientCount: null, expectedClientSetDigest: null },
   tls: { caCertificatePath: null, serverCertificatePath: null, serverPrivateKeyPath: null, clientTrustVerified: false, clientTrustEvidencePath: null, hstsEnabled: false },
   hostSecurity: { filesystemEvidencePath: null, firewallEvidencePath: null, edgeSigningPublicKeyPath: null, edgeSigningPrivateKeyPath: null, nodeProgramPath: null, nodeProgramSha256: null, edgeServiceSid: null },
-  backup: { root: null, dailyTime: null, rpoHours: 24, rtoHours: 4, physicalTargetEvidencePath: null, scheduledTaskEvidencePath: null, latestBackupEvidencePath: null, restoreEvidencePath: null, recoveryEvidencePath: null, backupReceiptPublicKeyPath: null, restoreReceiptPublicKeyPath: null }
+  backup: { root: null, dailyTime: null, rpoHours: 24, rtoHours: 4, physicalTargetEvidencePath: null, scheduledTaskEvidencePath: null, latestBackupEvidencePath: null, restoreEvidencePath: null, recoveryEvidencePath: null, disasterRecoveryEvidencePath: null, backupReceiptPublicKeyPath: null, restoreReceiptPublicKeyPath: null }
 });
 
 test("missing LAN deployment values remains loopback-only", () => {
@@ -145,6 +145,7 @@ test("operational readiness requires fresh schedule, backup, restore, filesystem
     latestBackupEvidencePath: path.join(dataRoot, "backup-receipt", "latest.json"),
     restoreEvidencePath: path.join(dataRoot, "evidence", "restore.json"),
     recoveryEvidencePath: path.join(dataRoot, "evidence", "recovery.json"),
+    disasterRecoveryEvidencePath: path.join(dataRoot, "evidence", "disaster-recovery.json"),
     backupReceiptPublicKeyPath: path.join(dataRoot, "public-keys", "backup-receipt-public.pem"),
     restoreReceiptPublicKeyPath: path.join(dataRoot, "public-keys", "restore-receipt-public.pem")
   };
@@ -160,12 +161,50 @@ test("operational readiness requires fresh schedule, backup, restore, filesystem
   assert.equal(stale.readiness.operationalReady, false);
 });
 
+test("operational readiness requires both current-host and clean-PC recovery evidence", () => {
+  const value = base(); configureTrustedLan(value);
+  const backupRoot = path.resolve(process.cwd(), "..", "runtime-backup");
+  value.backup = { root: backupRoot, dailyTime: "02:30", rpoHours: 24, rtoHours: 4,
+    physicalTargetEvidencePath: path.join(dataRoot,"evidence","target.json"), scheduledTaskEvidencePath: path.join(dataRoot,"evidence","schedule.json"), latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"),
+    restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"), disasterRecoveryEvidencePath: path.join(dataRoot,"evidence","disaster-recovery.json"),
+    backupReceiptPublicKeyPath: path.join(dataRoot,"public-keys","backup-receipt-public.pem"), restoreReceiptPublicKeyPath: path.join(dataRoot,"public-keys","restore-receipt-public.pem") };
+  const options = trustedEvidence(new Date("2026-08-26T12:00:00.000Z"), value, backupRoot);
+  const currentOnly = validateLocalRuntimeConfig(value, { ...options, disasterRecoveryEvidence: null });
+  assert.equal(currentOnly.readiness.currentRecoveryVerified, true);
+  assert.equal(currentOnly.readiness.disasterRecoveryVerified, false);
+  assert.equal(currentOnly.readiness.operationalReady, false);
+  const disasterOnly = validateLocalRuntimeConfig(value, { ...options, recoveryEvidence: null });
+  assert.equal(disasterOnly.readiness.currentRecoveryVerified, false);
+  assert.equal(disasterOnly.readiness.disasterRecoveryVerified, false);
+  assert.equal(disasterOnly.readiness.operationalReady, false);
+  const mismatchedKit = validateLocalRuntimeConfig(value, { ...options, disasterRecoveryEvidence: { ...options.disasterRecoveryEvidence, kitId: "0".repeat(64), escrowKitSha256: "0".repeat(64) } });
+  assert.equal(mismatchedKit.readiness.disasterRecoveryVerified, false);
+  assert.equal(mismatchedKit.readiness.operationalReady, false);
+});
+
+test("schedule and readiness reject backup target evidence byte or NAS identity drift", () => {
+  const value = base(); configureTrustedLan(value);
+  const backupRoot = path.resolve(process.cwd(), "..", "runtime-backup");
+  value.backup = { root: backupRoot, dailyTime: "02:30", rpoHours: 24, rtoHours: 4,
+    physicalTargetEvidencePath: path.join(dataRoot,"evidence","target.json"), scheduledTaskEvidencePath: path.join(dataRoot,"evidence","schedule.json"), latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"),
+    restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"), disasterRecoveryEvidencePath: path.join(dataRoot,"evidence","disaster-recovery.json"),
+    backupReceiptPublicKeyPath: path.join(dataRoot,"public-keys","backup-receipt-public.pem"), restoreReceiptPublicKeyPath: path.join(dataRoot,"public-keys","restore-receipt-public.pem") };
+  const options = trustedEvidence(new Date("2026-08-26T12:00:00.000Z"), value, backupRoot);
+  const changedBytes = validateLocalRuntimeConfig(value, { ...options, backupTargetEvidenceSha256: "0".repeat(64) });
+  assert.equal(changedBytes.readiness.backupScheduleVerified, false);
+  assert.equal(changedBytes.readiness.operationalReady, false);
+  const nas = { ...options.backupTargetEvidence, targetType: "NAS", backupRoot: "\\\\nas.internal\\backup", backupDiskNumber: null, backupDiskUniqueId: null, nasServer: "nas.internal", nasShare: "backup", nasServerIdentitySha256: "1".repeat(64), nasResolvedAddressCount: 1, nasLocalAliasRejected: true, nasShareAclAdministrativelyConfirmed: true, encryptionProof: "SMB_3_1_1_ENCRYPTED", retentionControl: "SNAPSHOT_OR_VERSIONING" };
+  const invalidNas = validateLocalRuntimeConfig({ ...value, backup: { ...value.backup, root: nas.backupRoot } }, { ...options, backupTargetEvidence: { ...nas, nasLocalAliasRejected: false }, backupTargetEvidenceSha256: createHash("sha256").update(JSON.stringify({ ...nas, nasLocalAliasRejected: false })).digest("hex") });
+  assert.equal(invalidNas.readiness.backupTargetVerified, false);
+  assert.equal(invalidNas.readiness.operationalReady, false);
+});
+
 test("executor pin drift fails schedule, signed backup, signed restore and recovery readiness", () => {
   const value = base(); configureTrustedLan(value);
   const backupRoot = path.resolve(process.cwd(), "..", "runtime-backup");
   value.backup = { root: backupRoot, dailyTime: "02:30", rpoHours: 24, rtoHours: 4,
     physicalTargetEvidencePath: path.join(dataRoot,"evidence","target.json"), scheduledTaskEvidencePath: path.join(dataRoot,"evidence","schedule.json"),
-    latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"), restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"),
+    latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"), restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"), disasterRecoveryEvidencePath: path.join(dataRoot,"evidence","disaster-recovery.json"),
     backupReceiptPublicKeyPath: path.join(dataRoot,"public-keys","backup-receipt-public.pem"), restoreReceiptPublicKeyPath: path.join(dataRoot,"public-keys","restore-receipt-public.pem") };
   const options = trustedEvidence(new Date("2026-08-26T12:00:00.000Z"), value, backupRoot);
   const scheduleDrift = validateLocalRuntimeConfig(value, { ...options, backupScheduleEvidence: { ...options.backupScheduleEvidence, nodeSha256: "0".repeat(64) } });
@@ -189,7 +228,7 @@ test("backup readiness rejects cap, deadline and cleanup-contract drift", () => 
   const backupRoot = path.resolve(process.cwd(), "..", "runtime-backup");
   value.backup = { root: backupRoot, dailyTime: "02:30", rpoHours: 24, rtoHours: 4,
     physicalTargetEvidencePath: path.join(dataRoot,"evidence","target.json"), scheduledTaskEvidencePath: path.join(dataRoot,"evidence","schedule.json"),
-    latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"), restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"),
+    latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"), restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"), disasterRecoveryEvidencePath: path.join(dataRoot,"evidence","disaster-recovery.json"),
     backupReceiptPublicKeyPath: path.join(dataRoot,"public-keys","backup-receipt-public.pem"), restoreReceiptPublicKeyPath: path.join(dataRoot,"public-keys","restore-receipt-public.pem") };
   const options = trustedEvidence(new Date("2026-08-26T12:00:00.000Z"), value, backupRoot);
   for (const drift of [
@@ -216,7 +255,7 @@ test("a newer valid daily backup does not invalidate the bounded restore rehears
   const backupRoot = path.resolve(process.cwd(), "..", "runtime-backup");
   value.backup = { root: backupRoot, dailyTime: "02:30", rpoHours: 24, rtoHours: 4,
     physicalTargetEvidencePath: path.join(dataRoot,"evidence","target.json"), scheduledTaskEvidencePath: path.join(dataRoot,"evidence","schedule.json"),
-    latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"), restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"),
+    latestBackupEvidencePath: path.join(dataRoot,"backup-receipt","latest.json"), restoreEvidencePath: path.join(dataRoot,"evidence","restore.json"), recoveryEvidencePath: path.join(dataRoot,"evidence","recovery.json"), disasterRecoveryEvidencePath: path.join(dataRoot,"evidence","disaster-recovery.json"),
     backupReceiptPublicKeyPath: path.join(dataRoot,"public-keys","backup-receipt-public.pem"), restoreReceiptPublicKeyPath: path.join(dataRoot,"public-keys","restore-receipt-public.pem") };
   const options = trustedEvidence(new Date("2026-08-26T12:00:00.000Z"), value, backupRoot);
   const nextUnsigned = { ...options.latestBackupEvidence, backupId: "20260826T115500Z-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", storageReferenceDigest: "8".repeat(64), completedAt: "2026-08-26T11:55:00.000Z" };
@@ -268,26 +307,29 @@ function databaseEvidence(completedAt) {
 
 function trustedEvidence(now, value, backupRoot) {
   const completedAt = "2026-08-26T11:00:00.000Z";
-  const target = { version: 6, result: "PASS", targetType: "LOCAL_DISK", dataRoot, backupRoot, dataDiskNumber: 1, backupDiskNumber: 2, dataDiskUniqueId: "disk-a", backupDiskUniqueId: "disk-b", nasServer: null, nasShare: null, backupWriterSid: "S-1-5-21-100-200-300-1003", signerReaderSid: "S-1-5-21-100-200-300-1004", appServiceDenied: true, edgeServiceDenied: true, separateBackupWriter: true, separateReceiptSigner: true, aclProtected: true, exactAcl: true, encryptedAtRestOrTransport: true, encryptionProof: "BITLOCKER_FULLY_ENCRYPTED", retentionControl: "OFFLINE_ROTATION", completedAt };
-  const targetFingerprint = createHash("sha256").update(["6",target.result,target.targetType,target.dataRoot,target.backupRoot,target.dataDiskUniqueId,target.backupDiskUniqueId,target.nasServer??"",target.nasShare??"",target.backupWriterSid,target.signerReaderSid,target.encryptionProof,target.retentionControl,target.completedAt].join("\n")).digest("hex");
+  const target = { version: 6, result: "PASS", targetType: "LOCAL_DISK", dataRoot, backupRoot, dataDiskNumber: 1, backupDiskNumber: 2, dataDiskUniqueId: "disk-a", backupDiskUniqueId: "disk-b", nasServer: null, nasShare: null, nasServerIdentitySha256: null, nasResolvedAddressCount: null, nasLocalAliasRejected: false, nasShareAclAdministrativelyConfirmed: false, backupWriterSid: "S-1-5-21-100-200-300-1003", signerReaderSid: "S-1-5-21-100-200-300-1004", appServiceDenied: true, edgeServiceDenied: true, separateBackupWriter: true, separateReceiptSigner: true, aclProtected: true, exactAcl: true, encryptedAtRestOrTransport: true, encryptionProof: "BITLOCKER_FULLY_ENCRYPTED", retentionControl: "OFFLINE_ROTATION", completedAt };
+  const targetEvidenceSha256 = createHash("sha256").update(JSON.stringify(target)).digest("hex");
+  const targetFingerprint = createHash("sha256").update(["7",target.result,target.targetType,target.dataRoot,target.backupRoot,target.dataDiskUniqueId,target.backupDiskUniqueId,target.nasServer??"",target.nasShare??"",target.nasServerIdentitySha256??"",String(target.nasResolvedAddressCount??""),String(target.nasLocalAliasRejected===true),String(target.nasShareAclAdministrativelyConfirmed===true),target.backupWriterSid,target.signerReaderSid,target.encryptionProof,target.retentionControl,target.completedAt].join("\n")).digest("hex");
   const db=value.database;
   const configFingerprint = createHash("sha256").update(["2",value.release.id,value.release.migrationDigest,dataRoot,backupRoot,value.backup.dailyTime,db.provider,db.projectRef,db.connectionMode,db.host,String(db.port),db.name,db.runtimeUser,db.migrationUser,db.backupUser,db.restoreUser,db.schema,db.caCertificateSha256,"24","4",targetFingerprint].join("\n")).digest("hex");
   const runtimeConfigSha256 = createHash("sha256").update(JSON.stringify(value)).digest("hex");
   const result = {
     now,
     runtimeConfigSha256,
-    recoveryEvidence: { version: 5, result: "PASS", kitId: "8".repeat(64), kitSha256: "8".repeat(64), worksheetSha256: "4".repeat(64), localKitSha256: "8".repeat(64), escrowKitSha256: "8".repeat(64), manifestSha256: "9".repeat(64), installId: "install-test-0001", runtimeConfigSha256, inventoryDigest: "6".repeat(64), databaseCredentialInventoryDigest: databaseEvidence("2026-08-26T11:55:00.000Z").credentialInventoryDigest, backupIntegrityKeySha256: "7".repeat(64), nodeSha256, toolSha256: recoveryToolSha256, executorSetDigest: sha256Tuple(nodeSha256,recoveryToolSha256), exactInventory: true, authenticatedExtract: true, boundedExtract: true, disasterRecoveryVerified: false, sourcePathsDisclosed: false, extractionRetained: false, currentInstallBound: true, currentSourceHashesVerified: true, localCopyPresent: true, escrowCopyPresent: true, escrowSeparated: true, copiesMatch: true, adminOnlyAcl: true, testExtractRemoved: true, pfxPrivateKeyVerified: true, caIdentityVerified: true, completedAt },
+    recoveryEvidence: { version: 5, result: "PASS", proofType: "current-host-recovery", recoveryContractDigest: sha256Tuple("recovery-pair-v1","8".repeat(64),"9".repeat(64),runtimeConfigSha256,"install-test-0001","6".repeat(64),"4".repeat(64),sha256Tuple(nodeSha256,recoveryToolSha256)), kitId: "8".repeat(64), kitSha256: "8".repeat(64), worksheetSha256: "4".repeat(64), localWorksheetSha256: "4".repeat(64), escrowWorksheetSha256: "4".repeat(64), localKitSha256: "8".repeat(64), escrowKitSha256: "8".repeat(64), manifestSha256: "9".repeat(64), installId: "install-test-0001", runtimeConfigSha256, inventoryDigest: "6".repeat(64), databaseCredentialInventoryDigest: databaseEvidence("2026-08-26T11:55:00.000Z").credentialInventoryDigest, backupIntegrityKeySha256: "7".repeat(64), nodeSha256, toolSha256: recoveryToolSha256, executorSetDigest: sha256Tuple(nodeSha256,recoveryToolSha256), exactInventory: true, authenticatedExtract: true, boundedExtract: true, boundedConcurrentChildOutput: true, processTreeKillOnDeadline: true, disasterRecoveryVerified: false, sourcePathsDisclosed: false, extractionRetained: false, currentInstallBound: true, currentSourceHashesVerified: true, localCopyPresent: true, escrowCopyPresent: true, escrowWorksheetPresent: true, escrowSeparated: true, copiesMatch: true, adminOnlyAcl: true, testExtractRemoved: true, pfxPrivateKeyVerified: true, caIdentityVerified: true, completedAt },
     clientTrustEvidence: { version: 4, result: "PASS", phase: "PREOPEN", hostname: value.lan.hostname, releaseId: null, caThumbprint: "A".repeat(40), serverCertificateSha256: "1".repeat(64), verifiedClientCount: 2, clientSetDigest: "2".repeat(64), allowedClientCidrs: value.lan.allowedCidrs, clientAddressMappingVerified: true, clientAddressOwnershipVerified: true, verificationPlanSetDigest: "3".repeat(64), httpsVerified: false, completedAt },
     filesystemEvidence: filesystemEvidence(completedAt),
     databaseBoundaryEvidence: databaseEvidence("2026-08-26T11:55:00.000Z"),
     firewallEvidence: firewallEvidence(value, completedAt),
     backupTargetEvidence: target,
-    backupScheduleEvidence: { version: 6, result: "PASS", taskName: "Meta Ads Performance Daily Backup", dailyTime: "02:30", dailyTriggerVerified: true, dailyTriggerEnabled: true, daysInterval: 1, backupTargetEvidenceSha256: "8".repeat(64), backupTargetFingerprint: targetFingerprint, backupRoot, scheduledAuthorizationSha256: "9".repeat(64), scheduledAuthorizationBound: true, maximumDatabaseDumpBytes: 68719476736, maximumBackupDurationSeconds: 14400, backupSafetyMarginBytes: 1073741824, databaseSizePreflightRequired: true, databaseDumpRealtimeCapRequired: true, databaseDumpFinalCapRequired: true, hardDeadlineRequired: true, processTreeKillOnDeadlineRequired: true, incompleteStagingCleanupRequired: true, backupSid: target.backupWriterSid, separatePrincipal: true, receiptSigningDelegatedToDistinctSigner: true, powerShell7Verified: true, powerShellPath: "C:\\Program Files\\PowerShell\\7\\pwsh.exe", powerShellSha256: "6".repeat(64), actionArgumentsSha256: "5".repeat(64), backupScriptSha256: "4".repeat(64), releaseVerifierSha256: "2".repeat(64), releaseManifestSha256: "1".repeat(64), attestationVerifierSha256: "3".repeat(64), nodeSha256, psqlSha256, pgDumpSha256, executorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgDumpSha256), filesystemEvidenceSha256, scriptHashVerified: true, signerHashVerified: false, executorHashesVerified: true, enabled: true, startWhenAvailable: true, lastSuccessAt: completedAt, completedAt },
+    backupTargetEvidenceSha256: targetEvidenceSha256,
+    backupScheduleEvidence: { version: 6, result: "PASS", taskName: "Meta Ads Performance Daily Backup", dailyTime: "02:30", dailyTriggerVerified: true, dailyTriggerEnabled: true, daysInterval: 1, backupTargetEvidenceSha256: targetEvidenceSha256, backupTargetFingerprint: targetFingerprint, backupRoot, scheduledAuthorizationSha256: "9".repeat(64), scheduledAuthorizationBound: true, maximumDatabaseDumpBytes: 68719476736, maximumBackupDurationSeconds: 14400, backupSafetyMarginBytes: 1073741824, databaseSizePreflightRequired: true, databaseDumpRealtimeCapRequired: true, databaseDumpFinalCapRequired: true, hardDeadlineRequired: true, processTreeKillOnDeadlineRequired: true, incompleteStagingCleanupRequired: true, backupSid: target.backupWriterSid, separatePrincipal: true, receiptSigningDelegatedToDistinctSigner: true, powerShell7Verified: true, powerShellPath: "C:\\Program Files\\PowerShell\\7\\pwsh.exe", powerShellSha256: "6".repeat(64), actionArgumentsSha256: "5".repeat(64), backupScriptSha256: "4".repeat(64), releaseVerifierSha256: "2".repeat(64), releaseManifestSha256: "1".repeat(64), attestationVerifierSha256: "3".repeat(64), nodeSha256, psqlSha256, pgDumpSha256, executorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgDumpSha256), filesystemEvidenceSha256, scriptHashVerified: true, signerHashVerified: false, executorHashesVerified: true, enabled: true, startWhenAvailable: true, lastSuccessAt: completedAt, completedAt },
     latestBackupEvidence: signed({ attestationType: "backup-latest", version: 6, result: "COMPLETE", backupId: "20260826T110000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", releaseId: value.release.id, sourceDataRoot: dataRoot, backupRoot, databaseProvider: db.provider, databaseProjectRef: db.projectRef, databaseHost: db.host, databasePort: db.port, databaseName: db.name, databaseSchema: db.schema, databaseDumpBytes: 1048576, maximumDatabaseDumpBytes: 68719476736, maximumBackupDurationSeconds: 14400, backupSafetyMarginBytes: 1073741824, elapsedSeconds: 30, databaseSizePreflightVerified: true, databaseDumpRealtimeCapEnforced: true, databaseDumpFinalCapVerified: true, hardDeadlineEnforced: true, processTreeKillOnDeadline: true, incompleteStagingCleanupContract: true, signerIndependentArtifactVerification: true, artifactVerificationDigest: "a".repeat(64), migrationDigest: value.release.migrationDigest, appliedMigrationDigest: "d".repeat(64), storageReferenceDigest: "f".repeat(64), targetEvidenceFingerprint: targetFingerprint, configFingerprint, manifestSha256: "b".repeat(64), integrityKeyId: "7".repeat(64), integritySignature: "c".repeat(64), nodeSha256, psqlSha256, pgDumpSha256, executorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgDumpSha256), filesystemEvidenceSha256, completedAt }, backupReceiptKeys),
     restoreEvidence: signed({ attestationType: "restore-verification", version: 6, result: "PASS", rpoHours: 24, rtoHours: 4, elapsedSeconds: 30, databaseRestored: true, storageHashVerified: true, storageReferenceVerified: true, businessKpiVerified: true, restoreRoleRestricted: true, restoreVerifierIdentityBound: true, isolatedDatabaseSchemaCleaned: true, isolatedDatabasePristineBeforeRestore: true, eventTriggersAbsentBeforeRestore: true, isolatedStorageRootCleaned: true, fullCatalogCleanupVerified: true, verifiedInputSnapshot: true, boundedManifestCopy: true, isolatedApiConfigsBound: true, archiveTocAllowlisted: true, hardDeadlineEnforced: true, processTreeKillOnDeadline: true, uncompressedTarArchive: true, capacityReserveVerified: true, nodeSha256, psqlSha256, pgRestoreSha256, restoreExecutorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgRestoreSha256), filesystemEvidenceSha256, databaseBoundaryEvidenceSha256: "9".repeat(64), sourceDataRoot: "D:\\previous-host-data", verifiedTargetDataRoot: dataRoot, verifiedStorageRoot: path.join(dataRoot,"restore-verification","drill_restore_verify"), verifiedTargetDescriptorDigest: "b".repeat(64), releaseId: value.release.id, databaseProvider: db.provider, sourceDatabaseProjectRef: db.projectRef, restoreTargetProjectRef: "zyxwvutsrqponmlkjihg", restoreTargetDatabaseName: "restore_db", isolatedRestoreTarget: true, productionDatabaseMutated: false, databaseName: db.name, databaseSchema: db.schema, configFingerprint, targetEvidenceFingerprint: targetFingerprint, integrityKeyId: "7".repeat(64), migrationDigest: value.release.migrationDigest, appliedMigrationDigest: "d".repeat(64), businessKpiDigest: "e".repeat(64), storageReferenceDigest: "f".repeat(64), backupId: "20260826T110000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", backupManifestSha256: "b".repeat(64), backupIntegritySignature: "c".repeat(64), completedAt }, restoreReceiptKeys),
     backupReceiptPublicKey: backupReceiptKeys.publicKey.export({ type: "spki", format: "pem" }),
     restoreReceiptPublicKey: restoreReceiptKeys.publicKey.export({ type: "spki", format: "pem" })
   };
+  result.disasterRecoveryEvidence = { ...result.recoveryEvidence, proofType: "clean-pc-disaster-recovery", worksheetSha256: result.recoveryEvidence.escrowWorksheetSha256, localWorksheetSha256: null, localKitSha256: null, disasterRecoveryVerified: true, currentInstallBound: false, currentSourceHashesVerified: false, extractionRetained: true, localCopyPresent: false, escrowSeparated: false, copiesMatch: false, testExtractRemoved: false, caIdentityVerified: false };
   const backupPins={pgPassSha256:"0".repeat(64),backupIntegrityKeySha256:"1".repeat(64),backupReceiptPrivateKeySha256:"2".repeat(64),receiptPublisherSha256:"3".repeat(64),semanticSignerSha256:"4".repeat(64)};
   Object.assign(result.backupScheduleEvidence,{runtimeConfigSha256,runtimeReadinessBound:true,recurringInvocationPlanBound:true,scheduledAuthorizationVersion:2,signerHashVerified:true,boundedChildProcesses:true,...backupPins});
   const {signingKeyId: _signingKeyId,attestationSignature: _attestationSignature,...unsignedBackup}=result.latestBackupEvidence;

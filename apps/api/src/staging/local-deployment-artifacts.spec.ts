@@ -195,7 +195,7 @@ describe("local native deployment artifacts", () => {
       file("deploy/local/recovery-kit.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1"),file("deploy/windows/recovery-process-tree.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Test-RebootReadiness.ps1"),file("deploy/local/runtime-config.mjs")
     ]);
     expect(tool).toContain("manifestSha256");expect(tool).toContain("files: payload.files.map");
-    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("EscrowWorksheetPath");expect(recovery).toContain("ExpectedEscrowWorksheetSha256");expect(recovery).toContain("BaseStream.ReadAsync");expect(recovery).toContain("Stop-VerifiedRecoveryProcessTree");expect(recovery).toContain("version=5");expect(recovery).not.toContain("version=4");expect(recovery).toContain("sourcePathsDisclosed=$false");
+    expect(recovery).toContain("DisasterRecovery");expect(recovery).toContain("RECOVERY_DISASTER_SCRATCH_NOT_EMPTY");expect(recovery).toContain("EscrowWorksheetPath");expect(recovery).toContain("ExpectedEscrowWorksheetSha256");expect(recovery).toContain("BaseStream.ReadAsync");expect(recovery).toContain("Stop-VerifiedRecoveryProcessTree");expect(recovery).toContain("version=5");expect(recovery).not.toContain("version=4");expect(recovery).toContain("sourcePathsDisclosed=$false");expect(runtime).toContain("disasterRecoveryEvidencePath");expect(runtime).toContain("currentRecoveryVerified && disasterRecoveryVerified");
     expect(recoveryTree).toContain("$Process.Kill($true)");expect(recoveryTree).toContain("WaitForExit");expect(recoveryTree).toContain("RECOVERY_KIT_TOOL_DESCENDANT_EXIT_UNCONFIRMED");
     if(process.platform==="win32"){const processTreeTest=spawnSync("pwsh.exe",["-NoProfile","-ExecutionPolicy","Bypass","-File",path.join(root,"deploy/windows/recovery-process-tree.runtime.test.ps1")],{cwd:root,encoding:"utf8",timeout:20_000});expect(processTreeTest.status,processTreeTest.stderr).toBe(0);expect(JSON.parse(processTreeTest.stdout).stubbornDescendantTerminated).toBe(true)}
     expect(schedule).toContain("$task.Triggers[0].Enabled -eq $true");expect(schedule).toContain("dailyTriggerEnabled=$true");expect(schedule).toContain("recurringInvocationPlanBound=$true");expect(schedule).toContain("runtimeConfigSha256=$ExpectedRuntimeConfigSha256");
@@ -205,8 +205,8 @@ describe("local native deployment artifacts", () => {
 
   it("preserves the live schema behind a durable rollback journal and rejects local NAS aliases",async()=>{
     const [rollback,target,nas]=await Promise.all([file("deploy/windows/Manage-SupabaseRollbackRestore.ps1"),file("deploy/windows/Test-BackupTarget.ps1"),file("deploy/windows/nas-identity.ps1")]);
-    for(const token of["state='INTENT'","PRESERVED_ORIGINAL_RESTORE_IN_PROGRESS","FAILED_MAINTENANCE_REQUIRED","COMPLETE_MAINTENANCE_REQUIRED","ALTER SCHEMA $quotedSchema RENAME TO $quotedPreserved","ROLLBACK_AUTOMATIC_PRESERVED_SCHEMA_RECOVERY","allReadsAndHashesDeadlineBound=$true","edgeProcessStartedAt","edgeIdentityDigest","drainCompletedAt","$Process.Kill($true)","WaitForExit"]){expect(rollback).toContain(token)}
-    expect(target).toContain("nasServerIdentitySha256");expect(target).toContain("NAS_REMOTE_IDENTITY_DRIFT");expect(nas).toContain("NAS_SERVER_RESOLVES_TO_CURRENT_HOST");expect(nas).toContain("Get-NetIPAddress");expect(nas).toContain("GetHostAddresses");
+    for(const token of["state='INTENT'","PRESERVED_ORIGINAL_RESTORE_IN_PROGRESS","FAILED_MAINTENANCE_REQUIRED","COMPLETE_MAINTENANCE_REQUIRED","ALTER SCHEMA $quotedSchema RENAME TO $quotedPreserved","ROLLBACK_AUTOMATIC_PRESERVED_SCHEMA_RECOVERY","ROLLBACK_FAILURE_SCHEMA_STATE_RECONCILE","freshSchemaStateReconciled","LegacyQuiesceEvidencePath","QuiesceReceiptPublicKeyPath","ROLLBACK_QUIESCE_SIGNATURE_VERIFY","legacyRestartCanonicalDigest","allReadsAndHashesDeadlineBound=$true","edgeProcessStartedAt","edgeIdentityDigest","drainCompletedAt","$Process.Kill($true)","WaitForExit"]){expect(rollback).toContain(token)}
+    expect(target).toContain("nasServerIdentitySha256");expect(target).toContain("nasResolvedAddressCount");expect(target).toContain("nasLocalAliasRejected");expect(target).toContain("NAS_REMOTE_IDENTITY_DRIFT");expect(nas).toContain("NAS_SERVER_RESOLVES_TO_CURRENT_HOST");expect(nas).toContain("Get-NetIPAddress");expect(nas).toContain("GetHostAddresses");
   });
 
   it("binds backup authority and keeps receipt signing outside the backup principal",async()=>{
@@ -293,5 +293,6 @@ describe("local native deployment artifacts", () => {
     expect(releaseSwitch).toContain("MAINTENANCE_REQUIRED");
     expect(releaseSwitch).toContain("DATABASE_COMPATIBILITY_EVIDENCE_REJECTED");
     expect(releaseSwitch).toContain("RELEASE_VERIFICATION_FAILED");
+    expect(releaseSwitch).toContain("previousEdgeXml");expect(releaseSwitch).toContain("targetEdgeXml");expect(releaseSwitch).toContain("Assert-ReleaseServiceIdentity");expect(releaseSwitch).toContain("currentCoreIdentityDigest");expect(releaseSwitch).toContain("currentEdgeIdentityDigest");expect(releaseSwitch).toContain("FileOptions]::WriteThrough");expect(releaseSwitch).toContain("Stop-Edge;Stop-Core");expect(releaseSwitch).toContain("EdgeRestarted=$true");
   });
 });

@@ -12,11 +12,13 @@ const releaseRoot = path.resolve(requiredEnvironment("LOCAL_RELEASE_ROOT"));
 const apiConfigPath = requiredEnvironment("CONFIG_PATH");
 const runtimeConfigBytes = readBoundedRegularFile(runtimeConfigPath, 1_048_576, "LOCAL_RUNTIME_CONFIG");
 const rawConfig = JSON.parse(runtimeConfigBytes.toString("utf8"));
+const backupTargetSnapshot = readEvidenceSnapshot(rawConfig.backup?.physicalTargetEvidencePath);
 const config = validateLocalRuntimeConfig(rawConfig, {
   runtimeConfigPath,
   releaseRoot,
   clientTrustEvidence: readEvidence(rawConfig.tls?.clientTrustEvidencePath),
-  backupTargetEvidence: readEvidence(rawConfig.backup?.physicalTargetEvidencePath),
+  backupTargetEvidence: backupTargetSnapshot?.value ?? null,
+  backupTargetEvidenceSha256: backupTargetSnapshot?.sha256 ?? null,
   backupScheduleEvidence: readEvidence(rawConfig.backup?.scheduledTaskEvidencePath),
   latestBackupEvidence: readEvidence(rawConfig.backup?.latestBackupEvidencePath),
   filesystemEvidence: readEvidence(rawConfig.hostSecurity?.filesystemEvidencePath),
@@ -24,6 +26,7 @@ const config = validateLocalRuntimeConfig(rawConfig, {
   firewallEvidence: readEvidence(rawConfig.hostSecurity?.firewallEvidencePath),
   restoreEvidence: readEvidence(rawConfig.backup?.restoreEvidencePath)
   ,recoveryEvidence: readEvidence(rawConfig.backup?.recoveryEvidencePath)
+  ,disasterRecoveryEvidence: readEvidence(rawConfig.backup?.disasterRecoveryEvidencePath)
   ,runtimeConfigSha256: createHash("sha256").update(runtimeConfigBytes).digest("hex")
   ,backupReceiptPublicKey: readKey(rawConfig.backup?.backupReceiptPublicKeyPath)
   ,restoreReceiptPublicKey: readKey(rawConfig.backup?.restoreReceiptPublicKeyPath)
@@ -140,6 +143,11 @@ function requiredEnvironment(name) {
 function readEvidence(value) {
   if (typeof value !== "string" || !value) return null;
   return JSON.parse(readBoundedRegularFile(value, 1_048_576, "LOCAL_EVIDENCE" ).toString("utf8"));
+}
+function readEvidenceSnapshot(value) {
+  if (typeof value !== "string" || !value) return null;
+  const bytes = readBoundedRegularFile(value, 1_048_576, "LOCAL_EVIDENCE");
+  return { value: JSON.parse(bytes.toString("utf8")), sha256: createHash("sha256").update(bytes).digest("hex") };
 }
 function readKey(value) {
   if (typeof value !== "string" || !value) return null;
