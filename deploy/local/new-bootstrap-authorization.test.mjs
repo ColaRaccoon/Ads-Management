@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, verify } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from "node:crypto";
 import { linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -76,6 +76,17 @@ test("bootstrap authorization producer rejects username argv before reading file
   assert.equal(result.stderr.includes(marker), false);
 });
 
+test("recovery authorization requires a signed v2 edge drain bound to runtime, Node, and release",()=>{
+  const root=mkdtempSync(path.join(tmpdir(),"bootstrap-recovery-"));
+  try{
+    const fixture=recoveryFixture(root);const accepted=run(fixture.argumentsList);assert.equal(accepted.status,0,accepted.stderr);
+    const authorization=JSON.parse(readFileSync(fixture.output,"utf8"));assert.equal(authorization.version,2);assert.equal(authorization.edgeSigningPublicKeySha256,fixture.edgePublicKeySha256);assert.equal(authorization.edgeReleaseManifestSha256,fixture.releaseManifestSha256);assert.equal(authorization.nodeProgramSha256,fixture.nodeProgramSha256);
+    rmSync(fixture.output);
+    const forged={...fixture.drainValue,version:1};delete forged.signingKeyId;delete forged.attestationSignature;const invalid={...forged,signingKeyId:fixture.edgeSigningKeyId,attestationSignature:fixture.signDrain(forged)};writeFileSync(fixture.drain,JSON.stringify(invalid));
+    assert.notEqual(run(fixture.argumentsList).status,0);
+  }finally{rmSync(root,{recursive:true,force:true})}
+});
+
 function file(root, name, content) {
   const value = path.join(root, name);
   mkdirSync(path.dirname(value), { recursive: true });
@@ -117,6 +128,16 @@ function producerFixture(root, options = {}) {
   return { username, request, runtime, filesystem, filesystemValue, boundary, privateKeyPath, publicKeyPath, privateKeySha256, publicKeySha256, signingKeyId, output, argumentsList, publicKey, signerRoot };
 }
 
+function recoveryFixture(root){
+  const fixture=producerFixture(root);const sharedRoot=path.dirname(fixture.publicKeyPath),evidenceRoot=path.dirname(fixture.boundary);
+  const edgePair=generateKeyPairSync("ed25519");const edgePublicKeyPath=file(sharedRoot,"edge-public.pem",edgePair.publicKey.export({type:"spki",format:"pem"}));const edgePublicKeySha256=sha256(readFileSync(edgePublicKeyPath));const edgeSigningKeyId=sha256(edgePair.publicKey.export({type:"spki",format:"der"}));
+  const nodeProgram=file(sharedRoot,"node.exe","fixture-node");const nodeProgramSha256=sha256(readFileSync(nodeProgram));const releaseManifest=file(sharedRoot,"release-manifest.json",JSON.stringify({version:4,releaseId:"release-1",runtimeSmokeVerified:true}));const releaseManifestSha256=sha256(readFileSync(releaseManifest));
+  const runtimeValue=JSON.parse(readFileSync(fixture.runtime,"utf8"));runtimeValue.lan={bindAddress:"192.168.50.2"};runtimeValue.hostSecurity={...runtimeValue.hostSecurity,edgeSigningPublicKeyPath:edgePublicKeyPath,edgeSigningPublicKeySha256:edgePublicKeySha256,nodeProgramPath:nodeProgram,nodeProgramSha256};writeFileSync(fixture.runtime,JSON.stringify(runtimeValue));const runtimeSha256=sha256(readFileSync(fixture.runtime));
+  const unsigned={attestationType:"edge-drain",version:2,result:"DRAINED",processId:process.pid,releaseId:"release-1",runtimeConfigSha256:runtimeSha256,nodeExecutableSha256:nodeProgramSha256,listenerAddress:"192.168.50.2",listenerPort:443,activeRequests:0,completedAt:new Date().toISOString()};const signDrain=(value)=>sign(null,Buffer.from(canonicalJson(value)),edgePair.privateKey).toString("base64url");const drainValue={...unsigned,signingKeyId:edgeSigningKeyId,attestationSignature:signDrain(unsigned)};const drain=file(evidenceRoot,"drain.json",JSON.stringify(drainValue));const maintenance=file(evidenceRoot,"maintenance.json","{}");const backup=file(evidenceRoot,"backup.json","{}");
+  let argumentsList=replaceArgument(fixture.argumentsList,"mode","recover");argumentsList=replaceArgument(argumentsList,"expected-runtime-config-sha256",runtimeSha256);argumentsList.push(`--maintenance-evidence=${maintenance}`,`--drain-evidence=${drain}`,`--prechange-backup-evidence=${backup}`,`--edge-signing-public-key=${edgePublicKeyPath}`,`--edge-release-manifest=${releaseManifest}`,`--node-program=${nodeProgram}`,`--expected-edge-signing-public-key-sha256=${edgePublicKeySha256}`,`--expected-edge-release-manifest-sha256=${releaseManifestSha256}`,`--expected-node-program-sha256=${nodeProgramSha256}`);
+  return {...fixture,argumentsList,edgePublicKeySha256,edgeSigningKeyId,nodeProgramSha256,releaseManifestSha256,drain,drainValue,signDrain};
+}
+
 function replaceArgument(values, name, replacement) { return values.map((value) => value.startsWith(`--${name}=`) ? `--${name}=${replacement}` : value); }
 function run(argumentsList) { return spawnSync(process.execPath, [script, ...argumentsList], { encoding: "utf8", windowsHide: true }); }
 
@@ -132,8 +153,8 @@ function canonicalJson(value) {
 const AUTHORIZATION_KEYS = [
   "attestationSignature", "attestationType", "authorizationExpiresAt", "authorizationInstanceId",
   "authorizationIssuedAt", "authorizationNonce", "databaseBoundaryEvidenceSha256", "databaseConnectionMode",
-  "databaseHost", "databaseName", "databasePort", "databaseProjectRef", "databaseSchema", "drainEvidenceSha256",
+  "databaseHost", "databaseName", "databasePort", "databaseProjectRef", "databaseSchema", "drainEvidenceSha256", "edgeReleaseManifestSha256", "edgeSigningPublicKeySha256",
   "filesystemDescriptorDigest", "filesystemEvidenceSha256", "ledgerPathSha256", "maintenanceEvidenceSha256",
   "mode", "prechangeBackupEvidenceSha256", "releaseId", "requestSha256", "result", "runtimeConfigPathSha256",
-  "runtimeConfigSha256", "setupTokenOutputPathSha256", "signingKeyId", "usernameSha256", "version"
+  "runtimeConfigSha256", "setupTokenOutputPathSha256", "signingKeyId", "nodeProgramSha256", "usernameSha256", "version"
 ].sort();

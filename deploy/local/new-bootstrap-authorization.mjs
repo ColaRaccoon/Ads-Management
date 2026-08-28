@@ -1,4 +1,4 @@
-import { createHash, createPrivateKey, createPublicKey, randomBytes, randomUUID, sign } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey, randomBytes, randomUUID, sign, verify } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -37,7 +37,7 @@ const boundaryBytes = bounded(boundaryPath, 64 * 1024, expectedBoundarySha256);
 const request = parse(requestBytes), runtime = parse(runtimeBytes), filesystem = parse(filesystemBytes);
 exactKeys(request, ["authorizationPrivateKeySha256", "authorizationPublicKeySha256", "signingKeyId", "username", "version"]);
 const username = normalizeUsername(request.username);
-const database = object(runtime.database), release = object(runtime.release), hostSecurity = object(runtime.hostSecurity);
+const database = object(runtime.database), release = object(runtime.release), hostSecurity = object(runtime.hostSecurity), lan = object(runtime.lan);
 const roots = object(filesystem.classRoots);
 if (request.version !== 2 || request.authorizationPrivateKeySha256 !== expectedPrivateKeySha256 ||
     request.authorizationPublicKeySha256 !== expectedPublicKeySha256 || request.signingKeyId !== expectedSigningKeyId ||
@@ -59,6 +59,23 @@ const recovery = mode === "recover";
 const maintenancePath = optionalAbsolute("maintenance-evidence", recovery);
 const drainPath = optionalAbsolute("drain-evidence", recovery);
 const backupPath = optionalAbsolute("prechange-backup-evidence", recovery);
+const edgePublicKeyPath = optionalAbsolute("edge-signing-public-key", recovery);
+const releaseManifestPath = optionalAbsolute("edge-release-manifest", recovery);
+const nodeProgramPath = optionalAbsolute("node-program", recovery);
+const expectedEdgePublicKeySha256 = optionalShaArgument("expected-edge-signing-public-key-sha256", recovery);
+const expectedReleaseManifestSha256 = optionalShaArgument("expected-edge-release-manifest-sha256", recovery);
+const expectedNodeProgramSha256 = optionalShaArgument("expected-node-program-sha256", recovery);
+if(recovery){
+  for(const candidate of [edgePublicKeyPath,releaseManifestPath,nodeProgramPath])requireClass(candidate,roots.SHARED_RUNTIME,"BOOTSTRAP_RECOVERY_IDENTITY_CLASS_REJECTED");
+  const edgePublicKeyBytes=bounded(edgePublicKeyPath,16*1024,expectedEdgePublicKeySha256);const manifestBytes=bounded(releaseManifestPath,128*1024*1024,expectedReleaseManifestSha256);bounded(nodeProgramPath,1024*1024*1024,expectedNodeProgramSha256);
+  const manifest=parse(manifestBytes),drain=parse(bounded(drainPath,1024*1024));
+  exactKeys(drain,["activeRequests","attestationSignature","attestationType","completedAt","listenerAddress","listenerPort","nodeExecutableSha256","processId","releaseId","result","runtimeConfigSha256","signingKeyId","version"]);
+  const edgePublicKey=createPublicKey(edgePublicKeyBytes);const edgeSigningKeyId=sha256(edgePublicKey.export({type:"spki",format:"der"}));const signature=drain.attestationSignature;const unsigned={...drain};delete unsigned.signingKeyId;delete unsigned.attestationSignature;
+  const drainAt=Date.parse(String(drain.completedAt??""));const now=Date.now();
+  if(edgePublicKey.asymmetricKeyType!=="ed25519"||drain.signingKeyId!==edgeSigningKeyId||typeof signature!=="string"||!verify(null,Buffer.from(canonicalJson(unsigned),"utf8"),edgePublicKey,Buffer.from(signature,"base64url"))||
+    manifest.version!==4||manifest.releaseId!==release.id||manifest.runtimeSmokeVerified!==true||path.resolve(String(hostSecurity.edgeSigningPublicKeyPath??""))!==edgePublicKeyPath||hostSecurity.edgeSigningPublicKeySha256!==expectedEdgePublicKeySha256||path.resolve(String(hostSecurity.nodeProgramPath??""))!==nodeProgramPath||hostSecurity.nodeProgramSha256!==expectedNodeProgramSha256||
+    drain.attestationType!=="edge-drain"||drain.version!==2||drain.result!=="DRAINED"||drain.releaseId!==release.id||drain.runtimeConfigSha256!==expectedRuntimeSha256||drain.nodeExecutableSha256!==expectedNodeProgramSha256||drain.listenerAddress!==lan.bindAddress||drain.listenerPort!==443||drain.activeRequests!==0||!Number.isInteger(drain.processId)||drain.processId<=0||!fresh(drainAt,now,30_000)||!processExists(drain.processId))fail("BOOTSTRAP_RECOVERY_EDGE_DRAIN_REJECTED");
+}
 const issuedAt = new Date();
 const expiresAt = new Date(issuedAt.valueOf() + 10 * 60_000);
 const privateKeyBytes = bounded(privateKeyPath, 16 * 1024, expectedPrivateKeySha256);
@@ -71,7 +88,7 @@ if (publicKey.asymmetricKeyType !== "ed25519" || signingKeyId !== expectedSignin
     sha256(publicKey.export({ type: "spki", format: "der" })) !== signingKeyId) fail("BOOTSTRAP_AUTHORIZATION_SIGNING_KEY_MISMATCH");
 const value = {
   attestationType: "local-bootstrap-authorization",
-  version: 1,
+  version: 2,
   result: "APPROVED",
   mode,
   usernameSha256: sha256(Buffer.from(username, "utf8")),
@@ -93,6 +110,9 @@ const value = {
   maintenanceEvidenceSha256: maintenancePath ? sha256(bounded(maintenancePath, 1024 * 1024)) : null,
   drainEvidenceSha256: drainPath ? sha256(bounded(drainPath, 1024 * 1024)) : null,
   prechangeBackupEvidenceSha256: backupPath ? sha256(bounded(backupPath, 1024 * 1024)) : null,
+  edgeSigningPublicKeySha256: edgePublicKeyPath ? expectedEdgePublicKeySha256 : null,
+  edgeReleaseManifestSha256: releaseManifestPath ? expectedReleaseManifestSha256 : null,
+  nodeProgramSha256: nodeProgramPath ? expectedNodeProgramSha256 : null,
   authorizationNonce: randomBytes(32).toString("hex"),
   authorizationInstanceId: randomUUID(),
   authorizationIssuedAt: issuedAt.toISOString(),
@@ -106,6 +126,7 @@ process.stdout.write(`${JSON.stringify({ result: "AUTHORIZED", authorizationSha2
 function absolute(name) { const value = args.get(name); if (!value || !path.isAbsolute(value)) fail("BOOTSTRAP_AUTHORIZATION_ARGUMENT_INVALID"); return path.resolve(value); }
 function optionalAbsolute(name, required) { const value = args.get(name); if (!value) { if (required) fail("BOOTSTRAP_RECOVERY_EVIDENCE_REQUIRED"); return null; } if (!path.isAbsolute(value)) fail("BOOTSTRAP_AUTHORIZATION_ARGUMENT_INVALID"); return path.resolve(value); }
 function shaArgument(name) { const value = args.get(name); if (!/^[0-9a-f]{64}$/.test(String(value ?? ""))) fail("BOOTSTRAP_AUTHORIZATION_ARGUMENT_INVALID"); return value; }
+function optionalShaArgument(name,required){const value=args.get(name);if(!value){if(required)fail("BOOTSTRAP_RECOVERY_IDENTITY_REQUIRED");return null;}if(!/^[0-9a-f]{64}$/.test(value))fail("BOOTSTRAP_AUTHORIZATION_ARGUMENT_INVALID");return value;}
 function bounded(file, maximum, expected) { assertNoReparseComponents(file); const before = lstatSync(file); if (!before.isFile() || before.isSymbolicLink() || before.nlink !== 1 || before.size < 1 || before.size > maximum) fail("BOOTSTRAP_AUTHORIZATION_INPUT_INVALID"); const handle = openSync(file, constants.O_RDONLY); try { const opened = fstatSync(handle), bytes = readFileSync(handle), after = lstatSync(file); if (opened.size !== before.size || after.size !== before.size || bytes.length !== before.size || opened.mtimeMs !== before.mtimeMs || after.mtimeMs !== before.mtimeMs || (expected && sha256(bytes) !== expected)) fail("BOOTSTRAP_AUTHORIZATION_INPUT_CHANGED"); return bytes; } finally { closeSync(handle); } }
 function parse(bytes) { try { const value = JSON.parse(bytes.toString("utf8")); if (!value || typeof value !== "object" || Array.isArray(value)) fail("BOOTSTRAP_AUTHORIZATION_JSON_INVALID"); return value; } catch { fail("BOOTSTRAP_AUTHORIZATION_JSON_INVALID"); } }
 function object(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
@@ -119,4 +140,6 @@ function normalizeUsername(value) { if (typeof value !== "string") fail("BOOTSTR
 function pathSha256(value) { const normalized = path.resolve(value).replace(/[\\/]+$/, ""); return sha256(Buffer.from(process.platform === "win32" ? normalized.toLowerCase() : normalized, "utf8")); }
 function sha256(value) { return createHash("sha256").update(value).digest("hex"); }
 function canonicalJson(value) { if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`; if (value && typeof value === "object") return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`; return JSON.stringify(value); }
+function fresh(timestamp,now,maxAge){return Number.isFinite(timestamp)&&timestamp<=now+5*60_000&&timestamp>=now-maxAge;}
+function processExists(pid){try{process.kill(pid,0);return true;}catch{return false;}}
 function fail(code) { throw new Error(code); }

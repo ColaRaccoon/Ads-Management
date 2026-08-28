@@ -122,7 +122,7 @@ async function authorizationFixture(time: { issuedAt?: number; expiresAt?: numbe
   const boundaryBytes = Buffer.from(JSON.stringify({ version: 6, result: "PASS" })); await writeFile(boundaryPath, boundaryBytes);
   const issuedAt = time.issuedAt ?? Date.now() - 1_000, expiresAt = time.expiresAt ?? Date.now() + 9 * 60_000;
   const unsigned = {
-    attestationType: "local-bootstrap-authorization", version: 1, result: "APPROVED", mode: "bootstrap",
+    attestationType: "local-bootstrap-authorization", version: 2, result: "APPROVED", mode: "bootstrap",
     usernameSha256: sha256(Buffer.from("local.admin")), requestSha256: sha256(requestBytes),
     runtimeConfigPathSha256: pathSha256(runtimePath), runtimeConfigSha256: sha256(runtimeBytes),
     filesystemEvidenceSha256: sha256(filesystemBytes), filesystemDescriptorDigest: filesystem.descriptorDigest,
@@ -131,6 +131,7 @@ async function authorizationFixture(time: { issuedAt?: number; expiresAt?: numbe
     databaseName: runtime.database.name, databaseSchema: runtime.database.schema, releaseId: runtime.release.id,
     setupTokenOutputPathSha256: pathSha256(tokenPath), ledgerPathSha256: pathSha256(ledgerPath),
     maintenanceEvidenceSha256: null, drainEvidenceSha256: null, prechangeBackupEvidenceSha256: null,
+    edgeSigningPublicKeySha256: null, edgeReleaseManifestSha256: null, nodeProgramSha256: null,
     authorizationNonce: "a".repeat(64), authorizationInstanceId: "12345678-1234-4123-8123-123456789abc",
     authorizationIssuedAt: new Date(issuedAt).toISOString(), authorizationExpiresAt: new Date(expiresAt).toISOString(),
     signingKeyId
@@ -147,7 +148,7 @@ async function authorizationFixture(time: { issuedAt?: number; expiresAt?: numbe
       expectedFilesystemEvidenceSha256: sha256(filesystemBytes), expectedFilesystemDescriptorDigest: filesystem.descriptorDigest,
       databaseBoundaryEvidencePath: boundaryPath, expectedDatabaseBoundaryEvidenceSha256: sha256(boundaryBytes),
       setupTokenOutputPath: tokenPath, maintenanceEvidenceSha256: null, drainEvidenceSha256: null,
-      prechangeBackupEvidenceSha256: null, database: { projectRef: runtime.database.projectRef, connectionMode: "direct" as const,
+      prechangeBackupEvidenceSha256: null, edgeSigningPublicKeySha256: null, edgeReleaseManifestSha256: null, nodeProgramSha256: null, database: { projectRef: runtime.database.projectRef, connectionMode: "direct" as const,
         host: runtime.database.host, port: 5432, name: runtime.database.name, schema: runtime.database.schema },
       releaseId: runtime.release.id, dataRoot
     }

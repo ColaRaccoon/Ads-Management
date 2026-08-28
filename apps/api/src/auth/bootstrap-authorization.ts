@@ -19,10 +19,10 @@ const AUTHORIZATION_KEYS = [
   "attestationSignature", "attestationType", "authorizationExpiresAt", "authorizationInstanceId",
   "authorizationIssuedAt", "authorizationNonce", "databaseBoundaryEvidenceSha256", "databaseConnectionMode",
   "databaseHost", "databaseName", "databasePort", "databaseProjectRef", "databaseSchema",
-  "drainEvidenceSha256", "filesystemDescriptorDigest", "filesystemEvidenceSha256", "ledgerPathSha256",
+  "drainEvidenceSha256", "edgeReleaseManifestSha256", "edgeSigningPublicKeySha256", "filesystemDescriptorDigest", "filesystemEvidenceSha256", "ledgerPathSha256",
   "maintenanceEvidenceSha256", "mode", "prechangeBackupEvidenceSha256", "releaseId", "requestSha256",
   "result", "runtimeConfigPathSha256", "runtimeConfigSha256", "setupTokenOutputPathSha256", "signingKeyId",
-  "usernameSha256", "version"
+  "nodeProgramSha256", "usernameSha256", "version"
 ] as const;
 
 export type BootstrapAuthorizationMode = "bootstrap" | "recover";
@@ -49,6 +49,9 @@ export type BootstrapAuthorizationInput = {
   maintenanceEvidenceSha256?: string | null;
   drainEvidenceSha256?: string | null;
   prechangeBackupEvidenceSha256?: string | null;
+  edgeSigningPublicKeySha256?: string | null;
+  edgeReleaseManifestSha256?: string | null;
+  nodeProgramSha256?: string | null;
   database: {
     projectRef: string;
     connectionMode: "direct" | "session_pooler";
@@ -116,7 +119,7 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
   const issuedAt = Date.parse(String(authorization.authorizationIssuedAt ?? ""));
   const expiresAt = Date.parse(String(authorization.authorizationExpiresAt ?? ""));
   assertAuthorizationTimeWindow(issuedAt, expiresAt, observedNow(input));
-  if (authorization.attestationType !== "local-bootstrap-authorization" || authorization.version !== 1 ||
+  if (authorization.attestationType !== "local-bootstrap-authorization" || authorization.version !== 2 ||
       authorization.result !== "APPROVED" || authorization.mode !== input.mode ||
       authorization.authorizationNonce === undefined || !SHA256.test(String(authorization.authorizationNonce)) ||
       !UUID_V4.test(String(authorization.authorizationInstanceId)) ||
@@ -136,7 +139,10 @@ export function loadBootstrapMutationAuthorization(input: BootstrapAuthorization
       authorization.releaseId !== input.releaseId ||
       authorization.maintenanceEvidenceSha256 !== normalizedOptionalSha(input.maintenanceEvidenceSha256) ||
       authorization.drainEvidenceSha256 !== normalizedOptionalSha(input.drainEvidenceSha256) ||
-      authorization.prechangeBackupEvidenceSha256 !== normalizedOptionalSha(input.prechangeBackupEvidenceSha256)) {
+      authorization.prechangeBackupEvidenceSha256 !== normalizedOptionalSha(input.prechangeBackupEvidenceSha256) ||
+      authorization.edgeSigningPublicKeySha256 !== normalizedOptionalSha(input.edgeSigningPublicKeySha256) ||
+      authorization.edgeReleaseManifestSha256 !== normalizedOptionalSha(input.edgeReleaseManifestSha256) ||
+      authorization.nodeProgramSha256 !== normalizedOptionalSha(input.nodeProgramSha256)) {
     throw new Error("BOOTSTRAP_AUTHORIZATION_BINDING_REJECTED");
   }
 
@@ -219,6 +225,11 @@ function loadTrustedContext(input: BootstrapAuthorizationInput) {
       runtimeDatabase.connectionMode !== input.database.connectionMode || runtimeDatabase.host !== input.database.host ||
       runtimeDatabase.port !== input.database.port || runtimeDatabase.name !== input.database.name || runtimeDatabase.schema !== input.database.schema) {
     throw new Error("BOOTSTRAP_RUNTIME_OR_FILESYSTEM_BINDING_REJECTED");
+  }
+  if (input.mode === "recover" &&
+      (runtimeHost.edgeSigningPublicKeySha256 !== input.edgeSigningPublicKeySha256 ||
+       runtimeHost.nodeProgramSha256 !== input.nodeProgramSha256)) {
+    throw new Error("BOOTSTRAP_RECOVERY_RUNTIME_IDENTITY_REJECTED");
   }
   for (const candidate of [requestPath, outputPath]) {
     assertContained(candidate, adminRoots, "BOOTSTRAP_ADMIN_ONLY_PATH_REQUIRED");

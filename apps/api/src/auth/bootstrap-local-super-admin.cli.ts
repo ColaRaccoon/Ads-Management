@@ -45,6 +45,9 @@ async function main() {
     maintenanceEvidenceSha256: recovery ? requiredArgument(args, "confirm-maintenance-flag-sha256") : null,
     drainEvidenceSha256: recovery ? requiredArgument(args, "confirm-drain-state-sha256") : null,
     prechangeBackupEvidenceSha256: recovery ? requiredArgument(args, "confirm-latest-backup-sha256") : null,
+    edgeSigningPublicKeySha256: recovery ? requiredArgument(args, "confirm-edge-signing-public-key-sha256") : null,
+    edgeReleaseManifestSha256: recovery ? requiredArgument(args, "confirm-edge-release-manifest-sha256") : null,
+    nodeProgramSha256: recovery ? requiredArgument(args, "confirm-node-program-sha256") : null,
     database: {
       projectRef: target.projectRef,
       connectionMode: target.connectionMode,
@@ -131,32 +134,44 @@ function assertBreakGlassOperationalEvidence(args: Map<string,string>, target: S
   const runtimeConfigPath=path.resolve(requiredArgument(args,"runtime-config-file"));
   if(runtimeConfigPath!==path.resolve(runtimeConfigEnvironmentPath))throw new Error("BREAK_GLASS_RUNTIME_CONFIG_PATH_INVALID");
   const runtime=readHashedJsonEvidence(runtimeConfigPath,requiredArgument(args,"confirm-runtime-config-sha256"));
-  const runtimeDatabase=runtime.database as Record<string,unknown>|undefined,runtimeBackup=runtime.backup as Record<string,unknown>|undefined,runtimeRelease=runtime.release as Record<string,unknown>|undefined,runtimeData=runtime.data as Record<string,unknown>|undefined;
+  const runtimeDatabase=runtime.database as Record<string,unknown>|undefined,runtimeBackup=runtime.backup as Record<string,unknown>|undefined,runtimeRelease=runtime.release as Record<string,unknown>|undefined,runtimeData=runtime.data as Record<string,unknown>|undefined,runtimeHost=runtime.hostSecurity as Record<string,unknown>|undefined,runtimeLan=runtime.lan as Record<string,unknown>|undefined;
   if(path.resolve(String(runtimeData?.root??""))!==path.resolve(dataRoot)||runtimeRelease?.id!==releaseId||runtimeDatabase?.provider!=="supabase_postgres"||runtimeDatabase.projectRef!==target.projectRef||runtimeDatabase.host!==target.host||runtimeDatabase.port!==5432||runtimeDatabase.name!==target.database||runtimeDatabase.schema!==target.schema||path.resolve(String(runtimeBackup?.latestBackupEvidencePath??""))!==backupPath||path.resolve(String(runtimeBackup?.backupReceiptPublicKeyPath??""))!==publicKeyPath)throw new Error("BREAK_GLASS_RUNTIME_BINDING_REJECTED");
   if(maintenancePath!==path.resolve(dataRoot,"runtime-control","maintenance.enabled")||drainPath!==path.resolve(dataRoot,"logs","edge","drain-state.json")||path.dirname(backupPath)!==path.resolve(dataRoot,"backup-receipt")) throw new Error("BREAK_GLASS_EVIDENCE_PATH_INVALID");
   const maintenance=readHashedJsonEvidence(maintenancePath,requiredArgument(args,"confirm-maintenance-flag-sha256"));
   const drain=readHashedJsonEvidence(drainPath,requiredArgument(args,"confirm-drain-state-sha256"));
   const backup=readHashedJsonEvidence(backupPath,requiredArgument(args,"confirm-latest-backup-sha256"));
+  const edgePublicKeyPath=path.resolve(requiredArgument(args,"edge-signing-public-key-file"));
+  const releaseManifestPath=path.resolve(requiredArgument(args,"edge-release-manifest-file"));
+  const expectedEdgePublicKeySha256=requiredArgument(args,"confirm-edge-signing-public-key-sha256");
+  const expectedReleaseManifestSha256=requiredArgument(args,"confirm-edge-release-manifest-sha256");
+  const expectedNodeProgramSha256=requiredArgument(args,"confirm-node-program-sha256");
+  const nodeProgramPath=path.resolve(String(runtimeHost?.nodeProgramPath??""));
+  if(path.resolve(String(runtimeHost?.edgeSigningPublicKeyPath??""))!==edgePublicKeyPath||runtimeHost?.edgeSigningPublicKeySha256!==expectedEdgePublicKeySha256||runtimeHost?.nodeProgramSha256!==expectedNodeProgramSha256)throw new Error("BREAK_GLASS_EDGE_RUNTIME_IDENTITY_REJECTED");
+  readHashedFileEvidence(edgePublicKeyPath,expectedEdgePublicKeySha256,16*1024);readHashedFileEvidence(nodeProgramPath,expectedNodeProgramSha256,1024*1024*1024);
+  const releaseManifest=readHashedJsonEvidence(releaseManifestPath,expectedReleaseManifestSha256,128*1024*1024);
   const now=Date.now(),maintenanceAt=Date.parse(String(maintenance.enabledAt??"")),drainAt=Date.parse(String(drain.completedAt??"")),backupAt=Date.parse(String(backup.completedAt??""));
   const approvalDigest=createHash("sha256").update(approvalId,"utf8").digest("hex");
   if(maintenance.version!==1||maintenance.enabled!==true||maintenance.releaseId!==releaseId||maintenance.approvalIdDigest!==approvalDigest||!fresh(maintenanceAt,now,24*3600_000)) throw new Error("BREAK_GLASS_MAINTENANCE_REJECTED");
-  if(drain.version!==1||drain.result!=="DRAINED"||drain.activeRequests!==0||!Number.isInteger(drain.processId)||!fresh(drainAt,now,30_000)||!processExists(Number(drain.processId))) throw new Error("BREAK_GLASS_DRAIN_REJECTED");
+  if(releaseManifest.version!==4||releaseManifest.releaseId!==releaseId||releaseManifest.runtimeSmokeVerified!==true)throw new Error("BREAK_GLASS_RELEASE_MANIFEST_REJECTED");
+  if(drain.attestationType!=="edge-drain"||drain.version!==2||drain.result!=="DRAINED"||drain.releaseId!==releaseId||drain.runtimeConfigSha256!==requiredArgument(args,"confirm-runtime-config-sha256")||drain.nodeExecutableSha256!==expectedNodeProgramSha256||drain.listenerAddress!==runtimeLan?.bindAddress||drain.listenerPort!==443||drain.activeRequests!==0||!Number.isInteger(drain.processId)||!fresh(drainAt,now,30_000)||!processExists(Number(drain.processId))) throw new Error("BREAK_GLASS_DRAIN_REJECTED");
+  assertSignedAttestation(drain,edgePublicKeyPath,"BREAK_GLASS_DRAIN");
   if(backup.version!==6||backup.signerIndependentArtifactVerification!==true||!/^[0-9a-f]{64}$/.test(String(backup.artifactVerificationDigest??""))||backup.attestationType!=="backup-latest"||backup.result!=="COMPLETE"||backup.databaseProjectRef!==target.projectRef||backup.databaseHost!==target.host||backup.databasePort!==5432||backup.databaseName!==target.database||backup.databaseSchema!==target.schema||backup.backupId!==requiredArgument(args,"prechange-backup-id")||!fresh(backupAt,now,24*3600_000)) throw new Error("BREAK_GLASS_BACKUP_REJECTED");
   assertSignedAttestation(backup,publicKeyPath);
 }
 
-function readHashedJsonEvidence(value:string,expectedSha256:string){
+function readHashedJsonEvidence(value:string,expectedSha256:string,maximum=1024*1024){
   if(!/^[0-9a-f]{64}$/.test(expectedSha256)) throw new Error("BREAK_GLASS_EVIDENCE_HASH_INVALID");
-  assertNoReparseComponents(value);const stat=lstatSync(value);if(!stat.isFile()||stat.isSymbolicLink()||stat.size===0||stat.size>1024*1024)throw new Error("BREAK_GLASS_EVIDENCE_FILE_INVALID");
+  assertNoReparseComponents(value);const stat=lstatSync(value);if(!stat.isFile()||stat.isSymbolicLink()||stat.size===0||stat.size>maximum)throw new Error("BREAK_GLASS_EVIDENCE_FILE_INVALID");
   const bytes=readFileSync(value);if(createHash("sha256").update(bytes).digest("hex")!==expectedSha256)throw new Error("BREAK_GLASS_EVIDENCE_HASH_MISMATCH");
   return JSON.parse(bytes.toString("utf8")) as Record<string,unknown>;
 }
-function assertSignedAttestation(evidence:Record<string,unknown>,publicKeyPath:string){
-  assertNoReparseComponents(publicKeyPath);const stat=lstatSync(publicKeyPath);if(!stat.isFile()||stat.isSymbolicLink()||stat.size<32||stat.size>16384)throw new Error("BREAK_GLASS_BACKUP_KEY_INVALID");
-  const key=createPublicKey(readFileSync(publicKeyPath));if(key.asymmetricKeyType!=="ed25519")throw new Error("BREAK_GLASS_BACKUP_KEY_INVALID");
-  const publicDer=key.export({type:"spki",format:"der"});if(createHash("sha256").update(publicDer).digest("hex")!==evidence.signingKeyId||typeof evidence.attestationSignature!=="string")throw new Error("BREAK_GLASS_BACKUP_SIGNATURE_INVALID");
+function readHashedFileEvidence(value:string,expectedSha256:string,maximum:number){if(!/^[0-9a-f]{64}$/.test(expectedSha256))throw new Error("BREAK_GLASS_EVIDENCE_HASH_INVALID");assertNoReparseComponents(value);const stat=lstatSync(value);if(!stat.isFile()||stat.isSymbolicLink()||stat.size===0||stat.size>maximum)throw new Error("BREAK_GLASS_EVIDENCE_FILE_INVALID");const bytes=readFileSync(value);if(createHash("sha256").update(bytes).digest("hex")!==expectedSha256)throw new Error("BREAK_GLASS_EVIDENCE_HASH_MISMATCH");return bytes;}
+function assertSignedAttestation(evidence:Record<string,unknown>,publicKeyPath:string,code="BREAK_GLASS_BACKUP"){
+  assertNoReparseComponents(publicKeyPath);const stat=lstatSync(publicKeyPath);if(!stat.isFile()||stat.isSymbolicLink()||stat.size<32||stat.size>16384)throw new Error(`${code}_KEY_INVALID`);
+  const key=createPublicKey(readFileSync(publicKeyPath));if(key.asymmetricKeyType!=="ed25519")throw new Error(`${code}_KEY_INVALID`);
+  const publicDer=key.export({type:"spki",format:"der"});if(createHash("sha256").update(publicDer).digest("hex")!==evidence.signingKeyId||typeof evidence.attestationSignature!=="string")throw new Error(`${code}_SIGNATURE_INVALID`);
   const unsigned={...evidence};delete unsigned.signingKeyId;delete unsigned.attestationSignature;
-  if(!verify(null,Buffer.from(canonicalJson(unsigned),"utf8"),key,Buffer.from(evidence.attestationSignature,"base64url")))throw new Error("BREAK_GLASS_BACKUP_SIGNATURE_INVALID");
+  if(!verify(null,Buffer.from(canonicalJson(unsigned),"utf8"),key,Buffer.from(evidence.attestationSignature,"base64url")))throw new Error(`${code}_SIGNATURE_INVALID`);
 }
 function canonicalJson(value:unknown):string{if(Array.isArray(value))return`[${value.map(canonicalJson).join(",")}]`;if(value&&typeof value==="object"){const record=value as Record<string,unknown>;return`{${Object.keys(record).sort().map((key)=>`${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(",")}}`;}return JSON.stringify(value)??"null";}
 function fresh(timestamp:number,now:number,maxAge:number){return Number.isFinite(timestamp)&&timestamp<=now+5*60_000&&timestamp>=now-maxAge;}
