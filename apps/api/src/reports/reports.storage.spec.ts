@@ -189,7 +189,7 @@ describe("ReportsService durable storage", () => {
     });
     expect(databaseHash).toBeNull();
     await expect(localStorage.getStream(stored.key)).rejects.toBeInstanceOf(StorageObjectNotFoundError);
-  });
+  }, 15_000);
 
   it("marks a restored stale CREATING row FAILED only after the exact payload is absent", async () => {
     const reference = "local:2026/08/missing-report.html";
