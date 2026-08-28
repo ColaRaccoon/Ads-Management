@@ -252,8 +252,11 @@ the step being approved. Approval for one step does not authorize another.
    consumed ledger record.
 
    `--recover` follows the same sequence with `--mode=recover` and additionally
-   binds the fresh maintenance, drain and pre-change backup evidence files and
-   hashes. It always requires a new immediate approval. Exactly one bootstrap
+   binds the fresh maintenance, signed Edge drain v2 and pre-change backup
+   evidence files and hashes. The authorization also pins the Edge public key,
+   release manifest, runtime configuration, and Node executable identities used
+   by that drain; unsigned or signed-v1 drain evidence is rejected. It always
+   requires a new immediate approval. Exactly one bootstrap
    `SUPER_ADMIN` can be created; later users are created from the management
    screen and complete a one-time setup token. No password or token is emailed,
    placed in argv, or written to logs.
@@ -414,8 +417,13 @@ Production database migration and process switching are separate approvals.
    closure. Enable maintenance with `Manage-Maintenance.ps1` using a change
    approval ID.
    Its file binds the release and approval digest.
-2. Wait for the Edge drain record to show zero active requests and a live Edge
-   process. Migration and switch scripts accept only a fresh record.
+2. Establish the quiescence proof for the exact transition type. A later
+   local-to-local upgrade requires a fresh signed Edge drain v2 with zero active
+   requests and the exact live Edge process/listener/runtime/release/Node
+   identity. The first legacy cutover instead requires signed legacy-quiesce v2
+   and exact absence of the baseline-bound 3100/4100 processes and listeners; it
+   does not invent an Edge drain before Edge exists. Release and certificate
+   switches always require the live signed Edge-drain path.
 3. Make and verify a fresh signed backup for the previous release. The restore,
    rehearsal and final compatibility evidence must all bind the same backup ID,
    backup-manifest hash and latest signed receipt; an older rehearsal cannot be
@@ -462,14 +470,22 @@ Production database migration and process switching are separate approvals.
    compatibility. `Test-InitialCutoverCompatibility.ps1` requires the signed
    quiesce, backup and rehearsal evidence and does not require live 3100/4100.
    `Manage-SupabaseMigration.ps1 -PreviousReleaseKind LEGACY_BASELINE` rechecks
-   their absence and, only after a fresh immediate production-migration approval,
-   applies the signed reference conversion before the target Prisma migration.
+   their absence, verifies the signed legacy-quiesce proof, and, only after a
+   fresh immediate production-migration approval, applies the signed reference
+   conversion before the target Prisma migration. A later local release uses
+   `-PreviousReleaseKind LOCAL_RELEASE` and signed Edge drain v2 instead.
    Rollback after that point uses `Manage-SupabaseRollbackRestore.ps1`: create a
-   fresh `Apply` Plan bound to the exact production Supabase project/host/database/
-   schema, maintenance/drain, migration journal, signed legacy backup chain,
-    executor/credential/key hashes, durable rollback journal, fresh drain and the
-     current Edge PID/start time/executable/command/release/listener identity, and
-     the exact signed `legacy-quiesce` evidence and type-specific public-key hashes.
+    fresh `Apply` Plan bound to the exact production Supabase project/host/database/
+    schema, maintenance, migration journal, signed legacy backup chain,
+     executor/credential/key hashes, durable rollback journal, exact signed
+     `legacy-quiesce` evidence and type-specific public-key hashes. Select
+     `-EdgeStateMode ACTIVE_LOCAL_EDGE` only when a local Edge is already active;
+     that mode additionally binds a fresh signed Edge drain v2 and the current
+     Edge PID/start time/executable/command/release/listener identity. Select
+     `-EdgeStateMode LEGACY_QUIESCED_NO_EDGE` for rollback before the first Edge
+     start; that mode requires no 443 listener, an absent or stopped Manual/Disabled
+     Edge service, the exact release/runtime/Node identity, and the signed legacy
+     quiesce. It never weakens the 3100/4100 absence check.
      It rechecks the baseline PIDs, restart digest, evidence freshness, and writer/
      listener absence immediately before INTENT. Apply keeps 3100/4100 quiesced and writes a flushed atomic `INTENT` before the first
     mutation. In one transaction it renames the current schema to an approval-
@@ -499,9 +515,12 @@ Production database migration and process switching are separate approvals.
    invoking the exact target Prisma migration digest, and requires a new immediate
    production-migration approval. It uses the dedicated migration role, pinned
    CA, pinned Node/Prisma/verifier, exact ACL classes, previous-release backup,
-   maintenance, signed exact-Edge drain identity and compatibility evidence.
-   The Plan, action-time check, and durable journal reject a restarted process,
-   wrong listener owner, command/release drift, or stale drain. Apply stops at
+   maintenance, the transition-appropriate signed quiescence proof, and
+   compatibility evidence. For `LOCAL_RELEASE`, the Plan, action-time check, and
+   durable journal reject a restarted process, wrong listener owner,
+   command/release drift, or stale Edge drain. For `LEGACY_BASELINE`, they reject
+   stale/invalid signed quiesce or any reappearing 3100/4100 process/listener.
+   Apply stops at
    `APPLIED_PENDING_BOUNDARY`; it cannot claim final PASS.
 5. Produce fresh post-migration database-boundary evidence, verify the exact
    applied migration chain, then run `Manage-SupabaseMigration.ps1 -Action
@@ -561,9 +580,11 @@ Recovery order is:
    and bounded-extracts the exact 13-file
    internal inventory, retains it for recovery, and neither requires nor emits
     any original source path;
-   every recovery execution also hash-pins the process-tree, host-instance and
-   NAS-identity helpers before dot-sourcing them, and the approval plan binds
-   those exact helper paths and hashes;
+    every recovery execution binds the process-tree, host-instance and
+    NAS-identity helper paths and hashes in the approval plan, opens each helper
+    without write/delete sharing, hashes the exact opened bytes, and executes the
+    strict-UTF-8 in-memory script block from those same bytes. A path swap or
+    mutation cannot change the executed helper after validation;
    write the current-host and clean-PC results to two distinct ADMIN_EVIDENCE
    paths configured as `recoveryEvidencePath` and
     `disasterRecoveryEvidencePath`. Operational readiness requires both v6 receipts
