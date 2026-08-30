@@ -1,13 +1,19 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, createPrivateKey, createPublicKey, randomBytes, scryptSync, sign, verify } from "node:crypto";
 import { lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const REQUIRED_RECOVERY_PURPOSES = Object.freeze([
-  "api-config", "runtime-config", "edge-signing-private-key", "backup-receipt-private-key",
-  "restore-receipt-private-key", "backup-integrity-key", "offline-ca-pfx", "offline-ca-pfx-password",
+  "api-config", "runtime-config", "edge-signing-private-key", "edge-signing-public-key",
+  "backup-receipt-private-key", "backup-receipt-public-key", "restore-receipt-private-key", "restore-receipt-public-key",
+  "backup-integrity-key", "offline-ca-pfx", "offline-ca-pfx-password",
   "postgres-admin-pgpass", "postgres-migration-pgpass", "postgres-backup-pgpass",
   "postgres-restore-pgpass", "postgres-runtime-pgpass"
+]);
+const KEY_PAIR_PURPOSES=Object.freeze([
+  ["edge-signing","edge-signing-private-key","edge-signing-public-key"],
+  ["backup-receipt","backup-receipt-private-key","backup-receipt-public-key"],
+  ["restore-receipt","restore-receipt-private-key","restore-receipt-public-key"]
 ]);
 let args;
 let passphrase;
@@ -44,8 +50,9 @@ function createKit() {
     const digest = sha256(bytes); if (digest !== entry.sha256) fail("KIT_DECLARED_HASH_MISMATCH");
     return { purpose: entry.purpose, name: entry.name, sha256: digest, bytes: bytes.toString("base64") };
   });
-  const payload = Buffer.from(JSON.stringify({ version: 2, installId: manifest.installId,
-    runtimeConfigSha256: manifest.runtimeConfigSha256, manifestSha256: sha256(manifestBytes), createdAt: new Date().toISOString(), files }), "utf8");
+  const keyPairs = recoveryKeyPairs(files);assertDeclaredKeyPairs(manifest.keyPairs,keyPairs,"KIT_MANIFEST_KEY_PAIR_INVALID");
+  const payload = Buffer.from(JSON.stringify({ version: 3, installId: manifest.installId,
+    runtimeConfigSha256: manifest.runtimeConfigSha256, manifestSha256: sha256(manifestBytes), keyPairs, createdAt: new Date().toISOString(), files }), "utf8");
   const salt = randomBytes(32), iv = randomBytes(12), key = deriveKey(salt);
   try {
     const cipher = createCipheriv("aes-256-gcm", key, iv);
@@ -57,7 +64,7 @@ function createKit() {
     process.stdout.write(`${JSON.stringify({ event: "recovery-kit.created", fileCount: files.length,
       inventoryDigest: inventoryDigest(files), kitId: sha256(Buffer.from(JSON.stringify(envelope))),
       installId: manifest.installId, runtimeConfigSha256: manifest.runtimeConfigSha256,
-      manifestSha256: sha256(manifestBytes) })}\n`);
+      manifestSha256: sha256(manifestBytes), signingKeyPairInventoryDigest:keyPairDigest(keyPairs), signingKeyPairsVerified:true, keyPairs })}\n`);
   } finally { key.fill(0); payload.fill(0); }
 }
 
@@ -79,6 +86,7 @@ function verifyKit(extract) {
   } catch { fail("KIT_AUTHENTICATION_FAILED"); } finally { key.fill(0); }
   try {
     const payload = parseJson(plaintext.toString("utf8"), "KIT_PAYLOAD_INVALID"); assertInventory(payload, true);
+    const keyPairs=recoveryKeyPairs(payload.files);assertDeclaredKeyPairs(payload.keyPairs,keyPairs,"KIT_PAYLOAD_KEY_PAIR_INVALID");
     const outputRoot = extract ? path.resolve(required("output-root")) : null;
     if (extract) { const rootStat = lstatSync(outputRoot); if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) fail("KIT_OUTPUT_ROOT_INVALID"); }
     for (const entry of payload.files) {
@@ -91,13 +99,15 @@ function verifyKit(extract) {
     process.stdout.write(`${JSON.stringify({ event: extract ? "recovery-kit.extracted" : "recovery-kit.verified",
       fileCount: payload.files.length, inventoryDigest: inventoryDigest(payload.files), kitId: sha256(bytes), installId: payload.installId,
       runtimeConfigSha256: payload.runtimeConfigSha256, manifestSha256: payload.manifestSha256,
+      signingKeyPairInventoryDigest: keyPairDigest(keyPairs), signingKeyPairsVerified: true, keyPairs,
       files: payload.files.map(({ purpose, name, sha256: digest }) => ({ purpose, name, sha256: digest })) })}\n`);
   } finally { plaintext.fill(0); }
 }
 
 function assertInventory(value, payload) {
-  if (!value || value.version !== 2 || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(value.installId ?? "") ||
+  if (!value || value.version !== 3 || !/^[a-z0-9][a-z0-9-]{7,63}$/.test(value.installId ?? "") ||
       !/^[a-f0-9]{64}$/.test(value.runtimeConfigSha256 ?? "") || !Array.isArray(value.files) ||
+      !Array.isArray(value.keyPairs) || value.keyPairs.length !== 3 ||
       value.files.length !== REQUIRED_RECOVERY_PURPOSES.length || (payload &&
         (Number.isNaN(Date.parse(value.createdAt)) || !/^[a-f0-9]{64}$/.test(value.manifestSha256 ?? "")))) fail(payload ? "KIT_PAYLOAD_INVALID" : "KIT_MANIFEST_INVALID");
   const purposes = new Set(), names = new Set();
@@ -111,6 +121,29 @@ function assertInventory(value, payload) {
   }
   if (REQUIRED_RECOVERY_PURPOSES.some((purpose) => !purposes.has(purpose))) fail("KIT_REQUIRED_PURPOSE_MISSING");
 }
+
+function recoveryKeyPairs(files){
+  const result=[];
+  for(const [purpose,privatePurpose,publicPurpose] of KEY_PAIR_PURPOSES){
+    const privateEntry=files.find((entry)=>entry.purpose===privatePurpose),publicEntry=files.find((entry)=>entry.purpose===publicPurpose);
+    if(!privateEntry||!publicEntry)fail("KIT_REQUIRED_KEY_PAIR_MISSING");
+    const privateBytes=strictBase64(privateEntry.bytes,"KIT_KEY_PAIR_INVALID"),publicBytes=strictBase64(publicEntry.bytes,"KIT_KEY_PAIR_INVALID");
+    try{
+      const privateKey=createPrivateKey(privateBytes),publicKey=createPublicKey(publicBytes),derived=createPublicKey(privateKey);
+      if(privateKey.asymmetricKeyType!=="ed25519"||publicKey.asymmetricKeyType!=="ed25519"||!publicKey.export({type:"spki",format:"der"}).equals(derived.export({type:"spki",format:"der"})))fail("KIT_KEY_PAIR_INVALID");
+      const challenge=Buffer.from(`recovery-kit-key-pair-v1:${purpose}`,"utf8"),signature=sign(null,challenge,privateKey);
+      try{if(!verify(null,challenge,publicKey,signature))fail("KIT_KEY_PAIR_ROUNDTRIP_FAILED")}finally{challenge.fill(0);signature.fill(0)}
+      result.push({purpose,publicKeySha256:publicEntry.sha256,signingKeyId:sha256(publicKey.export({type:"spki",format:"der"}))});
+    }catch(error){if(error?.message?.startsWith("KIT_"))throw error;fail("KIT_KEY_PAIR_INVALID")}finally{privateBytes.fill(0);publicBytes.fill(0)}
+  }
+  return result;
+}
+function assertDeclaredKeyPairs(declared,actual,code){
+  if(!Array.isArray(declared)||declared.length!==actual.length)fail(code);
+  const normalized=[...declared].sort((a,b)=>String(a?.purpose).localeCompare(String(b?.purpose))),expected=[...actual].sort((a,b)=>a.purpose.localeCompare(b.purpose));
+  for(let index=0;index<expected.length;index++){const item=normalized[index],wanted=expected[index];if(!item||Object.keys(item).sort().join("|")!=="publicKeySha256|purpose|signingKeyId"||item.purpose!==wanted.purpose||item.publicKeySha256!==wanted.publicKeySha256||item.signingKeyId!==wanted.signingKeyId)fail(code)}
+}
+function keyPairDigest(keyPairs){return sha256(Buffer.from([...keyPairs].sort((a,b)=>a.purpose.localeCompare(b.purpose)).map((entry)=>`${entry.purpose}\0${entry.publicKeySha256}\0${entry.signingKeyId}`).join("\n"),"utf8"));}
 
 function required(name) { const value = args.get(name); if (!value) fail("ARGUMENT_REQUIRED"); return path.resolve(value); }
 async function readPassphrase() {

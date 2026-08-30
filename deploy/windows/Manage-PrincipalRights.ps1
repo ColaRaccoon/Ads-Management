@@ -2,7 +2,7 @@
 [CmdletBinding()]
 param(
   [ValidateSet('Plan','Apply','Verify','Rollback')][string]$Action='Plan',
-  [string]$CoreServiceAccount,[string]$EdgeServiceAccount,[string]$BackupAccount,
+  [string]$CoreServiceAccount,[string]$EdgeServiceAccount,[string]$BackupAccount,[string]$SignerAccount,
   [string]$RollbackPath,[string]$EvidenceOutputPath,[string]$FileSystemEvidencePath,
   [ValidateSet('Apply','Rollback','VerifyEvidence')][string]$PlannedAction,[string]$ApprovedPlanSha256,[string]$ApprovalNonce,[string]$ApprovalIssuedAt,[string]$ApprovalExpiresAt,[string]$ApprovalInstanceId,[string]$ApprovalLedgerPath,[switch]$Approved
 )
@@ -54,26 +54,26 @@ function Assert-RightsEqual($Actual,$Expected){$actualKeys=@($Actual.Keys|Sort-O
 
 function New-PrincipalRightsApprovalPlan([string]$IntendedAction){
   if($IntendedAction-notin@('Apply','Rollback','VerifyEvidence')){throw 'PLANNED_ACTION_REQUIRED'}
-  foreach($account in @($CoreServiceAccount,$EdgeServiceAccount,$BackupAccount)){if($account-notmatch'^[^\\]+\\[^\\]+$'){throw 'PRINCIPAL_RIGHTS_PLAN_ACCOUNT_INVALID'}}
-  $parameters=[ordered]@{coreServiceAccount=$CoreServiceAccount;edgeServiceAccount=$EdgeServiceAccount;backupAccount=$BackupAccount;rollbackPath=(Get-ApprovalPath $RollbackPath 'PRINCIPAL_RIGHTS_PLAN_ROLLBACK_PATH_REQUIRED');filesystemEvidencePath=(Get-ApprovalPath $FileSystemEvidencePath 'PRINCIPAL_RIGHTS_PLAN_FILESYSTEM_PATH_REQUIRED')}
+  foreach($account in @($CoreServiceAccount,$EdgeServiceAccount,$BackupAccount,$SignerAccount)){if($account-notmatch'^[^\\]+\\[^\\]+$'){throw 'PRINCIPAL_RIGHTS_PLAN_ACCOUNT_INVALID'}}
+  $parameters=[ordered]@{coreServiceAccount=$CoreServiceAccount;edgeServiceAccount=$EdgeServiceAccount;backupAccount=$BackupAccount;signerAccount=$SignerAccount;rollbackPath=(Get-ApprovalPath $RollbackPath 'PRINCIPAL_RIGHTS_PLAN_ROLLBACK_PATH_REQUIRED');filesystemEvidencePath=(Get-ApprovalPath $FileSystemEvidencePath 'PRINCIPAL_RIGHTS_PLAN_FILESYSTEM_PATH_REQUIRED')}
   if($IntendedAction-eq'VerifyEvidence'){$parameters.evidenceOutputPath=Get-ApprovalPath $EvidenceOutputPath 'PRINCIPAL_RIGHTS_PLAN_EVIDENCE_PATH_REQUIRED'}
-  $target="Exact Windows user-right assignments for $CoreServiceAccount, $EdgeServiceAccount and $BackupAccount"
-  $impact=if($IntendedAction-eq'Apply'){'Exports the full current rights map, then assigns only the exact service/batch and deny-logon rights'}elseif($IntendedAction-eq'Rollback'){'Restores the exact ADMIN_ONLY full rights snapshot'}else{'Verifies the exact three principals and writes only the exact evidence output'}
+  $target="Exact Windows user-right assignments for $CoreServiceAccount, $EdgeServiceAccount, $BackupAccount and $SignerAccount"
+  $impact=if($IntendedAction-eq'Apply'){'Exports the full current rights map, then assigns only the exact service/batch and deny-logon rights'}elseif($IntendedAction-eq'Rollback'){'Restores the exact ADMIN_ONLY full rights snapshot'}else{'Verifies the exact four principals and writes only the exact evidence output'}
   $rollback=if($IntendedAction-eq'Apply'){'Use a separately approved Rollback plan bound to the exact snapshot path'}elseif($IntendedAction-eq'Rollback'){'Re-apply only through a new approved Apply plan'}else{'Delete only the exact evidence output'}
   return New-ApprovalPlan $PSCommandPath $IntendedAction $parameters $target $impact $rollback
 }
 if($Action-eq'Plan'){New-PrincipalRightsApprovalPlan $PlannedAction|ConvertTo-Json -Depth 12;exit 0}
 $rightsMutation=if($Action-in@('Apply','Rollback')){$Action}elseif($Action-eq'Verify'-and$EvidenceOutputPath){'VerifyEvidence'}else{$null};if($rightsMutation){Assert-ApprovedPlan (New-PrincipalRightsApprovalPlan $rightsMutation) ([bool]$Approved) $ApprovedPlanSha256}
-$coreSid=LocalSid $CoreServiceAccount;$edgeSid=LocalSid $EdgeServiceAccount;$backupSid=LocalSid $BackupAccount
-if(@(@($coreSid,$edgeSid,$backupSid)|Sort-Object -Unique).Count-ne3){throw 'PRINCIPALS_MUST_BE_DISTINCT'}
-$expected=[ordered]@{};$expected[$coreSid]=$serviceRights;$expected[$edgeSid]=$serviceRights;$expected[$backupSid]=$backupRights
+$coreSid=LocalSid $CoreServiceAccount;$edgeSid=LocalSid $EdgeServiceAccount;$backupSid=LocalSid $BackupAccount;$signerSid=LocalSid $SignerAccount
+if(@(@($coreSid,$edgeSid,$backupSid,$signerSid)|Sort-Object -Unique).Count-ne4){throw 'PRINCIPALS_MUST_BE_DISTINCT'}
+$expected=[ordered]@{};$expected[$coreSid]=$serviceRights;$expected[$edgeSid]=$serviceRights;$expected[$backupSid]=$backupRights;$expected[$signerSid]=$backupRights
 if($Action-eq'Verify'){
   Assert-Exact (Current-Rights) $expected
   if($EvidenceOutputPath){UnderClass $EvidenceOutputPath 'ADMIN_EVIDENCE';$parent=Split-Path -Parent (Full $EvidenceOutputPath 'EVIDENCE_PATH_REQUIRED');NoReparseAncestors $parent
-    $body=[ordered]@{version=3;result='PASS';corePrincipalDigest=(Digest $coreSid);edgePrincipalDigest=(Digest $edgeSid);backupPrincipalDigest=(Digest $backupSid);exactRights=$true;interactiveLogonDenied=$true;remoteInteractiveLogonDenied=$true;networkLogonDenied=$true;completedAt=(Get-Date).ToUniversalTime().ToString('o')}
+    $body=[ordered]@{version=4;result='PASS';corePrincipalDigest=(Digest $coreSid);edgePrincipalDigest=(Digest $edgeSid);backupPrincipalDigest=(Digest $backupSid);signerPrincipalDigest=(Digest $signerSid);exactRights=$true;interactiveLogonDenied=$true;remoteInteractiveLogonDenied=$true;networkLogonDenied=$true;completedAt=(Get-Date).ToUniversalTime().ToString('o')}
     [IO.File]::WriteAllText($EvidenceOutputPath,($body|ConvertTo-Json),(New-Object Text.UTF8Encoding($false)))
   }
-  [pscustomobject]@{Result='PASS';ExactRights=$true;PrincipalCount=3}|ConvertTo-Json;exit 0
+  [pscustomobject]@{Result='PASS';ExactRights=$true;PrincipalCount=4}|ConvertTo-Json;exit 0
 }
 if($Action-eq'Rollback'){
   $snapshot=Full $RollbackPath 'ROLLBACK_PATH_REQUIRED';UnderClass $snapshot 'ADMIN_ONLY';NoReparseAncestors $snapshot
@@ -88,8 +88,8 @@ if(Test-Path -LiteralPath $snapshot){throw 'ROLLBACK_SNAPSHOT_ALREADY_EXISTS'}
 Export-Rights $snapshot
 Protect-AdminOnlyFile $snapshot;Assert-AdminOnlyFile $snapshot
 $rights=Parse-Rights $snapshot
-foreach($right in @($rights.Keys)){$rights[$right]=@($rights[$right]|Where-Object{$_-notin@($coreSid,$edgeSid,$backupSid)})}
-foreach($pair in @(@{Sid=$coreSid;Rights=$serviceRights},@{Sid=$edgeSid;Rights=$serviceRights},@{Sid=$backupSid;Rights=$backupRights})){
+foreach($right in @($rights.Keys)){$rights[$right]=@($rights[$right]|Where-Object{$_-notin@($coreSid,$edgeSid,$backupSid,$signerSid)})}
+foreach($pair in @(@{Sid=$coreSid;Rights=$serviceRights},@{Sid=$edgeSid;Rights=$serviceRights},@{Sid=$backupSid;Rights=$backupRights},@{Sid=$signerSid;Rights=$backupRights})){
   foreach($right in $pair.Rights){if(-not$rights.Contains($right)){$rights[$right]=@()};$rights[$right]=@($rights[$right])+$pair.Sid}
 }
 $apply=Join-Path ([IO.Path]::GetTempPath()) ('meta-rights-'+[guid]::NewGuid().ToString('N')+'.inf');$database=[IO.Path]::ChangeExtension($apply,'.sdb')

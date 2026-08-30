@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash, createHmac, generateKeyPairSync } from "node:crypto";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { link, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -53,7 +53,7 @@ async function fixture() {
   const requestPath = path.join(artifactRoot, "receipt-request.json");
   const requestBytes = Buffer.from(JSON.stringify(request), "utf8");
   await writeFile(requestPath, requestBytes);
-  return { root, privatePath, publicPath, privateSha256:hex(privateBytes), integrityPath, integritySha256:hex(integrityKey), requestPath, requestSha256:hex(requestBytes), receiptKeyId, authorizationKeyId };
+  return { root, artifactRoot, privatePath, publicPath, privateSha256:hex(privateBytes), integrityPath, integritySha256:hex(integrityKey), requestPath, requestSha256:hex(requestBytes), receiptKeyId, authorizationKeyId };
 }
 
 test("semantic backup receipt signer independently validates a v6 artifact and signs with its own key", async () => {
@@ -76,4 +76,13 @@ test("semantic backup receipt signer rejects authorization and receipt key-domai
   const result = spawnSync(process.execPath, [signerPath,f.privatePath,f.privateSha256,f.integrityPath,f.integritySha256,f.requestPath,f.requestSha256,f.receiptKeyId,outputPath], { encoding:"utf8" });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /BACKUP_RECEIPT_KEY_DOMAIN_REUSE_REJECTED/);
+});
+
+test("semantic backup receipt signer rejects hard-linked artifacts", async () => {
+  const f = await fixture();
+  await link(path.join(f.artifactRoot,"database.dump"),path.join(f.root,"dump-hardlink.bin"));
+  const outputPath = path.join(f.root, "hardlink.json");
+  const result = spawnSync(process.execPath, [signerPath,f.privatePath,f.privateSha256,f.integrityPath,f.integritySha256,f.requestPath,f.requestSha256,f.authorizationKeyId,outputPath], { encoding:"utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /BACKUP_(?:HARDLINK_REJECTED|ARTIFACT_TREE_INVALID)/);
 });
