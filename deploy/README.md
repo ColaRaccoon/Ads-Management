@@ -159,13 +159,22 @@ local launchers. Do not copy source `.env` files or any key/pgpass material.
   deploy/local/https-edge.mjs
   deploy/local/runtime-config.mjs
   deploy/local/api-config.mjs
+  deploy/local/api.env.example
+  deploy/local/config.example.json
+  deploy/local/config.schema.json
+  deploy/local/new-backup-schedule-authorization.mjs
+  deploy/local/new-bootstrap-authorization.mjs
+  deploy/local/new-signing-key.mjs
+  deploy/local/recovery-kit.mjs
+  deploy/local/sign-attestation.mjs
+  deploy/local/sign-backup-receipt.mjs
   deploy/local/verify-tls-material.mjs
   deploy/local/verify-local-release.mjs
   deploy/local/verify-runtime-readiness.mjs
   deploy/local/verify-attestation.mjs
   deploy/local/verify-https-release.mjs
   deploy/local/smoke-local-release.mjs
-  deploy/windows/...             # exact 37 PS1 + 2 service XML host bundle
+  deploy/windows/...             # exact 39 PS1 + 2 service XML host bundle
 ```
 
 The packager inventories every file, rejects secret-like paths and reparse
@@ -205,8 +214,9 @@ Run elevated PowerShell only after presenting the exact values and rollback for
 the step being approved. Approval for one step does not authorize another.
 
 1. **Principal rights** — `Manage-PrincipalRights.ps1` assigns service logon and
-   explicit interactive/remote/network logon denial to the three exact local
-   principals. Rollback restores the prior policy backup.
+   explicit interactive/remote/network logon denial to four exact local
+   principals (Core, Edge, backup writer and receipt signer). Rollback restores
+   the prior policy backup.
 2. **NTFS ACL** — `Manage-Acl.ps1` applies eleven disjoint access classes and
    verifies every descendant. Rollback restores hash-pinned DACL and owner data.
 3. **Database boundary read-only check** —
@@ -217,7 +227,16 @@ the step being approved. Approval for one step does not authorize another.
    the hash-pinned Core and Edge wrappers with both services Manual/stopped. A
    reboot cannot implicitly start them. This does not stop or reconfigure
    `3100`/`4100`.
-5. **Bootstrap** — while loopback-only, place a version 2 request containing
+5. **Pre-bootstrap schema gate** — do not run bootstrap against the legacy
+   schema. First complete the backup/restore prerequisites below, enable
+   maintenance, quiesce the exact legacy writers, obtain the immediate
+   production Supabase migration approval, and run
+   `Manage-SupabaseMigration.ps1` through `Apply` and `Finalize` for the verified
+   local-native-auth release. Re-run the database-boundary check after migration.
+   Keep Core/Edge stopped and keep maintenance enabled; this step does not switch
+   the existing 3100/4100 processes.
+6. **Bootstrap** — only after the finalized local-native-auth migration, and
+   while loopback-only, place a version 2 request containing
    `username`, `authorizationPrivateKeySha256`,
    `authorizationPublicKeySha256`, and `signingKeyId` in a newly created
    ADMIN_ONLY file using an interactive editor or hidden prompt. The username is
@@ -260,7 +279,7 @@ the step being approved. Approval for one step does not authorize another.
    `SUPER_ADMIN` can be created; later users are created from the management
    screen and complete a one-time setup token. No password or token is emailed,
    placed in argv, or written to logs.
-6. **Separate process start** — immediately before `Manage-Service.ps1 -Action
+7. **Separate process start** — immediately before `Manage-Service.ps1 -Action
    Start`, present the exact services, bind state, impact and `Stop` rollback and
    obtain process-transition approval. A prepared LAN-disabled configuration
    starts Core only on loopback; a fully evidenced LAN configuration starts both
@@ -302,7 +321,8 @@ Client trust is established before the server listens on the LAN:
    impact, and rollback and obtain approval. All firewall profiles must already
    be enabled with default inbound Block. The rule permits only TCP 443 on the
    exact private address and rejects Public-profile exposure, EdgeTraversal,
-   conflicting allow rules, or internal-port rules.
+   conflicting allow rules, or any direct rule/listener exposure for the complete
+   protected set `3100,3200,4100,4200,5432,55432,6543`.
 6. From every authorized client, run `Manage-ClientTrust.ps1 -Phase Live` and
    merge live evidence. Confirm HTTPS release identity. Any unlisted client IP,
    direct Web/API ports, local data paths, and forbidden ports must remain
@@ -331,8 +351,11 @@ and time are configured, the schedule must not run and readiness remains false.
    the normalized remote server/share and its resolved remote address set. Core
    and Edge are denied; the dedicated backup principal is the only application
    writer.
-2. `Manage-BackupSchedule.ps1` creates the exact daily task under that principal
-   only after approval. Verification requires the Windows daily-trigger class,
+2. `Manage-BackupSchedule.ps1` creates two exact tasks only after approval: the
+   daily dump/storage task under the backup principal and a 15-minute recurring
+   pending-receipt publisher under the distinct signer principal. Verification
+   requires both Windows daily-trigger classes, the publisher `PT15M`/`P1D`
+   repetition contract,
    `DaysInterval=1`, `Trigger.Enabled=true`, the configured local time, an enabled
    task, start-when-available, the four-hour limit, and exact hashes for the
    runtime config, action and immutable release. The approved schedule plan binds
@@ -343,7 +366,11 @@ and time are configured, the schedule must not run and readiness remains false.
    value requires a new authorization and schedule plan. The schedule authorization
    is v3, also binds the exact NAS-identity helper hash, and carries its own CSPRNG
    nonce and instance identifier. Bare `-Approved`
-   is never delegated to the backup account.
+   is never delegated to the backup account. The signer task can publish at most
+   one oldest unconsumed request per run; it has no DB dump credential, while the
+   backup task has no receipt private key. A dump ending
+   `COMPLETE_PENDING_SIGNER` is not a successful recovery point until the
+   recurring signer publishes the signed `backup-latest` receipt.
    Runtime readiness hashes the exact backup-target evidence bytes and requires the
    schedule receipt to bind that hash. Its target fingerprint includes the stable
    NAS server/share/address-set identity, resolved-address count, local-alias
@@ -365,7 +392,11 @@ and time are configured, the schedule must not run and readiness remains false.
    key and receipt-key hashes immediately before signing. The semantic signer
    independently re-hashes the exact v6 manifest, HMAC, bounded dump, storage
    inventory, the NAS-identity helper binding, and any legacy reference-conversion
-   artifact before publishing the
+   artifact before publishing. The publisher holds read locks on the complete
+   artifact tree through publication; the semantic signer rejects hard links,
+   binds file identity/size/mtime around every hash, and re-enumerates the full
+   tree immediately before signing. The one-use authorization is marked consumed
+   only after the receipt is atomically published. It then publishes the
    signed latest receipt. Generic attestation signing refuses `backup-latest`.
    Receipts are constructed from an allowlist and contain hashes/metadata, never
    rows, file contents, credentials or unknown request fields.
@@ -504,7 +535,16 @@ Production database migration and process switching are separate approvals.
     as committed/partial states, transactionally restores the preserved original,
     verifies `1|0`, and journals the observed state; it never trusts only the child
     exit result to decide whether mutation occurred.
-    Maintenance and quiesce remain mandatory in either case. A separately approved
+    Maintenance and quiesce remain mandatory in either case. After a successful
+    rollback, `Finalize-SupabaseRollback.ps1` provides the only supported schema
+    boundary exit: a fresh exact approval either returns forward by transactionally
+    dropping the restored schema and renaming the preserved forward schema, or
+    accepts the rollback by transactionally dropping only the exact preserved
+    schema. Both modes require the hash-pinned signed rollback chain, exact
+    Supabase target, maintenance flag, restore credential/CA, journal, post-state
+    `current=present/preserved=absent` verification, and a separate VerifyEvidence
+    plan. No writer restart or maintenance removal is implicit.
+    A separately approved
     `VerifyEvidence` Plan rechecks the journal, receipt, role grants and live hashes.
     Only then is the rollback receipt supplied to
    `Manage-LegacyQuiesce.ps1 -Action Rollback` using the exact restart
@@ -577,8 +617,9 @@ Recovery order is:
     The kit tool's stdout/stderr are drained concurrently under a bounded buffer;
     timeout kills the complete process tree, waits a bounded interval, and fails
     hard unless the root and every snapshotted descendant are absent. Disaster verification authenticates
-   and bounded-extracts the exact 13-file
-   internal inventory, retains it for recovery, and neither requires nor emits
+   and bounded-extracts the exact 16-file internal inventory, including
+   functional matching Ed25519 private/public pairs for Edge, backup receipts,
+   and restore receipts. It retains the inventory for recovery and neither requires nor emits
     any original source path;
     every recovery execution binds the process-tree, host-instance and
     NAS-identity helper paths and hashes in the approval plan, opens each helper

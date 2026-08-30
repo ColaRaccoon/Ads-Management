@@ -244,13 +244,24 @@ describe("local native deployment artifacts", () => {
     expect(target).toContain("nasServerIdentitySha256");expect(target).toContain("nasResolvedAddressCount");expect(target).toContain("nasLocalAliasRejected");expect(target).toContain("NAS_REMOTE_IDENTITY_DRIFT");expect(nas).toContain("NAS_SERVER_RESOLVES_TO_CURRENT_HOST");expect(nas).toContain("Get-NetIPAddress");expect(nas).toContain("GetHostAddresses");
   });
 
+  it("separates pre-migration resume from signed post-migration rollback and provides an explicit preserved-schema finalizer",async()=>{
+    const [quiesce,finalizer]=await Promise.all([file("deploy/windows/Manage-LegacyQuiesce.ps1"),file("deploy/windows/Finalize-SupabaseRollback.ps1")]);
+    for(const token of["PRE_MIGRATION_RESUME","POST_MIGRATION_ROLLBACK","LEGACY_QUIESCED_NO_EDGE","SIGNED_LEGACY_QUIESCE_V2","ExpectedMigrationJournalSha256","legacyNoEdgeVerified","drainVerified"]){expect(quiesce).toContain(token)}
+    for(const token of["RETURN_FORWARD","ACCEPT_ROLLBACK_DROP_PRESERVED","Assert-ApprovedPlan","supabase_postgres","database.migrationUser","COMPLETE_MAINTENANCE_REQUIRED","DROP SCHEMA $schema CASCADE","ALTER SCHEMA $saved RENAME TO $schema","DROP SCHEMA $saved CASCADE","ROLLBACK_FINALIZE_POST_STATE_REJECTED"]){expect(finalizer).toContain(token)}
+    expect(finalizer).not.toContain("database.restoreUser-cne$ConfirmDatabaseUser");
+  });
+
   it("binds backup authority and keeps receipt signing outside the backup principal",async()=>{
-    const [backup,schedule,acl,publisher,semantic,generic,runtime,recovery]=await Promise.all([
-      file("deploy/windows/Backup-Local.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Manage-Acl.ps1"),file("deploy/windows/Publish-BackupReceipt.ps1"),file("deploy/local/sign-backup-receipt.mjs"),file("deploy/local/sign-attestation.mjs"),file("deploy/local/runtime-config.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1")
+    const [backup,schedule,broker,acl,publisher,semantic,generic,runtime,recovery]=await Promise.all([
+      file("deploy/windows/Backup-Local.ps1"),file("deploy/windows/Manage-BackupSchedule.ps1"),file("deploy/windows/Publish-PendingBackupReceipt.ps1"),file("deploy/windows/Manage-Acl.ps1"),file("deploy/windows/Publish-BackupReceipt.ps1"),file("deploy/local/sign-backup-receipt.mjs"),file("deploy/local/sign-attestation.mjs"),file("deploy/local/runtime-config.mjs"),file("deploy/windows/Manage-RecoveryKit.ps1")
     ]);
     expect(backup).not.toContain("if (-not $Approved)");expect(backup).toContain("New-BackupApprovalPlan");expect(backup).toContain("Assert-ScheduledAuthorization");expect(backup).toContain("ExpectedRuntimeConfigSha256");expect(backup).toContain("ExpectedBackupTargetEvidenceSha256");expect(backup).toContain("ExpectedBackupTargetFingerprint");expect(backup).toContain("ExpectedBackupRoot");
-    expect(schedule).not.toContain("'-Approved'");expect(schedule).not.toContain("BackupReceiptPrivateKeyPath");expect(schedule).toContain("ExpectedScheduledAuthorizationSha256");expect(schedule).toContain("scheduledAuthorizationBound=$true");expect(schedule).toContain("scheduledAuthorizationVersion=3");expect(schedule).toContain("ExpectedBackupReceiptPrivateKeySha256");expect(schedule).toContain("ExpectedNasIdentityHelperSha256");
+    const backupTaskArguments=schedule.slice(schedule.indexOf("function ExpectedArguments"),schedule.indexOf("function ExpectedPublisherArguments"));
+    const signerTaskArguments=schedule.slice(schedule.indexOf("function ExpectedPublisherArguments"),schedule.indexOf("function New-BackupScheduleApprovalPlan"));
+    expect(schedule).not.toContain("'-Approved'");expect(backupTaskArguments).not.toContain("BackupReceiptPrivateKeyPath");expect(signerTaskArguments).toContain("BackupReceiptPrivateKeyPath");expect(schedule).toContain("ExpectedScheduledAuthorizationSha256");expect(schedule).toContain("scheduledAuthorizationBound=$true");expect(schedule).toContain("scheduledAuthorizationVersion=3");expect(schedule).toContain("ExpectedBackupReceiptPrivateKeySha256");expect(schedule).toContain("ExpectedNasIdentityHelperSha256");
     expect(backup).not.toContain("BackupReceiptPrivateKeyPath");expect(backup).not.toContain("ATTESTATION_SIGNER_HASH_MISMATCH");expect(backup).toContain("COMPLETE_PENDING_SIGNER");
+    for(const token of["BACKUP_BROKER_SELF_HASH_MISMATCH","BACKUP_BROKER_DIRECTORY_LIMIT","NO_PENDING","AuthorizationMode','Scheduled","SecretMaterialEmitted=$false"]){expect(broker).toContain(token)}
+    expect(schedule).toContain("Meta Ads Performance Backup Receipt Publisher");expect(schedule).toContain("PT15M");expect(schedule).toContain("receiptPublisherRecurringVerified=$true");expect(schedule).toContain("version=8");
     expect(acl).toContain("SignerAccount");expect(acl).toContain("SIGNER_ONLY");expect(acl).toContain("SIGNER_STATE");expect(acl).toContain("signerSid=$script:SignerSid");expect(recovery).toContain("'backup-receipt-private-key'='SIGNER_ONLY'");
     for(const token of ["backup-signer-authorization","Assert-ApprovedPlan","SIGNER_PUBLISH_MUST_NOT_USE_ADMIN_LEDGER","SignerReplayLedgerRoot","CreateNew","ExpectedReceiptRequestSha256","BACKUP_RECEIPT_REQUEST_CHANGED_BEFORE_PUBLISH","ExpectedPgPassSha256","ExpectedNasIdentityHelperSha256","nasIdentityHelperSha256","version-ne3","ExpectedBackupIntegrityKeySha256","ExpectedBackupReceiptPrivateKeySha256","classRoots.SIGNER_ONLY","classRoots.SIGNER_STATE","BACKUP_RECEIPT_SIGNER_IDENTITY_REJECTED"]){expect(publisher).toContain(token)}
     for(const token of ["requestKeys","manifestKeys","exactObject","BACKUP_MANIFEST_HASH_MISMATCH","BACKUP_DUMP_MISMATCH","STORAGE_PAYLOAD_SET_MISMATCH","BACKUP_HMAC_INVALID","LEGACY_STORAGE_CONVERSION_HASH_MISMATCH","artifactVerificationDigest","signerIndependentArtifactVerification","BACKUP_RECEIPT_KEY_DOMAIN_REUSE_REJECTED"]){expect(semantic).toContain(token)}
@@ -308,7 +319,7 @@ describe("local native deployment artifacts", () => {
     expect(runtime).toContain("LAN_EXACT_CLIENT_ADDRESSES_REQUIRED");
     expect(runtime).toContain("LAN_CLIENT_ADDRESS_COUNT_MISMATCH");
     expect(firewall).toContain("EXACT_CLIENT_IPV4_32_REQUIRED");
-    expect(firewall).toContain("@(443,3200,4200,5432,55432,6543)");
+    expect(firewall).toContain("@(443,3100,3200,4100,4200,5432,55432,6543)");
     expect(firewall).not.toContain("$candidateProgram-notin");
     expect(service.indexOf("INSTALLED_WRAPPER_HASH_MISMATCH")).toBeLessThan(service.indexOf("&$verifiedExe uninstall"));
     expect(service.indexOf("SERVICE_IMAGE_PATH_MISMATCH")).toBeLessThan(service.indexOf("&$verifiedExe uninstall"));
@@ -323,7 +334,7 @@ describe("local native deployment artifacts", () => {
     expect(reboot).toContain("'--expected-status=200'");
     expect(reboot).toContain("HTTPS_RELEASE_OR_PINNED_TRUST_VERIFY_FAILED");
     expect(reboot).toContain("WEB_LISTENER_OWNERSHIP_FAILED");
-    expect(reboot).toContain("NEW_STACK_OWNS_FORBIDDEN_PORT");
+    expect(reboot).toContain("FORBIDDEN_PORT_LISTENER_PRESENT");
     const releaseSwitch = await file("deploy/windows/Switch-LocalRelease.ps1");
     expect(releaseSwitch).toContain("MAINTENANCE_REQUIRED");
     expect(releaseSwitch).toContain("DATABASE_COMPATIBILITY_EVIDENCE_REJECTED");
