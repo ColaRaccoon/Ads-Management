@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { createBodyIdleWatchdog, createBodyTransferBudget, createLocalHttpsEdge, takePerClientToken } from "./https-edge.mjs";
+import { createBodyIdleWatchdog, createBodyTransferBudget, createLocalHttpsEdge, runtimeConfigIdentityMatches, takePerClientToken } from "./https-edge.mjs";
 
 test("edge refuses the shipped loopback-only configuration before reading certificates", () => {
   const config = JSON.parse(readFileSync(new URL("./config.example.json", import.meta.url), "utf8"));
@@ -57,4 +57,13 @@ test("per-client limiter is cardinality-bounded and only reclaims stale entries"
   assert.equal(buckets.size, 2);
   assert.equal(takePerClientToken(buckets, "192.168.1.3", 1, 2, { now: 2_001, maximumEntries: 2, staleAfterMs: 1_000 }), true);
   assert.equal(buckets.size, 1);
+});
+
+test("running edge rejects any runtime-config byte or identity drift until restart", () => {
+  const raw = { version: 3, database: { host: "db.example" }, release: { id: "r1" }, backup: { root: "x" } };
+  const frozen = JSON.stringify(raw);
+  const sha = "a".repeat(64);
+  assert.equal(runtimeConfigIdentityMatches(frozen, sha, structuredClone(raw), sha), true);
+  assert.equal(runtimeConfigIdentityMatches(frozen, sha, { ...raw, database: { host: "changed" } }, sha), false);
+  assert.equal(runtimeConfigIdentityMatches(frozen, sha, raw, "b".repeat(64)), false);
 });

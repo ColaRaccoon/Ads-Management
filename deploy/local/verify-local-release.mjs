@@ -8,15 +8,16 @@ const MAX_FILE_BYTES = 1_073_741_824;
 const MAX_RELEASE_BYTES = 17_179_869_184;
 const MAX_MANIFEST_BYTES = 134_217_728;
 export const WINDOWS_HOST_FILES = Object.freeze([
-  "deploy/windows/Activate-ServerCertificate.ps1","deploy/windows/approval-plan.ps1","deploy/windows/approval-plan.runtime.test.ps1","deploy/windows/Backup-Local.ps1","deploy/windows/edge-drain-identity.ps1","deploy/windows/edge-drain-identity.runtime.test.ps1","deploy/windows/edge-service.xml.template","deploy/windows/host-instance.ps1","deploy/windows/Manage-Acl.ps1","deploy/windows/Manage-BackupSchedule.ps1","deploy/windows/Manage-ClientTrust.ps1","deploy/windows/Manage-Firewall.ps1","deploy/windows/Manage-LegacyQuiesce.ps1","deploy/windows/Manage-Maintenance.ps1","deploy/windows/Manage-PrincipalRights.ps1","deploy/windows/Manage-RecoveryKit.ps1","deploy/windows/Manage-Service.ps1","deploy/windows/Manage-SupabaseMigration.ps1","deploy/windows/Manage-SupabaseRollbackRestore.ps1","deploy/windows/Merge-ClientTrustEvidence.ps1","deploy/windows/nas-identity.ps1","deploy/windows/nas-identity.runtime.test.ps1","deploy/windows/New-InternalCa.ps1","deploy/windows/New-LegacyRunningBaseline.ps1","deploy/windows/Publish-BackupReceipt.ps1","deploy/windows/Publish-RestoreEvidence.ps1","deploy/windows/recovery-process-tree.ps1","deploy/windows/recovery-process-tree.runtime.test.ps1","deploy/windows/Renew-ServerCertificate.ps1","deploy/windows/Restore-Verify.ps1","deploy/windows/service.xml.template","deploy/windows/Stage-LegacyLocalStorage.ps1","deploy/windows/Switch-LocalRelease.ps1","deploy/windows/Test-BackupTarget.ps1","deploy/windows/Test-HostBundleSyntax.ps1","deploy/windows/Test-InitialCutoverCompatibility.ps1","deploy/windows/Test-RebootReadiness.ps1","deploy/windows/Test-ReleaseCompatibility.ps1","deploy/windows/Test-SupabaseDatabaseBoundary.ps1"
+  "deploy/windows/Activate-ServerCertificate.ps1","deploy/windows/approval-plan.ps1","deploy/windows/approval-plan.runtime.test.ps1","deploy/windows/Backup-Local.ps1","deploy/windows/edge-drain-identity.ps1","deploy/windows/edge-drain-identity.runtime.test.ps1","deploy/windows/edge-service.xml.template","deploy/windows/Finalize-SupabaseRollback.ps1","deploy/windows/host-instance.ps1","deploy/windows/Manage-Acl.ps1","deploy/windows/Manage-BackupSchedule.ps1","deploy/windows/Manage-ClientTrust.ps1","deploy/windows/Manage-Firewall.ps1","deploy/windows/Manage-LegacyQuiesce.ps1","deploy/windows/Manage-Maintenance.ps1","deploy/windows/Manage-PrincipalRights.ps1","deploy/windows/Manage-RecoveryKit.ps1","deploy/windows/Manage-Service.ps1","deploy/windows/Manage-SupabaseMigration.ps1","deploy/windows/Manage-SupabaseRollbackRestore.ps1","deploy/windows/Merge-ClientTrustEvidence.ps1","deploy/windows/nas-identity.ps1","deploy/windows/nas-identity.runtime.test.ps1","deploy/windows/New-InternalCa.ps1","deploy/windows/New-LegacyRunningBaseline.ps1","deploy/windows/Publish-BackupReceipt.ps1","deploy/windows/Publish-PendingBackupReceipt.ps1","deploy/windows/Publish-RestoreEvidence.ps1","deploy/windows/recovery-process-tree.ps1","deploy/windows/recovery-process-tree.runtime.test.ps1","deploy/windows/Renew-ServerCertificate.ps1","deploy/windows/Restore-Verify.ps1","deploy/windows/service.xml.template","deploy/windows/Stage-LegacyLocalStorage.ps1","deploy/windows/Switch-LocalRelease.ps1","deploy/windows/Test-BackupTarget.ps1","deploy/windows/Test-HostBundleSyntax.ps1","deploy/windows/Test-InitialCutoverCompatibility.ps1","deploy/windows/Test-RebootReadiness.ps1","deploy/windows/Test-ReleaseCompatibility.ps1","deploy/windows/Test-SupabaseDatabaseBoundary.ps1"
+]);
+export const LOCAL_HOST_TOOL_FILES = Object.freeze([
+  "deploy/local/api-config.mjs","deploy/local/api.env.example","deploy/local/config.example.json","deploy/local/config.schema.json","deploy/local/https-edge.mjs","deploy/local/launch-local-bundle.mjs","deploy/local/new-backup-schedule-authorization.mjs","deploy/local/new-bootstrap-authorization.mjs","deploy/local/new-signing-key.mjs","deploy/local/recovery-kit.mjs","deploy/local/runtime-config.mjs","deploy/local/sign-attestation.mjs","deploy/local/sign-backup-receipt.mjs","deploy/local/smoke-local-release.mjs","deploy/local/start-edge.mjs","deploy/local/verify-attestation.mjs","deploy/local/verify-https-release.mjs","deploy/local/verify-local-release.mjs","deploy/local/verify-runtime-readiness.mjs","deploy/local/verify-tls-material.mjs"
 ]);
 export const REQUIRED_RELEASE_FILES = Object.freeze([
   "api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/package.json","api/prisma/schema.prisma",
   "api/node_modules/@prisma/client/package.json","api/node_modules/.prisma/client/package.json","api/node_modules/prisma/package.json","api/node_modules/prisma/build/index.js",
   "web/server.js","web/package.json","web/.next/BUILD_ID","web/.next/required-server-files.json",
-  "deploy/local/launch-local-bundle.mjs","deploy/local/start-edge.mjs","deploy/local/https-edge.mjs",
-  "deploy/local/runtime-config.mjs","deploy/local/api-config.mjs","deploy/local/verify-tls-material.mjs",
-  "deploy/local/verify-local-release.mjs","deploy/local/verify-runtime-readiness.mjs","deploy/local/verify-attestation.mjs","deploy/local/verify-https-release.mjs","deploy/local/smoke-local-release.mjs",
+  ...LOCAL_HOST_TOOL_FILES,
   ...WINDOWS_HOST_FILES
 ]);
 export const FORBIDDEN_RELEASE_FILES = Object.freeze([
@@ -59,6 +60,8 @@ export async function verifyRuntimeClosure(rootValue, filesValue) {
   for(const name of REQUIRED_RELEASE_FILES)if(!names.has(name))fail(`RELEASE_REQUIRED_FILE_MISSING:${name}`);
   const actualWindows=[...names].filter((name)=>name.startsWith("deploy/windows/")).sort();
   if(actualWindows.join("\n")!==[...WINDOWS_HOST_FILES].sort().join("\n"))fail("RELEASE_WINDOWS_HOST_FILE_SET_MISMATCH");
+  const actualLocal=[...names].filter((name)=>name.startsWith("deploy/local/")).sort();
+  if(actualLocal.join("\n")!==[...LOCAL_HOST_TOOL_FILES].sort().join("\n"))fail("RELEASE_LOCAL_HOST_TOOL_SET_MISMATCH");
   if(![...names].some((name)=>name.startsWith("web/.next/server/"))||![...names].some((name)=>name.startsWith("web/.next/static/")))fail("RELEASE_WEB_RUNTIME_ASSETS_MISSING");
   const engineNames=[...names].filter((name)=>/^api\/node_modules\/\.prisma\/client\/(?:lib)?query_engine[^/]*\.(?:node|dll\.node|so\.node|dylib\.node)$/.test(name));
   if(engineNames.length<1)fail("RELEASE_PRISMA_ENGINE_MISSING");
@@ -87,7 +90,7 @@ export function windowsHostBundleDigest(files){
   return sha256(Buffer.from([...WINDOWS_HOST_FILES].sort().map((name)=>`${name}=${files[name]??""}`).join("\n"),"utf8"));
 }
 export function runtimeSmokeContractDigest(files){
-  const names=["deploy/local/smoke-local-release.mjs","api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/node_modules/prisma/build/index.js","web/server.js"];
+  const names=[...LOCAL_HOST_TOOL_FILES,"api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/node_modules/prisma/build/index.js","web/server.js"];
   return sha256(Buffer.from(["source-free-cold-start-v1",...names.map((name)=>`${name}=${files[name]??""}`)].join("\n"),"utf8"));
 }
 
@@ -163,7 +166,7 @@ export async function inventory(rootValue, excludeManifest = false) {
       if (!stat.isFile() || stat.size > MAX_FILE_BYTES) fail("RELEASE_FILE_INVALID");
       const relative=path.relative(root,full).split(path.sep).join("/");
       if (excludeManifest && relative === "release-manifest.json") continue;
-      if (secretMaterialName(relative)) fail("RELEASE_SECRET_MATERIAL_REJECTED");
+      if (secretMaterialName(relative) && relative !== "deploy/local/new-signing-key.mjs") fail("RELEASE_SECRET_MATERIAL_REJECTED");
       totalBytes+=stat.size;if(totalBytes>MAX_RELEASE_BYTES)fail("RELEASE_TOTAL_BYTES_EXCEEDED");
       result.push({full,relative,size:stat.size}); if(result.length>MAX_FILES)fail("RELEASE_FILE_COUNT_EXCEEDED");
     }

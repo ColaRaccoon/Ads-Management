@@ -30,6 +30,7 @@ export function createLocalHttpsEdge(rawConfig, options = {}) {
   const edgeSigningKeyId=createHash("sha256").update(configuredEdgePublic.export({type:"spki",format:"der"})).digest("hex");
   const nodeExecutableSha256=createHash("sha256").update(readFileSync(process.execPath)).digest("hex");
   const frozenEdgeConfig = edgeImmutableFingerprint(rawConfig);
+  const startupRuntimeConfigSha256 = options.runtimeConfigSha256;
   const maintenanceFlag = path.join(config.data.root, "runtime-control", "maintenance.enabled");
   const drainStatePath = path.join(config.data.root, "logs", "edge", "drain-state.json");
   const requestSpoolRoot = path.join(config.data.root, "logs", "edge", "request-spool");
@@ -64,7 +65,7 @@ export function createLocalHttpsEdge(rawConfig, options = {}) {
     if (normalizeHost(incoming.headers.host) !== hostname) return reject(outgoing, 421);
     if (!takePerClientToken(requestBuckets, remoteAddress, 30, 60) || !takeGlobalToken(globalBucket)) return reject(outgoing, 429);
     if (Date.now() >= readinessCache.expiresAt) {
-      readinessCache = { result: currentReadiness(frozenEdgeConfig, options), expiresAt: Date.now() + 2_000 };
+      readinessCache = { result: currentReadiness(frozenEdgeConfig, startupRuntimeConfigSha256, options), expiresAt: Date.now() + 2_000 };
     }
     if (!readinessCache.result) return reject(outgoing, 503);
     if (existsSync(maintenanceFlag)) return reject(outgoing, 503, { "x-local-release-id": config.release.id });
@@ -234,11 +235,11 @@ function apiTarget(url) {
   if (url.startsWith("/backend-api/")) return `/api/${url.slice("/backend-api/".length)}`;
   return url;
 }
-function currentReadiness(frozenEdgeConfig, options) {
+function currentReadiness(frozenEdgeConfig, startupRuntimeConfigSha256, options) {
   try {
     if (typeof options.readinessProvider !== "function") return true;
     const current = options.readinessProvider();
-    if (!current || edgeImmutableFingerprint(current.rawConfig) !== frozenEdgeConfig) return false;
+    if (!current || !runtimeConfigIdentityMatches(frozenEdgeConfig,startupRuntimeConfigSha256,current.rawConfig,current.evidence?.runtimeConfigSha256)) return false;
     const checked = validateLocalRuntimeConfig(current.rawConfig, current.evidence);
     if (!checked.network.lanReady || !checked.readiness.operationalReady) return false;
     verifyCertificateMaterial(
@@ -249,16 +250,9 @@ function currentReadiness(frozenEdgeConfig, options) {
   } catch { return false; }
 }
 function edgeImmutableFingerprint(rawConfig) {
-  return JSON.stringify({
-    version: rawConfig?.version,
-    deploymentMode: rawConfig?.deploymentMode,
-    internalPorts: rawConfig?.internalPorts,
-    data: rawConfig?.data,
-    lan: rawConfig?.lan,
-    tls: rawConfig?.tls,
-    hostSecurity: rawConfig?.hostSecurity
-  });
+  return JSON.stringify(rawConfig);
 }
+export function runtimeConfigIdentityMatches(frozenConfig,startupSha256,currentRawConfig,currentSha256){return /^[0-9a-f]{64}$/.test(startupSha256??"")&&currentSha256===startupSha256&&edgeImmutableFingerprint(currentRawConfig)===frozenConfig;}
 function decrement(map, key) { const next=(map.get(key)??1)-1; if(next<=0)map.delete(key);else map.set(key,next); }
 function prepareRequestSpool(root){
   mkdirSync(root,{recursive:true,mode:0o700});assertDirectoryChain(root);

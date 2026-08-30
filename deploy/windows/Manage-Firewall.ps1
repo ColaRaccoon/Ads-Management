@@ -19,7 +19,7 @@ function IsPrivateIpv4([string]$Address){try{$parts=$Address.Split('.')|ForEach-
 function Validate-Cidr([string]$Cidr){$parts=$Cidr.Split('/');if($parts.Count-ne2-or-not(IsPrivateIpv4 $parts[0])-or$parts[1]-cne'32'){throw 'EXACT_CLIENT_IPV4_32_REQUIRED'}}
 function FullFile([string]$Path,[string]$Code){if(-not$Path-or-not(Test-Path -LiteralPath $Path -PathType Leaf)){throw $Code};return [IO.Path]::GetFullPath($Path)}
 function Touches-ProtectedPort($PortFilter){
-  $protected=@(443,3200,4200,5432,55432,6543)
+  $protected=@(443,3100,3200,4100,4200,5432,55432,6543)
   $ports=@($PortFilter.LocalPort|ForEach-Object{([string]$_).Split(',')}|ForEach-Object{$_.Trim()}|Where-Object{$_})
   foreach($entry in $ports){
     if($entry-eq'Any'){return $true}
@@ -103,7 +103,7 @@ if($Action-eq'Verify'){
   if($EvidenceOutputPath){
     $output=[IO.Path]::GetFullPath($EvidenceOutputPath);$parent=Split-Path -Parent $output;if(-not(Test-Path -LiteralPath $parent -PathType Container)){throw 'FIREWALL_EVIDENCE_PARENT_NOT_FOUND'}
     $temp=Join-Path $parent ('.firewall-'+[Guid]::NewGuid().ToString('N')+'.tmp')
-    try{[IO.File]::WriteAllText($temp,([ordered]@{version=4;result='PASS';ruleName=$RuleName;bindAddress=$LanBindAddress;allowedCidrs=@($AllowedCidrs|Sort-Object);exactClientAddresses=$true;protectedPorts=@(443,3200,4200,5432,55432,6543);nodeProgramPath=$node;nodeProgramSha256=$ExpectedNodeSha256.ToLowerInvariant();edgeServiceName=$EdgeServiceName;edgeServiceSid=$edgeSid;serviceRestricted=$true;publicProfileOpened=$false;conflictingAllowRulesAbsent=$true;internalPortsDenied=$true;allProfilesEnabled=$true;defaultInboundBlocked=$true;profilePolicies=$policy.State;routerChanged=$false;completedAt=(Get-Date).ToUniversalTime().ToString('o')}|ConvertTo-Json -Depth 5),(New-Object Text.UTF8Encoding($false)));Move-Item -LiteralPath $temp -Destination $output -Force}finally{Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue}
+    try{[IO.File]::WriteAllText($temp,([ordered]@{version=4;result='PASS';ruleName=$RuleName;bindAddress=$LanBindAddress;allowedCidrs=@($AllowedCidrs|Sort-Object);exactClientAddresses=$true;protectedPorts=@(443,3100,3200,4100,4200,5432,55432,6543);nodeProgramPath=$node;nodeProgramSha256=$ExpectedNodeSha256.ToLowerInvariant();edgeServiceName=$EdgeServiceName;edgeServiceSid=$edgeSid;serviceRestricted=$true;publicProfileOpened=$false;conflictingAllowRulesAbsent=$true;internalPortsDenied=$true;allProfilesEnabled=$true;defaultInboundBlocked=$true;profilePolicies=$policy.State;routerChanged=$false;completedAt=(Get-Date).ToUniversalTime().ToString('o')}|ConvertTo-Json -Depth 5),(New-Object Text.UTF8Encoding($false)));Move-Item -LiteralPath $temp -Destination $output -Force}finally{Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue}
   }
   [pscustomobject]@{Result='PASS';RuleCount=1;ConflictingRuleCount=0;DefaultInboundBlocked=$true;PublicProfileOpened=$false;InternalPortsDenied=$true}|ConvertTo-Json;exit 0
 }
