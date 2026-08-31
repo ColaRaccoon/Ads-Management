@@ -14,7 +14,7 @@ export const LOCAL_HOST_TOOL_FILES = Object.freeze([
   "deploy/local/api-config.mjs","deploy/local/api.env.example","deploy/local/config.example.json","deploy/local/config.schema.json","deploy/local/evidence-reader.mjs","deploy/local/https-edge.mjs","deploy/local/launch-local-bundle.mjs","deploy/local/new-backup-schedule-authorization.mjs","deploy/local/new-bootstrap-authorization.mjs","deploy/local/new-signing-key.mjs","deploy/local/recovery-kit.mjs","deploy/local/runtime-config.mjs","deploy/local/sign-attestation.mjs","deploy/local/sign-backup-receipt.mjs","deploy/local/smoke-local-release.mjs","deploy/local/start-edge.mjs","deploy/local/verify-attestation.mjs","deploy/local/verify-https-release.mjs","deploy/local/verify-local-release.mjs","deploy/local/verify-runtime-readiness.mjs","deploy/local/verify-tls-material.mjs"
 ]);
 export const REQUIRED_RELEASE_FILES = Object.freeze([
-  "api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/package.json","api/prisma/schema.prisma",
+  "api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/dist/staging/mutation-compatibility-smoke.cli.js","api/package.json","api/prisma/schema.prisma",
   "api/node_modules/@prisma/client/package.json","api/node_modules/.prisma/client/package.json","api/node_modules/prisma/package.json","api/node_modules/prisma/build/index.js",
   "web/server.js","web/package.json","web/.next/BUILD_ID","web/.next/required-server-files.json",
   ...LOCAL_HOST_TOOL_FILES,
@@ -112,7 +112,7 @@ export function windowsHostBundleDigest(files){
   return sha256(Buffer.from([...WINDOWS_HOST_FILES].sort().map((name)=>`${name}=${files[name]??""}`).join("\n"),"utf8"));
 }
 export function runtimeSmokeContractDigest(files){
-  const names=[...LOCAL_HOST_TOOL_FILES,"api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/node_modules/prisma/build/index.js","web/server.js"];
+  const names=[...LOCAL_HOST_TOOL_FILES,"api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/dist/staging/mutation-compatibility-smoke.cli.js","api/node_modules/prisma/build/index.js","web/server.js"];
   return sha256(Buffer.from(["source-free-cold-start-v1",...names.map((name)=>`${name}=${files[name]??""}`)].join("\n"),"utf8"));
 }
 

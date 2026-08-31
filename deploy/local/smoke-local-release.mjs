@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 import { inventory } from "./verify-local-release.mjs";
 
 const ENTRYPOINTS = Object.freeze([
-  "api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/node_modules/prisma/build/index.js","web/server.js"
+  "api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/dist/staging/mutation-compatibility-smoke.cli.js","api/node_modules/prisma/build/index.js","web/server.js"
 ]);
 
 export async function smokeLocalRelease(rootValue, releaseId) {
@@ -22,7 +22,8 @@ export async function smokeLocalRelease(rootValue, releaseId) {
     ["api/dist/main.js",[configRequired]],
     ["api/dist/auth/bootstrap-local-super-admin.cli.js",[configRequired,'"event":"local-bootstrap.failed","code":"BOOTSTRAP_FAILED"']],
     ["api/dist/staging/business-compatibility-smoke.cli.js",[configRequired,'"business-compatibility-smoke","result":"FAIL"']],
-    ["api/dist/staging/legacy-business-compatibility-smoke.cli.js",[configRequired,'"legacy-business-compatibility-smoke","result":"FAIL"']]
+    ["api/dist/staging/legacy-business-compatibility-smoke.cli.js",[configRequired,'"legacy-business-compatibility-smoke","result":"FAIL"']],
+    ["api/dist/staging/mutation-compatibility-smoke.cli.js",[configRequired,'"mutation-compatibility-smoke","result":"FAIL"']]
   ]){const result=await run(process.execPath,[path.join(root,...entry.split("/"))],root,failClosedEnv,30_000);if(result.code===0||!markers.some((marker)=>result.output.includes(marker)))fail(`RELEASE_SMOKE_FAIL_CLOSED_REJECTED:${entry}`)}
   const matrix=await run(process.execPath,[path.join(root,"api/dist/staging/auth-role-matrix-smoke.cli.js")],root,cleanEnv({LOCAL_RELEASE_ID:releaseId}),120_000);
   if(matrix.code!==0||!matrix.output.includes('"event":"auth-role-matrix-smoke"'))fail("RELEASE_SMOKE_ROLE_MATRIX_FAILED");
