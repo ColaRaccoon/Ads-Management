@@ -17,12 +17,13 @@ export async function smokeLocalRelease(rootValue, releaseId) {
   for(const forbidden of ["api/src","web/src",".git"]){if(await exists(path.join(root,...forbidden.split("/"))))fail(`RELEASE_SMOKE_SOURCE_PRESENT:${forbidden}`)}
   for(const entry of ENTRYPOINTS){const result=await run(process.execPath,["--check",path.join(root,...entry.split("/"))],root,cleanEnv(),30_000);if(result.code!==0)fail(`RELEASE_SMOKE_SYNTAX_FAILED:${entry}`)}
   const failClosedEnv=cleanEnv({NODE_ENV:"production",APP_ENV:"production",DEPLOYMENT_MODE:"local_lan"});
-  for(const [entry,marker] of [
-    ["api/dist/main.js","CONFIG_PATH is required for local_lan production"],
-    ["api/dist/auth/bootstrap-local-super-admin.cli.js",'"event":"local-bootstrap.failed","code":"BOOTSTRAP_FAILED"'],
-    ["api/dist/staging/business-compatibility-smoke.cli.js",'"business-compatibility-smoke","result":"FAIL"'],
-    ["api/dist/staging/legacy-business-compatibility-smoke.cli.js",'"legacy-business-compatibility-smoke","result":"FAIL"']
-  ]){const result=await run(process.execPath,[path.join(root,...entry.split("/"))],root,failClosedEnv,30_000);if(result.code===0||!result.output.includes(marker))fail(`RELEASE_SMOKE_FAIL_CLOSED_REJECTED:${entry}`)}
+  const configRequired="CONFIG_PATH is required for local_lan production";
+  for(const [entry,markers] of [
+    ["api/dist/main.js",[configRequired]],
+    ["api/dist/auth/bootstrap-local-super-admin.cli.js",[configRequired,'"event":"local-bootstrap.failed","code":"BOOTSTRAP_FAILED"']],
+    ["api/dist/staging/business-compatibility-smoke.cli.js",[configRequired,'"business-compatibility-smoke","result":"FAIL"']],
+    ["api/dist/staging/legacy-business-compatibility-smoke.cli.js",[configRequired,'"legacy-business-compatibility-smoke","result":"FAIL"']]
+  ]){const result=await run(process.execPath,[path.join(root,...entry.split("/"))],root,failClosedEnv,30_000);if(result.code===0||!markers.some((marker)=>result.output.includes(marker)))fail(`RELEASE_SMOKE_FAIL_CLOSED_REJECTED:${entry}`)}
   const matrix=await run(process.execPath,[path.join(root,"api/dist/staging/auth-role-matrix-smoke.cli.js")],root,cleanEnv({LOCAL_RELEASE_ID:releaseId}),120_000);
   if(matrix.code!==0||!matrix.output.includes('"event":"auth-role-matrix-smoke"'))fail("RELEASE_SMOKE_ROLE_MATRIX_FAILED");
   const prisma=await run(process.execPath,[path.join(root,"api/node_modules/prisma/build/index.js"),"--version"],root,cleanEnv(),60_000);
