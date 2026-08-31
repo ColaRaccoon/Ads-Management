@@ -377,7 +377,8 @@ and time are configured, the schedule must not run and readiness remains false.
    config hash, backup-target evidence hash/fingerprint/root, ACL class, executor
    hashes, PgPass/integrity/receipt-key hashes and size/deadline caps; changing any
    value requires a new authorization and schedule plan. The schedule authorization
-   is v3, also binds the exact NAS-identity helper hash, and carries its own CSPRNG
+   is v4, also binds the exact `pg_restore` executable hash and NAS-identity helper
+   hash, and carries its own CSPRNG
    nonce and instance identifier. Bare `-Approved`
    is never delegated to the backup account. The signer task can publish at most
    one oldest unconsumed request per run; it has no DB dump credential, while the
@@ -397,15 +398,19 @@ and time are configured, the schedule must not run and readiness remains false.
    to the completed artifacts and cannot read the receipt private key or modify
    `BACKUP_RECEIPT`. Before a one-time publish, an administrator consumes an exact
    ADMIN_ONLY plan and issues a signed, request-hash-bound authorization lasting no
-   more than 15 minutes. Scheduled publication consumes the v3 admin-signed schedule
-   authorization instead. `Publish-BackupReceipt.ps1` then runs under the fourth
+   more than 15 minutes. This one-time signer authorization is v3 and binds the
+   exact `pg_restore` executable hash. Scheduled publication consumes the v4
+   admin-signed schedule authorization instead. `Publish-BackupReceipt.ps1` then runs under the fourth
    distinct, non-admin signer account: the key is read-only in `SIGNER_ONLY`, while
    immutable request copies and the independent one-use replay ledger are confined
    to `SIGNER_STATE`. It rechecks the publisher, semantic signer, PgPass, integrity
    key and receipt-key hashes immediately before signing. The semantic signer
    independently re-hashes the exact v6 manifest, HMAC, bounded dump, storage
    inventory, the NAS-identity helper binding, and any legacy reference-conversion
-   artifact before publishing. The publisher holds read locks on the complete
+   artifact before publishing. Under the separate signer account, the publisher
+   also runs the hash-pinned `pg_restore --list`, rejects out-of-schema or unsafe
+   TOC entries, and binds the fresh TOC digest and tool hash into the receipt.
+   The publisher holds read locks on the complete
    artifact tree through publication; the semantic signer rejects hard links,
    binds file identity/size/mtime around every hash, and re-enumerates the full
    tree immediately before signing. Before `latest` can change, the one-use
@@ -429,7 +434,9 @@ and time are configured, the schedule must not run and readiness remains false.
    The script binds both API configs to the isolated target/database/schema and
    per-run local Storage root, proves the target catalog was pristine, runs
    previous-before, previous-after-migration and target-after-migration API and
-   business smoke plus the complete 121-handler/10-permission compiled guard
+   business smoke, rollback-only real database mutations through an application
+   service, local Storage put/read-hash/delete, plus the complete
+   121-handler/10-permission compiled guard
    matrix and representative real HTTP non-invocation checks, checks KPI, storage
    references and byte hashes, then verifies full catalog cleanup and removes
    restored Storage, copied input and all scratch credentials/configs. Every

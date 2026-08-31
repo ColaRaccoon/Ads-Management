@@ -180,6 +180,7 @@ describe("local native deployment artifacts", () => {
     expect(migration).toContain("SIGNED_EDGE_DRAIN_V2");expect(migration).toContain("SIGNED_LEGACY_QUIESCE_V2");expect(migration).toContain("drainEvidenceSha256=if($drain)");
     expect(rollback).toContain("Assert-ExactEdgeDrainIdentity");expect(rollback).toContain("LEGACY_QUIESCED_NO_EDGE");expect(rollback).not.toContain("$drain.version -ne 1");
     for(const source of[compatibility,initial,restore]){expect(source).toContain("businessMutationVerified")};expect(restore).toContain("Invoke-MutationSmoke");expect(mutationSmoke).toContain("MappingsService");expect(mutationSmoke).toContain("RollbackMutationSmoke");expect(mutationSmoke).toContain("LocalFileStorage");
+    for(const token of["businessMutationVerified","mutationRollbackVerified","storageMutationHashVerified","archiveTocVerified","pgRestoreSha256"]){expect(migration).toContain(token)}
     expect(approval).toContain("Import-PinnedHelperScriptBlock");for(const source of[approval,migration,rollback]){expect(source).not.toMatch(/Get-FileHash[^\r\n]*Helper[^\r\n]*;?\.\s*\$/i)}
   });
 
