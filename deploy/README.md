@@ -560,17 +560,56 @@ Production database migration and process switching are separate approvals.
     as committed/partial states, transactionally restores the preserved original,
     verifies `1|0`, and journals the observed state; it never trusts only the child
     exit result to decide whether mutation occurred.
+    If the host or process stops before that in-process reconciliation completes,
+    create a separately approved `Recover` plan against the exact hash-pinned
+    rollback journal. `Recover` writes a durable `RECOVERY_INTENT`, drops only an
+    observed partial current schema when required, renames the exact preserved
+    original schema back, and leaves maintenance and all writers stopped. A
+    separately approved `VerifyRecovery` proves `current=present/preserved=absent`;
+    retrying the rollback after recovery requires another new Apply approval.
     Maintenance and quiesce remain mandatory in either case. After a successful
     rollback, `Finalize-SupabaseRollback.ps1` provides the only supported schema
     boundary exit: a fresh exact approval either returns forward by transactionally
     dropping the restored schema and renaming the preserved forward schema, or
     accepts the rollback by transactionally dropping only the exact preserved
     schema. Both modes require the hash-pinned signed rollback chain, exact
-    Supabase target, maintenance flag, restore credential/CA, journal, post-state
-    `current=present/preserved=absent` verification, and a separate VerifyEvidence
-    plan. No writer restart or maintenance removal is implicit.
-    A separately approved
-    `VerifyEvidence` Plan rechecks the journal, receipt, role grants and live hashes.
+    Supabase target, migration credential and CA, Node/attestation verifier/`psql`,
+    NTFS exact-ACL evidence, journal, and a separate VerifyEvidence plan. The
+    migration pgpass must be `ADMIN_ONLY`; executable, runtime, release and public
+    key inputs must be `SHARED_RUNTIME`; database CA is `SHARED_RUNTIME`;
+    maintenance/drain state is `EDGE_READ`; rollback/finalization evidence is
+    `ADMIN_EVIDENCE`.
+
+    Planning and execution both parse the exact `maintenance.enabled` JSON and
+    bind its release ID, approval-ID digest, path and hash. They also re-establish
+    the transition-specific current writer boundary: active Edge requires its
+    exact fresh signed drain, zero active requests and live service/process/443
+    identity; pre-first-Edge rollback requires the signed legacy quiesce within
+    the four-hour recovery window plus current absence of the baseline PIDs and
+    3100/4100/443 listeners and an absent or safely stopped Edge service. The
+    proof identity is approval-bound and checked once more immediately before
+    DDL.
+
+    Before the first destructive statement, Apply atomically publishes and
+    flushes a version-3 `INTENT` bound to mode, target, preserved schema, signed
+    rollback chain and all stable trusted-input hashes. A client/process/power
+    failure after COMMIT is recovered by hash-pinning the existing journal and
+    creating a new one-time Apply plan: live `1|0` is completed without replaying
+    DDL, live `1|1` may retry the exact transaction, and every other or unknown
+    state stays `FAILED_MAINTENANCE_REQUIRED`. Complete and failed records are
+    atomic durable replacements.
+
+    The finalizer computes live fingerprints for both schemas before mutation.
+    Each fingerprint covers catalog ownership/ACLs, columns, constraints, indexes,
+    functions, triggers, types and default ACLs; the completed Prisma migration
+    chain; local-Storage database references and tombstones; and the full business
+    KPI digest. The operation plan, `INTENT`, post-DDL journal, crash reconciliation
+    and `VerifyEvidence` all bind the exact expected survivor fingerprint. Any
+    pre-DDL drift, unexpected survivor, or maintenance-file drift fails closed.
+    VerifyEvidence requires the exact completing Apply plan and post-state
+    `current=present/preserved=absent`. No writer restart or maintenance removal is
+    implicit. A separately approved `VerifyEvidence` Plan rechecks the journal,
+    receipt, role grants and live fingerprints.
     Only then is the rollback receipt supplied to
    `Manage-LegacyQuiesce.ps1 -Action Rollback` using the exact restart
    specification. Rollback must reproduce the protected launch identity and pass
