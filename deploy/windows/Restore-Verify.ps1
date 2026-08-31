@@ -145,6 +145,37 @@ function Invoke-BoundedProcess([string]$File,[string[]]$Arguments,[int]$MaximumM
   }finally{if($startedProcess){Stop-RestoreProcessTree $process};$process.Dispose()}
 }
 function Invoke-Db([string]$Sql){$arguments=DbArgs $Sql;$run=Invoke-BoundedProcess $PsqlPath $arguments 120000 8388608 'RESTORE_DATABASE_QUERY_FAILED';return ([string]$run.Output).Trim()}
+function Set-IsolatedRuntimePrivileges([string]$Schema,[string]$RuntimeRole) {
+  $quotedSchema='"'+$Schema.Replace('"','""')+'"';$quotedRole='"'+$RuntimeRole.Replace('"','""')+'"';$roleLiteral=$RuntimeRole.Replace("'","''");$schemaLiteral=$Schema.Replace("'","''")
+  Invoke-Db ("REVOKE CREATE ON SCHEMA $quotedSchema FROM $quotedRole; GRANT USAGE ON SCHEMA $quotedSchema TO $quotedRole; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA $quotedSchema TO $quotedRole; REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA $quotedSchema FROM $quotedRole; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA $quotedSchema TO $quotedRole; REVOKE UPDATE ON ALL SEQUENCES IN SCHEMA $quotedSchema FROM $quotedRole; REVOKE ALL PRIVILEGES ON TABLE $quotedSchema.""_prisma_migrations"" FROM $quotedRole")|Out-Null
+  $proof=Invoke-Db @"
+WITH app_tables AS (
+  SELECT quote_ident(n.nspname)||'.'||quote_ident(c.relname) AS relation_name
+  FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+  WHERE n.nspname='$schemaLiteral' AND c.relkind IN ('r','p') AND c.relname<>'_prisma_migrations'
+), app_sequences AS (
+  SELECT quote_ident(n.nspname)||'.'||quote_ident(c.relname) AS relation_name
+  FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+  WHERE n.nspname='$schemaLiteral' AND c.relkind='S'
+)
+SELECT concat_ws('|',
+  has_schema_privilege('$roleLiteral','$schemaLiteral','USAGE'),
+  NOT has_schema_privilege('$roleLiteral','$schemaLiteral','CREATE'),
+  COALESCE((SELECT bool_and(has_table_privilege('$roleLiteral',relation_name,'SELECT')) FROM app_tables),false),
+  COALESCE((SELECT bool_and(has_table_privilege('$roleLiteral',relation_name,'INSERT')) FROM app_tables),false),
+  COALESCE((SELECT bool_and(has_table_privilege('$roleLiteral',relation_name,'UPDATE')) FROM app_tables),false),
+  COALESCE((SELECT bool_and(has_table_privilege('$roleLiteral',relation_name,'DELETE')) FROM app_tables),false),
+  COALESCE((SELECT bool_and(NOT has_table_privilege('$roleLiteral',relation_name,'TRUNCATE')) FROM app_tables),false),
+  COALESCE((SELECT bool_and(NOT has_table_privilege('$roleLiteral',relation_name,'REFERENCES')) FROM app_tables),false),
+  COALESCE((SELECT bool_and(NOT has_table_privilege('$roleLiteral',relation_name,'TRIGGER')) FROM app_tables),false),
+  NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='$schemaLiteral' AND c.relname='_prisma_migrations' AND (has_table_privilege('$roleLiteral',c.oid,'SELECT') OR has_table_privilege('$roleLiteral',c.oid,'INSERT') OR has_table_privilege('$roleLiteral',c.oid,'UPDATE') OR has_table_privilege('$roleLiteral',c.oid,'DELETE') OR has_table_privilege('$roleLiteral',c.oid,'TRUNCATE') OR has_table_privilege('$roleLiteral',c.oid,'REFERENCES') OR has_table_privilege('$roleLiteral',c.oid,'TRIGGER'))),
+  COALESCE((SELECT bool_and(has_sequence_privilege('$roleLiteral',relation_name,'USAGE')) FROM app_sequences),false),
+  COALESCE((SELECT bool_and(has_sequence_privilege('$roleLiteral',relation_name,'SELECT')) FROM app_sequences),false),
+  COALESCE((SELECT bool_and(NOT has_sequence_privilege('$roleLiteral',relation_name,'UPDATE')) FROM app_sequences),false)
+)
+"@
+  if($proof-cne't|t|t|t|t|t|t|t|t|t|t|t|t'){throw 'ISOLATED_RUNTIME_PRIVILEGE_CONTRACT_FAILED'}
+}
 function Invoke-CleanupDb([string]$Sql){
   $primaryDeadline=$script:RestoreDeadline;$primaryStopwatch=$script:RestoreStopwatch;$primaryMaximum=$script:RestoreMaximumMilliseconds
   try{$script:RestoreDeadline=(Get-Date).AddMinutes(2);$script:RestoreStopwatch=[Diagnostics.Stopwatch]::StartNew();$script:RestoreMaximumMilliseconds=120000;return Invoke-Db $Sql}
@@ -502,7 +533,7 @@ WITH user_objects AS (
   if (-not $storageReferenceCanonical -or $storageReferenceCanonical -eq 'INVALID' -or $storageReferenceCanonical.Contains("`n")) { throw 'RESTORED_STORAGE_REFERENCE_MISMATCH' }
   try { $storageReferences = @($storageReferenceCanonical | ConvertFrom-Json);if($PreviousReleaseKind-eq'LEGACY_BASELINE'){$storageReferenceCanonical=ConvertTo-Json -InputObject @($storageReferences) -Compress;if(-not$storageReferenceCanonical){$storageReferenceCanonical='[]'}} } catch { throw 'RESTORED_STORAGE_REFERENCE_INVALID' }
   if((Sha256Text -Value $storageReferenceCanonical)-cne$manifest.storageReferenceDigest){throw 'RESTORED_STORAGE_REFERENCE_MISMATCH'}
-  Invoke-Db ('GRANT USAGE ON SCHEMA "'+$manifest.databaseSchema+'" TO "'+$databaseBoundary.databaseUser+'"; GRANT SELECT ON ALL TABLES IN SCHEMA "'+$manifest.databaseSchema+'" TO "'+$databaseBoundary.databaseUser+'"; GRANT SELECT ON ALL SEQUENCES IN SCHEMA "'+$manifest.databaseSchema+'" TO "'+$databaseBoundary.databaseUser+'"')|Out-Null
+  Set-IsolatedRuntimePrivileges ([string]$manifest.databaseSchema) ([string]$databaseBoundary.databaseUser)
   $smokeFrom='2000-01-01';$smokeTo=(Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
   $tokenItem=Get-Item -LiteralPath $InternalProbeTokenFile -Force;if($tokenItem.Length-lt32-or$tokenItem.Length-gt4096){throw 'COMPATIBILITY_PROBE_TOKEN_INVALID'};$probeToken=(Read-DeadlineBoundText $InternalProbeTokenFile 4096).Trim();if($probeToken.Length-lt32){throw 'COMPATIBILITY_PROBE_TOKEN_INVALID'}
   if($PreviousReleaseKind-eq'LOCAL_RELEASE'){$previousSmokeBeforeDigest=Invoke-ApiSmoke ([IO.Path]::GetFullPath($PreviousReleaseRoot)) ([string]$previousRelease.releaseId) $PreviousApiConfigPath $probeToken 'previous-before';$previousBusinessBeforeDigest=Invoke-BusinessSmoke ([IO.Path]::GetFullPath($PreviousReleaseRoot)) ([string]$previousRelease.releaseId) $PreviousApiConfigPath $smokeFrom $smokeTo;$previousMutationBeforeDigest=Invoke-MutationSmoke ([IO.Path]::GetFullPath($PreviousReleaseRoot)) ([string]$previousRelease.releaseId) $PreviousApiConfigPath;$previousRoleMatrixBeforeDigest=Invoke-RoleMatrixSmoke ([IO.Path]::GetFullPath($PreviousReleaseRoot)) ([string]$previousRelease.releaseId)}else{$previousSmokeBeforeDigest=Sha256Text 'ACTUAL_LEGACY_CODE_NOT_EXECUTED_IN_ISOLATED_RESTORE';$previousRoleMatrixBeforeDigest=Sha256Text 'LEGACY_LOCAL_ROLE_MATRIX_NOT_APPLICABLE';$previousMutationBeforeDigest=Sha256Text 'LEGACY_LOCAL_MUTATION_SMOKE_NOT_APPLICABLE';$previousBusinessBeforeDigest=Invoke-TargetLegacyDataProjectionSmoke ([IO.Path]::GetFullPath($TargetReleaseRoot)) ([string]$targetRelease.releaseId) $TargetApiConfigPath $smokeFrom $smokeTo}
@@ -514,7 +545,7 @@ WITH user_objects AS (
     Invoke-BoundedProcess $NodePath @($TargetPrismaCliPath,'migrate','deploy',"--schema=$TargetPrismaSchemaPath") 1800000 8388608 'TARGET_MIGRATION_REHEARSAL_FAILED'|Out-Null
   }finally{if($null-eq$priorDatabaseUrl){Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue}else{$env:DATABASE_URL=$priorDatabaseUrl}}
   $targetApplied=Invoke-Db "$schemaSearchPath$(AppliedMigrationSql)";if($targetApplied-cne$targetAppliedCanonical){throw 'TARGET_APPLIED_MIGRATIONS_MISMATCH'}
-  Invoke-Db ('GRANT USAGE ON SCHEMA "'+$manifest.databaseSchema+'" TO "'+$databaseBoundary.databaseUser+'"; GRANT SELECT ON ALL TABLES IN SCHEMA "'+$manifest.databaseSchema+'" TO "'+$databaseBoundary.databaseUser+'"; GRANT SELECT ON ALL SEQUENCES IN SCHEMA "'+$manifest.databaseSchema+'" TO "'+$databaseBoundary.databaseUser+'"')|Out-Null
+  Set-IsolatedRuntimePrivileges ([string]$manifest.databaseSchema) ([string]$databaseBoundary.databaseUser)
   $postMigrationKpi=Invoke-Db "$schemaSearchPath$(BusinessKpiSql)";if($postMigrationKpi-cne$kpiCanonical-or(Sha256Text $postMigrationKpi)-cne$manifest.businessKpiDigest){throw 'TARGET_MIGRATION_CHANGED_BUSINESS_KPI'}
   $postMigrationStorage=Invoke-Db "$schemaSearchPath$(StorageReferenceSql)";if($PreviousReleaseKind-eq'LEGACY_BASELINE'){try{$postMigrationStorage=ConvertTo-Json -InputObject @($postMigrationStorage|ConvertFrom-Json) -Compress}catch{throw 'TARGET_MIGRATION_STORAGE_REFERENCE_INVALID'}};if($postMigrationStorage-cne$storageReferenceCanonical){throw 'TARGET_MIGRATION_CHANGED_STORAGE_REFERENCES'}
   $postMigrationAuditGuard=Invoke-Db "$schemaSearchPath SELECT (SELECT count(*)=1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_language l ON l.oid=p.prolang WHERE n.nspname='$($manifest.databaseSchema)' AND p.proname='security_audit_events_append_only' AND p.prorettype='trigger'::regtype AND p.pronargs=0 AND l.lanname='plpgsql' AND NOT p.prosecdef AND NOT p.proleakproof AND regexp_replace(trim(p.prosrc),'\s+',' ','g')='BEGIN RAISE EXCEPTION ''security_audit_events is append-only''; END;') AND (SELECT count(*)=2 FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_namespace pn ON pn.oid=p.pronamespace WHERE n.nspname='$($manifest.databaseSchema)' AND c.relname='security_audit_events' AND pn.nspname='$($manifest.databaseSchema)' AND p.proname='security_audit_events_append_only' AND NOT t.tgisinternal AND t.tgenabled='O' AND ((t.tgname='security_audit_events_append_only_trigger' AND t.tgtype=27) OR (t.tgname='security_audit_events_reject_truncate' AND t.tgtype=34)))";if($postMigrationAuditGuard-cne't'){throw 'TARGET_MIGRATION_AUDIT_GUARD_INVALID'}
