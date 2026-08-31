@@ -93,9 +93,14 @@ function projectedSheet(
     const row = sheet.getRow(rowNumber);
     rows.push(Object.fromEntries(columns.map((column) => [
       column,
-      normalized(row.getCell(header.get(column)!).value, runId)
+      normalized(row.getCell(header.get(column)!).value, runId, column)
     ])));
   }
+  rows.sort((left, right) => {
+    const leftKey = JSON.stringify(left);
+    const rightKey = JSON.stringify(right);
+    return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+  });
   return { columns, rows };
 }
 
@@ -106,7 +111,11 @@ function primitive(value: ExcelJS.CellValue): string | number | boolean | null {
   throw new Error("REPORT_COMPATIBILITY_CELL_INVALID");
 }
 
-function normalized(value: ExcelJS.CellValue, runId: string) {
+function normalized(value: ExcelJS.CellValue, runId: string, column = "") {
   const result = primitive(value);
-  return typeof result === "string" ? result.split(runId).join("<RUN_ID>") : result;
+  if (typeof result !== "string") return result;
+  if (/(^|\.)(createdAt|updatedAt)$/.test(column)) return "<TIMESTAMP>";
+  return result
+    .split(runId).join("<RUN_ID>")
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi, "<UUID>");
 }

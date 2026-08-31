@@ -38,6 +38,12 @@ function expected(id: string) {
 
 async function workbook(id: string, overrides: { spendKrw?: number; targetCpaKrw?: number } = {}) {
   const value = new ExcelJS.Workbook();
+  const volatileId = id.startsWith("11111111")
+    ? "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    : "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const volatileDecisionRunId = id.startsWith("11111111")
+    ? "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+    : "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
   const summary = value.addWorksheet("Summary");
   const summaryRows = [
     ["Period", "2026-08-25 ~ 2026-08-25"], ["Report Type", "PERIOD_XLSX"], ["Spend USD", 20],
@@ -47,10 +53,11 @@ async function workbook(id: string, overrides: { spendKrw?: number; targetCpaKrw
   ];
   summaryRows.forEach((row) => summary.addRow(row));
   table(value.addWorksheet("Product Performance"), {
-    "product.code": `MUT-${id}`, "product.name": "Compatibility product", "product.displayName": "Compatibility product",
+    "product.id": volatileId, "product.code": `MUT-${id}`, "product.name": "Compatibility product", "product.displayName": "Compatibility product",
     "totals.spendUsd": 20, "totals.spendKrw": 27_000, "totals.purchaseCount": 2, "totals.cpaKrw": 13_500,
     "totals.revenueKrw": 138_000, "totals.marginKrw": 61_000, targetCpaKrw: overrides.targetCpaKrw ?? 15_000,
-    breakEvenCpaKrw: 20_000, watchCpaKrw: 18_000, stopCpaKrw: 25_000, ruleStatus: "WATCH"
+    breakEvenCpaKrw: 20_000, watchCpaKrw: 18_000, stopCpaKrw: 25_000, ruleStatus: "WATCH",
+    createdAt: id.startsWith("11111111") ? "2026-08-31" : "2026-09-01"
   });
   table(value.addWorksheet("Adset Performance"), {
     adsetName: `Compatibility ${id}`, stage: "TEST", "product.displayName": "Compatibility product",
@@ -58,8 +65,9 @@ async function workbook(id: string, overrides: { spendKrw?: number; targetCpaKrw
     "totals.revenueKrw": 138_000, "totals.marginKrw": 61_000
   });
   table(value.addWorksheet("Decisions"), {
-    scopeType: "ADSET", decision: "KEEP", severity: "INFO", reason: `Compatibility ${id}`,
-    recommendedAction: "Observe", relatedDecisionId: `decision-${id}`
+    id: volatileId, decisionRunId: volatileDecisionRunId, scopeType: "ADSET", decision: "KEEP", severity: "INFO",
+    reason: `Compatibility ${id}`, recommendedAction: "Observe", relatedDecisionId: volatileDecisionRunId,
+    createdAt: id.startsWith("11111111") ? "2026-08-31" : "2026-09-01"
   });
   value.addWorksheet("Unmatched").addRow(["No data"]);
   value.addWorksheet("Change Logs").addRow(["No data"]);

@@ -102,16 +102,32 @@ function Set-LocalRecoveryExactAcl([string]$Root,[ValidateSet('CORE_MODIFY','ADM
   }
 }
 
+function Test-LocalRecoveryAclDescriptor($Item,$Acl,$Entries) {
+  try {
+    if (-not $Acl.AreAccessRulesProtected -or $Acl.Owner.Translate([Security.Principal.SecurityIdentifier]).Value -cne $script:RecoveryAdministratorsSid -or @($Acl.Access).Count -ne $Entries.Count) { return $false }
+    $inherit = if ($Item.PSIsContainer) { [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit' } else { [Security.AccessControl.InheritanceFlags]::None }
+    foreach ($rule in @($Acl.Access)) {
+      $sid = $rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
+      if (-not $Entries.Contains($sid) -or $rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or $rule.FileSystemRights -ne $Entries[$sid] -or $rule.InheritanceFlags -ne $inherit -or $rule.PropagationFlags -ne [Security.AccessControl.PropagationFlags]::None -or $rule.IsInherited) { return $false }
+    }
+    return $true
+  } catch { return $false }
+}
+
 function Assert-LocalRecoveryExactAcl([string]$Root,[ValidateSet('CORE_MODIFY','ADMIN_ONLY')][string]$Class,$FileSystemEvidence) {
   $entries = Get-LocalRecoveryAclEntries $Class $FileSystemEvidence
   foreach ($path in Get-LocalRecoveryTreeItems $Root) {
     $item = Get-Item -LiteralPath $path -Force;$acl = Get-Acl -LiteralPath $path
-    if (-not $acl.AreAccessRulesProtected -or $acl.Owner.Translate([Security.Principal.SecurityIdentifier]).Value -cne $script:RecoveryAdministratorsSid -or @($acl.Access).Count -ne $entries.Count) { throw 'LOCAL_RECOVERY_ACL_DESCRIPTOR_MISMATCH' }
-    $inherit = if ($item.PSIsContainer) { [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit' } else { [Security.AccessControl.InheritanceFlags]::None }
-    foreach ($rule in @($acl.Access)) {
-      $sid = $rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
-      if (-not $entries.Contains($sid) -or $rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or $rule.FileSystemRights -ne $entries[$sid] -or $rule.InheritanceFlags -ne $inherit -or $rule.PropagationFlags -ne [Security.AccessControl.PropagationFlags]::None -or $rule.IsInherited) { throw 'LOCAL_RECOVERY_ACL_DESCRIPTOR_MISMATCH' }
-    }
+    if (-not(Test-LocalRecoveryAclDescriptor $item $acl $entries)) { throw 'LOCAL_RECOVERY_ACL_DESCRIPTOR_MISMATCH' }
+  }
+  return $true
+}
+
+function Assert-LocalRecoveryAclOneOf([string]$Root,[ValidateSet('CORE_MODIFY','ADMIN_ONLY')][string[]]$Classes,$FileSystemEvidence) {
+  $expected = @($Classes | ForEach-Object { Get-LocalRecoveryAclEntries $_ $FileSystemEvidence })
+  foreach ($path in Get-LocalRecoveryTreeItems $Root) {
+    $item = Get-Item -LiteralPath $path -Force;$acl = Get-Acl -LiteralPath $path
+    if (-not @($expected | Where-Object { Test-LocalRecoveryAclDescriptor $item $acl $_ }).Count) { throw 'LOCAL_RECOVERY_ACL_TRANSITION_DESCRIPTOR_REJECTED' }
   }
   return $true
 }

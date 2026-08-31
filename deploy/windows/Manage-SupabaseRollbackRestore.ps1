@@ -176,6 +176,8 @@ function Prepare-DailyRecoveryAclForRecover([string]$ExpectedOriginalDigest,$Fil
   $liveMatches=(Test-Path -LiteralPath $liveStorageRoot -PathType Container)-and(InventoryDigest $liveStorageRoot)-ceq$ExpectedOriginalDigest
   $preservedMatches=(Test-Path -LiteralPath $preservedStorageRoot -PathType Container)-and(InventoryDigest $preservedStorageRoot)-ceq$ExpectedOriginalDigest
   if(-not$liveMatches-and-not$preservedMatches){throw 'ROLLBACK_RECOVERY_ORIGINAL_STORAGE_NOT_FOUND'}
+  if(Test-Path -LiteralPath $liveStorageRoot -PathType Container){Assert-LocalRecoveryAclOneOf $liveStorageRoot @('CORE_MODIFY','ADMIN_ONLY') $FileSystemEvidence|Out-Null}
+  Assert-LocalRecoveryAclOneOf $recoveryWorkspaceRoot @('CORE_MODIFY','ADMIN_ONLY') $FileSystemEvidence|Out-Null
   if(Test-Path -LiteralPath $liveStorageRoot -PathType Container){Set-LocalRecoveryExactAcl $liveStorageRoot 'ADMIN_ONLY' $FileSystemEvidence}
   Set-LocalRecoveryExactAcl $recoveryWorkspaceRoot 'ADMIN_ONLY' $FileSystemEvidence
   Assert-DailyRecoveryAclState 'RECOVER_NORMALIZED' $FileSystemEvidence
@@ -569,7 +571,9 @@ if ($Action -eq 'Apply') {
   } catch {
     $failureCode = if ($_.Exception.Message -match '^[A-Z0-9_]{3,160}$') { $_.Exception.Message } else { 'ROLLBACK_RESTORE_UNCLASSIFIED_FAILURE' }
     $originalRestored = $false;$originalStorageRestored=($RecoveryPurpose-ne'DAILY_BACKUP_RECOVERY');$observedSchemaState = 'UNKNOWN';$preservedObserved = $false
-    try {
+    $failureRecoveryBoundaryVerified=($RecoveryPurpose-ne'DAILY_BACKUP_RECOVERY')
+    if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and$originalStorageDigest){try{Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'TRANSITIONAL';Prepare-DailyRecoveryAclForRecover $originalStorageDigest $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED';$failureRecoveryBoundaryVerified=$true}catch{$failureRecoveryBoundaryVerified=$false}}
+    if($failureRecoveryBoundaryVerified){try {
       $observedSchemaState = Invoke-Bounded $psql ($base + @('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_FAILURE_SCHEMA_STATE_RECONCILE' -Cleanup
       if ($observedSchemaState -eq '1|0') { $originalRestored = $true }
       elseif ($observedSchemaState -in @('0|1','1|1')) {
@@ -579,8 +583,8 @@ if ($Action -eq 'Apply') {
         $repairState = Invoke-Bounded $psql ($base + @('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_AUTOMATIC_RECOVERY_STATE_VERIFY' -Cleanup
         if ($repairState -cne '1|0') { throw 'ROLLBACK_AUTOMATIC_RECOVERY_STATE_REJECTED' };$originalRestored = $true;$observedSchemaState = $repairState
       } elseif ($observedSchemaState -ne '0|0') { throw 'ROLLBACK_SCHEMA_STATE_UNRECOGNIZED' }
-    } catch { $originalRestored = $false }
-    if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and$originalStorageDigest){try{Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'TRANSITIONAL';Prepare-DailyRecoveryAclForRecover $originalStorageDigest $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED';$originalStorageRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot $originalStorageDigest $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'STRICT'}catch{$originalStorageRestored=$false}}
+    } catch { $originalRestored = $false }}
+    if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and$originalStorageDigest-and$failureRecoveryBoundaryVerified){try{Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED';$originalStorageRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot $originalStorageDigest $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'STRICT'}catch{$originalStorageRestored=$false}}
     if ($evidencePublished -and (Test-Path -LiteralPath $EvidenceOutputPath)) { Remove-Item -LiteralPath $EvidenceOutputPath -Force -ErrorAction SilentlyContinue }
     try {
       $recoveryProcedure = if ($originalRestored-and$originalStorageRestored) { 'ORIGINAL PRE-RECOVERY SCHEMA AND STORAGE WERE RESTORED; KEEP MAINTENANCE UNTIL A NEW APPROVED VERIFY.' } else { 'PRESERVED ORIGINAL SCHEMA OR STORAGE MUST NOT BE DELETED; KEEP MAINTENANCE AND QUIESCE; USE A NEW EXACT APPROVED RECOVER PLAN BEFORE ANY WRITER RESTART.' }
