@@ -13,7 +13,7 @@ describe("report workbook compatibility proof", () => {
     expect(first.canonicalBytes).toBeGreaterThan(100);
   });
 
-  it("rejects a report whose KPI cell or required business sheet regresses", async () => {
+  it("rejects a report whose KPI cell, relationship, or required business sheet regresses", async () => {
     const changed = await workbook(runId, { spendKrw: 1 });
     const baseline = await reportWorkbookCompatibility(await workbook(runId), expected(runId));
     const changedProof = await reportWorkbookCompatibility(changed, expected(runId));
@@ -24,6 +24,12 @@ describe("report workbook compatibility proof", () => {
       expected(runId)
     );
     expect(changedRule.digest).not.toBe(baseline.digest);
+
+    const changedRelationship = await reportWorkbookCompatibility(
+      await workbook(runId, { breakDecisionLink: true }),
+      expected(runId)
+    );
+    expect(changedRelationship.digest).not.toBe(baseline.digest);
 
     const missing = new ExcelJS.Workbook();
     missing.addWorksheet("Summary");
@@ -36,7 +42,10 @@ function expected(id: string) {
   return { from: "2026-08-25", to: "2026-08-25", reportType: "PERIOD_XLSX", runId: id };
 }
 
-async function workbook(id: string, overrides: { spendKrw?: number; targetCpaKrw?: number } = {}) {
+async function workbook(
+  id: string,
+  overrides: { spendKrw?: number; targetCpaKrw?: number; breakDecisionLink?: boolean } = {}
+) {
   const value = new ExcelJS.Workbook();
   const volatileId = id.startsWith("11111111")
     ? "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
@@ -66,11 +75,16 @@ async function workbook(id: string, overrides: { spendKrw?: number; targetCpaKrw
   });
   table(value.addWorksheet("Decisions"), {
     id: volatileId, decisionRunId: volatileDecisionRunId, scopeType: "ADSET", decision: "KEEP", severity: "INFO",
-    reason: `Compatibility ${id}`, recommendedAction: "Observe", relatedDecisionId: volatileDecisionRunId,
+    reason: `Compatibility ${id}`, recommendedAction: "Observe",
     createdAt: id.startsWith("11111111") ? "2026-08-31" : "2026-09-01"
   });
   value.addWorksheet("Unmatched").addRow(["No data"]);
-  value.addWorksheet("Change Logs").addRow(["No data"]);
+  table(value.addWorksheet("Change Logs"), {
+    id: volatileDecisionRunId, actionDate: "2026-08-25", actionType: "KEEP", entityType: "META_ADSET",
+    reason: "Compatibility change", relatedDecisionId: overrides.breakDecisionLink
+      ? "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
+      : volatileId
+  });
   return Buffer.from(await value.xlsx.writeBuffer());
 }
 

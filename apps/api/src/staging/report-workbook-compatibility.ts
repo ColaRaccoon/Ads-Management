@@ -5,6 +5,7 @@ const MAX_REPORT_BYTES = 64 * 1024 * 1024;
 const MAX_REPORT_ROWS = 100_000;
 const MAX_REPORT_CELLS = 1_000_000;
 const EXPECTED_SHEETS = ["Summary", "Product Performance", "Adset Performance", "Decisions", "Unmatched", "Change Logs"];
+const UUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi;
 const SUMMARY_LABELS = [
   "Period", "Report Type", "Spend USD", "Spend KRW", "Purchases", "CPA KRW",
   "Revenue KRW", "Margin KRW", "Unmatched", "Missing Cost Rules", "Missing CPA Rules"
@@ -64,7 +65,79 @@ export async function reportWorkbookCompatibility(
     throw new Error("REPORT_COMPATIBILITY_ADSET_MISSING");
   }
   if (decisions.rows.length < 1) throw new Error("REPORT_COMPATIBILITY_DECISIONS_MISSING");
-  return businessCompatibilityDigest({ summary, products, adsets, decisions, unmatched, changeLogs });
+  return businessCompatibilityDigest(canonicalizeUuidRelationships({
+    summary, products, adsets, decisions, unmatched, changeLogs
+  }));
+}
+
+type Primitive = string | number | boolean | null;
+type ProjectedSheet = { columns: string[]; rows: Record<string, Primitive>[] };
+type CompatibilityWorkbook = {
+  summary: Record<string, Primitive>;
+  products: ProjectedSheet;
+  adsets: ProjectedSheet;
+  decisions: ProjectedSheet;
+  unmatched: ProjectedSheet;
+  changeLogs: ProjectedSheet;
+};
+
+function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook): CompatibilityWorkbook {
+  const contexts = new Map<string, string[]>();
+  const sheets: Array<[keyof Omit<CompatibilityWorkbook, "summary">, ProjectedSheet]> = [
+    ["products", workbook.products], ["adsets", workbook.adsets], ["decisions", workbook.decisions],
+    ["unmatched", workbook.unmatched], ["changeLogs", workbook.changeLogs]
+  ];
+  for (const [column, value] of Object.entries(workbook.summary)) {
+    collectUuidContexts(value, JSON.stringify({ sheet: "summary", column, value: genericUuids(value) }), contexts);
+  }
+  for (const [sheetName, sheet] of sheets) {
+    for (const row of sheet.rows) {
+      const genericRow = Object.fromEntries(sheet.columns.map((column) => [column, genericUuids(row[column])]));
+      for (const column of sheet.columns) {
+        collectUuidContexts(row[column], JSON.stringify({ sheet: sheetName, column, row: genericRow }), contexts);
+      }
+    }
+  }
+  const aliases = new Map(
+    [...contexts].sort(([leftUuid, leftContexts], [rightUuid, rightContexts]) => {
+      const left = [...leftContexts].sort().join("\n");
+      const right = [...rightContexts].sort().join("\n");
+      return left < right ? -1 : left > right ? 1 : leftUuid.localeCompare(rightUuid);
+    }).map(([uuid], index) => [uuid, `<UUID_${index + 1}>`])
+  );
+  const canonicalSummary = Object.fromEntries(Object.entries(workbook.summary).map(([column, value]) => [
+    column, aliasUuids(value, aliases)
+  ]));
+  const canonicalSheets = Object.fromEntries(sheets.map(([name, sheet]) => {
+    const rows = sheet.rows.map((row) => Object.fromEntries(sheet.columns.map((column) => [
+      column, aliasUuids(row[column], aliases)
+    ])));
+    rows.sort((left, right) => {
+      const leftKey = JSON.stringify(left);
+      const rightKey = JSON.stringify(right);
+      return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+    });
+    return [name, { columns: sheet.columns, rows }];
+  })) as Omit<CompatibilityWorkbook, "summary">;
+  return { summary: canonicalSummary, ...canonicalSheets };
+}
+
+function genericUuids(value: Primitive): Primitive {
+  return typeof value === "string" ? value.replace(UUID_PATTERN, "<UUID>") : value;
+}
+
+function collectUuidContexts(value: Primitive, context: string, contexts: Map<string, string[]>) {
+  if (typeof value !== "string") return;
+  for (const uuid of value.match(UUID_PATTERN) ?? []) {
+    const key = uuid.toLowerCase();
+    contexts.set(key, [...(contexts.get(key) ?? []), context]);
+  }
+}
+
+function aliasUuids(value: Primitive, aliases: Map<string, string>): Primitive {
+  return typeof value === "string"
+    ? value.replace(UUID_PATTERN, (uuid) => aliases.get(uuid.toLowerCase()) ?? "<UUID_UNKNOWN>")
+    : value;
 }
 
 function projectedSheet(
@@ -88,7 +161,7 @@ function projectedSheet(
     columns.push(value);
   });
   for (const column of selectedColumns) if (!header.has(column)) throw new Error("REPORT_COMPATIBILITY_COLUMN_MISSING");
-  const rows: Record<string, string | number | boolean | null>[] = [];
+  const rows: Record<string, Primitive>[] = [];
   for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber += 1) {
     const row = sheet.getRow(rowNumber);
     rows.push(Object.fromEntries(columns.map((column) => [
@@ -96,11 +169,6 @@ function projectedSheet(
       normalized(row.getCell(header.get(column)!).value, runId, column)
     ])));
   }
-  rows.sort((left, right) => {
-    const leftKey = JSON.stringify(left);
-    const rightKey = JSON.stringify(right);
-    return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
-  });
   return { columns, rows };
 }
 
@@ -115,7 +183,5 @@ function normalized(value: ExcelJS.CellValue, runId: string, column = "") {
   const result = primitive(value);
   if (typeof result !== "string") return result;
   if (/(^|\.)(createdAt|updatedAt)$/.test(column)) return "<TIMESTAMP>";
-  return result
-    .split(runId).join("<RUN_ID>")
-    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi, "<UUID>");
+  return result.split(runId).join("<RUN_ID>");
 }
