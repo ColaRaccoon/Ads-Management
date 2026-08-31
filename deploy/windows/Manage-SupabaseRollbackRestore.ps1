@@ -144,16 +144,48 @@ function Restore-OriginalStorage([string]$Live,[string]$Staging,[string]$Preserv
   if(Test-Path -LiteralPath $Preserved -PathType Container){
     if(Test-Path -LiteralPath $Live){if(Test-Path -LiteralPath $Staging){throw 'ROLLBACK_STORAGE_RECOVERY_STAGING_COLLISION'};[IO.Directory]::Move($Live,$Staging)}
     [IO.Directory]::Move($Preserved,$Live)
-    Set-LocalRecoveryExactAcl $Live 'CORE_MODIFY' $FileSystemEvidence;Assert-LocalRecoveryExactAcl $Live 'CORE_MODIFY' $FileSystemEvidence|Out-Null
     if(Test-Path -LiteralPath $Staging){Set-LocalRecoveryExactAcl $Staging 'ADMIN_ONLY' $FileSystemEvidence;Assert-LocalRecoveryExactAcl $Staging 'ADMIN_ONLY' $FileSystemEvidence|Out-Null}
   }
   if(-not(Test-Path -LiteralPath $Live -PathType Container)-or(InventoryDigest $Live)-cne$ExpectedOriginalDigest){throw 'ROLLBACK_ORIGINAL_STORAGE_RECOVERY_FAILED'}
+  Set-LocalRecoveryExactAcl $Live 'CORE_MODIFY' $FileSystemEvidence;Assert-LocalRecoveryExactAcl $Live 'CORE_MODIFY' $FileSystemEvidence|Out-Null
   if(Test-Path -LiteralPath $Staging){
     [void](InventoryDigest $Staging)
     Remove-Item -LiteralPath $Staging -Recurse -Force
     if(Test-Path -LiteralPath $Staging){throw 'ROLLBACK_STORAGE_RECOVERY_STAGING_CLEANUP_FAILED'}
   }
   return $true
+}
+function Assert-DailyRecoveryAclState([ValidateSet('STRICT','RECOVER_NORMALIZED')][string]$Mode,$FileSystemEvidence) {
+  Assert-DailyStoragePaths $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot
+  Assert-LocalRecoveryExactAcl $recoveryWorkspaceRoot 'ADMIN_ONLY' $FileSystemEvidence|Out-Null
+  if($Mode-eq'STRICT'){
+    Assert-LocalRecoveryExactAcl $liveStorageRoot 'CORE_MODIFY' $FileSystemEvidence|Out-Null
+  }elseif(Test-Path -LiteralPath $liveStorageRoot -PathType Container){
+    Assert-LocalRecoveryExactAcl $liveStorageRoot 'ADMIN_ONLY' $FileSystemEvidence|Out-Null
+  }
+  if(Test-Path -LiteralPath $stagingStorageRoot -PathType Container){Assert-LocalRecoveryExactAcl $stagingStorageRoot 'ADMIN_ONLY' $FileSystemEvidence|Out-Null}
+  if(Test-Path -LiteralPath $preservedStorageRoot -PathType Container){Assert-LocalRecoveryExactAcl $preservedStorageRoot 'ADMIN_ONLY' $FileSystemEvidence|Out-Null}
+}
+function Prepare-DailyRecoveryAclForRecover([string]$ExpectedOriginalDigest,$FileSystemEvidence) {
+  Assert-DailyStoragePaths $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot
+  $allowed=@($stagingStorageRoot,$preservedStorageRoot)
+  foreach($entry in [IO.Directory]::EnumerateFileSystemEntries($recoveryWorkspaceRoot)){
+    $full=[IO.Path]::GetFullPath($entry);$attributes=[IO.File]::GetAttributes($full)
+    if($allowed-inotcontains $full -or -not($attributes-band[IO.FileAttributes]::Directory)-or($attributes-band[IO.FileAttributes]::ReparsePoint)){throw 'ROLLBACK_RECOVERY_WORKSPACE_TOPOLOGY_REJECTED'}
+  }
+  $liveMatches=(Test-Path -LiteralPath $liveStorageRoot -PathType Container)-and(InventoryDigest $liveStorageRoot)-ceq$ExpectedOriginalDigest
+  $preservedMatches=(Test-Path -LiteralPath $preservedStorageRoot -PathType Container)-and(InventoryDigest $preservedStorageRoot)-ceq$ExpectedOriginalDigest
+  if(-not$liveMatches-and-not$preservedMatches){throw 'ROLLBACK_RECOVERY_ORIGINAL_STORAGE_NOT_FOUND'}
+  if(Test-Path -LiteralPath $liveStorageRoot -PathType Container){Set-LocalRecoveryExactAcl $liveStorageRoot 'ADMIN_ONLY' $FileSystemEvidence}
+  Set-LocalRecoveryExactAcl $recoveryWorkspaceRoot 'ADMIN_ONLY' $FileSystemEvidence
+  Assert-DailyRecoveryAclState 'RECOVER_NORMALIZED' $FileSystemEvidence
+}
+function Test-DailyRecoveryJournalBinding($Record) {
+  try {
+    return [IO.Path]::GetFullPath([string]$Record.recoveryWorkspaceRoot).TrimEnd('\')-ieq$recoveryWorkspaceRoot -and
+      [IO.Path]::GetFullPath([string]$Record.localRecoverySecurityHelperPath)-ieq$recoverySecurityHelper -and
+      [string]$Record.localRecoverySecurityHelperSha256-ceq$ExpectedLocalRecoverySecurityHelperSha256.ToLowerInvariant()
+  } catch { return $false }
 }
 function Get-RollbackStorageDigest {
   if($PreviousReleaseKind-eq'LEGACY_BASELINE'){
@@ -217,10 +249,11 @@ function Get-CurrentEdgeIdentity {
   return [pscustomobject]@{stateMode=$EdgeStateMode;processId=0;processStartedAt=$null;executablePath=$node;executableSha256=$ExpectedNodeSha256.ToLowerInvariant();commandLineSha256=$null;releaseRoot=$releaseRoot;releaseId=[string]$config.release.id;releaseManifestSha256=$ExpectedEdgeReleaseManifestSha256.ToLowerInvariant();listenerAddress=$null;listenerPort=0;serviceProcessId=0;activeRequests=0;drainCompletedAt=$null;drainStateSha256=$null;identityDigest=$identityDigest;proofType='SIGNED_LEGACY_QUIESCE_V2';edgeServiceState=$serviceState}
 }
 
-function Assert-ActionTimeRecoveryBoundary([string]$ExpectedIdentityDigest) {
+function Assert-ActionTimeRecoveryBoundary([string]$ExpectedIdentityDigest,[ValidateSet('STRICT','TRANSITIONAL','RECOVER_NORMALIZED')][string]$AclMode='STRICT') {
   if($RecoveryPurpose-ne'DAILY_BACKUP_RECOVERY'){return}
   $current=Get-CurrentEdgeIdentity
   if($current.proofType-cne'STOPPED_LOCAL_SERVICES_ABSENCE_V2'-or$current.identityDigest-cne$ExpectedIdentityDigest-or-not$current.serviceRightsExact-or-not$current.serviceAccountProcessesAbsent-or-not$current.protectedListenersAbsent){throw 'ROLLBACK_ACTION_TIME_LOCAL_RECOVERY_BOUNDARY_CHANGED'}
+  if($AclMode-ne'TRANSITIONAL'){Assert-DailyRecoveryAclState $AclMode $fs}
 }
 
 function New-RollbackPlan([string]$IntendedAction) {
@@ -362,8 +395,7 @@ $recoveryWorkspaceRoot=$null;$liveStorageRoot=$null;$stagingStorageRoot=$null;$p
 if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'){
   $recoveryWorkspaceRoot=[IO.Path]::GetFullPath([string]$approvalPlan.exactParameters.recoveryWorkspaceRoot);$liveStorageRoot=[IO.Path]::GetFullPath([string]$approvalPlan.exactParameters.liveStorageRoot);$stagingStorageRoot=[IO.Path]::GetFullPath([string]$approvalPlan.exactParameters.stagingStorageRoot);$preservedStorageRoot=[IO.Path]::GetFullPath([string]$approvalPlan.exactParameters.preservedStorageRoot);$backupPayloadRoot=Existing (Join-Path $backupRoot 'storage-payload') $true 'ROLLBACK_STORAGE_PAYLOAD_NOT_FOUND';Assert-DailyStoragePaths $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot
   if(-not(Under $liveStorageRoot $fs.classRoots.CORE_MODIFY)-or-not(Under $recoveryWorkspaceRoot $fs.classRoots.ADMIN_ONLY)-or-not(Under $stagingStorageRoot $fs.classRoots.ADMIN_ONLY)-or-not(Under $preservedStorageRoot $fs.classRoots.ADMIN_ONLY)){throw 'ROLLBACK_DAILY_STORAGE_ACL_BOUNDARY_REJECTED'}
-  Assert-LocalRecoveryExactAcl $liveStorageRoot 'CORE_MODIFY' $fs|Out-Null;Assert-LocalRecoveryExactAcl $recoveryWorkspaceRoot 'ADMIN_ONLY' $fs|Out-Null
-  if(Test-Path -LiteralPath $stagingStorageRoot -PathType Container){Assert-LocalRecoveryExactAcl $stagingStorageRoot 'ADMIN_ONLY' $fs|Out-Null};if(Test-Path -LiteralPath $preservedStorageRoot -PathType Container){Assert-LocalRecoveryExactAcl $preservedStorageRoot 'ADMIN_ONLY' $fs|Out-Null}
+  if($Action-ne'Recover'){Assert-DailyRecoveryAclState 'STRICT' $fs}
 }
 
 $connectionUser = if ($db.connectionMode -eq 'session_pooler') { "$($db.migrationUser).$($db.projectRef)" } else { [string]$db.migrationUser }
@@ -408,22 +440,24 @@ if($Action-eq'Recover'){
   $recoveryJournal=Existing $RollbackJournalPath $false 'ROLLBACK_DURABLE_JOURNAL_NOT_FOUND';AssertHash $recoveryJournal $ExpectedRollbackJournalSha256 'ROLLBACK_DURABLE_JOURNAL_HASH_MISMATCH' 1048576
   $recoverySource=Read-BoundedJson $recoveryJournal 1048576 'ROLLBACK_DURABLE_JOURNAL_INVALID';$recoverySourceHash=Hash $recoveryJournal 1048576
   $sourcePurpose=if([string]$recoverySource.recoveryPurpose){[string]$recoverySource.recoveryPurpose}else{'MIGRATION_ROLLBACK'}
-  if($recoverySource.version -ne 4 -or $sourcePurpose-cne$RecoveryPurpose-or $recoverySource.previousReleaseKind-cne$PreviousReleaseKind-or $recoverySource.state -notin @('INTENT','STORAGE_STAGED_RESTORE_PENDING','PRESERVED_ORIGINAL_RESTORE_IN_PROGRESS','DATABASE_RESTORED_STORAGE_SWITCH_PENDING','STORAGE_SWITCHED_MAINTENANCE_REQUIRED','COMPLETE_MAINTENANCE_REQUIRED','RECOVERY_INTENT','FAILED_MAINTENANCE_REQUIRED') -or [string]$recoverySource.preservedSchema -cne $preservedSchema -or($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and([IO.Path]::GetFullPath([string]$recoverySource.recoveryWorkspaceRoot)-ine$recoveryWorkspaceRoot))-or -not $recoverySource.maintenanceMustRemainEnabled -or -not $recoverySource.legacyWritersMustRemainQuiesced){throw 'ROLLBACK_RECOVERY_SOURCE_REJECTED'}
+  if($recoverySource.version -ne 4 -or $sourcePurpose-cne$RecoveryPurpose-or $recoverySource.previousReleaseKind-cne$PreviousReleaseKind-or $recoverySource.state -notin @('INTENT','STORAGE_STAGED_RESTORE_PENDING','PRESERVED_ORIGINAL_RESTORE_IN_PROGRESS','DATABASE_RESTORED_STORAGE_SWITCH_PENDING','STORAGE_SWITCHED_MAINTENANCE_REQUIRED','COMPLETE_MAINTENANCE_REQUIRED','RECOVERY_INTENT','FAILED_MAINTENANCE_REQUIRED') -or [string]$recoverySource.preservedSchema -cne $preservedSchema -or($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and-not(Test-DailyRecoveryJournalBinding $recoverySource))-or -not $recoverySource.maintenanceMustRemainEnabled -or -not $recoverySource.legacyWritersMustRemainQuiesced){throw 'ROLLBACK_RECOVERY_SOURCE_REJECTED'}
   $recoveryEdge=Get-CurrentEdgeIdentity;if($recoveryEdge.identityDigest-cne$approvalPlan.exactParameters.edgeIdentityDigest){throw 'ROLLBACK_RECOVERY_EDGE_IDENTITY_DRIFT'}
   AssertHash $maintenancePath $ExpectedMaintenanceFlagSha256 'ROLLBACK_RECOVERY_MAINTENANCE_HASH_DRIFT' 1048576
   $schemaState=Invoke-Bounded $psql ($base+@('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_RECOVERY_SCHEMA_STATE'
   if($schemaState-notin@('1|0','0|1','1|1')){throw 'ROLLBACK_RECOVERY_SCHEMA_STATE_REJECTED'}
+  Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'TRANSITIONAL'
+  if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'){Prepare-DailyRecoveryAclForRecover ([string]$recoverySource.originalStorageInventoryDigest) $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED'}
   $recoveryIntent=[ordered]@{version=4;recoveryPurpose=$RecoveryPurpose;previousReleaseKind=$PreviousReleaseKind;state='RECOVERY_INTENT';sourceJournalSha256=$recoverySourceHash;sourceState=[string]$recoverySource.state;recoveryPlanSha256=$approvalPlan.planSha256;databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;observedSchemaState=$schemaState;recoveryWorkspaceRoot=$recoveryWorkspaceRoot;liveStorageRoot=$liveStorageRoot;stagingStorageRoot=$stagingStorageRoot;preservedStorageRoot=$preservedStorageRoot;originalStorageInventoryDigest=[string]$recoverySource.originalStorageInventoryDigest;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;edgeStateMode=$EdgeStateMode;quiescenceProofType=$edgeIdentity.proofType;edgeIdentityDigest=$edgeIdentity.identityDigest;legacyQuiesceEvidenceSha256=$quiesceIdentity.EvidenceSha256;createdAt=[datetimeoffset]::UtcNow.ToString('o')}
   Write-AtomicJson $RollbackJournalPath $recoveryIntent
   try{
-    Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest
+    Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED'
     if($schemaState-in@('0|1','1|1')){
       $recoverSql="BEGIN; DROP SCHEMA IF EXISTS $quotedSchema CASCADE; ALTER SCHEMA $quotedPreserved RENAME TO $quotedSchema; COMMIT;"
       [void](Invoke-Bounded $psql ($base+@('--set=ON_ERROR_STOP=1',"--command=$recoverSql")) $environment 'ROLLBACK_RECOVERY_RETURN_ORIGINAL')
     }
     $recoveredState=Invoke-Bounded $psql ($base+@('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_RECOVERY_STATE_VERIFY'
     if($recoveredState-cne'1|0'){throw 'ROLLBACK_RECOVERY_POST_STATE_REJECTED'}
-    $storageOriginalRestored=$true;if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'){Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest;$storageOriginalRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot ([string]$recoverySource.originalStorageInventoryDigest) $fs}
+    $storageOriginalRestored=$true;if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'){Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED';$storageOriginalRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot ([string]$recoverySource.originalStorageInventoryDigest) $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'STRICT'}
     Write-AtomicJson $RollbackJournalPath ([ordered]@{version=4;recoveryPurpose=$RecoveryPurpose;previousReleaseKind=$PreviousReleaseKind;state='RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED';sourceJournalSha256=$recoverySourceHash;sourceState=[string]$recoverySource.state;recoveryPlanSha256=$approvalPlan.planSha256;databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;observedSchemaState=$recoveredState;originalSchemaRestored=$true;preservedSchemaAbsent=$true;liveStorageRoot=$liveStorageRoot;stagingStorageRoot=$stagingStorageRoot;preservedStorageRoot=$preservedStorageRoot;originalStorageInventoryDigest=[string]$recoverySource.originalStorageInventoryDigest;originalStorageRestored=$storageOriginalRestored;preservedStorageAbsent=$(if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'){-not(Test-Path -LiteralPath $preservedStorageRoot)}else{$true});partialTargetPossible=$false;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;edgeStateMode=$EdgeStateMode;quiescenceProofType=$edgeIdentity.proofType;edgeIdentityDigest=$edgeIdentity.identityDigest;legacyQuiesceEvidenceSha256=$quiesceIdentity.EvidenceSha256;completedAt=[datetimeoffset]::UtcNow.ToString('o')})
     [pscustomobject]@{Result='RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED';CurrentSchemaPresent=$true;PreservedSchemaAbsent=$true;OriginalStorageRestored=$storageOriginalRestored;MaintenanceRetained=$true;WritersRemainQuiesced=$true;VerifyRecoveryRequired=$true;NewRollbackApprovalRequired=$true}|ConvertTo-Json;exit 0
   }catch{
@@ -432,7 +466,7 @@ if($Action-eq'Recover'){
     if($observed-ceq'1|0'){
       $storageOriginalRestored=$true
       if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'){
-        try{Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest;$storageOriginalRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot ([string]$recoverySource.originalStorageInventoryDigest) $fs}catch{$storageOriginalRestored=$false}
+        try{Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'TRANSITIONAL';Prepare-DailyRecoveryAclForRecover ([string]$recoverySource.originalStorageInventoryDigest) $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED';$storageOriginalRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot ([string]$recoverySource.originalStorageInventoryDigest) $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'STRICT'}catch{$storageOriginalRestored=$false}
       }
       if(-not$storageOriginalRestored){
         Write-AtomicJson $RollbackJournalPath ([ordered]@{version=4;recoveryPurpose=$RecoveryPurpose;previousReleaseKind=$PreviousReleaseKind;state='FAILED_MAINTENANCE_REQUIRED';sourceJournalSha256=$recoverySourceHash;sourceState=[string]$recoverySource.state;recoveryPlanSha256=$approvalPlan.planSha256;failureCode=$failureCode;databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;observedSchemaState=$observed;originalSchemaRestored=$true;liveStorageRoot=$liveStorageRoot;stagingStorageRoot=$stagingStorageRoot;preservedStorageRoot=$preservedStorageRoot;originalStorageInventoryDigest=[string]$recoverySource.originalStorageInventoryDigest;originalStorageRestored=$false;partialTargetPossible=$true;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;recoveryProcedure='KEEP MAINTENANCE AND WRITERS QUIESCED. HASH-PIN THIS JOURNAL AND CREATE A NEW EXACT RECOVER PLAN.';failedAt=[datetimeoffset]::UtcNow.ToString('o')})
@@ -450,7 +484,7 @@ if($Action-eq'VerifyRecovery'){
   $recoveryJournal=Existing $RollbackJournalPath $false 'ROLLBACK_DURABLE_JOURNAL_NOT_FOUND';AssertHash $recoveryJournal $ExpectedRollbackJournalSha256 'ROLLBACK_DURABLE_JOURNAL_HASH_MISMATCH' 1048576;$recoveryRecord=Read-BoundedJson $recoveryJournal 1048576 'ROLLBACK_DURABLE_JOURNAL_INVALID'
   $schemaState=Invoke-Bounded $psql ($base+@('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_VERIFY_RECOVERY_STATE'
   $recordPurpose=if([string]$recoveryRecord.recoveryPurpose){[string]$recoveryRecord.recoveryPurpose}else{'MIGRATION_ROLLBACK'};$storageRecoveryVerified=$true;if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'){$storageRecoveryVerified=$recoveryRecord.originalStorageRestored-and$recoveryRecord.preservedStorageAbsent-and-not(Test-Path -LiteralPath $preservedStorageRoot)-and(InventoryDigest $liveStorageRoot)-ceq[string]$recoveryRecord.originalStorageInventoryDigest}
-  if($recoveryRecord.version-ne4-or$recordPurpose-cne$RecoveryPurpose-or$recoveryRecord.previousReleaseKind-cne$PreviousReleaseKind-or$recoveryRecord.state-cne'RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED'-or$recoveryRecord.databaseProjectRef-cne$ConfirmProjectRef-or$recoveryRecord.databaseHost-cne$ConfirmDatabaseHost-or$recoveryRecord.databaseName-cne$ConfirmDatabaseName-or$recoveryRecord.databaseSchema-cne$ConfirmDatabaseSchema-or$recoveryRecord.preservedSchema-cne$preservedSchema-or-not$recoveryRecord.originalSchemaRestored-or-not$recoveryRecord.preservedSchemaAbsent-or-not$storageRecoveryVerified-or$recoveryRecord.partialTargetPossible-or-not$recoveryRecord.maintenanceMustRemainEnabled-or-not$recoveryRecord.legacyWritersMustRemainQuiesced-or$schemaState-cne'1|0'){throw 'ROLLBACK_RECOVERY_EVIDENCE_REJECTED'}
+  if($recoveryRecord.version-ne4-or$recordPurpose-cne$RecoveryPurpose-or$recoveryRecord.previousReleaseKind-cne$PreviousReleaseKind-or$recoveryRecord.state-cne'RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED'-or$recoveryRecord.databaseProjectRef-cne$ConfirmProjectRef-or$recoveryRecord.databaseHost-cne$ConfirmDatabaseHost-or$recoveryRecord.databaseName-cne$ConfirmDatabaseName-or$recoveryRecord.databaseSchema-cne$ConfirmDatabaseSchema-or$recoveryRecord.preservedSchema-cne$preservedSchema-or($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and-not(Test-DailyRecoveryJournalBinding $recoveryRecord))-or-not$recoveryRecord.originalSchemaRestored-or-not$recoveryRecord.preservedSchemaAbsent-or-not$storageRecoveryVerified-or$recoveryRecord.partialTargetPossible-or-not$recoveryRecord.maintenanceMustRemainEnabled-or-not$recoveryRecord.legacyWritersMustRemainQuiesced-or$schemaState-cne'1|0'){throw 'ROLLBACK_RECOVERY_EVIDENCE_REJECTED'}
   [pscustomobject]@{Result='PASS';RecoveryVerified=$true;CurrentSchemaPresent=$true;PreservedSchemaAbsent=$true;OriginalStorageRestored=$storageRecoveryVerified;MaintenanceRetained=$true;WritersRemainQuiesced=$true;NewRollbackApprovalRequired=$true}|ConvertTo-Json;exit 0
 }
 
@@ -510,6 +544,7 @@ if ($Action -eq 'Apply') {
       [IO.Directory]::Move($liveStorageRoot,$preservedStorageRoot);Set-LocalRecoveryExactAcl $preservedStorageRoot 'ADMIN_ONLY' $fs;Assert-LocalRecoveryExactAcl $preservedStorageRoot 'ADMIN_ONLY' $fs|Out-Null
       [IO.Directory]::Move($stagingStorageRoot,$liveStorageRoot);Set-LocalRecoveryExactAcl $liveStorageRoot 'CORE_MODIFY' $fs;Assert-LocalRecoveryExactAcl $liveStorageRoot 'CORE_MODIFY' $fs|Out-Null
       if((InventoryDigest $liveStorageRoot)-cne$backupStorageDigest-or(InventoryDigest $preservedStorageRoot)-cne$originalStorageDigest){throw 'ROLLBACK_DAILY_STORAGE_SWITCH_VERIFY_FAILED'}
+      Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest
       Write-AtomicJson $RollbackJournalPath ([ordered]@{version=4;recoveryPurpose=$RecoveryPurpose;previousReleaseKind=$PreviousReleaseKind;state='STORAGE_SWITCHED_MAINTENANCE_REQUIRED';intentSha256=$intentSha256;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;originalSchemaPreserved=$true;liveStorageRoot=$liveStorageRoot;stagingStorageRoot=$stagingStorageRoot;preservedStorageRoot=$preservedStorageRoot;originalStorageInventoryDigest=$originalStorageDigest;backupStorageInventoryDigest=$backupStorageDigest;productionStorageRestored=$true;preservedOriginalStorage=$true;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;updatedAt=[datetimeoffset]::UtcNow.ToString('o')})
     }
     $storageDigest = Get-RollbackStorageDigest
@@ -545,7 +580,7 @@ if ($Action -eq 'Apply') {
         if ($repairState -cne '1|0') { throw 'ROLLBACK_AUTOMATIC_RECOVERY_STATE_REJECTED' };$originalRestored = $true;$observedSchemaState = $repairState
       } elseif ($observedSchemaState -ne '0|0') { throw 'ROLLBACK_SCHEMA_STATE_UNRECOGNIZED' }
     } catch { $originalRestored = $false }
-    if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and$originalStorageDigest){try{Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest;$originalStorageRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot $originalStorageDigest $fs}catch{$originalStorageRestored=$false}}
+    if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and$originalStorageDigest){try{Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'TRANSITIONAL';Prepare-DailyRecoveryAclForRecover $originalStorageDigest $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'RECOVER_NORMALIZED';$originalStorageRestored=Restore-OriginalStorage $liveStorageRoot $stagingStorageRoot $preservedStorageRoot $recoveryWorkspaceRoot $originalStorageDigest $fs;Assert-ActionTimeRecoveryBoundary $approvalPlan.exactParameters.edgeIdentityDigest 'STRICT'}catch{$originalStorageRestored=$false}}
     if ($evidencePublished -and (Test-Path -LiteralPath $EvidenceOutputPath)) { Remove-Item -LiteralPath $EvidenceOutputPath -Force -ErrorAction SilentlyContinue }
     try {
       $recoveryProcedure = if ($originalRestored-and$originalStorageRestored) { 'ORIGINAL PRE-RECOVERY SCHEMA AND STORAGE WERE RESTORED; KEEP MAINTENANCE UNTIL A NEW APPROVED VERIFY.' } else { 'PRESERVED ORIGINAL SCHEMA OR STORAGE MUST NOT BE DELETED; KEEP MAINTENANCE AND QUIESCE; USE A NEW EXACT APPROVED RECOVER PLAN BEFORE ANY WRITER RESTART.' }
@@ -572,7 +607,7 @@ $legacyEvidenceInvalid=$PreviousReleaseKind-eq'LEGACY_BASELINE'-and($value.basel
 $localEvidenceInvalid=$PreviousReleaseKind-eq'LOCAL_RELEASE'-and($value.baselineSha256-or$value.legacyQuiesceEvidenceSha256-or$value.quiescePublicKeySha256-or$value.releaseId-cne$config.release.id-or$value.releaseManifestSha256-cne$ExpectedEdgeReleaseManifestSha256.ToLowerInvariant()-or$value.migrationDigest-cne$releaseManifest.migrationDigest-or$value.appliedMigrationDigest-cne$releaseManifest.appliedMigrationDigest)
 $recordPurpose=if([string]$journalValue.recoveryPurpose){[string]$journalValue.recoveryPurpose}else{'MIGRATION_ROLLBACK'};$evidencePurpose=if([string]$value.recoveryPurpose){[string]$value.recoveryPurpose}else{'MIGRATION_ROLLBACK'}
 $sourceProofInvalid=if($RecoveryPurpose-eq'MIGRATION_ROLLBACK'){$value.migrationJournalSha256-cne(Hash $migrationJournal 16777216)-or$value.restoreRehearsalEvidenceSha256}else{$value.migrationJournalSha256-or$value.restoreRehearsalEvidenceSha256-cne(Hash $restoreRehearsal 16777216)}
-$dailyStorageInvalid=$RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and(-not$value.productionStorageRestored-or-not$value.preservedOriginalStorage-or-not$journalValue.productionStorageRestored-or-not$journalValue.preservedOriginalStorage-or$value.recoveryWorkspaceRoot-ine$recoveryWorkspaceRoot-or$journalValue.recoveryWorkspaceRoot-ine$recoveryWorkspaceRoot-or$value.localRecoverySecurityHelperSha256-cne$ExpectedLocalRecoverySecurityHelperSha256.ToLowerInvariant()-or$journalValue.localRecoverySecurityHelperSha256-cne$ExpectedLocalRecoverySecurityHelperSha256.ToLowerInvariant()-or$value.liveStorageRoot-ine$liveStorageRoot-or$value.preservedStorageRoot-ine$preservedStorageRoot-or$journalValue.liveStorageRoot-ine$liveStorageRoot-or$journalValue.preservedStorageRoot-ine$preservedStorageRoot-or$value.originalStorageInventoryDigest-cne$journalValue.originalStorageInventoryDigest-or-not(Test-Path -LiteralPath $preservedStorageRoot -PathType Container)-or(InventoryDigest $preservedStorageRoot)-cne$value.originalStorageInventoryDigest)
+$dailyStorageInvalid=$RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and(-not$value.productionStorageRestored-or-not$value.preservedOriginalStorage-or-not$journalValue.productionStorageRestored-or-not$journalValue.preservedOriginalStorage-or-not(Test-DailyRecoveryJournalBinding $value)-or-not(Test-DailyRecoveryJournalBinding $journalValue)-or$value.liveStorageRoot-ine$liveStorageRoot-or$value.preservedStorageRoot-ine$preservedStorageRoot-or$journalValue.liveStorageRoot-ine$liveStorageRoot-or$journalValue.preservedStorageRoot-ine$preservedStorageRoot-or$value.originalStorageInventoryDigest-cne$journalValue.originalStorageInventoryDigest-or-not(Test-Path -LiteralPath $preservedStorageRoot -PathType Container)-or(InventoryDigest $preservedStorageRoot)-cne$value.originalStorageInventoryDigest)
 if ($journalValue.version -ne 4 -or $recordPurpose-cne$RecoveryPurpose-or$journalValue.previousReleaseKind-cne$PreviousReleaseKind-or$journalValue.state -cne 'COMPLETE_MAINTENANCE_REQUIRED' -or $journalValue.edgeStateMode-cne$EdgeStateMode -or $journalValue.quiescenceProofType-cne$value.quiescenceProofType -or $journalValue.edgeIdentityDigest-cne$edgeIdentity.identityDigest -or $journalValue.intentSha256 -cne $value.rollbackIntentSha256 -or $journalValue.evidenceSha256 -cne (Hash $evidence 16777216) -or $journalValue.recoveryProcessTreeHelperPath -ine $processTreeHelper -or $journalValue.recoveryProcessTreeHelperSha256 -cne $ExpectedRecoveryProcessTreeHelperSha256.ToLowerInvariant() -or $journalValue.legacyQuiesceEvidenceSha256 -cne $quiesceIdentity.EvidenceSha256 -or -not $journalValue.originalSchemaPreserved -or $journalValue.partialTargetPossible -or $value.attestationType-cne'database-rollback'-or$value.version -ne 4 -or$evidencePurpose-cne$RecoveryPurpose-or$value.previousReleaseKind-cne$PreviousReleaseKind-or$legacyEvidenceInvalid-or$localEvidenceInvalid-or$sourceProofInvalid-or$dailyStorageInvalid-or$value.result -cne 'PASS' -or $value.edgeStateMode-cne$EdgeStateMode -or $value.edgeIdentityDigest-cne$edgeIdentity.identityDigest -or -not$value.quiescenceVerified -or -not$edgeModeProof -or $value.recoveryProcessTreeHelperPath -ine $processTreeHelper -or $value.recoveryProcessTreeHelperSha256 -cne $ExpectedRecoveryProcessTreeHelperSha256.ToLowerInvariant() -or $value.backupEvidenceSha256 -cne (Hash $backupEvidence 16777216) -or -not $value.productionDatabaseRestored -or -not $value.preRollbackSchemaPreserved -or -not $value.runtimeRolePrivilegesVerified -or $privilegeProof -cne 't|t|t|t|t|t|t|t' -or -not $value.maintenanceVerified -or -not $value.businessKpiVerified -or (TextHash $kpi) -cne $value.businessKpiDigest -or -not $value.storageHashVerified -or $storageDigest -cne $value.storageInventoryDigest -or -not $value.hardDeadlineEnforced -or -not $value.processTreeKillOnDeadline -or -not $value.allReadsAndHashesDeadlineBound -or $value.elapsedSeconds -gt $MaximumRestoreDurationSeconds) { throw 'ROLLBACK_EVIDENCE_INVALID' }
 Assert-RestoreDeadline -Finalization
 [pscustomobject]@{Result='PASS';RecoveryPurpose=$RecoveryPurpose;PreviousReleaseKind=$PreviousReleaseKind;SignedRollbackEvidence=$true;DurableJournalVerified=$true;ProductionDatabaseRestored=$true;ProductionStorageRestored=($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY');PreRollbackSchemaPreserved=$true;PreRecoveryStoragePreserved=($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY');MaintenanceRetained=$true;LegacyRestartStillSeparatelyApprovalGated=($PreviousReleaseKind-eq'LEGACY_BASELINE');LocalReleaseTransitionStillSeparatelyApprovalGated=($PreviousReleaseKind-eq'LOCAL_RELEASE')} | ConvertTo-Json

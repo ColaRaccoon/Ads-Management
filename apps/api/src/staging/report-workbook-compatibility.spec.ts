@@ -19,6 +19,12 @@ describe("report workbook compatibility proof", () => {
     const changedProof = await reportWorkbookCompatibility(changed, expected(runId));
     expect(changedProof.digest).not.toBe(baseline.digest);
 
+    const changedRule = await reportWorkbookCompatibility(
+      await workbook(runId, { targetCpaKrw: 99_999 }),
+      expected(runId)
+    );
+    expect(changedRule.digest).not.toBe(baseline.digest);
+
     const missing = new ExcelJS.Workbook();
     missing.addWorksheet("Summary");
     await expect(reportWorkbookCompatibility(Buffer.from(await missing.xlsx.writeBuffer()), expected(runId)))
@@ -30,7 +36,7 @@ function expected(id: string) {
   return { from: "2026-08-25", to: "2026-08-25", reportType: "PERIOD_XLSX", runId: id };
 }
 
-async function workbook(id: string, overrides: { spendKrw?: number } = {}) {
+async function workbook(id: string, overrides: { spendKrw?: number; targetCpaKrw?: number } = {}) {
   const value = new ExcelJS.Workbook();
   const summary = value.addWorksheet("Summary");
   const summaryRows = [
@@ -43,7 +49,8 @@ async function workbook(id: string, overrides: { spendKrw?: number } = {}) {
   table(value.addWorksheet("Product Performance"), {
     "product.code": `MUT-${id}`, "product.name": "Compatibility product", "product.displayName": "Compatibility product",
     "totals.spendUsd": 20, "totals.spendKrw": 27_000, "totals.purchaseCount": 2, "totals.cpaKrw": 13_500,
-    "totals.revenueKrw": 138_000, "totals.marginKrw": 61_000
+    "totals.revenueKrw": 138_000, "totals.marginKrw": 61_000, targetCpaKrw: overrides.targetCpaKrw ?? 15_000,
+    breakEvenCpaKrw: 20_000, watchCpaKrw: 18_000, stopCpaKrw: 25_000, ruleStatus: "WATCH"
   });
   table(value.addWorksheet("Adset Performance"), {
     adsetName: `Compatibility ${id}`, stage: "TEST", "product.displayName": "Compatibility product",
@@ -51,7 +58,8 @@ async function workbook(id: string, overrides: { spendKrw?: number } = {}) {
     "totals.revenueKrw": 138_000, "totals.marginKrw": 61_000
   });
   table(value.addWorksheet("Decisions"), {
-    scopeType: "ADSET", decision: "KEEP", severity: "INFO", reason: `Compatibility ${id}`, recommendedAction: "Observe"
+    scopeType: "ADSET", decision: "KEEP", severity: "INFO", reason: `Compatibility ${id}`,
+    recommendedAction: "Observe", relatedDecisionId: `decision-${id}`
   });
   value.addWorksheet("Unmatched").addRow(["No data"]);
   value.addWorksheet("Change Logs").addRow(["No data"]);

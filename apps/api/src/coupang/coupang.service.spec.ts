@@ -4861,7 +4861,12 @@ describe("CoupangService unmatched", () => {
         ]
       },
       take: 200,
-      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+      orderBy: [
+        { createdAt: "desc" },
+        { sourceType: "asc" },
+        { rowNumber: { sort: "asc", nulls: "first" } },
+        { id: "asc" }
+      ],
       include: { batch: true }
     });
   });

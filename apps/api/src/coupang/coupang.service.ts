@@ -3041,7 +3041,12 @@ export class CoupangService {
           ]
         },
         take,
-        orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+        orderBy: [
+          { createdAt: "desc" },
+          { sourceType: "asc" },
+          { rowNumber: { sort: "asc", nulls: "first" } },
+          { id: "asc" }
+        ],
         include: { batch: true }
       })
     ]);
@@ -3100,7 +3105,7 @@ export class CoupangService {
       ]
         .sort((left, right) =>
           right.__date - left.__date ||
-          String(left.sourceType).localeCompare(String(right.sourceType)) ||
+          coupangUploadSourceRank(String(left.sourceType)) - coupangUploadSourceRank(String(right.sourceType)) ||
           (left.rowNumber ?? 0) - (right.rowNumber ?? 0) ||
           left.__id.localeCompare(right.__id)
         )
@@ -4604,6 +4609,11 @@ export function buildCoupangDailyHierarchy({
       left.productName.localeCompare(right.productName) ||
       dailyReportStableId(left).localeCompare(dailyReportStableId(right))
     ));
+}
+
+function coupangUploadSourceRank(sourceType: string) {
+  const rank: Record<string, number> = { SALES: 0, ADS: 1, MARGIN: 2, PRICE_TEXT: 3, PROMOTION: 4, BUNDLE: 5 };
+  return rank[sourceType] ?? Number.MAX_SAFE_INTEGER;
 }
 
 function dailyReportStableId(row: CoupangDailyReportRow) {

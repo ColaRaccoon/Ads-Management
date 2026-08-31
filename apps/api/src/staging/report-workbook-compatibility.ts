@@ -36,38 +36,38 @@ export async function reportWorkbookCompatibility(
   }
 
   let cellCount = SUMMARY_LABELS.length * 2;
-  const products = projectedRows(workbook.getWorksheet("Product Performance")!, [
+  const products = projectedSheet(workbook.getWorksheet("Product Performance")!, [
     "product.code", "product.name", "product.displayName", "totals.spendUsd", "totals.spendKrw",
     "totals.purchaseCount", "totals.cpaKrw", "totals.revenueKrw", "totals.marginKrw"
   ], expected.runId);
-  const adsets = projectedRows(workbook.getWorksheet("Adset Performance")!, [
+  const adsets = projectedSheet(workbook.getWorksheet("Adset Performance")!, [
     "adsetName", "stage", "product.displayName", "totals.spendUsd", "totals.spendKrw",
     "totals.purchaseCount", "totals.cpaKrw", "totals.revenueKrw", "totals.marginKrw"
   ], expected.runId);
-  const decisions = projectedRows(workbook.getWorksheet("Decisions")!, [
+  const decisions = projectedSheet(workbook.getWorksheet("Decisions")!, [
     "scopeType", "decision", "severity", "reason", "recommendedAction"
   ], expected.runId);
-  const unmatched = projectedRows(workbook.getWorksheet("Unmatched")!, [
+  const unmatched = projectedSheet(workbook.getWorksheet("Unmatched")!, [
     "metricDate", "adsetName", "spendUsd", "resultCount"
   ], expected.runId, true);
-  const changeLogs = projectedRows(workbook.getWorksheet("Change Logs")!, [
+  const changeLogs = projectedSheet(workbook.getWorksheet("Change Logs")!, [
     "actionDate", "actionType", "entityType", "reason"
   ], expected.runId, true);
-  for (const rows of [products, adsets, decisions, unmatched, changeLogs]) {
-    cellCount += rows.reduce((total, row) => total + Object.keys(row).length, 0);
+  for (const sheet of [products, adsets, decisions, unmatched, changeLogs]) {
+    cellCount += sheet.columns.length + sheet.rows.reduce((total, row) => total + Object.keys(row).length, 0);
   }
   if (cellCount > MAX_REPORT_CELLS) throw new Error("REPORT_COMPATIBILITY_CELL_LIMIT");
-  if (!products.some((row) => row["product.displayName"] === "Compatibility product")) {
+  if (!products.rows.some((row) => row["product.displayName"] === "Compatibility product")) {
     throw new Error("REPORT_COMPATIBILITY_PRODUCT_MISSING");
   }
-  if (!adsets.some((row) => row.adsetName === "Compatibility <RUN_ID>")) {
+  if (!adsets.rows.some((row) => row.adsetName === "Compatibility <RUN_ID>")) {
     throw new Error("REPORT_COMPATIBILITY_ADSET_MISSING");
   }
-  if (decisions.length < 1) throw new Error("REPORT_COMPATIBILITY_DECISIONS_MISSING");
+  if (decisions.rows.length < 1) throw new Error("REPORT_COMPATIBILITY_DECISIONS_MISSING");
   return businessCompatibilityDigest({ summary, products, adsets, decisions, unmatched, changeLogs });
 }
 
-function projectedRows(
+function projectedSheet(
   sheet: ExcelJS.Worksheet,
   selectedColumns: string[],
   runId: string,
@@ -76,23 +76,27 @@ function projectedRows(
   if (sheet.rowCount < 1 || sheet.rowCount > MAX_REPORT_ROWS) throw new Error("REPORT_COMPATIBILITY_ROW_LIMIT");
   if (primitive(sheet.getRow(1).getCell(1).value) === "No data") {
     if (!allowEmpty) throw new Error("REPORT_COMPATIBILITY_REQUIRED_ROWS_MISSING");
-    return [];
+    if (sheet.rowCount !== 1 || sheet.getRow(1).cellCount !== 1) throw new Error("REPORT_COMPATIBILITY_EMPTY_SHEET_INVALID");
+    return { columns: ["No data"], rows: [] };
   }
   const header = new Map<string, number>();
-  sheet.getRow(1).eachCell((cell, column) => {
+  const columns: string[] = [];
+  sheet.getRow(1).eachCell({ includeEmpty: true }, (cell, column) => {
     const value = primitive(cell.value);
-    if (typeof value === "string") header.set(value, column);
+    if (typeof value !== "string" || value.length < 1 || header.has(value)) throw new Error("REPORT_COMPATIBILITY_HEADER_INVALID");
+    header.set(value, column);
+    columns.push(value);
   });
   for (const column of selectedColumns) if (!header.has(column)) throw new Error("REPORT_COMPATIBILITY_COLUMN_MISSING");
   const rows: Record<string, string | number | boolean | null>[] = [];
   for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber += 1) {
     const row = sheet.getRow(rowNumber);
-    rows.push(Object.fromEntries(selectedColumns.map((column) => [
+    rows.push(Object.fromEntries(columns.map((column) => [
       column,
       normalized(row.getCell(header.get(column)!).value, runId)
     ])));
   }
-  return rows;
+  return { columns, rows };
 }
 
 function primitive(value: ExcelJS.CellValue): string | number | boolean | null {
