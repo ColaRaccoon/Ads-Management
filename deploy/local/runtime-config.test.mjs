@@ -17,7 +17,7 @@ const base = () => ({
   internalPorts: { web: 3200, api: 4200 },
   database: databaseConfig(),
   data: { root: dataRoot },
-  release: { id: null, migrationDigest: null },
+  release: { id: null, migrationDigest: null, appliedMigrationDigest: null },
   lan: { enabled: false, hostname: null, bindAddress: null, allowedCidrs: [], expectedClientCount: null, expectedClientSetDigest: null },
   tls: { caCertificatePath: null, serverCertificatePath: null, serverPrivateKeyPath: null, clientTrustVerified: false, clientTrustEvidencePath: null, hstsEnabled: false },
   hostSecurity: { filesystemEvidencePath: null, firewallEvidencePath: null, rebootEvidencePath: null, edgeSigningPublicKeyPath: null, edgeSigningPrivateKeyPath: null, nodeProgramPath: null, nodeProgramSha256: null, edgeServiceSid: null },
@@ -34,7 +34,7 @@ test("missing LAN deployment values remains loopback-only", () => {
 
 test("a prepared Core may run on loopback without enabling Edge or reporting operational readiness", () => {
   const value = base();
-  value.release = { id: "release-1", migrationDigest: "a".repeat(64) };
+  value.release = { id: "release-1", migrationDigest: "a".repeat(64), appliedMigrationDigest: "d".repeat(64) };
   value.hostSecurity = {
     filesystemEvidencePath: path.join(dataRoot, "evidence", "filesystem.json"),
     firewallEvidencePath: null,
@@ -79,7 +79,7 @@ test("backup is disabled until root and time are both present", () => {
 test("trusted explicit LAN may open but cannot be operational-ready before restore proof", () => {
   const value = base();
   value.lan = { enabled: true, hostname: "meta-ads.internal", bindAddress: "192.168.10.20", allowedCidrs: ["192.168.10.31/32"], expectedClientCount: 1, expectedClientSetDigest: "2".repeat(64) };
-  value.release = { id: "release-1", migrationDigest: "a".repeat(64) };
+  value.release = { id: "release-1", migrationDigest: "a".repeat(64), appliedMigrationDigest: "d".repeat(64) };
   value.hostSecurity = {
     filesystemEvidencePath: path.join(dataRoot, "evidence", "filesystem.json"),
     firewallEvidencePath: path.join(dataRoot, "evidence", "firewall.json"),
@@ -121,7 +121,7 @@ test("wildcard or public bind addresses are rejected", () => {
   for (const bindAddress of ["0.0.0.0", "8.8.8.8", "169.254.1.5", "224.0.0.1"]) {
     const value = base();
     value.lan = { enabled: true, hostname: "meta-ads.internal", bindAddress, allowedCidrs: ["192.168.10.31/32"], expectedClientCount: 1, expectedClientSetDigest: "2".repeat(64) };
-    value.release = { id: "release-1", migrationDigest: "a".repeat(64) };
+    value.release = { id: "release-1", migrationDigest: "a".repeat(64), appliedMigrationDigest: "d".repeat(64) };
     assert.throws(() => validateLocalRuntimeConfig(value), /LAN_EXPLICIT_HOST_AND_BIND_REQUIRED/);
   }
 });
@@ -129,12 +129,12 @@ test("wildcard or public bind addresses are rejected", () => {
 test("LAN access is restricted to one exact private /32 per approved client", () => {
   const subnet = base();
   subnet.lan = { enabled: true, hostname: "meta-ads.internal", bindAddress: "192.168.10.20", allowedCidrs: ["192.168.10.0/24"], expectedClientCount: 1, expectedClientSetDigest: "2".repeat(64) };
-  subnet.release = { id: "release-1", migrationDigest: "a".repeat(64) };
+  subnet.release = { id: "release-1", migrationDigest: "a".repeat(64), appliedMigrationDigest: "d".repeat(64) };
   assert.throws(() => validateLocalRuntimeConfig(subnet), /LAN_EXACT_CLIENT_ADDRESSES_REQUIRED/);
 
   const mismatch = base();
   mismatch.lan = { enabled: true, hostname: "meta-ads.internal", bindAddress: "192.168.10.20", allowedCidrs: ["192.168.10.31/32"], expectedClientCount: 2, expectedClientSetDigest: "2".repeat(64) };
-  mismatch.release = { id: "release-1", migrationDigest: "a".repeat(64) };
+  mismatch.release = { id: "release-1", migrationDigest: "a".repeat(64), appliedMigrationDigest: "d".repeat(64) };
   assert.throws(() => validateLocalRuntimeConfig(mismatch), /LAN_CLIENT_ADDRESS_COUNT_MISMATCH/);
 });
 
@@ -174,6 +174,16 @@ test("operational readiness requires fresh schedule, backup, restore, filesystem
   });
   assert.equal(stale.readiness.latestBackupVerified, false);
   assert.equal(stale.readiness.operationalReady, false);
+  const { signingKeyId: _backupKeyId, attestationSignature: _backupSignature, ...unsignedBackup } = options.latestBackupEvidence;
+  const wrongBackupChain = signed({ ...unsignedBackup, appliedMigrationDigest: "e".repeat(64) }, backupReceiptKeys);
+  const backupChainDrift = validateLocalRuntimeConfig(value, { ...options, latestBackupEvidence: wrongBackupChain });
+  assert.equal(backupChainDrift.readiness.latestBackupVerified, false);
+  assert.equal(backupChainDrift.readiness.operationalReady, false);
+  const { signingKeyId: _restoreKeyId, attestationSignature: _restoreSignature, ...unsignedRestore } = options.restoreEvidence;
+  const wrongRestoreChain = signed({ ...unsignedRestore, appliedMigrationDigest: "e".repeat(64) }, restoreReceiptKeys);
+  const restoreChainDrift = validateLocalRuntimeConfig(value, { ...options, restoreEvidence: wrongRestoreChain });
+  assert.equal(restoreChainDrift.readiness.restoreVerified, false);
+  assert.equal(restoreChainDrift.readiness.operationalReady, false);
 });
 
 test("operational readiness requires both current-host and clean-PC recovery evidence", () => {
@@ -294,7 +304,7 @@ test("a newer valid daily backup does not invalidate the bounded restore rehears
 
 function configureTrustedLan(value) {
   value.lan = { enabled: true, hostname: "meta-ads.internal", bindAddress: "192.168.10.20", allowedCidrs: ["192.168.10.31/32", "192.168.10.32/32"], expectedClientCount: 2, expectedClientSetDigest: "2".repeat(64) };
-  value.release = { id: "release-1", migrationDigest: "a".repeat(64) };
+  value.release = { id: "release-1", migrationDigest: "a".repeat(64), appliedMigrationDigest: "d".repeat(64) };
   value.tls = {
     caCertificatePath: path.join(dataRoot, "certs", "ca.cer"), serverCertificatePath: path.join(dataRoot, "certs", "server.pem"),
     serverPrivateKeyPath: path.join(dataRoot, "certs", "server-key.pem"), clientTrustVerified: true,
@@ -325,7 +335,7 @@ function databaseEvidence(completedAt) {
   return { version: 6, result: "PASS", provider: db.provider, projectRef: db.projectRef, connectionMode: db.connectionMode, host: db.host, port: db.port,
     sslMode: "verify-full", tlsVerified: true, hostnameVerified: true, caVerified: true, caCertificateSha256: db.caCertificateSha256, psqlSha256, executorHashesVerified: true,
     pgStatSsl: true, tlsProtocol: "TLSv1.3", tlsCipher: "TLS_AES_256_GCM_SHA384", publicRemoteEndpoint: true,
-    runtimeDdlDenied: true, roleAttributesRestricted: true, boundedConnectionLimits: true, scramCredentialsVerified: true, runtimeObjectOwnershipDenied: true, roleMembershipsAbsent: true,
+    runtimeDdlDenied: true, runtimeDatabaseTemporaryDenied: true, roleAttributesRestricted: true, boundedConnectionLimits: true, scramCredentialsVerified: true, runtimeObjectOwnershipDenied: true, roleMembershipsAbsent: true,
     privilegeContractVerified: true, backupDatabaseCreateDenied: true, backupDatabaseTemporaryDenied: true, backupSchemaCreateDenied: true, sequencePrivilegesVerified: true, functionEscalationAbsent: true, defaultPrivilegesVerified: true, migrationOwnershipVerified: true, migrationRoleFullDataPrivileged: true, migrationCredentialAdminOnly: true, migrationCredentialMaintenanceOnly: true, migrationTableProtected: true, crossSchemaPrivilegesAbsent: true, credentialsDistinct: true, crossRoleAuthenticationDenied: true, productionRestoreRoleAccessAbsent: true, restoreDatabasePrivilegesAbsent: true, restoreSchemaPrivilegesAbsent: true, restoreTablePrivilegesAbsent: true, restoreSequencePrivilegesAbsent: true, restoreFunctionPrivilegesAbsent: true, restoreTypePrivilegesAbsent: true, restoreDefaultAclAbsent: true, auditAppendOnlyGuardVerified: true, credentialInventoryDigest: "a".repeat(64),
     databaseName: db.name, databaseUser: db.runtimeUser, databaseSchema: db.schema,
     runtimeRoleDigest: createHash("sha256").update(db.runtimeUser).digest("hex"), migrationRoleDigest: createHash("sha256").update(db.migrationUser).digest("hex"), backupRoleDigest: createHash("sha256").update(db.backupUser).digest("hex"), restoreRoleDigest: createHash("sha256").update(db.restoreUser).digest("hex"), completedAt };
@@ -339,7 +349,7 @@ function trustedEvidence(now, value, backupRoot) {
   const targetEvidenceSha256 = createHash("sha256").update(JSON.stringify(target)).digest("hex");
   const targetFingerprint = createHash("sha256").update(["8",target.result,target.targetType,target.dataRoot,target.backupRoot,target.dataDiskUniqueId,target.backupDiskUniqueId,target.nasIdentityHelperSha256,target.nasServer??"",target.nasShare??"",target.nasServerIdentitySha256??"",String(target.nasResolvedAddressCount??""),String(target.nasLocalAliasRejected===true),String(target.nasShareAclAdministrativelyConfirmed===true),target.backupWriterSid,target.signerReaderSid,target.encryptionProof,target.retentionControl,target.completedAt].join("\n")).digest("hex");
   const db=value.database;
-  const configFingerprint = createHash("sha256").update(["2",value.release.id,value.release.migrationDigest,dataRoot,backupRoot,value.backup.dailyTime,db.provider,db.projectRef,db.connectionMode,db.host,String(db.port),db.name,db.runtimeUser,db.migrationUser,db.backupUser,db.restoreUser,db.schema,db.caCertificateSha256,"24","4",targetFingerprint].join("\n")).digest("hex");
+  const configFingerprint = createHash("sha256").update(["3",value.release.id,value.release.migrationDigest,value.release.appliedMigrationDigest,dataRoot,backupRoot,value.backup.dailyTime,db.provider,db.projectRef,db.connectionMode,db.host,String(db.port),db.name,db.runtimeUser,db.migrationUser,db.backupUser,db.restoreUser,db.schema,db.caCertificateSha256,"24","4",targetFingerprint].join("\n")).digest("hex");
   const runtimeConfigSha256 = createHash("sha256").update(JSON.stringify(value)).digest("hex");
   const result = {
     now,
@@ -353,8 +363,8 @@ function trustedEvidence(now, value, backupRoot) {
     backupTargetEvidence: target,
     backupTargetEvidenceSha256: targetEvidenceSha256,
     backupScheduleEvidence: { version: 8, result: "PASS", taskName: "Meta Ads Performance Daily Backup", receiptTaskName: "Meta Ads Performance Backup Receipt Publisher", dailyTime: "02:30", dailyTriggerVerified: true, dailyTriggerEnabled: true, daysInterval: 1, receiptPublisherRecurringVerified: true, receiptPublisherIntervalMinutes: 15, backupTargetEvidenceSha256: targetEvidenceSha256, backupTargetFingerprint: targetFingerprint, backupRoot, scheduledAuthorizationSha256: "9".repeat(64), scheduledAuthorizationBound: true, maximumDatabaseDumpBytes: 68719476736, maximumBackupDurationSeconds: 14400, backupSafetyMarginBytes: 1073741824, databaseSizePreflightRequired: true, databaseDumpRealtimeCapRequired: true, databaseDumpFinalCapRequired: true, hardDeadlineRequired: true, processTreeKillOnDeadlineRequired: true, incompleteStagingCleanupRequired: true, backupSid: target.backupWriterSid, signerSid: target.signerReaderSid, separatePrincipal: true, receiptSigningDelegatedToDistinctSigner: true, powerShell7Verified: true, powerShellPath: "C:\\Program Files\\PowerShell\\7\\pwsh.exe", powerShellSha256: "6".repeat(64), actionArgumentsSha256: "5".repeat(64), receiptPublisherActionArgumentsSha256: "7".repeat(64), publisherBrokerSha256: "8".repeat(64), backupScriptSha256: "4".repeat(64), releaseVerifierSha256: "2".repeat(64), releaseManifestSha256: "1".repeat(64), attestationVerifierSha256: "3".repeat(64), nasIdentityHelperPath, nasIdentityHelperSha256, nodeSha256, psqlSha256, pgDumpSha256, executorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgDumpSha256), filesystemEvidenceSha256, scriptHashVerified: true, signerHashVerified: false, executorHashesVerified: true, enabled: true, startWhenAvailable: true, lastSuccessAt: completedAt, completedAt },
-    latestBackupEvidence: signed({ attestationType: "backup-latest", version: 6, result: "COMPLETE", backupId: "20260826T110000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", releaseId: value.release.id, sourceDataRoot: dataRoot, backupRoot, databaseProvider: db.provider, databaseProjectRef: db.projectRef, databaseHost: db.host, databasePort: db.port, databaseName: db.name, databaseSchema: db.schema, databaseDumpBytes: 1048576, maximumDatabaseDumpBytes: 68719476736, maximumBackupDurationSeconds: 14400, backupSafetyMarginBytes: 1073741824, elapsedSeconds: 30, databaseSizePreflightVerified: true, databaseDumpRealtimeCapEnforced: true, databaseDumpFinalCapVerified: true, hardDeadlineEnforced: true, processTreeKillOnDeadline: true, incompleteStagingCleanupContract: true, signerIndependentArtifactVerification: true, archiveTocVerified: true, archiveTocSha256: "0".repeat(64), archiveTocEntryCount: 10, artifactVerificationDigest: "a".repeat(64), migrationDigest: value.release.migrationDigest, appliedMigrationDigest: "d".repeat(64), storageReferenceDigest: "f".repeat(64), targetEvidenceFingerprint: targetFingerprint, configFingerprint, manifestSha256: "b".repeat(64), integrityKeyId: "7".repeat(64), integritySignature: "c".repeat(64), nasIdentityHelperSha256, nodeSha256, psqlSha256, pgDumpSha256, executorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgDumpSha256), filesystemEvidenceSha256, completedAt }, backupReceiptKeys),
-    restoreEvidence: signed({ attestationType: "restore-verification", version: 6, result: "PASS", rpoHours: 24, rtoHours: 4, elapsedSeconds: 30, databaseRestored: true, storageHashVerified: true, storageReferenceVerified: true, businessKpiVerified: true, businessMutationVerified: true, restoreRoleRestricted: true, restoreVerifierIdentityBound: true, isolatedDatabaseSchemaCleaned: true, isolatedDatabasePristineBeforeRestore: true, eventTriggersAbsentBeforeRestore: true, isolatedStorageRootCleaned: true, fullCatalogCleanupVerified: true, verifiedInputSnapshot: true, boundedManifestCopy: true, isolatedApiConfigsBound: true, archiveTocAllowlisted: true, hardDeadlineEnforced: true, processTreeKillOnDeadline: true, uncompressedTarArchive: true, capacityReserveVerified: true, nodeSha256, psqlSha256, pgRestoreSha256, restoreExecutorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgRestoreSha256), filesystemEvidenceSha256, databaseBoundaryEvidenceSha256: "9".repeat(64), sourceDataRoot: path.resolve(path.dirname(dataRoot),"previous-host-data"), verifiedTargetDataRoot: dataRoot, verifiedStorageRoot: path.join(dataRoot,"restore-verification","drill_restore_verify"), verifiedTargetDescriptorDigest: "b".repeat(64), releaseId: value.release.id, databaseProvider: db.provider, sourceDatabaseProjectRef: db.projectRef, restoreTargetProjectRef: "zyxwvutsrqponmlkjihg", restoreTargetDatabaseName: "restore_db", isolatedRestoreTarget: true, productionDatabaseMutated: false, databaseName: db.name, databaseSchema: db.schema, configFingerprint, targetEvidenceFingerprint: targetFingerprint, integrityKeyId: "7".repeat(64), migrationDigest: value.release.migrationDigest, appliedMigrationDigest: "d".repeat(64), businessKpiDigest: "e".repeat(64), storageReferenceDigest: "f".repeat(64), backupId: "20260826T110000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", backupManifestSha256: "b".repeat(64), backupIntegritySignature: "c".repeat(64), completedAt }, restoreReceiptKeys),
+    latestBackupEvidence: signed({ attestationType: "backup-latest", version: 6, result: "COMPLETE", backupId: "20260826T110000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", releaseId: value.release.id, sourceDataRoot: dataRoot, backupRoot, databaseProvider: db.provider, databaseProjectRef: db.projectRef, databaseHost: db.host, databasePort: db.port, databaseName: db.name, databaseSchema: db.schema, databaseDumpBytes: 1048576, maximumDatabaseDumpBytes: 68719476736, maximumBackupDurationSeconds: 14400, backupSafetyMarginBytes: 1073741824, elapsedSeconds: 30, databaseSizePreflightVerified: true, databaseDumpRealtimeCapEnforced: true, databaseDumpFinalCapVerified: true, hardDeadlineEnforced: true, processTreeKillOnDeadline: true, incompleteStagingCleanupContract: true, signerIndependentArtifactVerification: true, archiveTocVerified: true, archiveTocSha256: "0".repeat(64), archiveTocEntryCount: 10, artifactVerificationDigest: "a".repeat(64), migrationDigest: value.release.migrationDigest, appliedMigrationDigest: value.release.appliedMigrationDigest, storageReferenceDigest: "f".repeat(64), targetEvidenceFingerprint: targetFingerprint, configFingerprint, manifestSha256: "b".repeat(64), integrityKeyId: "7".repeat(64), integritySignature: "c".repeat(64), nasIdentityHelperSha256, nodeSha256, psqlSha256, pgDumpSha256, executorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgDumpSha256), filesystemEvidenceSha256, completedAt }, backupReceiptKeys),
+    restoreEvidence: signed({ attestationType: "restore-verification", version: 6, result: "PASS", rpoHours: 24, rtoHours: 4, elapsedSeconds: 30, databaseRestored: true, storageHashVerified: true, storageReferenceVerified: true, businessKpiVerified: true, businessMutationVerified: true, restoreRoleRestricted: true, restoreVerifierIdentityBound: true, isolatedDatabaseSchemaCleaned: true, isolatedDatabasePristineBeforeRestore: true, eventTriggersAbsentBeforeRestore: true, isolatedStorageRootCleaned: true, fullCatalogCleanupVerified: true, verifiedInputSnapshot: true, boundedManifestCopy: true, isolatedApiConfigsBound: true, archiveTocAllowlisted: true, hardDeadlineEnforced: true, processTreeKillOnDeadline: true, uncompressedTarArchive: true, capacityReserveVerified: true, nodeSha256, psqlSha256, pgRestoreSha256, restoreExecutorSetDigest: sha256Tuple(nodeSha256,psqlSha256,pgRestoreSha256), filesystemEvidenceSha256, databaseBoundaryEvidenceSha256: "9".repeat(64), sourceDataRoot: path.resolve(path.dirname(dataRoot),"previous-host-data"), verifiedTargetDataRoot: dataRoot, verifiedStorageRoot: path.join(dataRoot,"restore-verification","drill_restore_verify"), verifiedTargetDescriptorDigest: "b".repeat(64), releaseId: value.release.id, databaseProvider: db.provider, sourceDatabaseProjectRef: db.projectRef, restoreTargetProjectRef: "zyxwvutsrqponmlkjihg", restoreTargetDatabaseName: "restore_db", isolatedRestoreTarget: true, productionDatabaseMutated: false, databaseName: db.name, databaseSchema: db.schema, configFingerprint, targetEvidenceFingerprint: targetFingerprint, integrityKeyId: "7".repeat(64), migrationDigest: value.release.migrationDigest, appliedMigrationDigest: value.release.appliedMigrationDigest, businessKpiDigest: "e".repeat(64), storageReferenceDigest: "f".repeat(64), backupId: "20260826T110000Z-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", backupManifestSha256: "b".repeat(64), backupIntegritySignature: "c".repeat(64), completedAt }, restoreReceiptKeys),
     backupReceiptPublicKey: backupReceiptKeys.publicKey.export({ type: "spki", format: "pem" }),
     restoreReceiptPublicKey: restoreReceiptKeys.publicKey.export({ type: "spki", format: "pem" })
   };
@@ -364,7 +374,7 @@ function trustedEvidence(now, value, backupRoot) {
   Object.assign(result.backupScheduleEvidence,{runtimeConfigSha256,runtimeReadinessBound:true,recurringInvocationPlanBound:true,scheduledAuthorizationVersion:4,signerHashVerified:true,boundedChildProcesses:true,...backupPins});
   const {signingKeyId: _signingKeyId,attestationSignature: _attestationSignature,...unsignedBackup}=result.latestBackupEvidence;
   result.latestBackupEvidence=signed({...unsignedBackup,...backupPins},backupReceiptKeys);
-  result.rebootEvidence={version:3,result:"PASS",mode:"PRE_EDGE_LAN",readinessMode:"pre-edge",releaseId:value.release.id,migrationDigest:value.release.migrationDigest,releaseManifestSha256:result.backupScheduleEvidence.releaseManifestSha256,sourceRuntimeConfigSha256:runtimeConfigSha256,rebootContractFingerprint:rebootContractFingerprint(value,dataRoot),hostInstanceDigest:result.recoveryEvidence.sourceHostInstanceDigest,coreAutomatic:true,edgeAutomatic:false,edgeStoppedFailClosed:true,supabaseDatabaseReadyAfterBoot:true,principalRightsVerifiedAfterBoot:true,listenerOwnershipVerified:true,loopbackInternalPorts:true,httpsReleaseVerified:false,pinnedCaAndSniVerified:false,forbiddenPortListenersAbsent:true,backupTaskReady:true,backupTaskExactConfigurationVerified:true,backupDailyTriggerEnabled:true,backupScheduleEvidenceSha256:"3".repeat(64),signedRuntimeReadinessVerified:true,latestBackupFresh:true,bootedAt:"2026-08-26T10:00:00.000Z",completedAt};
+  result.rebootEvidence={version:3,result:"PASS",mode:"PRE_EDGE_LAN",readinessMode:"pre-edge",releaseId:value.release.id,migrationDigest:value.release.migrationDigest,appliedMigrationDigest:value.release.appliedMigrationDigest,releaseManifestSha256:result.backupScheduleEvidence.releaseManifestSha256,sourceRuntimeConfigSha256:runtimeConfigSha256,rebootContractFingerprint:rebootContractFingerprint(value,dataRoot),hostInstanceDigest:result.recoveryEvidence.sourceHostInstanceDigest,coreAutomatic:true,edgeAutomatic:false,edgeStoppedFailClosed:true,supabaseDatabaseReadyAfterBoot:true,principalRightsVerifiedAfterBoot:true,listenerOwnershipVerified:true,loopbackInternalPorts:true,httpsReleaseVerified:false,pinnedCaAndSniVerified:false,forbiddenPortListenersAbsent:true,backupTaskReady:true,backupTaskExactConfigurationVerified:true,backupDailyTriggerEnabled:true,backupScheduleEvidenceSha256:"3".repeat(64),signedRuntimeReadinessVerified:true,latestBackupFresh:true,bootedAt:"2026-08-26T10:00:00.000Z",completedAt};
   return result;
 }
 

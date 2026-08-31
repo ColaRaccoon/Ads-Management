@@ -45,10 +45,11 @@
     },
     "release": {
       "type": "object", "additionalProperties": false,
-      "required": ["id", "migrationDigest"],
+      "required": ["id", "migrationDigest", "appliedMigrationDigest"],
       "properties": {
         "id": { "type": ["string", "null"] },
-        "migrationDigest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+        "migrationDigest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "appliedMigrationDigest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
       }
     },
     "lan": {

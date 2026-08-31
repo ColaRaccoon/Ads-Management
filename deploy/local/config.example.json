@@ -19,7 +19,7 @@
     "boundaryEvidencePath": null
   },
   "data": { "root": null },
-  "release": { "id": null, "migrationDigest": null },
+  "release": { "id": null, "migrationDigest": null, "appliedMigrationDigest": null },
   "lan": { "enabled": false, "hostname": null, "bindAddress": null, "allowedCidrs": [], "expectedClientCount": null, "expectedClientSetDigest": null },
   "tls": {
     "caCertificatePath": null,

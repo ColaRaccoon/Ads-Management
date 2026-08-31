@@ -57,8 +57,8 @@ export async function verifyLocalRelease(rootValue, expectedManifestSha256) {
   if (expectedManifestSha256 && (!/^[0-9a-f]{64}$/i.test(expectedManifestSha256) || manifestSha256 !== expectedManifestSha256.toLowerCase())) fail("RELEASE_MANIFEST_HASH_MISMATCH");
   let manifest;
   try { manifest = JSON.parse(manifestBytes.toString("utf8")); } catch { fail("RELEASE_MANIFEST_INVALID"); }
-  exactKeys(manifest, ["version","releaseId","targetPlatform","targetArch","nodeModulesAbi","migrationDigest","windowsHostBundleDigest","runtimeSmokeContractDigest","runtimeSmokeVerified","files"]);
-  if (manifest.version !== 4 || !/^[a-z0-9][a-z0-9._-]{0,62}$/.test(manifest.releaseId) || !/^[a-z0-9_-]{2,32}$/.test(manifest.targetPlatform) || !/^[a-z0-9_-]{2,32}$/.test(manifest.targetArch) || !/^[0-9]{2,4}$/.test(manifest.nodeModulesAbi) || !/^[0-9a-f]{64}$/.test(manifest.migrationDigest) || !/^[0-9a-f]{64}$/.test(manifest.windowsHostBundleDigest) || !/^[0-9a-f]{64}$/.test(manifest.runtimeSmokeContractDigest) || manifest.runtimeSmokeVerified!==true || !plainObject(manifest.files)) fail("RELEASE_MANIFEST_INVALID");
+  exactKeys(manifest, ["version","releaseId","targetPlatform","targetArch","nodeModulesAbi","migrationDigest","appliedMigrationDigest","windowsHostBundleDigest","runtimeSmokeContractDigest","runtimeSmokeVerified","files"]);
+  if (manifest.version !== 4 || !/^[a-z0-9][a-z0-9._-]{0,62}$/.test(manifest.releaseId) || !/^[a-z0-9_-]{2,32}$/.test(manifest.targetPlatform) || !/^[a-z0-9_-]{2,32}$/.test(manifest.targetArch) || !/^[0-9]{2,4}$/.test(manifest.nodeModulesAbi) || !/^[0-9a-f]{64}$/.test(manifest.migrationDigest) || !/^[0-9a-f]{64}$/.test(manifest.appliedMigrationDigest) || !/^[0-9a-f]{64}$/.test(manifest.windowsHostBundleDigest) || !/^[0-9a-f]{64}$/.test(manifest.runtimeSmokeContractDigest) || manifest.runtimeSmokeVerified!==true || !plainObject(manifest.files)) fail("RELEASE_MANIFEST_INVALID");
   if (manifest.targetPlatform !== process.platform || manifest.targetArch !== process.arch || manifest.nodeModulesAbi !== process.versions.modules) fail("RELEASE_PLATFORM_ABI_MISMATCH");
   const actual = await inventory(root, true);
   const expectedNames = Object.keys(manifest.files).sort((a,b)=>a.localeCompare(b,"en"));
@@ -74,7 +74,9 @@ export async function verifyLocalRelease(rootValue, expectedManifestSha256) {
   const migrationLines = actual.filter((item) => /^api\/prisma\/migrations\/[^/]+\/migration\.sql$/.test(item.relative))
     .map((item) => `${item.relative.slice("api/prisma/migrations/".length)}=${manifest.files[item.relative]}`);
   if (migrationLines.length === 0 || sha256(Buffer.from(migrationLines.join("\n"),"utf8")) !== manifest.migrationDigest) fail("RELEASE_MIGRATION_DIGEST_MISMATCH");
-  return Object.freeze({ root, releaseId: manifest.releaseId, targetPlatform:manifest.targetPlatform, targetArch:manifest.targetArch, nodeModulesAbi:manifest.nodeModulesAbi, migrationDigest: manifest.migrationDigest, manifestSha256, fileCount: actual.length });
+  const appliedMigrationLines=migrationLines.map((line)=>`${line.slice(0,line.indexOf("/"))}=${line.slice(line.indexOf("=")+1)}`).sort();
+  if(sha256(Buffer.from(appliedMigrationLines.join("\n"),"utf8"))!==manifest.appliedMigrationDigest)fail("RELEASE_APPLIED_MIGRATION_DIGEST_MISMATCH");
+  return Object.freeze({ root, releaseId: manifest.releaseId, targetPlatform:manifest.targetPlatform, targetArch:manifest.targetArch, nodeModulesAbi:manifest.nodeModulesAbi, migrationDigest: manifest.migrationDigest, appliedMigrationDigest:manifest.appliedMigrationDigest, manifestSha256, fileCount: actual.length });
 }
 
 export async function verifyRuntimeClosure(rootValue, filesValue) {
@@ -229,5 +231,5 @@ function fail(code){throw new Error(code);}
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const args=new Map(process.argv.slice(2).map((arg)=>{const i=arg.indexOf("=");if(!arg.startsWith("--")||i<3)fail("ARGUMENT_INVALID");return[arg.slice(2,i),arg.slice(i+1)]}));
   const result=await verifyLocalRelease(args.get("root"),args.get("manifest-sha256"));
-  process.stdout.write(`${JSON.stringify({event:"local-release.verified",releaseId:result.releaseId,targetPlatform:result.targetPlatform,targetArch:result.targetArch,nodeModulesAbi:result.nodeModulesAbi,migrationDigest:result.migrationDigest,manifestSha256:result.manifestSha256,fileCount:result.fileCount})}\n`);
+  process.stdout.write(`${JSON.stringify({event:"local-release.verified",releaseId:result.releaseId,targetPlatform:result.targetPlatform,targetArch:result.targetArch,nodeModulesAbi:result.nodeModulesAbi,migrationDigest:result.migrationDigest,appliedMigrationDigest:result.appliedMigrationDigest,manifestSha256:result.manifestSha256,fileCount:result.fileCount})}\n`);
 }

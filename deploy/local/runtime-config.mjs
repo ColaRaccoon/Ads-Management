@@ -11,7 +11,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
   exactObject(input.database, ["provider", "projectRef", "connectionMode", "host", "port", "name", "runtimeUser", "migrationUser", "backupUser", "restoreUser", "schema", "caCertificatePath", "caCertificateSha256", "boundaryEvidencePath"]);
   validateDatabase(input.database);
   exactObject(input.data, ["root"]);
-  exactObject(input.release, ["id", "migrationDigest"]);
+  exactObject(input.release, ["id", "migrationDigest", "appliedMigrationDigest"]);
   exactObject(input.lan, ["enabled", "hostname", "bindAddress", "allowedCidrs", "expectedClientCount", "expectedClientSetDigest"]);
   exactObject(input.tls, ["caCertificatePath", "serverCertificatePath", "serverPrivateKeyPath", "clientTrustVerified", "clientTrustEvidencePath", "hstsEnabled"]);
   exactObject(input.hostSecurity, ["filesystemEvidencePath", "firewallEvidencePath", "rebootEvidencePath", "edgeSigningPublicKeyPath", "edgeSigningPrivateKeyPath", "nodeProgramPath", "nodeProgramSha256", "edgeServiceSid"]);
@@ -95,7 +95,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
         Object.values(tls).some((value) => value !== null && value !== false)) {
       fail("DISABLED_LAN_MUST_NOT_HAVE_NETWORK_OR_TLS_VALUES");
     }
-    const emptyHost = Object.values(hostSecurity).every((value) => value === null) && release.id === null && release.migrationDigest === null;
+    const emptyHost = Object.values(hostSecurity).every((value) => value === null) && release.id === null && release.migrationDigest === null && release.appliedMigrationDigest === null;
     if (!emptyHost) {
       if (!validRelease(release) || hostSecurity.firewallEvidencePath !== null || hostSecurity.edgeSigningPrivateKeyPath !== null ||
           !hostSecurity.filesystemEvidencePath || !hostSecurity.edgeSigningPublicKeyPath || !hostSecurity.nodeProgramPath ||
@@ -187,7 +187,7 @@ function validLatestBackupEvidence(evidence, publicKey, release, backup, dataRoo
     evidence.databaseProvider === "supabase_postgres" && evidence.databaseProjectRef === database.projectRef && evidence.databaseHost === database.host && evidence.databasePort === database.port &&
     evidence.databaseName === database.name && evidence.databaseSchema === database.schema &&
     Number.isSafeInteger(evidence.databaseDumpBytes) && evidence.databaseDumpBytes >= 1024 && Number.isSafeInteger(evidence.maximumDatabaseDumpBytes) && evidence.databaseDumpBytes <= evidence.maximumDatabaseDumpBytes && evidence.maximumDatabaseDumpBytes === scheduleEvidence?.maximumDatabaseDumpBytes && evidence.maximumBackupDurationSeconds === 14400 && evidence.maximumBackupDurationSeconds === scheduleEvidence?.maximumBackupDurationSeconds && evidence.backupSafetyMarginBytes === 1073741824 && evidence.backupSafetyMarginBytes === scheduleEvidence?.backupSafetyMarginBytes && Number.isInteger(evidence.elapsedSeconds) && evidence.elapsedSeconds >= 0 && evidence.elapsedSeconds <= evidence.maximumBackupDurationSeconds && evidence.databaseSizePreflightVerified === true && evidence.databaseDumpRealtimeCapEnforced === true && evidence.databaseDumpFinalCapVerified === true && evidence.hardDeadlineEnforced === true && evidence.processTreeKillOnDeadline === true && evidence.incompleteStagingCleanupContract === true &&
-    evidence.migrationDigest === release.migrationDigest && /^[0-9a-f]{64}$/.test(evidence.appliedMigrationDigest ?? "") &&
+    evidence.migrationDigest === release.migrationDigest && evidence.appliedMigrationDigest === release.appliedMigrationDigest &&
     evidence.targetEvidenceFingerprint === targetFingerprint && evidence.configFingerprint === configFingerprint &&
     /^[0-9a-f]{64}$/.test(evidence.integrityKeyId ?? "") && /^[0-9a-f]{64}$/.test(evidence.storageReferenceDigest ?? "") &&
     /^[0-9a-f]{64}$/.test(evidence.manifestSha256 ?? "") && /^[0-9a-f]{64}$/.test(evidence.integritySignature ?? "") &&
@@ -197,11 +197,12 @@ function validLatestBackupEvidence(evidence, publicKey, release, backup, dataRoo
 }
 function validRelease(release) {
   return typeof release.id === "string" && /^[a-z0-9][a-z0-9._-]{0,62}$/.test(release.id) &&
-    typeof release.migrationDigest === "string" && /^[0-9a-f]{64}$/.test(release.migrationDigest);
+    typeof release.migrationDigest === "string" && /^[0-9a-f]{64}$/.test(release.migrationDigest) &&
+    typeof release.appliedMigrationDigest === "string" && /^[0-9a-f]{64}$/.test(release.appliedMigrationDigest);
 }
 export function rebootContractFingerprint(config, resolvedDataRoot = resolveDataRoot(config.data.root)) {
   const database=config.database,backup=config.backup,host=config.hostSecurity;
-  return sha256Tuple("reboot-core-v1",config.deploymentMode,String(config.internalPorts.web),String(config.internalPorts.api),database.provider,database.projectRef,database.connectionMode,database.host,String(database.port),database.name,database.runtimeUser,database.schema,database.caCertificateSha256,path.resolve(resolvedDataRoot),config.release.id,config.release.migrationDigest,backup.root?path.resolve(backup.root):"",backup.dailyTime??"",String(backup.rpoHours),String(backup.rtoHours),host.nodeProgramSha256,host.edgeServiceSid);
+  return sha256Tuple("reboot-core-v2",config.deploymentMode,String(config.internalPorts.web),String(config.internalPorts.api),database.provider,database.projectRef,database.connectionMode,database.host,String(database.port),database.name,database.runtimeUser,database.schema,database.caCertificateSha256,path.resolve(resolvedDataRoot),config.release.id,config.release.migrationDigest,config.release.appliedMigrationDigest,backup.root?path.resolve(backup.root):"",backup.dailyTime??"",String(backup.rpoHours),String(backup.rtoHours),host.nodeProgramSha256,host.edgeServiceSid);
 }
 function validRebootEvidence(evidence, config, dataRoot, scheduleEvidence, recoveryEvidence, runtimeConfigSha256, now, bootedAt) {
   const bootTime=bootedAt instanceof Date?bootedAt.getTime():Number(bootedAt);
@@ -210,7 +211,7 @@ function validRebootEvidence(evidence, config, dataRoot, scheduleEvidence, recov
   const modeValid=(evidence?.mode==="CORE_ONLY_CLI_BOOTSTRAP"&&evidence?.readinessMode==="core-prepared")||(evidence?.mode==="PRE_EDGE_LAN"&&evidence?.readinessMode==="pre-edge");
   const networkModeValid=(evidence?.mode==="PRE_EDGE_LAN")===config.lan.enabled;
   return evidence?.version===3 && evidence?.result==="PASS" && modeValid && networkModeValid &&
-    evidence.releaseId===config.release.id && evidence.migrationDigest===config.release.migrationDigest && evidence.releaseManifestSha256===scheduleEvidence?.releaseManifestSha256 &&
+    evidence.releaseId===config.release.id && evidence.migrationDigest===config.release.migrationDigest && evidence.appliedMigrationDigest===config.release.appliedMigrationDigest && evidence.releaseManifestSha256===scheduleEvidence?.releaseManifestSha256 &&
     evidence.rebootContractFingerprint===rebootContractFingerprint(config,dataRoot) && evidence.sourceRuntimeConfigSha256===runtimeConfigSha256 && /^[0-9a-f]{64}$/.test(evidence.sourceRuntimeConfigSha256??"") &&
     /^[0-9a-f]{64}$/.test(evidence.hostInstanceDigest??"") && evidence.hostInstanceDigest===recoveryEvidence?.sourceHostInstanceDigest &&
     evidence.coreAutomatic===true && evidence.edgeAutomatic===false && evidence.edgeStoppedFailClosed===true && evidence.supabaseDatabaseReadyAfterBoot===true &&
@@ -224,7 +225,7 @@ function backupTargetFingerprint(evidence) {
 }
 function backupConfigFingerprint(release, backup, dataRoot, database, targetFingerprint) {
   if (!targetFingerprint) return null;
-  return createHash("sha256").update(["2",release.id,release.migrationDigest,path.resolve(dataRoot),path.resolve(backup.root),backup.dailyTime,database.provider,database.projectRef,database.connectionMode,database.host,String(database.port),database.name,database.runtimeUser,database.migrationUser,database.backupUser,database.restoreUser,database.schema,database.caCertificateSha256,"24","4",targetFingerprint].join("\n")).digest("hex");
+  return createHash("sha256").update(["3",release.id,release.migrationDigest,release.appliedMigrationDigest,path.resolve(dataRoot),path.resolve(backup.root),backup.dailyTime,database.provider,database.projectRef,database.connectionMode,database.host,String(database.port),database.name,database.runtimeUser,database.migrationUser,database.backupUser,database.restoreUser,database.schema,database.caCertificateSha256,"24","4",targetFingerprint].join("\n")).digest("hex");
 }
 function validFilesystemEvidence(evidence, config, dataRoot, runtimeConfigPath, now) {
   const roots = evidence?.classRoots;
@@ -256,7 +257,7 @@ function validDatabaseBoundaryEvidence(evidence, database, now) {
     evidence.sslMode === "verify-full" && evidence.tlsVerified === true && evidence.hostnameVerified === true && evidence.caVerified === true &&
     evidence.caCertificateSha256 === database.caCertificateSha256 && evidence.executorHashesVerified === true && /^[0-9a-f]{64}$/.test(evidence.psqlSha256 ?? "") && evidence.pgStatSsl === true && ["TLSv1.2","TLSv1.3"].includes(evidence.tlsProtocol) &&
     typeof evidence.tlsCipher === "string" && evidence.tlsCipher.length > 0 && evidence.publicRemoteEndpoint === true &&
-    evidence.runtimeDdlDenied === true && evidence.roleAttributesRestricted === true && evidence.boundedConnectionLimits === true && evidence.scramCredentialsVerified === true && evidence.runtimeObjectOwnershipDenied === true &&
+    evidence.runtimeDdlDenied === true && evidence.runtimeDatabaseTemporaryDenied === true && evidence.roleAttributesRestricted === true && evidence.boundedConnectionLimits === true && evidence.scramCredentialsVerified === true && evidence.runtimeObjectOwnershipDenied === true &&
     evidence.roleMembershipsAbsent === true && evidence.privilegeContractVerified === true && evidence.backupDatabaseCreateDenied === true && evidence.backupDatabaseTemporaryDenied === true && evidence.backupSchemaCreateDenied === true && evidence.sequencePrivilegesVerified === true && evidence.functionEscalationAbsent === true && evidence.defaultPrivilegesVerified === true && evidence.migrationOwnershipVerified === true && evidence.migrationRoleFullDataPrivileged === true && evidence.migrationCredentialAdminOnly === true && evidence.migrationCredentialMaintenanceOnly === true && evidence.migrationTableProtected === true && evidence.crossSchemaPrivilegesAbsent === true && evidence.credentialsDistinct === true && evidence.crossRoleAuthenticationDenied === true && evidence.productionRestoreRoleAccessAbsent === true && evidence.restoreDatabasePrivilegesAbsent === true && evidence.restoreSchemaPrivilegesAbsent === true && evidence.restoreTablePrivilegesAbsent === true && evidence.restoreSequencePrivilegesAbsent === true && evidence.restoreFunctionPrivilegesAbsent === true && evidence.restoreTypePrivilegesAbsent === true && evidence.restoreDefaultAclAbsent === true && evidence.auditAppendOnlyGuardVerified === true &&
     evidence.databaseName === database.name && evidence.databaseUser === database.runtimeUser && evidence.databaseSchema === database.schema &&
     [evidence.runtimeRoleDigest,evidence.migrationRoleDigest,evidence.backupRoleDigest,evidence.restoreRoleDigest].every((value) => typeof value === "string" && /^[0-9a-f]{64}$/.test(value)) &&
@@ -348,7 +349,7 @@ function validRestoreEvidence(evidence, publicKey, backup, release, dataRoot, da
     evidence.databaseProvider === "supabase_postgres" && evidence.sourceDatabaseProjectRef === database.projectRef && evidence.isolatedRestoreTarget === true && typeof evidence.restoreTargetProjectRef === "string" && typeof evidence.restoreTargetDatabaseName === "string" && (evidence.restoreTargetProjectRef !== database.projectRef || evidence.restoreTargetDatabaseName !== database.name) &&
     evidence.productionDatabaseMutated === false && evidence.databaseName === database.name && evidence.databaseSchema === database.schema &&
     evidence.targetEvidenceFingerprint === targetFingerprint && evidence.configFingerprint === configFingerprint && /^[0-9a-f]{64}$/.test(evidence.integrityKeyId ?? "") &&
-    evidence.migrationDigest === release.migrationDigest && /^[0-9a-f]{64}$/.test(evidence.appliedMigrationDigest ?? "") &&
+    evidence.migrationDigest === release.migrationDigest && evidence.appliedMigrationDigest === release.appliedMigrationDigest &&
     /^[0-9a-f]{64}$/.test(evidence.businessKpiDigest ?? "") && /^[0-9a-f]{64}$/.test(evidence.storageReferenceDigest ?? "") &&
     /^[0-9A-Za-z-]{20,80}$/.test(evidence.backupId ?? "") && /^[0-9a-f]{64}$/.test(evidence.backupIntegritySignature ?? "") &&
     /^[0-9a-f]{64}$/.test(evidence.backupManifestSha256 ?? "") &&

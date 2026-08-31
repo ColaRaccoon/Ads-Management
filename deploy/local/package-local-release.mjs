@@ -22,8 +22,10 @@ export async function packageLocalRelease(rootValue,releaseId,{afterSmoke}={}){
   const migrationLines=Object.keys(hashesAfter).filter((name)=>/^api\/prisma\/migrations\/[^/]+\/migration\.sql$/.test(name)).sort().map((name)=>`${name.slice("api/prisma/migrations/".length)}=${hashesAfter[name]}`);
   if(migrationLines.length===0)throw new Error("RELEASE_MIGRATIONS_MISSING");
   const migrationDigest=createHash("sha256").update(migrationLines.join("\n"),"utf8").digest("hex");
+  const appliedMigrationLines=migrationLines.map((line)=>`${line.slice(0,line.indexOf("/"))}=${line.slice(line.indexOf("=")+1)}`).sort();
+  const appliedMigrationDigest=createHash("sha256").update(appliedMigrationLines.join("\n"),"utf8").digest("hex");
   const manifestPath=path.join(root,"release-manifest.json");let handle;
-  try{handle=await open(manifestPath,"wx");await writeFile(handle,JSON.stringify({version:4,releaseId,targetPlatform:process.platform,targetArch:process.arch,nodeModulesAbi:process.versions.modules,migrationDigest,windowsHostBundleDigest:windowsHostBundleDigest(hashesAfter),runtimeSmokeContractDigest:runtimeSmokeContractDigest(hashesAfter),runtimeSmokeVerified:true,files:hashesAfter})+"\n",{encoding:"utf8"});}finally{await handle?.close();}
+  try{handle=await open(manifestPath,"wx");await writeFile(handle,JSON.stringify({version:4,releaseId,targetPlatform:process.platform,targetArch:process.arch,nodeModulesAbi:process.versions.modules,migrationDigest,appliedMigrationDigest,windowsHostBundleDigest:windowsHostBundleDigest(hashesAfter),runtimeSmokeContractDigest:runtimeSmokeContractDigest(hashesAfter),runtimeSmokeVerified:true,files:hashesAfter})+"\n",{encoding:"utf8"});}finally{await handle?.close();}
   return await verifyLocalRelease(root);
 }
 
@@ -51,5 +53,5 @@ async function runStagedSmoke(releaseRoot,releaseId){
 if(import.meta.url===pathToFileURL(process.argv[1]??"").href){
   const args=new Map(process.argv.slice(2).map((arg)=>{const i=arg.indexOf("=");if(!arg.startsWith("--")||i<3)throw new Error("ARGUMENT_INVALID");return[arg.slice(2,i),arg.slice(i+1)]}));
   const releaseId=args.get("release-id")??"";const verified=await packageLocalRelease(args.get("root"),releaseId);
-  process.stdout.write(`${JSON.stringify({event:"local-release.packaged",releaseId,manifestSha256:verified.manifestSha256,migrationDigest:verified.migrationDigest,fileCount:verified.fileCount})}\n`);
+  process.stdout.write(`${JSON.stringify({event:"local-release.packaged",releaseId,manifestSha256:verified.manifestSha256,migrationDigest:verified.migrationDigest,appliedMigrationDigest:verified.appliedMigrationDigest,fileCount:verified.fileCount})}\n`);
 }

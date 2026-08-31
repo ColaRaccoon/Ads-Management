@@ -78,7 +78,7 @@ if($Action-ne'Stop'){
   if($ExpectedReleaseManifestSha256-notmatch'^[A-Fa-f0-9]{64}$'){throw 'RELEASE_MANIFEST_HASH_INVALID'}
   &$node $releaseVerifier "--root=$release" "--manifest-sha256=$ExpectedReleaseManifestSha256" 2>$null|Out-Null;if($LASTEXITCODE-ne0){throw 'COMPLETE_RELEASE_VERIFICATION_FAILED'}
   $releaseManifest=Get-Content -Raw -LiteralPath (File (Join-Path $release 'release-manifest.json') 'RELEASE_MANIFEST_NOT_FOUND')|ConvertFrom-Json
-  if($releaseManifest.releaseId-cne$ExpectedReleaseId-or$releaseManifest.releaseId-cne$runtimeValue.release.id-or$releaseManifest.migrationDigest-cne$runtimeValue.release.migrationDigest){throw 'RELEASE_RUNTIME_IDENTITY_MISMATCH'}
+  if($releaseManifest.releaseId-cne$ExpectedReleaseId-or$releaseManifest.releaseId-cne$runtimeValue.release.id-or$releaseManifest.migrationDigest-cne$runtimeValue.release.migrationDigest-or$releaseManifest.appliedMigrationDigest-cne$runtimeValue.release.appliedMigrationDigest){throw 'RELEASE_RUNTIME_IDENTITY_MISMATCH'}
 }
 if($runtimeValue.lan.enabled){foreach($secretPath in @($runtimeValue.tls.serverPrivateKeyPath,$runtimeValue.hostSecurity.edgeSigningPrivateKeyPath)){if(-not(UnderAny $secretPath $classes.EDGE_READ)){throw 'EDGE_PRIVATE_KEY_ACL_COVERAGE_FAILED'}}}
 $expectedCore=CoreXml $node $coreLauncher $release $runtime $api $coreLog;$expectedEdge=EdgeXml $node $edgeLauncher $release $runtime $edgeLog
