@@ -3,8 +3,8 @@ import { closeSync, existsSync, fstatSync, lstatSync, openSync, readFileSync, re
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const [privateKeyPath, expectedPrivateKeySha256, integrityKeyPath, expectedIntegrityKeySha256, requestPath, expectedRequestSha256, authorizationSigningKeyId, outputPath] = process.argv.slice(2);
-if (!privateKeyPath || !integrityKeyPath || !requestPath || !outputPath || !hex(expectedPrivateKeySha256) || !hex(expectedIntegrityKeySha256) || !hex(expectedRequestSha256) || !hex(authorizationSigningKeyId)) fail("BACKUP_RECEIPT_SIGNER_ARGUMENTS_REQUIRED");
+const [privateKeyPath, expectedPrivateKeySha256, integrityKeyPath, expectedIntegrityKeySha256, requestPath, expectedRequestSha256, authorizationSigningKeyId, archiveEvidencePath, expectedArchiveEvidenceSha256, expectedPgRestoreSha256, outputPath] = process.argv.slice(2);
+if (!privateKeyPath || !integrityKeyPath || !requestPath || !archiveEvidencePath || !outputPath || !hex(expectedPrivateKeySha256) || !hex(expectedIntegrityKeySha256) || !hex(expectedRequestSha256) || !hex(authorizationSigningKeyId) || !hex(expectedArchiveEvidenceSha256) || !hex(expectedPgRestoreSha256)) fail("BACKUP_RECEIPT_SIGNER_ARGUMENTS_REQUIRED");
 const deadline = Date.now() + 300_000;
 const requestBytes = pinnedBytes(requestPath, 1_048_576, expectedRequestSha256, "BACKUP_RECEIPT_REQUEST_HASH_MISMATCH");
 const request = parseJson(requestBytes, "BACKUP_RECEIPT_REQUEST_INVALID");
@@ -47,6 +47,13 @@ if (readdirSync(artifactRoot).sort().join("\n") !== expectedTop.join("\n")) fail
 
 const dump = hashFile(dumpPath, manifest.maximumDatabaseDumpBytes, "BACKUP_DUMP_INVALID");
 if (dump.bytes !== manifest.databaseDumpBytes || dump.sha256 !== manifest.databaseDumpSha256) fail("BACKUP_DUMP_MISMATCH");
+const archiveEvidenceBytes = pinnedBytes(archiveEvidencePath, 1_048_576, expectedArchiveEvidenceSha256, "BACKUP_ARCHIVE_EVIDENCE_INVALID");
+const archiveEvidence = parseJson(archiveEvidenceBytes, "BACKUP_ARCHIVE_EVIDENCE_INVALID");
+const archiveEvidenceKeys = ["archiveTocEntryCount","archiveTocSha256","attestationType","backupId","databaseDumpSha256","databaseSchema","pgRestoreSha256","result","verifiedAt","version"];
+if (!exactObject(archiveEvidence, archiveEvidenceKeys) || archiveEvidence.version !== 1 || archiveEvidence.attestationType !== "backup-archive-verification" || archiveEvidence.result !== "PASS" || archiveEvidence.backupId !== request.backupId || archiveEvidence.databaseDumpSha256 !== dump.sha256 || archiveEvidence.databaseSchema !== manifest.databaseSchema || archiveEvidence.pgRestoreSha256 !== expectedPgRestoreSha256 || !hex(archiveEvidence.archiveTocSha256) || !Number.isSafeInteger(archiveEvidence.archiveTocEntryCount) || archiveEvidence.archiveTocEntryCount < 1 || archiveEvidence.archiveTocEntryCount > 100_000 || !timestamp(archiveEvidence.verifiedAt)) fail("BACKUP_ARCHIVE_EVIDENCE_INVALID");
+const archiveVerifiedAt = Date.parse(archiveEvidence.verifiedAt);
+if (archiveVerifiedAt > Date.now() + 300_000 || archiveVerifiedAt < Date.now() - 600_000) fail("BACKUP_ARCHIVE_EVIDENCE_STALE");
+assertBackupTimeBinding(request.backupId, request.completedAt, manifest.elapsedSeconds);
 const storageManifestBytes = bytesFile(storageManifestPath, 268_435_456, "STORAGE_MANIFEST_INVALID");
 if (sha256(storageManifestBytes) !== manifest.storageManifestSha256) fail("STORAGE_MANIFEST_HASH_MISMATCH");
 const entries = parseJson(storageManifestBytes, "STORAGE_MANIFEST_INVALID");
@@ -71,11 +78,11 @@ if (privateKey.asymmetricKeyType !== "ed25519") fail("BACKUP_RECEIPT_PRIVATE_KEY
 const signingKeyId = sha256(createPublicKey(privateKey).export({ type: "spki", format: "der" }));
 if (signingKeyId === authorizationSigningKeyId) fail("BACKUP_RECEIPT_KEY_DOMAIN_REUSE_REJECTED");
 const conversionDigest = conversion?.sha256 ?? sha256(Buffer.alloc(0));
-const artifactVerificationDigest = sha256(Buffer.from([manifestSha256,dump.sha256,manifest.storageManifestSha256,sha256(Buffer.from(canonical.join("\n"),"utf8")),conversionDigest].join("\n"),"utf8"));
+const artifactVerificationDigest = sha256(Buffer.from([manifestSha256,dump.sha256,manifest.storageManifestSha256,sha256(Buffer.from(canonical.join("\n"),"utf8")),conversionDigest,archiveEvidence.archiveTocSha256,expectedPgRestoreSha256].join("\n"),"utf8"));
 if(artifactTreeDigest(artifactRoot)!==artifactSnapshotBefore)fail("BACKUP_ARTIFACT_CHANGED_DURING_SIGNING");
 const value = { attestationType:"backup-latest" };
 for (const key of manifestKeys) if (!["createdAt","version","result"].includes(key)) value[key]=manifest[key];
-Object.assign(value,{version:6,result:"COMPLETE",completedAt:manifest.createdAt,manifestSha256,backupContractSha256:request.backupContractSha256,pgPassSha256:request.pgPassSha256,backupIntegrityKeySha256:request.backupIntegrityKeySha256,backupReceiptPrivateKeySha256:request.backupReceiptPrivateKeySha256,receiptPublisherSha256:request.receiptPublisherSha256,semanticSignerSha256:request.semanticSignerSha256,authorizationSigningKeyId,artifactVerificationDigest,signerIndependentArtifactVerification:true});
+Object.assign(value,{version:6,result:"COMPLETE",completedAt:manifest.createdAt,manifestSha256,backupContractSha256:request.backupContractSha256,pgPassSha256:request.pgPassSha256,backupIntegrityKeySha256:request.backupIntegrityKeySha256,backupReceiptPrivateKeySha256:request.backupReceiptPrivateKeySha256,receiptPublisherSha256:request.receiptPublisherSha256,semanticSignerSha256:request.semanticSignerSha256,authorizationSigningKeyId,pgRestoreSha256:expectedPgRestoreSha256,archiveTocSha256:archiveEvidence.archiveTocSha256,archiveTocEntryCount:archiveEvidence.archiveTocEntryCount,archiveTocVerified:true,artifactVerificationDigest,signerIndependentArtifactVerification:true});
 const attestationSignature = sign(null, Buffer.from(canonicalJson(value), "utf8"), privateKey).toString("base64url");
 writeFileSync(outputPath, JSON.stringify({ ...value, signingKeyId, attestationSignature }), { flag: "wx", mode: 0o600 });
 
@@ -98,6 +105,7 @@ function identifier(value){return typeof value==="string"&&/^[a-z][a-z0-9_]{0,62
 function pathValue(value){return typeof value==="string"&&path.isAbsolute(value)&&value.length<=32767}
 function nonnegativeInteger(value){return Number.isSafeInteger(value)&&value>=0}
 function timestamp(value){return typeof value==="string"&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?Z$/.test(value)&&Number.isFinite(Date.parse(value))}
+function assertBackupTimeBinding(id,completedAt,elapsedSeconds){const match=/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z-[0-9a-f]{32}$/.exec(id);if(!match)fail("BACKUP_ID_TIME_BINDING_INVALID");const started=Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3]),Number(match[4]),Number(match[5]),Number(match[6]));const completed=Date.parse(completedAt),now=Date.now();if(!Number.isFinite(started)||!Number.isFinite(completed)||completed<started||completed>started+14_700_000||completed>now+300_000||Math.abs((completed-started)-elapsedSeconds*1000)>300_000)fail("BACKUP_COMPLETION_TIME_INVALID")}
 function sha256(bytes){return createHash("sha256").update(bytes).digest("hex")}
 function canonicalJson(value){if(Array.isArray(value))return`[${value.map(canonicalJson).join(",")}]`;if(plainObject(value))return`{${Object.keys(value).sort().map((key)=>`${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;return JSON.stringify(value)}
 function plainObject(value){return typeof value==="object"&&value!==null&&!Array.isArray(value)}
