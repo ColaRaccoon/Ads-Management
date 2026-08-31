@@ -7,28 +7,29 @@ import path from "node:path";
 import { uptime } from "node:os";
 import { validateLocalRuntimeConfig } from "./runtime-config.mjs";
 import { validateLocalApiConfigText } from "./api-config.mjs";
+import { readJsonEvidence, readJsonEvidenceSnapshot } from "./evidence-reader.mjs";
 
 const runtimeConfigPath = requiredEnvironment("LOCAL_RUNTIME_CONFIG_PATH");
 const releaseRoot = path.resolve(requiredEnvironment("LOCAL_RELEASE_ROOT"));
 const apiConfigPath = requiredEnvironment("CONFIG_PATH");
 const runtimeConfigBytes = readBoundedRegularFile(runtimeConfigPath, 1_048_576, "LOCAL_RUNTIME_CONFIG");
 const rawConfig = JSON.parse(runtimeConfigBytes.toString("utf8"));
-const backupTargetSnapshot = readEvidenceSnapshot(rawConfig.backup?.physicalTargetEvidencePath);
+const backupTargetSnapshot = readJsonEvidenceSnapshot(rawConfig.backup?.physicalTargetEvidencePath);
 const config = validateLocalRuntimeConfig(rawConfig, {
   runtimeConfigPath,
   releaseRoot,
-  clientTrustEvidence: readEvidence(rawConfig.tls?.clientTrustEvidencePath),
+  clientTrustEvidence: readJsonEvidence(rawConfig.tls?.clientTrustEvidencePath),
   backupTargetEvidence: backupTargetSnapshot?.value ?? null,
   backupTargetEvidenceSha256: backupTargetSnapshot?.sha256 ?? null,
-  backupScheduleEvidence: readEvidence(rawConfig.backup?.scheduledTaskEvidencePath),
-  latestBackupEvidence: readEvidence(rawConfig.backup?.latestBackupEvidencePath),
-  filesystemEvidence: readEvidence(rawConfig.hostSecurity?.filesystemEvidencePath),
-  databaseBoundaryEvidence: readEvidence(rawConfig.database?.boundaryEvidencePath),
-  firewallEvidence: readEvidence(rawConfig.hostSecurity?.firewallEvidencePath),
-  rebootEvidence: readEvidence(rawConfig.hostSecurity?.rebootEvidencePath),
-  restoreEvidence: readEvidence(rawConfig.backup?.restoreEvidencePath)
-  ,recoveryEvidence: readEvidence(rawConfig.backup?.recoveryEvidencePath)
-  ,disasterRecoveryEvidence: readEvidence(rawConfig.backup?.disasterRecoveryEvidencePath)
+  backupScheduleEvidence: readJsonEvidence(rawConfig.backup?.scheduledTaskEvidencePath),
+  latestBackupEvidence: readJsonEvidence(rawConfig.backup?.latestBackupEvidencePath),
+  filesystemEvidence: readJsonEvidence(rawConfig.hostSecurity?.filesystemEvidencePath),
+  databaseBoundaryEvidence: readJsonEvidence(rawConfig.database?.boundaryEvidencePath),
+  firewallEvidence: readJsonEvidence(rawConfig.hostSecurity?.firewallEvidencePath),
+  rebootEvidence: readJsonEvidence(rawConfig.hostSecurity?.rebootEvidencePath, { label: "REBOOT_EVIDENCE", allowMissingLeaf: true }),
+  restoreEvidence: readJsonEvidence(rawConfig.backup?.restoreEvidencePath)
+  ,recoveryEvidence: readJsonEvidence(rawConfig.backup?.recoveryEvidencePath)
+  ,disasterRecoveryEvidence: readJsonEvidence(rawConfig.backup?.disasterRecoveryEvidencePath)
   ,runtimeConfigSha256: createHash("sha256").update(runtimeConfigBytes).digest("hex")
   ,bootedAt: Date.now()-uptime()*1000
   ,backupReceiptPublicKey: readKey(rawConfig.backup?.backupReceiptPublicKeyPath)
@@ -143,15 +144,6 @@ function requiredEnvironment(name) {
   return value;
 }
 
-function readEvidence(value) {
-  if (typeof value !== "string" || !value) return null;
-  return JSON.parse(readBoundedRegularFile(value, 1_048_576, "LOCAL_EVIDENCE" ).toString("utf8"));
-}
-function readEvidenceSnapshot(value) {
-  if (typeof value !== "string" || !value) return null;
-  const bytes = readBoundedRegularFile(value, 1_048_576, "LOCAL_EVIDENCE");
-  return { value: JSON.parse(bytes.toString("utf8")), sha256: createHash("sha256").update(bytes).digest("hex") };
-}
 function readKey(value) {
   if (typeof value !== "string" || !value) return null;
   const bytes = readBoundedRegularFile(value, 16_384, "LOCAL_PUBLIC_KEY");
