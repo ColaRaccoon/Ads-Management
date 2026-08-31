@@ -73,6 +73,12 @@ function TextHash([string]$Value) { $sha = [Security.Cryptography.SHA256]::Creat
 function Under([string]$Path,$Roots) { $full = [IO.Path]::GetFullPath($Path).TrimEnd('\');return @($Roots | Where-Object { $root = [IO.Path]::GetFullPath([string]$_).TrimEnd('\');$full -ieq $root -or $full.StartsWith($root + '\',[StringComparison]::OrdinalIgnoreCase) }).Count -gt 0 }
 function Write-AtomicJson([string]$Path,$Value,[switch]$CreateOnly) {
   Assert-RestoreDeadline -Finalization;$full = [IO.Path]::GetFullPath($Path);$parent = Split-Path -Parent $full
+  if($RecoveryPurpose-eq'DAILY_BACKUP_RECOVERY'-and$RollbackJournalPath-and$full-ieq[IO.Path]::GetFullPath($RollbackJournalPath)){
+    if(-not$recoveryWorkspaceRoot-or-not$recoverySecurityHelper-or$ExpectedLocalRecoverySecurityHelperSha256-notmatch'^[A-Fa-f0-9]{64}$'){throw 'ROLLBACK_DAILY_JOURNAL_WORKSPACE_BINDING_REQUIRED'}
+    $Value.recoveryWorkspaceRoot=[IO.Path]::GetFullPath($recoveryWorkspaceRoot).TrimEnd('\')
+    $Value.localRecoverySecurityHelperPath=[IO.Path]::GetFullPath($recoverySecurityHelper)
+    $Value.localRecoverySecurityHelperSha256=$ExpectedLocalRecoverySecurityHelperSha256.ToLowerInvariant()
+  }
   if (-not(Test-Path -LiteralPath $parent -PathType Container)) { throw 'ROLLBACK_JOURNAL_PARENT_NOT_FOUND' };if ($CreateOnly -and (Test-Path -LiteralPath $full)) { throw 'ROLLBACK_JOURNAL_ALREADY_EXISTS' }
   $bytes = [Text.Encoding]::UTF8.GetBytes(($Value | ConvertTo-Json -Depth 32 -Compress));if ($bytes.Length -gt 1048576) { throw 'ROLLBACK_JOURNAL_SIZE_LIMIT' };$pending = Join-Path $parent ('.rollback-' + [guid]::NewGuid().ToString('N') + '.pending')
   try { $stream = [IO.FileStream]::new($pending,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None,4096,[IO.FileOptions]::WriteThrough);try { $stream.Write($bytes,0,$bytes.Length);$stream.Flush($true) } finally { $stream.Dispose() };[IO.File]::Move($pending,$full,-not $CreateOnly);$committed=[IO.FileStream]::new($full,[IO.FileMode]::Open,[IO.FileAccess]::Write,[IO.FileShare]::Read,4096,[IO.FileOptions]::WriteThrough);try{$committed.Flush($true)}finally{$committed.Dispose()} } finally { [Array]::Clear($bytes,0,$bytes.Length);if (Test-Path -LiteralPath $pending) { Remove-Item -LiteralPath $pending -Force } }
