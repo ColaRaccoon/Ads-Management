@@ -48,7 +48,7 @@ function MigrationDigest([string]$Root){$prefix=$Root.TrimEnd('\')+'\';$lines=@(
 function AppliedCanonical([string]$Root){return(@(Get-ChildItem -LiteralPath $Root -Filter migration.sql -File -Recurse|ForEach-Object{"$($_.Directory.Name)=$((FileHash $_.FullName))"}|Sort-Object)-join"`n")}
 function PgPassword([string]$Path,[string]$Host,[string]$Database,[string]$User){$lines=@(Get-Content -LiteralPath $Path|Where-Object{$_-and-not$_.StartsWith('#')});if($lines.Count-ne1){throw 'MIGRATION_PGPASS_INVALID'};$parts=[Collections.Generic.List[string]]::new();$current=New-Object Text.StringBuilder;$escaped=$false;foreach($character in $lines[0].ToCharArray()){if($escaped){$current.Append($character)|Out-Null;$escaped=$false;continue};if($character-eq'\'){$escaped=$true;continue};if($character-eq':'-and$parts.Count-lt4){$parts.Add($current.ToString());$current.Clear()|Out-Null}else{$current.Append($character)|Out-Null}};if($escaped){throw 'MIGRATION_PGPASS_INVALID'};$parts.Add($current.ToString());if($parts.Count-ne5-or$parts[0]-cne$Host-or$parts[1]-ne'5432'-or$parts[2]-cne$Database-or$parts[3]-cne$User-or-not$parts[4]){throw 'MIGRATION_PGPASS_INVALID'};return $parts[4]}
 function ValidateBoundary([string]$Path,[string]$Expected,$Db,[datetime]$NotBefore,[string]$Code){$file=File $Path "$Code`_NOT_FOUND";AssertHash $file $Expected "$Code`_HASH_MISMATCH";$value=Get-Content -Raw -LiteralPath $file|ConvertFrom-Json;$at=[datetime]::Parse([string]$value.completedAt).ToUniversalTime();if($value.version-ne6-or$value.result-ne'PASS'-or-not$value.executorHashesVerified-or$value.psqlSha256-notmatch'^[0-9a-f]{64}$'-or-not$value.runtimeDatabaseTemporaryDenied-or-not$value.scramCredentialsVerified-or-not$value.defaultPrivilegesVerified-or-not$value.functionEscalationAbsent-or-not$value.backupDatabaseCreateDenied-or-not$value.backupDatabaseTemporaryDenied-or-not$value.backupSchemaCreateDenied-or-not$value.productionRestoreRoleAccessAbsent-or-not$value.restoreDatabasePrivilegesAbsent-or-not$value.restoreSchemaPrivilegesAbsent-or-not$value.restoreTablePrivilegesAbsent-or-not$value.restoreSequencePrivilegesAbsent-or-not$value.restoreFunctionPrivilegesAbsent-or-not$value.restoreTypePrivilegesAbsent-or-not$value.restoreDefaultAclAbsent-or-not$value.migrationRoleFullDataPrivileged-or-not$value.migrationCredentialAdminOnly-or-not$value.migrationCredentialMaintenanceOnly-or-not$value.auditAppendOnlyGuardVerified-or$value.projectRef-cne$Db.projectRef-or$value.host-cne$Db.host-or$value.databaseName-cne$Db.name-or$value.databaseSchema-cne$Db.schema-or$value.migrationRoleDigest-cne(Sha256Text ([string]$Db.migrationUser))-or($NotBefore-ne[datetime]::MinValue-and$at-lt$NotBefore)){throw $Code};return $value}
-function Stop-BoundedProcessTree([Diagnostics.Process]$Process){if($null-eq$Process){return};$remaining=[Math]::Max(100,[Math]::Min(5000,[int](($script:MaintenanceMaximumMilliseconds-$script:MaintenanceStopwatch.ElapsedMilliseconds))));try{Stop-VerifiedRecoveryProcessTree $Process $remaining}catch{throw 'MIGRATION_PROCESS_TREE_EXIT_UNCONFIRMED'}}
+function Stop-BoundedProcessTree($Process){if($null-eq$Process){return};$remaining=[Math]::Max(100,[Math]::Min(5000,[int](($script:MaintenanceMaximumMilliseconds-$script:MaintenanceStopwatch.ElapsedMilliseconds))));try{Stop-VerifiedRecoveryProcessTree $Process $remaining}catch{throw 'MIGRATION_PROCESS_TREE_EXIT_UNCONFIRMED'}}
 function Assert-MigrationDeadline{if($script:MaintenanceStopwatch.ElapsedMilliseconds-ge$script:MaintenanceMaximumMilliseconds-or(Get-Date).ToUniversalTime()-ge$script:MaintenanceDeadline){throw 'MIGRATION_MAINTENANCE_DEADLINE_EXCEEDED'}}
 function Invoke-BoundedChild{
   param([string]$Executable,[string[]]$Arguments,[hashtable]$ChildEnvironment,[string]$Code)
@@ -57,10 +57,10 @@ function Invoke-BoundedChild{
   foreach($argument in $Arguments){[void]$start.ArgumentList.Add($argument)}
   foreach($name in @('DATABASE_URL','PGPASSWORD','PGPASSFILE','PGSSLMODE','PGSSLROOTCERT','PGOPTIONS','PGCONNECT_TIMEOUT')){[void]$start.Environment.Remove($name)}
   if($ChildEnvironment){foreach($name in $ChildEnvironment.Keys){$start.Environment[[string]$name]=[string]$ChildEnvironment[$name]}}
-  $process=[Diagnostics.Process]::new();$process.StartInfo=$start;$started=$false
+  $process=$null;$started=$false
   $stdout=[IO.MemoryStream]::new();$stderr=[IO.MemoryStream]::new();$stdoutBuffer=New-Object byte[] 8192;$stderrBuffer=New-Object byte[] 8192
   try{
-    if(-not$process.Start()){throw "$Code`_START_FAILED"};$started=$true
+    $process=Start-VerifiedRecoveryProcess $start;if(-not$process){throw "$Code`_START_FAILED"};$started=$true
     $stdoutTask=$process.StandardOutput.BaseStream.ReadAsync($stdoutBuffer,0,$stdoutBuffer.Length);$stderrTask=$process.StandardError.BaseStream.ReadAsync($stderrBuffer,0,$stderrBuffer.Length);$stdoutDone=$false;$stderrDone=$false
     while(-not($process.HasExited-and$stdoutDone-and$stderrDone)){
       if($script:MaintenanceStopwatch.ElapsedMilliseconds-ge$script:MaintenanceMaximumMilliseconds-or(Get-Date).ToUniversalTime()-ge$script:MaintenanceDeadline){Stop-BoundedProcessTree $process;throw "$Code`_TIMEOUT"}
@@ -71,7 +71,7 @@ function Invoke-BoundedChild{
     if($process.ExitCode-ne0){throw "$Code`_FAILED"}
     return [Text.Encoding]::UTF8.GetString($stdout.ToArray())
   }finally{
-    if($started){Stop-BoundedProcessTree $process};$stdout.Dispose();$stderr.Dispose();$process.Dispose()
+    if($started){Stop-BoundedProcessTree $process};$stdout.Dispose();$stderr.Dispose();if($process){$process.Dispose()}
   }
 }
 function New-PgChildEnvironment([string]$PgPass,$Db){return @{PGPASSFILE=$PgPass;PGSSLMODE='verify-full';PGSSLROOTCERT=[IO.Path]::GetFullPath([string]$Db.caCertificatePath);PGCONNECT_TIMEOUT=[string]$PgConnectTimeoutSeconds;PGOPTIONS="-c lock_timeout=$($PgLockTimeoutMilliseconds)ms -c statement_timeout=$($PgStatementTimeoutMilliseconds)ms -c idle_in_transaction_session_timeout=$($PgIdleTransactionTimeoutMilliseconds)ms";PGAPPNAME='meta-ads-security-migration'}}
