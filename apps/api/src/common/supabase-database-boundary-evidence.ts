@@ -9,11 +9,14 @@ export const SUPABASE_DATABASE_BOUNDARY_V6_FIELDS = [
   "pgConnectTimeoutSeconds", "statementTimeoutMilliseconds", "pgStatSsl", "tlsProtocol", "tlsCipher", "sslEnforcementVerified",
   "publicRemoteEndpoint", "runtimeDdlDenied", "roleAttributesRestricted", "boundedConnectionLimits",
   "scramCredentialsVerified", "runtimeObjectOwnershipDenied", "roleMembershipsAbsent",
-  "privilegeContractVerified", "sequencePrivilegesVerified", "functionEscalationAbsent",
+  "privilegeContractVerified", "backupDatabaseCreateDenied", "backupDatabaseTemporaryDenied",
+  "backupSchemaCreateDenied", "sequencePrivilegesVerified", "functionEscalationAbsent",
   "defaultPrivilegesVerified", "migrationOwnershipVerified", "migrationRoleFullDataPrivileged",
   "migrationCredentialAdminOnly", "migrationCredentialMaintenanceOnly", "migrationTableProtected",
   "crossSchemaPrivilegesAbsent", "credentialsDistinct", "crossRoleAuthenticationDenied",
-  "productionRestoreRoleAccessAbsent", "auditAppendOnlyGuardVerified", "credentialInventoryDigest",
+  "productionRestoreRoleAccessAbsent", "restoreDatabasePrivilegesAbsent", "restoreSchemaPrivilegesAbsent",
+  "restoreTablePrivilegesAbsent", "restoreSequencePrivilegesAbsent", "restoreFunctionPrivilegesAbsent",
+  "restoreTypePrivilegesAbsent", "restoreDefaultAclAbsent", "auditAppendOnlyGuardVerified", "credentialInventoryDigest",
   "databaseName", "databaseUser", "databaseSchema", "runtimeRoleDigest", "migrationRoleDigest",
   "backupRoleDigest", "restoreRoleDigest", "completedAt"
 ] as const;
@@ -22,11 +25,15 @@ const trueFields = [
   "processTreeKillOnDeadline", "pgStatSsl",
   "sslEnforcementVerified", "publicRemoteEndpoint", "runtimeDdlDenied", "roleAttributesRestricted",
   "boundedConnectionLimits", "scramCredentialsVerified", "runtimeObjectOwnershipDenied",
-  "roleMembershipsAbsent", "privilegeContractVerified", "sequencePrivilegesVerified",
+  "roleMembershipsAbsent", "privilegeContractVerified", "backupDatabaseCreateDenied",
+  "backupDatabaseTemporaryDenied", "backupSchemaCreateDenied", "sequencePrivilegesVerified",
   "functionEscalationAbsent", "defaultPrivilegesVerified", "migrationOwnershipVerified",
   "migrationRoleFullDataPrivileged", "migrationCredentialAdminOnly", "migrationCredentialMaintenanceOnly",
   "migrationTableProtected", "crossSchemaPrivilegesAbsent", "credentialsDistinct",
-  "crossRoleAuthenticationDenied", "productionRestoreRoleAccessAbsent", "auditAppendOnlyGuardVerified"
+  "crossRoleAuthenticationDenied", "productionRestoreRoleAccessAbsent", "restoreDatabasePrivilegesAbsent",
+  "restoreSchemaPrivilegesAbsent", "restoreTablePrivilegesAbsent", "restoreSequencePrivilegesAbsent",
+  "restoreFunctionPrivilegesAbsent", "restoreTypePrivilegesAbsent", "restoreDefaultAclAbsent",
+  "auditAppendOnlyGuardVerified"
 ] as const;
 const digestFields = [
   "caCertificateSha256", "psqlSha256", "credentialInventoryDigest", "runtimeRoleDigest",

@@ -147,7 +147,7 @@ function Invoke-BoundedProcess([string]$File,[string[]]$Arguments,[int]$MaximumM
 function Invoke-Db([string]$Sql){$arguments=DbArgs $Sql;$run=Invoke-BoundedProcess $PsqlPath $arguments 120000 8388608 'RESTORE_DATABASE_QUERY_FAILED';return ([string]$run.Output).Trim()}
 function Set-IsolatedRuntimePrivileges([string]$Schema,[string]$RuntimeRole) {
   $quotedSchema='"'+$Schema.Replace('"','""')+'"';$quotedRole='"'+$RuntimeRole.Replace('"','""')+'"';$roleLiteral=$RuntimeRole.Replace("'","''");$schemaLiteral=$Schema.Replace("'","''")
-  Invoke-Db ("REVOKE CREATE ON SCHEMA $quotedSchema FROM $quotedRole; GRANT USAGE ON SCHEMA $quotedSchema TO $quotedRole; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA $quotedSchema TO $quotedRole; REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA $quotedSchema FROM $quotedRole; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA $quotedSchema TO $quotedRole; REVOKE UPDATE ON ALL SEQUENCES IN SCHEMA $quotedSchema FROM $quotedRole; REVOKE ALL PRIVILEGES ON TABLE $quotedSchema.""_prisma_migrations"" FROM $quotedRole")|Out-Null
+  Invoke-Db ("REVOKE CREATE ON SCHEMA $quotedSchema FROM $quotedRole; GRANT USAGE ON SCHEMA $quotedSchema TO $quotedRole; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA $quotedSchema TO $quotedRole; REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA $quotedSchema FROM $quotedRole; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA $quotedSchema TO $quotedRole; REVOKE UPDATE ON ALL SEQUENCES IN SCHEMA $quotedSchema FROM $quotedRole; REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA $quotedSchema FROM $quotedRole; REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA $quotedSchema FROM PUBLIC; REVOKE ALL PRIVILEGES ON TABLE $quotedSchema.""_prisma_migrations"" FROM $quotedRole")|Out-Null
   $proof=Invoke-Db @"
 WITH app_tables AS (
   SELECT quote_ident(n.nspname)||'.'||quote_ident(c.relname) AS relation_name
@@ -157,6 +157,10 @@ WITH app_tables AS (
   SELECT quote_ident(n.nspname)||'.'||quote_ident(c.relname) AS relation_name
   FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
   WHERE n.nspname='$schemaLiteral' AND c.relkind='S'
+), app_functions AS (
+  SELECT p.oid,p.proowner,p.proacl
+  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+  WHERE n.nspname='$schemaLiteral'
 )
 SELECT concat_ws('|',
   has_schema_privilege('$roleLiteral','$schemaLiteral','USAGE'),
@@ -169,12 +173,14 @@ SELECT concat_ws('|',
   COALESCE((SELECT bool_and(NOT has_table_privilege('$roleLiteral',relation_name,'REFERENCES')) FROM app_tables),false),
   COALESCE((SELECT bool_and(NOT has_table_privilege('$roleLiteral',relation_name,'TRIGGER')) FROM app_tables),false),
   NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='$schemaLiteral' AND c.relname='_prisma_migrations' AND (has_table_privilege('$roleLiteral',c.oid,'SELECT') OR has_table_privilege('$roleLiteral',c.oid,'INSERT') OR has_table_privilege('$roleLiteral',c.oid,'UPDATE') OR has_table_privilege('$roleLiteral',c.oid,'DELETE') OR has_table_privilege('$roleLiteral',c.oid,'TRUNCATE') OR has_table_privilege('$roleLiteral',c.oid,'REFERENCES') OR has_table_privilege('$roleLiteral',c.oid,'TRIGGER'))),
-  COALESCE((SELECT bool_and(has_sequence_privilege('$roleLiteral',relation_name,'USAGE')) FROM app_sequences),false),
-  COALESCE((SELECT bool_and(has_sequence_privilege('$roleLiteral',relation_name,'SELECT')) FROM app_sequences),false),
-  COALESCE((SELECT bool_and(NOT has_sequence_privilege('$roleLiteral',relation_name,'UPDATE')) FROM app_sequences),false)
+  COALESCE((SELECT bool_and(has_sequence_privilege('$roleLiteral',relation_name,'USAGE')) FROM app_sequences),true),
+  COALESCE((SELECT bool_and(has_sequence_privilege('$roleLiteral',relation_name,'SELECT')) FROM app_sequences),true),
+  COALESCE((SELECT bool_and(NOT has_sequence_privilege('$roleLiteral',relation_name,'UPDATE')) FROM app_sequences),true),
+  NOT EXISTS(SELECT 1 FROM app_functions WHERE has_function_privilege('$roleLiteral',oid,'EXECUTE')),
+  NOT EXISTS(SELECT 1 FROM app_functions f CROSS JOIN LATERAL aclexplode(COALESCE(f.proacl,acldefault('f',f.proowner))) x WHERE x.grantee=0 AND x.privilege_type='EXECUTE')
 )
 "@
-  if($proof-cne't|t|t|t|t|t|t|t|t|t|t|t|t'){throw 'ISOLATED_RUNTIME_PRIVILEGE_CONTRACT_FAILED'}
+  if($proof-cne't|t|t|t|t|t|t|t|t|t|t|t|t|t|t'){throw 'ISOLATED_RUNTIME_PRIVILEGE_CONTRACT_FAILED'}
 }
 function Invoke-CleanupDb([string]$Sql){
   $primaryDeadline=$script:RestoreDeadline;$primaryStopwatch=$script:RestoreStopwatch;$primaryMaximum=$script:RestoreMaximumMilliseconds
@@ -440,7 +446,7 @@ $previousMigrationInventory=@{};if($PreviousReleaseKind-eq'LOCAL_RELEASE'){forea
 $targetMigrationInventory=@{};foreach($property in $targetRelease.files.PSObject.Properties){if($property.Name-match'^api/prisma/migrations/([^/]+)/migration\.sql$'){$targetMigrationInventory[$Matches[1]]=[string]$property.Value}}
 foreach($name in $previousMigrationInventory.Keys){if(-not$targetMigrationInventory.ContainsKey($name)-or$targetMigrationInventory[$name]-cne$previousMigrationInventory[$name]){throw 'PREVIOUS_MIGRATION_CHAIN_CHANGED'}}
 $databaseBoundary=Read-DeadlineBoundText $DatabaseBoundaryEvidencePath|ConvertFrom-Json
-if($databaseBoundary.version-ne6-or$databaseBoundary.result-ne'PASS'-or-not$databaseBoundary.executorHashesVerified-or$databaseBoundary.psqlSha256-notmatch'^[0-9a-f]{64}$'-or-not$databaseBoundary.tlsVerified-or-not$databaseBoundary.hostnameVerified-or-not$databaseBoundary.caVerified-or-not$databaseBoundary.roleAttributesRestricted-or-not$databaseBoundary.boundedConnectionLimits-or-not$databaseBoundary.scramCredentialsVerified-or-not$databaseBoundary.roleMembershipsAbsent-or-not$databaseBoundary.privilegeContractVerified-or-not$databaseBoundary.functionEscalationAbsent-or-not$databaseBoundary.defaultPrivilegesVerified-or-not$databaseBoundary.productionRestoreRoleAccessAbsent-or-not$databaseBoundary.migrationRoleFullDataPrivileged-or-not$databaseBoundary.migrationCredentialAdminOnly-or-not$databaseBoundary.migrationCredentialMaintenanceOnly-or-not$databaseBoundary.auditAppendOnlyGuardVerified-or$databaseBoundary.projectRef-cne$manifest.databaseProjectRef-or$databaseBoundary.host-cne$manifest.databaseHost-or$databaseBoundary.databaseName-cne$manifest.databaseName-or$databaseBoundary.databaseSchema-cne$manifest.databaseSchema-or$databaseBoundary.restoreRoleDigest-cne(Sha256Text $RestoreDatabaseUser)){throw 'DATABASE_BOUNDARY_EVIDENCE_REJECTED'}
+if($databaseBoundary.version-ne6-or$databaseBoundary.result-ne'PASS'-or-not$databaseBoundary.executorHashesVerified-or$databaseBoundary.psqlSha256-notmatch'^[0-9a-f]{64}$'-or-not$databaseBoundary.tlsVerified-or-not$databaseBoundary.hostnameVerified-or-not$databaseBoundary.caVerified-or-not$databaseBoundary.roleAttributesRestricted-or-not$databaseBoundary.boundedConnectionLimits-or-not$databaseBoundary.scramCredentialsVerified-or-not$databaseBoundary.roleMembershipsAbsent-or-not$databaseBoundary.privilegeContractVerified-or-not$databaseBoundary.backupDatabaseCreateDenied-or-not$databaseBoundary.backupDatabaseTemporaryDenied-or-not$databaseBoundary.backupSchemaCreateDenied-or-not$databaseBoundary.functionEscalationAbsent-or-not$databaseBoundary.defaultPrivilegesVerified-or-not$databaseBoundary.productionRestoreRoleAccessAbsent-or-not$databaseBoundary.restoreDatabasePrivilegesAbsent-or-not$databaseBoundary.restoreSchemaPrivilegesAbsent-or-not$databaseBoundary.restoreTablePrivilegesAbsent-or-not$databaseBoundary.restoreSequencePrivilegesAbsent-or-not$databaseBoundary.restoreFunctionPrivilegesAbsent-or-not$databaseBoundary.restoreTypePrivilegesAbsent-or-not$databaseBoundary.restoreDefaultAclAbsent-or-not$databaseBoundary.migrationRoleFullDataPrivileged-or-not$databaseBoundary.migrationCredentialAdminOnly-or-not$databaseBoundary.migrationCredentialMaintenanceOnly-or-not$databaseBoundary.auditAppendOnlyGuardVerified-or$databaseBoundary.projectRef-cne$manifest.databaseProjectRef-or$databaseBoundary.host-cne$manifest.databaseHost-or$databaseBoundary.databaseName-cne$manifest.databaseName-or$databaseBoundary.databaseSchema-cne$manifest.databaseSchema-or$databaseBoundary.restoreRoleDigest-cne(Sha256Text $RestoreDatabaseUser)){throw 'DATABASE_BOUNDARY_EVIDENCE_REJECTED'}
 if($PreviousReleaseKind-eq'LOCAL_RELEASE'){Assert-IsolatedApiConfig $PreviousApiConfigPath $manifest $databaseBoundary $restoreDataRoot}
 Assert-IsolatedApiConfig $TargetApiConfigPath $manifest $databaseBoundary $restoreDataRoot
 $schemaSearchPath='SET search_path TO "'+$manifest.databaseSchema+'", pg_catalog; '
