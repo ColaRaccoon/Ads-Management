@@ -1,6 +1,9 @@
 import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import {
   ConflictPolicy,
+  CoupangAdMetric,
+  CoupangPromotionPrice,
+  CoupangSaleLine,
   CoupangUploadBatch,
   CoupangUploadSourceType,
   MatchSource,
@@ -2674,17 +2677,26 @@ export class CoupangService {
     const range = parseDateRange(query.from, query.to);
     const take = Math.min(Math.max(Number(query.take ?? 1000) || 1000, 1), 5000);
     const rules = await this.matcherRules();
-    const saleLines = await this.prisma.coupangSaleLine.findMany({
-      where: {
-        isCurrent: true,
-        saleDate: { gte: range.fromDate, lte: range.toDate },
-        validationStatus: { not: RowValidationStatus.ERROR }
-      },
-      take,
-      orderBy: [{ saleDate: "asc" }, { rowNumber: "asc" }]
-    });
     let matchedSalesCount = 0;
-    for (const line of saleLines) {
+    let scannedSalesCount = 0;
+    let saleCursor: { saleDate: Date; rowNumber: number; id: string } | null = null;
+    while (true) {
+      const candidates: CoupangSaleLine[] = await this.prisma.coupangSaleLine.findMany({
+        where: {
+          isCurrent: true,
+          saleDate: { gte: range.fromDate, lte: range.toDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          ...(saleCursor ? { OR: [
+            { saleDate: { gt: saleCursor.saleDate } },
+            { saleDate: saleCursor.saleDate, rowNumber: { gt: saleCursor.rowNumber } },
+            { saleDate: saleCursor.saleDate, rowNumber: saleCursor.rowNumber, id: { gt: saleCursor.id } }
+          ] } : {})
+        },
+        take: take + 1,
+        orderBy: [{ saleDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
+      });
+      const saleLines = candidates.slice(0, take);
+      for (const line of saleLines) {
       const match = this.matcher.matchText(`${line.productName} ${line.optionName}`, rules, line.saleDate);
       const matched = match.reason === "MATCHED";
       const warnings = matched ? [] : [matchIssue(match.reason, match.candidates)];
@@ -2722,20 +2734,35 @@ export class CoupangService {
       }
       }, COUPANG_TRANSACTION_OPTIONS);
       matchedSalesCount += matched ? 1 : 0;
+      }
+      scannedSalesCount += saleLines.length;
+      if (candidates.length <= take) break;
+      const last = saleLines.at(-1);
+      if (!last) break;
+      saleCursor = { saleDate: last.saleDate!, rowNumber: last.rowNumber, id: last.id };
     }
 
-    const adMetrics = await this.prisma.coupangAdMetric.findMany({
-      where: {
-        isCurrent: true,
-        metricDate: { gte: range.fromDate, lte: range.toDate },
-        validationStatus: { not: RowValidationStatus.ERROR }
-      },
-      take,
-      orderBy: [{ metricDate: "asc" }, { rowNumber: "asc" }]
-    });
     let matchedSpendCount = 0;
     let matchedConversionCount = 0;
-    for (const metric of adMetrics) {
+    let scannedAdsCount = 0;
+    let adCursor: { metricDate: Date; rowNumber: number; id: string } | null = null;
+    while (true) {
+      const candidates: CoupangAdMetric[] = await this.prisma.coupangAdMetric.findMany({
+        where: {
+          isCurrent: true,
+          metricDate: { gte: range.fromDate, lte: range.toDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          ...(adCursor ? { OR: [
+            { metricDate: { gt: adCursor.metricDate } },
+            { metricDate: adCursor.metricDate, rowNumber: { gt: adCursor.rowNumber } },
+            { metricDate: adCursor.metricDate, rowNumber: adCursor.rowNumber, id: { gt: adCursor.id } }
+          ] } : {})
+        },
+        take: take + 1,
+        orderBy: [{ metricDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
+      });
+      const adMetrics = candidates.slice(0, take);
+      for (const metric of adMetrics) {
       const productMatches = resolveCoupangAdProductMatches({
         matcher: this.matcher,
         rules,
@@ -2795,19 +2822,34 @@ export class CoupangService {
       }, COUPANG_TRANSACTION_OPTIONS);
       matchedSpendCount += productMatches.spendMatched ? 1 : 0;
       matchedConversionCount += productMatches.conversionMatched ? 1 : 0;
+      }
+      scannedAdsCount += adMetrics.length;
+      if (candidates.length <= take) break;
+      const last = adMetrics.at(-1);
+      if (!last) break;
+      adCursor = { metricDate: last.metricDate, rowNumber: last.rowNumber, id: last.id };
     }
 
-    const promotionPrices = await this.prisma.coupangPromotionPrice.findMany({
-      where: {
-        promotionStartDate: { lte: range.toDate },
-        promotionEndDate: { gte: range.fromDate },
-        validationStatus: { not: RowValidationStatus.ERROR }
-      },
-      take,
-      orderBy: [{ promotionStartDate: "asc" }, { rowNumber: "asc" }]
-    });
     let matchedPromotionCount = 0;
-    for (const promotion of promotionPrices) {
+    let scannedPromotionCount = 0;
+    let promotionCursor: { promotionStartDate: Date; rowNumber: number; id: string } | null = null;
+    while (true) {
+      const candidates: CoupangPromotionPrice[] = await this.prisma.coupangPromotionPrice.findMany({
+        where: {
+          promotionStartDate: { lte: range.toDate },
+          promotionEndDate: { gte: range.fromDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          ...(promotionCursor ? { OR: [
+            { promotionStartDate: { gt: promotionCursor.promotionStartDate } },
+            { promotionStartDate: promotionCursor.promotionStartDate, rowNumber: { gt: promotionCursor.rowNumber } },
+            { promotionStartDate: promotionCursor.promotionStartDate, rowNumber: promotionCursor.rowNumber, id: { gt: promotionCursor.id } }
+          ] } : {})
+        },
+        take: take + 1,
+        orderBy: [{ promotionStartDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
+      });
+      const promotionPrices = candidates.slice(0, take);
+      for (const promotion of promotionPrices) {
       const match = this.matcher.matchText(promotion.productText, rules, promotion.promotionStartDate);
       const matched = match.reason === "MATCHED";
       const warnings = [
@@ -2849,8 +2891,14 @@ export class CoupangService {
       }
       }, COUPANG_TRANSACTION_OPTIONS);
       matchedPromotionCount += matched ? 1 : 0;
+      }
+      scannedPromotionCount += promotionPrices.length;
+      if (candidates.length <= take) break;
+      const last = promotionPrices.at(-1);
+      if (!last) break;
+      promotionCursor = { promotionStartDate: last.promotionStartDate, rowNumber: last.rowNumber, id: last.id };
     }
-    if (actorId && saleLines.length === 0 && adMetrics.length === 0 && promotionPrices.length === 0) {
+    if (actorId && scannedSalesCount === 0 && scannedAdsCount === 0 && scannedPromotionCount === 0) {
       await this.prisma.$transaction((tx) => writeSecurityAudit(tx, {
         actorUserId: actorId,
         actorType: SecurityAuditActorType.USER,
@@ -2862,12 +2910,12 @@ export class CoupangService {
     }
     return {
       period: { from: range.from, to: range.to },
-      scannedSalesCount: saleLines.length,
+      scannedSalesCount,
       matchedSalesCount,
-      scannedAdsCount: adMetrics.length,
+      scannedAdsCount,
       matchedSpendCount,
       matchedConversionCount,
-      scannedPromotionCount: promotionPrices.length,
+      scannedPromotionCount,
       matchedPromotionCount
     };
   }

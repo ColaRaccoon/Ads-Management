@@ -4168,6 +4168,33 @@ describe("CoupangService sales import", () => {
 });
 
 describe("CoupangService rematch", () => {
+  it("continues through bounded sale-line keyset pages beyond 1000 rows", async () => {
+    const saleLines = Array.from({ length: 1001 }, (_, index) => ({
+      id: `sale-${String(index + 1).padStart(4, "0")}`,
+      uploadBatchId: "batch-sales",
+      rowNumber: index + 1,
+      saleDate: toDateOnly("2026-06-22")!,
+      productName: "Spend Product",
+      optionName: "2-pack",
+      coupangProductId: null,
+      validationStatus: RowValidationStatus.UNMATCHED
+    }));
+    const prisma = fakeCoupangRematchPrisma({ saleLines });
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.rematch({ from: "2026-06-22", to: "2026-06-22", take: "1000" });
+
+    expect(result).toMatchObject({ scannedSalesCount: 1001, matchedSalesCount: 1001 });
+    expect(prisma.coupangSaleLine.findMany).toHaveBeenCalledTimes(2);
+    expect(prisma.coupangSaleLine.findMany.mock.calls[0][0]).toMatchObject({
+      take: 1001,
+      orderBy: [{ saleDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
+    });
+    expect(prisma.coupangSaleLine.findMany.mock.calls[1][0].where.OR[2]).toMatchObject({
+      saleDate: toDateOnly("2026-06-22")!, rowNumber: 1000, id: { gt: "sale-1000" }
+    });
+  });
+
   it("infers blank and dash conversion products during Ads XLSX import", async () => {
     const prisma = fakeCoupangAdsImportPrisma();
     const service = new CoupangService(prisma as never);
@@ -5552,7 +5579,7 @@ function fakeCoupangAdsImportPrisma(options: { existingAdMetrics?: any[] } = {})
   return prisma;
 }
 
-function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any[] } = {}) {
+function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any[]; saleLines?: any[] } = {}) {
   const prisma = {
     coupangProductRule: {
       findMany: vi.fn(async () => [
@@ -5581,10 +5608,11 @@ function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any
       ])
     },
     coupangSaleLine: {
-      findMany: vi.fn(async () => [])
+      findMany: vi.fn(async (args: any) => rematchPage(options.saleLines ?? [], args, "saleDate")),
+      update: vi.fn(async () => ({}))
     },
     coupangAdMetric: {
-      findMany: vi.fn(async () => options.adMetrics ?? [
+      findMany: vi.fn(async (args: any) => rematchPage(options.adMetrics ?? [
         {
           id: "metric-1",
           uploadBatchId: "batch-1",
@@ -5594,11 +5622,11 @@ function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any
           conversionProductName: "Conversion Product 2-pack",
           validationStatus: RowValidationStatus.UNMATCHED
         }
-      ]),
+      ], args, "metricDate")),
       update: vi.fn(async () => ({}))
     },
     coupangPromotionPrice: {
-      findMany: vi.fn(async () => options.promotions ?? []),
+      findMany: vi.fn(async (args: any) => rematchPage(options.promotions ?? [], args, "promotionStartDate")),
       update: vi.fn(async () => ({}))
     },
     coupangUploadRowError: {
@@ -5608,6 +5636,20 @@ function fakeCoupangRematchPrisma(options: { promotions?: any[]; adMetrics?: any
     $transaction: vi.fn(async (callback: (client: unknown) => Promise<unknown>) => callback(prisma))
   };
   return prisma;
+}
+
+function rematchPage(rows: any[], args: any, dateField: "saleDate" | "metricDate" | "promotionStartDate") {
+  const cursor = args.where?.OR?.[2];
+  const afterCursor = cursor
+    ? rows.filter((row) => {
+        const dateOrder = row[dateField].getTime() - cursor[dateField].getTime();
+        return dateOrder > 0 || (dateOrder === 0 && (
+          row.rowNumber > cursor.rowNumber ||
+          (row.rowNumber === cursor.rowNumber && row.id > cursor.id.gt)
+        ));
+      })
+    : rows;
+  return afterCursor.slice(0, args.take);
 }
 
 function fakeCoupangPromotionImportPrisma() {

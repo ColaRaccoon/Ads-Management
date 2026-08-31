@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import {
+  Cafe24OrderLine,
   ConflictPolicy,
   MatchSource,
   Prisma,
@@ -370,25 +371,34 @@ export class Cafe24UploadsService {
     const take = Math.min(Math.max(Number(query.take ?? 1000) || 1000, 1), 5000);
     const rules = await this.matcherRules();
     const completeCafe24BatchIds = await this.completeCafe24BatchIds(range);
-    const lines =
-      completeCafe24BatchIds.length > 0
-        ? await this.prisma.cafe24OrderLine.findMany({
-            where: {
-              isCurrent: true,
-              uploadBatchId: { in: completeCafe24BatchIds },
-              orderDate: { gte: range.fromDate, lte: range.toDate },
-              validationStatus: { not: RowValidationStatus.ERROR }
-            },
-            take,
-            orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }]
-          })
-        : [];
-
     let matchedCount = 0;
     let stillUnmatchedCount = 0;
     let ambiguousCount = 0;
+    let scannedCount = 0;
+    let cursor: { orderDate: Date; rowNumber: number; id: string } | null = null;
+    const refreshedBatchIds = new Set<string>();
 
-    for (const line of lines) {
+    while (completeCafe24BatchIds.length > 0) {
+      const candidates: Cafe24OrderLine[] = await this.prisma.cafe24OrderLine.findMany({
+        where: {
+          isCurrent: true,
+          uploadBatchId: { in: completeCafe24BatchIds },
+          orderDate: { gte: range.fromDate, lte: range.toDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          ...(cursor ? {
+            OR: [
+              { orderDate: { gt: cursor.orderDate } },
+              { orderDate: cursor.orderDate, rowNumber: { gt: cursor.rowNumber } },
+              { orderDate: cursor.orderDate, rowNumber: cursor.rowNumber, id: { gt: cursor.id } }
+            ]
+          } : {})
+        },
+        take: take + 1,
+        orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
+      });
+      const lines = candidates.slice(0, take);
+      for (const line of lines) {
+        refreshedBatchIds.add(line.uploadBatchId);
       const match = this.matcher.match(
         {
           productNo: line.productNo,
@@ -476,11 +486,17 @@ export class Cafe24UploadsService {
           });
         }
       });
+      }
+      scannedCount += lines.length;
+      if (candidates.length <= take) break;
+      const last = lines.at(-1);
+      if (!last) break;
+      cursor = { orderDate: last.orderDate!, rowNumber: last.rowNumber, id: last.id };
     }
 
-    await this.refreshCafe24BatchIssueCounts(uniqueNonEmpty(lines.map((line) => line.uploadBatchId)), actorId);
+    await this.refreshCafe24BatchIssueCounts([...refreshedBatchIds], actorId);
 
-    if (actorId && lines.length === 0) {
+    if (actorId && scannedCount === 0) {
       await this.prisma.$transaction((tx) => writeSecurityAudit(tx, {
         actorUserId: actorId,
         actorType: SecurityAuditActorType.USER,
@@ -493,7 +509,7 @@ export class Cafe24UploadsService {
 
     return {
       period: { from: range.from, to: range.to },
-      scannedCount: lines.length,
+      scannedCount,
       matchedCount,
       stillUnmatchedCount,
       ambiguousCount

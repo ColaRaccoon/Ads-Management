@@ -259,7 +259,7 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
 
   list() {
     return this.prisma.reportExport.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: 100,
       select: {
         id: true,
@@ -321,7 +321,11 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       this.metricsService.productMetrics(from, to, undefined, client),
       this.metricsService.adsetMetrics({ from, to }, client),
       this.metricsService.unmatchedMetrics(from, to, undefined, client),
-      client.decisionLog.findMany({ where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) }, take: 20 })
+      client.decisionLog.findMany({
+        where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 20
+      })
     ]));
     const bestProduct = products.sort((a, b) => (b.totals.marginKrw ?? -Infinity) - (a.totals.marginKrw ?? -Infinity))[0];
     const worstProduct = products.sort((a, b) => (a.totals.marginKrw ?? Infinity) - (b.totals.marginKrw ?? Infinity))[0];
@@ -370,11 +374,11 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       this.metricsService.unmatchedMetrics(from, to, undefined, client),
       client.decisionLog.findMany({
         where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) },
-        orderBy: { createdAt: "desc" }
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }]
       }),
       client.changeLog.findMany({
         where: { actionDate: { gte: new Date(`${from}T00:00:00.000Z`), lte: new Date(`${to}T00:00:00.000Z`) } },
-        orderBy: { actionDate: "desc" }
+        orderBy: [{ actionDate: "desc" }, { id: "desc" }]
       })
     ]));
 

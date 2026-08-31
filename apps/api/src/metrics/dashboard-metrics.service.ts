@@ -154,7 +154,7 @@ export class DashboardMetricsService {
   ) {
     const logs = await client.decisionLog.findMany({
       where: { periodStart: fromDate, periodEnd: toDate },
-      orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ severity: "desc" }, { createdAt: "desc" }, { id: "desc" }],
       take: 20
     });
     const counts = logs.reduce<Record<string, number>>((acc, log) => {

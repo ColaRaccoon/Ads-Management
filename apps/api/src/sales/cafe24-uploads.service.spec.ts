@@ -279,6 +279,37 @@ describe("Cafe24UploadsService rematch", () => {
       importedAt
     });
   });
+
+  it("continues through a bounded keyset page instead of rescanning the first 1000 rows", async () => {
+    const lines = Array.from({ length: 1001 }, (_, index) => ({
+      id: `line-${String(index + 1).padStart(4, "0")}`,
+      uploadBatchId: "batch-1",
+      rowNumber: index + 1,
+      productNo: "120",
+      productName: "Wavebar",
+      optionName: "Wavebar black",
+      orderDate: date("2026-06-11"),
+      productId: null,
+      cafe24ProductRuleId: null,
+      matchSource: MatchSource.UNMATCHED,
+      validationStatus: RowValidationStatus.UNMATCHED,
+      validationErrors: []
+    }));
+    const prisma = fakeRematchPrisma({ lines, batchRowCount: lines.length, batchStoredRowCount: lines.length });
+    const service = new Cafe24UploadsService(prisma as never, {} as never);
+
+    const result = await service.rematchCafe24Lines({ from: "2026-06-11", to: "2026-06-11", take: "1000" });
+
+    expect(result).toMatchObject({ scannedCount: 1001, matchedCount: 1001 });
+    expect(prisma.cafe24OrderLine.findManyCalls).toHaveLength(2);
+    expect(prisma.cafe24OrderLine.findManyCalls[0]).toMatchObject({
+      take: 1001,
+      orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
+    });
+    expect(prisma.cafe24OrderLine.findManyCalls[1].where.OR[2]).toMatchObject({
+      orderDate: date("2026-06-11"), rowNumber: 1000, id: { gt: "line-1000" }
+    });
+  });
 });
 
 describe("Cafe24UploadsService duplicate upload guard", () => {
@@ -735,9 +766,9 @@ function fakeRematchPrisma(
         _min: { orderDate: date("2026-06-11") },
         _max: { orderDate: date("2026-06-11") }
       }),
-      findMany: async (args: unknown) => {
+      findMany: async (args: any) => {
         findManyCalls.push(args);
-        return input.lines ?? [
+        const rows = input.lines ?? [
           {
             id: "line-1",
             uploadBatchId: "batch-1",
@@ -755,6 +786,17 @@ function fakeRematchPrisma(
             ]
           }
         ];
+        const cursor = args.where?.OR?.[2];
+        const afterCursor = cursor
+          ? rows.filter((row: any) => {
+              const dateOrder = row.orderDate.getTime() - cursor.orderDate.getTime();
+              return dateOrder > 0 || (dateOrder === 0 && (
+                row.rowNumber > cursor.rowNumber ||
+                (row.rowNumber === cursor.rowNumber && row.id > cursor.id.gt)
+              ));
+            })
+          : rows;
+        return afterCursor.slice(0, args.take);
       }
     },
     $transaction: async (callback: (tx: unknown) => unknown) => callback(tx)
