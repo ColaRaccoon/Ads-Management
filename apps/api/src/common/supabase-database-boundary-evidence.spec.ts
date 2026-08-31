@@ -27,7 +27,7 @@ describe("Supabase database boundary evidence v6 contract", () => {
     expect(() => assertSupabaseDatabaseBoundaryEvidenceV6(missing, binding, { now })).toThrow("DATABASE_BOUNDARY_EVIDENCE_REJECTED");
     expect(() => assertSupabaseDatabaseBoundaryEvidenceV6({ ...producerEvidence(), version: 5 }, binding, { now })).toThrow("DATABASE_BOUNDARY_EVIDENCE_REJECTED");
     expect(() => assertSupabaseDatabaseBoundaryEvidenceV6({ ...producerEvidence(), migrationRoleDigest: "f".repeat(64) }, binding, { now })).toThrow("DATABASE_BOUNDARY_EVIDENCE_REJECTED");
-    for (const field of ["backupDatabaseCreateDenied", "backupDatabaseTemporaryDenied", "backupSchemaCreateDenied",
+    for (const field of ["runtimeDatabaseTemporaryDenied", "backupDatabaseCreateDenied", "backupDatabaseTemporaryDenied", "backupSchemaCreateDenied",
       "restoreDatabasePrivilegesAbsent", "restoreSchemaPrivilegesAbsent", "restoreTablePrivilegesAbsent",
       "restoreSequencePrivilegesAbsent", "restoreFunctionPrivilegesAbsent", "restoreTypePrivilegesAbsent",
       "restoreDefaultAclAbsent"] as const) {
@@ -46,7 +46,7 @@ export function producerEvidence(completedAt = "2026-08-26T23:55:00.000Z"): Reco
     maximumChildOutputBytes: 1_048_576, elapsedSeconds: 42, pgConnectTimeoutSeconds: 15,
     statementTimeoutMilliseconds: 60_000, pgStatSsl: true, tlsProtocol: "TLSv1.3",
     tlsCipher: "TLS_AES_256_GCM_SHA384", sslEnforcementVerified: true, publicRemoteEndpoint: true,
-    runtimeDdlDenied: true, roleAttributesRestricted: true, boundedConnectionLimits: true,
+    runtimeDdlDenied: true, runtimeDatabaseTemporaryDenied: true, roleAttributesRestricted: true, boundedConnectionLimits: true,
     scramCredentialsVerified: true, runtimeObjectOwnershipDenied: true, roleMembershipsAbsent: true,
     privilegeContractVerified: true, backupDatabaseCreateDenied: true, backupDatabaseTemporaryDenied: true,
     backupSchemaCreateDenied: true, sequencePrivilegesVerified: true, functionEscalationAbsent: true,

@@ -7,7 +7,7 @@ export const SUPABASE_DATABASE_BOUNDARY_V6_FIELDS = [
   "executorHashesVerified", "boundedChildProcesses", "processTreeKillOnDeadline",
   "maximumVerificationDurationSeconds", "maximumChildOutputBytes", "elapsedSeconds",
   "pgConnectTimeoutSeconds", "statementTimeoutMilliseconds", "pgStatSsl", "tlsProtocol", "tlsCipher", "sslEnforcementVerified",
-  "publicRemoteEndpoint", "runtimeDdlDenied", "roleAttributesRestricted", "boundedConnectionLimits",
+  "publicRemoteEndpoint", "runtimeDdlDenied", "runtimeDatabaseTemporaryDenied", "roleAttributesRestricted", "boundedConnectionLimits",
   "scramCredentialsVerified", "runtimeObjectOwnershipDenied", "roleMembershipsAbsent",
   "privilegeContractVerified", "backupDatabaseCreateDenied", "backupDatabaseTemporaryDenied",
   "backupSchemaCreateDenied", "sequencePrivilegesVerified", "functionEscalationAbsent",
@@ -23,7 +23,7 @@ export const SUPABASE_DATABASE_BOUNDARY_V6_FIELDS = [
 const trueFields = [
   "tlsVerified", "hostnameVerified", "caVerified", "executorHashesVerified", "boundedChildProcesses",
   "processTreeKillOnDeadline", "pgStatSsl",
-  "sslEnforcementVerified", "publicRemoteEndpoint", "runtimeDdlDenied", "roleAttributesRestricted",
+  "sslEnforcementVerified", "publicRemoteEndpoint", "runtimeDdlDenied", "runtimeDatabaseTemporaryDenied", "roleAttributesRestricted",
   "boundedConnectionLimits", "scramCredentialsVerified", "runtimeObjectOwnershipDenied",
   "roleMembershipsAbsent", "privilegeContractVerified", "backupDatabaseCreateDenied",
   "backupDatabaseTemporaryDenied", "backupSchemaCreateDenied", "sequencePrivilegesVerified",

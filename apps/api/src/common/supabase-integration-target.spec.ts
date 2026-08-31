@@ -49,7 +49,7 @@ function sourceEvidence(projectRef="zyxwvutsrqponmlkjihg",host=`db.${projectRef}
     processTreeKillOnDeadline:true,maximumVerificationDurationSeconds:600,maximumChildOutputBytes:1_048_576,
     elapsedSeconds:42,pgConnectTimeoutSeconds:15,statementTimeoutMilliseconds:60_000,
     pgStatSsl:true,tlsProtocol:"TLSv1.3",tlsCipher:"TLS_AES_256_GCM_SHA384",
-    sslEnforcementVerified:true,publicRemoteEndpoint:true,runtimeDdlDenied:true,roleAttributesRestricted:true,
+    sslEnforcementVerified:true,publicRemoteEndpoint:true,runtimeDdlDenied:true,runtimeDatabaseTemporaryDenied:true,roleAttributesRestricted:true,
     boundedConnectionLimits:true,scramCredentialsVerified:true,runtimeObjectOwnershipDenied:true,roleMembershipsAbsent:true,
     privilegeContractVerified:true,backupDatabaseCreateDenied:true,backupDatabaseTemporaryDenied:true,
     backupSchemaCreateDenied:true,sequencePrivilegesVerified:true,functionEscalationAbsent:true,defaultPrivilegesVerified:true,
