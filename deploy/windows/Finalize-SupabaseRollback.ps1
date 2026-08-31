@@ -94,7 +94,7 @@ function Test-UnderClass([string]$Path,$Roots) {
 }
 
 function Quote-Identifier([string]$Value) {
-  if ($Value -notmatch '^[a-z][a-z0-9_]{0,62}$') { throw 'ROLLBACK_FINALIZE_IDENTIFIER_REJECTED' }
+  if ($Value -notmatch '^[a-z_][a-z0-9_]{0,62}$') { throw 'ROLLBACK_FINALIZE_IDENTIFIER_REJECTED' }
   return '"' + $Value + '"'
 }
 
@@ -135,6 +135,46 @@ function Invoke-Bounded([string]$Executable,[string[]]$Arguments,[hashtable]$Env
     $process.Dispose()
     $watch.Stop()
   }
+}
+
+function Get-KpiSql {
+  return "SELECT concat_ws('|',(SELECT count(*) FROM meta_adset_daily_metrics WHERE is_current),(SELECT coalesce(sum(spend_usd),0)::text FROM meta_adset_daily_metrics WHERE is_current),(SELECT coalesce(sum(result_count),0)::text FROM meta_adset_daily_metrics WHERE is_current),(SELECT count(*) FROM meta_ad_daily_metrics WHERE is_current),(SELECT coalesce(sum(purchase_count),0)::text FROM meta_ad_daily_metrics WHERE is_current),(SELECT count(*) FROM cafe24_order_lines WHERE is_current),(SELECT coalesce(sum(total_paid_krw),0)::text FROM cafe24_order_lines WHERE is_current),(SELECT count(*) FROM coupang_sale_lines WHERE is_current),(SELECT coalesce(sum(net_sales_krw),0)::text FROM coupang_sale_lines WHERE is_current),(SELECT count(*) FROM coupang_ad_metrics WHERE is_current),(SELECT coalesce(sum(ad_spend_krw),0)::text FROM coupang_ad_metrics WHERE is_current),(SELECT coalesce(sum(total_orders_1d),0)::text FROM coupang_ad_metrics WHERE is_current),(SELECT count(*) FROM coupang_manual_purchases),(SELECT coalesce(sum(quantity),0)::text FROM coupang_manual_purchases),(SELECT coalesce(sum(sales_amount_krw),0)::text FROM coupang_manual_purchases),(SELECT coalesce(sum(total_cost_krw),0)::text FROM coupang_manual_purchases),(SELECT count(*) FROM decision_logs),(SELECT count(*) FROM change_logs),(SELECT count(*) FROM report_exports))"
+}
+
+function Get-LiveSchemaFingerprint([string]$Psql,[string[]]$Base,[hashtable]$Environment,[string]$SchemaName) {
+  $quoted = Quote-Identifier $SchemaName
+  $catalogSql = @"
+WITH items(v) AS (
+  SELECT concat_ws('|','N',r.rolname,coalesce(n.nspacl::text,'')) FROM pg_namespace n JOIN pg_roles r ON r.oid=n.nspowner WHERE n.nspname='$SchemaName'
+  UNION ALL SELECT concat_ws('|','C',c.oid::text,c.relname,c.relkind,r.rolname,coalesce(c.relacl::text,''),coalesce(c.reloptions::text,'')) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_roles r ON r.oid=c.relowner WHERE n.nspname='$SchemaName'
+  UNION ALL SELECT concat_ws('|','A',c.oid::text,a.attnum::text,a.attname,a.atttypid::text,a.atttypmod::text,a.attnotnull::text,a.attidentity,a.attgenerated,replace(coalesce(pg_get_expr(d.adbin,d.adrelid),''),quote_ident(n.nspname)||'.','<schema>.')) FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum WHERE n.nspname='$SchemaName' AND a.attnum>0 AND NOT a.attisdropped
+  UNION ALL SELECT concat_ws('|','K',c.oid::text,k.conname,k.contype,replace(pg_get_constraintdef(k.oid,true),quote_ident(n.nspname)||'.','<schema>.')) FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='$SchemaName'
+  UNION ALL SELECT concat_ws('|','I',i.indexrelid::text,i.indrelid::text,replace(pg_get_indexdef(i.indexrelid),quote_ident(n.nspname)||'.','<schema>.')) FROM pg_index i JOIN pg_class c ON c.oid=i.indrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='$SchemaName'
+  UNION ALL SELECT concat_ws('|','P',p.oid::text,p.proname,p.proargtypes::text,p.prorettype::text,r.rolname,p.prosecdef::text,p.proleakproof::text,coalesce(p.proacl::text,''),coalesce(p.proconfig::text,''),encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_roles r ON r.oid=p.proowner WHERE n.nspname='$SchemaName'
+  UNION ALL SELECT concat_ws('|','G',t.oid::text,t.tgname,t.tgenabled,replace(pg_get_triggerdef(t.oid,true),quote_ident(n.nspname)||'.','<schema>.')) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='$SchemaName' AND NOT t.tgisinternal
+  UNION ALL SELECT concat_ws('|','T',t.oid::text,t.typname,t.typtype,r.rolname,coalesce(t.typacl::text,'')) FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace JOIN pg_roles r ON r.oid=t.typowner WHERE n.nspname='$SchemaName'
+  UNION ALL SELECT concat_ws('|','D',r.rolname,d.defaclobjtype,coalesce(d.defaclacl::text,'')) FROM pg_default_acl d JOIN pg_namespace n ON n.oid=d.defaclnamespace JOIN pg_roles r ON r.oid=d.defaclrole WHERE n.nspname='$SchemaName'
+)
+SELECT count(*)::text||'|'||encode(sha256(convert_to(coalesce(string_agg(v,E'\n' ORDER BY v),''),'UTF8')),'hex') FROM items
+"@
+  $migrationSql = "SELECT count(*)::text||'|'||encode(sha256(convert_to(coalesce(string_agg(migration_name||'='||checksum||'='||(finished_at IS NOT NULL)::text||'='||(rolled_back_at IS NOT NULL)::text,E'\n' ORDER BY migration_name),''),'UTF8')),'hex') FROM $quoted.""_prisma_migrations"""
+  $storageSql = @"
+WITH refs(v) AS (
+  SELECT concat_ws('|','META',id::text,stored_file_path,file_hash_sha256) FROM $quoted."upload_batches" WHERE stored_file_path IS NOT NULL
+  UNION ALL SELECT concat_ws('|','CAFE24',id::text,stored_file_path,file_hash_sha256) FROM $quoted."cafe24_upload_batches" WHERE stored_file_path IS NOT NULL
+  UNION ALL SELECT concat_ws('|','COUPANG',id::text,stored_file_path,file_hash_sha256) FROM $quoted."coupang_upload_batches" WHERE stored_file_path IS NOT NULL
+  UNION ALL SELECT concat_ws('|','REPORT',id::text,file_path,coalesce(file_hash_sha256,'')) FROM $quoted."report_exports" WHERE file_path IS NOT NULL
+  UNION ALL SELECT concat_ws('|','TOMBSTONE',id::text,domain::text,provider,original_key,trash_key,hash_sha256,state::text) FROM $quoted."storage_tombstones"
+)
+SELECT count(*)::text||'|'||encode(sha256(convert_to(coalesce(string_agg(v,E'\n' ORDER BY v),''),'UTF8')),'hex') FROM refs
+"@
+  $catalog = Invoke-Bounded $Psql ($Base + @("--command=$catalogSql")) $Environment 'ROLLBACK_FINALIZE_CATALOG_FINGERPRINT'
+  $migrations = Invoke-Bounded $Psql ($Base + @("--command=$migrationSql")) $Environment 'ROLLBACK_FINALIZE_MIGRATION_FINGERPRINT'
+  $storage = Invoke-Bounded $Psql ($Base + @("--command=$storageSql")) $Environment 'ROLLBACK_FINALIZE_STORAGE_REFERENCE_FINGERPRINT'
+  $kpi = Invoke-Bounded $Psql ($Base + @("--command=SET search_path TO $quoted; $(Get-KpiSql)")) $Environment 'ROLLBACK_FINALIZE_KPI_FINGERPRINT'
+  if ($catalog -notmatch '^\d+\|[0-9a-f]{64}$' -or $migrations -notmatch '^\d+\|[0-9a-f]{64}$' -or $storage -notmatch '^\d+\|[0-9a-f]{64}$') { throw 'ROLLBACK_FINALIZE_SCHEMA_FINGERPRINT_INVALID' }
+  $kpiDigest = Get-TextSha256 $kpi
+  return [pscustomobject]@{Fingerprint=Get-TextSha256 (@('live-schema-fingerprint-v1',$catalog,$migrations,$storage,$kpiDigest)-join"`n");Catalog=$catalog;Migrations=$migrations;StorageReferences=$storage;KpiDigest=$kpiDigest}
 }
 
 function Write-DurableJson([string]$Path,$Value,[switch]$CreateOnly) {
@@ -230,7 +270,7 @@ function Assert-CurrentQuiescence($Config,$RollbackEvidence,[string]$Runtime,[st
   return Assert-LegacyQuiescence $Config $RollbackEvidence $Node $Verifier
 }
 
-function Get-BoundaryContext {
+function Get-BoundaryContext([string]$ExistingFinalizationHash) {
   $runtime = Get-PinnedFile $RuntimeConfigPath $ExpectedRuntimeConfigSha256 'ROLLBACK_FINALIZE_RUNTIME_HASH_MISMATCH' $script:MaximumJsonBytes
   $rollbackJournal = Get-PinnedFile $RollbackJournalPath $ExpectedRollbackJournalSha256 'ROLLBACK_FINALIZE_JOURNAL_HASH_MISMATCH' $script:MaximumJsonBytes
   $rollbackEvidencePath = Get-PinnedFile $RollbackEvidencePath $ExpectedRollbackEvidenceSha256 'ROLLBACK_FINALIZE_EVIDENCE_HASH_MISMATCH' $script:MaximumJsonBytes
@@ -283,8 +323,36 @@ function Get-BoundaryContext {
       ($EdgeStateMode -eq 'LEGACY_QUIESCED_NO_EDGE' -and -not(Test-UnderClass $LegacyQuiesceEvidencePath $filesystem.classRoots.ADMIN_EVIDENCE))) {
     throw 'ROLLBACK_FINALIZE_FILESYSTEM_BOUNDARY_REJECTED'
   }
+  $connectionUser = if ($config.database.connectionMode -eq 'session_pooler') { "$ConfirmDatabaseUser.$ConfirmProjectRef" } else { $ConfirmDatabaseUser }
+  $dbEnvironment = @{PGPASSFILE=$pgpass;PGSSLMODE='verify-full';PGSSLROOTCERT=$ca;PGCONNECT_TIMEOUT='15';PGOPTIONS='-c statement_timeout=240000 -c lock_timeout=30000 -c idle_in_transaction_session_timeout=60000';PGAPPNAME='meta-ads-rollback-finalize-fingerprint'}
+  $dbBase = @("--host=$ConfirmDatabaseHost",'--port=5432',"--username=$connectionUser","--dbname=$ConfirmDatabaseName",'--no-password','--tuples-only','--no-align','--set=ON_ERROR_STOP=1')
+  $schemaStateSql = "SELECT (to_regnamespace('$ConfirmDatabaseSchema') IS NOT NULL)::int || '|' || (to_regnamespace('$preserved') IS NOT NULL)::int"
+  $schemaState = Invoke-Bounded $psql ($dbBase + @("--command=$schemaStateSql")) $dbEnvironment 'ROLLBACK_FINALIZE_CONTEXT_SCHEMA_STATE'
+  $existingRecord = $null
+  if ($ExistingFinalizationHash) {
+    $existingPath = Get-PinnedFile $FinalizationJournalPath $ExistingFinalizationHash 'ROLLBACK_FINALIZE_EXISTING_OUTPUT_HASH_REQUIRED' 1048576
+    $existingRecord = Read-BoundedJson $existingPath 'ROLLBACK_FINALIZE_EXISTING_OUTPUT_INVALID' 1048576
+  }
+  if ($schemaState -ceq '1|1') {
+    $currentFingerprint = Get-LiveSchemaFingerprint $psql $dbBase $dbEnvironment $ConfirmDatabaseSchema
+    $preservedFingerprint = Get-LiveSchemaFingerprint $psql $dbBase $dbEnvironment $preserved
+    if ($existingRecord -and ([string]$existingRecord.initialCurrentSchemaFingerprint -cne $currentFingerprint.Fingerprint -or [string]$existingRecord.initialPreservedSchemaFingerprint -cne $preservedFingerprint.Fingerprint)) { throw 'ROLLBACK_FINALIZE_EXISTING_FINGERPRINT_DRIFT' }
+  } elseif ($schemaState -ceq '1|0') {
+    if (-not $existingRecord -or $existingRecord.state -notin @('INTENT','FAILED_MAINTENANCE_REQUIRED','COMPLETE_MAINTENANCE_REQUIRED')) { throw 'ROLLBACK_FINALIZE_COMPLETED_STATE_WITHOUT_INTENT' }
+    $liveSurvivor = Get-LiveSchemaFingerprint $psql $dbBase $dbEnvironment $ConfirmDatabaseSchema
+    $expectedSurvivor = [string]$existingRecord.expectedSurvivorSchemaFingerprint
+    if ($expectedSurvivor -notmatch '^[0-9a-f]{64}$' -or $liveSurvivor.Fingerprint -cne $expectedSurvivor) { throw 'ROLLBACK_FINALIZE_SURVIVOR_FINGERPRINT_DRIFT' }
+    $currentFingerprint = if ($Mode -eq 'RETURN_FORWARD') { $null } else { $liveSurvivor }
+    $preservedFingerprint = if ($Mode -eq 'RETURN_FORWARD') { $liveSurvivor } else { $null }
+  } else {
+    throw 'ROLLBACK_FINALIZE_CONTEXT_SCHEMA_STATE_REJECTED'
+  }
+  $initialCurrentSchemaFingerprint = if ($schemaState -ceq '1|1') { $currentFingerprint.Fingerprint } else { [string]$existingRecord.initialCurrentSchemaFingerprint }
+  $initialPreservedSchemaFingerprint = if ($schemaState -ceq '1|1') { $preservedFingerprint.Fingerprint } else { [string]$existingRecord.initialPreservedSchemaFingerprint }
+  $expectedSurvivorSchemaFingerprint = if ($Mode -eq 'RETURN_FORWARD') { $initialPreservedSchemaFingerprint } else { $initialCurrentSchemaFingerprint }
+  if ($initialCurrentSchemaFingerprint -notmatch '^[0-9a-f]{64}$' -or $initialPreservedSchemaFingerprint -notmatch '^[0-9a-f]{64}$' -or ($existingRecord -and [string]$existingRecord.expectedSurvivorSchemaFingerprint -cne $expectedSurvivorSchemaFingerprint)) { throw 'ROLLBACK_FINALIZE_SCHEMA_FINGERPRINT_BINDING_REJECTED' }
   $operationFingerprint = Get-TextSha256 (@(
-    'rollback-finalization-operation-v2',$Mode,$ExpectedRuntimeConfigSha256.ToLowerInvariant(),
+    'rollback-finalization-operation-v3',$Mode,$ExpectedRuntimeConfigSha256.ToLowerInvariant(),
     $ExpectedRollbackJournalSha256.ToLowerInvariant(),$ExpectedRollbackEvidenceSha256.ToLowerInvariant(),
     $ExpectedRestoreReceiptPublicKeySha256.ToLowerInvariant(),$ExpectedNodeSha256.ToLowerInvariant(),
     $ExpectedAttestationVerifierSha256.ToLowerInvariant(),$ExpectedPsqlSha256.ToLowerInvariant(),
@@ -292,9 +360,9 @@ function Get-BoundaryContext {
     $ExpectedFileSystemEvidenceSha256.ToLowerInvariant(),$ExpectedMaintenanceFlagSha256.ToLowerInvariant(),
     $ExpectedMaintenanceApprovalIdDigest.ToLowerInvariant(),$EdgeStateMode,[IO.Path]::GetFullPath($EdgeReleaseRoot),
     $ExpectedEdgeReleaseManifestSha256.ToLowerInvariant(),$ConfirmProjectRef,$ConfirmDatabaseHost,$ConfirmDatabaseName,
-    $ConfirmDatabaseSchema,$ConfirmDatabaseUser,$preserved,[IO.Path]::GetFullPath($FinalizationJournalPath)
+    $ConfirmDatabaseSchema,$ConfirmDatabaseUser,$preserved,$initialCurrentSchemaFingerprint,$initialPreservedSchemaFingerprint,$expectedSurvivorSchemaFingerprint,[IO.Path]::GetFullPath($FinalizationJournalPath)
   ) -join "`n")
-  return [pscustomobject]@{Runtime=$runtime;Config=$config;RollbackJournal=$rollbackJournal;RollbackEvidencePath=$rollbackEvidencePath;RollbackEvidence=$rollbackEvidence;RestorePublic=$restorePublic;Node=$node;Verifier=$verifier;Psql=$psql;PgPass=$pgpass;Ca=$ca;FileSystemPath=$filesystemPath;FileSystem=$filesystem;MaintenancePath=$maintenancePath;Maintenance=$maintenance;Quiescence=$quiescence;PreservedSchema=$preserved;OperationFingerprint=$operationFingerprint}
+  return [pscustomobject]@{Runtime=$runtime;Config=$config;RollbackJournal=$rollbackJournal;RollbackEvidencePath=$rollbackEvidencePath;RollbackEvidence=$rollbackEvidence;RestorePublic=$restorePublic;Node=$node;Verifier=$verifier;Psql=$psql;PgPass=$pgpass;Ca=$ca;FileSystemPath=$filesystemPath;FileSystem=$filesystem;MaintenancePath=$maintenancePath;Maintenance=$maintenance;Quiescence=$quiescence;PreservedSchema=$preserved;OperationFingerprint=$operationFingerprint;SchemaState=$schemaState;InitialCurrentSchemaFingerprint=$initialCurrentSchemaFingerprint;InitialPreservedSchemaFingerprint=$initialPreservedSchemaFingerprint;ExpectedSurvivorSchemaFingerprint=$expectedSurvivorSchemaFingerprint;CurrentSchemaFingerprint=$currentFingerprint;PreservedSchemaFingerprint=$preservedFingerprint}
 }
 
 function Get-ExistingFinalizationHash([string]$IntendedAction) {
@@ -313,15 +381,15 @@ function Get-ExistingFinalizationHash([string]$IntendedAction) {
 function New-FinalizePlan([string]$IntendedAction) {
   if ($IntendedAction -notin @('Apply','VerifyEvidence')) { throw 'ROLLBACK_FINALIZE_PLANNED_ACTION_REQUIRED' }
   if (-not $Mode) { throw 'ROLLBACK_FINALIZE_MODE_REQUIRED' }
-  $context = Get-BoundaryContext
   $existingFinalizationHash = Get-ExistingFinalizationHash $IntendedAction
+  $context = Get-BoundaryContext $existingFinalizationHash
   $parameters = [ordered]@{
     mode=$Mode;provider='supabase_postgres';projectRef=Get-ApprovalText $ConfirmProjectRef '^[a-z]{20}$' 'ROLLBACK_FINALIZE_PROJECT_REQUIRED';databaseHost=Get-ApprovalText $ConfirmDatabaseHost '^(?:db\.[a-z]{20}\.supabase\.co|[a-z0-9-]+\.pooler\.supabase\.com)$' 'ROLLBACK_FINALIZE_HOST_REQUIRED';databasePort=5432;databaseName=Get-ApprovalText $ConfirmDatabaseName '^[a-z][a-z0-9_]{0,62}$' 'ROLLBACK_FINALIZE_DATABASE_REQUIRED';databaseSchema=Get-ApprovalText $ConfirmDatabaseSchema '^[a-z][a-z0-9_]{0,62}$' 'ROLLBACK_FINALIZE_SCHEMA_REQUIRED';databaseUser=Get-ApprovalText $ConfirmDatabaseUser '^[a-z][a-z0-9_]{0,62}$' 'ROLLBACK_FINALIZE_USER_REQUIRED';preservedSchema=$context.PreservedSchema
     runtimeConfigPath=Get-ApprovalPath $RuntimeConfigPath 'ROLLBACK_FINALIZE_RUNTIME_REQUIRED';runtimeConfigSha256=Get-ApprovalHash $ExpectedRuntimeConfigSha256 'ROLLBACK_FINALIZE_RUNTIME_HASH_REQUIRED';rollbackJournalPath=Get-ApprovalPath $RollbackJournalPath 'ROLLBACK_FINALIZE_JOURNAL_REQUIRED';rollbackJournalSha256=Get-ApprovalHash $ExpectedRollbackJournalSha256 'ROLLBACK_FINALIZE_JOURNAL_HASH_REQUIRED';rollbackEvidencePath=Get-ApprovalPath $RollbackEvidencePath 'ROLLBACK_FINALIZE_EVIDENCE_REQUIRED';rollbackEvidenceSha256=Get-ApprovalHash $ExpectedRollbackEvidenceSha256 'ROLLBACK_FINALIZE_EVIDENCE_HASH_REQUIRED';restoreReceiptPublicKeyPath=Get-ApprovalPath $RestoreReceiptPublicKeyPath 'ROLLBACK_FINALIZE_PUBLIC_KEY_REQUIRED';restoreReceiptPublicKeySha256=Get-ApprovalHash $ExpectedRestoreReceiptPublicKeySha256 'ROLLBACK_FINALIZE_PUBLIC_KEY_HASH_REQUIRED'
     nodePath=Get-ApprovalPath $NodePath 'ROLLBACK_FINALIZE_NODE_REQUIRED';nodeSha256=Get-ApprovalHash $ExpectedNodeSha256 'ROLLBACK_FINALIZE_NODE_HASH_REQUIRED';attestationVerifierPath=Get-ApprovalPath $AttestationVerifierPath 'ROLLBACK_FINALIZE_VERIFIER_REQUIRED';attestationVerifierSha256=Get-ApprovalHash $ExpectedAttestationVerifierSha256 'ROLLBACK_FINALIZE_VERIFIER_HASH_REQUIRED';psqlPath=Get-ApprovalPath $PsqlPath 'ROLLBACK_FINALIZE_PSQL_REQUIRED';psqlSha256=Get-ApprovalHash $ExpectedPsqlSha256 'ROLLBACK_FINALIZE_PSQL_HASH_REQUIRED';pgPassPath=Get-ApprovalPath $PgPassFile 'ROLLBACK_FINALIZE_PGPASS_REQUIRED';pgPassSha256=Get-ApprovalHash $ExpectedPgPassSha256 'ROLLBACK_FINALIZE_PGPASS_HASH_REQUIRED';caCertificatePath=Get-ApprovalPath $CaCertificatePath 'ROLLBACK_FINALIZE_CA_REQUIRED';caCertificateSha256=Get-ApprovalHash $ExpectedCaCertificateSha256 'ROLLBACK_FINALIZE_CA_HASH_REQUIRED'
     filesystemEvidencePath=Get-ApprovalPath $FileSystemEvidencePath 'ROLLBACK_FINALIZE_FILESYSTEM_REQUIRED';filesystemEvidenceSha256=Get-ApprovalHash $ExpectedFileSystemEvidenceSha256 'ROLLBACK_FINALIZE_FILESYSTEM_HASH_REQUIRED';filesystemRequired='NTFS_EXACT_ACL';maintenanceFlagPath=Get-ApprovalPath $MaintenanceFlagPath 'ROLLBACK_FINALIZE_MAINTENANCE_REQUIRED';maintenanceFlagSha256=Get-ApprovalHash $ExpectedMaintenanceFlagSha256 'ROLLBACK_FINALIZE_MAINTENANCE_HASH_REQUIRED';maintenanceApprovalIdDigest=Get-ApprovalHash $ExpectedMaintenanceApprovalIdDigest 'ROLLBACK_FINALIZE_MAINTENANCE_APPROVAL_REQUIRED';maintenanceReleaseId=$context.Maintenance.ReleaseId
     edgeStateMode=$EdgeStateMode;edgeServiceName=$EdgeServiceName;edgeReleaseRoot=Get-ApprovalPath $EdgeReleaseRoot 'ROLLBACK_FINALIZE_EDGE_RELEASE_ROOT_REQUIRED';edgeReleaseManifestSha256=Get-ApprovalHash $ExpectedEdgeReleaseManifestSha256 'ROLLBACK_FINALIZE_EDGE_RELEASE_HASH_REQUIRED';quiescenceProofType=$context.Quiescence.ProofType;quiescenceIdentityDigest=$context.Quiescence.IdentityDigest;quiescenceEvidencePath=Get-ApprovalPath $context.Quiescence.EvidencePath 'ROLLBACK_FINALIZE_QUIESCENCE_PATH_REQUIRED';quiescenceEvidenceSha256=Get-ApprovalHash $context.Quiescence.EvidenceSha256 'ROLLBACK_FINALIZE_QUIESCENCE_HASH_REQUIRED';quiescencePublicKeyPath=Get-ApprovalPath $context.Quiescence.PublicKeyPath 'ROLLBACK_FINALIZE_QUIESCENCE_PUBLIC_KEY_REQUIRED';quiescencePublicKeySha256=Get-ApprovalHash $context.Quiescence.PublicKeySha256 'ROLLBACK_FINALIZE_QUIESCENCE_PUBLIC_KEY_HASH_REQUIRED';quiescenceCompletedAt=$context.Quiescence.CompletedAt;activeRequests=0;edgeProcessId=$context.Quiescence.EdgeProcessId;edgeProcessStartedAt=$context.Quiescence.EdgeProcessStartedAt;edgeListenerAddress=$context.Quiescence.ListenerAddress;edgeListenerPort=$context.Quiescence.ListenerPort;edgeServiceState=$context.Quiescence.ServiceState
-    finalizationJournalPath=Get-ApprovalPath $FinalizationJournalPath 'ROLLBACK_FINALIZE_OUTPUT_REQUIRED';existingFinalizationJournalSha256=$existingFinalizationHash;operationFingerprint=$context.OperationFingerprint
+    finalizationJournalPath=Get-ApprovalPath $FinalizationJournalPath 'ROLLBACK_FINALIZE_OUTPUT_REQUIRED';existingFinalizationJournalSha256=$existingFinalizationHash;operationFingerprint=$context.OperationFingerprint;initialSchemaState=$context.SchemaState;initialCurrentSchemaFingerprint=$context.InitialCurrentSchemaFingerprint;initialPreservedSchemaFingerprint=$context.InitialPreservedSchemaFingerprint;expectedSurvivorSchemaFingerprint=$context.ExpectedSurvivorSchemaFingerprint
   }
   if ($EdgeStateMode -eq 'ACTIVE_LOCAL_EDGE') {
     $parameters.edgeDrainHelperPath=Get-ApprovalPath $script:edgeDrainHelper 'ROLLBACK_FINALIZE_EDGE_DRAIN_HELPER_REQUIRED';$parameters.edgeDrainHelperSha256=Get-ApprovalHash $ExpectedEdgeDrainHelperSha256 'ROLLBACK_FINALIZE_EDGE_DRAIN_HELPER_HASH_REQUIRED';$parameters.maximumDrainAgeSeconds=$script:MaximumEdgeDrainAgeSeconds
@@ -334,24 +402,27 @@ function New-FinalizePlan([string]$IntendedAction) {
 
 function New-CompleteRecord($Intent,$Plan,$Boundary,[string]$ObservedState) {
   return [ordered]@{
-    version=2;state='COMPLETE_MAINTENANCE_REQUIRED';mode=$Mode;operationFingerprint=$Boundary.OperationFingerprint
+    version=3;state='COMPLETE_MAINTENANCE_REQUIRED';mode=$Mode;operationFingerprint=$Boundary.OperationFingerprint
     initialApprovalPlanSha256=[string]$Intent.initialApprovalPlanSha256;approvalPlanSha256=$Plan.planSha256
     recoveryApprovalPlanSha256=$(if ($Plan.planSha256 -cne [string]$Intent.initialApprovalPlanSha256) { $Plan.planSha256 } else { $null })
     rollbackJournalSha256=$ExpectedRollbackJournalSha256.ToLowerInvariant();rollbackEvidenceSha256=$ExpectedRollbackEvidenceSha256.ToLowerInvariant()
     filesystemEvidenceSha256=$ExpectedFileSystemEvidenceSha256.ToLowerInvariant();maintenanceFlagSha256=$ExpectedMaintenanceFlagSha256.ToLowerInvariant();maintenanceApprovalIdDigest=$ExpectedMaintenanceApprovalIdDigest.ToLowerInvariant()
     edgeStateMode=$EdgeStateMode;quiescenceProofType=$Boundary.Quiescence.ProofType;quiescenceIdentityDigest=$Boundary.Quiescence.IdentityDigest;quiescenceEvidenceSha256=$Boundary.Quiescence.EvidenceSha256;activeRequestsAtMutation=0
     databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$Boundary.PreservedSchema
+    initialCurrentSchemaFingerprint=[string]$Intent.initialCurrentSchemaFingerprint;initialPreservedSchemaFingerprint=[string]$Intent.initialPreservedSchemaFingerprint;expectedSurvivorSchemaFingerprint=[string]$Intent.expectedSurvivorSchemaFingerprint;survivorSchemaFingerprint=[string]$Intent.expectedSurvivorSchemaFingerprint
+    catalogFingerprintVerified=$true;migrationChainFingerprintVerified=$true;businessKpiFingerprintVerified=$true;storageReferenceFingerprintVerified=$true
     observedSchemaState=$ObservedState;currentSchemaPresent=$true;preservedSchemaAbsent=$true;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true
     completedAt=[datetimeoffset]::UtcNow.ToString('o')
   }
 }
 
 function Assert-ExistingIntent($Record,$Boundary) {
-  if ($Record.version -ne 2 -or $Record.state -notin @('INTENT','FAILED_MAINTENANCE_REQUIRED','COMPLETE_MAINTENANCE_REQUIRED') -or
+  if ($Record.version -ne 3 -or $Record.state -notin @('INTENT','FAILED_MAINTENANCE_REQUIRED','COMPLETE_MAINTENANCE_REQUIRED') -or
       $Record.mode -cne $Mode -or $Record.operationFingerprint -cne $Boundary.OperationFingerprint -or
       $Record.databaseProjectRef -cne $ConfirmProjectRef -or $Record.databaseHost -cne $ConfirmDatabaseHost -or
       $Record.databaseName -cne $ConfirmDatabaseName -or $Record.databaseSchema -cne $ConfirmDatabaseSchema -or
       $Record.preservedSchema -cne $Boundary.PreservedSchema -or $Record.initialApprovalPlanSha256 -notmatch '^[0-9a-f]{64}$' -or
+      $Record.initialCurrentSchemaFingerprint -cne $Boundary.InitialCurrentSchemaFingerprint -or $Record.initialPreservedSchemaFingerprint -cne $Boundary.InitialPreservedSchemaFingerprint -or $Record.expectedSurvivorSchemaFingerprint -cne $Boundary.ExpectedSurvivorSchemaFingerprint -or
       -not $Record.maintenanceMustRemainEnabled -or -not $Record.legacyWritersMustRemainQuiesced) {
     throw 'ROLLBACK_FINALIZE_EXISTING_INTENT_REJECTED'
   }
@@ -361,8 +432,8 @@ $intended = if ($Action -eq 'Apply') { 'Apply' } else { 'VerifyEvidence' }
 $plan = New-FinalizePlan $(if ($Action -eq 'Plan') { $PlannedAction } else { $intended })
 if ($Action -eq 'Plan') { $plan | ConvertTo-Json -Depth 16;exit 0 }
 Assert-ApprovedPlan $plan ([bool]$Approved) $ApprovedPlanSha256
-$boundary = Get-BoundaryContext
-if ($boundary.Quiescence.IdentityDigest -cne $plan.exactParameters.quiescenceIdentityDigest -or $boundary.OperationFingerprint -cne $plan.exactParameters.operationFingerprint) { throw 'ROLLBACK_FINALIZE_ACTION_BOUNDARY_DRIFT' }
+$boundary = Get-BoundaryContext ([string]$plan.exactParameters.existingFinalizationJournalSha256)
+if ($boundary.Quiescence.IdentityDigest -cne $plan.exactParameters.quiescenceIdentityDigest -or $boundary.OperationFingerprint -cne $plan.exactParameters.operationFingerprint -or $boundary.InitialCurrentSchemaFingerprint -cne $plan.exactParameters.initialCurrentSchemaFingerprint -or $boundary.InitialPreservedSchemaFingerprint -cne $plan.exactParameters.initialPreservedSchemaFingerprint -or $boundary.ExpectedSurvivorSchemaFingerprint -cne $plan.exactParameters.expectedSurvivorSchemaFingerprint) { throw 'ROLLBACK_FINALIZE_ACTION_BOUNDARY_DRIFT' }
 
 $connectionUser = if ($boundary.Config.database.connectionMode -eq 'session_pooler') { "$ConfirmDatabaseUser.$ConfirmProjectRef" } else { $ConfirmDatabaseUser }
 $environment = @{PGPASSFILE=$boundary.PgPass;PGSSLMODE='verify-full';PGSSLROOTCERT=$boundary.Ca;PGCONNECT_TIMEOUT='15';PGOPTIONS='-c statement_timeout=240000 -c lock_timeout=30000 -c idle_in_transaction_session_timeout=60000';PGAPPNAME='meta-ads-rollback-finalize'}
@@ -386,8 +457,12 @@ if ($Action -eq 'Apply') {
     $observed = Invoke-Bounded $boundary.Psql ($base + @("--command=$stateSql")) $environment 'ROLLBACK_FINALIZE_STATE_CHECK'
     if ($intent -and $intent.state -ceq 'COMPLETE_MAINTENANCE_REQUIRED') {
       if ($observed -cne '1|0') { throw 'ROLLBACK_FINALIZE_COMPLETE_STATE_DRIFT' }
+      $liveSurvivor = Get-LiveSchemaFingerprint $boundary.Psql $base $environment $ConfirmDatabaseSchema
+      if ($liveSurvivor.Fingerprint -cne $boundary.ExpectedSurvivorSchemaFingerprint) { throw 'ROLLBACK_FINALIZE_COMPLETE_FINGERPRINT_DRIFT' }
       $completed = $true
     } elseif ($observed -eq '1|0' -and $intent) {
+      $liveSurvivor = Get-LiveSchemaFingerprint $boundary.Psql $base $environment $ConfirmDatabaseSchema
+      if ($liveSurvivor.Fingerprint -cne $boundary.ExpectedSurvivorSchemaFingerprint) { throw 'ROLLBACK_FINALIZE_RECONCILE_FINGERPRINT_DRIFT' }
       Write-DurableJson $FinalizationJournalPath (New-CompleteRecord $intent $plan $boundary $observed)
       $completed = $true
       $reconciledAfterFailure = $true
@@ -395,46 +470,58 @@ if ($Action -eq 'Apply') {
       if ($observed -cne '1|1') { throw 'ROLLBACK_FINALIZE_SCHEMA_STATE_REJECTED' }
       if (-not $intent) {
         $intent = [ordered]@{
-          version=2;state='INTENT';mode=$Mode;operationFingerprint=$boundary.OperationFingerprint
+          version=3;state='INTENT';mode=$Mode;operationFingerprint=$boundary.OperationFingerprint
           initialApprovalPlanSha256=$plan.planSha256;approvalInstanceId=$plan.approvalInstanceId
           rollbackJournalSha256=$ExpectedRollbackJournalSha256.ToLowerInvariant();rollbackEvidenceSha256=$ExpectedRollbackEvidenceSha256.ToLowerInvariant()
           filesystemEvidenceSha256=$ExpectedFileSystemEvidenceSha256.ToLowerInvariant();maintenanceFlagSha256=$ExpectedMaintenanceFlagSha256.ToLowerInvariant();maintenanceApprovalIdDigest=$ExpectedMaintenanceApprovalIdDigest.ToLowerInvariant()
           edgeStateMode=$EdgeStateMode;quiescenceProofType=$boundary.Quiescence.ProofType;quiescenceIdentityDigest=$boundary.Quiescence.IdentityDigest;quiescenceEvidenceSha256=$boundary.Quiescence.EvidenceSha256;activeRequestsAtIntent=0
           databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$boundary.PreservedSchema
+          initialCurrentSchemaFingerprint=$boundary.InitialCurrentSchemaFingerprint;initialPreservedSchemaFingerprint=$boundary.InitialPreservedSchemaFingerprint;expectedSurvivorSchemaFingerprint=$boundary.ExpectedSurvivorSchemaFingerprint
           expectedPreState='1|1';expectedPostState='1|0';maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;createdAt=[datetimeoffset]::UtcNow.ToString('o')
         }
         Write-DurableJson $FinalizationJournalPath $intent -CreateOnly
         $journalOwned = $true
       }
+      [void](Get-PinnedFile $boundary.MaintenancePath $ExpectedMaintenanceFlagSha256 'ROLLBACK_FINALIZE_PRE_MUTATION_MAINTENANCE_HASH_DRIFT' 1048576)
       [void](Assert-MaintenanceState $boundary.Config $boundary.MaintenancePath)
       $actionQuiescence = Assert-CurrentQuiescence $boundary.Config $boundary.RollbackEvidence $boundary.Runtime $boundary.Node $boundary.Verifier
       if ($actionQuiescence.IdentityDigest -cne $plan.exactParameters.quiescenceIdentityDigest -or [int]$actionQuiescence.ActiveRequests -ne 0) { throw 'ROLLBACK_FINALIZE_ACTION_TIME_QUIESCENCE_CHANGED' }
       $beforeMutation = Invoke-Bounded $boundary.Psql ($base + @("--command=$stateSql")) $environment 'ROLLBACK_FINALIZE_PRE_MUTATION_STATE_CHECK'
       if ($beforeMutation -cne '1|1') { throw 'ROLLBACK_FINALIZE_PRE_MUTATION_STATE_REJECTED' }
+      $beforeCurrentFingerprint = Get-LiveSchemaFingerprint $boundary.Psql $base $environment $ConfirmDatabaseSchema
+      $beforePreservedFingerprint = Get-LiveSchemaFingerprint $boundary.Psql $base $environment $boundary.PreservedSchema
+      if ($beforeCurrentFingerprint.Fingerprint -cne $boundary.InitialCurrentSchemaFingerprint -or $beforePreservedFingerprint.Fingerprint -cne $boundary.InitialPreservedSchemaFingerprint) { throw 'ROLLBACK_FINALIZE_PRE_MUTATION_FINGERPRINT_DRIFT' }
       $sql = if ($Mode -eq 'RETURN_FORWARD') { "BEGIN; DROP SCHEMA $schema CASCADE; ALTER SCHEMA $saved RENAME TO $schema; COMMIT;" } else { "BEGIN; DROP SCHEMA $saved CASCADE; COMMIT;" }
       [void](Invoke-Bounded $boundary.Psql ($base + @("--command=$sql")) $environment 'ROLLBACK_FINALIZE_MUTATION_FAILED')
       $observed = Invoke-Bounded $boundary.Psql ($base + @("--command=$stateSql")) $environment 'ROLLBACK_FINALIZE_STATE_VERIFY'
       if ($observed -cne '1|0') { throw 'ROLLBACK_FINALIZE_POST_STATE_REJECTED' }
+      $afterFingerprint = Get-LiveSchemaFingerprint $boundary.Psql $base $environment $ConfirmDatabaseSchema
+      if ($afterFingerprint.Fingerprint -cne $boundary.ExpectedSurvivorSchemaFingerprint) { throw 'ROLLBACK_FINALIZE_POST_FINGERPRINT_REJECTED' }
       Write-DurableJson $FinalizationJournalPath (New-CompleteRecord $intent $plan $boundary $observed)
       $completed = $true
     }
   } catch {
-    $failureCode = [string]$_.Exception.Message
+    $failureCode = if ([string]$_.Exception.Message -match '^[A-Z0-9_]{3,160}$') { [string]$_.Exception.Message } else { 'ROLLBACK_FINALIZE_UNCLASSIFIED_FAILURE' }
     try { $observed = Invoke-Bounded $boundary.Psql ($base + @("--command=$stateSql")) $environment 'ROLLBACK_FINALIZE_FAILURE_STATE_CHECK' } catch { $observed = 'UNKNOWN' }
     if ($journalOwned -and $intent) {
       try {
+        $reconcileFingerprintMatches = $false
         if ($observed -ceq '1|0') {
+          try { $reconcileFingerprintMatches = (Get-LiveSchemaFingerprint $boundary.Psql $base $environment $ConfirmDatabaseSchema).Fingerprint -ceq $boundary.ExpectedSurvivorSchemaFingerprint } catch { $reconcileFingerprintMatches = $false }
+        }
+        if ($observed -ceq '1|0' -and $reconcileFingerprintMatches) {
           Write-DurableJson $FinalizationJournalPath (New-CompleteRecord $intent $plan $boundary $observed)
           $completed = $true
           $reconciledAfterFailure = $true
         } else {
           Write-DurableJson $FinalizationJournalPath ([ordered]@{
-            version=2;state='FAILED_MAINTENANCE_REQUIRED';mode=$Mode;operationFingerprint=$boundary.OperationFingerprint
+            version=3;state='FAILED_MAINTENANCE_REQUIRED';mode=$Mode;operationFingerprint=$boundary.OperationFingerprint
             initialApprovalPlanSha256=[string]$intent.initialApprovalPlanSha256;lastApprovalPlanSha256=$plan.planSha256;failureCode=$failureCode
             rollbackJournalSha256=$ExpectedRollbackJournalSha256.ToLowerInvariant();rollbackEvidenceSha256=$ExpectedRollbackEvidenceSha256.ToLowerInvariant()
             filesystemEvidenceSha256=$ExpectedFileSystemEvidenceSha256.ToLowerInvariant();maintenanceFlagSha256=$ExpectedMaintenanceFlagSha256.ToLowerInvariant();maintenanceApprovalIdDigest=$ExpectedMaintenanceApprovalIdDigest.ToLowerInvariant()
             edgeStateMode=$EdgeStateMode;quiescenceProofType=$boundary.Quiescence.ProofType;quiescenceIdentityDigest=$boundary.Quiescence.IdentityDigest;quiescenceEvidenceSha256=$boundary.Quiescence.EvidenceSha256
             databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$boundary.PreservedSchema
+            initialCurrentSchemaFingerprint=[string]$intent.initialCurrentSchemaFingerprint;initialPreservedSchemaFingerprint=[string]$intent.initialPreservedSchemaFingerprint;expectedSurvivorSchemaFingerprint=[string]$intent.expectedSurvivorSchemaFingerprint
             observedSchemaState=$observed;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;recoveryProcedure='KEEP MAINTENANCE AND WRITER QUIESCENCE. HASH-PIN THIS JOURNAL AND CREATE A NEW EXACT APPLY PLAN TO RECONCILE 1|1 OR 1|0.';failedAt=[datetimeoffset]::UtcNow.ToString('o')
           })
         }
@@ -450,7 +537,7 @@ if ($Action -eq 'Apply') {
 $finalPath = Get-PinnedFile $FinalizationJournalPath $ExpectedFinalizationJournalSha256 'ROLLBACK_FINALIZE_OUTPUT_HASH_MISMATCH' 1048576
 $record = Read-BoundedJson $finalPath 'ROLLBACK_FINALIZE_OUTPUT_INVALID' 1048576
 $state = Invoke-Bounded $boundary.Psql ($base + @("--command=$stateSql")) $environment 'ROLLBACK_FINALIZE_VERIFY_STATE'
-if ($record.version -ne 2 -or $record.state -cne 'COMPLETE_MAINTENANCE_REQUIRED' -or $record.mode -cne $Mode -or
+if ($record.version -ne 3 -or $record.state -cne 'COMPLETE_MAINTENANCE_REQUIRED' -or $record.mode -cne $Mode -or
     $record.operationFingerprint -cne $boundary.OperationFingerprint -or $record.approvalPlanSha256 -cne $ExpectedApplyPlanSha256.ToLowerInvariant() -or
     $record.rollbackJournalSha256 -cne $ExpectedRollbackJournalSha256.ToLowerInvariant() -or $record.rollbackEvidenceSha256 -cne $ExpectedRollbackEvidenceSha256.ToLowerInvariant() -or
     $record.filesystemEvidenceSha256 -cne $ExpectedFileSystemEvidenceSha256.ToLowerInvariant() -or $record.maintenanceFlagSha256 -cne $ExpectedMaintenanceFlagSha256.ToLowerInvariant() -or
@@ -458,7 +545,8 @@ if ($record.version -ne 2 -or $record.state -cne 'COMPLETE_MAINTENANCE_REQUIRED'
     $record.edgeStateMode -cne $EdgeStateMode -or $record.quiescenceProofType -cne $boundary.Quiescence.ProofType -or
     $record.databaseProjectRef -cne $ConfirmProjectRef -or $record.databaseHost -cne $ConfirmDatabaseHost -or
     $record.databaseName -cne $ConfirmDatabaseName -or $record.databaseSchema -cne $ConfirmDatabaseSchema -or
-    $record.preservedSchema -cne $boundary.PreservedSchema -or $state -cne '1|0' -or
+    $record.preservedSchema -cne $boundary.PreservedSchema -or $record.initialCurrentSchemaFingerprint -cne $boundary.InitialCurrentSchemaFingerprint -or $record.initialPreservedSchemaFingerprint -cne $boundary.InitialPreservedSchemaFingerprint -or $record.expectedSurvivorSchemaFingerprint -cne $boundary.ExpectedSurvivorSchemaFingerprint -or $record.survivorSchemaFingerprint -cne $boundary.ExpectedSurvivorSchemaFingerprint -or $state -cne '1|0' -or
+    -not $record.catalogFingerprintVerified -or -not $record.migrationChainFingerprintVerified -or -not $record.businessKpiFingerprintVerified -or -not $record.storageReferenceFingerprintVerified -or
     -not $record.currentSchemaPresent -or -not $record.preservedSchemaAbsent -or -not $record.maintenanceMustRemainEnabled -or -not $record.legacyWritersMustRemainQuiesced) {
   throw 'ROLLBACK_FINALIZE_VERIFY_REJECTED'
 }

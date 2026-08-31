@@ -1,7 +1,7 @@
 #Requires -Version 7.2
 [CmdletBinding()]
 param(
-  [ValidateSet('Plan','Apply','Verify')][string]$Action = 'Plan',
+  [ValidateSet('Plan','Apply','Recover','Verify','VerifyRecovery')][string]$Action = 'Plan',
   [string]$RuntimeConfigPath,[string]$ExpectedRuntimeConfigSha256,
   [string]$LegacyBaselineEvidencePath,[string]$ExpectedLegacyBaselineEvidenceSha256,
   [string]$LegacyQuiesceEvidencePath,[string]$ExpectedLegacyQuiesceEvidenceSha256,[string]$QuiesceReceiptPublicKeyPath,[string]$ExpectedQuiesceReceiptPublicKeySha256,
@@ -17,7 +17,7 @@ param(
   [string]$FileSystemEvidencePath,[string]$ExpectedFileSystemEvidenceSha256,[string]$RollbackJournalPath,[string]$ExpectedRollbackJournalSha256,[string]$EvidenceOutputPath,[string]$ExpectedEvidenceSha256,
   [string]$ConfirmProjectRef,[string]$ConfirmDatabaseHost,[string]$ConfirmDatabaseName,[string]$ConfirmDatabaseSchema,[string]$ConfirmDatabaseUser,
   [ValidateSet(14400)][int]$MaximumRestoreDurationSeconds = 14400,[ValidateRange(1048576,274877906944)][long]$MaximumDatabaseDumpBytes = 68719476736,[ValidateRange(4096,8388608)][int]$MaximumChildOutputBytes = 1048576,
-  [ValidateSet('Apply','VerifyEvidence')][string]$PlannedAction,[string]$ApprovedPlanSha256,[string]$ApprovalNonce,[string]$ApprovalIssuedAt,[string]$ApprovalExpiresAt,[string]$ApprovalInstanceId,[string]$ApprovalLedgerPath,[switch]$Approved
+  [ValidateSet('Apply','Recover','VerifyEvidence','VerifyRecovery')][string]$PlannedAction,[string]$ApprovedPlanSha256,[string]$ApprovalNonce,[string]$ApprovalIssuedAt,[string]$ApprovalExpiresAt,[string]$ApprovalInstanceId,[string]$ApprovalLedgerPath,[switch]$Approved
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
@@ -152,10 +152,15 @@ function Get-CurrentEdgeIdentity {
 }
 
 function New-RollbackPlan([string]$IntendedAction) {
-  if ($IntendedAction -notin @('Apply','VerifyEvidence')) { throw 'ROLLBACK_RESTORE_PLAN_ACTION_REQUIRED' }
+  if ($IntendedAction -notin @('Apply','Recover','VerifyEvidence','VerifyRecovery')) { throw 'ROLLBACK_RESTORE_PLAN_ACTION_REQUIRED' }
   $context = Get-ApprovalContext
   $edge = Get-CurrentEdgeIdentity
-  $preserved = Get-PreservedSchemaName
+  $existingRollbackRecord=$null
+  if($IntendedAction-eq'Apply'){$preserved=Get-PreservedSchemaName}else{
+    $existingRollbackPath=Existing $RollbackJournalPath $false 'ROLLBACK_DURABLE_JOURNAL_NOT_FOUND';AssertHash $existingRollbackPath $ExpectedRollbackJournalSha256 'ROLLBACK_DURABLE_JOURNAL_HASH_MISMATCH' 1048576;$existingRollbackRecord=Read-BoundedJson $existingRollbackPath 1048576 'ROLLBACK_DURABLE_JOURNAL_INVALID';$preserved=[string]$existingRollbackRecord.preservedSchema
+    $allowedState=if($IntendedAction-eq'Recover'){$existingRollbackRecord.state-in@('INTENT','PRESERVED_ORIGINAL_RESTORE_IN_PROGRESS','RECOVERY_INTENT','FAILED_MAINTENANCE_REQUIRED')}elseif($IntendedAction-eq'VerifyRecovery'){$existingRollbackRecord.state-ceq'RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED'}else{$existingRollbackRecord.state-ceq'COMPLETE_MAINTENANCE_REQUIRED'}
+    if($existingRollbackRecord.version -ne 3 -or -not $allowedState -or $preserved -notmatch '^__metaads_pre_[0-9a-f]{16}$' -or ([string]$existingRollbackRecord.databaseSchema -and [string]$existingRollbackRecord.databaseSchema -cne $ConfirmDatabaseSchema)){throw 'ROLLBACK_EXISTING_JOURNAL_STATE_REJECTED'}
+  }
   $parameters = [ordered]@{
     provider='supabase_postgres';projectRef=Get-ApprovalText $ConfirmProjectRef '^[a-z]{20}$' 'ROLLBACK_PROJECT_REQUIRED';host=Get-ApprovalText $ConfirmDatabaseHost '^(?:db\.[a-z]{20}\.supabase\.co|[a-z0-9-]+\.pooler\.supabase\.com)$' 'ROLLBACK_HOST_REQUIRED';port=5432;databaseName=Get-ApprovalText $ConfirmDatabaseName '^[a-z][a-z0-9_]{0,62}$' 'ROLLBACK_DATABASE_REQUIRED';databaseSchema=Get-ApprovalText $ConfirmDatabaseSchema '^[a-z][a-z0-9_]{0,62}$' 'ROLLBACK_SCHEMA_REQUIRED';preservedSchema=$preserved;databaseUser=Get-ApprovalText $ConfirmDatabaseUser '^[a-z][a-z0-9_]{0,62}$' 'ROLLBACK_DATABASE_USER_REQUIRED'
     runtimeConfigPath=Get-ApprovalPath $RuntimeConfigPath 'ROLLBACK_RUNTIME_REQUIRED';runtimeConfigSha256=Get-ApprovalHash $ExpectedRuntimeConfigSha256 'ROLLBACK_RUNTIME_HASH_REQUIRED';baselinePath=Get-ApprovalPath $LegacyBaselineEvidencePath 'ROLLBACK_BASELINE_REQUIRED';baselineSha256=Get-ApprovalHash $ExpectedLegacyBaselineEvidenceSha256 'ROLLBACK_BASELINE_HASH_REQUIRED';legacyQuiesceEvidencePath=Get-ApprovalPath $LegacyQuiesceEvidencePath 'ROLLBACK_QUIESCE_EVIDENCE_REQUIRED';legacyQuiesceEvidenceSha256=Get-ApprovalHash $ExpectedLegacyQuiesceEvidenceSha256 'ROLLBACK_QUIESCE_EVIDENCE_HASH_REQUIRED';quiescePublicKeyPath=Get-ApprovalPath $QuiesceReceiptPublicKeyPath 'ROLLBACK_QUIESCE_PUBLIC_KEY_REQUIRED';quiescePublicKeySha256=Get-ApprovalHash $ExpectedQuiesceReceiptPublicKeySha256 'ROLLBACK_QUIESCE_PUBLIC_KEY_HASH_REQUIRED';migrationJournalPath=Get-ApprovalPath $MigrationJournalPath 'ROLLBACK_MIGRATION_JOURNAL_REQUIRED';migrationJournalSha256=Get-ApprovalHash $ExpectedMigrationJournalSha256 'ROLLBACK_MIGRATION_JOURNAL_HASH_REQUIRED';rollbackJournalPath=Get-ApprovalPath $RollbackJournalPath 'ROLLBACK_DURABLE_JOURNAL_REQUIRED'
@@ -168,13 +173,16 @@ function New-RollbackPlan([string]$IntendedAction) {
   if($EdgeStateMode-eq'ACTIVE_LOCAL_EDGE'){$parameters.drainStatePath=Get-ApprovalPath $DrainStatePath 'ROLLBACK_DRAIN_REQUIRED';$parameters.drainStateSha256=Get-ApprovalHash $ExpectedDrainStateSha256 'ROLLBACK_DRAIN_HASH_REQUIRED';$parameters.maximumDrainAgeSeconds=30;$parameters.edgeDrainHelperPath=Get-ApprovalPath $edgeDrainHelper 'ROLLBACK_EDGE_DRAIN_HELPER_REQUIRED';$parameters.edgeDrainHelperSha256=Get-ApprovalHash $ExpectedEdgeDrainHelperSha256 'ROLLBACK_EDGE_DRAIN_HELPER_HASH_REQUIRED';$parameters.edgeSigningPublicKeyPath=Get-ApprovalPath $EdgeSigningPublicKeyPath 'ROLLBACK_EDGE_PUBLIC_KEY_REQUIRED';$parameters.edgeSigningPublicKeySha256=Get-ApprovalHash $ExpectedEdgeSigningPublicKeySha256 'ROLLBACK_EDGE_PUBLIC_KEY_HASH_REQUIRED'}else{$parameters.edgeListenerAbsent=$true;$parameters.edgeServiceState=$edge.edgeServiceState}
   if ($IntendedAction -eq 'Apply') {
     $parameters.signerPath=Get-ApprovalPath $AttestationSignerPath 'ROLLBACK_SIGNER_REQUIRED';$parameters.signerSha256=Get-ApprovalHash $ExpectedAttestationSignerSha256 'ROLLBACK_SIGNER_HASH_REQUIRED';$parameters.restorePrivateKeyPath=Get-ApprovalPath $RestoreReceiptPrivateKeyPath 'ROLLBACK_PRIVATE_KEY_REQUIRED';$parameters.restorePrivateKeySha256=Get-ApprovalHash $ExpectedRestoreReceiptPrivateKeySha256 'ROLLBACK_PRIVATE_KEY_HASH_REQUIRED'
-  } else {
+  } elseif($IntendedAction-eq'VerifyEvidence') {
     $parameters.rollbackJournalSha256=Get-ApprovalHash $ExpectedRollbackJournalSha256 'ROLLBACK_DURABLE_JOURNAL_HASH_REQUIRED';$parameters.evidenceSha256=Get-ApprovalHash $ExpectedEvidenceSha256 'ROLLBACK_EVIDENCE_HASH_REQUIRED';$parameters.restorePublicKeyPath=Get-ApprovalPath $RestoreReceiptPublicKeyPath 'ROLLBACK_PUBLIC_KEY_REQUIRED';$parameters.restorePublicKeySha256=Get-ApprovalHash $ExpectedRestoreReceiptPublicKeySha256 'ROLLBACK_PUBLIC_KEY_HASH_REQUIRED'
+  } else {
+    $parameters.rollbackJournalSha256=Get-ApprovalHash $ExpectedRollbackJournalSha256 'ROLLBACK_DURABLE_JOURNAL_HASH_REQUIRED';$parameters.recoverySourceState=[string]$existingRollbackRecord.state
   }
-  return New-ApprovalPlan $PSCommandPath $IntendedAction $parameters "Exact existing Supabase target $ConfirmProjectRef/$ConfirmDatabaseHost`:5432/$ConfirmDatabaseName schema $ConfirmDatabaseSchema with preserved schema $preserved" 'Keeps maintenance, drain, and legacy quiesce active; durably records INTENT; transactionally preserves the current schema before restoring and proving the signed legacy backup' 'On failure, atomically restore the preserved schema when possible; otherwise retain it with FAILED_MAINTENANCE_REQUIRED and do not restart writers until a new exact approved repair'
+  $impact=if($IntendedAction-eq'Apply'){'Keeps maintenance, drain, and legacy quiesce active; durably records INTENT; transactionally preserves the current schema before restoring and proving the signed legacy backup'}elseif($IntendedAction-eq'Recover'){'Keeps maintenance and writers quiesced; hash-pins the interrupted rollback journal; transactionally discards only a partial current schema when present and renames the exact preserved original schema back to production'}else{'Read-only verification of the exact completed rollback or recovered-original journal and live schema state while maintenance remains enabled'}
+  return New-ApprovalPlan $PSCommandPath $IntendedAction $parameters "Exact existing Supabase target $ConfirmProjectRef/$ConfirmDatabaseHost`:5432/$ConfirmDatabaseName schema $ConfirmDatabaseSchema with preserved schema $preserved" $impact 'Recovery never restarts writers or disables maintenance; a failed recovery remains journaled and requires a new exact hash-pinned approval'
 }
 
-$intended = if ($Action -eq 'Apply') { 'Apply' } else { 'VerifyEvidence' }
+$intended = if ($Action -eq 'Apply') { 'Apply' } elseif($Action-eq'Recover'){'Recover'}elseif($Action-eq'VerifyRecovery'){'VerifyRecovery'}else { 'VerifyEvidence' }
 $approvalPlan = New-RollbackPlan $(if ($Action -eq 'Plan') { $PlannedAction } else { $intended })
 if ($Action -eq 'Plan') { $approvalPlan | ConvertTo-Json -Depth 16;exit 0 }
 Assert-ApprovedPlan $approvalPlan ([bool]$Approved) $ApprovedPlanSha256
@@ -211,7 +219,9 @@ $maintenance = Read-BoundedJson $maintenancePath 1048576 'ROLLBACK_MAINTENANCE_I
 if ($maintenance.version -ne 1 -or -not $maintenance.enabled -or $maintenance.releaseId -cne $config.release.id -or @(Get-NetTCPConnection -State Listen -LocalPort 3100,4100 -ErrorAction SilentlyContinue).Count) { throw 'ROLLBACK_MAINTENANCE_DRAIN_OR_QUIESCE_REJECTED' }
 $baseline = Read-BoundedJson $baselinePath 16777216 'ROLLBACK_BASELINE_INVALID'
 $migration = Read-BoundedJson $migrationJournal 16777216 'ROLLBACK_MIGRATION_JOURNAL_INVALID'
-if ($baseline.version -ne 3 -or $baseline.proofType -cne 'legacy-running-baseline' -or $baseline.migrationDigest -notmatch '^[0-9a-f]{64}$' -or ($migration.result -cne 'APPLIED_PENDING_BOUNDARY' -and $migration.result -cne 'APPLIED')) { throw 'ROLLBACK_BASELINE_OR_JOURNAL_REJECTED' }
+$migrationStateRecoverable = $migration.result -in @('INTENT','FAILED_MAINTENANCE_REQUIRED','APPLIED_PENDING_BOUNDARY','APPLIED')
+$failedMigrationBound = $migration.result -cne 'FAILED_MAINTENANCE_REQUIRED' -or ($migration.rollbackRequiresApprovedRestore -and $migration.failureCode -match '^[A-Z0-9_]{3,160}$')
+if ($baseline.version -ne 3 -or $baseline.proofType -cne 'legacy-running-baseline' -or $baseline.migrationDigest -notmatch '^[0-9a-f]{64}$' -or -not $migrationStateRecoverable -or -not $failedMigrationBound -or $migration.version -ne 2 -or $migration.projectRef -cne $ConfirmProjectRef -or $migration.host -cne $ConfirmDatabaseHost -or $migration.databaseName -cne $ConfirmDatabaseName -or $migration.databaseSchema -cne $ConfirmDatabaseSchema -or $migration.previousMigrationDigest -cne $baseline.migrationDigest -or $migration.targetMigrationDigest -notmatch '^[0-9a-f]{64}$' -or $migration.prechangeBackupEvidenceSha256 -cne (Hash $backupEvidence 16777216) -or $migration.legacyQuiesceEvidenceSha256 -cne $ExpectedLegacyQuiesceEvidenceSha256.ToLowerInvariant() -or -not $migration.maintenanceMustRemainEnabled) { throw 'ROLLBACK_BASELINE_OR_JOURNAL_REJECTED' }
 $quiesceIdentity = Assert-LegacyQuiesceState $baseline $migration (Hash $baselinePath 16777216)
 [void](Invoke-Bounded $node @($verifier,$backupPublic,$backupEvidence,'backup-latest') @{} 'ROLLBACK_BACKUP_SIGNATURE_VERIFY')
 $receipt = Read-BoundedJson $backupEvidence 16777216 'ROLLBACK_BACKUP_EVIDENCE_INVALID'
@@ -260,6 +270,45 @@ SELECT concat_ws('|',
   NOT EXISTS(SELECT 1 FROM migration_defaults d LEFT JOIN pg_roles r ON r.oid=d.grantee WHERE d.grantee=0 OR (d.grantee<>d.defaclrole AND (r.rolname IS NULL OR (d.defaclobjtype='r' AND NOT (r.rolname='$($db.runtimeUser)' AND d.privilege_type IN ('SELECT','INSERT','UPDATE','DELETE'))) OR (d.defaclobjtype='S' AND NOT (r.rolname='$($db.runtimeUser)' AND d.privilege_type IN ('USAGE','SELECT'))) OR d.defaclobjtype NOT IN ('r','S','f') OR d.defaclobjtype='f')))
 )
 "@
+$schemaStateSql = "SELECT (to_regnamespace('$ConfirmDatabaseSchema') IS NOT NULL)::int || '|' || (to_regnamespace('$preservedSchema') IS NOT NULL)::int"
+
+if($Action-eq'Recover'){
+  $recoveryJournal=Existing $RollbackJournalPath $false 'ROLLBACK_DURABLE_JOURNAL_NOT_FOUND';AssertHash $recoveryJournal $ExpectedRollbackJournalSha256 'ROLLBACK_DURABLE_JOURNAL_HASH_MISMATCH' 1048576
+  $recoverySource=Read-BoundedJson $recoveryJournal 1048576 'ROLLBACK_DURABLE_JOURNAL_INVALID';$recoverySourceHash=Hash $recoveryJournal 1048576
+  if($recoverySource.version -ne 3 -or $recoverySource.state -notin @('INTENT','PRESERVED_ORIGINAL_RESTORE_IN_PROGRESS','RECOVERY_INTENT','FAILED_MAINTENANCE_REQUIRED') -or [string]$recoverySource.preservedSchema -cne $preservedSchema -or -not $recoverySource.maintenanceMustRemainEnabled -or -not $recoverySource.legacyWritersMustRemainQuiesced){throw 'ROLLBACK_RECOVERY_SOURCE_REJECTED'}
+  $recoveryEdge=Get-CurrentEdgeIdentity;if($recoveryEdge.identityDigest-cne$approvalPlan.exactParameters.edgeIdentityDigest){throw 'ROLLBACK_RECOVERY_EDGE_IDENTITY_DRIFT'}
+  AssertHash $maintenancePath $ExpectedMaintenanceFlagSha256 'ROLLBACK_RECOVERY_MAINTENANCE_HASH_DRIFT' 1048576
+  $schemaState=Invoke-Bounded $psql ($base+@('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_RECOVERY_SCHEMA_STATE'
+  if($schemaState-notin@('1|0','0|1','1|1')){throw 'ROLLBACK_RECOVERY_SCHEMA_STATE_REJECTED'}
+  $recoveryIntent=[ordered]@{version=3;state='RECOVERY_INTENT';sourceJournalSha256=$recoverySourceHash;sourceState=[string]$recoverySource.state;recoveryPlanSha256=$approvalPlan.planSha256;databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;observedSchemaState=$schemaState;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;edgeStateMode=$EdgeStateMode;quiescenceProofType=$edgeIdentity.proofType;edgeIdentityDigest=$edgeIdentity.identityDigest;legacyQuiesceEvidenceSha256=$quiesceIdentity.EvidenceSha256;createdAt=[datetimeoffset]::UtcNow.ToString('o')}
+  Write-AtomicJson $RollbackJournalPath $recoveryIntent
+  try{
+    if($schemaState-in@('0|1','1|1')){
+      $recoverSql="BEGIN; DROP SCHEMA IF EXISTS $quotedSchema CASCADE; ALTER SCHEMA $quotedPreserved RENAME TO $quotedSchema; COMMIT;"
+      [void](Invoke-Bounded $psql ($base+@('--set=ON_ERROR_STOP=1',"--command=$recoverSql")) $environment 'ROLLBACK_RECOVERY_RETURN_ORIGINAL')
+    }
+    $recoveredState=Invoke-Bounded $psql ($base+@('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_RECOVERY_STATE_VERIFY'
+    if($recoveredState-cne'1|0'){throw 'ROLLBACK_RECOVERY_POST_STATE_REJECTED'}
+    Write-AtomicJson $RollbackJournalPath ([ordered]@{version=3;state='RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED';sourceJournalSha256=$recoverySourceHash;sourceState=[string]$recoverySource.state;recoveryPlanSha256=$approvalPlan.planSha256;databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;observedSchemaState=$recoveredState;originalSchemaRestored=$true;preservedSchemaAbsent=$true;partialTargetPossible=$false;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;edgeStateMode=$EdgeStateMode;quiescenceProofType=$edgeIdentity.proofType;edgeIdentityDigest=$edgeIdentity.identityDigest;legacyQuiesceEvidenceSha256=$quiesceIdentity.EvidenceSha256;completedAt=[datetimeoffset]::UtcNow.ToString('o')})
+    [pscustomobject]@{Result='RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED';CurrentSchemaPresent=$true;PreservedSchemaAbsent=$true;MaintenanceRetained=$true;WritersRemainQuiesced=$true;VerifyRecoveryRequired=$true;NewRollbackApprovalRequired=$true}|ConvertTo-Json;exit 0
+  }catch{
+    $failureCode=if($_.Exception.Message-match'^[A-Z0-9_]{3,160}$'){$_.Exception.Message}else{'ROLLBACK_RECOVERY_UNCLASSIFIED_FAILURE'}
+    try{$observed=Invoke-Bounded $psql ($base+@('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_RECOVERY_FAILURE_STATE'}catch{$observed='UNKNOWN'}
+    if($observed-ceq'1|0'){
+      Write-AtomicJson $RollbackJournalPath ([ordered]@{version=3;state='RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED';sourceJournalSha256=$recoverySourceHash;sourceState=[string]$recoverySource.state;recoveryPlanSha256=$approvalPlan.planSha256;databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;observedSchemaState=$observed;originalSchemaRestored=$true;preservedSchemaAbsent=$true;partialTargetPossible=$false;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;reconciledAfterFailure=$true;completedAt=[datetimeoffset]::UtcNow.ToString('o')})
+      [pscustomobject]@{Result='RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED';CrashStateReconciled=$true;VerifyRecoveryRequired=$true;MaintenanceRetained=$true}|ConvertTo-Json;exit 0
+    }
+    Write-AtomicJson $RollbackJournalPath ([ordered]@{version=3;state='FAILED_MAINTENANCE_REQUIRED';sourceJournalSha256=$recoverySourceHash;sourceState=[string]$recoverySource.state;recoveryPlanSha256=$approvalPlan.planSha256;failureCode=$failureCode;databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;observedSchemaState=$observed;originalSchemaRestored=$false;partialTargetPossible=$true;maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;recoveryProcedure='KEEP MAINTENANCE AND WRITERS QUIESCED. HASH-PIN THIS JOURNAL AND CREATE A NEW EXACT RECOVER PLAN.';failedAt=[datetimeoffset]::UtcNow.ToString('o')})
+    throw 'ROLLBACK_RECOVERY_FAILED_MAINTENANCE_REQUIRED'
+  }
+}
+
+if($Action-eq'VerifyRecovery'){
+  $recoveryJournal=Existing $RollbackJournalPath $false 'ROLLBACK_DURABLE_JOURNAL_NOT_FOUND';AssertHash $recoveryJournal $ExpectedRollbackJournalSha256 'ROLLBACK_DURABLE_JOURNAL_HASH_MISMATCH' 1048576;$recoveryRecord=Read-BoundedJson $recoveryJournal 1048576 'ROLLBACK_DURABLE_JOURNAL_INVALID'
+  $schemaState=Invoke-Bounded $psql ($base+@('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_VERIFY_RECOVERY_STATE'
+  if($recoveryRecord.version-ne3-or$recoveryRecord.state-cne'RECOVERED_ORIGINAL_MAINTENANCE_REQUIRED'-or$recoveryRecord.databaseProjectRef-cne$ConfirmProjectRef-or$recoveryRecord.databaseHost-cne$ConfirmDatabaseHost-or$recoveryRecord.databaseName-cne$ConfirmDatabaseName-or$recoveryRecord.databaseSchema-cne$ConfirmDatabaseSchema-or$recoveryRecord.preservedSchema-cne$preservedSchema-or-not$recoveryRecord.originalSchemaRestored-or-not$recoveryRecord.preservedSchemaAbsent-or$recoveryRecord.partialTargetPossible-or-not$recoveryRecord.maintenanceMustRemainEnabled-or-not$recoveryRecord.legacyWritersMustRemainQuiesced-or$schemaState-cne'1|0'){throw 'ROLLBACK_RECOVERY_EVIDENCE_REJECTED'}
+  [pscustomobject]@{Result='PASS';RecoveryVerified=$true;CurrentSchemaPresent=$true;PreservedSchemaAbsent=$true;MaintenanceRetained=$true;WritersRemainQuiesced=$true;NewRollbackApprovalRequired=$true}|ConvertTo-Json;exit 0
+}
 
 if ($Action -eq 'Apply') {
   if (Test-Path -LiteralPath $RollbackJournalPath) { throw 'ROLLBACK_JOURNAL_ALREADY_EXISTS' }
@@ -269,12 +318,11 @@ if ($Action -eq 'Apply') {
   AssertHash $signer $ExpectedAttestationSignerSha256 'ROLLBACK_SIGNER_HASH_MISMATCH' 16777216
   AssertHash $private $ExpectedRestoreReceiptPrivateKeySha256 'ROLLBACK_PRIVATE_KEY_HASH_MISMATCH' 1048576
   if (-not(Under $signer $fs.classRoots.SHARED_RUNTIME) -or -not(Under $private $fs.classRoots.ADMIN_ONLY)) { throw 'ROLLBACK_SIGNER_BOUNDARY_REJECTED' }
-  $schemaStateSql = "SELECT (to_regnamespace('$ConfirmDatabaseSchema') IS NOT NULL)::int || '|' || (to_regnamespace('$preservedSchema') IS NOT NULL)::int"
   $schemaState = Invoke-Bounded $psql ($base + @('--tuples-only','--no-align','--set=ON_ERROR_STOP=1',"--command=$schemaStateSql")) $environment 'ROLLBACK_SCHEMA_PREFLIGHT'
   if ($schemaState -cne '1|0') { throw 'ROLLBACK_SCHEMA_PREFLIGHT_REJECTED' }
   $quiesceIdentity = Assert-LegacyQuiesceState $baseline $migration (Hash $baselinePath 16777216)
 
-  $intent = [ordered]@{version=3;state='INTENT';maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;planSha256=$approvalPlan.planSha256;approvalInstanceId=$approvalPlan.approvalInstanceId;recoveryProcessTreeHelperPath=$processTreeHelper;recoveryProcessTreeHelperSha256=$ExpectedRecoveryProcessTreeHelperSha256.ToLowerInvariant();databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;edgeStateMode=$EdgeStateMode;quiescenceProofType=$edgeIdentity.proofType;edgeIdentityDigest=$edgeIdentity.identityDigest;edgeProcessId=$edgeIdentity.processId;edgeProcessStartedAt=$edgeIdentity.processStartedAt;edgeExecutableSha256=$edgeIdentity.executableSha256;edgeReleaseId=$edgeIdentity.releaseId;edgeReleaseManifestSha256=$edgeIdentity.releaseManifestSha256;edgeListenerAddress=$edgeIdentity.listenerAddress;edgeListenerPort=$edgeIdentity.listenerPort;drainStateSha256=$edgeIdentity.drainStateSha256;drainCompletedAt=$edgeIdentity.drainCompletedAt;activeRequests=0;legacyQuiesceEvidenceSha256=$quiesceIdentity.EvidenceSha256;quiescePublicKeySha256=$quiesceIdentity.PublicKeySha256;quiesceSigningKeyId=$quiesceIdentity.SigningKeyId;quiesceCompletedAt=$quiesceIdentity.CompletedAt;legacyProcessIdentityDigest=$quiesceIdentity.ProcessIdentityDigest;legacyRestartCanonicalDigest=$quiesceIdentity.RestartCanonicalDigest;legacyWebProcessId=$quiesceIdentity.WebProcessId;legacyApiProcessId=$quiesceIdentity.ApiProcessId;backupEvidenceSha256=(Hash $backupEvidence 16777216);backupManifestSha256=(Hash $manifestPath 16777216);createdAt=[datetimeoffset]::UtcNow.ToString('o')}
+  $intent = [ordered]@{version=3;state='INTENT';maintenanceMustRemainEnabled=$true;legacyWritersMustRemainQuiesced=$true;planSha256=$approvalPlan.planSha256;approvalInstanceId=$approvalPlan.approvalInstanceId;recoveryProcessTreeHelperPath=$processTreeHelper;recoveryProcessTreeHelperSha256=$ExpectedRecoveryProcessTreeHelperSha256.ToLowerInvariant();databaseProjectRef=$ConfirmProjectRef;databaseHost=$ConfirmDatabaseHost;databaseName=$ConfirmDatabaseName;databaseSchema=$ConfirmDatabaseSchema;preservedSchema=$preservedSchema;migrationRecoverySourceState=[string]$migration.result;migrationJournalSha256=(Hash $migrationJournal 16777216);edgeStateMode=$EdgeStateMode;quiescenceProofType=$edgeIdentity.proofType;edgeIdentityDigest=$edgeIdentity.identityDigest;edgeProcessId=$edgeIdentity.processId;edgeProcessStartedAt=$edgeIdentity.processStartedAt;edgeExecutableSha256=$edgeIdentity.executableSha256;edgeReleaseId=$edgeIdentity.releaseId;edgeReleaseManifestSha256=$edgeIdentity.releaseManifestSha256;edgeListenerAddress=$edgeIdentity.listenerAddress;edgeListenerPort=$edgeIdentity.listenerPort;drainStateSha256=$edgeIdentity.drainStateSha256;drainCompletedAt=$edgeIdentity.drainCompletedAt;activeRequests=0;legacyQuiesceEvidenceSha256=$quiesceIdentity.EvidenceSha256;quiescePublicKeySha256=$quiesceIdentity.PublicKeySha256;quiesceSigningKeyId=$quiesceIdentity.SigningKeyId;quiesceCompletedAt=$quiesceIdentity.CompletedAt;legacyProcessIdentityDigest=$quiesceIdentity.ProcessIdentityDigest;legacyRestartCanonicalDigest=$quiesceIdentity.RestartCanonicalDigest;legacyWebProcessId=$quiesceIdentity.WebProcessId;legacyApiProcessId=$quiesceIdentity.ApiProcessId;backupEvidenceSha256=(Hash $backupEvidence 16777216);backupManifestSha256=(Hash $manifestPath 16777216);createdAt=[datetimeoffset]::UtcNow.ToString('o')}
   $intentSha256 = TextHash ($intent | ConvertTo-Json -Depth 32 -Compress)
   Write-AtomicJson $RollbackJournalPath $intent -CreateOnly
   $boundaryCreated = $false
