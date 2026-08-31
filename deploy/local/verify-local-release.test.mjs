@@ -4,9 +4,17 @@ import { access, mkdtemp, mkdir, readFile, rm, truncate, writeFile } from "node:
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { inventory, LOCAL_HOST_TOOL_FILES, verifyLocalRelease, verifyRuntimeClosure, WINDOWS_HOST_FILES } from "./verify-local-release.mjs";
+import { allowedReleaseFile, inventory, LOCAL_HOST_TOOL_FILES, verifyLocalRelease, verifyRuntimeClosure, WINDOWS_HOST_FILES } from "./verify-local-release.mjs";
 import { smokeLocalRelease } from "./smoke-local-release.mjs";
 import { packageLocalRelease } from "./package-local-release.mjs";
+
+test("allows a manifest-declared Node .njs executable only inside packaged dependencies",()=>{
+  assert.equal(allowedReleaseFile("api/node_modules/crc-32/bin/crc32.njs"),true);
+  assert.equal(allowedReleaseFile("api/node_modules/esbuild/bin/esbuild"),true);
+  assert.equal(allowedReleaseFile("api/dist/unexpected.njs"),false);
+  assert.equal(allowedReleaseFile("api/node_modules/esbuild/unexpected"),false);
+  assert.equal(allowedReleaseFile("unexpected.njs"),false);
+});
 
 test("inventory rejects an oversized sparse artifact before hashing it",async()=>{
   const root=await mkdtemp(path.join(tmpdir(),"local-release-oversized-"));const file=path.join(root,"oversized.bin");
@@ -19,7 +27,8 @@ test("inventory permits runtime private-field helpers but rejects actual secret 
   try{
     await mkdir(path.join(root,"api","node_modules","runtime"),{recursive:true});
     await writeFile(path.join(root,"api","node_modules","runtime","classPrivateFieldGet.js"),"module.exports=1;");
-    assert.equal((await inventory(root)).length,1);
+    await writeFile(path.join(root,"api","node_modules","runtime","injection-token.interface.js"),"module.exports=2;");
+    assert.equal((await inventory(root)).length,2);
     await writeFile(path.join(root,"api","node_modules","runtime","signing-private-key.pem"),"not-a-real-key");
     await assert.rejects(()=>inventory(root),/RELEASE_SECRET_MATERIAL_REJECTED/);
   }finally{await rm(root,{recursive:true,force:true})}

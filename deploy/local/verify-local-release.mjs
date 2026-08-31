@@ -24,7 +24,7 @@ export const FORBIDDEN_RELEASE_FILES = Object.freeze([
   "api/dist/auth/bootstrap-super-admin.cli.js"
 ]);
 const LEGAL_RUNTIME_BASENAME = /^(?:licen[cs]e|notice|copying|patents?)(?:[-_.].*)?$/i;
-const NODE_RUNTIME_EXTENSIONS = new Set([".js",".cjs",".mjs",".json",".node",".wasm",".exe",".dll",".prisma",".xml",".html",".css",".svg",".png",".ico",".woff",".woff2",".ttf",".bnf"]);
+const NODE_RUNTIME_EXTENSIONS = new Set([".js",".cjs",".mjs",".njs",".json",".node",".wasm",".exe",".dll",".prisma",".xml",".html",".css",".svg",".png",".ico",".woff",".woff2",".ttf",".bnf"]);
 const NEXT_RUNTIME_EXTENSIONS = new Set([".js",".cjs",".mjs",".json",".node",".wasm",".html",".rsc",".meta",".css",".svg",".png",".ico",".woff",".woff2",".ttf",".gz"]);
 const PUBLIC_RUNTIME_EXTENSIONS = new Set([".js",".cjs",".mjs",".json",".wasm",".html",".css",".svg",".png",".jpg",".jpeg",".gif",".webp",".ico",".woff",".woff2",".ttf"]);
 const SECRET_NAME_EXCEPTIONS = new Set(["deploy/local/new-signing-key.mjs","deploy/local/api.env.example"]);
@@ -41,6 +41,7 @@ export function allowedReleaseFile(relative) {
     const basename=path.posix.basename(relative);
     if(LEGAL_RUNTIME_BASENAME.test(basename))return true;
     if(relative.endsWith("/next/dist/lib/server-external-packages.jsonc"))return true;
+    if(!path.posix.extname(relative)&&/\/bin\/[a-z0-9._-]+$/i.test(relative))return true;
     return NODE_RUNTIME_EXTENSIONS.has(path.posix.extname(relative).toLowerCase());
   }
   return false;
@@ -215,8 +216,9 @@ async function boundedRead(file,max){const before=await lstat(file);if(!before.i
 function sha256(bytes){return createHash("sha256").update(bytes).digest("hex");}
 function secretMaterialName(relative){
   const base=path.posix.basename(relative).toLowerCase();
-  return /(^|\/)\.env(?:\.|$)/i.test(relative)||/^pgpass(?:\.|$)/.test(base)||/\.(?:key|pfx|p12)$/.test(base)||
-    /(?:^|[._-])env(?:[._-]|$)/.test(base)||/(?:^|[._-])(?:secret|secrets|credential|credentials|password|passwd|token)(?:[._-]|$)/.test(base)||
+  const executableCode=/\.(?:js|cjs|mjs|njs)$/.test(base);
+  return /(^|\/)\.env(?:\.|$)/i.test(relative)||/^pgpass(?:\.|$)/.test(base)||/\.(?:key|pfx|p12)$/.test(base)||(!executableCode&&(
+    /(?:^|[._-])env(?:[._-]|$)/.test(base)||/(?:^|[._-])(?:secret|secrets|credential|credentials|password|passwd|token)(?:[._-]|$)/.test(base)))||
     /^(?:\.?secrets?|.*[._-]secrets?)\.(?:txt|json|pem|der|bin|dat)$/.test(base)||/(?:^|[._-])(?:private|server|client|signing)[._-]?key(?:[._-]|$)/.test(base)||
     new Set([".npmrc",".yarnrc",".pypirc",".netrc","credentials.json"]).has(base);
 }
