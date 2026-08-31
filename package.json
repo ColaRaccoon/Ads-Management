@@ -12,6 +12,7 @@
     "packages/*"
   ],
   "scripts": {
+    "local:assemble-release": "node deploy/local/assemble-local-release.mjs",
     "local:package-release": "node deploy/local/package-local-release.mjs",
     "local:verify-release": "node deploy/local/verify-local-release.mjs",
     "local:recovery-kit": "node deploy/local/recovery-kit.mjs",

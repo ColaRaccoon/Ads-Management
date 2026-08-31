@@ -51,7 +51,7 @@ describe("UploadQueryService", () => {
     expect(calls).toEqual(expect.arrayContaining([
       expect.objectContaining({
         operation: "list",
-        args: expect.objectContaining({ take: 50, orderBy: { uploadedAt: "desc" } })
+        args: expect.objectContaining({ take: 50, orderBy: [{ uploadedAt: "desc" }, { id: "desc" }] })
       }),
       expect.objectContaining({
         operation: "rows",

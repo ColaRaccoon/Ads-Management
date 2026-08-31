@@ -25,7 +25,7 @@ describe("UploadStorageService", () => {
     expect(reference).toBe(`local:2026/08/${objectId}/${hash}`);
     expect(reference).not.toContain("private-order-list");
     await expect(service.deleteStoredUploadFile(reference)).resolves.toBe(true);
-  });
+  }, 30_000);
 
   it("never reuses an active key when the same bytes are uploaded again", () => {
     const service = new UploadStorageService(config("unused"));

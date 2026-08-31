@@ -29,7 +29,7 @@ describe.skipIf(process.platform !== "win32")("WindowsNtfsFileStorage helper lif
     opened.stream.destroy();
     await closed;
     await expect(waitUntilExited(readPid, 10_000)).resolves.toBeUndefined();
-    await expect(rm(path.join(root, "early-close", "object"))).resolves.toBeUndefined();
+    await expect(removeWhenUnlocked(path.join(root, "early-close", "object"), 10_000)).resolves.toBeUndefined();
   }, 90_000);
 
   it("kills and verifies a stubborn descendant process tree", async () => {
@@ -145,4 +145,15 @@ async function waitUntilExited(pid: number, timeoutMs: number) {
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
   throw new Error("PROCESS_EXIT_TIMEOUT");
+}
+
+async function removeWhenUnlocked(file: string, timeoutMs: number) {
+  const deadline = performance.now() + timeoutMs;
+  while (true) {
+    try { await rm(file); return; } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (!new Set(["EBUSY", "EPERM", "EACCES"]).has(code ?? "") || performance.now() >= deadline) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+  }
 }

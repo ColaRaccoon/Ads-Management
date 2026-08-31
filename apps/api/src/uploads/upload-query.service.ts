@@ -10,7 +10,7 @@ export class UploadQueryService {
   async listUploads(take = 50) {
     const uploads = await this.prisma.uploadBatch.findMany({
       take,
-      orderBy: { uploadedAt: "desc" },
+      orderBy: [{ uploadedAt: "desc" }, { id: "desc" }],
       include: { _count: { select: { rows: true, errors: true, metrics: true, adMetrics: true } } }
     });
     return uploads.map((upload) => ({

@@ -4,6 +4,18 @@ import { SalesMetricsService } from "./sales-metrics.service";
 import { toDateOnly } from "../domain/date-number";
 
 describe("SalesMetricsService", () => {
+  it("uses a stable unique tie-breaker for capped unmatched Cafe24 rows", async () => {
+    const prisma = fakePrisma();
+    const service = new SalesMetricsService(prisma as never);
+
+    await service.unmatchedCafe24Lines({ from: "2026-06-11", to: "2026-06-11", take: "2" });
+
+    expect(prisma.cafe24OrderLine.findManyCalls[0]).toEqual(expect.objectContaining({
+      take: 2,
+      orderBy: [{ orderDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }]
+    }));
+  });
+
   it("combines Cafe24 quantities with current Meta ad spend by productId", async () => {
     const prisma = fakePrisma();
     const service = new SalesMetricsService(prisma as never);

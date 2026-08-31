@@ -4861,9 +4861,26 @@ describe("CoupangService unmatched", () => {
         ]
       },
       take: 200,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
       include: { batch: true }
     });
+  });
+
+  it("selects the newest rows globally across unmatched source types", async () => {
+    const batch = { originalFilename: "coupang.xlsx" };
+    const prisma = {
+      coupangSaleLine: { findMany: vi.fn(async () => [{ id: "sale-old", saleDate: toDateOnly("2026-06-22"), rowNumber: 1, batch, productName: "Old", optionName: "Sale", netSalesKrw: new Prisma.Decimal(1000), coupangProductId: null, validationErrors: [] }]) },
+      coupangAdMetric: { findMany: vi.fn(async () => [{ id: "ad-new", metricDate: toDateOnly("2026-06-23"), rowNumber: 2, batch, adExecutionProductName: "New", conversionProductName: "Ad", adSpendKrw: new Prisma.Decimal(2000), spendProductId: null, conversionProductId: null, validationErrors: [] }]) },
+      coupangPromotionPrice: { findMany: vi.fn(async () => []) },
+      coupangUploadRowError: { findMany: vi.fn(async () => []) }
+    };
+    const service = new CoupangService(prisma as never);
+
+    const result = await service.unmatched({ from: "2026-06-22", to: "2026-06-23", take: "1" });
+
+    expect(result.rows).toEqual([expect.objectContaining({ sourceType: "ADS", productText: "New / Ad" })]);
+    expect(prisma.coupangSaleLine.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 1, orderBy: [{ saleDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }] }));
+    expect(prisma.coupangAdMetric.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 1, orderBy: [{ metricDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }] }));
   });
 });
 
@@ -4888,6 +4905,9 @@ describe("CoupangService mappingIssues", () => {
     expect((prisma.coupangSaleLine.findMany as any).mock.calls[0][0]).not.toHaveProperty("take");
     expect((prisma.coupangAdMetric.findMany as any).mock.calls[0][0]).not.toHaveProperty("take");
     expect((prisma.coupangPromotionPrice.findMany as any).mock.calls[0][0]).not.toHaveProperty("take");
+    expect((prisma.coupangSaleLine.findMany as any).mock.calls[0][0].orderBy).toEqual([{ saleDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }]);
+    expect((prisma.coupangAdMetric.findMany as any).mock.calls[0][0].orderBy).toEqual([{ metricDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }]);
+    expect((prisma.coupangPromotionPrice.findMany as any).mock.calls[0][0].orderBy).toEqual([{ promotionStartDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }]);
     expect(result.rows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

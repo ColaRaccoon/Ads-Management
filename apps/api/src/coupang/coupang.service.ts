@@ -3006,7 +3006,8 @@ export class CoupangService {
           saleDate: { gte: range.fromDate, lte: range.toDate },
           OR: [{ coupangProductId: null }, { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }]
         },
-        orderBy: [{ saleDate: "desc" }, { rowNumber: "asc" }],
+        take,
+        orderBy: [{ saleDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
         include: { batch: true }
       }),
       this.prisma.coupangAdMetric.findMany({
@@ -3015,7 +3016,8 @@ export class CoupangService {
           metricDate: { gte: range.fromDate, lte: range.toDate },
           OR: [{ spendProductId: null }, { conversionProductId: null }, { validationStatus: RowValidationStatus.WARNING }]
         },
-        orderBy: [{ metricDate: "desc" }, { rowNumber: "asc" }],
+        take,
+        orderBy: [{ metricDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
         include: { batch: true }
       }),
       this.prisma.coupangPromotionPrice.findMany({
@@ -3025,7 +3027,7 @@ export class CoupangService {
           OR: [{ coupangProductId: null }, { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }]
         },
         take,
-        orderBy: [{ promotionStartDate: "desc" }, { rowNumber: "asc" }],
+        orderBy: [{ promotionStartDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
         include: { batch: true }
       }),
       this.prisma.coupangUploadRowError.findMany({
@@ -3039,7 +3041,7 @@ export class CoupangService {
           ]
         },
         take,
-        orderBy: [{ createdAt: "desc" }],
+        orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         include: { batch: true }
       })
     ]);
@@ -3047,6 +3049,8 @@ export class CoupangService {
       period: { from: range.from, to: range.to },
       rows: [
         ...sales.map((line) => ({
+          __date: line.saleDate?.getTime() ?? 0,
+          __id: line.id,
           sourceType: "SALES",
           rowNumber: line.rowNumber,
           sourceName: line.batch.originalFilename,
@@ -3056,6 +3060,8 @@ export class CoupangService {
           candidates: issueCandidates(line.validationErrors)
         })),
         ...ads.map((metric) => ({
+          __date: metric.metricDate.getTime(),
+          __id: metric.id,
           sourceType: "ADS",
           rowNumber: metric.rowNumber,
           sourceName: metric.batch.originalFilename,
@@ -3070,6 +3076,8 @@ export class CoupangService {
           candidates: issueCandidates(metric.validationErrors)
         })),
         ...promotions.map((promotion) => ({
+          __date: promotion.promotionStartDate.getTime(),
+          __id: promotion.id,
           sourceType: "PROMOTION",
           rowNumber: promotion.rowNumber,
           sourceName: promotion.batch.originalFilename,
@@ -3079,6 +3087,8 @@ export class CoupangService {
           candidates: issueCandidates(promotion.validationErrors)
         })),
         ...errors.map((error) => ({
+          __date: error.createdAt.getTime(),
+          __id: error.id,
           sourceType: error.sourceType,
           rowNumber: error.rowNumber,
           sourceName: error.batch.originalFilename,
@@ -3087,7 +3097,15 @@ export class CoupangService {
           reason: error.errorCode,
           candidates: jsonStringArray(error.candidates)
         }))
-      ].slice(0, take)
+      ]
+        .sort((left, right) =>
+          right.__date - left.__date ||
+          String(left.sourceType).localeCompare(String(right.sourceType)) ||
+          (left.rowNumber ?? 0) - (right.rowNumber ?? 0) ||
+          left.__id.localeCompare(right.__id)
+        )
+        .slice(0, take)
+        .map(({ __date: _date, __id: _id, ...row }) => row)
     };
   }
 
@@ -3102,7 +3120,7 @@ export class CoupangService {
           validationStatus: { not: RowValidationStatus.ERROR },
           OR: [{ coupangProductId: null }, { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }]
         },
-        orderBy: [{ saleDate: "desc" }, { rowNumber: "asc" }],
+        orderBy: [{ saleDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
         include: { batch: true }
       }),
       this.prisma.coupangAdMetric.findMany({
@@ -3116,7 +3134,7 @@ export class CoupangService {
             { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }
           ]
         },
-        orderBy: [{ metricDate: "desc" }, { rowNumber: "asc" }],
+        orderBy: [{ metricDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
         include: { batch: true }
       }),
       this.prisma.coupangPromotionPrice.findMany({
@@ -3126,7 +3144,7 @@ export class CoupangService {
           validationStatus: { not: RowValidationStatus.ERROR },
           OR: [{ coupangProductId: null }, { validationStatus: { in: [RowValidationStatus.WARNING, RowValidationStatus.UNMATCHED] } }]
         },
-        orderBy: [{ promotionStartDate: "desc" }, { rowNumber: "asc" }],
+        orderBy: [{ promotionStartDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
         include: { batch: true }
       })
     ]);
@@ -5305,7 +5323,8 @@ function compareMappingIssues(left: CoupangMappingIssueRow, right: CoupangMappin
     (right.date ?? "").localeCompare(left.date ?? "") ||
     left.sourceType.localeCompare(right.sourceType) ||
     left.targetKind.localeCompare(right.targetKind) ||
-    (left.rowNumber ?? 0) - (right.rowNumber ?? 0)
+    (left.rowNumber ?? 0) - (right.rowNumber ?? 0) ||
+    left.rowId.localeCompare(right.rowId)
   );
 }
 

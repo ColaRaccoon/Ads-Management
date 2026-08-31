@@ -26,8 +26,9 @@ import { MetaMetricVersionService } from "../uploads/meta-metric-version.service
 import { UploadExchangeRateService } from "../uploads/upload-exchange-rate.service";
 import { UploadLifecycleService } from "../uploads/upload-lifecycle.service";
 import { UploadStorageService } from "../uploads/upload-storage.service";
+import { reportWorkbookCompatibility } from "./report-workbook-compatibility";
 
-const MUTATION_COMPATIBILITY_CONTRACT_VERSION=3;
+const MUTATION_COMPATIBILITY_CONTRACT_VERSION=4;
 class RollbackMutationSmoke extends Error {}
 
 async function run() {
@@ -40,6 +41,7 @@ async function run() {
   const reportKeys:string[]=[],reportTrashKeys:string[]=[],uploadKeys:string[]=[],trashKeys:string[]=[];
   let purgedTombstoneId="";
   let rollbackObserved=false;
+  let reportContentDigest="";
   try{
     await prisma.$connect();
     try{
@@ -78,7 +80,8 @@ async function run() {
         const decision=await new DecisionsService(scoped as never,metrics).run({from:dateText,to:dateText},actor.id);assert(decision.count>0&&decision.count<=100000,"DECISION_RUN_INVALID");
         const reports=new ReportsService(scoped as never,metrics,config),report=await reports.export({reportType:ReportType.PERIOD_XLSX,from:dateText,to:dateText,parameters:{contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION}},reviewer.id);
         const reportReference=parseStorageReference(report.filePath??"");assert(reportReference?.provider==="local"&&Boolean(report.fileHashSha256),"REPORT_REFERENCE_INVALID");reportKeys.push(reportReference.key);
-        const download=await reports.download(report.id),downloadedHash=createHash("sha256");for await(const chunk of download.stream)downloadedHash.update(chunk);assert(downloadedHash.digest("hex")===report.fileHashSha256,"REPORT_DOWNLOAD_HASH_INVALID");
+        const download=await reports.download(report.id),downloadedHash=createHash("sha256"),downloadedChunks:Buffer[]=[];let downloadedBytes=0;for await(const chunk of download.stream){const bytes=Buffer.from(chunk);downloadedBytes+=bytes.length;assert(downloadedBytes<=64*1024*1024,"REPORT_DOWNLOAD_SIZE_INVALID");downloadedHash.update(bytes);downloadedChunks.push(bytes)}assert(downloadedHash.digest("hex")===report.fileHashSha256,"REPORT_DOWNLOAD_HASH_INVALID");
+        const reportContent=await reportWorkbookCompatibility(Buffer.concat(downloadedChunks,downloadedBytes),{from:dateText,to:dateText,reportType:ReportType.PERIOD_XLSX,runId});reportContentDigest=reportContent.digest;
         const [coupangDashboard,coupangProfit,coupangAds,coupangDaily]=await Promise.all([coupang.dashboard({from:dateText,to:dateText}),coupang.productProfit({from:dateText,to:dateText}),coupang.adsAnalysis({from:dateText,to:dateText}),coupang.dailyReport({date:dateText})]);
         assert(boundedJson(coupangDashboard)&&boundedJson(coupangProfit)&&boundedJson(coupangAds)&&boundedJson(coupangDaily),"COUPANG_KPI_OUTPUT_INVALID");
 
@@ -106,9 +109,9 @@ async function run() {
     assert(!purgedTombstoneId||await prisma.storageTombstone.count({where:{id:purgedTombstoneId}})===0,"COMPATIBILITY_PURGE_TOMBSTONE_ROLLBACK_FAILED");
     for(const key of trashKeys)assert(!await uploadFileStorage.exists(key),"COMPATIBILITY_TOMBSTONE_TRASH_REMAINS");
     for(const key of reportTrashKeys)assert(!await reportStorage.exists(key),"COMPATIBILITY_PURGE_TRASH_REMAINS");
-    const flows=["MetaAdsetImportService.importMetaAdsetCsv:duplicate-replay","MappingsService.createProductRule+rematchCurrentMetrics","Cafe24UploadsService.import+rematch+deleteUpload","CoupangService.importSales+rematch+deleteUpload","CoupangService.replaceManualPurchasesForDate+deleteManualPurchase","DecisionsService.run","ReportsService.export+download:hash-verified","UploadLifecycleService.deleteUpload+StorageTombstoneService.restore:hash-verified","UploadLifecycleService.purgeStoredObject:db-hash-and-byte-absence-verified"];
-    const digest=createHash("sha256").update(JSON.stringify({contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION,flows})).digest("hex");
-    process.stdout.write(`${JSON.stringify({event:"mutation-compatibility-smoke",releaseId,contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION,digest,flows,flowCount:flows.length,databaseMutations:10,storageMutations:10,rollbackVerified:rollbackObserved,storageHashVerified:true})}\n`);
+    const flows=["MetaAdsetImportService.importMetaAdsetCsv:duplicate-replay","MappingsService.createProductRule+rematchCurrentMetrics","Cafe24UploadsService.import+rematch+deleteUpload","CoupangService.importSales+rematch+deleteUpload","CoupangService.replaceManualPurchasesForDate+deleteManualPurchase","DecisionsService.run","ReportsService.export+download:content-canonical-and-hash-verified","UploadLifecycleService.deleteUpload+StorageTombstoneService.restore:hash-verified","UploadLifecycleService.purgeStoredObject:db-hash-and-byte-absence-verified"];
+    assert(/^[0-9a-f]{64}$/.test(reportContentDigest),"REPORT_CONTENT_DIGEST_INVALID");const digest=createHash("sha256").update(JSON.stringify({contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION,flows,reportContentDigest})).digest("hex");
+    process.stdout.write(`${JSON.stringify({event:"mutation-compatibility-smoke",releaseId,contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION,digest,flows,flowCount:flows.length,databaseMutations:10,storageMutations:10,rollbackVerified:rollbackObserved,storageHashVerified:true,reportContentVerified:true,reportContentDigest})}\n`);
   }finally{
     for(const key of [...reportKeys,...reportTrashKeys])await reportStorage.delete(key).catch(()=>false);
     for(const key of [...uploadKeys,...trashKeys])await uploadFileStorage.delete(key).catch(()=>false);

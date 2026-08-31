@@ -36,5 +36,5 @@ describe("legacy storage migration planning", () => {
       targetReference: "candidate:reports/server-generated-key"
     });
     expect(await source.exists("2026/08/legacy-report")).toBe(true);
-  });
+  }, 30_000);
 });

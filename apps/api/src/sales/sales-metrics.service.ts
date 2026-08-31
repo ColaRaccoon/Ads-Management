@@ -216,7 +216,7 @@ export class SalesMetricsService {
             validationStatus: { not: RowValidationStatus.ERROR }
           },
           take,
-          orderBy: [{ orderDate: "desc" }, { rowNumber: "asc" }],
+          orderBy: [{ orderDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
           include: { batch: true }
         })
       : [];
@@ -235,7 +235,7 @@ export class SalesMetricsService {
         validationStatus: { not: RowValidationStatus.ERROR }
       },
       include: { product: true, matchRule: true },
-      orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }]
+      orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
     });
     if (salesLines.length === 0) {
       return { salesLines, couponLines: salesLines };
