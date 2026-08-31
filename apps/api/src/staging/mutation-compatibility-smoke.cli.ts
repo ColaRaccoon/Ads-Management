@@ -27,7 +27,7 @@ import { UploadExchangeRateService } from "../uploads/upload-exchange-rate.servi
 import { UploadLifecycleService } from "../uploads/upload-lifecycle.service";
 import { UploadStorageService } from "../uploads/upload-storage.service";
 
-const MUTATION_COMPATIBILITY_CONTRACT_VERSION=2;
+const MUTATION_COMPATIBILITY_CONTRACT_VERSION=3;
 class RollbackMutationSmoke extends Error {}
 
 async function run() {

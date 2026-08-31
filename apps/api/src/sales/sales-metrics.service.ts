@@ -59,7 +59,7 @@ export class SalesMetricsService {
           ...deliveryStatusWhere(deliveryStatus)
         },
         include: { product: true },
-        orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
+        orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }, { id: "asc" }]
       })
     ]);
     const salesLines = salesData.salesLines;
@@ -101,7 +101,7 @@ export class SalesMetricsService {
     const adSpend = this.aggregateAdSpend(adMetrics, costRulesByProductId, exchangeRateByDate);
     const productById = productMap(salesLines, adMetrics);
     const allProductIds = Array.from(new Set([...salesByProductId.keys(), ...adSpend.byProductId.keys()])).sort((a, b) =>
-      productLabel(productById.get(a)).localeCompare(productLabel(productById.get(b)))
+      productLabel(productById.get(a)).localeCompare(productLabel(productById.get(b))) || a.localeCompare(b)
     );
 
     const rows = allProductIds.map((productId) => {

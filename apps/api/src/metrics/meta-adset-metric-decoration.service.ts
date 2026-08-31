@@ -31,7 +31,7 @@ export class MetaAdsetMetricDecorationService {
         ...deliveryStatusWhere(deliveryStatus)
       },
       include: { product: true, metaAdset: true },
-      orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
+      orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }, { id: "asc" }]
     });
     return this.decorate(metrics, client);
   }

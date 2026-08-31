@@ -1333,7 +1333,7 @@ export class CoupangService {
   listUploads(take = 50) {
     return this.prisma.coupangUploadBatch.findMany({
       take,
-      orderBy: { uploadedAt: "desc" },
+      orderBy: [{ uploadedAt: "desc" }, { id: "desc" }],
       include: { _count: { select: { saleLines: true, adMetrics: true, promotionPrices: true, errors: true } } }
     });
   }
@@ -2903,7 +2903,7 @@ export class CoupangService {
         validationStatus: { not: RowValidationStatus.ERROR }
       },
       include: { spendProduct: { include: { group: true } }, conversionProduct: true },
-      orderBy: [{ metricDate: "asc" }, { campaignName: "asc" }, { adGroupName: "asc" }]
+      orderBy: [{ metricDate: "asc" }, { campaignName: "asc" }, { adGroupName: "asc" }, { id: "asc" }]
     });
     const groups = new Map<string, AdsAccumulator>();
     for (const metric of metrics) {
@@ -3142,7 +3142,7 @@ export class CoupangService {
       }),
       categoryDelegate
         ? categoryDelegate.findMany({
-            orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+            orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }, { id: "asc" }],
             include: { members: { select: { coupangProductId: true } } }
           })
         : Promise.resolve([])
@@ -3561,7 +3561,7 @@ export class CoupangService {
     const dailyRowsByProductId = groupBy(dailyRows, (row) => row.productId);
     return Array.from(dailyRowsByProductId.values())
       .map(aggregateCoupangProductDateRows)
-      .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName));
+      .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName) || a.productId.localeCompare(b.productId));
   }
 
   private async groupProductProfitRows(rows: ProductProfitRow[]): Promise<ProductProfitRow[]> {
@@ -4313,7 +4313,7 @@ export function aggregateCoupangProductProfitRowsByGroup(
       }
       return aggregateCoupangProductProfitGroup(bucket.group, bucket.rows);
     })
-    .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName));
+    .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName) || a.productId.localeCompare(b.productId));
 }
 
 export function hasDailyReportActivity(row: ProductProfitRow) {
@@ -4505,7 +4505,8 @@ export function buildCoupangDailyHierarchy({
           (currentByProductId.get(right.id)?.reportedSalesKrw ?? 0) -
           (currentByProductId.get(left.id)?.reportedSalesKrw ?? 0) ||
           left.sortOrder - right.sortOrder ||
-          left.displayName.localeCompare(right.displayName)
+          left.displayName.localeCompare(right.displayName) ||
+          left.id.localeCompare(right.id)
         ));
       const children = displayedProducts.map((product) => toDailyProductRow({
         current: currentByProductId.get(product.id),
@@ -4534,8 +4535,13 @@ export function buildCoupangDailyHierarchy({
     .filter((row): row is CoupangDailyReportRow => row !== null)
     .sort((left, right) => (
       right.reportedSalesKrw - left.reportedSalesKrw ||
-      left.productName.localeCompare(right.productName)
+      left.productName.localeCompare(right.productName) ||
+      dailyReportStableId(left).localeCompare(dailyReportStableId(right))
     ));
+}
+
+function dailyReportStableId(row: CoupangDailyReportRow) {
+  return row.rowType === "GROUP" ? `group:${row.groupId}` : `product:${row.productId}`;
 }
 
 function toDailyProductRow({

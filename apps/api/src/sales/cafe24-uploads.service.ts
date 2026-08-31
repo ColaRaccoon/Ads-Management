@@ -314,7 +314,7 @@ export class Cafe24UploadsService {
   listUploads(take = 50) {
     return this.prisma.cafe24UploadBatch.findMany({
       take,
-      orderBy: { uploadedAt: "desc" },
+      orderBy: [{ uploadedAt: "desc" }, { id: "desc" }],
       include: { _count: { select: { rows: true, errors: true } } }
     });
   }

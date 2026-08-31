@@ -76,7 +76,7 @@ export class MetaAdsetMetricsReadService {
     const metrics = await client.metaAdsetDailyMetric.findMany({
       where,
       include: { product: true, metaAdset: true },
-      orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
+      orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }, { id: "asc" }]
     });
     const decorated = await this.decorationService.decorate(metrics, client);
     const groups = groupBy(decorated, (row) => row.metric.metaAdsetId);
@@ -131,7 +131,7 @@ export class MetaAdsetMetricsReadService {
         ...deliveryStatusWhere(deliveryStatus),
         productId: null
       },
-      orderBy: [{ metricDate: "desc" }, { adsetName: "asc" }],
+      orderBy: [{ metricDate: "desc" }, { adsetName: "asc" }, { id: "asc" }],
       include: { metaAdset: true }
     });
   }
