@@ -52,6 +52,7 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly serviceStartedAt = new Date();
   private reconciliationTimer?: NodeJS.Timeout;
   private reconciliationInFlight?: Promise<ReportReconciliationResult>;
+  private readonly activeExports = new Set<string>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -126,6 +127,10 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
         return result;
       }
       const candidate = candidates[index];
+      if (this.activeExports.has(candidate.id)) {
+        result.unresolved += 1;
+        continue;
+      }
       if (!candidate.filePath) {
         const status = await this.confirmMissingCreatingReport(candidate.id, null);
         result[status] += 1;
@@ -208,31 +213,38 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
     });
 
     let stored: StoredFile | undefined;
+    this.activeExports.add(reportId);
     try {
       const body = extension === "html"
         ? Buffer.from(await this.renderHtml(range.from, range.to), "utf8")
         : Buffer.from(await (await this.renderWorkbook(range.from, range.to, reportType)).xlsx.writeBuffer());
+      if (body.length > this.maxStoredReportBytes) throw new StorageIntegrityError();
       const parsed = this.explicitCurrentReference(reference);
       const result = await this.storage.put({
         key: parsed.key,
         body,
-        expectedHashSha256: createHash("sha256").update(body).digest("hex")
+        expectedHashSha256: createHash("sha256").update(body).digest("hex"),
+        maxBytes: this.maxStoredReportBytes
       });
       stored = result;
-      return await this.prisma.reportExport.update({
-        where: { id: report.id },
+      await this.prisma.reportExport.updateMany({
+        where: { id: report.id, status: "CREATING", filePath: reference, fileHashSha256: null },
         data: {
           fileHashSha256: result.hash,
           status: "CREATED"
         }
       });
+      const finalized = await this.prisma.reportExport.findUnique({ where: { id: report.id } });
+      const committed = await this.confirmCommittedStoredReport(finalized, reference, result);
+      if (committed) return committed;
+      throw new Error("REPORT_FINALIZE_COMPARE_AND_SET_LOST");
     } catch {
       if (stored) {
         const committed = await this.reconcileStoredReport(report.id, reference, stored);
         if (committed) return committed;
       } else {
-        await this.prisma.reportExport.update({
-          where: { id: report.id },
+        await this.prisma.reportExport.updateMany({
+          where: { id: report.id, status: "CREATING", filePath: reference, fileHashSha256: null },
           data: { status: "FAILED", fileHashSha256: null }
         }).catch(() => undefined);
       }
@@ -240,6 +252,8 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
         code: "REPORT_STORAGE_UNAVAILABLE",
         message: "The report could not be stored and remains available for a safe retry."
       });
+    } finally {
+      this.activeExports.delete(reportId);
     }
   }
 

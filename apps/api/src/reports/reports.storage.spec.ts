@@ -74,9 +74,9 @@ describe("ReportsService durable storage", () => {
         createdData = data;
         return { ...reportRow(), ...data };
       }),
-      update: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      updateMany: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
         updates.push(data);
-        return { ...reportRow(), ...data };
+        return { count: 1 };
       })
     };
     const service = new ReportsService(
@@ -91,6 +91,75 @@ describe("ReportsService durable storage", () => {
     expect(updates.at(-1)).toEqual({ status: "FAILED", fileHashSha256: null });
   });
 
+  it("does not let periodic reconciliation fail an active long-running export", async () => {
+    let releaseRender!: () => void;
+    const renderBlocked = new Promise<void>((resolve) => { releaseRender = resolve; });
+    let createdData: Record<string, unknown> = {};
+    let databaseStatus: "CREATING" | "CREATED" = "CREATING";
+    let databaseHash: string | null = null;
+    const updateMany = vi.fn(async ({ data }: { data: { status: "CREATED"; fileHashSha256: string } }) => {
+      databaseStatus = data.status;
+      databaseHash = data.fileHashSha256;
+      return { count: 1 };
+    });
+    const reportExport = {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        createdData = data;
+        return { ...reportRow(), ...data };
+      }),
+      findMany: vi.fn(async () => [{ id: createdData.id, filePath: createdData.filePath }]),
+      updateMany,
+      findUnique: vi.fn(async () => ({ ...reportRow(), ...createdData, status: databaseStatus, fileHashSha256: databaseHash }))
+    };
+    const metrics = safeMetrics();
+    metrics.dashboardSummary = async () => {
+      await renderBlocked;
+      return safeSummary();
+    };
+    const storage = inMemoryStorage();
+    const service = new ReportsService(
+      { reportExport, decisionLog: { findMany: vi.fn(async () => []) } } as never,
+      metrics as never,
+      config()
+    );
+    (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+
+    const exporting = service.export(exportBody(), ACTOR_ID);
+    await vi.waitFor(() => expect(createdData.id).toBeTruthy());
+    await expect(service.reconcileStaleCreatingReports(new Date())).resolves.toEqual({
+      scanned: 1, created: 0, failed: 0, unresolved: 1
+    });
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(storage.delete).not.toHaveBeenCalled();
+
+    releaseRender();
+    await expect(exporting).resolves.toMatchObject({ status: "CREATED" });
+    expect(updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ status: "CREATING", filePath: createdData.filePath, fileHashSha256: null })
+    }));
+  });
+
+  it("fails before publish when the rendered report exceeds the configured object limit", async () => {
+    const reportExport = {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => ({ ...reportRow(), ...data })),
+      updateMany: vi.fn(async () => ({ count: 1 }))
+    };
+    const storage = inMemoryStorage();
+    const service = new ReportsService(
+      { reportExport, decisionLog: { findMany: vi.fn(async () => []) } } as never,
+      safeMetrics() as never,
+      config({ SUPABASE_STORAGE_MAX_OBJECT_BYTES: "8" })
+    );
+    (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+
+    await expect(service.export(exportBody(), ACTOR_ID)).rejects.toBeInstanceOf(ServiceUnavailableException);
+    expect(storage.put).not.toHaveBeenCalled();
+    expect(reportExport.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ status: "CREATING", fileHashSha256: null }),
+      data: { status: "FAILED", fileHashSha256: null }
+    }));
+  });
+
   it("keeps the payload and returns success when CREATED committed but its acknowledgement was lost", async () => {
     const harness = reportCommitAmbiguityHarness("COMMITTED");
 
@@ -101,7 +170,11 @@ describe("ReportsService durable storage", () => {
     });
     expect(harness.storage.getStream).toHaveBeenCalledOnce();
     expect(harness.storage.delete).not.toHaveBeenCalled();
-    expect(harness.updateMany).not.toHaveBeenCalled();
+    expect(harness.updateMany).toHaveBeenCalledOnce();
+    expect(harness.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ status: "CREATING", fileHashSha256: null }),
+      data: expect.objectContaining({ status: "CREATED", fileHashSha256: harness.expectedHash })
+    }));
   });
 
   it("confirms FAILED after a rolled-back CREATED update before deleting the payload once", async () => {
@@ -126,7 +199,7 @@ describe("ReportsService durable storage", () => {
     const error = await rejected(harness.service.export(exportBody(), ACTOR_ID));
     expect(error).toBeInstanceOf(ServiceUnavailableException);
     expect(events).toEqual(["put", "created-update-error", "read-creating", "mark-failed", "read-failed", "delete"]);
-    expect(harness.updateMany).toHaveBeenCalledOnce();
+    expect(harness.updateMany).toHaveBeenCalledTimes(2);
     expect(harness.storage.delete).toHaveBeenCalledOnce();
   });
 
@@ -137,7 +210,7 @@ describe("ReportsService durable storage", () => {
     expect(error).toBeInstanceOf(ServiceUnavailableException);
     expect((error as ServiceUnavailableException).getResponse()).toMatchObject({ code: "REPORT_STORAGE_UNAVAILABLE" });
     expect(harness.storage.delete).not.toHaveBeenCalled();
-    expect(harness.updateMany).not.toHaveBeenCalled();
+    expect(harness.updateMany).toHaveBeenCalledOnce();
   });
 
   it("does not accept or clean up a CREATED row until the stored byte size and hash match", async () => {
@@ -147,7 +220,7 @@ describe("ReportsService durable storage", () => {
     expect(error).toBeInstanceOf(ServiceUnavailableException);
     expect(harness.storage.getStream).toHaveBeenCalledOnce();
     expect(harness.storage.delete).not.toHaveBeenCalled();
-    expect(harness.updateMany).not.toHaveBeenCalled();
+    expect(harness.updateMany).toHaveBeenCalledOnce();
   });
 
   it("fails and removes an exact payload from a restored put-before-finalize CREATING snapshot", async () => {
@@ -503,13 +576,16 @@ function reportCommitAmbiguityHarness(
   let storedBody = Buffer.alloc(0);
   let storedHash = "";
 
-  const update = vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+  const updateMany = vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
     if (data.status === "CREATED") {
       if (outcome === "COMMITTED") databaseStatus = "CREATED";
       events.push("created-update-error");
       throw new Error("final DB acknowledgement unavailable");
     }
-    return { ...reportRow(), ...createdData, ...data };
+    events.push("mark-failed");
+    databaseStatus = "FAILED";
+    if (options.failedTransitionAckLost) throw new Error("FAILED transition acknowledgement unavailable");
+    return { count: 1 };
   });
   const findUnique = vi.fn(async () => {
     if (outcome === "UNAVAILABLE") throw new Error("fresh DB read unavailable");
@@ -520,12 +596,6 @@ function reportCommitAmbiguityHarness(
       status: databaseStatus,
       fileHashSha256: databaseStatus === "CREATED" ? storedHash : null
     };
-  });
-  const updateMany = vi.fn(async () => {
-    events.push("mark-failed");
-    databaseStatus = "FAILED";
-    if (options.failedTransitionAckLost) throw new Error("FAILED transition acknowledgement unavailable");
-    return { count: 1 };
   });
   const storage = {
     provider: "local",
@@ -552,7 +622,6 @@ function reportCommitAmbiguityHarness(
           createdData = data;
           return { ...reportRow(), ...data };
         }),
-        update,
         updateMany,
         findUnique
       },
@@ -568,6 +637,28 @@ function reportCommitAmbiguityHarness(
     updateMany,
     findUnique,
     get expectedHash() { return storedHash; }
+  };
+}
+
+function safeSummary() {
+  return {
+    totals: { spendUsd: 0, spendKrw: 0, purchaseCount: 0, cpaKrw: 0, revenueKrw: 0, marginKrw: 0 },
+    health: { unmatchedCount: 0, missingCostRuleCount: 0, missingCpaRuleCount: 0 }
+  };
+}
+
+function inMemoryStorage() {
+  let body = Buffer.alloc(0);
+  return {
+    provider: "local",
+    put: vi.fn(async ({ key, body: input, maxBytes }: { key: string; body: Buffer; maxBytes?: number }) => {
+      body = Buffer.from(input);
+      if (maxBytes !== undefined && body.length > maxBytes) throw new Error("too large");
+      return { key, hash: createHash("sha256").update(body).digest("hex"), size: body.length };
+    }),
+    getStream: vi.fn(async () => ({ stream: Readable.from(body), size: body.length })),
+    delete: vi.fn(async () => true),
+    exists: vi.fn(async () => true)
   };
 }
 
