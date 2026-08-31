@@ -28,6 +28,13 @@ approved LAN client -- HTTPS 443 --> Windows Edge
 - The application never owns or changes the existing `3100`/`4100` processes.
 - Source and release paths are immutable inputs. Data, secrets, evidence, logs,
   and backups live outside the repository and outside release directories.
+- Domain mutations pass a high-capacity pre-authenticated IP abuse/CSRF gate,
+  then a separate authenticated user+IP business quota. Invalid anonymous CSRF
+  traffic cannot consume another user's business quota on a shared LAN address.
+- Stale `CREATING` report rows are reconciled at startup and every minute for
+  rows at least five minutes old. Each pass is bounded; unresolved storage/DB
+  outcomes keep readiness closed and are retried without blessing or deleting
+  uncertain bytes.
 
 The Node application and release verifier are path-, hostname-, IP-, and
 OS-independent. `deploy/windows` is the replaceable host layer for service,
@@ -94,7 +101,11 @@ These steps are safe before approval:
    --root=<RELEASE_ROOT> --release-id=<RELEASE_ID>` once. Record the returned
    manifest hash and migration digest without modifying the release afterward.
    Packaging parses the staged Windows host bundle and runs the staged
-   source-free cold-start contract before it writes manifest v4.
+   source-free cold-start contract before it writes manifest v4. The release
+   allowlist accepts only compiled API runtime files, Prisma schema/migrations,
+   runtime dependencies/assets, the exact local/Windows host tools, and Next
+   runtime/public assets. TypeScript sources, documentation, source maps, and
+   unknown top-level or host files are rejected before signing.
 3. Run `node deploy/local/verify-local-release.mjs --root=<RELEASE_ROOT>
    --manifest-sha256=<HASH>` whenever the release is transferred.
 4. Create the data-root directory layout and four distinct local non-admin account
@@ -178,7 +189,9 @@ local launchers. Do not copy source `.env` files or any key/pgpass material.
 ```
 
 The packager inventories every file, rejects secret-like paths and reparse
-points, rejects `api/src`, `web/src`, and `.git`, and creates the manifest with
+points, enforces the explicit runtime allowlist in both package and cold-start
+smoke, rejects TypeScript/declaration sources, documentation, source maps,
+`api/src`, `web/src`, and `.git`, and creates the manifest with
 exclusive-create semantics. Manifest v4 binds a digest of the exact Windows host
 file set and a digest of the cold-start contract. The staged smoke syntax-checks
 all entrypoints, proves missing production config fails closed, executes the
@@ -395,9 +408,13 @@ and time are configured, the schedule must not run and readiness remains false.
    artifact before publishing. The publisher holds read locks on the complete
    artifact tree through publication; the semantic signer rejects hard links,
    binds file identity/size/mtime around every hash, and re-enumerates the full
-   tree immediately before signing. The one-use authorization is marked consumed
-   only after the receipt is atomically published. It then publishes the
-   signed latest receipt. Generic attestation signing refuses `backup-latest`.
+   tree immediately before signing. Before `latest` can change, the one-use
+   authorization and candidate receipt hash are synchronously persisted as a
+   durable `RESERVED` record. After atomic publication it becomes `COMMITTED`;
+   a crash between those states is retried idempotently from the reservation.
+   An older candidate is committed as `SUPERSEDED` without replacing a newer
+   receipt, so crash recovery cannot roll `latest` backward. Generic attestation
+   signing refuses `backup-latest`.
    Receipts are constructed from an allowlist and contain hashes/metadata, never
    rows, file contents, credentials or unknown request fields.
 4. `Restore-Verify.ps1` must run as the dedicated unprivileged restore verifier
@@ -423,7 +440,8 @@ and time are configured, the schedule must not run and readiness remains false.
    `Publish-RestoreEvidence.ps1` after presenting its exact source/destination,
    impact and rollback and obtaining approval. Never publish scratch secrets,
    logs, database rows, or payload bytes.
-6. Only a fresh signed backup and a successful signed restore receipt make
+6. Only a fresh signed backup, successful signed restore receipt, both recovery
+   receipts, exact LAN evidence, and a current-boot reboot receipt make
    `operationalReady` true. A configured schedule alone is insufficient.
 
 Backup, restore/rehearsal, and legacy-quiesce attestations use distinct Ed25519
@@ -596,13 +614,22 @@ production merely to test a script.
 
 ## Reboot verification and incident recovery
 
-After an approved reboot, `Test-RebootReadiness.ps1` verifies service start
-modes, exact listener ownership, loopback-only Web/API, Supabase readiness,
-HTTPS release identity, principal rights re-evaluated after boot, daily task,
-and backup freshness. The new services must not own 3100, 4100, 5432, 55432, or
-6543. A LAN-disabled installation uses the reachable `core-prepared` verifier
-mode and requires Edge to remain stopped/manual; full operational readiness is
-required only for an enabled LAN installation.
+Before a planned reboot, use a separately approved
+`Manage-Service.ps1 -Action PrepareReboot` plan: Core becomes
+Automatic/running while Edge is forced Manual/stopped. After boot, an exact
+approved `Test-RebootReadiness.ps1 -Action Verify` evidence write uses
+`pre-edge` mode for LAN or `core-prepared` mode without LAN. It verifies the
+current boot identity, release/runtime/Supabase contract, exact listener
+ownership, loopback-only Web/API, principal rights re-evaluated after boot,
+daily task, backup freshness, and that Edge/443 remain stopped. The new services
+must not own 3100, 4100, 5432, 55432, or 6543. The atomic v3 receipt is bound to
+the runtime hash, release manifest/migration, stable host digest, current boot,
+Node/service identities, data/backup roots and RPO/RTO. Missing, stale, prior-
+boot, or drifted evidence keeps `operationalReady=false`. Only after that
+receipt exists may a separately approved `Manage-Service.ps1 -Action ResumeEdge`
+make Edge Automatic/running; the launcher independently revalidates the receipt
+before binding 443. An unexpected reboot therefore leaves 443 closed until the
+same proof and approval sequence is repeated.
 
 Recovery order is:
 
