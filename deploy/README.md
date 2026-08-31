@@ -530,11 +530,12 @@ Production database migration and process switching are separate approvals.
    fresh immediate production-migration approval, applies the signed reference
    conversion before the target Prisma migration. A later local release uses
    `-PreviousReleaseKind LOCAL_RELEASE` and signed Edge drain v2 instead.
-   Rollback after that point uses `Manage-SupabaseRollbackRestore.ps1`: create a
-    fresh `Apply` Plan bound to the exact production Supabase project/host/database/
-    schema, maintenance, migration journal, signed legacy backup chain,
-     executor/credential/key hashes, durable rollback journal, exact signed
-     `legacy-quiesce` evidence and type-specific public-key hashes. Select
+    Rollback after that point uses `Manage-SupabaseRollbackRestore.ps1`: create a
+     fresh `Apply` Plan bound to the exact production Supabase project/host/database/
+     schema, maintenance, migration journal, release manifest, exact applied-
+     migration digest, signed backup chain, executor/credential/key hashes,
+     durable rollback journal, transition-specific quiescence evidence and
+     type-specific public-key hashes. Select
      `-EdgeStateMode ACTIVE_LOCAL_EDGE` only when a local Edge is already active;
      that mode additionally binds a fresh signed Edge drain v2 and the current
      Edge PID/start time/executable/command/release/listener identity. Select
@@ -542,16 +543,21 @@ Production database migration and process switching are separate approvals.
      start; that mode requires no 443 listener, an absent or stopped Manual/Disabled
      Edge service, the exact release/runtime/Node identity, and the signed legacy
      quiesce. It never weakens the 3100/4100 absence check.
-     It rechecks the baseline PIDs, restart digest, evidence freshness, and writer/
-     listener absence immediately before INTENT. Apply keeps 3100/4100 quiesced and writes a flushed atomic `INTENT` before the first
+     In `LEGACY_BASELINE` mode it binds the legacy backup, restart digest and
+     `legacy-quiesce`. In `LOCAL_RELEASE` mode it instead requires the previous
+     release's exact manifest/applied chain, a current target-release backup and
+     restore rehearsal, a fresh signed Edge drain v2, and byte-for-byte equality
+     between the live local Storage inventory and the backup `storage-payload`.
+     It rechecks evidence freshness and writer/listener absence immediately before
+     INTENT. Apply keeps all writers quiesced and writes a flushed atomic `INTENT` before the first
     mutation. In one transaction it renames the current schema to an approval-
     instance-specific preserved schema; it never drops that pre-rollback schema.
     The signed archive then recreates a pristine target schema. Apply restores the
     runtime-role grants, verifies them, KPI, and unchanged repository-local storage
     inventories, while every stream/hash/child/cleanup shares one monotonic four-
     hour deadline and verified process-tree termination. It retains the preserved
-    schema, writes `COMPLETE_MAINTENANCE_REQUIRED`, and signs
-    `legacy-database-rollback` with the restore key. On any failure after INTENT it
+     schema, writes `COMPLETE_MAINTENANCE_REQUIRED`, and signs the type-neutral
+     `database-rollback` attestation with the restore key. On any failure after INTENT it
     transactionally drops only the partial restored target and renames the
     preserved original back when possible; otherwise it atomically writes
     `FAILED_MAINTENANCE_REQUIRED` and the preserved schema must remain untouched.
@@ -591,7 +597,7 @@ Production database migration and process switching are separate approvals.
     DDL.
 
     Before the first destructive statement, Apply atomically publishes and
-    flushes a version-3 `INTENT` bound to mode, target, preserved schema, signed
+    flushes a version-4 `INTENT` bound to mode, target, preserved schema, signed
     rollback chain and all stable trusted-input hashes. A client/process/power
     failure after COMMIT is recovered by hash-pinning the existing journal and
     creating a new one-time Apply plan: live `1|0` is completed without replaying
@@ -602,8 +608,12 @@ Production database migration and process switching are separate approvals.
     The finalizer computes live fingerprints for both schemas before mutation.
     Each fingerprint covers catalog ownership/ACLs, columns, constraints, indexes,
     functions, triggers, types and default ACLs; the completed Prisma migration
-    chain; local-Storage database references and tombstones; and the full business
-    KPI digest. The operation plan, `INTENT`, post-DDL journal, crash reconciliation
+    chain; and a deterministic SHA-256 digest of every column of every row in every
+    application relation, including Auth/session, Storage references/tombstones and
+    business data. The final schema choice takes the advisory transaction lock,
+    locks every current and preserved application table `ACCESS EXCLUSIVE`, performs
+    the drop/rename and recomputes the full-row survivor fingerprint in one database
+    transaction. The operation plan, `INTENT`, post-DDL journal, crash reconciliation
     and `VerifyEvidence` all bind the exact expected survivor fingerprint. Any
     pre-DDL drift, unexpected survivor, or maintenance-file drift fails closed.
     VerifyEvidence requires the exact completing Apply plan and post-state
@@ -616,7 +626,8 @@ Production database migration and process switching are separate approvals.
    the same bounded legacy health smoke before it reports success. It never
    records `rollbackCodeCompatible=true` for this first cutover.
 4. `Manage-SupabaseMigration.ps1 -Action Apply` writes an INTENT journal before
-   invoking the exact target Prisma migration digest, and requires a new immediate
+   invoking the exact target Prisma migration digest and manifest-declared applied
+   migration-chain digest, and requires a new immediate
    production-migration approval. It uses the dedicated migration role, pinned
    CA, pinned Node/Prisma/verifier, exact ACL classes, previous-release backup,
    maintenance, the transition-appropriate signed quiescence proof, and
@@ -626,8 +637,9 @@ Production database migration and process switching are separate approvals.
    stale/invalid signed quiesce or any reappearing 3100/4100 process/listener.
    Apply stops at
    `APPLIED_PENDING_BOUNDARY`; it cannot claim final PASS.
-5. Produce fresh post-migration database-boundary evidence, verify the exact
-   applied migration chain, then run `Manage-SupabaseMigration.ps1 -Action
+5. Produce fresh post-migration database-boundary evidence (including denial of
+   runtime `TEMPORARY` database privilege), verify the exact applied migration
+   chain against `appliedMigrationDigest`, then run `Manage-SupabaseMigration.ps1 -Action
    Finalize` to create final migration evidence. Rollback is an independently
    approved restore, not an implicit SQL reversal.
 6. Make a target-release backup and complete/publish its restore verification
