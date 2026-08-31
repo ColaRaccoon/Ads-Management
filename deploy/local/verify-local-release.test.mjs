@@ -25,10 +25,18 @@ test("inventory permits runtime private-field helpers but rejects actual secret 
   }finally{await rm(root,{recursive:true,force:true})}
 });
 
-test("inventory rejects source, documentation, and source maps outside the runtime allowlist",async()=>{
-  for(const name of ["api/leaked.ts","operator-notes.md","api/dist/main.js.map","web/.next/server/app.js.map","api/node_modules/pkg/source.ts"]){
+test("inventory rejects source, notes, and source maps outside the positive runtime allowlist",async()=>{
+  for(const name of ["api/leaked.ts","operator-notes.md","api/dist/main.js.map","web/.next/server/app.js.map","api/node_modules/pkg/source.ts","web/.next/server/app.jsx","api/node_modules/pkg/src/index.jsx","api/node_modules/pkg/tool.py","api/node_modules/pkg/native.c","web/.next/operator-notes.txt"]){
     const root=await mkdtemp(path.join(tmpdir(),"local-release-allowlist-"));
     try{const file=path.join(root,...name.split("/"));await mkdir(path.dirname(file),{recursive:true});await writeFile(file,"not runtime");await assert.rejects(()=>inventory(root),/RELEASE_FILE_NOT_ALLOWLISTED/)}
+    finally{await rm(root,{recursive:true,force:true})}
+  }
+});
+
+test("inventory rejects nonstandard environment and credential filenames",async()=>{
+  for(const name of ["api/node_modules/pkg/secret.env.backup","api/node_modules/pkg/runtime-credentials.json","web/.next/server/operator-password.json"]){
+    const root=await mkdtemp(path.join(tmpdir(),"local-release-secret-alias-"));
+    try{const file=path.join(root,...name.split("/"));await mkdir(path.dirname(file),{recursive:true});await writeFile(file,"not-a-real-secret");await assert.rejects(()=>inventory(root),/RELEASE_SECRET_MATERIAL_REJECTED/)}
     finally{await rm(root,{recursive:true,force:true})}
   }
 });

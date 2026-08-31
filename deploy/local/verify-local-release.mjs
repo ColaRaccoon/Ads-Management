@@ -23,16 +23,26 @@ export const REQUIRED_RELEASE_FILES = Object.freeze([
 export const FORBIDDEN_RELEASE_FILES = Object.freeze([
   "api/dist/auth/bootstrap-super-admin.cli.js"
 ]);
-const FORBIDDEN_RUNTIME_ASSET = /(?:^|\/)(?:readme|changelog|changes|history|authors|contributing|security|code_of_conduct)(?:\.|$)|\.(?:map|ts|tsx|cts|mts|md|markdown|rst|adoc|pdf|docx?|pptx?)$/i;
+const LEGAL_RUNTIME_BASENAME = /^(?:licen[cs]e|notice|copying|patents?)(?:[-_.].*)?$/i;
+const NODE_RUNTIME_EXTENSIONS = new Set([".js",".cjs",".mjs",".json",".node",".wasm",".exe",".dll",".prisma",".xml",".html",".css",".svg",".png",".ico",".woff",".woff2",".ttf",".bnf"]);
+const NEXT_RUNTIME_EXTENSIONS = new Set([".js",".cjs",".mjs",".json",".node",".wasm",".html",".rsc",".meta",".css",".svg",".png",".ico",".woff",".woff2",".ttf",".gz"]);
+const PUBLIC_RUNTIME_EXTENSIONS = new Set([".js",".cjs",".mjs",".json",".wasm",".html",".css",".svg",".png",".jpg",".jpeg",".gif",".webp",".ico",".woff",".woff2",".ttf"]);
+const SECRET_NAME_EXCEPTIONS = new Set(["deploy/local/new-signing-key.mjs","deploy/local/api.env.example"]);
 
 export function allowedReleaseFile(relative) {
   if (relative === "release-manifest.json" || relative === "api/package.json" || relative === "api/prisma/schema.prisma" || relative === "web/server.js" || relative === "web/package.json") return true;
   if (LOCAL_HOST_TOOL_FILES.includes(relative) || WINDOWS_HOST_FILES.includes(relative)) return true;
   if (/^api\/prisma\/migrations\/[^/]+\/migration\.sql$/.test(relative)) return true;
   if (/^api\/dist\/.+\.(?:js|cjs|mjs|json|node|wasm)$/.test(relative)) return true;
-  if (/^web\/\.next\/.+/.test(relative)) return !FORBIDDEN_RUNTIME_ASSET.test(relative);
-  if (/^web\/public\/.+/.test(relative)) return !FORBIDDEN_RUNTIME_ASSET.test(relative);
-  if (/^(?:api|web)\/node_modules\/.+/.test(relative)) return !FORBIDDEN_RUNTIME_ASSET.test(relative);
+  if (relative === "web/.next/BUILD_ID") return true;
+  if (/^web\/\.next\/.+/.test(relative)) return !relative.startsWith("web/.next/cache/") && NEXT_RUNTIME_EXTENSIONS.has(path.posix.extname(relative).toLowerCase());
+  if (/^web\/public\/.+/.test(relative)) return PUBLIC_RUNTIME_EXTENSIONS.has(path.posix.extname(relative).toLowerCase());
+  if (/^(?:api|web)\/node_modules\/.+/.test(relative)) {
+    const basename=path.posix.basename(relative);
+    if(LEGAL_RUNTIME_BASENAME.test(basename))return true;
+    if(relative.endsWith("/next/dist/lib/server-external-packages.jsonc"))return true;
+    return NODE_RUNTIME_EXTENSIONS.has(path.posix.extname(relative).toLowerCase());
+  }
   return false;
 }
 
@@ -178,7 +188,7 @@ export async function inventory(rootValue, excludeManifest = false) {
       if (!stat.isFile() || stat.size > MAX_FILE_BYTES) fail("RELEASE_FILE_INVALID");
       const relative=path.relative(root,full).split(path.sep).join("/");
       if (excludeManifest && relative === "release-manifest.json") continue;
-      if (secretMaterialName(relative) && relative !== "deploy/local/new-signing-key.mjs") fail("RELEASE_SECRET_MATERIAL_REJECTED");
+      if (secretMaterialName(relative) && !SECRET_NAME_EXCEPTIONS.has(relative)) fail("RELEASE_SECRET_MATERIAL_REJECTED");
       if (!allowedReleaseFile(relative)) fail(`RELEASE_FILE_NOT_ALLOWLISTED:${relative}`);
       totalBytes+=stat.size;if(totalBytes>MAX_RELEASE_BYTES)fail("RELEASE_TOTAL_BYTES_EXCEEDED");
       result.push({full,relative,size:stat.size}); if(result.length>MAX_FILES)fail("RELEASE_FILE_COUNT_EXCEEDED");
@@ -206,6 +216,7 @@ function sha256(bytes){return createHash("sha256").update(bytes).digest("hex");}
 function secretMaterialName(relative){
   const base=path.posix.basename(relative).toLowerCase();
   return /(^|\/)\.env(?:\.|$)/i.test(relative)||/^pgpass(?:\.|$)/.test(base)||/\.(?:key|pfx|p12)$/.test(base)||
+    /(?:^|[._-])env(?:[._-]|$)/.test(base)||/(?:^|[._-])(?:secret|secrets|credential|credentials|password|passwd|token)(?:[._-]|$)/.test(base)||
     /^(?:\.?secrets?|.*[._-]secrets?)\.(?:txt|json|pem|der|bin|dat)$/.test(base)||/(?:^|[._-])(?:private|server|client|signing)[._-]?key(?:[._-]|$)/.test(base)||
     new Set([".npmrc",".yarnrc",".pypirc",".netrc","credentials.json"]).has(base);
 }
