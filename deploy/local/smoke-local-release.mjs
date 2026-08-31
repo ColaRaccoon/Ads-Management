@@ -4,6 +4,7 @@ import http from "node:http";
 import net from "node:net";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { inventory } from "./verify-local-release.mjs";
 
 const ENTRYPOINTS = Object.freeze([
   "api/dist/main.js","api/dist/auth/bootstrap-local-super-admin.cli.js","api/dist/staging/business-compatibility-smoke.cli.js","api/dist/staging/legacy-business-compatibility-smoke.cli.js","api/dist/staging/auth-role-matrix-smoke.cli.js","api/node_modules/prisma/build/index.js","web/server.js"
@@ -12,6 +13,7 @@ const ENTRYPOINTS = Object.freeze([
 export async function smokeLocalRelease(rootValue, releaseId) {
   const root=path.resolve(rootValue);
   if(!/^[a-z0-9][a-z0-9._-]{0,62}$/.test(releaseId??""))fail("RELEASE_SMOKE_RELEASE_ID_INVALID");
+  await inventory(root,true);
   for(const forbidden of ["api/src","web/src",".git"]){if(await exists(path.join(root,...forbidden.split("/"))))fail(`RELEASE_SMOKE_SOURCE_PRESENT:${forbidden}`)}
   for(const entry of ENTRYPOINTS){const result=await run(process.execPath,["--check",path.join(root,...entry.split("/"))],root,cleanEnv(),30_000);if(result.code!==0)fail(`RELEASE_SMOKE_SYNTAX_FAILED:${entry}`)}
   const failClosedEnv=cleanEnv({NODE_ENV:"production",APP_ENV:"production",DEPLOYMENT_MODE:"local_lan"});

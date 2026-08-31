@@ -23,6 +23,18 @@ export const REQUIRED_RELEASE_FILES = Object.freeze([
 export const FORBIDDEN_RELEASE_FILES = Object.freeze([
   "api/dist/auth/bootstrap-super-admin.cli.js"
 ]);
+const FORBIDDEN_RUNTIME_ASSET = /(?:^|\/)(?:readme|changelog|changes|history|authors|contributing|security|code_of_conduct)(?:\.|$)|\.(?:map|ts|tsx|cts|mts|md|markdown|rst|adoc|pdf|docx?|pptx?)$/i;
+
+export function allowedReleaseFile(relative) {
+  if (relative === "release-manifest.json" || relative === "api/package.json" || relative === "api/prisma/schema.prisma" || relative === "web/server.js" || relative === "web/package.json") return true;
+  if (LOCAL_HOST_TOOL_FILES.includes(relative) || WINDOWS_HOST_FILES.includes(relative)) return true;
+  if (/^api\/prisma\/migrations\/[^/]+\/migration\.sql$/.test(relative)) return true;
+  if (/^api\/dist\/.+\.(?:js|cjs|mjs|json|node|wasm)$/.test(relative)) return true;
+  if (/^web\/\.next\/.+/.test(relative)) return !FORBIDDEN_RUNTIME_ASSET.test(relative);
+  if (/^web\/public\/.+/.test(relative)) return !FORBIDDEN_RUNTIME_ASSET.test(relative);
+  if (/^(?:api|web)\/node_modules\/.+/.test(relative)) return !FORBIDDEN_RUNTIME_ASSET.test(relative);
+  return false;
+}
 
 export async function verifyLocalRelease(rootValue, expectedManifestSha256) {
   const root = path.resolve(rootValue);
@@ -167,6 +179,7 @@ export async function inventory(rootValue, excludeManifest = false) {
       const relative=path.relative(root,full).split(path.sep).join("/");
       if (excludeManifest && relative === "release-manifest.json") continue;
       if (secretMaterialName(relative) && relative !== "deploy/local/new-signing-key.mjs") fail("RELEASE_SECRET_MATERIAL_REJECTED");
+      if (!allowedReleaseFile(relative)) fail(`RELEASE_FILE_NOT_ALLOWLISTED:${relative}`);
       totalBytes+=stat.size;if(totalBytes>MAX_RELEASE_BYTES)fail("RELEASE_TOTAL_BYTES_EXCEEDED");
       result.push({full,relative,size:stat.size}); if(result.length>MAX_FILES)fail("RELEASE_FILE_COUNT_EXCEEDED");
     }
