@@ -253,6 +253,11 @@ describe("local native deployment artifacts", () => {
     const [quiesce,finalizer]=await Promise.all([file("deploy/windows/Manage-LegacyQuiesce.ps1"),file("deploy/windows/Finalize-SupabaseRollback.ps1")]);
     for(const token of["PRE_MIGRATION_RESUME","POST_MIGRATION_ROLLBACK","LEGACY_QUIESCED_NO_EDGE","SIGNED_LEGACY_QUIESCE_V2","ExpectedMigrationJournalSha256","legacyNoEdgeVerified","drainVerified"]){expect(quiesce).toContain(token)}
     for(const token of["RETURN_FORWARD","ACCEPT_ROLLBACK_DROP_PRESERVED","Assert-ApprovedPlan","supabase_postgres","database.migrationUser","COMPLETE_MAINTENANCE_REQUIRED","DROP SCHEMA $schema CASCADE","ALTER SCHEMA $saved RENAME TO $schema","DROP SCHEMA $saved CASCADE","ROLLBACK_FINALIZE_POST_STATE_REJECTED"]){expect(finalizer).toContain(token)}
+    for(const token of["ExpectedMaintenanceApprovalIdDigest","Assert-MaintenanceState","Assert-CurrentQuiescence","FileSystemEvidencePath","ExpectedPsqlSha256","ExpectedPgPassSha256","ExpectedCaCertificateSha256","INTENT","FAILED_MAINTENANCE_REQUIRED","Write-DurableJson","existingFinalizationJournalSha256","ROLLBACK_FINALIZE_ACTION_TIME_QUIESCENCE_CHANGED","1|1","1|0"]){expect(finalizer).toContain(token)}
+    expect(finalizer).toContain("Test-UnderClass $pgpass $filesystem.classRoots.ADMIN_ONLY");
+    expect(finalizer).toContain("Test-UnderClass $maintenancePath $filesystem.classRoots.EDGE_READ");
+    expect(finalizer).toContain("Test-UnderClass $FinalizationJournalPath $filesystem.classRoots.ADMIN_EVIDENCE");
+    expect(finalizer.indexOf("Write-DurableJson $FinalizationJournalPath $intent -CreateOnly")).toBeLessThan(finalizer.indexOf("ROLLBACK_FINALIZE_MUTATION_FAILED"));
     expect(finalizer).not.toContain("database.restoreUser-cne$ConfirmDatabaseUser");
   });
 
