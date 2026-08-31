@@ -13,6 +13,16 @@ describe("report workbook compatibility proof", () => {
     expect(first.canonicalBytes).toBeGreaterThan(100);
   });
 
+  it("keeps symmetric UUID relationship graphs stable without using raw UUID order", async () => {
+    const parallel = await reportWorkbookCompatibility(
+      await workbook(runId, { symmetricCross: false }), expected(runId)
+    );
+    const crossed = await reportWorkbookCompatibility(
+      await workbook(runId, { symmetricCross: true }), expected(runId)
+    );
+    expect(parallel.digest).toBe(crossed.digest);
+  });
+
   it("rejects a report whose KPI cell, relationship, or required business sheet regresses", async () => {
     const changed = await workbook(runId, { spendKrw: 1 });
     const baseline = await reportWorkbookCompatibility(await workbook(runId), expected(runId));
@@ -44,7 +54,12 @@ function expected(id: string) {
 
 async function workbook(
   id: string,
-  overrides: { spendKrw?: number; targetCpaKrw?: number; breakDecisionLink?: boolean } = {}
+  overrides: {
+    spendKrw?: number;
+    targetCpaKrw?: number;
+    breakDecisionLink?: boolean;
+    symmetricCross?: boolean;
+  } = {}
 ) {
   const value = new ExcelJS.Workbook();
   const volatileId = id.startsWith("11111111")
@@ -73,23 +88,39 @@ async function workbook(
     "totals.spendUsd": 20, "totals.spendKrw": 27_000, "totals.purchaseCount": 2, "totals.cpaKrw": 13_500,
     "totals.revenueKrw": 138_000, "totals.marginKrw": 61_000
   });
-  table(value.addWorksheet("Decisions"), {
+  const decisionRows = overrides.symmetricCross === undefined ? [{
     id: volatileId, decisionRunId: volatileDecisionRunId, scopeType: "ADSET", decision: "KEEP", severity: "INFO",
     reason: `Compatibility ${id}`, recommendedAction: "Observe",
     createdAt: id.startsWith("11111111") ? "2026-08-31" : "2026-09-01"
-  });
+  }] : ["10000000-0000-4000-8000-000000000001", "f0000000-0000-4000-8000-000000000002"].map(
+    (decisionId) => ({
+      id: decisionId, scopeType: "ADSET", decision: "KEEP", severity: "INFO",
+      reason: "Symmetric decision", recommendedAction: "Observe"
+    })
+  );
+  tableRows(value.addWorksheet("Decisions"), decisionRows);
   value.addWorksheet("Unmatched").addRow(["No data"]);
-  table(value.addWorksheet("Change Logs"), {
+  const changeRows = overrides.symmetricCross === undefined ? [{
     id: volatileDecisionRunId, actionDate: "2026-08-25", actionType: "KEEP", entityType: "META_ADSET",
     reason: "Compatibility change", relatedDecisionId: overrides.breakDecisionLink
       ? "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
       : volatileId
-  });
+  }] : ["20000000-0000-4000-8000-000000000003", "e0000000-0000-4000-8000-000000000004"].map(
+    (changeId, index) => ({
+      id: changeId, actionDate: "2026-08-25", actionType: "KEEP", entityType: "META_ADSET",
+      reason: "Symmetric change", relatedDecisionId: decisionRows[overrides.symmetricCross ? 1 - index : index].id
+    })
+  );
+  tableRows(value.addWorksheet("Change Logs"), changeRows);
   return Buffer.from(await value.xlsx.writeBuffer());
 }
 
 function table(sheet: ExcelJS.Worksheet, row: Record<string, string | number>) {
-  const columns = Object.keys(row);
+  tableRows(sheet, [row]);
+}
+
+function tableRows(sheet: ExcelJS.Worksheet, rows: Array<Record<string, string | number>>) {
+  const columns = Object.keys(rows[0]);
   sheet.addRow(columns);
-  sheet.addRow(columns.map((column) => row[column]));
+  for (const row of rows) sheet.addRow(columns.map((column) => row[column]));
 }

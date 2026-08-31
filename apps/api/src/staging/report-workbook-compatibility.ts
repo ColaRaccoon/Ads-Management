@@ -81,30 +81,39 @@ type CompatibilityWorkbook = {
   changeLogs: ProjectedSheet;
 };
 
-function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook): CompatibilityWorkbook {
-  const contexts = new Map<string, string[]>();
+function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook) {
   const sheets: Array<[keyof Omit<CompatibilityWorkbook, "summary">, ProjectedSheet]> = [
     ["products", workbook.products], ["adsets", workbook.adsets], ["decisions", workbook.decisions],
     ["unmatched", workbook.unmatched], ["changeLogs", workbook.changeLogs]
   ];
+  const uuids = new Set<string>();
   for (const [column, value] of Object.entries(workbook.summary)) {
-    collectUuidContexts(value, JSON.stringify({ sheet: "summary", column, value: genericUuids(value) }), contexts);
+    collectUuids(value, uuids);
   }
-  for (const [sheetName, sheet] of sheets) {
+  for (const [, sheet] of sheets) {
     for (const row of sheet.rows) {
-      const genericRow = Object.fromEntries(sheet.columns.map((column) => [column, genericUuids(row[column])]));
-      for (const column of sheet.columns) {
-        collectUuidContexts(row[column], JSON.stringify({ sheet: sheetName, column, row: genericRow }), contexts);
-      }
+      for (const column of sheet.columns) collectUuids(row[column], uuids);
     }
   }
-  const aliases = new Map(
-    [...contexts].sort(([leftUuid, leftContexts], [rightUuid, rightContexts]) => {
-      const left = [...leftContexts].sort().join("\n");
-      const right = [...rightContexts].sort().join("\n");
-      return left < right ? -1 : left > right ? 1 : leftUuid.localeCompare(rightUuid);
-    }).map(([uuid], index) => [uuid, `<UUID_${index + 1}>`])
-  );
+  let aliases = new Map([...uuids].map((uuid) => [uuid, "<UUID_1>"]));
+  let contexts = collectRelationshipContexts(workbook, sheets, aliases);
+  let stable = aliases.size === 0;
+  for (let iteration = 0; !stable && iteration < 32; iteration += 1) {
+    const fingerprints = new Map([...aliases].map(([uuid, alias]) => [
+      uuid, JSON.stringify({ alias, contexts: [...(contexts.get(uuid) ?? [])].sort() })
+    ]));
+    const orderedFingerprints = [...new Set(fingerprints.values())].sort();
+    const fingerprintAliases = new Map(orderedFingerprints.map((fingerprint, index) => [
+      fingerprint, `<UUID_${index + 1}>`
+    ]));
+    const refined = new Map([...fingerprints].map(([uuid, fingerprint]) => [
+      uuid, fingerprintAliases.get(fingerprint)!
+    ]));
+    stable = new Set(refined.values()).size === new Set(aliases.values()).size;
+    aliases = refined;
+    contexts = collectRelationshipContexts(workbook, sheets, aliases);
+  }
+  if (!stable) throw new Error("REPORT_COMPATIBILITY_UUID_REFINEMENT_LIMIT");
   const canonicalSummary = Object.fromEntries(Object.entries(workbook.summary).map(([column, value]) => [
     column, aliasUuids(value, aliases)
   ]));
@@ -119,11 +128,45 @@ function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook): Compati
     });
     return [name, { columns: sheet.columns, rows }];
   })) as Omit<CompatibilityWorkbook, "summary">;
-  return { summary: canonicalSummary, ...canonicalSheets };
+  const classMembers = new Map<string, string[]>();
+  for (const [uuid, alias] of aliases) classMembers.set(alias, [...(classMembers.get(alias) ?? []), uuid]);
+  const uuidRelationshipClasses = [...classMembers].sort(([left], [right]) => left.localeCompare(right)).map(
+    ([alias, members]) => ({
+      alias,
+      nodeCount: members.length,
+      occurrenceCount: members.reduce((total, uuid) => total + (contexts.get(uuid)?.length ?? 0), 0)
+    })
+  );
+  return { summary: canonicalSummary, ...canonicalSheets, uuidRelationshipClasses };
 }
 
-function genericUuids(value: Primitive): Primitive {
-  return typeof value === "string" ? value.replace(UUID_PATTERN, "<UUID>") : value;
+function collectRelationshipContexts(
+  workbook: CompatibilityWorkbook,
+  sheets: Array<[keyof Omit<CompatibilityWorkbook, "summary">, ProjectedSheet]>,
+  aliases: Map<string, string>
+) {
+  const contexts = new Map<string, string[]>();
+  for (const [column, value] of Object.entries(workbook.summary)) {
+    collectUuidContexts(value, JSON.stringify({
+      sheet: "summary", column, value: aliasUuids(value, aliases)
+    }), contexts);
+  }
+  for (const [sheetName, sheet] of sheets) {
+    for (const row of sheet.rows) {
+      const coloredRow = Object.fromEntries(sheet.columns.map((column) => [
+        column, aliasUuids(row[column], aliases)
+      ]));
+      for (const column of sheet.columns) {
+        collectUuidContexts(row[column], JSON.stringify({ sheet: sheetName, column, row: coloredRow }), contexts);
+      }
+    }
+  }
+  return contexts;
+}
+
+function collectUuids(value: Primitive, uuids: Set<string>) {
+  if (typeof value !== "string") return;
+  for (const uuid of value.match(UUID_PATTERN) ?? []) uuids.add(uuid.toLowerCase());
 }
 
 function collectUuidContexts(value: Primitive, context: string, contexts: Map<string, string[]>) {
