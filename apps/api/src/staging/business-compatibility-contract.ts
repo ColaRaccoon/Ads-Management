@@ -29,7 +29,7 @@ function normalize(value: unknown, budget: { arrayItems: number; nodes: number }
   if (Array.isArray(value)) {
     budget.arrayItems += value.length;
     if (budget.arrayItems > MAX_ARRAY_ITEMS) throw new Error("BUSINESS_COMPATIBILITY_ARRAY_LIMIT");
-    return value.map((entry) => normalize(entry, budget, depth + 1)).sort(compareCanonical);
+    return value.map((entry) => normalize(entry, budget, depth + 1));
   }
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
@@ -40,9 +40,4 @@ function normalize(value: unknown, budget: { arrayItems: number; nodes: number }
   }
   if (typeof value === "number" && !Number.isFinite(value)) throw new Error("BUSINESS_COMPATIBILITY_NON_FINITE_NUMBER");
   return value;
-}
-
-function compareCanonical(left: unknown, right: unknown) {
-  const leftText=JSON.stringify(left),rightText=JSON.stringify(right);
-  return leftText<rightText?-1:leftText>rightText?1:0;
 }

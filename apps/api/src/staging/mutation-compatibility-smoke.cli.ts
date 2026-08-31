@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { ConfigService } from "@nestjs/config";
-import { AppRole, ConflictPolicy, InviteStatus, PrismaClient, ReportType } from "@prisma/client";
+import { AppRole, ConflictPolicy, InviteStatus, PrismaClient, ReportType, StorageTombstoneDomain, StorageTombstoneState } from "@prisma/client";
 import { createHash, randomUUID } from "node:crypto";
 import path from "node:path";
 import ExcelJS from "exceljs";
@@ -18,7 +18,7 @@ import { MetricsService } from "../metrics/metrics.service";
 import { ReportsService } from "../reports/reports.service";
 import { Cafe24UploadsService } from "../sales/cafe24-uploads.service";
 import { LocalFileStorage } from "../storage/local-file-storage";
-import { parseStorageReference } from "../storage/storage-reference";
+import { parseStorageReference, storageReference } from "../storage/storage-reference";
 import { StorageTombstoneService } from "../storage/storage-tombstone.service";
 import { MetaAdsetImportService } from "../uploads/meta-adset-import.service";
 import { MetaEntityWriterService } from "../uploads/meta-entity-writer.service";
@@ -37,7 +37,8 @@ async function run() {
   const reportRoot=requiredRoot("REPORT_STORAGE_DIR"),uploadRoot=requiredRoot("UPLOAD_STORAGE_DIR");
   const prisma=new PrismaClient();const reportStorage=new LocalFileStorage(reportRoot);const uploadFileStorage=new LocalFileStorage(uploadRoot);
   const runId=randomUUID(),dateText="2026-08-25",date=new Date(`${dateText}T00:00:00.000Z`);
-  const reportKeys:string[]=[],uploadKeys:string[]=[],trashKeys:string[]=[];
+  const reportKeys:string[]=[],reportTrashKeys:string[]=[],uploadKeys:string[]=[],trashKeys:string[]=[];
+  let purgedTombstoneId="";
   let rollbackObserved=false;
   try{
     await prisma.$connect();
@@ -86,17 +87,30 @@ async function run() {
         assert(deleted.storedFileRetained&&Boolean(deleted.tombstoneId),"META_UPLOAD_RETENTION_INVALID");trashKeys.push(`trash/${deleted.tombstoneId}`);
         const restored=await lifecycle.restoreStoredObject(deleted.tombstoneId!,actor.id);assert(restored.state==="RESTORED","META_UPLOAD_RESTORE_INVALID");
         const restoredUpload=await uploadFileStorage.getStream(metaReference.key),restoredHash=createHash("sha256");for await(const chunk of restoredUpload.stream)restoredHash.update(chunk);assert(restoredHash.digest("hex")===createHash("sha256").update(metaFile.buffer).digest("hex"),"META_UPLOAD_RESTORE_HASH_INVALID");
+        const manualDeleted=await coupang.deleteManualPurchase(manual.rows[0].id,actor.id);assert(manualDeleted.deleted&&manualDeleted.id===manual.rows[0].id,"COUPANG_MANUAL_PURCHASE_DELETE_INVALID");
+        assert(await tx.coupangManualPurchase.count({where:{id:manual.rows[0].id}})===0,"COUPANG_MANUAL_PURCHASE_DELETE_NOT_PERSISTED");
+
+        const purgeKey=`compatibility/purge-${runId}.bin`,purgeBytes=Buffer.from(`purge-contract-${runId}`,"utf8"),purgeHash=createHash("sha256").update(purgeBytes).digest("hex");
+        await reportStorage.put({key:purgeKey,body:purgeBytes,expectedHashSha256:purgeHash,maxBytes:purgeBytes.length});reportKeys.push(purgeKey);
+        const retainedForPurge=await tombstones.retain({domain:StorageTombstoneDomain.REPORT,businessRecordId:randomUUID(),reference:storageReference("local",purgeKey),expectedHashSha256:purgeHash,actorUserId:actor.id});
+        purgedTombstoneId=retainedForPurge.tombstoneId;const purgeTrashKey=`trash/${purgedTombstoneId}`;reportTrashKeys.push(purgeTrashKey);
+        assert(retainedForPurge.state===StorageTombstoneState.RETAINED&&!await reportStorage.exists(purgeKey)&&await reportStorage.exists(purgeTrashKey),"REPORT_PURGE_RETENTION_INVALID");
+        const purged=await lifecycle.purgeStoredObject(purgedTombstoneId,actor.id),purgedRow=await tx.storageTombstone.findUniqueOrThrow({where:{id:purgedTombstoneId}});
+        assert(purged.state===StorageTombstoneState.PURGED&&purgedRow.state===StorageTombstoneState.PURGED&&purgedRow.hashSha256===purgeHash&&purgedRow.byteSize===BigInt(purgeBytes.length),"REPORT_PURGE_STATE_OR_HASH_INVALID");
+        assert(!await reportStorage.exists(purgeKey)&&!await reportStorage.exists(purgeTrashKey),"REPORT_PURGE_BYTES_REMAIN");
         throw new RollbackMutationSmoke();
       },{timeout:300_000});
       throw new Error("COMPATIBILITY_MUTATION_ROLLBACK_MISSING");
     }catch(error){if(!(error instanceof RollbackMutationSmoke))throw error;rollbackObserved=true}
     assert(await prisma.appUser.count({where:{normalizedUsername:`mutation_${runId}`}})===0,"COMPATIBILITY_DATABASE_ROLLBACK_FAILED");
+    assert(!purgedTombstoneId||await prisma.storageTombstone.count({where:{id:purgedTombstoneId}})===0,"COMPATIBILITY_PURGE_TOMBSTONE_ROLLBACK_FAILED");
     for(const key of trashKeys)assert(!await uploadFileStorage.exists(key),"COMPATIBILITY_TOMBSTONE_TRASH_REMAINS");
-    const flows=["MetaAdsetImportService.importMetaAdsetCsv:duplicate-replay","MappingsService.createProductRule+rematchCurrentMetrics","Cafe24UploadsService.import+rematch+deleteUpload","CoupangService.importSales+rematch+deleteUpload","CoupangService.replaceManualPurchasesForDate","DecisionsService.run","ReportsService.export+download:hash-verified","UploadLifecycleService.deleteUpload+StorageTombstoneService.restore:hash-verified"];
+    for(const key of reportTrashKeys)assert(!await reportStorage.exists(key),"COMPATIBILITY_PURGE_TRASH_REMAINS");
+    const flows=["MetaAdsetImportService.importMetaAdsetCsv:duplicate-replay","MappingsService.createProductRule+rematchCurrentMetrics","Cafe24UploadsService.import+rematch+deleteUpload","CoupangService.importSales+rematch+deleteUpload","CoupangService.replaceManualPurchasesForDate+deleteManualPurchase","DecisionsService.run","ReportsService.export+download:hash-verified","UploadLifecycleService.deleteUpload+StorageTombstoneService.restore:hash-verified","UploadLifecycleService.purgeStoredObject:db-hash-and-byte-absence-verified"];
     const digest=createHash("sha256").update(JSON.stringify({contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION,flows})).digest("hex");
-    process.stdout.write(`${JSON.stringify({event:"mutation-compatibility-smoke",releaseId,contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION,digest,flows,flowCount:flows.length,databaseMutations:8,storageMutations:6,rollbackVerified:rollbackObserved,storageHashVerified:true})}\n`);
+    process.stdout.write(`${JSON.stringify({event:"mutation-compatibility-smoke",releaseId,contractVersion:MUTATION_COMPATIBILITY_CONTRACT_VERSION,digest,flows,flowCount:flows.length,databaseMutations:10,storageMutations:10,rollbackVerified:rollbackObserved,storageHashVerified:true})}\n`);
   }finally{
-    for(const key of reportKeys)await reportStorage.delete(key).catch(()=>false);
+    for(const key of [...reportKeys,...reportTrashKeys])await reportStorage.delete(key).catch(()=>false);
     for(const key of [...uploadKeys,...trashKeys])await uploadFileStorage.delete(key).catch(()=>false);
     await prisma.$disconnect();
   }
