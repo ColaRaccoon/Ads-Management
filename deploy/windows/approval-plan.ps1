@@ -53,7 +53,7 @@ function Get-ApprovalContext {
   }
   if($provided.Count-ne4-or$ApprovalNonce-notmatch'^[a-f0-9]{64}$'-or$ApprovalInstanceId-notmatch'^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$'){throw 'APPROVAL_INSTANCE_FIELDS_REQUIRED'}
   try{$issued=[datetimeoffset]::ParseExact($ApprovalIssuedAt,'o',[Globalization.CultureInfo]::InvariantCulture);$expires=[datetimeoffset]::ParseExact($ApprovalExpiresAt,'o',[Globalization.CultureInfo]::InvariantCulture)}catch{throw 'APPROVAL_TIME_INVALID'}
-  if($expires-le$issued-or($expires-$issued).TotalMinutes-gt15){throw 'APPROVAL_WINDOW_INVALID'}
+  if($expires-le$issued-or($expires-$issued).TotalMinutes-gt10){throw 'APPROVAL_WINDOW_INVALID'}
   $script:ApprovalContext=[ordered]@{nonce=$ApprovalNonce;issuedAt=$issued.ToUniversalTime().ToString('o');expiresAt=$expires.ToUniversalTime().ToString('o');instanceId=$ApprovalInstanceId;ledgerPath=(Get-ApprovalPath $(if($ApprovalLedgerPath){$ApprovalLedgerPath}else{Get-ApprovalDefaultLedgerPath}) 'APPROVAL_LEDGER_PATH_REQUIRED')}
   return $script:ApprovalContext
 }

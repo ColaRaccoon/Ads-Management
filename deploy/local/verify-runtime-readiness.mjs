@@ -1,11 +1,14 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { uptime } from "node:os";
+import { pathToFileURL } from "node:url";
 import { validateLocalRuntimeConfig } from "./runtime-config.mjs";
 
-const args=new Map(process.argv.slice(2).map((arg)=>{const index=arg.indexOf("=");if(!arg.startsWith("--")||index<3)fail("ARGUMENT_INVALID");return[arg.slice(2,index),arg.slice(index+1)]}));
+if(import.meta.url===pathToFileURL(process.argv[1]??"").href) main();
+function main(){const args=new Map(process.argv.slice(2).map((arg)=>{const index=arg.indexOf("=");if(!arg.startsWith("--")||index<3)fail("ARGUMENT_INVALID");return[arg.slice(2,index),arg.slice(index+1)]}));
 const runtimeConfigPath=path.resolve(args.get("runtime-config")??"");const releaseRoot=path.resolve(args.get("release-root")??"");
-const mode=args.get("mode")??"operational";if(!new Set(["operational","core-prepared"]).has(mode))fail("READINESS_MODE_INVALID");
+const mode=args.get("mode")??"operational";if(!new Set(["operational","core-prepared","pre-edge"]).has(mode))fail("READINESS_MODE_INVALID");
 const runtimeBytes=readBounded(runtimeConfigPath,1_048_576,"RUNTIME_CONFIG");const raw=JSON.parse(runtimeBytes.toString("utf8"));
 const backupTargetSnapshot=readJsonSnapshot(raw.backup?.physicalTargetEvidencePath);
 const value=validateLocalRuntimeConfig(raw,{
@@ -14,11 +17,16 @@ const value=validateLocalRuntimeConfig(raw,{
   backupScheduleEvidence:readJson(raw.backup?.scheduledTaskEvidencePath),latestBackupEvidence:readJson(raw.backup?.latestBackupEvidencePath),
   filesystemEvidence:readJson(raw.hostSecurity?.filesystemEvidencePath),databaseBoundaryEvidence:readJson(raw.database?.boundaryEvidencePath),
   firewallEvidence:readJson(raw.hostSecurity?.firewallEvidencePath),restoreEvidence:readJson(raw.backup?.restoreEvidencePath),recoveryEvidence:readJson(raw.backup?.recoveryEvidencePath),disasterRecoveryEvidence:readJson(raw.backup?.disasterRecoveryEvidencePath),
+  rebootEvidence:readJson(raw.hostSecurity?.rebootEvidencePath),bootedAt:Date.now()-uptime()*1000,
   backupReceiptPublicKey:readOptional(raw.backup?.backupReceiptPublicKeyPath,16_384,"BACKUP_PUBLIC_KEY"),restoreReceiptPublicKey:readOptional(raw.backup?.restoreReceiptPublicKeyPath,16_384,"RESTORE_PUBLIC_KEY")
 });
-if(mode==="operational"&&!value.readiness.operationalReady)fail("OPERATIONAL_READINESS_FAILED");
-if(mode==="core-prepared"&&(!value.readiness.corePrepared||value.lan.enabled||value.readiness.lanReady||value.readiness.operationalReady))fail("CORE_PREPARED_READINESS_FAILED");
-process.stdout.write(`${JSON.stringify({result:"PASS",releaseId:value.release.id,mode,corePrepared:value.readiness.corePrepared,operationalReady:value.readiness.operationalReady})}\n`);
+verifyReadinessMode(value,mode);
+process.stdout.write(`${JSON.stringify({result:"PASS",releaseId:value.release.id,mode,corePrepared:value.network.corePrepared,operationalReady:value.readiness.operationalReady})}\n`);}
+export function verifyReadinessMode(value,mode){
+  if(mode==="operational"&&!value.readiness.operationalReady)fail("OPERATIONAL_READINESS_FAILED");
+  if(mode==="core-prepared"&&(!value.network.corePrepared||value.lan.enabled||value.network.lanReady||value.readiness.operationalReady))fail("CORE_PREPARED_READINESS_FAILED");
+  if(mode==="pre-edge"&&(!value.readiness.preEdgeReady||!value.lan.enabled||!value.network.lanReady||value.readiness.operationalReady))fail("PRE_EDGE_READINESS_FAILED");
+}
 function readJson(value){if(typeof value!=="string"||!value)return null;return JSON.parse(readBounded(value,1_048_576,"EVIDENCE").toString("utf8"))}
 function readJsonSnapshot(value){if(typeof value!=="string"||!value)return null;const bytes=readBounded(value,1_048_576,"EVIDENCE");return{value:JSON.parse(bytes.toString("utf8")),sha256:createHash("sha256").update(bytes).digest("hex")}}
 function readOptional(value,max,label){if(typeof value!=="string"||!value)return null;return readBounded(value,max,label)}

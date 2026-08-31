@@ -1,14 +1,14 @@
 #Requires -Version 7.2
 [CmdletBinding()]
 param(
-  [ValidateSet('Plan','Install','Start','Stop','Remove','Verify')][string]$Action='Plan',
+  [ValidateSet('Plan','Install','Start','Stop','PrepareReboot','ResumeEdge','Remove','Verify')][string]$Action='Plan',
   [string]$StagedWrapperPath,[string]$ExpectedWrapperSha256,[string]$NodePath,[string]$ExpectedNodeSha256,
   [string]$ReleaseRoot,[string]$ReleaseVerifierPath,[string]$ExpectedReleaseVerifierSha256,[string]$ExpectedReleaseManifestSha256,[string]$ExpectedReleaseId,[string]$ExpectedCoreLauncherSha256,[string]$ExpectedEdgeLauncherSha256,
   [string]$ServiceRoot,[string]$RuntimeConfigPath,[string]$ExpectedRuntimeConfigSha256,[string]$ApiConfigPath,[string]$ExpectedApiConfigSha256,[string]$CoreLogRoot,[string]$EdgeLogRoot,
   [string]$FileSystemEvidencePath,[string]$ExpectedFileSystemEvidenceSha256,[string]$PrincipalRightsEvidencePath,[string]$ExpectedPrincipalRightsEvidenceSha256,[string]$PrincipalRightsScriptPath,[string]$ExpectedPrincipalRightsScriptSha256,
   [string]$CoreServiceAccount,[PSCredential]$CoreServiceCredential,
   [string]$EdgeServiceAccount,[PSCredential]$EdgeServiceCredential,[string]$BackupAccount,[string]$SignerAccount,
-  [ValidateSet('Install','Start','Stop','Remove')][string]$PlannedAction,[string]$ApprovedPlanSha256,[string]$ApprovalNonce,[string]$ApprovalIssuedAt,[string]$ApprovalExpiresAt,[string]$ApprovalInstanceId,[string]$ApprovalLedgerPath,[switch]$Approved
+  [ValidateSet('Install','Start','Stop','PrepareReboot','ResumeEdge','Remove')][string]$PlannedAction,[string]$ApprovedPlanSha256,[string]$ApprovalNonce,[string]$ApprovalIssuedAt,[string]$ApprovalExpiresAt,[string]$ApprovalInstanceId,[string]$ApprovalLedgerPath,[switch]$Approved
 )
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'approval-plan.ps1')
@@ -27,7 +27,7 @@ function CoreXml($Node,$Launcher,$Release,$Runtime,$Api,$Log){$t=Get-Content -Ra
 function EdgeXml($Node,$Launcher,$Release,$Runtime,$Log){$t=Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'edge-service.xml.template');return $t.Replace('__NODE_PATH__',[Security.SecurityElement]::Escape($Node)).Replace('__EDGE_LAUNCHER_PATH__',[Security.SecurityElement]::Escape($Launcher)).Replace('__RELEASE_ROOT__',[Security.SecurityElement]::Escape($Release)).Replace('__RUNTIME_CONFIG_PATH__',[Security.SecurityElement]::Escape($Runtime)).Replace('__LOG_PATH__',[Security.SecurityElement]::Escape($Log))}
 function ConfigureService($Wrapper,$Id,$Account,$Credential,[string]$StartMode){&$Wrapper install|Out-Null;if($LASTEXITCODE-ne0){throw "SERVICE_INSTALL_FAILED_$Id"};$svc=Get-CimInstance Win32_Service -Filter "Name='$Id'";$password=$Credential.GetNetworkCredential().Password;try{$change=Invoke-CimMethod -InputObject $svc -MethodName Change -Arguments @{StartName=$Account;StartPassword=$password;StartMode=$StartMode}}finally{$password=$null};if($change.ReturnValue-ne0){throw "SERVICE_ACCOUNT_CONFIGURATION_FAILED_$Id"};&sc.exe sidtype $Id unrestricted|Out-Null;if($LASTEXITCODE-ne0){throw "SERVICE_SID_CONFIGURATION_FAILED_$Id"};&sc.exe sdset $Id $serviceSddl|Out-Null;if($LASTEXITCODE-ne0){throw "SERVICE_DACL_CONFIGURATION_FAILED_$Id"}}
 function New-ServiceApprovalPlan([string]$IntendedAction){
-  if($IntendedAction-notin@('Install','Start','Stop','Remove')){throw 'PLANNED_ACTION_REQUIRED'}
+  if($IntendedAction-notin@('Install','Start','Stop','PrepareReboot','ResumeEdge','Remove')){throw 'PLANNED_ACTION_REQUIRED'}
   $parameters=[ordered]@{serviceIds=$ids;serviceRoot=(Get-ApprovalPath $ServiceRoot 'SERVICE_PLAN_ROOT_REQUIRED');wrapperSha256=(Get-ApprovalHash $ExpectedWrapperSha256 'SERVICE_PLAN_WRAPPER_HASH_REQUIRED')}
   if($IntendedAction-ne'Remove'){
     foreach($account in @($CoreServiceAccount,$EdgeServiceAccount,$BackupAccount,$SignerAccount)){if($account-notmatch'^[^\\]+\\[^\\]+$'){throw 'SERVICE_PLAN_ACCOUNT_REQUIRED'}}
@@ -37,13 +37,13 @@ function New-ServiceApprovalPlan([string]$IntendedAction){
     if($IntendedAction-eq'Install'){$parameters.stagedWrapperPath=Get-ApprovalPath $StagedWrapperPath 'SERVICE_PLAN_STAGED_WRAPPER_PATH_REQUIRED'}
   }
   $target="Exact Windows services $($ids-join',') under $($parameters.serviceRoot)"+$(if($IntendedAction-ne'Remove'){" for release $ExpectedReleaseId"}else{''})
-  $impact=if($IntendedAction-eq'Install'){'Installs the exact hash-pinned wrappers under distinct non-admin accounts and leaves both services Manual/stopped'}elseif($IntendedAction-eq'Start'){'Starts Core and starts Edge only when the exact runtime is LAN-enabled; it does not target legacy 3100/4100'}elseif($IntendedAction-eq'Stop'){'Stops only the two exact services and sets both to Manual'}else{'Stops/uninstalls only the two exact services and removes their wrapper/XML files; data, DB, firewall, and legacy processes remain unchanged'}
-  $rollback=if($IntendedAction-eq'Install'){'Remove only through a separately approved Remove plan'}elseif($IntendedAction-eq'Start'){'Stop only through a separately approved Stop plan'}elseif($IntendedAction-eq'Stop'){'Restart only through a new approved Start plan'}else{'Reinstall only through a new approved Install plan with matching service credentials'}
+  $impact=if($IntendedAction-eq'Install'){'Installs the exact hash-pinned wrappers under distinct non-admin accounts and leaves both services Manual/stopped'}elseif($IntendedAction-eq'Start'){'Starts Core and starts Edge only when the exact runtime is LAN-enabled and current reboot evidence passes; it does not target legacy 3100/4100'}elseif($IntendedAction-eq'Stop'){'Stops only the two exact services and sets both to Manual'}elseif($IntendedAction-eq'PrepareReboot'){'Starts/keeps Core Automatic and forces Edge Manual/stopped so reboot recovery can be proved before 443 opens'}elseif($IntendedAction-eq'ResumeEdge'){'After current-boot evidence exists, changes only Edge to Automatic/running; its launcher still fails closed unless operational readiness passes'}else{'Stops/uninstalls only the two exact services and removes their wrapper/XML files; data, DB, firewall, and legacy processes remain unchanged'}
+  $rollback=if($IntendedAction-eq'Install'){'Remove only through a separately approved Remove plan'}elseif($IntendedAction-in@('Start','ResumeEdge')){'Stop only through a separately approved Stop or PrepareReboot plan'}elseif($IntendedAction-eq'Stop'){'Restart only through a new approved Start or PrepareReboot plan'}elseif($IntendedAction-eq'PrepareReboot'){'Keep Edge stopped; resume it only through a new approved ResumeEdge plan after post-reboot evidence'}else{'Reinstall only through a new approved Install plan with matching service credentials'}
   return New-ApprovalPlan $PSCommandPath $IntendedAction $parameters $target $impact $rollback
 }
 
 if($Action-eq'Plan'){New-ServiceApprovalPlan $PlannedAction|ConvertTo-Json -Depth 12;exit 0}
-$serviceMutation=if($Action-in@('Install','Start','Stop','Remove')){$Action}else{$null};if($serviceMutation){Assert-ApprovedPlan (New-ServiceApprovalPlan $serviceMutation) ([bool]$Approved) $ApprovedPlanSha256}
+$serviceMutation=if($Action-in@('Install','Start','Stop','PrepareReboot','ResumeEdge','Remove')){$Action}else{$null};if($serviceMutation){Assert-ApprovedPlan (New-ServiceApprovalPlan $serviceMutation) ([bool]$Approved) $ApprovedPlanSha256}
 $root=Dir $ServiceRoot 'SERVICE_ROOT_NOT_FOUND';$coreExe=Join-Path $root 'MetaAdsPerformanceCore.exe';$edgeExe=Join-Path $root 'MetaAdsPerformanceEdge.exe';$coreXmlPath=Join-Path $root 'MetaAdsPerformanceCore.xml';$edgeXmlPath=Join-Path $root 'MetaAdsPerformanceEdge.xml'
 if($Action-eq'Remove'){
   foreach($id in $ids){
@@ -82,7 +82,7 @@ if($Action-ne'Stop'){
 }
 if($runtimeValue.lan.enabled){foreach($secretPath in @($runtimeValue.tls.serverPrivateKeyPath,$runtimeValue.hostSecurity.edgeSigningPrivateKeyPath)){if(-not(UnderAny $secretPath $classes.EDGE_READ)){throw 'EDGE_PRIVATE_KEY_ACL_COVERAGE_FAILED'}}}
 $expectedCore=CoreXml $node $coreLauncher $release $runtime $api $coreLog;$expectedEdge=EdgeXml $node $edgeLauncher $release $runtime $edgeLog
-if($Action-in@('Start','Stop')){
+if($Action-in@('Start','Stop','PrepareReboot','ResumeEdge')){
   foreach($entry in @(@{Id=$ids[0];Exe=$coreExe;Xml=$coreXmlPath;Expected=$expectedCore;Account=$CoreServiceAccount},@{Id=$ids[1];Exe=$edgeExe;Xml=$edgeXmlPath;Expected=$expectedEdge;Account=$EdgeServiceAccount})){
     $svc=Get-CimInstance Win32_Service -Filter "Name='$($entry.Id)'";if(-not$svc-or-not(Test-Path -LiteralPath $entry.Exe)-or-not(Test-Path -LiteralPath $entry.Xml)-or(Get-Content -Raw -LiteralPath $entry.Xml)-cne$entry.Expected-or$svc.StartName-ine$entry.Account){throw 'SERVICE_CONFIGURATION_MISMATCH'};Hash $entry.Exe $ExpectedWrapperSha256 'INSTALLED_WRAPPER_HASH_MISMATCH'
   }
@@ -90,7 +90,18 @@ if($Action-in@('Start','Stop')){
     foreach($id in @($ids[1],$ids[0])){$service=Get-Service -Name $id;if($service.Status-ne'Stopped'){Stop-Service -Name $id -ErrorAction Stop;Wait-State $id 'Stopped'};Set-Service -Name $id -StartupType Manual}
     [pscustomobject]@{Result='STOPPED';CoreStopped=$true;EdgeStopped=$true;StartupType='Manual';LegacyProcessesChanged=$false}|ConvertTo-Json;exit 0
   }
+  if($Action-eq'PrepareReboot'){
+    $edge=Get-Service -Name $ids[1];if($edge.Status-ne'Stopped'){Stop-Service -Name $ids[1] -ErrorAction Stop;Wait-State $ids[1] 'Stopped'};Set-Service -Name $ids[1] -StartupType Manual
+    Set-Service -Name $ids[0] -StartupType Automatic;$core=Get-Service -Name $ids[0];if($core.Status-ne'Running'){Start-Service -Name $ids[0] -ErrorAction Stop;Wait-State $ids[0] 'Running'}
+    [pscustomobject]@{Result='REBOOT_PREPARED';CoreStatus='Running';CoreStartupType='Automatic';EdgeStatus='Stopped';EdgeStartupType='Manual';HttpsOpened=$false;LegacyProcessesChanged=$false}|ConvertTo-Json;exit 0
+  }
+  if($Action-eq'ResumeEdge'){
+    if(-not$runtimeValue.lan.enabled){throw 'RESUME_EDGE_REQUIRES_LAN_ENABLED'};$runtimeVerifier=File (Join-Path $release 'deploy\local\verify-runtime-readiness.mjs') 'RUNTIME_READINESS_VERIFIER_NOT_FOUND';&$node $runtimeVerifier "--runtime-config=$runtime" "--release-root=$release" '--mode=operational' 2>$null|Out-Null;if($LASTEXITCODE-ne0){throw 'RESUME_EDGE_OPERATIONAL_READINESS_FAILED'};$core=Get-CimInstance Win32_Service -Filter "Name='$($ids[0])'";if(-not$core-or$core.State-ne'Running'-or$core.StartMode-ne'Auto'){throw 'RESUME_EDGE_CORE_NOT_READY'};$edge=Get-Service -Name $ids[1];if($edge.Status-ne'Stopped'){throw 'RESUME_EDGE_REQUIRES_STOPPED_EDGE'}
+    try{Set-Service -Name $ids[1] -StartupType Automatic;Start-Service -Name $ids[1] -ErrorAction Stop;Wait-State $ids[1] 'Running'}catch{try{Stop-Service -Name $ids[1] -Force -ErrorAction SilentlyContinue;Set-Service -Name $ids[1] -StartupType Manual}catch{};throw}
+    [pscustomobject]@{Result='EDGE_RESUMED_VERIFY_REQUIRED';CoreRunning=$true;EdgeRunning=$true;RebootEvidenceRequiredByLauncher=$true;LegacyProcessesChanged=$false}|ConvertTo-Json;exit 0
+  }
   if((Get-Service -Name $ids[0]).Status-ne'Stopped'-or(Get-Service -Name $ids[1]).Status-ne'Stopped'){throw 'SERVICE_START_REQUIRES_BOTH_SERVICES_STOPPED'}
+  if($runtimeValue.lan.enabled){$runtimeVerifier=File (Join-Path $release 'deploy\local\verify-runtime-readiness.mjs') 'RUNTIME_READINESS_VERIFIER_NOT_FOUND';&$node $runtimeVerifier "--runtime-config=$runtime" "--release-root=$release" '--mode=operational' 2>$null|Out-Null;if($LASTEXITCODE-ne0){throw 'SERVICE_START_OPERATIONAL_READINESS_FAILED'}}
   Set-Service -Name $ids[0] -StartupType Automatic;$core=Get-Service -Name $ids[0];if($core.Status-ne'Running'){Start-Service -Name $ids[0] -ErrorAction Stop;Wait-State $ids[0] 'Running'}
   if($runtimeValue.lan.enabled){Set-Service -Name $ids[1] -StartupType Automatic;$edge=Get-Service -Name $ids[1];if($edge.Status-ne'Running'){Start-Service -Name $ids[1] -ErrorAction Stop;Wait-State $ids[1] 'Running'}}else{Set-Service -Name $ids[1] -StartupType Manual;$edge=Get-Service -Name $ids[1];if($edge.Status-ne'Stopped'){Stop-Service -Name $ids[1] -ErrorAction Stop;Wait-State $ids[1] 'Stopped'}}
   [pscustomobject]@{Result='STARTED_VERIFY_REQUIRED';Mode=if($runtimeValue.lan.enabled){'FULL_LAN'}else{'CORE_ONLY_CLI_BOOTSTRAP'};CoreRunning=$true;EdgeRunning=[bool]$runtimeValue.lan.enabled;LegacyProcessesChanged=$false}|ConvertTo-Json;exit 0

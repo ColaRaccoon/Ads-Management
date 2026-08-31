@@ -15,8 +15,8 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 const SAMPLE_AD_DAILY_CSV = process.env.APPROVED_META_SAMPLE_PATH ?? "";
-const ORIGINAL_BUSINESS_ROOT = "C:\\Users\\seong\\Desktop\\workspace\\Meta-Ads-Performance";
-const SAMPLE_IS_APPROVED_COPY = Boolean(SAMPLE_AD_DAILY_CSV) &&
+const ORIGINAL_BUSINESS_ROOT = process.env.ORIGINAL_BUSINESS_ROOT ?? "";
+const SAMPLE_IS_APPROVED_COPY = Boolean(SAMPLE_AD_DAILY_CSV) && Boolean(ORIGINAL_BUSINESS_ROOT) &&
   !isWithin(ORIGINAL_BUSINESS_ROOT, SAMPLE_AD_DAILY_CSV);
 
 describe("AdsetNameNormalizer", () => {

@@ -12,8 +12,10 @@ try{
   $Action='Apply';$ApprovalNonce='a'*64;$ApprovalIssuedAt=[datetimeoffset]::UtcNow.AddSeconds(-1).ToString('o');$ApprovalExpiresAt=[datetimeoffset]::UtcNow.AddMinutes(5).ToString('o');$ApprovalInstanceId=[guid]::NewGuid().ToString('D').ToLowerInvariant();$ApprovalLedgerPath=Join-Path $testRoot 'consumed.jsonl';$script:ApprovalContext=$null
   $plan=New-ApprovalPlan $PSCommandPath 'Test' ([ordered]@{value='exact'}) 'test target' 'test impact' 'test rollback';Assert-ApprovedPlan $plan $true $plan.planSha256
   try{Assert-ApprovedPlan $plan $true $plan.planSha256;throw 'REPLAY_WAS_ACCEPTED'}catch{if($_.Exception.Message-cne'APPROVAL_PLAN_REPLAY_REJECTED'){throw}}
-  $ApprovalNonce='b'*64;$ApprovalIssuedAt=[datetimeoffset]::UtcNow.AddMinutes(-20).ToString('o');$ApprovalExpiresAt=[datetimeoffset]::UtcNow.AddMinutes(-10).ToString('o');$ApprovalInstanceId=[guid]::NewGuid().ToString('D').ToLowerInvariant();$script:ApprovalContext=$null
+  $expiredIssued=[datetimeoffset]::UtcNow.AddMinutes(-20);$ApprovalNonce='b'*64;$ApprovalIssuedAt=$expiredIssued.ToString('o');$ApprovalExpiresAt=$expiredIssued.AddMinutes(5).ToString('o');$ApprovalInstanceId=[guid]::NewGuid().ToString('D').ToLowerInvariant();$script:ApprovalContext=$null
   $expired=New-ApprovalPlan $PSCommandPath 'Test' ([ordered]@{value='expired'}) 'test target' 'test impact' 'test rollback'
   try{Assert-ApprovedPlan $expired $true $expired.planSha256;throw 'EXPIRED_WAS_ACCEPTED'}catch{if($_.Exception.Message-cne'APPROVAL_EXPIRED_OR_NOT_YET_VALID'){throw}}
-  [pscustomobject]@{result='PASS';returnRuntime=$true;pinnedHelperRuntime=$true;pinnedHelperMutationRejected=$true;replayRejected=$true;expiryRejected=$true}|ConvertTo-Json -Compress
+  $oversizedIssued=[datetimeoffset]::UtcNow;$ApprovalNonce='c'*64;$ApprovalIssuedAt=$oversizedIssued.ToString('o');$ApprovalExpiresAt=$oversizedIssued.AddMinutes(11).ToString('o');$ApprovalInstanceId=[guid]::NewGuid().ToString('D').ToLowerInvariant();$script:ApprovalContext=$null
+  try{[void](New-ApprovalPlan $PSCommandPath 'Test' ([ordered]@{value='oversized'}) 'test target' 'test impact' 'test rollback');throw 'OVERSIZED_WINDOW_ACCEPTED'}catch{if($_.Exception.Message-cne'APPROVAL_WINDOW_INVALID'){throw}}
+  [pscustomobject]@{result='PASS';returnRuntime=$true;pinnedHelperRuntime=$true;pinnedHelperMutationRejected=$true;replayRejected=$true;expiryRejected=$true;oversizedWindowRejected=$true}|ConvertTo-Json -Compress
 }finally{if(Test-Path -LiteralPath $testRoot){[IO.Directory]::Delete($testRoot,$true)}}

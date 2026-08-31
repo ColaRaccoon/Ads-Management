@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import path from "node:path";
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
-import { validateLocalRuntimeConfig } from "./runtime-config.mjs";
+import { rebootContractFingerprint, validateLocalRuntimeConfig } from "./runtime-config.mjs";
+import { verifyReadinessMode } from "./verify-runtime-readiness.mjs";
 
 const dataRoot = path.resolve(process.cwd(), "..", "runtime-data");
 const backupReceiptKeys = generateKeyPairSync("ed25519");
@@ -19,7 +20,7 @@ const base = () => ({
   release: { id: null, migrationDigest: null },
   lan: { enabled: false, hostname: null, bindAddress: null, allowedCidrs: [], expectedClientCount: null, expectedClientSetDigest: null },
   tls: { caCertificatePath: null, serverCertificatePath: null, serverPrivateKeyPath: null, clientTrustVerified: false, clientTrustEvidencePath: null, hstsEnabled: false },
-  hostSecurity: { filesystemEvidencePath: null, firewallEvidencePath: null, edgeSigningPublicKeyPath: null, edgeSigningPrivateKeyPath: null, nodeProgramPath: null, nodeProgramSha256: null, edgeServiceSid: null },
+  hostSecurity: { filesystemEvidencePath: null, firewallEvidencePath: null, rebootEvidencePath: null, edgeSigningPublicKeyPath: null, edgeSigningPrivateKeyPath: null, nodeProgramPath: null, nodeProgramSha256: null, edgeServiceSid: null },
   backup: { root: null, dailyTime: null, rpoHours: 24, rtoHours: 4, physicalTargetEvidencePath: null, scheduledTaskEvidencePath: null, latestBackupEvidencePath: null, restoreEvidencePath: null, recoveryEvidencePath: null, disasterRecoveryEvidencePath: null, backupReceiptPublicKeyPath: null, restoreReceiptPublicKeyPath: null }
 });
 
@@ -37,6 +38,7 @@ test("a prepared Core may run on loopback without enabling Edge or reporting ope
   value.hostSecurity = {
     filesystemEvidencePath: path.join(dataRoot, "evidence", "filesystem.json"),
     firewallEvidencePath: null,
+    rebootEvidencePath: path.join(dataRoot, "evidence", "reboot.json"),
     edgeSigningPublicKeyPath: path.join(dataRoot, "public-keys", "edge-public.pem"),
     edgeSigningPrivateKeyPath: null,
     nodeProgramPath: path.join(dataRoot, "public-keys", "node.exe"),
@@ -51,6 +53,7 @@ test("a prepared Core may run on loopback without enabling Edge or reporting ope
     databaseBoundaryEvidence: databaseEvidence("2026-08-26T11:55:00.000Z")
   });
   assert.equal(result.network.corePrepared, true);
+  assert.doesNotThrow(()=>verifyReadinessMode(result,"core-prepared"));
   assert.equal(result.network.lanReady, false);
   assert.equal(result.readiness.operationalReady, false);
   assert.throws(() => validateLocalRuntimeConfig(value, {
@@ -80,6 +83,7 @@ test("trusted explicit LAN may open but cannot be operational-ready before resto
   value.hostSecurity = {
     filesystemEvidencePath: path.join(dataRoot, "evidence", "filesystem.json"),
     firewallEvidencePath: path.join(dataRoot, "evidence", "firewall.json"),
+    rebootEvidencePath: path.join(dataRoot, "evidence", "reboot.json"),
     edgeSigningPublicKeyPath: path.join(dataRoot, "public-keys", "edge-public.pem"),
     edgeSigningPrivateKeyPath: path.join(dataRoot, "edge-private", "edge-private.pem"),
     nodeProgramPath: path.join(dataRoot, "public-keys", "node.exe"), nodeProgramSha256: "9".repeat(64),
@@ -151,8 +155,19 @@ test("operational readiness requires fresh schedule, backup, restore, filesystem
   };
   const now = new Date("2026-08-26T12:00:00.000Z");
   const options = trustedEvidence(now, value, backupRoot);
+  const preEdge = validateLocalRuntimeConfig(value, { ...options, rebootEvidence: null });
+  assert.equal(preEdge.readiness.preEdgeReady, true);
+  assert.doesNotThrow(()=>verifyReadinessMode(preEdge,"pre-edge"));
   const ready = validateLocalRuntimeConfig(value, options);
   assert.equal(ready.readiness.operationalReady, true);
+  assert.equal(ready.readiness.rebootVerified, true);
+  assert.doesNotThrow(()=>verifyReadinessMode(ready,"operational"));
+  const missingReboot=validateLocalRuntimeConfig(value,{...options,rebootEvidence:null});
+  assert.equal(missingReboot.readiness.operationalReady,false);
+  const staleReboot=validateLocalRuntimeConfig(value,{...options,rebootEvidence:{...options.rebootEvidence,completedAt:"2026-08-26T09:00:00.000Z"}});
+  assert.equal(staleReboot.readiness.rebootVerified,false);
+  const driftedReboot=validateLocalRuntimeConfig(value,{...options,rebootEvidence:{...options.rebootEvidence,rebootContractFingerprint:"0".repeat(64)}});
+  assert.equal(driftedReboot.readiness.rebootVerified,false);
   const stale = validateLocalRuntimeConfig(value, {
     ...options,
     latestBackupEvidence: { ...options.latestBackupEvidence, completedAt: "2026-08-24T00:00:00.000Z" }
@@ -288,6 +303,7 @@ function configureTrustedLan(value) {
   value.hostSecurity = {
     filesystemEvidencePath: path.join(dataRoot, "evidence", "filesystem.json"),
     firewallEvidencePath: path.join(dataRoot, "evidence", "firewall.json"),
+    rebootEvidencePath: path.join(dataRoot, "evidence", "reboot.json"),
     edgeSigningPublicKeyPath: path.join(dataRoot, "public-keys", "edge-public.pem"),
     edgeSigningPrivateKeyPath: path.join(dataRoot, "edge-private", "edge-private.pem"),
     nodeProgramPath: path.join(dataRoot, "public-keys", "node.exe"), nodeProgramSha256: "9".repeat(64),
@@ -327,6 +343,7 @@ function trustedEvidence(now, value, backupRoot) {
   const runtimeConfigSha256 = createHash("sha256").update(JSON.stringify(value)).digest("hex");
   const result = {
     now,
+    bootedAt: new Date("2026-08-26T10:00:00.000Z"),
     runtimeConfigSha256,
     recoveryEvidence: { version: 6, result: "PASS", proofType: "current-host-recovery", recoveryContractDigest: sha256Tuple("recovery-pair-v3","8".repeat(64),"9".repeat(64),runtimeConfigSha256,"install-test-0001","6".repeat(64),"5".repeat(64),"4".repeat(64),sha256Tuple(nodeSha256,recoveryToolSha256),"a".repeat(64),"a".repeat(64),"REMOTE_NAS","c".repeat(64),"2"), sourceHostInstanceDigest: "a".repeat(64), verificationHostInstanceDigest: "a".repeat(64), escrowType: "REMOTE_NAS", escrowIdentitySha256: "c".repeat(64), escrowAddressCount: 2, escrowLocalAliasRejected: true, kitId: "8".repeat(64), kitSha256: "8".repeat(64), worksheetSha256: "4".repeat(64), localWorksheetSha256: "4".repeat(64), escrowWorksheetSha256: "4".repeat(64), localKitSha256: "8".repeat(64), escrowKitSha256: "8".repeat(64), manifestSha256: "9".repeat(64), installId: "install-test-0001", runtimeConfigSha256, inventoryDigest: "6".repeat(64), signingKeyPairInventoryDigest: "5".repeat(64), signingKeyPairsVerified: true, fileCount: 16, databaseCredentialInventoryDigest: databaseEvidence("2026-08-26T11:55:00.000Z").credentialInventoryDigest, backupIntegrityKeySha256: "7".repeat(64), nodeSha256, toolSha256: recoveryToolSha256, executorSetDigest: sha256Tuple(nodeSha256,recoveryToolSha256), exactInventory: true, authenticatedExtract: true, boundedExtract: true, boundedConcurrentChildOutput: true, processTreeKillOnDeadline: true, disasterRecoveryVerified: false, sourcePathsDisclosed: false, extractionRetained: false, currentInstallBound: true, currentSourceHashesVerified: true, localCopyPresent: true, escrowCopyPresent: true, escrowWorksheetPresent: true, escrowSeparated: true, copiesMatch: true, adminOnlyAcl: true, testExtractRemoved: true, pfxPrivateKeyVerified: true, caIdentityVerified: true, completedAt },
     clientTrustEvidence: { version: 4, result: "PASS", phase: "PREOPEN", hostname: value.lan.hostname, releaseId: null, caThumbprint: "A".repeat(40), serverCertificateSha256: "1".repeat(64), verifiedClientCount: 2, clientSetDigest: "2".repeat(64), allowedClientCidrs: value.lan.allowedCidrs, clientAddressMappingVerified: true, clientAddressOwnershipVerified: true, verificationPlanSetDigest: "3".repeat(64), httpsVerified: false, completedAt },
@@ -347,6 +364,7 @@ function trustedEvidence(now, value, backupRoot) {
   Object.assign(result.backupScheduleEvidence,{runtimeConfigSha256,runtimeReadinessBound:true,recurringInvocationPlanBound:true,scheduledAuthorizationVersion:3,signerHashVerified:true,boundedChildProcesses:true,...backupPins});
   const {signingKeyId: _signingKeyId,attestationSignature: _attestationSignature,...unsignedBackup}=result.latestBackupEvidence;
   result.latestBackupEvidence=signed({...unsignedBackup,...backupPins},backupReceiptKeys);
+  result.rebootEvidence={version:3,result:"PASS",mode:"PRE_EDGE_LAN",readinessMode:"pre-edge",releaseId:value.release.id,migrationDigest:value.release.migrationDigest,releaseManifestSha256:result.backupScheduleEvidence.releaseManifestSha256,sourceRuntimeConfigSha256:runtimeConfigSha256,rebootContractFingerprint:rebootContractFingerprint(value,dataRoot),hostInstanceDigest:result.recoveryEvidence.sourceHostInstanceDigest,coreAutomatic:true,edgeAutomatic:false,edgeStoppedFailClosed:true,supabaseDatabaseReadyAfterBoot:true,principalRightsVerifiedAfterBoot:true,listenerOwnershipVerified:true,loopbackInternalPorts:true,httpsReleaseVerified:false,pinnedCaAndSniVerified:false,forbiddenPortListenersAbsent:true,backupTaskReady:true,backupTaskExactConfigurationVerified:true,backupDailyTriggerEnabled:true,backupScheduleEvidenceSha256:"3".repeat(64),signedRuntimeReadinessVerified:true,latestBackupFresh:true,bootedAt:"2026-08-26T10:00:00.000Z",completedAt};
   return result;
 }
 

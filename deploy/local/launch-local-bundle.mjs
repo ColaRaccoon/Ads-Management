@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { createConnection } from "node:net";
 import { request as httpRequest } from "node:http";
 import path from "node:path";
+import { uptime } from "node:os";
 import { validateLocalRuntimeConfig } from "./runtime-config.mjs";
 import { validateLocalApiConfigText } from "./api-config.mjs";
 
@@ -24,10 +25,12 @@ const config = validateLocalRuntimeConfig(rawConfig, {
   filesystemEvidence: readEvidence(rawConfig.hostSecurity?.filesystemEvidencePath),
   databaseBoundaryEvidence: readEvidence(rawConfig.database?.boundaryEvidencePath),
   firewallEvidence: readEvidence(rawConfig.hostSecurity?.firewallEvidencePath),
+  rebootEvidence: readEvidence(rawConfig.hostSecurity?.rebootEvidencePath),
   restoreEvidence: readEvidence(rawConfig.backup?.restoreEvidencePath)
   ,recoveryEvidence: readEvidence(rawConfig.backup?.recoveryEvidencePath)
   ,disasterRecoveryEvidence: readEvidence(rawConfig.backup?.disasterRecoveryEvidencePath)
   ,runtimeConfigSha256: createHash("sha256").update(runtimeConfigBytes).digest("hex")
+  ,bootedAt: Date.now()-uptime()*1000
   ,backupReceiptPublicKey: readKey(rawConfig.backup?.backupReceiptPublicKeyPath)
   ,restoreReceiptPublicKey: readKey(rawConfig.backup?.restoreReceiptPublicKeyPath)
 });

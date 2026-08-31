@@ -79,10 +79,11 @@
     },
     "hostSecurity": {
       "type": "object", "additionalProperties": false,
-      "required": ["filesystemEvidencePath", "firewallEvidencePath", "edgeSigningPublicKeyPath", "edgeSigningPrivateKeyPath", "nodeProgramPath", "nodeProgramSha256", "edgeServiceSid"],
+      "required": ["filesystemEvidencePath", "firewallEvidencePath", "rebootEvidencePath", "edgeSigningPublicKeyPath", "edgeSigningPrivateKeyPath", "nodeProgramPath", "nodeProgramSha256", "edgeServiceSid"],
       "properties": {
         "filesystemEvidencePath": { "type": ["string", "null"] },
         "firewallEvidencePath": { "type": ["string", "null"] },
+        "rebootEvidencePath": { "type": ["string", "null"] },
         "edgeSigningPublicKeyPath": { "type": ["string", "null"] },
         "edgeSigningPrivateKeyPath": { "type": ["string", "null"] },
         "nodeProgramPath": { "type": ["string", "null"] },

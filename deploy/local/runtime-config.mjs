@@ -14,7 +14,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
   exactObject(input.release, ["id", "migrationDigest"]);
   exactObject(input.lan, ["enabled", "hostname", "bindAddress", "allowedCidrs", "expectedClientCount", "expectedClientSetDigest"]);
   exactObject(input.tls, ["caCertificatePath", "serverCertificatePath", "serverPrivateKeyPath", "clientTrustVerified", "clientTrustEvidencePath", "hstsEnabled"]);
-  exactObject(input.hostSecurity, ["filesystemEvidencePath", "firewallEvidencePath", "edgeSigningPublicKeyPath", "edgeSigningPrivateKeyPath", "nodeProgramPath", "nodeProgramSha256", "edgeServiceSid"]);
+  exactObject(input.hostSecurity, ["filesystemEvidencePath", "firewallEvidencePath", "rebootEvidencePath", "edgeSigningPublicKeyPath", "edgeSigningPrivateKeyPath", "nodeProgramPath", "nodeProgramSha256", "edgeServiceSid"]);
   exactObject(input.backup, ["root", "dailyTime", "rpoHours", "rtoHours", "physicalTargetEvidencePath", "scheduledTaskEvidencePath", "latestBackupEvidencePath", "restoreEvidencePath", "recoveryEvidencePath", "disasterRecoveryEvidencePath", "backupReceiptPublicKeyPath", "restoreReceiptPublicKeyPath"]);
 
   const dataRoot = resolveDataRoot(input.data.root, options.env);
@@ -78,6 +78,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
     requireAbsoluteLocalPath(hostSecurity.filesystemEvidencePath, "FILESYSTEM_EVIDENCE_PATH_REQUIRED");
     requireAbsoluteLocalPath(database.boundaryEvidencePath, "DATABASE_BOUNDARY_EVIDENCE_PATH_REQUIRED");
     requireAbsoluteLocalPath(hostSecurity.firewallEvidencePath, "FIREWALL_EVIDENCE_PATH_REQUIRED");
+    requireAbsoluteLocalPath(hostSecurity.rebootEvidencePath, "REBOOT_EVIDENCE_PATH_REQUIRED");
     requireAbsoluteLocalPath(hostSecurity.edgeSigningPublicKeyPath, "EDGE_SIGNING_PUBLIC_KEY_PATH_REQUIRED");
     requireAbsoluteLocalPath(hostSecurity.edgeSigningPrivateKeyPath, "EDGE_SIGNING_PRIVATE_KEY_PATH_REQUIRED");
     requireAbsoluteLocalPath(hostSecurity.nodeProgramPath, "NODE_PROGRAM_PATH_REQUIRED");
@@ -101,7 +102,7 @@ export function validateLocalRuntimeConfig(input, options = {}) {
           !/^[0-9a-f]{64}$/.test(hostSecurity.nodeProgramSha256 ?? "") || !/^S-1-(?:\d+-){1,14}\d+$/.test(hostSecurity.edgeServiceSid ?? "")) {
         fail("DISABLED_LAN_CORE_PREPARATION_INVALID");
       }
-      for (const value of [hostSecurity.filesystemEvidencePath, hostSecurity.edgeSigningPublicKeyPath, hostSecurity.nodeProgramPath, database.boundaryEvidencePath]) {
+      for (const value of [hostSecurity.filesystemEvidencePath, hostSecurity.rebootEvidencePath, hostSecurity.edgeSigningPublicKeyPath, hostSecurity.nodeProgramPath, database.boundaryEvidencePath]) {
         requireAbsoluteLocalPath(value, "DISABLED_LAN_CORE_PATH_REQUIRED");
       }
       if (!validFilesystemEvidence(options.filesystemEvidence, input, dataRoot, options.runtimeConfigPath, now)) fail("FILESYSTEM_EVIDENCE_REQUIRED");
@@ -116,6 +117,8 @@ export function validateLocalRuntimeConfig(input, options = {}) {
   const disasterRecoveryVerified = validDisasterRecoveryEvidence(options.disasterRecoveryEvidence, options.recoveryEvidence, options.runtimeConfigSha256, options.databaseBoundaryEvidence, options.latestBackupEvidence, now);
   const recoveryVerified = currentRecoveryVerified && disasterRecoveryVerified;
   const databaseVerified = validDatabaseBoundaryEvidence(options.databaseBoundaryEvidence, database, now);
+  const rebootVerified = validRebootEvidence(options.rebootEvidence, input, dataRoot, options.backupScheduleEvidence, options.recoveryEvidence, options.runtimeConfigSha256, now, options.bootedAt);
+  const preEdgeReady = databaseVerified && backupConfigured && restoreVerified && recoveryVerified && lanReady;
   return Object.freeze({
     ...input,
     data: { root: dataRoot },
@@ -138,7 +141,9 @@ export function validateLocalRuntimeConfig(input, options = {}) {
       disasterRecoveryVerified,
       recoveryVerified,
       databaseVerified,
-      operationalReady: databaseVerified && backupConfigured && restoreVerified && recoveryVerified && lanReady
+      rebootVerified,
+      preEdgeReady,
+      operationalReady: preEdgeReady && rebootVerified
     })
   });
 }
@@ -194,6 +199,25 @@ function validRelease(release) {
   return typeof release.id === "string" && /^[a-z0-9][a-z0-9._-]{0,62}$/.test(release.id) &&
     typeof release.migrationDigest === "string" && /^[0-9a-f]{64}$/.test(release.migrationDigest);
 }
+export function rebootContractFingerprint(config, resolvedDataRoot = resolveDataRoot(config.data.root)) {
+  const database=config.database,backup=config.backup,host=config.hostSecurity;
+  return sha256Tuple("reboot-core-v1",config.deploymentMode,String(config.internalPorts.web),String(config.internalPorts.api),database.provider,database.projectRef,database.connectionMode,database.host,String(database.port),database.name,database.runtimeUser,database.schema,database.caCertificateSha256,path.resolve(resolvedDataRoot),config.release.id,config.release.migrationDigest,backup.root?path.resolve(backup.root):"",backup.dailyTime??"",String(backup.rpoHours),String(backup.rtoHours),host.nodeProgramSha256,host.edgeServiceSid);
+}
+function validRebootEvidence(evidence, config, dataRoot, scheduleEvidence, recoveryEvidence, runtimeConfigSha256, now, bootedAt) {
+  const bootTime=bootedAt instanceof Date?bootedAt.getTime():Number(bootedAt);
+  const completed=Date.parse(evidence?.completedAt??"");
+  const evidenceBoot=Date.parse(evidence?.bootedAt??"");
+  const modeValid=(evidence?.mode==="CORE_ONLY_CLI_BOOTSTRAP"&&evidence?.readinessMode==="core-prepared")||(evidence?.mode==="PRE_EDGE_LAN"&&evidence?.readinessMode==="pre-edge");
+  const networkModeValid=(evidence?.mode==="PRE_EDGE_LAN")===config.lan.enabled;
+  return evidence?.version===3 && evidence?.result==="PASS" && modeValid && networkModeValid &&
+    evidence.releaseId===config.release.id && evidence.migrationDigest===config.release.migrationDigest && evidence.releaseManifestSha256===scheduleEvidence?.releaseManifestSha256 &&
+    evidence.rebootContractFingerprint===rebootContractFingerprint(config,dataRoot) && evidence.sourceRuntimeConfigSha256===runtimeConfigSha256 && /^[0-9a-f]{64}$/.test(evidence.sourceRuntimeConfigSha256??"") &&
+    /^[0-9a-f]{64}$/.test(evidence.hostInstanceDigest??"") && evidence.hostInstanceDigest===recoveryEvidence?.sourceHostInstanceDigest &&
+    evidence.coreAutomatic===true && evidence.edgeAutomatic===false && evidence.edgeStoppedFailClosed===true && evidence.supabaseDatabaseReadyAfterBoot===true &&
+    evidence.principalRightsVerifiedAfterBoot===true && evidence.listenerOwnershipVerified===true && evidence.loopbackInternalPorts===true && evidence.httpsReleaseVerified===false && evidence.pinnedCaAndSniVerified===false &&
+    evidence.forbiddenPortListenersAbsent===true && evidence.backupTaskReady===Boolean(config.backup.root) && evidence.backupTaskExactConfigurationVerified===Boolean(config.backup.root) && evidence.backupDailyTriggerEnabled===Boolean(config.backup.root) && evidence.latestBackupFresh===Boolean(config.backup.root) &&
+    evidence.signedRuntimeReadinessVerified===true && Number.isFinite(bootTime) && Number.isFinite(evidenceBoot) && Math.abs(evidenceBoot-bootTime)<=5*60_000 && Number.isFinite(completed) && completed>=bootTime && completed>=evidenceBoot && recentTimestamp(evidence.completedAt,now,30*24*3600_000);
+}
 function backupTargetFingerprint(evidence) {
   if (!plainObject(evidence)) return null;
   return createHash("sha256").update(["8",evidence.result,evidence.targetType,evidence.dataRoot,evidence.backupRoot,evidence.dataDiskUniqueId ?? "",evidence.backupDiskUniqueId ?? "",evidence.nasIdentityHelperSha256 ?? "",evidence.nasServer ?? "",evidence.nasShare ?? "",evidence.nasServerIdentitySha256 ?? "",String(evidence.nasResolvedAddressCount ?? ""),String(evidence.nasLocalAliasRejected === true),String(evidence.nasShareAclAdministrativelyConfirmed === true),evidence.backupWriterSid,evidence.signerReaderSid,evidence.encryptionProof,evidence.retentionControl,evidence.completedAt].join("\n")).digest("hex");
@@ -208,7 +232,7 @@ function validFilesystemEvidence(evidence, config, dataRoot, runtimeConfigPath, 
   if (!plainObject(roots) || Object.keys(roots).sort().join("|") !== [...requiredClasses].sort().join("|") ||
       requiredClasses.some((name) => !Array.isArray(roots[name]) || roots[name].length === 0 || roots[name].some((root) => typeof root !== "string" || !path.isAbsolute(root)))) return false;
   const adminEvidencePaths = [config.hostSecurity.filesystemEvidencePath, config.database.boundaryEvidencePath,
-    config.hostSecurity.firewallEvidencePath,
+    config.hostSecurity.firewallEvidencePath,config.hostSecurity.rebootEvidencePath,
     config.tls.clientTrustEvidencePath, config.backup.physicalTargetEvidencePath, config.backup.scheduledTaskEvidencePath,
     config.backup.restoreEvidencePath,config.backup.recoveryEvidencePath,config.backup.disasterRecoveryEvidencePath].filter(Boolean);
   const covered = classContains(path.join(dataRoot,"storage"),roots.CORE_MODIFY) &&

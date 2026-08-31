@@ -41,7 +41,8 @@ describe("STEP7-EVAL-013 explicit metadata measurement safety", () => {
   });
 
   it("fail-closed rejects the original business worktree before file access", async () => {
-    const originalRoot = "C:\\Users\\seong\\Desktop\\workspace\\Meta-Ads-Performance";
+    const originalRoot = await mkdtemp(path.join(tmpdir(), "step7-original-"));
+    temporaryRoots.push(originalRoot);
     await expect(measureExplicitUploadMetadata(
       [{ profile: "META_CSV", absolutePath: path.join(originalRoot, "never-read.csv") }],
       { approvedRoot: originalRoot, originalBusinessRoot: originalRoot }

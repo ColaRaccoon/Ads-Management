@@ -1,6 +1,7 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { uptime } from "node:os";
 import path from "node:path";
 import { startLocalHttpsEdge } from "./https-edge.mjs";
 
@@ -21,10 +22,12 @@ const evidence = () => {
   filesystemEvidence: readEvidence(config.hostSecurity?.filesystemEvidencePath),
   databaseBoundaryEvidence: readEvidence(config.database?.boundaryEvidencePath),
   firewallEvidence: readEvidence(config.hostSecurity?.firewallEvidencePath),
+  rebootEvidence: readEvidence(config.hostSecurity?.rebootEvidencePath),
   restoreEvidence: readEvidence(config.backup?.restoreEvidencePath)
   ,recoveryEvidence: readEvidence(config.backup?.recoveryEvidencePath)
   ,disasterRecoveryEvidence: readEvidence(config.backup?.disasterRecoveryEvidencePath)
   ,runtimeConfigSha256: createHash("sha256").update(readFileSync(configPath)).digest("hex")
+  ,bootedAt: Date.now()-uptime()*1000
   ,backupReceiptPublicKey: readKey(config.backup?.backupReceiptPublicKeyPath)
   ,restoreReceiptPublicKey: readKey(config.backup?.restoreReceiptPublicKeyPath)
 });
