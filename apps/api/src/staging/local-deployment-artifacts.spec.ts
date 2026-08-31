@@ -224,7 +224,7 @@ describe("local native deployment artifacts", () => {
     expect(recoveryTree).toContain("$Process.Kill($true)");expect(recoveryTree).toContain("WaitForExit");expect(recoveryTree).toContain("RECOVERY_KIT_TOOL_DESCENDANT_EXIT_UNCONFIRMED");
     if(process.platform==="win32"){const processTreeTest=spawnSync("pwsh.exe",["-NoProfile","-ExecutionPolicy","Bypass","-File",path.join(root,"deploy/windows/recovery-process-tree.runtime.test.ps1")],{cwd:root,encoding:"utf8",timeout:20_000});expect(processTreeTest.status,processTreeTest.stderr).toBe(0);expect(JSON.parse(processTreeTest.stdout).stubbornDescendantTerminated).toBe(true)}
     expect(schedule).toContain("$task.Triggers[0].Enabled -eq $true");expect(schedule).toContain("dailyTriggerEnabled=$true");expect(schedule).toContain("recurringInvocationPlanBound=$true");expect(schedule).toContain("runtimeConfigSha256=$ExpectedRuntimeConfigSha256");
-    expect(reboot).toContain("not[bool]$task.Triggers[0].Enabled");expect(reboot).toContain("backupDailyTriggerEnabled");expect(reboot).toContain("runtimeConfigSha256=(FileHash $configPath)");
+    expect(reboot).toContain("not[bool]$task.Triggers[0].Enabled");expect(reboot).toContain("backupDailyTriggerEnabled");expect(reboot).toContain("sourceRuntimeConfigSha256=(FileHash $configPath)");expect(reboot).toContain("readinessMode=if($preEdgeVerification)");expect(reboot).toContain("hostInstanceDigest=(Get-StableHostInstanceDigest)");expect(reboot).toContain("version=3");
     expect(runtime).toContain("evidence.dailyTriggerEnabled === true");
   },20_000);
 
@@ -263,7 +263,8 @@ describe("local native deployment artifacts", () => {
     for(const token of["BACKUP_BROKER_SELF_HASH_MISMATCH","BACKUP_BROKER_DIRECTORY_LIMIT","NO_PENDING","AuthorizationMode','Scheduled","SecretMaterialEmitted=$false"]){expect(broker).toContain(token)}
     expect(schedule).toContain("Meta Ads Performance Backup Receipt Publisher");expect(schedule).toContain("PT15M");expect(schedule).toContain("receiptPublisherRecurringVerified=$true");expect(schedule).toContain("version=8");
     expect(acl).toContain("SignerAccount");expect(acl).toContain("SIGNER_ONLY");expect(acl).toContain("SIGNER_STATE");expect(acl).toContain("signerSid=$script:SignerSid");expect(recovery).toContain("'backup-receipt-private-key'='SIGNER_ONLY'");
-    for(const token of ["backup-signer-authorization","Assert-ApprovedPlan","SIGNER_PUBLISH_MUST_NOT_USE_ADMIN_LEDGER","SignerReplayLedgerRoot","CreateNew","ExpectedReceiptRequestSha256","BACKUP_RECEIPT_REQUEST_CHANGED_BEFORE_PUBLISH","ExpectedPgPassSha256","ExpectedNasIdentityHelperSha256","nasIdentityHelperSha256","version-ne3","ExpectedBackupIntegrityKeySha256","ExpectedBackupReceiptPrivateKeySha256","classRoots.SIGNER_ONLY","classRoots.SIGNER_STATE","BACKUP_RECEIPT_SIGNER_IDENTITY_REJECTED"]){expect(publisher).toContain(token)}
+    for(const token of ["backup-signer-authorization","Assert-ApprovedPlan","SIGNER_PUBLISH_MUST_NOT_USE_ADMIN_LEDGER","SignerReplayLedgerRoot","CreateNew","ExpectedReceiptRequestSha256","BACKUP_RECEIPT_REQUEST_CHANGED_BEFORE_PUBLISH","ExpectedPgPassSha256","ExpectedNasIdentityHelperSha256","nasIdentityHelperSha256","version-ne3","ExpectedBackupIntegrityKeySha256","ExpectedBackupReceiptPrivateKeySha256","classRoots.SIGNER_ONLY","classRoots.SIGNER_STATE","BACKUP_RECEIPT_SIGNER_IDENTITY_REJECTED","state='RESERVED'","state='COMMITTED'","SUPERSEDED","Flush($true)","CrashRecoveryIdempotent=$true"]){expect(publisher).toContain(token)}
+    expect(broker).toContain("RecoveredReservation");expect(broker).toContain("Replay-State");
     for(const token of ["requestKeys","manifestKeys","exactObject","BACKUP_MANIFEST_HASH_MISMATCH","BACKUP_DUMP_MISMATCH","STORAGE_PAYLOAD_SET_MISMATCH","BACKUP_HMAC_INVALID","LEGACY_STORAGE_CONVERSION_HASH_MISMATCH","artifactVerificationDigest","signerIndependentArtifactVerification","BACKUP_RECEIPT_KEY_DOMAIN_REUSE_REJECTED"]){expect(semantic).toContain(token)}
     expect(generic).not.toContain('"backup-latest",');expect(runtime).toContain("evidence.signerIndependentArtifactVerification === true");expect(runtime).toContain("evidence.artifactVerificationDigest");
   });
@@ -321,6 +322,7 @@ describe("local native deployment artifacts", () => {
     expect(firewall).toContain("EXACT_CLIENT_IPV4_32_REQUIRED");
     expect(firewall).toContain("@(443,3100,3200,4100,4200,5432,55432,6543)");
     expect(firewall).not.toContain("$candidateProgram-notin");
+    expect(service).toContain("PrepareReboot");expect(service).toContain("ResumeEdge");expect(service).toContain("RESUME_EDGE_OPERATIONAL_READINESS_FAILED");
     expect(service.indexOf("INSTALLED_WRAPPER_HASH_MISMATCH")).toBeLessThan(service.indexOf("&$verifiedExe uninstall"));
     expect(service.indexOf("SERVICE_IMAGE_PATH_MISMATCH")).toBeLessThan(service.indexOf("&$verifiedExe uninstall"));
   });

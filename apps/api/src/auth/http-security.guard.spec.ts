@@ -6,7 +6,7 @@ describe("HttpSecurityGuard", () => {
   it("applies shared read limits and signed CSRF/origin checks to domain mutations", async () => {
     const security = {
       assertGeneralRead: vi.fn(),
-      assertGeneralMutation: vi.fn(),
+      assertGeneralMutationTransport: vi.fn(),
       assertTrustedTransport: vi.fn()
     };
     const guard = new HttpSecurityGuard(security as never);
@@ -14,12 +14,12 @@ describe("HttpSecurityGuard", () => {
     await expect(guard.canActivate(context("PATCH", "/api/products/id"))).resolves.toBe(true);
     await expect(guard.canActivate(context("POST", "/api/reports/export"))).resolves.toBe(true);
     expect(security.assertGeneralRead).toHaveBeenCalledTimes(1);
-    expect(security.assertGeneralMutation).toHaveBeenNthCalledWith(1, expect.anything(), false);
-    expect(security.assertGeneralMutation).toHaveBeenNthCalledWith(2, expect.anything(), true);
+    expect(security.assertGeneralMutationTransport).toHaveBeenNthCalledWith(1, expect.anything(), false);
+    expect(security.assertGeneralMutationTransport).toHaveBeenNthCalledWith(2, expect.anything(), true);
   });
 
   it("does not double-consume stricter auth/user policies and exempts health probes", async () => {
-    const security = { assertGeneralRead: vi.fn(), assertGeneralMutation: vi.fn(), assertTrustedTransport: vi.fn() };
+    const security = { assertGeneralRead: vi.fn(), assertGeneralMutationTransport: vi.fn(), assertTrustedTransport: vi.fn() };
     const guard = new HttpSecurityGuard(security as never);
     for (const [method, path] of [
       ["POST", "/api/auth/login"],
@@ -31,7 +31,7 @@ describe("HttpSecurityGuard", () => {
       await expect(guard.canActivate(context(method, path))).resolves.toBe(true);
     }
     expect(security.assertGeneralRead).not.toHaveBeenCalled();
-    expect(security.assertGeneralMutation).not.toHaveBeenCalled();
+    expect(security.assertGeneralMutationTransport).not.toHaveBeenCalled();
     expect(security.assertTrustedTransport).toHaveBeenCalledTimes(3);
   });
 

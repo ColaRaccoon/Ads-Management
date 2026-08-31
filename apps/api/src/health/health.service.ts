@@ -1,4 +1,4 @@
-import { Inject, Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { Inject, Injectable, Optional, ServiceUnavailableException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
 import { AUTH_CONFIG, AuthConfig } from "../auth/auth.config";
@@ -9,6 +9,7 @@ import {
 import { PrismaService } from "../common/prisma.service";
 import { configuredFileStorage } from "../storage/configured-file-storage";
 import { LocalFileStorage } from "../storage/local-file-storage";
+import { ReportReconciliationStateService } from "../reports/report-reconciliation-state.service";
 
 @Injectable()
 export class HealthService {
@@ -18,7 +19,8 @@ export class HealthService {
     private readonly prisma: PrismaService,
     @Inject(AUTH_CONFIG) private readonly auth: AuthConfig,
     @Inject(HTTP_SECURITY_CONFIG) private readonly http: HttpSecurityConfig,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    @Optional() private readonly reportReconciliation?: ReportReconciliationStateService
   ) {}
 
   async assertReady() {
@@ -37,6 +39,7 @@ export class HealthService {
       }, this.http.readinessTimeoutMs);
     });
     try {
+      this.reportReconciliation?.assertReady();
       await Promise.race([
         Promise.all([
           this.probeDatabase(),

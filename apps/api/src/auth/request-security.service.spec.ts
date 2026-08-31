@@ -50,6 +50,32 @@ describe("AuthRequestSecurityService", () => {
     expect(verifyCsrfToken).toHaveBeenCalledTimes(1);
   });
 
+  it("separates pre-authenticated abuse quota from per-user business quota on the same IP", async () => {
+    const consume = vi.fn().mockResolvedValue(allowed());
+    const invalidCsrf = makeService(consume, vi.fn().mockReturnValue(false));
+    await expect(invalidCsrf.assertGeneralMutationTransport(
+      request("http://localhost:3200", "10.0.0.1"), true
+    )).rejects.toMatchObject({ code: "CSRF_INVALID" });
+    expect(consume).toHaveBeenCalledTimes(1);
+    expect(consume.mock.calls[0][0]).toContain("http:expensive-abuse:10.0.0.1");
+
+    const authenticated = makeService(consume);
+    const first = request("http://localhost:3200", "10.0.0.1") as unknown as {
+      authenticatedUser: { id: string };
+    };
+    const second = request("http://localhost:3200", "10.0.0.1") as unknown as {
+      authenticatedUser: { id: string };
+    };
+    first.authenticatedUser = { id: "account-one" };
+    second.authenticatedUser = { id: "account-two" };
+    await authenticated.assertAuthenticatedMutationRate(first as never, true);
+    await authenticated.assertAuthenticatedMutationRate(second as never, true);
+    const businessKeys = consume.mock.calls.slice(1).map((call) => call[0] as string);
+    expect(businessKeys).toHaveLength(2);
+    expect(businessKeys[0]).not.toBe(businessKeys[1]);
+    expect(businessKeys.every((key) => key.startsWith("http:expensive:10.0.0.1:"))).toBe(true);
+  });
+
   it("requires exact same-site invitation acceptance and never uses the raw link hash as a limiter key", async () => {
     const consume = vi.fn().mockResolvedValue(allowed());
     const service = makeService(consume);

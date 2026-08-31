@@ -19,6 +19,7 @@ import { InternalProbeGuard } from "./internal-probe.guard";
 import { HttpSecurityGuard } from "./http-security.guard";
 import { LocalAuthService } from "./local-auth.service";
 import { LocalAuthMaintenanceService } from "./local-auth-maintenance.service";
+import { AuthenticatedMutationRateGuard } from "./authenticated-mutation-rate.guard";
 
 @Module({
   imports: [CommonModule],
@@ -39,8 +40,10 @@ import { LocalAuthMaintenanceService } from "./local-auth-maintenance.service";
     InternalProbeGuard,
     PermissionGuard,
     HttpSecurityGuard,
+    AuthenticatedMutationRateGuard,
     { provide: APP_GUARD, useExisting: HttpSecurityGuard },
     { provide: APP_GUARD, useExisting: AuthenticationGuard },
+    { provide: APP_GUARD, useExisting: AuthenticatedMutationRateGuard },
     { provide: APP_GUARD, useExisting: InternalProbeGuard },
     { provide: APP_GUARD, useExisting: PermissionGuard }
   ],
@@ -54,6 +57,7 @@ import { LocalAuthMaintenanceService } from "./local-auth-maintenance.service";
     AuthenticationGuard,
     InternalProbeGuard,
     HttpSecurityGuard,
+    AuthenticatedMutationRateGuard,
     PermissionGuard
   ]
 })

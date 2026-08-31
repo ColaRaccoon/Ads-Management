@@ -100,25 +100,31 @@ export class AuthRequestSecurityService {
     await this.consumeKey(`http:read:${clientAddress(request, this.http)}`, 600, 60_000);
   }
 
-  async assertGeneralMutation(request: Request, expensive: boolean) {
+  async assertGeneralMutationTransport(request: Request, expensive: boolean) {
     this.assertMutationOrigin(request);
-    const principal = (request as Request & {
-      authenticatedUser?: { id?: string };
-    }).authenticatedUser;
-    const identity = principal?.id
-      ? createHash("sha256").update(principal.id).digest("base64url")
-      : "anonymous";
-    const scope = expensive ? "expensive" : "mutation";
-    const limit = expensive ? 15 : 120;
+    const scope = expensive ? "expensive-abuse" : "mutation-abuse";
+    const limit = expensive ? 120 : 600;
     const windowMs = expensive ? 5 * 60_000 : 60_000;
     await this.consumeKey(
-      `http:${scope}:${clientAddress(request, this.http)}:${identity}`,
+      `http:${scope}:${clientAddress(request, this.http)}`,
       limit,
       windowMs
     );
     const csrfCookie = parseCookie(request.headers.cookie, this.cookies.csrfCookieName);
     const csrfHeader = request.get("x-csrf-token");
     if (!this.cookies.verifyCsrfToken(csrfCookie, csrfHeader)) throw authError("CSRF_INVALID");
+  }
+
+  async assertAuthenticatedMutationRate(request: Request, expensive: boolean) {
+    const principal = (request as Request & { authenticatedUser?: { id?: string } }).authenticatedUser;
+    if (!principal?.id) throw authError("AUTHENTICATION_REQUIRED");
+    const identity = createHash("sha256").update(principal.id).digest("base64url");
+    const scope = expensive ? "expensive" : "mutation";
+    await this.consumeKey(
+      `http:${scope}:${clientAddress(request, this.http)}:${identity}`,
+      expensive ? 15 : 120,
+      expensive ? 5 * 60_000 : 60_000
+    );
   }
 
   assertMutationOrigin(request: Request) {

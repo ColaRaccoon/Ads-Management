@@ -34,7 +34,7 @@ export class HttpSecurityGuard implements CanActivate {
       return true;
     }
 
-    await this.security.assertGeneralMutation(request, isExpensiveMutation(path));
+    await this.security.assertGeneralMutationTransport(request, isExpensiveMutation(path));
     return true;
   }
 }

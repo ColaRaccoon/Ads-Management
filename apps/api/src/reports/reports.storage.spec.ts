@@ -10,6 +10,7 @@ import { LocalFileStorage } from "../storage/local-file-storage";
 import { StorageObjectNotFoundError } from "../storage/file-storage";
 import { ReportsController } from "./reports.controller";
 import { ReportsService } from "./reports.service";
+import { ReportReconciliationStateService } from "./report-reconciliation-state.service";
 
 const ACTOR_ID = "11111111-1111-4111-8111-111111111111";
 const REPORT_ID = "22222222-2222-4222-8222-222222222222";
@@ -21,6 +22,38 @@ afterEach(async () => {
 });
 
 describe("ReportsService durable storage", () => {
+  it("retries transient stale rows and keeps readiness closed until reconciliation succeeds", async () => {
+    const reference = "local:2026/08/retry-report.html";
+    let unavailable = true;
+    let status: "CREATING" | "FAILED" = "CREATING";
+    const reportExport = {
+      findMany: vi.fn(async () => status === "CREATING" ? [{ id: REPORT_ID, filePath: reference }] : []),
+      updateMany: vi.fn(async () => { status = "FAILED"; return { count: 1 }; }),
+      findUnique: vi.fn(async () => ({ ...reportRow(), filePath: reference, status, fileHashSha256: null }))
+    };
+    const storage = {
+      provider: "local",
+      getStream: vi.fn(async () => {
+        if (unavailable) throw new Error("transient storage failure");
+        throw new StorageObjectNotFoundError();
+      }),
+      delete: vi.fn(async () => true)
+    };
+    const reconciliationState = new ReportReconciliationStateService();
+    const service = new ReportsService(
+      { reportExport } as never, {} as never, config(), reconciliationState
+    );
+    (service as unknown as { fileStorage: typeof storage }).fileStorage = storage;
+
+    await expect(service.runReconciliationCycle(new Date())).resolves.toMatchObject({ unresolved: 1 });
+    expect(() => reconciliationState.assertReady()).toThrow("REPORT_RECONCILIATION_PENDING");
+    unavailable = false;
+    await expect(service.runReconciliationCycle(new Date())).resolves.toEqual({
+      scanned: 1, created: 0, failed: 1, unresolved: 0
+    });
+    expect(() => reconciliationState.assertReady()).not.toThrow();
+  });
+
   it("does not create a CREATING row when configured storage has no approved adapter", async () => {
     const create = vi.fn();
     const service = new ReportsService(

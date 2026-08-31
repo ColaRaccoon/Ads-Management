@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
   OnApplicationBootstrap,
+  OnModuleDestroy,
+  Optional,
   ServiceUnavailableException
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -19,6 +21,10 @@ import { PrismaService } from "../common/prisma.service";
 import { parseDateRange } from "../common/date-range";
 import { safeExportCellValue } from "../common/safe-export-cell";
 import { MetricsService } from "../metrics/metrics.service";
+import {
+  ReportReconciliationResult,
+  ReportReconciliationStateService
+} from "./report-reconciliation-state.service";
 import {
   configuredFileStorage,
   configuredFileStorageForProvider
@@ -41,18 +47,48 @@ import {
 } from "../storage/temporary-storage-budget";
 
 @Injectable()
-export class ReportsService implements OnApplicationBootstrap {
+export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
   private fileStorage?: FileStorage;
   private readonly serviceStartedAt = new Date();
+  private reconciliationTimer?: NodeJS.Timeout;
+  private reconciliationInFlight?: Promise<ReportReconciliationResult>;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly metricsService: MetricsService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    @Optional() private readonly reconciliationState?: ReportReconciliationStateService
   ) {}
 
   async onApplicationBootstrap() {
-    await this.reconcileStaleCreatingReports(this.serviceStartedAt);
+    await this.runReconciliationCycle(this.serviceStartedAt);
+    this.reconciliationTimer = setInterval(() => {
+      void this.runReconciliationCycle(new Date(Date.now() - 5 * 60_000));
+    }, 60_000);
+    this.reconciliationTimer.unref();
+  }
+
+  onModuleDestroy() {
+    if (this.reconciliationTimer) clearInterval(this.reconciliationTimer);
+  }
+
+  async runReconciliationCycle(cutoff = new Date(Date.now() - 5 * 60_000)) {
+    if (this.reconciliationInFlight) return this.reconciliationInFlight;
+    const operation = this.reconcileStaleCreatingReports(cutoff, 30_000)
+      .then((result) => {
+        this.reconciliationState?.record(result);
+        return result;
+      })
+      .catch(() => {
+        this.reconciliationState?.recordFailure();
+        return { scanned: 0, created: 0, failed: 0, unresolved: 1 };
+      });
+    this.reconciliationInFlight = operation;
+    try {
+      return await operation;
+    } finally {
+      if (this.reconciliationInFlight === operation) this.reconciliationInFlight = undefined;
+    }
   }
 
   /**
@@ -60,11 +96,16 @@ export class ReportsService implements OnApplicationBootstrap {
    * export may legitimately be between its atomic payload publish and its DB
    * finalize; startup rows cannot belong to such a live request.
    */
-  async reconcileStaleCreatingReports(cutoff = this.serviceStartedAt) {
+  async reconcileStaleCreatingReports(cutoff = this.serviceStartedAt, maximumDurationMs = 30_000) {
     const result = { scanned: 0, created: 0, failed: 0, unresolved: 0 };
     let afterId: string | undefined;
+    const deadline = Date.now() + maximumDurationMs;
 
     while (true) {
+      if (Date.now() >= deadline) {
+        result.unresolved += 1;
+        break;
+      }
       const candidates = await this.prisma.reportExport.findMany({
         where: {
           status: "CREATING",
@@ -79,7 +120,12 @@ export class ReportsService implements OnApplicationBootstrap {
       result.scanned += candidates.length;
       if (result.scanned > 100_000) throw new Error("REPORT_RECONCILIATION_LIMIT_EXCEEDED");
 
-      for (const candidate of candidates) {
+      for (let index = 0; index < candidates.length; index += 1) {
+      if (Date.now() >= deadline) {
+        result.unresolved += candidates.length - index;
+        return result;
+      }
+      const candidate = candidates[index];
       if (!candidate.filePath) {
         const status = await this.confirmMissingCreatingReport(candidate.id, null);
         result[status] += 1;

@@ -71,13 +71,28 @@ describe("HealthService", () => {
       })
     );
   });
+
+  it("fails closed before dependency probes while stale report reconciliation is unresolved", async () => {
+    const database = vi.fn().mockResolvedValue([{ ok: 1 }]);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("ok", { status: 200 })));
+    const health = makeHealth(database, 1_000, null, null, {
+      assertReady: () => { throw new Error("REPORT_RECONCILIATION_PENDING"); }
+    });
+    await expect(health.assertReady()).rejects.toMatchObject({
+      status: 503,
+      response: { code: "SERVICE_NOT_READY", message: "Service is not ready.", details: null }
+    });
+    expect(database).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });
 
 function makeHealth(
   database: ReturnType<typeof vi.fn>,
   readinessTimeoutMs = 1_000,
   storageCredentialExpiresAtMs: number | null = null,
-  storageReadinessKey: string | null = null
+  storageReadinessKey: string | null = null,
+  reportReconciliation?: { assertReady: () => void }
 ) {
   const transaction = vi.fn(async (
     callback: (client: { $queryRaw: (query: unknown) => Promise<unknown> }) => Promise<unknown>,
@@ -112,6 +127,7 @@ function makeHealth(
     { get: (key: string) => ({
       SUPABASE_STORAGE_BUCKET: "private-bucket",
       SUPABASE_STORAGE_ACCESS_TOKEN: "scoped-storage-token"
-    })[key as "SUPABASE_STORAGE_BUCKET" | "SUPABASE_STORAGE_ACCESS_TOKEN"] } as never
+    })[key as "SUPABASE_STORAGE_BUCKET" | "SUPABASE_STORAGE_ACCESS_TOKEN"] } as never,
+    reportReconciliation as never
   );
 }

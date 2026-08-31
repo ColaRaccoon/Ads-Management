@@ -166,6 +166,7 @@ describe("active AppModule route permissions", () => {
     expect(globalGuards).toEqual([
       "HttpSecurityGuard",
       "AuthenticationGuard",
+      "AuthenticatedMutationRateGuard",
       "InternalProbeGuard",
       "PermissionGuard"
     ]);
