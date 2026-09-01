@@ -81,7 +81,11 @@ runtime fingerprint.
 
 `resource-probe.mjs` is a local-only harness and is not copied into the runtime
 image. Mount it and a scratch fixture volume into fresh `--memory=1g`
-containers to measure `text-max`, `xlsx-max`, `bundle-max`, and `report-max`.
+containers to measure `text-max`, `xlsx-max`, `bundle-max`, `report-max`, and
+`concurrent-request`. The concurrent request scenario runs the production Nest
+heavy-operation gate over HTTP: one accepted request renders the maximum report
+while a second request must be rejected with `503 HEAVY_OPERATION_BUSY` before
+another memory-intensive workload can start.
 Each JSON result records process RSS/heap/external peaks, cgroup
 `memory.current`/`memory.peak`/`memory.events`, and `/tmp` peak bytes. Treat an
 OOM-killed container as failure. The harness itself returns non-zero and emits

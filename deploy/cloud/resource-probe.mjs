@@ -70,6 +70,7 @@ async function runScenario(name) {
     };
   }
   if (name === "report-max") return renderMaximumReport();
+  if (name === "concurrent-request") return runConcurrentRequestProbe();
   if (name === "baseline") return { baseline: true };
   throw new Error(`Unknown resource probe scenario: ${name}`);
 }
@@ -100,6 +101,102 @@ async function renderMaximumReport() {
     throw new Error("REPORT_PROBE_OUTPUT_INVALID");
   }
   return { sourceRows: rows.length, columns: 24, outputBytes: size, spooledCopies: 2 };
+}
+
+async function runConcurrentRequestProbe() {
+  await import("reflect-metadata");
+  const common = await import("@nestjs/common");
+  const core = await import("@nestjs/core");
+  const heavy = await import(pathToFileURL(
+    "/srv/app/apps/api/dist/common/heavy-operation.js"
+  ).href);
+  const httpSecurity = await import(pathToFileURL(
+    "/srv/app/apps/api/dist/common/http-security.config.js"
+  ).href);
+
+  let enteredResolve;
+  let releaseResolve;
+  let released = false;
+  const entered = new Promise((resolve) => { enteredResolve = resolve; });
+  const release = new Promise((resolve) => { releaseResolve = resolve; });
+  const releaseFirst = () => {
+    if (released) return;
+    released = true;
+    releaseResolve();
+  };
+
+  class ConcurrentProbeController {
+    async run() {
+      enteredResolve();
+      await release;
+      return renderMaximumReport();
+    }
+  }
+  const descriptor = Object.getOwnPropertyDescriptor(ConcurrentProbeController.prototype, "run");
+  common.Post()(ConcurrentProbeController.prototype, "run", descriptor);
+  heavy.HeavyOperation()(ConcurrentProbeController.prototype, "run", descriptor);
+  common.Controller("resource-probe")(ConcurrentProbeController);
+
+  class ConcurrentProbeModule {}
+  common.Module({
+    controllers: [ConcurrentProbeController],
+    providers: [
+      heavy.HeavyOperationGate,
+      {
+        provide: httpSecurity.HTTP_SECURITY_CONFIG,
+        useValue: { heavyOperationConcurrency: 1, heavyOperationRetryAfterSeconds: 7 }
+      },
+      { provide: core.APP_INTERCEPTOR, useExisting: heavy.HeavyOperationGate }
+    ]
+  })(ConcurrentProbeModule);
+
+  const app = await core.NestFactory.create(ConcurrentProbeModule, {
+    abortOnError: false,
+    logger: false
+  });
+  try {
+    await app.listen(0, "127.0.0.1");
+    const address = app.getHttpServer().address();
+    if (!address || typeof address === "string") throw new Error("CONCURRENT_PROBE_LISTENER_INVALID");
+    const url = `http://127.0.0.1:${address.port}/resource-probe`;
+    const first = fetch(url, { method: "POST" });
+    await Promise.race([
+      entered,
+      first.then(async (response) => {
+        throw new Error(`CONCURRENT_PROBE_FIRST_ENDED_EARLY_${response.status}`);
+      }),
+      timeoutAfter(5_000, "CONCURRENT_PROBE_FIRST_TIMEOUT")
+    ]);
+
+    const busy = await fetch(url, { method: "POST" });
+    const busyBody = await busy.json();
+    if (busy.status !== 503 || busy.headers.get("retry-after") !== "7" || busyBody.code !== "HEAVY_OPERATION_BUSY") {
+      throw new Error("CONCURRENT_PROBE_BUSY_RESPONSE_INVALID");
+    }
+
+    releaseFirst();
+    const accepted = await first;
+    const workload = await accepted.json();
+    if (accepted.status !== 201) throw new Error(`CONCURRENT_PROBE_FIRST_STATUS_${accepted.status}`);
+    return {
+      acceptedRequests: 1,
+      rejectedRequests: 1,
+      rejectedStatus: busy.status,
+      retryAfterSeconds: Number(busy.headers.get("retry-after")),
+      rejectionCode: busyBody.code,
+      workload
+    };
+  } finally {
+    releaseFirst();
+    await app.close();
+  }
+}
+
+function timeoutAfter(milliseconds, code) {
+  return new Promise((_resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(code)), milliseconds);
+    timer.unref();
+  });
 }
 
 async function generateFixtures() {
