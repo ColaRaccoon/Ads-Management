@@ -158,6 +158,8 @@ test("ships a single hardened 1GB service without historical host artifacts", as
   assert.match(runtimeStage, /apt-get install --yes --no-install-recommends ca-certificates openssl/);
   assert.match(runtimeStage, /USER node/);
   assert.match(runtimeStage, /EXPOSE 8000/);
+  assert.match(runtimeStage, /rm -rf \/usr\/local\/lib\/node_modules\/npm \/usr\/local\/lib\/node_modules\/corepack/);
+  assert.match(runtimeStage, /rm -f \/usr\/local\/bin\/npm \/usr\/local\/bin\/npx \/usr\/local\/bin\/corepack/);
   assert.doesNotMatch(runtimeStage, /deploy\/(?:local|windows)|edge\.Dockerfile/);
   expectNoProductionCli(runtimeStage);
   assert.match(dockerfile, /find apps\/web\/\.next\/standalone -type f -name '\*\.map' -delete/);
