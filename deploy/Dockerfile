@@ -31,6 +31,7 @@ ENV HSTS_ENABLED=true
 RUN node -e "if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(process.env.RELEASE_GIT_SHA ?? '')) throw new Error('RELEASE_GIT_SHA build argument must be a full SHA-1 or SHA-256 commit id')"
 RUN npm run prisma:generate && npm run build
 RUN npm prune --omit=dev
+RUN find apps/web/.next/standalone -type f -name '*.map' -delete
 
 FROM ${NODE_IMAGE} AS runtime
 ARG RELEASE_GIT_SHA
