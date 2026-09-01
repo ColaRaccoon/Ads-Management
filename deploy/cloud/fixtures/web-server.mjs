@@ -1,6 +1,4 @@
-"use strict";
-
-const http = require("node:http");
+import http from "node:http";
 
 if (process.env.HOSTNAME !== "0.0.0.0" || !process.env.PORT) {
   throw new Error("FIXTURE_WEB_MUST_BE_PUBLIC_LISTENER");
