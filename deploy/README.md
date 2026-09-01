@@ -96,10 +96,13 @@ These steps are safe before approval:
 
 1. Run the repository tests, lint, build, Prisma validation/generation, and the
    PowerShell parser check.
-2. Assemble a release directory containing the built API/Web runtime and
-   dependencies. Run `node deploy/local/package-local-release.mjs
-   --root=<RELEASE_ROOT> --release-id=<RELEASE_ID>` once. Record the returned
-   manifest hash and migration digest without modifying the release afterward.
+2. Assemble and package a release directory containing the built API/Web runtime
+   and complete installed dependency closure with `npm run local:assemble-release
+   -- --root=<NEW_RELEASE_ROOT> --release-id=<RELEASE_ID>`. The target must not
+   already exist; the assembler never merges with or overwrites another release.
+   Record the returned manifest hash and migration digest without modifying the
+   release afterward. `node deploy/local/package-local-release.mjs` remains the
+   lower-level verifier/packager for an independently assembled release root.
    Packaging parses the staged Windows host bundle and runs the staged
    source-free cold-start contract before it writes manifest v4. The release
    allowlist accepts only compiled API runtime files, Prisma schema/migrations,
@@ -585,6 +588,48 @@ Production database migration and process switching are separate approvals.
     key inputs must be `SHARED_RUNTIME`; database CA is `SHARED_RUNTIME`;
     maintenance/drain state is `EDGE_READ`; rollback/finalization evidence is
     `ADMIN_EVIDENCE`.
+
+    Daily production recovery is the same fail-closed boundary, not an ad-hoc
+    file copy. Before collecting filesystem evidence, create one dedicated
+    `RecoveryWorkspaceRoot` under an `ADMIN_ONLY` class root; it must not be the
+    live Storage root, its parent, or a sibling under the live data root. Enable
+    maintenance and, through separately approved service plans, stop **and
+    disable** both the exact Core and Edge services. The daily-recovery plan uses
+    `-RecoveryPurpose DAILY_BACKUP_RECOVERY`, `-PreviousReleaseKind LOCAL_RELEASE`
+    and `-EdgeStateMode STOPPED_LOCAL_EDGE`. It binds the exact Supabase
+    PostgreSQL project/host/database/schema/user, current release and migration
+    chain, fresh backup and restore-rehearsal evidence, filesystem evidence,
+    recovery workspace, and pinned recovery-security helper.
+
+    `STOPPED_LOCAL_EDGE` is accepted only when both services remain
+    `Stopped`/`Disabled`, their configured account SIDs match filesystem
+    evidence, those SIDs have exactly service-logon plus the four deny rights,
+    no process is running as either service account, and ports 443/3200/4200 have
+    no listener. This proof is re-created immediately before Storage copy, DDL,
+    the Storage directory switch, failure recovery, and finalization. In normal
+    Apply/Verify/Finalize states the live Storage tree is exact `CORE_MODIFY` and
+    the workspace, staged copy, and preserved original are exact `ADMIN_ONLY`.
+    A hash-pinned `Recover` may accept a crash-interrupted tree only after the
+    stopped-service boundary and exact journal/helper/workspace/topology/original-
+    digest bindings pass, and only when every object is already one of those two
+    exact ACL descriptors. It then normalizes all recovery objects to
+    `ADMIN_ONLY` before database or Storage repair and restores the final live
+    tree to exact `CORE_MODIFY`. Arbitrary ACL or service/process/listener drift
+    aborts before the next mutation.
+
+    Review the emitted exact plan and obtain fresh immediate approval before
+    `Apply`. After Apply, run its separately planned `VerifyEvidence` action and
+    keep maintenance and both services stopped. To abandon the recovery, bind a
+    new `Recover` plan to the exact rollback-journal hash and then run a separate
+    `VerifyRecovery`; this restores both the original schema and original local
+    Storage. To accept the recovered backup, use only a new
+    `Finalize-SupabaseRollback.ps1` plan with
+    `ACCEPT_ROLLBACK_DROP_PRESERVED`, followed by its separately planned
+    `VerifyEvidence`. Daily recovery cannot use `RETURN_FORWARD`; that direction
+    belongs to the rollback script's `Recover` action. The preserved original
+    Storage stays `ADMIN_ONLY` after acceptance and must not be manually removed
+    or exposed. Maintenance removal and Core/Edge restart are separate exact
+    approved operations.
 
     Planning and execution both parse the exact `maintenance.enabled` JSON and
     bind its release ID, approval-ID digest, path and hash. They also re-establish
