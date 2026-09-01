@@ -116,7 +116,9 @@ async function generateFixtures() {
   });
   const sheet = workbook.addWorksheet("Rows");
   sheet.addRow(Array.from({ length: 12 }, (_, index) => `column_${index + 1}`)).commit();
-  for (let row = 1; row <= 100_000; row += 1) {
+  // The header is a worksheet row too. Generate 99,999 data rows so the
+  // fixture exercises the exact 100,000-row structural ceiling.
+  for (let row = 1; row <= 99_999; row += 1) {
     sheet.addRow([
       row,
       `sku-${row}`,
@@ -197,7 +199,7 @@ async function measure(name, operation) {
     workload = await operation();
     sample();
   } catch (error) {
-    operationError = error instanceof Error ? error.message : "RESOURCE_PROBE_OPERATION_FAILED";
+    operationError = describeOperationError(error);
   } finally {
     clearInterval(timer);
   }
@@ -226,6 +228,20 @@ async function measure(name, operation) {
       oomDelta,
       oomKillDelta
     }
+  };
+}
+
+function describeOperationError(error) {
+  const response = error && typeof error.getResponse === "function"
+    ? error.getResponse()
+    : error?.response;
+  return {
+    name: error instanceof Error ? error.name : "Error",
+    code: typeof response === "object" && response !== null && typeof response.code === "string"
+      ? response.code
+      : "RESOURCE_PROBE_OPERATION_FAILED",
+    status: error && typeof error.getStatus === "function" ? error.getStatus() : null,
+    message: error instanceof Error ? error.message : "Resource probe operation failed."
   };
 }
 
