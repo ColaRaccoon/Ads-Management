@@ -7,7 +7,7 @@ import {
   readdirSync,
   statSync
 } from "node:fs";
-import { mkdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
@@ -103,8 +103,10 @@ async function renderMaximumReport() {
 }
 
 async function generateFixtures() {
-  await rm(fixtureRoot, { recursive: true, force: true });
   await mkdir(fixtureRoot, { recursive: true });
+  for (const entry of await readdir(fixtureRoot)) {
+    await rm(path.join(fixtureRoot, entry), { recursive: true, force: true });
+  }
   const ExcelJS = (await import("exceljs")).default;
   const basePath = path.join(fixtureRoot, "base.xlsx");
   const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
