@@ -5,6 +5,7 @@ const MAX_REPORT_BYTES = 64 * 1024 * 1024;
 const MAX_REPORT_ROWS = 100_000;
 const MAX_REPORT_CELLS = 1_000_000;
 const MAX_UUID_CANONICAL_PERMUTATIONS = 100_000;
+const MAX_UUID_CANONICAL_CELL_VISITS = 1_000_000;
 const EXPECTED_SHEETS = ["Summary", "Product Performance", "Adset Performance", "Decisions", "Unmatched", "Change Logs"];
 const UUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi;
 const SUMMARY_LABELS = [
@@ -53,7 +54,7 @@ export async function reportWorkbookCompatibility(
     "metricDate", "adsetName", "spendUsd", "resultCount"
   ], expected.runId, true);
   const changeLogs = projectedSheet(workbook.getWorksheet("Change Logs")!, [
-    "actionDate", "actionType", "entityType", "reason"
+    "actionDate", "actionType", "targetType", "reason"
   ], expected.runId, true);
   for (const sheet of [products, adsets, decisions, unmatched, changeLogs]) {
     cellCount += sheet.columns.length + sheet.rows.reduce((total, row) => total + Object.keys(row).length, 0);
@@ -68,7 +69,7 @@ export async function reportWorkbookCompatibility(
   if (decisions.rows.length < 1) throw new Error("REPORT_COMPATIBILITY_DECISIONS_MISSING");
   return businessCompatibilityDigest(canonicalizeUuidRelationships({
     summary, products, adsets, decisions, unmatched, changeLogs
-  }));
+  }, cellCount));
 }
 
 type Primitive = string | number | boolean | null;
@@ -82,7 +83,7 @@ type CompatibilityWorkbook = {
   changeLogs: ProjectedSheet;
 };
 
-function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook) {
+function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook, cellCount: number) {
   const sheets: Array<[keyof Omit<CompatibilityWorkbook, "summary">, ProjectedSheet]> = [
     ["products", workbook.products], ["adsets", workbook.adsets], ["decisions", workbook.decisions],
     ["unmatched", workbook.unmatched], ["changeLogs", workbook.changeLogs]
@@ -127,6 +128,9 @@ function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook) {
       permutationCount *= factor;
     }
   }
+  if (permutationCount > Math.floor(MAX_UUID_CANONICAL_CELL_VISITS / Math.max(cellCount, 1))) {
+    throw new Error("REPORT_COMPATIBILITY_UUID_SYMMETRY_WORK_LIMIT");
+  }
   let best: CompatibilityWorkbook | undefined;
   let bestKey: string | undefined;
   const exactAliases = new Map<string, string>();
@@ -157,15 +161,12 @@ function canonicalWorkbook(
     column, aliasUuids(value, aliases)
   ]));
   const canonicalSheets = Object.fromEntries(sheets.map(([name, sheet]) => {
-    const rows = sheet.rows.map((row) => Object.fromEntries(sheet.columns.map((column) => [
-      column, aliasUuids(row[column], aliases)
-    ])));
-    rows.sort((left, right) => {
-      const leftKey = canonicalJson(left);
-      const rightKey = canonicalJson(right);
-      return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+    const rows = sheet.rows.map((row) => {
+      const value = Object.fromEntries(sheet.columns.map((column) => [column, aliasUuids(row[column], aliases)]));
+      return { value, key: canonicalJson(value) };
     });
-    return [name, { columns: sheet.columns, rows }];
+    rows.sort((left, right) => left.key < right.key ? -1 : left.key > right.key ? 1 : 0);
+    return [name, { columns: sheet.columns, rows: rows.map((row) => row.value) }];
   })) as Omit<CompatibilityWorkbook, "summary">;
   return { summary, ...canonicalSheets };
 }

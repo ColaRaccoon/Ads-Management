@@ -33,6 +33,12 @@ describe("report workbook compatibility proof", () => {
     expect(cycle.digest).not.toBe(disconnected.digest);
   });
 
+  it("fails closed before excessive symmetric canonicalization work", async () => {
+    await expect(reportWorkbookCompatibility(
+      await workbook(runId, { symmetricSize: 5 }), expected(runId)
+    )).rejects.toThrow("REPORT_COMPATIBILITY_UUID_SYMMETRY_WORK_LIMIT");
+  });
+
   it("rejects a report whose KPI cell, relationship, or required business sheet regresses", async () => {
     const changed = await workbook(runId, { spendKrw: 1 });
     const baseline = await reportWorkbookCompatibility(await workbook(runId), expected(runId));
@@ -69,6 +75,7 @@ async function workbook(
     targetCpaKrw?: number;
     breakDecisionLink?: boolean;
     symmetricCross?: boolean;
+    symmetricSize?: number;
     regularGraph?: "cycle8" | "two4";
   } = {}
 ) {
@@ -110,13 +117,15 @@ async function workbook(
   const graphEdges = overrides.regularGraph === "cycle8"
     ? [[0, 0], [1, 0], [1, 1], [2, 1], [2, 2], [3, 2], [3, 3], [0, 3]]
     : [[0, 0], [0, 1], [1, 0], [1, 1], [2, 2], [2, 3], [3, 2], [3, 3]];
-  const symmetricDecisionIds = [
-    "10000000-0000-4000-8000-000000000001", "f0000000-0000-4000-8000-000000000002"
-  ];
+  const symmetricSize = overrides.symmetricSize ?? 2;
+  const symmetricMode = overrides.symmetricCross !== undefined || overrides.symmetricSize !== undefined;
+  const symmetricDecisionIds = Array.from({ length: symmetricSize }, (_, index) =>
+    `50000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`
+  );
   const decisionRows = overrides.regularGraph ? graphEdges.map(([run, user]) => ({
     decisionRunId: graphRuns[run], createdBy: graphUsers[user], scopeType: "ADSET", decision: "KEEP",
     severity: "INFO", reason: "Regular graph decision", recommendedAction: "Observe"
-  })) : overrides.symmetricCross === undefined ? [{
+  })) : !symmetricMode ? [{
     id: volatileId, decisionRunId: volatileDecisionRunId, scopeType: "ADSET", decision: "KEEP", severity: "INFO",
     reason: `Compatibility ${id}`, recommendedAction: "Observe",
     createdAt: id.startsWith("11111111") ? "2026-08-31" : "2026-09-01"
@@ -128,15 +137,16 @@ async function workbook(
   );
   tableRows(value.addWorksheet("Decisions"), decisionRows);
   value.addWorksheet("Unmatched").addRow(["No data"]);
-  const changeRows = overrides.regularGraph ? [] : overrides.symmetricCross === undefined ? [{
-    id: volatileDecisionRunId, actionDate: "2026-08-25", actionType: "KEEP", entityType: "META_ADSET",
+  const changeRows = overrides.regularGraph ? [] : !symmetricMode ? [{
+    id: volatileDecisionRunId, actionDate: "2026-08-25", actionType: "KEEP", targetType: "META_ADSET",
     reason: "Compatibility change", relatedDecisionId: overrides.breakDecisionLink
       ? "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
       : volatileId
-  }] : ["20000000-0000-4000-8000-000000000003", "e0000000-0000-4000-8000-000000000004"].map(
-    (changeId, index) => ({
-      id: changeId, actionDate: "2026-08-25", actionType: "KEEP", entityType: "META_ADSET",
-      reason: "Symmetric change", relatedDecisionId: symmetricDecisionIds[overrides.symmetricCross ? 1 - index : index]
+  }] : Array.from({ length: symmetricSize }, (_, index) => ({
+      id: `60000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      actionDate: "2026-08-25", actionType: "KEEP", targetType: "META_ADSET",
+      reason: "Symmetric change",
+      relatedDecisionId: symmetricDecisionIds[overrides.symmetricCross ? symmetricSize - 1 - index : index]
     })
   );
   if (changeRows.length) tableRows(value.addWorksheet("Change Logs"), changeRows);
