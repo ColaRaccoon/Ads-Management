@@ -23,6 +23,16 @@ describe("report workbook compatibility proof", () => {
     expect(parallel.digest).toBe(crossed.digest);
   });
 
+  it("distinguishes non-isomorphic regular UUID relationship graphs", async () => {
+    const cycle = await reportWorkbookCompatibility(
+      await workbook(runId, { regularGraph: "cycle8" }), expected(runId)
+    );
+    const disconnected = await reportWorkbookCompatibility(
+      await workbook(runId, { regularGraph: "two4" }), expected(runId)
+    );
+    expect(cycle.digest).not.toBe(disconnected.digest);
+  });
+
   it("rejects a report whose KPI cell, relationship, or required business sheet regresses", async () => {
     const changed = await workbook(runId, { spendKrw: 1 });
     const baseline = await reportWorkbookCompatibility(await workbook(runId), expected(runId));
@@ -59,6 +69,7 @@ async function workbook(
     targetCpaKrw?: number;
     breakDecisionLink?: boolean;
     symmetricCross?: boolean;
+    regularGraph?: "cycle8" | "two4";
   } = {}
 ) {
   const value = new ExcelJS.Workbook();
@@ -88,11 +99,28 @@ async function workbook(
     "totals.spendUsd": 20, "totals.spendKrw": 27_000, "totals.purchaseCount": 2, "totals.cpaKrw": 13_500,
     "totals.revenueKrw": 138_000, "totals.marginKrw": 61_000
   });
-  const decisionRows = overrides.symmetricCross === undefined ? [{
+  const graphRuns = [
+    "30000000-0000-4000-8000-000000000001", "30000000-0000-4000-8000-000000000002",
+    "30000000-0000-4000-8000-000000000003", "30000000-0000-4000-8000-000000000004"
+  ];
+  const graphUsers = [
+    "40000000-0000-4000-8000-000000000001", "40000000-0000-4000-8000-000000000002",
+    "40000000-0000-4000-8000-000000000003", "40000000-0000-4000-8000-000000000004"
+  ];
+  const graphEdges = overrides.regularGraph === "cycle8"
+    ? [[0, 0], [1, 0], [1, 1], [2, 1], [2, 2], [3, 2], [3, 3], [0, 3]]
+    : [[0, 0], [0, 1], [1, 0], [1, 1], [2, 2], [2, 3], [3, 2], [3, 3]];
+  const symmetricDecisionIds = [
+    "10000000-0000-4000-8000-000000000001", "f0000000-0000-4000-8000-000000000002"
+  ];
+  const decisionRows = overrides.regularGraph ? graphEdges.map(([run, user]) => ({
+    decisionRunId: graphRuns[run], createdBy: graphUsers[user], scopeType: "ADSET", decision: "KEEP",
+    severity: "INFO", reason: "Regular graph decision", recommendedAction: "Observe"
+  })) : overrides.symmetricCross === undefined ? [{
     id: volatileId, decisionRunId: volatileDecisionRunId, scopeType: "ADSET", decision: "KEEP", severity: "INFO",
     reason: `Compatibility ${id}`, recommendedAction: "Observe",
     createdAt: id.startsWith("11111111") ? "2026-08-31" : "2026-09-01"
-  }] : ["10000000-0000-4000-8000-000000000001", "f0000000-0000-4000-8000-000000000002"].map(
+  }] : symmetricDecisionIds.map(
     (decisionId) => ({
       id: decisionId, scopeType: "ADSET", decision: "KEEP", severity: "INFO",
       reason: "Symmetric decision", recommendedAction: "Observe"
@@ -100,7 +128,7 @@ async function workbook(
   );
   tableRows(value.addWorksheet("Decisions"), decisionRows);
   value.addWorksheet("Unmatched").addRow(["No data"]);
-  const changeRows = overrides.symmetricCross === undefined ? [{
+  const changeRows = overrides.regularGraph ? [] : overrides.symmetricCross === undefined ? [{
     id: volatileDecisionRunId, actionDate: "2026-08-25", actionType: "KEEP", entityType: "META_ADSET",
     reason: "Compatibility change", relatedDecisionId: overrides.breakDecisionLink
       ? "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
@@ -108,10 +136,11 @@ async function workbook(
   }] : ["20000000-0000-4000-8000-000000000003", "e0000000-0000-4000-8000-000000000004"].map(
     (changeId, index) => ({
       id: changeId, actionDate: "2026-08-25", actionType: "KEEP", entityType: "META_ADSET",
-      reason: "Symmetric change", relatedDecisionId: decisionRows[overrides.symmetricCross ? 1 - index : index].id
+      reason: "Symmetric change", relatedDecisionId: symmetricDecisionIds[overrides.symmetricCross ? 1 - index : index]
     })
   );
-  tableRows(value.addWorksheet("Change Logs"), changeRows);
+  if (changeRows.length) tableRows(value.addWorksheet("Change Logs"), changeRows);
+  else value.addWorksheet("Change Logs").addRow(["No data"]);
   return Buffer.from(await value.xlsx.writeBuffer());
 }
 

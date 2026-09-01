@@ -4,6 +4,7 @@ import { businessCompatibilityDigest } from "./business-compatibility-contract";
 const MAX_REPORT_BYTES = 64 * 1024 * 1024;
 const MAX_REPORT_ROWS = 100_000;
 const MAX_REPORT_CELLS = 1_000_000;
+const MAX_UUID_CANONICAL_PERMUTATIONS = 100_000;
 const EXPECTED_SHEETS = ["Summary", "Product Performance", "Adset Performance", "Decisions", "Unmatched", "Change Logs"];
 const UUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi;
 const SUMMARY_LABELS = [
@@ -114,7 +115,45 @@ function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook) {
     contexts = collectRelationshipContexts(workbook, sheets, aliases);
   }
   if (!stable) throw new Error("REPORT_COMPATIBILITY_UUID_REFINEMENT_LIMIT");
-  const canonicalSummary = Object.fromEntries(Object.entries(workbook.summary).map(([column, value]) => [
+  const classMembers = new Map<string, string[]>();
+  for (const [uuid, alias] of aliases) classMembers.set(alias, [...(classMembers.get(alias) ?? []), uuid]);
+  const classes = [...classMembers].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+  let permutationCount = 1;
+  for (const [, members] of classes) {
+    for (let factor = 2; factor <= members.length; factor += 1) {
+      if (permutationCount > MAX_UUID_CANONICAL_PERMUTATIONS / factor) {
+        throw new Error("REPORT_COMPATIBILITY_UUID_SYMMETRY_LIMIT");
+      }
+      permutationCount *= factor;
+    }
+  }
+  let best: CompatibilityWorkbook | undefined;
+  let bestKey: string | undefined;
+  const exactAliases = new Map<string, string>();
+  const visitClass = (classIndex: number, aliasOffset: number) => {
+    if (classIndex === classes.length) {
+      const candidate = canonicalWorkbook(workbook, sheets, exactAliases);
+      const key = canonicalJson(candidate);
+      if (bestKey === undefined || key < bestKey) { best = candidate; bestKey = key; }
+      return;
+    }
+    const members = classes[classIndex][1];
+    forEachPermutation(members, (permutation) => {
+      permutation.forEach((uuid, index) => exactAliases.set(uuid, `<UUID_${aliasOffset + index + 1}>`));
+      visitClass(classIndex + 1, aliasOffset + members.length);
+      for (const uuid of permutation) exactAliases.delete(uuid);
+    });
+  };
+  visitClass(0, 0);
+  return best ?? canonicalWorkbook(workbook, sheets, exactAliases);
+}
+
+function canonicalWorkbook(
+  workbook: CompatibilityWorkbook,
+  sheets: Array<[keyof Omit<CompatibilityWorkbook, "summary">, ProjectedSheet]>,
+  aliases: Map<string, string>
+): CompatibilityWorkbook {
+  const summary = Object.fromEntries(Object.entries(workbook.summary).map(([column, value]) => [
     column, aliasUuids(value, aliases)
   ]));
   const canonicalSheets = Object.fromEntries(sheets.map(([name, sheet]) => {
@@ -122,22 +161,35 @@ function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook) {
       column, aliasUuids(row[column], aliases)
     ])));
     rows.sort((left, right) => {
-      const leftKey = JSON.stringify(left);
-      const rightKey = JSON.stringify(right);
+      const leftKey = canonicalJson(left);
+      const rightKey = canonicalJson(right);
       return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
     });
     return [name, { columns: sheet.columns, rows }];
   })) as Omit<CompatibilityWorkbook, "summary">;
-  const classMembers = new Map<string, string[]>();
-  for (const [uuid, alias] of aliases) classMembers.set(alias, [...(classMembers.get(alias) ?? []), uuid]);
-  const uuidRelationshipClasses = [...classMembers].sort(([left], [right]) => left.localeCompare(right)).map(
-    ([alias, members]) => ({
-      alias,
-      nodeCount: members.length,
-      occurrenceCount: members.reduce((total, uuid) => total + (contexts.get(uuid)?.length ?? 0), 0)
-    })
-  );
-  return { summary: canonicalSummary, ...canonicalSheets, uuidRelationshipClasses };
+  return { summary, ...canonicalSheets };
+}
+
+function forEachPermutation(values: string[], visit: (permutation: string[]) => void) {
+  const permutation = [...values];
+  const generate = (index: number) => {
+    if (index === permutation.length) { visit(permutation); return; }
+    for (let cursor = index; cursor < permutation.length; cursor += 1) {
+      [permutation[index], permutation[cursor]] = [permutation[cursor], permutation[index]];
+      generate(index + 1);
+      [permutation[index], permutation[cursor]] = [permutation[cursor], permutation[index]];
+    }
+  };
+  generate(0);
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function collectRelationshipContexts(
