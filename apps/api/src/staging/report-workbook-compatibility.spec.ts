@@ -39,6 +39,12 @@ describe("report workbook compatibility proof", () => {
     )).rejects.toThrow("REPORT_COMPATIBILITY_UUID_SYMMETRY_WORK_LIMIT");
   });
 
+  it("canonicalizes thousands of singleton UUID classes without recursive stack growth", async () => {
+    await expect(reportWorkbookCompatibility(
+      await workbook(runId, { singletonDecisionCount: 6_000 }), expected(runId)
+    )).resolves.toMatchObject({ digest: expect.stringMatching(/^[0-9a-f]{64}$/) });
+  });
+
   it("rejects a report whose KPI cell, relationship, or required business sheet regresses", async () => {
     const changed = await workbook(runId, { spendKrw: 1 });
     const baseline = await reportWorkbookCompatibility(await workbook(runId), expected(runId));
@@ -76,6 +82,7 @@ async function workbook(
     breakDecisionLink?: boolean;
     symmetricCross?: boolean;
     symmetricSize?: number;
+    singletonDecisionCount?: number;
     regularGraph?: "cycle8" | "two4";
   } = {}
 ) {
@@ -122,7 +129,13 @@ async function workbook(
   const symmetricDecisionIds = Array.from({ length: symmetricSize }, (_, index) =>
     `50000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`
   );
-  const decisionRows = overrides.regularGraph ? graphEdges.map(([run, user]) => ({
+  const decisionRows = overrides.singletonDecisionCount ? Array.from(
+    { length: overrides.singletonDecisionCount }, (_, index) => ({
+      decisionRunId: `70000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      scopeType: "ADSET", decision: "KEEP", severity: "INFO",
+      reason: `Unique decision ${index + 1}`, recommendedAction: "Observe"
+    })
+  ) : overrides.regularGraph ? graphEdges.map(([run, user]) => ({
     decisionRunId: graphRuns[run], createdBy: graphUsers[user], scopeType: "ADSET", decision: "KEEP",
     severity: "INFO", reason: "Regular graph decision", recommendedAction: "Observe"
   })) : !symmetricMode ? [{
@@ -137,7 +150,7 @@ async function workbook(
   );
   tableRows(value.addWorksheet("Decisions"), decisionRows);
   value.addWorksheet("Unmatched").addRow(["No data"]);
-  const changeRows = overrides.regularGraph ? [] : !symmetricMode ? [{
+  const changeRows = overrides.regularGraph || overrides.singletonDecisionCount ? [] : !symmetricMode ? [{
     id: volatileDecisionRunId, actionDate: "2026-08-25", actionType: "KEEP", targetType: "META_ADSET",
     reason: "Compatibility change", relatedDecisionId: overrides.breakDecisionLink
       ? "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"

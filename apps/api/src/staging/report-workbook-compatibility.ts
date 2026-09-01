@@ -134,21 +134,28 @@ function canonicalizeUuidRelationships(workbook: CompatibilityWorkbook, cellCoun
   let best: CompatibilityWorkbook | undefined;
   let bestKey: string | undefined;
   const exactAliases = new Map<string, string>();
-  const visitClass = (classIndex: number, aliasOffset: number) => {
-    if (classIndex === classes.length) {
+  const ambiguousClasses: Array<{ members: string[]; aliasOffset: number }> = [];
+  let aliasOffset = 0;
+  for (const [, members] of classes) {
+    if (members.length === 1) exactAliases.set(members[0], `<UUID_${aliasOffset + 1}>`);
+    else ambiguousClasses.push({ members, aliasOffset });
+    aliasOffset += members.length;
+  }
+  const visitClass = (classIndex: number) => {
+    if (classIndex === ambiguousClasses.length) {
       const candidate = canonicalWorkbook(workbook, sheets, exactAliases);
       const key = canonicalJson(candidate);
       if (bestKey === undefined || key < bestKey) { best = candidate; bestKey = key; }
       return;
     }
-    const members = classes[classIndex][1];
+    const { members, aliasOffset: offset } = ambiguousClasses[classIndex];
     forEachPermutation(members, (permutation) => {
-      permutation.forEach((uuid, index) => exactAliases.set(uuid, `<UUID_${aliasOffset + index + 1}>`));
-      visitClass(classIndex + 1, aliasOffset + members.length);
+      permutation.forEach((uuid, index) => exactAliases.set(uuid, `<UUID_${offset + index + 1}>`));
+      visitClass(classIndex + 1);
       for (const uuid of permutation) exactAliases.delete(uuid);
     });
   };
-  visitClass(0, 0);
+  visitClass(0);
   return best ?? canonicalWorkbook(workbook, sheets, exactAliases);
 }
 
