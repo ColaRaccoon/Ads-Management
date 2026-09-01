@@ -155,6 +155,7 @@ test("ships a single hardened 1GB service without historical host artifacts", as
   assert.match(dockerfile, /\@sha256:\[a-f0-9\]\{64\}\$/);
   assert.match(compose, /NODE_IMAGE: \$\{NODE_IMAGE:\?Set NODE_IMAGE to an approved node image pinned by sha256 digest\}/);
   assert.match(runtimeStage, /ENV IMAGE_RELEASE_GIT_SHA=\$\{RELEASE_GIT_SHA\}/);
+  assert.match(runtimeStage, /apt-get install --yes --no-install-recommends ca-certificates openssl/);
   assert.match(runtimeStage, /USER node/);
   assert.match(runtimeStage, /EXPOSE 8000/);
   assert.doesNotMatch(runtimeStage, /deploy\/(?:local|windows)|edge\.Dockerfile/);

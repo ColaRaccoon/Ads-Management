@@ -23,7 +23,9 @@ describe("security step 8 staging artifacts", () => {
     expect(dockerfile).not.toContain("/srv/app/apps/api/prisma ./apps/api/prisma");
     expect(dockerignore).toMatch(/^\.env\.\*$/m);
     expect(dockerignore).toMatch(/^\.security-dev$/m);
-    expect(dockerignore).toMatch(/^\*\*\/storage$/m);
+    expect(dockerignore).toMatch(/^apps\/api\/storage\/\*\*$/m);
+    expect(dockerignore).not.toMatch(/^(?:storage|\*\*\/storage)$/m);
+    expect(dockerignore).not.toMatch(/^apps\/api\/src\/storage(?:\/\*\*)?$/m);
   });
 
   it("keeps the production API target release-local and outside environment promotion", async () => {

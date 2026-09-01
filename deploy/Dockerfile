@@ -5,6 +5,8 @@ FROM ${NODE_IMAGE} AS dependencies
 ARG NODE_IMAGE
 WORKDIR /srv/app
 RUN node -e "if (!/@sha256:[a-f0-9]{64}$/.test(process.env.NODE_IMAGE ?? '')) throw new Error('NODE_IMAGE must be pinned by sha256 digest')"
+RUN apt-get update && apt-get install --yes --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
 RUN npm install --global npm@10.9.4 && npm --version | grep -Fx 10.9.4
 COPY package.json package-lock.json .npmrc ./
 COPY apps/api/package.json apps/api/package.json
@@ -33,6 +35,8 @@ RUN npm prune --omit=dev
 FROM ${NODE_IMAGE} AS runtime
 ARG RELEASE_GIT_SHA
 WORKDIR /srv/app
+RUN apt-get update && apt-get install --yes --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
 ENV APP_ENV=production
 ENV DEPLOYMENT_MODE=cloud_container

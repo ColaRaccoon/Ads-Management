@@ -14,8 +14,7 @@ dist
 **/dist
 coverage
 **/coverage
-storage
-**/storage
+apps/api/storage/**
 *.log
 *.dump
 *.sql.gz
