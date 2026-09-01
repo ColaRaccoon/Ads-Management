@@ -22,6 +22,10 @@ describe("security step 8 staging artifacts", () => {
     expect(await file("apps/api/tsconfig.build.json")).toContain('"sourceMap": false');
     expect(dockerfile).not.toContain("/srv/app/apps/api/prisma ./apps/api/prisma");
     expect(dockerignore).toMatch(/^\.env\.\*$/m);
+    expect(dockerignore).toMatch(/^\*\*\/\.env$/m);
+    expect(dockerignore).toMatch(/^\*\*\/\.env\.\*$/m);
+    expect(dockerignore).toMatch(/^!\*\*\/\.env\.example$/m);
+    expect(dockerfile).toContain("RUN node deploy/cloud/assert-build-context-clean.mjs");
     expect(dockerignore).toMatch(/^\.security-dev$/m);
     expect(dockerignore).toMatch(/^apps\/api\/storage\/\*\*$/m);
     expect(dockerignore).not.toMatch(/^(?:storage|\*\*\/storage)$/m);

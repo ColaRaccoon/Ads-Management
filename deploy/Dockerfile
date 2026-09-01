@@ -16,6 +16,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 FROM dependencies AS build
 ARG RELEASE_GIT_SHA
 COPY . .
+RUN node deploy/cloud/assert-build-context-clean.mjs
 ENV NODE_ENV=production
 ENV APP_ENV=production
 ENV DEPLOYMENT_MODE=cloud_container
