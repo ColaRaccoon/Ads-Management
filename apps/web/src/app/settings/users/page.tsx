@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { apiErrorCode, apiGet, apiPatch, apiRequest } from "@/lib/api";
 import { PermissionPage } from "@/components/permission-page";
+import { WEB_AUTH_PROVIDER } from "@/features/auth/auth-provider";
 import { APP_ROLES, AppRole, roleLabel } from "@/features/auth/auth-types";
 import { useAuth } from "@/features/auth/use-auth";
 import {
@@ -31,7 +32,8 @@ function UsersPageContent() {
   const auth = useAuth();
   const queryClient = useQueryClient();
   const inviteInFlight = useRef(false);
-  const [username, setUsername] = useState("");
+  const supabaseAuth = WEB_AUTH_PROVIDER === "supabase";
+  const [identifier, setIdentifier] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<AppRole>("GUEST");
   const [attempt, setAttempt] = useState<InvitationAttempt | null>(null);
@@ -40,7 +42,11 @@ function UsersPageContent() {
 
   const users = useQuery({
     queryKey: USERS_QUERY_KEY,
-    queryFn: async () => parseUsersResponse(await apiGet<unknown>("/users"))
+    queryFn: async () => {
+      const parsed = parseUsersResponse(await apiGet<unknown>("/users"));
+      if (!supabaseAuth) return parsed;
+      return parsed.map(({ setupToken: _discarded, ...safe }) => safe);
+    }
   });
 
   const invalidateManagementQueries = async () => {
@@ -62,13 +68,13 @@ function UsersPageContent() {
           body: value.payload
         }
       ));
-      if (created.setupToken) setIssuedSetupToken(created.setupToken);
+      if (!supabaseAuth && created.setupToken) setIssuedSetupToken(created.setupToken);
       const { setupToken: _discarded, ...safe } = created;
       return safe;
     },
-    onSuccess: async (created) => {
+    onSuccess: async () => {
       setAttempt(null);
-      setUsername("");
+      setIdentifier("");
       setName("");
       setRole("GUEST");
       await invalidateManagementQueries();
@@ -90,7 +96,9 @@ function UsersPageContent() {
   function submitInvitation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (inviteInFlight.current) return;
-    const payload = normalizeInvitationPayload({ username, name, role });
+    const payload = normalizeInvitationPayload(supabaseAuth
+      ? { email: identifier, name, role }
+      : { username: identifier, name, role });
     const validationError = validateInvitationPayload(payload);
     if (validationError) {
       setFormError(validationError);
@@ -113,24 +121,28 @@ function UsersPageContent() {
       <div className="page-title">
         <div>
           <h1>사용자 관리</h1>
-          <p>로컬 업무 계정과 역할, 활성 상태, 최초 설정 수명주기를 관리합니다.</p>
+          <p>{supabaseAuth
+            ? "업무 계정을 초대하고 이름, 역할, 활성 상태와 초대 수명주기를 관리합니다."
+            : "로컬 업무 계정과 역할, 활성 상태, 최초 설정 수명주기를 관리합니다."}</p>
         </div>
       </div>
 
       <div className="grid two security-admin-grid">
         <form className="panel security-invite-form" onSubmit={submitInvitation}>
-          <h2>사용자 추가</h2>
-          <p className="muted">일회용 설정 코드는 생성 직후 한 번만 표시됩니다. 실제 사용자에게 안전한 별도 채널로 전달하세요.</p>
+          <h2>{supabaseAuth ? "사용자 초대" : "사용자 추가"}</h2>
+          <p className="muted">{supabaseAuth
+            ? "초대 메일의 일회용 링크를 수락한 사용자가 최초 비밀번호를 설정하면 활성화됩니다."
+            : "일회용 설정 코드는 생성 직후 한 번만 표시됩니다. 실제 사용자에게 안전한 별도 채널로 전달하세요."}</p>
           <label>
-            사용자 이름
+            {supabaseAuth ? "이메일" : "사용자 이름"}
             <input
               className="input"
-              type="text"
+              type={supabaseAuth ? "email" : "text"}
               autoComplete="off"
-              maxLength={32}
-              pattern="[A-Za-z][A-Za-z0-9._-]{2,31}"
-              value={username}
-              onChange={(event) => { setUsername(event.target.value); resetAttempt(); }}
+              maxLength={supabaseAuth ? 320 : 32}
+              pattern={supabaseAuth ? undefined : "[A-Za-z][A-Za-z0-9._-]{2,31}"}
+              value={identifier}
+              onChange={(event) => { setIdentifier(event.target.value); resetAttempt(); }}
               disabled={invitation.isPending}
               required
             />
@@ -160,8 +172,8 @@ function UsersPageContent() {
             </select>
           </label>
           {formError ? <div className="auth-error" role="alert">{formError}</div> : null}
-          {invitation.error ? <div className="auth-error" role="alert">{invitationErrorMessage(invitation.error)}</div> : null}
-          {issuedSetupToken ? (
+          {invitation.error ? <div className="auth-error" role="alert">{invitationErrorMessage(invitation.error, WEB_AUTH_PROVIDER)}</div> : null}
+          {!supabaseAuth && issuedSetupToken ? (
             <div className="auth-help" role="status">
               <strong>일회용 설정 코드</strong>
               <code>{issuedSetupToken}</code>
@@ -170,7 +182,9 @@ function UsersPageContent() {
           ) : null}
           <div className="toolbar">
             <button className="button primary" type="submit" disabled={invitation.isPending}>
-              {invitation.isPending ? "추가 중…" : "사용자 추가"}
+              {invitation.isPending
+                ? supabaseAuth ? "초대 요청 중…" : "추가 중…"
+                : supabaseAuth ? "초대 보내기" : "사용자 추가"}
             </button>
             {attempt && invitation.isError ? (
               <button className="button" type="button" onClick={() => runInvitation(attempt)}>
@@ -183,8 +197,10 @@ function UsersPageContent() {
         <div className="panel">
           <h2>수명주기 원칙</h2>
           <div className="security-lifecycle-list">
-            <span>설정 코드 전달 → 코드 수락 → 최초 비밀번호 설정 → 활성화</span>
-            <span>일반 로그인은 사용자 이름과 비밀번호만 사용</span>
+            <span>{supabaseAuth
+              ? "초대 발송 → 링크 수락 → 최초 비밀번호 설정 → 활성화"
+              : "설정 코드 전달 → 코드 수락 → 최초 비밀번호 설정 → 활성화"}</span>
+            <span>일반 로그인은 {supabaseAuth ? "이메일" : "사용자 이름"}과 비밀번호만 사용</span>
             <span>계정은 삭제하지 않고 비활성화하며 마지막 총관리자는 서버가 보호</span>
           </div>
         </div>
@@ -194,7 +210,9 @@ function UsersPageContent() {
         <div className="security-panel-heading">
           <div>
             <h2>등록 사용자</h2>
-            <p className="muted">credential, 세션 정보, 저장된 설정 코드 hash는 표시하지 않습니다.</p>
+            <p className="muted">{supabaseAuth
+              ? "provider 식별자, 세션 정보, 초대 확인 값은 표시하지 않습니다."
+              : "credential, 세션 정보, 저장된 설정 코드 hash는 표시하지 않습니다."}</p>
           </div>
           <button className="button" type="button" disabled={users.isFetching} onClick={() => void users.refetch()}>
             {users.isFetching ? "새로고침 중…" : "새로고침"}
@@ -233,6 +251,8 @@ function UserEditor({
   onChanged(user: UserSummary): Promise<void>;
   onSetupToken(token: string): void;
 }) {
+  const supabaseAuth = WEB_AUTH_PROVIDER === "supabase";
+  const accountIdentifier = supabaseAuth ? user.email ?? user.username : user.username;
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState(user.role);
   const [isActive, setIsActive] = useState(user.isActive);
@@ -262,7 +282,7 @@ function UserEditor({
 
   const reconcile = useMutation({
     mutationFn: async (action: "RETRY_INVITATION" | "CANCEL") => {
-      if (action === "CANCEL" && !window.confirm(`${user.username} 설정 요청을 취소할까요?`)) throw new Error("CANCELLED");
+      if (action === "CANCEL" && !window.confirm(`${accountIdentifier} ${supabaseAuth ? "초대를" : "설정 요청을"} 취소할까요?`)) throw new Error("CANCELLED");
       return parseUserSummary(await apiRequest<unknown>(
         `/users/${encodeURIComponent(user.id)}/reconcile-invitation`,
         { method: "POST", body: { action } }
@@ -273,6 +293,7 @@ function UserEditor({
 
   const passwordReset = useMutation({
     mutationFn: async () => {
+      if (supabaseAuth) throw new Error("LOCAL_PASSWORD_RESET_UNAVAILABLE");
       if (!window.confirm(`${user.username} 사용자의 기존 세션을 폐기하고 새 설정 코드를 발급할까요?`)) {
         throw new Error("CANCELLED");
       }
@@ -299,12 +320,12 @@ function UserEditor({
     <article className="security-user-card">
       <div className="security-user-identity">
         <strong>{user.name}{user.id === currentUserId ? " (현재 계정)" : ""}</strong>
-        <span>{user.username}</span>
+        <span>{accountIdentifier}</span>
         <div className="toolbar">
           <span className={`badge ${user.isActive ? "scale" : "stop_candidate"}`}>{user.isActive ? "활성" : "비활성"}</span>
-          <span className="security-status-chip">{inviteStatusLabel(user.inviteStatus)}</span>
+          <span className="security-status-chip">{inviteStatusLabel(user.inviteStatus, WEB_AUTH_PROVIDER)}</span>
         </div>
-        <small>최근 로그인 {formatTimestamp(user.lastLoginAt)} · 설정 요청 {formatTimestamp(user.invitedAt)}</small>
+        <small>최근 로그인 {formatTimestamp(user.lastLoginAt)} · {supabaseAuth ? "초대" : "설정 요청"} {formatTimestamp(user.invitedAt)}</small>
       </div>
       <div className="security-user-fields">
         <label>
@@ -322,7 +343,7 @@ function UserEditor({
           활성 계정
         </label>
       </div>
-      {visibleError ? <div className="auth-error" role="alert">{invitationErrorMessage(visibleError)}</div> : null}
+      {visibleError ? <div className="auth-error" role="alert">{invitationErrorMessage(visibleError, WEB_AUTH_PROVIDER)}</div> : null}
       <div className="toolbar security-user-actions">
         <button className="button primary" type="button" disabled={!dirty || update.isPending} onClick={() => update.mutate()}>
           {update.isPending ? "저장 중…" : "변경 저장"}
@@ -334,9 +355,9 @@ function UserEditor({
             setIsActive(user.isActive);
           }}>취소</button>
         ) : null}
-        {canRetry ? <button className="button" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("RETRY_INVITATION")}>설정 코드 재발급</button> : null}
-        {canCancel ? <button className="button danger" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("CANCEL")}>설정 요청 취소</button> : null}
-        {user.id !== currentUserId ? (
+        {canRetry ? <button className="button" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("RETRY_INVITATION")}>{supabaseAuth ? "재초대" : "설정 코드 재발급"}</button> : null}
+        {canCancel ? <button className="button danger" type="button" disabled={reconcile.isPending} onClick={() => reconcile.mutate("CANCEL")}>{supabaseAuth ? "초대 취소" : "설정 요청 취소"}</button> : null}
+        {!supabaseAuth && user.id !== currentUserId ? (
           <button className="button" type="button" disabled={passwordReset.isPending} onClick={() => passwordReset.mutate()}>
             {passwordReset.isPending ? "재설정 중…" : "비밀번호 재설정"}
           </button>

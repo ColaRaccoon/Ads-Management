@@ -18,6 +18,9 @@ describe("security step 8 staging artifacts", () => {
     expect(dockerfile).toContain("npm install --global npm@10.9.4");
     expect(dockerfile).toContain("USER node");
     expect(dockerfile).toContain("API_PROXY_TARGET=http://127.0.0.1:4200/api");
+    expect(await file("apps/api/tsconfig.build.json")).toContain('"src/**/*.cli.ts"');
+    expect(await file("apps/api/tsconfig.build.json")).toContain('"sourceMap": false');
+    expect(dockerfile).not.toContain("/srv/app/apps/api/prisma ./apps/api/prisma");
     expect(dockerignore).toMatch(/^\.env\.\*$/m);
     expect(dockerignore).toMatch(/^\.security-dev$/m);
     expect(dockerignore).toMatch(/^\*\*\/storage$/m);
@@ -26,8 +29,8 @@ describe("security step 8 staging artifacts", () => {
   it("keeps the production API target release-local and outside environment promotion", async () => {
     const nextConfig = await file("apps/web/next.config.mjs");
     expect(nextConfig).toContain('process.env.NODE_ENV === "production"');
-    expect(nextConfig).toContain('`http://127.0.0.1:${internalPort(process.env.API_INTERNAL_PORT, 4200)}/api`');
-    expect(nextConfig).toContain('if (!/^\\d+$/.test(normalized))');
+    expect(nextConfig).toContain('"http://127.0.0.1:4200/api"');
+    expect(nextConfig).not.toContain("process.env.API_INTERNAL_PORT");
     expect(nextConfig).not.toContain("destination: `${process.env.API_PROXY_TARGET");
   });
 

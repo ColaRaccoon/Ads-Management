@@ -10,7 +10,7 @@ const nextConfig = {
   },
   async rewrites() {
     const apiTarget = process.env.NODE_ENV === "production"
-      ? `http://127.0.0.1:${internalPort(process.env.API_INTERNAL_PORT, 4200)}/api`
+      ? "http://127.0.0.1:4200/api"
       : process.env.API_PROXY_TARGET ?? "http://localhost:4100/api";
     return [{
       source: "/backend-api/:path*",
@@ -66,14 +66,4 @@ export function securityHeaders(production, hstsEnabled = false) {
     });
   }
   return headers;
-}
-
-function internalPort(value, fallback) {
-  const normalized = value?.trim() || String(fallback);
-  if (!/^\d+$/.test(normalized)) throw new Error("API_INTERNAL_PORT must be an integer.");
-  const port = Number(normalized);
-  if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) {
-    throw new Error("API_INTERNAL_PORT must be between 1024 and 65535.");
-  }
-  return port;
 }

@@ -12,6 +12,7 @@
     "packages/*"
   ],
   "scripts": {
+    "cloud:test-runtime": "node --test deploy/launch-bundle.test.mjs",
     "local:assemble-release": "node deploy/local/assemble-local-release.mjs",
     "local:package-release": "node deploy/local/package-local-release.mjs",
     "local:verify-release": "node deploy/local/verify-local-release.mjs",
@@ -20,7 +21,7 @@
     "dev:api": "npm --workspace @meta-ads-performance/api run start:dev",
     "dev:web": "npm --workspace @meta-ads-performance/web run dev",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run cloud:test-runtime && npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "prisma:validate": "node scripts/prisma-validate.mjs",
     "prisma:generate": "npm --workspace @meta-ads-performance/api run prisma:generate",

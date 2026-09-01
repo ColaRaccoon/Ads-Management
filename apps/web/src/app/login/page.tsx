@@ -3,12 +3,14 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { safeNextPath } from "@/features/auth/auth-redirect";
+import { WEB_AUTH_PROVIDER } from "@/features/auth/auth-provider";
 import { useAuth } from "@/features/auth/use-auth";
 
 export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const supabaseAuth = WEB_AUTH_PROVIDER === "supabase";
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +21,11 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await auth.login(username, password);
+      await auth.login(identifier, password);
       const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
       router.replace(next);
     } catch {
-      setError("로그인할 수 없습니다. 사용자 이름과 비밀번호를 확인하거나 관리자에게 문의해 주세요.");
+      setError(`로그인할 수 없습니다. ${supabaseAuth ? "이메일" : "사용자 이름"}과 비밀번호를 확인하거나 관리자에게 문의해 주세요.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -34,16 +36,16 @@ export default function LoginPage() {
       <section className="auth-card" aria-labelledby="login-heading">
         <div className="auth-brand">Meta Ads Performance Hub</div>
         <h1 id="login-heading">로그인</h1>
-        <p>발급된 로컬 업무 계정으로 로그인해 주세요.</p>
+        <p>{supabaseAuth ? "초대받은 업무 계정으로 로그인해 주세요." : "발급된 로컬 업무 계정으로 로그인해 주세요."}</p>
         <form className="auth-form" onSubmit={submit}>
           <label>
-            사용자 이름
+            {supabaseAuth ? "이메일" : "사용자 이름"}
             <input
-              type="text"
-              autoComplete="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              pattern="[A-Za-z][A-Za-z0-9._-]{2,31}"
+              type={supabaseAuth ? "email" : "text"}
+              autoComplete={supabaseAuth ? "email" : "username"}
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
+              pattern={supabaseAuth ? undefined : "[A-Za-z][A-Za-z0-9._-]{2,31}"}
               required
               disabled={isSubmitting}
             />

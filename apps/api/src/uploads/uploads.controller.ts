@@ -6,12 +6,14 @@ import { SecureUploadPipe } from "../file-security/secure-upload.pipe";
 import { UPLOAD_PROFILES, uploadFileInterceptor } from "../file-security/upload-profiles";
 import { UploadFormDto, UploadListQueryDto, UploadParamDto } from "./dto/upload-transport.dto";
 import { UploadsService } from "./uploads.service";
+import { HeavyOperation } from "../common/heavy-operation";
 
 @Controller("uploads")
 export class UploadsController {
   constructor(private readonly uploadsService: UploadsService) {}
 
   @Post("meta-ad-daily-csv")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.META_CSV))
   uploadMetaAdDailyCsv(
@@ -23,6 +25,7 @@ export class UploadsController {
   }
 
   @Post("meta-adset-csv")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.META_CSV))
   uploadMetaAdsetCsv(

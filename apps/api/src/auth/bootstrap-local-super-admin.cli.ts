@@ -179,6 +179,7 @@ function processExists(pid:number){try{process.kill(pid,0);return true;}catch{re
 
 function assertDatabaseBoundaryEvidence(value: string, expectedSha256: string, target: SupabaseDatabaseTarget) {
   if (!path.isAbsolute(value) || expectedSha256 !== expectedSha256.toLowerCase() || !/^[0-9a-f]{64}$/.test(expectedSha256)) throw new Error("DATABASE_BOUNDARY_EVIDENCE_CONFIRMATION_INVALID");
+  if (!target.caCertificatePath) throw new Error("DATABASE_CA_CERTIFICATE_INVALID");
   const evidencePath=path.resolve(value);assertNoReparseComponents(evidencePath);const stat=lstatSync(evidencePath);
   if(!stat.isFile()||stat.isSymbolicLink()||stat.size>64*1024){throw new Error("DATABASE_BOUNDARY_EVIDENCE_INVALID");}
   const bytes=readFileSync(evidencePath);if(createHash("sha256").update(bytes).digest("hex")!==expectedSha256){throw new Error("DATABASE_BOUNDARY_EVIDENCE_HASH_MISMATCH");}

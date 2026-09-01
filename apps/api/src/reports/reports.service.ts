@@ -5,6 +5,7 @@ import {
   OnApplicationBootstrap,
   OnModuleDestroy,
   Optional,
+  PayloadTooLargeException,
   ServiceUnavailableException
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -12,12 +13,13 @@ import { Prisma, ReportExport, ReportType } from "@prisma/client";
 import ExcelJS from "exceljs";
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { PrismaService } from "../common/prisma.service";
+import { HeavyOperationGate, HeavyOperationLease } from "../common/heavy-operation";
 import { parseDateRange } from "../common/date-range";
 import { safeExportCellValue } from "../common/safe-export-cell";
 import { MetricsService } from "../metrics/metrics.service";
@@ -58,7 +60,8 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly metricsService: MetricsService,
     private readonly config: ConfigService,
-    @Optional() private readonly reconciliationState?: ReportReconciliationStateService
+    @Optional() private readonly reconciliationState?: ReportReconciliationStateService,
+    @Optional() private readonly heavyOperationGate?: HeavyOperationGate
   ) {}
 
   async onApplicationBootstrap() {
@@ -69,12 +72,25 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
     this.reconciliationTimer.unref();
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     if (this.reconciliationTimer) clearInterval(this.reconciliationTimer);
+    if (this.reconciliationInFlight) {
+      await Promise.race([
+        this.reconciliationInFlight.catch(() => undefined),
+        new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, 8_000);
+          timer.unref();
+        })
+      ]);
+    }
   }
 
   async runReconciliationCycle(cutoff = new Date(Date.now() - 5 * 60_000)) {
     if (this.reconciliationInFlight) return this.reconciliationInFlight;
+    const lease = this.heavyOperationGate?.tryAcquire();
+    if (this.heavyOperationGate && !lease) {
+      return { scanned: 0, created: 0, failed: 0, unresolved: 0 };
+    }
     const operation = this.reconcileStaleCreatingReports(cutoff, 30_000)
       .then((result) => {
         this.reconciliationState?.record(result);
@@ -89,6 +105,7 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       return await operation;
     } finally {
       if (this.reconciliationInFlight === operation) this.reconciliationInFlight = undefined;
+      lease?.release();
     }
   }
 
@@ -213,17 +230,28 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
     });
 
     let stored: StoredFile | undefined;
+    let generatedFile: GeneratedReportFile | undefined;
     this.activeExports.add(reportId);
     try {
-      const body = extension === "html"
-        ? Buffer.from(await this.renderHtml(range.from, range.to), "utf8")
-        : Buffer.from(await (await this.renderWorkbook(range.from, range.to, reportType)).xlsx.writeBuffer());
-      if (body.length > this.maxStoredReportBytes) throw new StorageIntegrityError();
       const parsed = this.explicitCurrentReference(reference);
+      const renderedHtml = extension === "html"
+        ? Buffer.from(await this.renderHtml(range.from, range.to), "utf8")
+        : undefined;
+      if (renderedHtml && renderedHtml.length > this.maxStoredReportBytes) {
+        throw new StorageIntegrityError();
+      }
+      generatedFile = extension === "xlsx"
+        ? await this.serializeWorkbook(
+          () => this.renderWorkbook(range.from, range.to, reportType)
+        )
+        : undefined;
+      const body = generatedFile?.stream() ?? renderedHtml as Buffer;
+      const expectedHashSha256 = generatedFile?.hash ??
+        createHash("sha256").update(renderedHtml as Buffer).digest("hex");
       const result = await this.storage.put({
         key: parsed.key,
         body,
-        expectedHashSha256: createHash("sha256").update(body).digest("hex"),
+        expectedHashSha256,
         maxBytes: this.maxStoredReportBytes
       });
       stored = result;
@@ -238,7 +266,7 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       const committed = await this.confirmCommittedStoredReport(finalized, reference, result);
       if (committed) return committed;
       throw new Error("REPORT_FINALIZE_COMPARE_AND_SET_LOST");
-    } catch {
+    } catch (error) {
       if (stored) {
         const committed = await this.reconcileStoredReport(report.id, reference, stored);
         if (committed) return committed;
@@ -248,12 +276,14 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
           data: { status: "FAILED", fileHashSha256: null }
         }).catch(() => undefined);
       }
+      if (error instanceof PayloadTooLargeException) throw error;
       throw new ServiceUnavailableException({
         code: "REPORT_STORAGE_UNAVAILABLE",
         message: "The report could not be stored and remains available for a safe retry."
       });
     } finally {
       this.activeExports.delete(reportId);
+      await generatedFile?.cleanup();
     }
   }
 
@@ -316,17 +346,20 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   private async renderHtml(from: string, to: string) {
-    const [summary, products, adsets, unmatched, decisions] = await this.reportSnapshot((client) => Promise.all([
-      this.metricsService.dashboardSummary(from, to, undefined, undefined, client),
-      this.metricsService.productMetrics(from, to, undefined, client),
-      this.metricsService.adsetMetrics({ from, to }, client),
-      this.metricsService.unmatchedMetrics(from, to, undefined, client),
-      client.decisionLog.findMany({
+    const [summary, products, adsets, unmatched, decisions] = await this.reportSnapshot(async (client) => {
+      await this.assertReportSourceRows(client, from, to);
+      const summary = await this.metricsService.dashboardSummary(from, to, undefined, undefined, client);
+      const products = await this.metricsService.productMetrics(from, to, undefined, client);
+      const adsets = await this.metricsService.adsetMetrics({ from, to }, client);
+      const unmatched = await this.metricsService.unmatchedMetrics(from, to, undefined, client);
+      const decisions = await client.decisionLog.findMany({
         where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 20
-      })
-    ]));
+      });
+      this.assertReportResultRows(products, adsets, unmatched, decisions);
+      return [summary, products, adsets, unmatched, decisions] as const;
+    });
     const bestProduct = products.sort((a, b) => (b.totals.marginKrw ?? -Infinity) - (a.totals.marginKrw ?? -Infinity))[0];
     const worstProduct = products.sort((a, b) => (a.totals.marginKrw ?? Infinity) - (b.totals.marginKrw ?? Infinity))[0];
     return `<!doctype html>
@@ -367,20 +400,23 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   private async renderWorkbook(from: string, to: string, reportType: ReportType) {
-    const [summary, products, adsets, unmatched, decisions, changeLogs] = await this.reportSnapshot((client) => Promise.all([
-      this.metricsService.dashboardSummary(from, to, undefined, undefined, client),
-      this.metricsService.productMetrics(from, to, undefined, client),
-      this.metricsService.adsetMetrics({ from, to }, client),
-      this.metricsService.unmatchedMetrics(from, to, undefined, client),
-      client.decisionLog.findMany({
+    const [summary, products, adsets, unmatched, decisions, changeLogs] = await this.reportSnapshot(async (client) => {
+      await this.assertReportSourceRows(client, from, to);
+      const summary = await this.metricsService.dashboardSummary(from, to, undefined, undefined, client);
+      const products = await this.metricsService.productMetrics(from, to, undefined, client);
+      const adsets = await this.metricsService.adsetMetrics({ from, to }, client);
+      const unmatched = await this.metricsService.unmatchedMetrics(from, to, undefined, client);
+      const decisions = await client.decisionLog.findMany({
         where: { periodStart: new Date(`${from}T00:00:00.000Z`), periodEnd: new Date(`${to}T00:00:00.000Z`) },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }]
-      }),
-      client.changeLog.findMany({
+      });
+      const changeLogs = await client.changeLog.findMany({
         where: { actionDate: { gte: new Date(`${from}T00:00:00.000Z`), lte: new Date(`${to}T00:00:00.000Z`) } },
         orderBy: [{ actionDate: "desc" }, { id: "desc" }]
-      })
-    ]));
+      });
+      this.assertReportResultRows(products, adsets, unmatched, decisions, changeLogs);
+      return [summary, products, adsets, unmatched, decisions, changeLogs] as const;
+    });
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "Meta Ads Performance Hub";
@@ -409,6 +445,107 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       });
     });
     return workbook;
+  }
+
+  private async assertReportSourceRows(client: Prisma.TransactionClient, from: string, to: string) {
+    const fromDate = new Date(`${from}T00:00:00.000Z`);
+    const toDate = new Date(`${to}T00:00:00.000Z`);
+    const selectedDays = Math.floor((toDate.getTime() - fromDate.getTime()) / 86_400_000) + 1;
+    const comparisonFromDate = new Date(fromDate.getTime() - selectedDays * 86_400_000);
+    const delegates = [
+      {
+        delegate: client.metaAdsetDailyMetric,
+        where: { isCurrent: true, metricDate: { gte: comparisonFromDate, lte: toDate } }
+      },
+      {
+        delegate: client.metaAdDailyMetric,
+        where: { isCurrent: true, metricDate: { gte: comparisonFromDate, lte: toDate } }
+      },
+      {
+        delegate: client.decisionLog,
+        where: { periodStart: fromDate, periodEnd: toDate }
+      },
+      {
+        delegate: client.changeLog,
+        where: { actionDate: { gte: fromDate, lte: toDate } }
+      },
+      {
+        delegate: client.productCostRule,
+        where: {}
+      },
+      {
+        delegate: client.productCpaRule,
+        where: {}
+      },
+      {
+        delegate: client.exchangeRate,
+        where: {
+          baseCurrency: "USD",
+          quoteCurrency: "KRW",
+          provider: "KOREA_EXIM",
+          rateDate: { gte: comparisonFromDate, lte: toDate }
+        }
+      }
+    ] as Array<{ delegate: { count?: (args: unknown) => Promise<number> }; where: unknown }>;
+    let total = 0;
+    for (const { delegate, where } of delegates) {
+      if (typeof delegate?.count !== "function") continue;
+      total += await delegate.count({ where, take: this.reportMaxSourceRows - total + 1 });
+      if (total > this.reportMaxSourceRows) {
+        throw new PayloadTooLargeException({
+          code: "REPORT_SOURCE_LIMIT_EXCEEDED",
+          message: `The report source exceeds the ${this.reportMaxSourceRows} row safety limit.`
+        });
+      }
+    }
+  }
+
+  private assertReportResultRows(...collections: unknown[][]) {
+    const resultRows = collections.reduce((total, rows) => total + rows.length, 0);
+    if (resultRows > this.reportMaxSourceRows) {
+      throw new PayloadTooLargeException({
+        code: "REPORT_SOURCE_LIMIT_EXCEEDED",
+        message: `The report result exceeds the ${this.reportMaxSourceRows} row safety limit.`
+      });
+    }
+  }
+
+  private async serializeWorkbook(
+    render: () => Promise<ExcelJS.Workbook>
+  ): Promise<GeneratedReportFile> {
+    let lease: HeavyOperationLease | undefined;
+    let root: string | undefined;
+    try {
+      lease = temporaryStorageBudget.acquire(
+        this.maxStoredReportBytes,
+        this.temporaryStorageBudgetBytes
+      );
+      const workbook = await render();
+      root = await mkdtemp(path.join(tmpdir(), "meta-report-export-"));
+      const target = path.join(root, "report.xlsx");
+      await workbook.xlsx.writeFile(target);
+      const file = await stat(target);
+      if (!file.isFile() || file.size < 0 || file.size > this.maxStoredReportBytes) {
+        throw new StorageIntegrityError();
+      }
+      const hash = await hashFile(target, file.size);
+      let cleaned = false;
+      return {
+        hash,
+        size: file.size,
+        stream: () => createReadStream(target),
+        cleanup: async () => {
+          if (cleaned) return;
+          cleaned = true;
+          await rm(root as string, { recursive: true, force: true }).catch(() => undefined);
+          lease?.release();
+        }
+      };
+    } catch (error) {
+      if (root) await rm(root, { recursive: true, force: true }).catch(() => undefined);
+      lease?.release();
+      throw error;
+    }
   }
 
   private reportReference(reportId: string, extension: string) {
@@ -663,6 +800,32 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       : 300_000;
   }
 
+  private get reportMaxSourceRows() {
+    const configured = Number(this.config?.get?.<string>("REPORT_MAX_SOURCE_ROWS") ?? 25_000);
+    return Number.isSafeInteger(configured) && configured >= 1_000 && configured <= 25_000
+      ? configured
+      : 25_000;
+  }
+
+}
+
+type GeneratedReportFile = {
+  hash: string;
+  size: number;
+  stream: () => ReturnType<typeof createReadStream>;
+  cleanup: () => Promise<void>;
+};
+
+async function hashFile(target: string, expectedSize: number) {
+  const hash = createHash("sha256");
+  let size = 0;
+  for await (const chunk of createReadStream(target)) {
+    size += chunk.length;
+    if (size > expectedSize) throw new StorageIntegrityError();
+    hash.update(chunk);
+  }
+  if (size !== expectedSize) throw new StorageIntegrityError();
+  return hash.digest("hex");
 }
 
 function reportIntegrityUnavailable() {

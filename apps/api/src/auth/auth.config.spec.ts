@@ -97,6 +97,40 @@ describe("auth config", () => {
       .toThrow("require AUTH_PROVIDER=local");
   });
 
+  it("hard-disables local Auth for cloud_container", () => {
+    const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY,
+      SUPABASE_JWT_ISSUER, SUPABASE_JWT_AUDIENCE, ...common } = base;
+    expect(() => loadAuthConfig({
+      ...common,
+      DEPLOYMENT_MODE: "cloud_container",
+      AUTH_PROVIDER: "local",
+      AUTH_LOCAL_SESSION_TOKEN_SECRET: "b6a9d3f4187c2e9051ab6d7f830c4e92a5b8d1f6073c9e41a6b2d8f5071c3e94",
+      AUTH_LOCAL_SETUP_TOKEN_SECRET: "c7b0e4a5298d3f0162bc7e8a941d5f03b6c9e2a7184d0f52b7c3e9a6182d4f05",
+      AUTH_LOCAL_RATE_LIMIT_SECRET: "d8c1f5b6309e4a1273cd8f9b052e6a14c7d0f3b8295e1a63c8d4f0b7293e5a16"
+    })).toThrow("require AUTH_PROVIDER=supabase");
+  });
+
+  it("binds cloud invitation redirects to one explicit allowed origin", () => {
+    const cloud = {
+      ...base,
+      APP_ENV: "production",
+      DEPLOYMENT_MODE: "cloud_container",
+      AUTH_PROVIDER: "supabase",
+      AUTH_COOKIE_SECURE: "true",
+      AUTH_COOKIE_NAMESPACE: "cloud",
+      APP_ALLOWED_ORIGINS: "https://app.example.com,https://admin.example.com"
+    };
+    expect(() => loadAuthConfig(cloud)).toThrow("AUTH_INVITE_REDIRECT_ORIGIN is required");
+    expect(loadAuthConfig({
+      ...cloud,
+      AUTH_INVITE_REDIRECT_ORIGIN: "https://app.example.com"
+    }).inviteRedirectOrigin).toBe("https://app.example.com");
+    expect(() => loadAuthConfig({
+      ...cloud,
+      AUTH_INVITE_REDIRECT_ORIGIN: "https://other.example.com"
+    })).toThrow("must be an exact allowed origin");
+  });
+
   it("rejects local session rotation beyond the absolute lifetime", () => {
     const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY,
       SUPABASE_JWT_ISSUER, SUPABASE_JWT_AUDIENCE, ...common } = base;

@@ -831,7 +831,7 @@ export class UsersService {
   }
 
   private inviteRedirectUrl() {
-    const origin = [...this.config.allowedOrigins][0];
+    const origin = this.config.inviteRedirectOrigin || [...this.config.allowedOrigins][0];
     return new URL("/invite/accept", origin).toString();
   }
 }

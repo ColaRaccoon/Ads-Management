@@ -14,12 +14,14 @@ import {
   Cafe24UploadListQueryDto,
   Cafe24UploadPreviewQueryDto
 } from "./dto/sales-transport.dto";
+import { HeavyOperation } from "../common/heavy-operation";
 
 @Controller("sales/cafe24")
 export class Cafe24UploadsController {
   constructor(private readonly cafe24UploadsService: Cafe24UploadsService) {}
 
   @Post("uploads")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.CAFE24_CSV))
   uploadCafe24Csv(

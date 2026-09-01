@@ -33,12 +33,14 @@ import {
   CoupangUploadListQueryDto,
   CoupangUploadPreviewQueryDto
 } from "./dto/coupang-transport.dto";
+import { HeavyOperation } from "../common/heavy-operation";
 
 @Controller("coupang")
 export class CoupangController {
   constructor(private readonly coupangService: CoupangService) {}
 
   @Post("uploads/sales")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_SALES_XLSX))
   uploadSales(
@@ -50,6 +52,7 @@ export class CoupangController {
   }
 
   @Post("uploads/ads")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_ADS_XLSX))
   uploadAds(
@@ -61,6 +64,7 @@ export class CoupangController {
   }
 
   @Post("uploads/margin")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_MARGIN_TEXT))
   uploadMargin(
@@ -72,6 +76,7 @@ export class CoupangController {
   }
 
   @Post("uploads/price-text")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_PRICE_TEXT))
   uploadPriceText(
@@ -83,6 +88,7 @@ export class CoupangController {
   }
 
   @Post("uploads/promotion")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(uploadFileInterceptor(UPLOAD_PROFILES.COUPANG_PROMOTION_XLSX))
   uploadPromotion(
@@ -94,6 +100,7 @@ export class CoupangController {
   }
 
   @Post("uploads/bundle")
+  @HeavyOperation()
   @RequirePermissions("imports.manage")
   @UseInterceptors(coupangBundleInterceptor())
   uploadBundle(

@@ -2,12 +2,14 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { WEB_AUTH_PROVIDER } from "@/features/auth/auth-provider";
 import { passwordErrorMessage } from "@/features/user-management/user-management";
 import { useAuth } from "@/features/auth/use-auth";
 
 export default function CompleteInvitationPage() {
   const auth = useAuth();
   const router = useRouter();
+  const supabaseAuth = WEB_AUTH_PROVIDER === "supabase";
   const submitting = useRef(false);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -18,7 +20,7 @@ export default function CompleteInvitationPage() {
     return (
       <main className="auth-screen">
         <section className="auth-card auth-loading" aria-busy="true" aria-live="polite">
-          최초 설정 세션을 확인하고 있습니다.
+          {supabaseAuth ? "초대 설정 세션을" : "최초 설정 세션을"} 확인하고 있습니다.
         </section>
       </main>
     );
@@ -44,7 +46,7 @@ export default function CompleteInvitationPage() {
       setConfirmation("");
       router.replace("/dashboard");
     } catch (requestError) {
-      setError(passwordErrorMessage(requestError));
+      setError(passwordErrorMessage(requestError, WEB_AUTH_PROVIDER));
     } finally {
       submitting.current = false;
       setIsSubmitting(false);
@@ -92,7 +94,7 @@ export default function CompleteInvitationPage() {
         <button className="button" type="button" disabled={isSubmitting} onClick={() => void auth.logout()}>
           설정을 중단하고 로그아웃
         </button>
-        <p className="auth-help">설정이 완료되면 사용자 이름과 비밀번호로 로그인합니다.</p>
+        <p className="auth-help">설정이 완료되면 {supabaseAuth ? "이메일" : "사용자 이름"}과 비밀번호로 로그인합니다.</p>
       </section>
     </main>
   );

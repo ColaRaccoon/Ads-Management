@@ -1,0 +1,38 @@
+name: meta-ads-cloud-container-local
+
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: deploy/Dockerfile
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:?Set NODE_IMAGE to an approved node image pinned by sha256 digest}
+        RELEASE_GIT_SHA: ${RELEASE_GIT_SHA:?Set RELEASE_GIT_SHA to the commit being tested}
+    env_file:
+      - path: ./.env.local
+        required: true
+    environment:
+      PORT: "8000"
+      API_INTERNAL_PORT: "4200"
+      RELEASE_GIT_SHA: ${RELEASE_GIT_SHA:?Set RELEASE_GIT_SHA to the commit being tested}
+    ports:
+      - "127.0.0.1:3200:8000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=192m,mode=1777,uid=1000,gid=1000
+    mem_limit: 1g
+    memswap_limit: 1g
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    init: true
+    restart: "no"
+    stop_grace_period: 15s
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:'+process.env.PORT+'/backend-api/health/live').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s

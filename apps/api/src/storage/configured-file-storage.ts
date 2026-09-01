@@ -17,11 +17,11 @@ export function configuredFileStorageForProvider(
   domain: StorageDomain,
   provider: string
 ): FileStorage {
+  const configuredProvider = (config.get<string>("STORAGE_PROVIDER") ?? "local").trim().toLowerCase();
+  if (provider !== configuredProvider) {
+    throw new Error("The stored object provider is not configured for access.");
+  }
   if (provider === "supabase") {
-    const configuredProvider = (config.get<string>("STORAGE_PROVIDER") ?? "local").trim().toLowerCase();
-    if (configuredProvider !== "supabase") {
-      throw new Error("The stored object provider is not configured for access.");
-    }
     const accessMode = (config.get<string>("SUPABASE_STORAGE_ACCESS_MODE") ?? "admin")
       .trim()
       .toLowerCase();

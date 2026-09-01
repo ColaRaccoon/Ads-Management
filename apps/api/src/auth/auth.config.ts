@@ -16,6 +16,7 @@ export type AuthConfig = {
   csrfPreviousSecret?: string;
   csrfTtlMs: number;
   allowedOrigins: ReadonlySet<string>;
+  inviteRedirectOrigin: string;
   production: boolean;
   localSessionTokenSecret?: string;
   localSetupTokenSecret?: string;
@@ -88,10 +89,20 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     provider === "local"
   );
   const cookieNamespace = parseCookieNamespace(env.AUTH_COOKIE_NAMESPACE, production);
-  const localLanDeployment = env.DEPLOYMENT_MODE?.trim().toLowerCase() === "local_lan";
+  const deploymentMode = env.DEPLOYMENT_MODE?.trim().toLowerCase();
+  const localLanDeployment = deploymentMode === "local_lan";
   if (localLanDeployment && provider !== "local") {
     throw new Error("local_lan deployments require AUTH_PROVIDER=local.");
   }
+  if (deploymentMode === "cloud_container" && provider !== "supabase") {
+    throw new Error("cloud_container deployments require AUTH_PROVIDER=supabase.");
+  }
+  const inviteRedirectOrigin = parseInviteRedirectOrigin(
+    env.AUTH_INVITE_REDIRECT_ORIGIN,
+    allowedOrigins,
+    provider,
+    deploymentMode === "cloud_container"
+  );
 
   const independentlyManagedSecrets = [
     sessionHandleSecret,
@@ -163,6 +174,7 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     csrfPreviousSecret,
     csrfTtlMs,
     allowedOrigins,
+    inviteRedirectOrigin,
     production,
     localSessionTokenSecret,
     localSetupTokenSecret,
@@ -174,6 +186,27 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     localScryptConcurrency: parseInteger(env.AUTH_LOCAL_SCRYPT_CONCURRENCY, "AUTH_LOCAL_SCRYPT_CONCURRENCY", 1, 8, 2),
     localScryptQueueLimit: parseInteger(env.AUTH_LOCAL_SCRYPT_QUEUE_LIMIT, "AUTH_LOCAL_SCRYPT_QUEUE_LIMIT", 0, 64, 8)
   };
+}
+
+function parseInviteRedirectOrigin(
+  value: string | undefined,
+  allowedOrigins: ReadonlySet<string>,
+  provider: "supabase" | "local",
+  requiredForCloud: boolean
+) {
+  if (provider === "local") return "";
+  const candidate = value?.trim() || (requiredForCloud ? "" : [...allowedOrigins][0]);
+  if (!candidate) throw new Error("AUTH_INVITE_REDIRECT_ORIGIN is required in cloud_container.");
+  let parsed: URL;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    throw new Error("AUTH_INVITE_REDIRECT_ORIGIN must be an exact allowed origin.");
+  }
+  if (parsed.origin !== candidate || !allowedOrigins.has(candidate)) {
+    throw new Error("AUTH_INVITE_REDIRECT_ORIGIN must be an exact allowed origin.");
+  }
+  return parsed.origin;
 }
 
 export function parseAllowedOrigins(value: string, production: boolean, allowLocalProduction = false) {

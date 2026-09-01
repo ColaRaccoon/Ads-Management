@@ -83,7 +83,7 @@ export class UsersController {
     setNoStore(response);
     await this.requestSecurity.assertCsrfMutation(request, "users");
     if (this.config?.provider !== "local" || !this.localUsers) {
-      throw new Error("Password reset is only available with local authentication.");
+      throw userLifecycleError("INVALID_USER_TRANSITION");
     }
     return this.localUsers.resetPassword(id, actor.id);
   }

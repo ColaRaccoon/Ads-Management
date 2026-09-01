@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "declaration": false,
-    "sourceMap": true,
+    "sourceMap": false,
     "incremental": true,
     "tsBuildInfoFile": "../../node_modules/.cache/api-build.tsbuildinfo",
     "rootDir": "src",
@@ -12,5 +12,12 @@
   "watchOptions": {
     "excludeDirectories": ["dist", "node_modules", "storage"]
   },
-  "exclude": ["src/**/*.spec.ts", "src/auth/bootstrap-super-admin.cli.ts", "dist", "node_modules", "prisma/**/*.ts"]
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/auth/bootstrap-super-admin.cli.ts",
+    "src/**/*.cli.ts",
+    "dist",
+    "node_modules",
+    "prisma/**/*.ts"
+  ]
 }

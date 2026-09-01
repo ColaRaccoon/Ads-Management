@@ -13,6 +13,8 @@ import {
 
 export const HTTP_SECURITY_CONFIG = Symbol("HTTP_SECURITY_CONFIG");
 
+export type DeploymentMode = "legacy" | "local_lan" | "cloud_container";
+
 export type HttpSecurityConfig = {
   production: boolean;
   trustProxyHops: number;
@@ -25,8 +27,12 @@ export type HttpSecurityConfig = {
   runtimeConfigFingerprint: string;
   storageCredentialExpiresAtMs: number | null;
   storageReadinessKey: string | null;
-  deploymentMode: "legacy" | "local_lan";
+  deploymentMode: DeploymentMode;
   localEdgeProxyPublicKey: string | null;
+  releaseId: string;
+  heavyOperationConcurrency: number;
+  heavyOperationRetryAfterSeconds: number;
+  reportMaxSourceRows: number;
 };
 
 export function loadHttpSecurityConfig(
@@ -35,6 +41,12 @@ export function loadHttpSecurityConfig(
   const appEnvironment = normalizedEnvironment(env.APP_ENV?.trim() || env.NODE_ENV);
   const production = appEnvironment === "production";
   const deploymentMode = parseDeploymentMode(env.DEPLOYMENT_MODE);
+  if (production && deploymentMode === "legacy") {
+    throw new Error("Production DEPLOYMENT_MODE must be explicitly local_lan or cloud_container.");
+  }
+  if (deploymentMode === "cloud_container" && !production) {
+    throw new Error("cloud_container requires APP_ENV=production and NODE_ENV=production.");
+  }
   const readinessTimeoutMs = boundedInteger(
     env.READINESS_TIMEOUT_MS,
     "READINESS_TIMEOUT_MS",
@@ -55,6 +67,9 @@ export function loadHttpSecurityConfig(
   const trustProxyHops = boundedInteger(env.TRUST_PROXY_HOPS, "TRUST_PROXY_HOPS", 0, 3, 0);
   if (deploymentMode === "local_lan" && trustProxyHops !== 0) {
     throw new Error("local_lan requires TRUST_PROXY_HOPS=0 and authenticated edge client metadata.");
+  }
+  if (deploymentMode === "cloud_container" && trustProxyHops === 0) {
+    throw new Error("cloud_container requires a bounded non-zero TRUST_PROXY_HOPS value.");
   }
   return {
     production,
@@ -88,7 +103,29 @@ export function loadHttpSecurityConfig(
     deploymentMode,
     localEdgeProxyPublicKey: deploymentMode === "local_lan"
       ? localEdgePublicKey(env.LOCAL_EDGE_PUBLIC_KEY_PATH)
-      : null
+      : null,
+    releaseId: cloudReleaseId(env.RELEASE_GIT_SHA, deploymentMode),
+    heavyOperationConcurrency: boundedInteger(
+      env.HEAVY_OPERATION_CONCURRENCY,
+      "HEAVY_OPERATION_CONCURRENCY",
+      1,
+      2,
+      deploymentMode === "cloud_container" ? 1 : 2
+    ),
+    heavyOperationRetryAfterSeconds: boundedInteger(
+      env.HEAVY_OPERATION_RETRY_AFTER_SECONDS,
+      "HEAVY_OPERATION_RETRY_AFTER_SECONDS",
+      1,
+      60,
+      5
+    ),
+    reportMaxSourceRows: boundedInteger(
+      env.REPORT_MAX_SOURCE_ROWS,
+      "REPORT_MAX_SOURCE_ROWS",
+      1_000,
+      25_000,
+      25_000
+    )
   };
 }
 
@@ -119,13 +156,35 @@ export function validateRuntimeEnvironment(
   if (env.NODE_ENV === "test" && env.APP_ENV === "development") {
     delete env.NODE_ENV;
   }
-  const localNative = parseDeploymentMode(env.DEPLOYMENT_MODE) === "local_lan";
+  const deploymentMode = parseDeploymentMode(env.DEPLOYMENT_MODE);
+  const localNative = deploymentMode === "local_lan";
+  const cloudContainer = deploymentMode === "cloud_container";
   if (localNative) {
     for (const key of [
       "SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SECRET_KEY",
       "SUPABASE_JWT_ISSUER", "SUPABASE_STORAGE_ACCESS_TOKEN"
     ]) {
       if (env[key]?.trim()) throw new Error("local_lan rejects Supabase Auth and Storage configuration.");
+    }
+  }
+  if (cloudContainer) {
+    for (const [key, value] of Object.entries(env)) {
+      const forbidden = key.startsWith("AUTH_LOCAL_") || key.startsWith("LOCAL_EDGE_") ||
+        key === "LOCAL_RELEASE_ID" || key === "CONFIG_PATH" ||
+        key === "SUPABASE_DATABASE_CA_CERT_PATH" || key === "APP_DATA_ROOT" ||
+        key === "UPLOAD_STORAGE_DIR" || key === "REPORT_STORAGE_DIR";
+      if (forbidden && value?.trim()) {
+        throw new Error(`cloud_container rejects local-only configuration key ${key}.`);
+      }
+    }
+    if (env.AUTH_PROVIDER?.trim().toLowerCase() !== "supabase") {
+      throw new Error("cloud_container requires explicit AUTH_PROVIDER=supabase.");
+    }
+    if (env.STORAGE_PROVIDER?.trim().toLowerCase() !== "supabase") {
+      throw new Error("cloud_container requires explicit STORAGE_PROVIDER=supabase.");
+    }
+    if (!env.PRISMA_CONNECTION_LIMIT?.trim()) {
+      throw new Error("cloud_container requires explicit PRISMA_CONNECTION_LIMIT.");
     }
   }
   const auth = loadAuthConfig(env);
@@ -141,7 +200,9 @@ export function validateRuntimeEnvironment(
     throw new Error("Production DATABASE_URL must use sslmode=verify-full.");
   }
   if (localNative && auth.provider !== "local") throw new Error("local_lan requires local native Auth.");
+  if (cloudContainer && auth.provider !== "supabase") throw new Error("cloud_container requires Supabase Auth.");
   if (localNative) assertSupabaseDatabase(database, env);
+  if (cloudContainer) assertCloudSupabaseDatabase(database, env, auth.supabaseUrl);
 
   if (auth.provider === "supabase" && auth.supabasePublishableKey === auth.supabaseSecretKey) {
     throw new Error("Supabase publishable and secret keys must be different.");
@@ -170,6 +231,9 @@ export function validateRuntimeEnvironment(
   }
   if (localNative && storageProvider !== "local") {
     throw new Error("local_lan requires STORAGE_PROVIDER=local.");
+  }
+  if (cloudContainer && storageProvider !== "supabase") {
+    throw new Error("cloud_container requires STORAGE_PROVIDER=supabase.");
   }
   const dataRoot = env.APP_DATA_ROOT?.trim() || (localNative
     ? defaultApplicationDataRoot(env)
@@ -259,6 +323,38 @@ export function validateRuntimeEnvironment(
   }
   resolveCoupangBundleMaxTotalBytes(env);
   resolveUploadStructureLimits(env);
+  const prismaConnectionLimit = boundedInteger(
+    env.PRISMA_CONNECTION_LIMIT,
+    "PRISMA_CONNECTION_LIMIT",
+    1,
+    cloudContainer ? 3 : 20,
+    1
+  );
+  const heavyOperationConcurrency = boundedInteger(
+    env.HEAVY_OPERATION_CONCURRENCY,
+    "HEAVY_OPERATION_CONCURRENCY",
+    1,
+    2,
+    cloudContainer ? 1 : 2
+  );
+  if (cloudContainer && heavyOperationConcurrency !== 1) {
+    throw new Error("cloud_container requires HEAVY_OPERATION_CONCURRENCY=1 for the 1GB release.");
+  }
+  const heavyOperationRetryAfterSeconds = boundedInteger(
+    env.HEAVY_OPERATION_RETRY_AFTER_SECONDS,
+    "HEAVY_OPERATION_RETRY_AFTER_SECONDS",
+    1,
+    60,
+    5
+  );
+  const reportMaxSourceRows = boundedInteger(
+    env.REPORT_MAX_SOURCE_ROWS,
+    "REPORT_MAX_SOURCE_ROWS",
+    1_000,
+    25_000,
+    25_000
+  );
+  const releaseId = cloudReleaseId(env.RELEASE_GIT_SHA, deploymentMode);
 
   const deploymentEnvironmentId = deploymentIdentifier(
     env.DEPLOYMENT_ENVIRONMENT_ID,
@@ -286,7 +382,7 @@ export function validateRuntimeEnvironment(
   );
   const fingerprint = runtimeConfigFingerprint(env, auth.production);
 
-  return {
+  const normalized: Record<string, unknown> = {
     ...input,
     PORT: String(port),
     DEPLOYMENT_MODE: http.deploymentMode,
@@ -294,6 +390,7 @@ export function validateRuntimeEnvironment(
     UPLOAD_STORAGE_DIR: uploadStorageDir,
     REPORT_STORAGE_DIR: reportStorageDir,
     STORAGE_PROVIDER: storageProvider,
+    PRISMA_CONNECTION_LIMIT: String(prismaConnectionLimit),
     SUPABASE_STORAGE_RETENTION_DAYS: String(storageRetentionDays),
     SUPABASE_STORAGE_TIMEOUT_MS: String(storageTimeoutMs),
     SUPABASE_STORAGE_MAX_OBJECT_BYTES: String(storageMaxObjectBytes),
@@ -304,12 +401,22 @@ export function validateRuntimeEnvironment(
     DATABASE_READINESS_TIMEOUT_MS: String(http.databaseReadinessTimeoutMs),
     JSON_BODY_LIMIT_BYTES: String(http.jsonBodyLimitBytes),
     URLENCODED_BODY_LIMIT_BYTES: String(http.urlencodedBodyLimitBytes),
+    HEAVY_OPERATION_CONCURRENCY: String(heavyOperationConcurrency),
+    HEAVY_OPERATION_RETRY_AFTER_SECONDS: String(heavyOperationRetryAfterSeconds),
+    REPORT_MAX_SOURCE_ROWS: String(reportMaxSourceRows),
+    RELEASE_GIT_SHA: releaseId,
     DEPLOYMENT_ENVIRONMENT_ID: deploymentEnvironmentId,
     RUNTIME_API_TARGET_ID: apiTargetId,
     RUNTIME_DATABASE_ID: databaseId,
     RUNTIME_STORAGE_ID: storageId,
     RUNTIME_CONFIG_FINGERPRINT: fingerprint
   };
+  if (cloudContainer) {
+    delete normalized.APP_DATA_ROOT;
+    delete normalized.UPLOAD_STORAGE_DIR;
+    delete normalized.REPORT_STORAGE_DIR;
+  }
+  return normalized;
 }
 
 function runtimeConfigFingerprint(env: NodeJS.ProcessEnv, production: boolean) {
@@ -344,14 +451,31 @@ function runtimeConfigFingerprint(env: NodeJS.ProcessEnv, production: boolean) {
     originHosts: [...auth.allowedOrigins].map((origin) => new URL(origin).host).sort(),
     cookieMode: auth.cookieSecure ? "secure" : "development",
     cookieNamespace: auth.cookieNamespace,
+    inviteRedirectHost: auth.inviteRedirectOrigin
+      ? new URL(auth.inviteRedirectOrigin).host
+      : "local",
     apiTargetId,
     authProvider: auth.provider,
     authProjectRef: auth.provider === "supabase"
       ? new URL(auth.supabaseUrl).hostname.split(".")[0]
       : "local",
     databaseId,
+    databaseProjectRef: env.SUPABASE_DATABASE_PROJECT_REF?.trim().toLowerCase() || "unbound",
+    databaseConnectionMode: env.SUPABASE_DATABASE_CONNECTION_MODE?.trim().toLowerCase() || "unbound",
+    databaseHost: env.SUPABASE_DATABASE_HOST?.trim().toLowerCase() || "unbound",
+    databaseName: env.SUPABASE_DATABASE_NAME?.trim().toLowerCase() || "unbound",
+    databaseSchema: env.SUPABASE_DATABASE_SCHEMA?.trim().toLowerCase() || "unbound",
+    databaseRuntimeUser: env.SUPABASE_DATABASE_RUNTIME_USER?.trim() || "unbound",
     storageId,
-    storageProvider
+    storageProvider,
+    storageBucket: env.SUPABASE_STORAGE_BUCKET?.trim().toLowerCase() || "local",
+    storageAccessMode: env.SUPABASE_STORAGE_ACCESS_MODE?.trim().toLowerCase() || "local",
+    storageReadinessKey: env.SUPABASE_STORAGE_READINESS_KEY?.trim() || "none",
+    deploymentMode: parseDeploymentMode(env.DEPLOYMENT_MODE),
+    releaseId: cloudReleaseId(env.RELEASE_GIT_SHA, parseDeploymentMode(env.DEPLOYMENT_MODE)),
+    prismaConnectionLimit: env.PRISMA_CONNECTION_LIMIT?.trim() || "1",
+    heavyOperationConcurrency: env.HEAVY_OPERATION_CONCURRENCY?.trim() || "1",
+    reportMaxSourceRows: env.REPORT_MAX_SOURCE_ROWS?.trim() || "25000"
   })).digest("hex");
 }
 
@@ -482,6 +606,30 @@ function assertSupabaseDatabase(database: URL, env: NodeJS.ProcessEnv) {
   }
 }
 
+function assertCloudSupabaseDatabase(database: URL, env: NodeJS.ProcessEnv, supabaseUrl: string) {
+  const target = validateSupabaseDatabaseTarget(env, database.toString(), { tlsTrust: "system" });
+  const authHost = new URL(supabaseUrl).hostname.toLowerCase();
+  if (authHost !== `${target.projectRef}.supabase.co`) {
+    throw new Error("cloud_container database, Auth, and Storage must use the same Supabase project ref.");
+  }
+  const expectedDatabase = env.SUPABASE_DATABASE_NAME?.trim() || "";
+  const expectedSchema = env.SUPABASE_DATABASE_SCHEMA?.trim() || "";
+  if (!expectedDatabase || !expectedSchema ||
+      target.database !== expectedDatabase || target.schema !== expectedSchema) {
+    throw new Error("cloud_container DATABASE_URL must match the exact configured database and schema.");
+  }
+  for (const key of ["connection_limit", "pool_timeout", "connect_timeout"]) {
+    const values = database.searchParams.getAll(key);
+    if (values.length > 1 || (values[0] && (!/^\d+$/.test(values[0]) || Number(values[0]) < 1 || Number(values[0]) > 120))) {
+      throw new Error(`cloud_container DATABASE_URL ${key} is out of range.`);
+    }
+  }
+  const urlConnectionLimit = database.searchParams.get("connection_limit");
+  if (urlConnectionLimit && urlConnectionLimit !== env.PRISMA_CONNECTION_LIMIT?.trim()) {
+    throw new Error("DATABASE_URL connection_limit must equal PRISMA_CONNECTION_LIMIT.");
+  }
+}
+
 function boundedInteger(
   value: string | undefined,
   key: string,
@@ -568,8 +716,17 @@ function assertExternalLocalPath(value: string, key: string, expectedParent?: st
   }
 }
 
-function parseDeploymentMode(value: string | undefined): "legacy" | "local_lan" {
+function parseDeploymentMode(value: string | undefined): DeploymentMode {
   const normalized = value?.trim().toLowerCase() || "legacy";
-  if (normalized === "legacy" || normalized === "local_lan") return normalized;
-  throw new Error("DEPLOYMENT_MODE must be legacy or local_lan.");
+  if (normalized === "legacy" || normalized === "local_lan" || normalized === "cloud_container") return normalized;
+  throw new Error("DEPLOYMENT_MODE must be legacy, local_lan, or cloud_container.");
+}
+
+function cloudReleaseId(value: string | undefined, deploymentMode: DeploymentMode) {
+  if (deploymentMode !== "cloud_container") return value?.trim().toLowerCase() || "unversioned";
+  const releaseId = value?.trim().toLowerCase() || "";
+  if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(releaseId)) {
+    throw new Error("RELEASE_GIT_SHA must be a full 40-character SHA-1 or 64-character SHA-256 commit id in cloud_container.");
+  }
+  return releaseId;
 }

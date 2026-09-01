@@ -19,6 +19,7 @@ import {
 } from "@/lib/api";
 import { authCoordinator } from "./auth-coordination";
 import { clearUserQueries } from "./auth-cache";
+import { authLoginPayload } from "./auth-provider";
 import { AuthMe, AuthStatus, parseAuthMe, Permission } from "./auth-types";
 
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
@@ -31,7 +32,7 @@ export type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   status: AuthStatus;
-  login(username: string, password: string): Promise<AuthMe>;
+  login(identifier: string, password: string): Promise<AuthMe>;
   acceptInvitation(tokenHash: string): Promise<AuthMe>;
   completeInvitation(password: string): Promise<AuthMe>;
   logout(): Promise<void>;
@@ -160,14 +161,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, [queryClient, refreshAuth]);
 
-  const login = useCallback(async (username: string, password: string) => {
+  const login = useCallback(async (identifier: string, password: string) => {
     await queryClient.cancelQueries();
     invalidateApiSession();
     queryClient.clear();
     setForcedStatus("loading");
     try {
       const me = await authCoordinator.runExclusive(async () =>
-        parseAuthMe(await apiPost<unknown>("/auth/login", { username, password }))
+        parseAuthMe(await apiPost<unknown>("/auth/login", authLoginPayload(identifier, password)))
       );
       queryClient.setQueryData(AUTH_ME_QUERY_KEY, me);
       previousIdentity.current = me.user.id;

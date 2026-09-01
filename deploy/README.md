@@ -1,6 +1,14 @@
-# Local-native deployment and recovery runbook
+# Deployment runbooks
 
-This is the active deployment path for the local multi-user installation. The
+> **2026-09-01 production decision:** the active production target is the
+> [single 1GB cloud container](cloud/README.md) with Supabase Auth, PostgreSQL,
+> and private Storage. The local-native/LAN/Windows material below is preserved
+> as historical security and rollback design only; it is not copied into or
+> executed by the cloud image and must not be used as the new production path.
+
+## Historical local-native deployment and recovery runbook
+
+This was the planned deployment path for the local multi-user installation. The
 application keeps **only PostgreSQL** in the existing Supabase project. Login is
 local native username authentication and file payloads use local NTFS storage.
 Supabase Auth and Supabase Storage are not used by this deployment.

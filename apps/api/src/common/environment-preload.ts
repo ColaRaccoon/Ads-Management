@@ -17,8 +17,18 @@ export function preloadApiEnvironment(options: {
   const packageRoot = path.resolve(options.packageRoot ?? apiPackageRoot());
   const target = options.env ?? process.env;
   const configuredPath = target.CONFIG_PATH?.trim();
-  const localProduction = target.DEPLOYMENT_MODE === "local_lan" &&
-    (target.APP_ENV === "production" || target.NODE_ENV === "production");
+  const deploymentMode = target.DEPLOYMENT_MODE?.trim().toLowerCase();
+  const appEnvironment = target.APP_ENV?.trim().toLowerCase();
+  const nodeEnvironment = target.NODE_ENV?.trim().toLowerCase();
+  const cloudContainer = deploymentMode === "cloud_container";
+  if (cloudContainer) {
+    if (configuredPath) {
+      throw new Error("CONFIG_PATH is forbidden for cloud_container; inject runtime environment variables.");
+    }
+    return false;
+  }
+  const localProduction = deploymentMode === "local_lan" &&
+    (appEnvironment === "production" || nodeEnvironment === "production");
   if (localProduction && !configuredPath) {
     throw new Error("CONFIG_PATH is required for local_lan production; repository .env loading is disabled.");
   }
@@ -28,6 +38,9 @@ export function preloadApiEnvironment(options: {
   if (!existsSync(envFile)) return false;
 
   const parsed = parseEnv(readFileSync(envFile, "utf8"));
+  if (parsed.DEPLOYMENT_MODE?.trim().toLowerCase() === "cloud_container") {
+    throw new Error("cloud_container must be selected by the runtime environment; file-based environment loading is forbidden.");
+  }
   for (const [key, value] of Object.entries(parsed)) {
     if (target[key] === undefined) target[key] = value;
   }

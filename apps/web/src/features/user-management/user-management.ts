@@ -1,4 +1,5 @@
 import { ApiError, apiErrorCode } from "@/lib/api";
+import { WEB_AUTH_PROVIDER, type WebAuthProvider } from "@/features/auth/auth-provider";
 import {
   APP_ROLES,
   AppRole,
@@ -202,7 +203,10 @@ function auditFieldLabel(field: (typeof SAFE_AUDIT_FIELDS)[number]) {
   return { name: "이름", role: "역할", isActive: "계정", inviteStatus: "설정 상태" }[field];
 }
 
-export function invitationErrorMessage(error: unknown): string {
+export function invitationErrorMessage(
+  error: unknown,
+  provider: WebAuthProvider = WEB_AUTH_PROVIDER
+): string {
   const code = apiErrorCode(error);
   const messages: Record<string, string> = {
     USER_EMAIL_EXISTS: "이미 등록되었거나 초대 처리 중인 이메일입니다.",
@@ -210,7 +214,9 @@ export function invitationErrorMessage(error: unknown): string {
     USERNAME_INVALID: "사용자 이름 형식이 올바르지 않습니다.",
     IDEMPOTENCY_KEY_INVALID: "사용자 설정 요청 식별자를 만들지 못했습니다. 입력을 다시 확인해 주세요.",
     IDEMPOTENCY_KEY_CONFLICT: "같은 요청 식별자가 다른 사용자 설정 내용에 사용되었습니다. 입력을 다시 확인해 주세요.",
-    IDEMPOTENCY_REPLAY: "이 사용자 추가 요청은 이미 처리되었습니다. 새로고침된 목록에서 사용자를 선택해 설정 코드를 재발급하세요.",
+    IDEMPOTENCY_REPLAY: provider === "supabase"
+      ? "이 사용자 초대 요청은 이미 처리되었습니다. 새로고침된 목록에서 초대 상태를 확인해 주세요."
+      : "이 사용자 추가 요청은 이미 처리되었습니다. 새로고침된 목록에서 사용자를 선택해 설정 코드를 재발급하세요.",
     INVITATION_PROVIDER_UNAVAILABLE: "사용자 설정 요청을 처리하지 못했습니다. 같은 요청으로 다시 시도해 주세요.",
     INVITATION_NOT_RECONCILABLE: "현재 설정 상태에서는 이 작업을 수행할 수 없습니다.",
     INVITATION_LOCAL_COMMIT_FAILED: "사용자 설정 상태를 반영하지 못했습니다. 계정은 활성화되지 않았습니다.",
@@ -222,11 +228,15 @@ export function invitationErrorMessage(error: unknown): string {
   return code && messages[code] ? messages[code] : "사용자 관리 요청을 안전하게 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
 }
 
-export function invitationAcceptanceError(error: unknown): { message: string; retryable: boolean; activeSession: boolean } {
+export function invitationAcceptanceError(
+  error: unknown,
+  provider: WebAuthProvider = WEB_AUTH_PROVIDER
+): { message: string; retryable: boolean; activeSession: boolean } {
+  const invitationValue = provider === "supabase" ? "초대 링크" : "설정 코드";
   const code = apiErrorCode(error);
   if (code === "ACTIVE_SESSION_PRESENT") {
     return {
-      message: "다른 계정으로 이미 로그인되어 있어 설정 코드를 수락하지 않았습니다. 현재 계정에서 로그아웃하거나 시크릿 창에서 다시 여세요.",
+      message: `다른 계정으로 이미 로그인되어 있어 ${invitationValue}를 수락하지 않았습니다. 현재 계정에서 로그아웃하거나 시크릿 창에서 다시 여세요.`,
       retryable: true,
       activeSession: true
     };
@@ -240,32 +250,49 @@ export function invitationAcceptanceError(error: unknown): { message: string; re
   }
   return {
     message: code === "INVITATION_INVALID_OR_EXPIRED"
-      ? "설정 코드가 만료되었거나 이미 사용되었습니다. 총관리자에게 새 코드를 요청해 주세요."
-      : "설정 코드를 확인하지 못했습니다. 잠시 후 다시 시도하거나 총관리자에게 문의해 주세요.",
+      ? `${invitationValue}가 만료되었거나 이미 사용되었습니다. 총관리자에게 새 ${provider === "supabase" ? "초대를" : "코드를"} 요청해 주세요.`
+      : `${invitationValue}를 확인하지 못했습니다. 잠시 후 다시 시도하거나 총관리자에게 문의해 주세요.`,
     retryable: code === "AUTH_PROVIDER_UNAVAILABLE",
     activeSession: false
   };
 }
 
-export function passwordErrorMessage(error: unknown): string {
+export function passwordErrorMessage(
+  error: unknown,
+  provider: WebAuthProvider = WEB_AUTH_PROVIDER
+): string {
   const code = apiErrorCode(error);
   if (code === "PASSWORD_POLICY_INVALID") return "비밀번호 정책을 충족하지 않습니다. 12자 이상으로 다시 입력해 주세요.";
-  if (code === "ONBOARDING_SESSION_REQUIRED") return "최초 설정 세션이 만료되었습니다. 총관리자에게 새 설정 코드를 요청해 주세요.";
+  if (code === "ONBOARDING_SESSION_REQUIRED") return provider === "supabase"
+    ? "초대 설정 세션이 만료되었습니다. 총관리자에게 새 초대를 요청해 주세요."
+    : "최초 설정 세션이 만료되었습니다. 총관리자에게 새 설정 코드를 요청해 주세요.";
   if (code === "PASSWORD_PROVIDER_UNAVAILABLE") return "비밀번호 설정을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
   if (code === "PASSWORD_LOCAL_COMMIT_FAILED") return "비밀번호 설정 뒤 계정 활성화에 실패했습니다. 업무 접근은 계속 차단되어 있습니다.";
   if (error instanceof ApiError && error.status === 429) return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
   return "비밀번호를 설정하지 못했습니다. 잠시 후 다시 시도해 주세요.";
 }
 
-export function inviteStatusLabel(status: InviteStatus) {
-  return {
+export function inviteStatusLabel(
+  status: InviteStatus,
+  provider: WebAuthProvider = WEB_AUTH_PROVIDER
+) {
+  const localLabels = {
     PENDING_PROVIDER: "설정 요청 처리 중",
     INVITED: "설정 코드 발급됨",
     VERIFIED_PENDING_PASSWORD: "비밀번호 설정 대기",
     ACTIVE: "활성화 완료",
     RECONCILE_REQUIRED: "설정 확인 필요",
     CANCELLED: "설정 요청 취소"
-  }[status];
+  } as const;
+  const supabaseLabels = {
+    PENDING_PROVIDER: "초대 처리 중",
+    INVITED: "초대 발송됨",
+    VERIFIED_PENDING_PASSWORD: "비밀번호 설정 대기",
+    ACTIVE: "활성화 완료",
+    RECONCILE_REQUIRED: "초대 확인 필요",
+    CANCELLED: "초대 취소"
+  } as const;
+  return (provider === "supabase" ? supabaseLabels : localLabels)[status];
 }
 
 export function takeInvitationTokenHash(

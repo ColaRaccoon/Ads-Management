@@ -38,20 +38,38 @@ export class DashboardMetricsService {
     const firstDayRange = { fromDate: range.fromDate, toDate: range.fromDate };
     const lastDayRange = { fromDate: range.toDate, toDate: range.toDate };
 
-    const [previousDay, previousSamePeriod, firstDay, lastDay] = await Promise.all([
-      this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(previousDayRange.fromDate, previousDayRange.toDate, deliveryStatus, client)
-      ),
-      this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(previousSamePeriodRange.fromDate, previousSamePeriodRange.toDate, deliveryStatus, client)
-      ),
-      this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(firstDayRange.fromDate, firstDayRange.toDate, deliveryStatus, client)
-      ),
-      this.decorationService.aggregate(
-        await this.decorationService.decoratedMetrics(lastDayRange.fromDate, lastDayRange.toDate, deliveryStatus, client)
+    const previousDay = this.decorationService.aggregate(
+      await this.decorationService.decoratedMetrics(
+        previousDayRange.fromDate,
+        previousDayRange.toDate,
+        deliveryStatus,
+        client
       )
-    ]);
+    );
+    const previousSamePeriod = this.decorationService.aggregate(
+      await this.decorationService.decoratedMetrics(
+        previousSamePeriodRange.fromDate,
+        previousSamePeriodRange.toDate,
+        deliveryStatus,
+        client
+      )
+    );
+    const firstDay = this.decorationService.aggregate(
+      await this.decorationService.decoratedMetrics(
+        firstDayRange.fromDate,
+        firstDayRange.toDate,
+        deliveryStatus,
+        client
+      )
+    );
+    const lastDay = this.decorationService.aggregate(
+      await this.decorationService.decoratedMetrics(
+        lastDayRange.fromDate,
+        lastDayRange.toDate,
+        deliveryStatus,
+        client
+      )
+    );
 
     return {
       selectedPeriod: {

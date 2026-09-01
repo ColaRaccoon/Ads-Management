@@ -15,4 +15,31 @@ describe("LocalAuthMaintenanceService", () => {
     expect(calls).toHaveLength(4);
     expect(JSON.stringify(calls)).not.toContain("securityAuditEvent");
   });
+
+  it("does not schedule or call local pruning under Supabase cloud Auth", async () => {
+    vi.useFakeTimers();
+    try {
+      const deleteMany = vi.fn();
+      const prisma = {
+        appAuthSession: { deleteMany },
+        localAccountSetupToken: { deleteMany },
+        securityRateLimitBucket: { deleteMany },
+        localEdgeRequestNonce: { deleteMany },
+        $transaction: vi.fn()
+      };
+      const service = new LocalAuthMaintenanceService(
+        prisma as never,
+        { provider: "supabase" } as never
+      );
+
+      service.onModuleInit();
+      expect(vi.getTimerCount()).toBe(0);
+      await vi.advanceTimersByTimeAsync(12 * 60 * 60 * 1_000);
+      await service.prune();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(deleteMany).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

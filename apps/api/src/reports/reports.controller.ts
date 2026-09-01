@@ -4,12 +4,14 @@ import { ReportsService } from "./reports.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
 import { ExportReportDto, ReportParamDto } from "./dto/report-transport.dto";
+import { HeavyOperation } from "../common/heavy-operation";
 
 @Controller("reports")
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Post("export")
+  @HeavyOperation()
   @RequirePermissions("reports.generate")
   export(
     @Body() body: ExportReportDto,

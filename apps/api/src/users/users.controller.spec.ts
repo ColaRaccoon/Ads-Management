@@ -62,6 +62,34 @@ describe("UsersController", () => {
     expect(security.assertCsrfMutation).toHaveBeenCalledTimes(3);
   });
 
+  it("never invokes local user flows when Supabase Auth is selected", async () => {
+    const users = { invite: vi.fn(async () => ({ id: "cloud-user" })) };
+    const security = { assertCsrfMutation: vi.fn(async () => undefined) };
+    const localUsers = {
+      invite: vi.fn(),
+      resetPassword: vi.fn()
+    };
+    const controller = new UsersController(
+      users as never,
+      security as never,
+      { provider: "supabase" } as never,
+      localUsers as never
+    );
+
+    await expect(controller.invite(
+      { email: "cloud@example.com", name: "Cloud", role: AppRole.USER },
+      actor,
+      request
+    )).resolves.toMatchObject({ id: "cloud-user" });
+    await expect(controller.resetPassword(
+      "22222222-2222-4222-8222-222222222222",
+      actor,
+      request
+    )).rejects.toMatchObject({ code: "INVALID_USER_TRANSITION", status: 409 });
+    expect(localUsers.invite).not.toHaveBeenCalled();
+    expect(localUsers.resetPassword).not.toHaveBeenCalled();
+  });
+
   it("rejects unknown invitation fields under the endpoint strict DTO contract", async () => {
     const pipe = new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true });
     await expect(pipe.transform({
