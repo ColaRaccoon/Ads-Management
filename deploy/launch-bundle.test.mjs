@@ -161,6 +161,7 @@ test("ships a single hardened 1GB service without historical host artifacts", as
   assert.doesNotMatch(runtimeStage, /deploy\/(?:local|windows)|edge\.Dockerfile/);
   expectNoProductionCli(runtimeStage);
   assert.match(dockerfile, /find apps\/web\/\.next\/standalone -type f -name '\*\.map' -delete/);
+  assert.match(dockerfile, /npm prune --omit=dev --legacy-peer-deps/);
   assert.equal((compose.match(/^  [a-z][a-z0-9_-]*:\s*$/gm) ?? []).length, 1);
   assert.match(compose, /"127\.0\.0\.1:3200:8000"/);
   assert.doesNotMatch(compose, /(?:^|:)4200:4200(?:$|\s|\")/m);
