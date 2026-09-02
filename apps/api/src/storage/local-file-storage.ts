@@ -1,9 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { access, link, lstat, mkdir, open, realpath, rm, statfs } from "node:fs/promises";
+import { access, link, lstat, mkdir, open, readdir, realpath, rm, statfs } from "node:fs/promises";
+import type { FileHandle } from "node:fs/promises";
 import path from "node:path";
-import { Readable, Transform } from "node:stream";
-import { pipeline } from "node:stream/promises";
+import { Readable } from "node:stream";
+import { finished } from "node:stream/promises";
 import {
   FileStorage,
   FileStoragePutInput,
@@ -20,9 +21,11 @@ export class LocalFileStorage implements FileStorage {
   readonly provider = "local";
   readonly rootPath: string;
   private readonly windows?: WindowsNtfsFileStorage;
+  private readonly waitForConcurrentPublish: (milliseconds: number) => Promise<void>;
 
-  constructor(rootPath: string) {
+  constructor(rootPath: string, options: LocalFileStorageOptions = {}) {
     this.rootPath = path.resolve(rootPath);
+    this.waitForConcurrentPublish = options.waitForConcurrentPublish ?? wait;
     if (process.platform === "win32") this.windows = new WindowsNtfsFileStorage(this.rootPath);
   }
 
@@ -49,55 +52,39 @@ export class LocalFileStorage implements FileStorage {
     if (this.windows) return this.windows.put({ ...input, key });
     const targetPath = await this.safeTargetPath(key, true);
     const temporaryPath = path.join(path.dirname(targetPath), `.pending-${randomUUID()}`);
-    const hash = createHash("sha256");
-    let size = 0;
     const limit = checkedLimit(input.maxBytes);
-    const integrity = new Transform({
-      transform(chunk: Buffer | string, _encoding, callback) {
-        const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-        size += bytes.length;
-        if (size > limit) {
-          callback(new StorageObjectTooLargeError());
-          return;
-        }
-        hash.update(bytes);
-        callback(null, bytes);
-      }
-    });
 
-    try {
-      const pending = await open(
-        temporaryPath,
-        constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowFlag(),
-        0o600
-      );
-      try {
-        await pipeline(
-          Buffer.isBuffer(input.body) ? Readable.from(input.body) : input.body,
-          integrity,
-          pending.createWriteStream({ autoClose: false })
+    return withDurablySynchronizedPendingDirectory(
+      path.dirname(targetPath),
+      temporaryPath,
+      async ({ syncPublishedDirectory }) => {
+        const pending = await open(
+          temporaryPath,
+          constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowFlag(),
+          0o600
         );
-        await pending.sync();
-      } finally {
-        await pending.close();
+        const { hash: digest, size } = await writeAndSyncOwnedPendingFile(
+          pending,
+          Buffer.isBuffer(input.body) ? Readable.from([input.body]) : input.body,
+          limit
+        );
+        if (input.expectedHashSha256 && digest !== input.expectedHashSha256.toLowerCase()) {
+          throw new StorageIntegrityError();
+        }
+        try {
+          await link(temporaryPath, targetPath);
+        } catch (error) {
+          if (!isAlreadyExists(error)) throw error;
+          await this.regularFileStatAfterConcurrentPublish(targetPath);
+          const stored = await this.hashFile(key, targetPath, input.maxBytes);
+          if (stored.hash !== digest || stored.size !== size) throw new StorageIntegrityError();
+          return stored;
+        }
+        await syncPublishedDirectory();
+        await rm(temporaryPath, { force: false });
+        return { key, hash: digest, size };
       }
-      const digest = hash.digest("hex");
-      if (input.expectedHashSha256 && digest !== input.expectedHashSha256.toLowerCase()) {
-        throw new StorageIntegrityError();
-      }
-      try {
-        await link(temporaryPath, targetPath);
-      } catch (error) {
-        if (!isAlreadyExists(error)) throw error;
-        await this.regularFileStat(targetPath);
-        const stored = await this.hashFile(key, targetPath, input.maxBytes);
-        if (stored.hash !== digest || stored.size !== size) throw new StorageIntegrityError();
-        return stored;
-      }
-      return { key, hash: digest, size };
-    } finally {
-      await rm(temporaryPath, { force: true }).catch(() => undefined);
-    }
+    );
   }
 
   async getStream(key: string) {
@@ -183,12 +170,36 @@ export class LocalFileStorage implements FileStorage {
     return opened.metadata;
   }
 
+  private async regularFileStatAfterConcurrentPublish(targetPath: string) {
+    const attempts = 25;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        return await this.regularFileStat(targetPath);
+      } catch (error) {
+        if (!(error instanceof MultipleLinkStorageError)) throw error;
+        const pendingLink = await hasMatchingPendingLink(targetPath, error);
+        if (!pendingLink) {
+          // The winning writer may have unlinked its pending name between stat and directory inspection.
+          try { return await this.regularFileStat(targetPath); }
+          catch (confirmed) {
+            if (confirmed instanceof MultipleLinkStorageError) throw confirmed;
+            throw confirmed;
+          }
+        }
+        if (attempt === attempts - 1) throw error;
+        await this.waitForConcurrentPublish(10);
+      }
+    }
+    throw new InvalidStorageKeyError();
+  }
+
   private async openRegularFile(targetPath: string) {
     let handle;
     try {
       handle = await open(targetPath, constants.O_RDONLY | noFollowFlag());
       const metadata = await handle.stat();
-      if (!metadata.isFile() || metadata.nlink !== 1) throw new InvalidStorageKeyError();
+      if (!metadata.isFile()) throw new InvalidStorageKeyError();
+      if (metadata.nlink !== 1) throw new MultipleLinkStorageError(metadata.dev, metadata.ino);
       return { handle, metadata };
     } catch (error) {
       await handle?.close().catch(() => undefined);
@@ -214,6 +225,169 @@ export class LocalFileStorage implements FileStorage {
     }
     return { key, hash: hash.digest("hex"), size };
   }
+}
+
+export type LocalFileStorageOptions = {
+  /** Test seam only: retry count and all fail-closed checks remain fixed. */
+  waitForConcurrentPublish?: (milliseconds: number) => Promise<void>;
+};
+
+type DurableDirectoryHandle = {
+  stat: () => Promise<{ isDirectory: () => boolean }>;
+  sync: () => Promise<void>;
+  close: () => Promise<void>;
+};
+
+type DurablePendingDirectoryIo = {
+  openDirectory: (parentPath: string) => Promise<DurableDirectoryHandle>;
+  removePending: (temporaryPath: string) => Promise<void>;
+};
+
+const defaultDurablePendingDirectoryIo: DurablePendingDirectoryIo = {
+  openDirectory: async (parentPath) => open(
+    parentPath,
+    constants.O_RDONLY | (constants.O_DIRECTORY ?? 0) | noFollowFlag()
+  ),
+  removePending: async (temporaryPath) => {
+    await rm(temporaryPath, { force: true });
+  }
+};
+
+export async function withDurablySynchronizedPendingDirectory<T>(
+  parentPath: string,
+  temporaryPath: string,
+  operation: (durability: { syncPublishedDirectory: () => Promise<void> }) => Promise<T>,
+  io: DurablePendingDirectoryIo = defaultDurablePendingDirectoryIo
+): Promise<T> {
+  const parent = await io.openDirectory(parentPath);
+  let operationFailed = false;
+  let operationFailure: unknown;
+  let result: T | undefined;
+  try {
+    const metadata = await parent.stat();
+    if (!metadata.isDirectory()) throw new InvalidStorageKeyError();
+    result = await operation({ syncPublishedDirectory: () => parent.sync() });
+  } catch (error) {
+    operationFailed = true;
+    operationFailure = error;
+  }
+
+  const durabilityFailures: unknown[] = [];
+  try { await io.removePending(temporaryPath); }
+  catch (error) { durabilityFailures.push(error); }
+  try { await parent.sync(); }
+  catch (error) { durabilityFailures.push(error); }
+  try { await parent.close(); }
+  catch (error) { durabilityFailures.push(error); }
+
+  if (operationFailed) {
+    if (durabilityFailures.length > 0) {
+      throw new AggregateError(
+        [operationFailure, ...durabilityFailures],
+        "The storage operation failed and its pending-directory durability is uncertain."
+      );
+    }
+    throw operationFailure;
+  }
+  if (durabilityFailures.length === 1) throw durabilityFailures[0];
+  if (durabilityFailures.length > 1) {
+    throw new AggregateError(durabilityFailures, "The pending-directory durability is uncertain.");
+  }
+  return result!;
+}
+
+class MultipleLinkStorageError extends InvalidStorageKeyError {
+  constructor(readonly device: number, readonly inode: number) {
+    super();
+  }
+}
+
+async function hasMatchingPendingLink(targetPath: string, target: MultipleLinkStorageError) {
+  const parent = path.dirname(targetPath);
+  const names = await readdir(parent);
+  for (const name of names) {
+    if (!name.startsWith(".pending-")) continue;
+    try {
+      const metadata = await lstat(path.join(parent, name));
+      if (metadata.isFile() && !metadata.isSymbolicLink() &&
+          metadata.dev === target.device && metadata.ino === target.inode) return true;
+    } catch (error) {
+      if (!isMissing(error)) throw error;
+    }
+  }
+  return false;
+}
+
+export async function writeAndSyncOwnedPendingFile(
+  pending: Pick<FileHandle, "write" | "sync" | "close">,
+  source: Readable,
+  maximumBytes: number
+): Promise<{ hash: string; size: number }> {
+  let size = 0;
+  let sourceCompleted = false;
+  let result: { hash: string; size: number } | undefined;
+  let iterator: AsyncIterator<unknown> | undefined;
+  let operationFailed = false;
+  let operationFailure: unknown;
+  try {
+    const limit = checkedLimit(maximumBytes);
+    const hash = createHash("sha256");
+    iterator = source[Symbol.asyncIterator]();
+    while (true) {
+      const next = await iterator.next();
+      if (next.done) {
+        sourceCompleted = true;
+        break;
+      }
+      const bytes = storageChunk(next.value);
+      if (bytes.byteLength === 0) continue;
+      if (bytes.byteLength > limit - size) throw new StorageObjectTooLargeError();
+      let chunkOffset = 0;
+      while (chunkOffset < bytes.byteLength) {
+        const write = await pending.write(
+          bytes,
+          chunkOffset,
+          bytes.byteLength - chunkOffset,
+          size + chunkOffset
+        );
+        if (!Number.isSafeInteger(write.bytesWritten) || write.bytesWritten < 1 ||
+            write.bytesWritten > bytes.byteLength - chunkOffset) {
+          throw new StorageIntegrityError();
+        }
+        chunkOffset += write.bytesWritten;
+      }
+      hash.update(bytes);
+      size += bytes.byteLength;
+    }
+    await pending.sync();
+    result = { hash: hash.digest("hex"), size };
+  } catch (error) {
+    operationFailed = true;
+    operationFailure = error;
+  }
+  if (operationFailed && !sourceCompleted) {
+    const sourceFinished = finished(source, { cleanup: true }).then(
+      () => undefined,
+      () => undefined
+    );
+    try { source.destroy(); } catch { /* Preserve the original write/read failure. */ }
+    try { await iterator?.return?.(); }
+    catch { /* Cancellation is awaited, but the primary storage failure takes precedence. */ }
+    await sourceFinished;
+  }
+  let closeFailure: unknown;
+  try { await pending.close(); }
+  catch (error) { closeFailure = error; }
+  if (operationFailed) throw operationFailure;
+  if (closeFailure !== undefined) throw closeFailure;
+  return result!;
+}
+
+function storageChunk(value: unknown): Buffer {
+  if (Buffer.isBuffer(value)) return value;
+  if (typeof value === "string") return Buffer.from(value);
+  if (value instanceof Uint8Array) return Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+  throw new StorageIntegrityError();
 }
 
 function noFollowFlag() {
@@ -255,4 +429,8 @@ function isAlreadyExists(error: unknown): error is NodeJS.ErrnoException {
 function isNoFollowViolation(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error &&
     ["ELOOP", "EMLINK"].includes(String((error as NodeJS.ErrnoException).code));
+}
+
+function wait(milliseconds: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 }

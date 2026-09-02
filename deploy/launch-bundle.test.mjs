@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
-import { readFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
-import { parseEnv } from "node:util";
+import { pathToFileURL } from "node:url";
 import {
   BUNDLE_STATES,
   CLOUD_API_PORT,
@@ -99,43 +101,35 @@ test("launch plan is non-secret evidence while child environments remain isolate
   await terminateBundle(bundle, harness, "SIGTERM");
 });
 
-test("production default derives the expected fingerprint from the compiled API validator", async () => {
-  const example = parseEnv(await readFile(new URL("./cloud/.env.example", import.meta.url), "utf8"));
-  const projectRef = "abc123def456ghi789jk";
-  const issuer = `https://${projectRef}.supabase.co/auth/v1`;
-  const env = {
-    ...example,
-    PORT: "8000",
-    API_INTERNAL_PORT: "4200",
-    RELEASE_GIT_SHA: releaseGitSha,
-    IMAGE_RELEASE_GIT_SHA: releaseGitSha,
-    DATABASE_URL: `postgresql://meta_runtime:synthetic@db.${projectRef}.supabase.co:5432/postgres?schema=public&sslmode=verify-full&connection_limit=2`,
-    SUPABASE_DATABASE_PROJECT_REF: projectRef,
-    SUPABASE_DATABASE_CONNECTION_MODE: "direct",
-    SUPABASE_DATABASE_HOST: `db.${projectRef}.supabase.co`,
-    SUPABASE_DATABASE_RUNTIME_USER: "meta_runtime",
-    SUPABASE_DATABASE_NAME: "postgres",
-    SUPABASE_DATABASE_SCHEMA: "public",
-    SUPABASE_URL: `https://${projectRef}.supabase.co`,
-    SUPABASE_PUBLISHABLE_KEY: "sb_publishable_synthetic",
-    SUPABASE_SECRET_KEY: "synthetic-provider-secret-value",
-    SUPABASE_JWT_ISSUER: issuer,
-    SUPABASE_STORAGE_BUCKET: "synthetic-private",
-    SUPABASE_STORAGE_ACCESS_TOKEN: storageJwt(issuer),
-    SUPABASE_STORAGE_TOKEN_SUBJECT: "synthetic-storage",
-    AUTH_COOKIE_NAMESPACE: "cloud-test",
-    APP_ALLOWED_ORIGINS: "https://app.example.com",
-    AUTH_INVITE_REDIRECT_ORIGIN: "https://app.example.com",
-    AUTH_SESSION_HANDLE_SECRET: "4f68a2417e7c4fb7bf0663649c671b91406f6d7986061527f5e84a7894b6e45f",
-    AUTH_AUTHORIZATION_VERSION_SECRET: "8b3ca7f1a62e49cd9058d27e183bfa645e71c328f4a09d6be2c7351f680ad942",
-    AUTH_CSRF_SECRET: "7c778290a780dd14e507ef0282c50aa5f6ee4d955e13ab76d19714226520ca44",
-    INTERNAL_PROBE_TOKEN: "aa35e635992217a3295b8690b6c4f01eeb3e6e309ebf9a9e7eb86c42e0f2cf9d",
-    RUNTIME_DATABASE_ID: "synthetic-db",
-    RUNTIME_STORAGE_ID: "synthetic-storage"
-  };
-  const plan = createLaunchPlan(env);
+test("clean-source tests inject the fingerprint while the production default fails closed without compiled output", async (t) => {
+  const env = cloudEnvironment();
+  let resolverEnvironment;
+  const plan = createLaunchPlan(env, {
+    resolveRuntimeFingerprint(candidate) {
+      resolverEnvironment = candidate;
+      return runtimeConfigFingerprint;
+    }
+  });
+  assert.notEqual(resolverEnvironment, env);
+  assert.equal(resolverEnvironment.INTERNAL_PROBE_TOKEN, probeToken);
+  assert.equal(plan.readiness.runtimeConfigFingerprint, runtimeConfigFingerprint);
   assert.match(plan.readiness.runtimeConfigFingerprint, /^[a-f0-9]{64}$/u);
   assert.equal(JSON.stringify(plan).includes(env.INTERNAL_PROBE_TOKEN), false);
+
+  const isolatedRoot = await mkdtemp(path.join(tmpdir(), "meta-launch-clean-source-"));
+  t.after(() => rm(isolatedRoot, { recursive: true, force: true }));
+  const isolatedDeploy = path.join(isolatedRoot, "deploy");
+  const isolatedCloud = path.join(isolatedDeploy, "cloud");
+  await mkdir(isolatedCloud, { recursive: true });
+  await Promise.all([
+    copyFile(new URL("./launch-bundle.mjs", import.meta.url), path.join(isolatedDeploy, "launch-bundle.mjs")),
+    copyFile(new URL("./cloud/ready-barrier.mjs", import.meta.url), path.join(isolatedCloud, "ready-barrier.mjs"))
+  ]);
+  const isolatedLauncher = await import(pathToFileURL(path.join(isolatedDeploy, "launch-bundle.mjs")).href);
+  assert.throws(
+    () => isolatedLauncher.createLaunchPlan(env),
+    /compiled runtime environment validator is unavailable/
+  );
 });
 
 test("spawns API first and does not spawn Web until exact protected-ready success", async () => {
@@ -406,15 +400,4 @@ function response(status, payload) {
 
 function findLogCode(records, event) {
   return records.find((record) => record.event === event)?.code;
-}
-
-function storageJwt(issuer) {
-  const encode = (value) => Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
-  return `${encode({ alg: "HS256", typ: "JWT" })}.${encode({
-    iss: issuer,
-    aud: "authenticated",
-    sub: "synthetic-storage",
-    role: "storage_app",
-    exp: Math.floor(Date.now() / 1_000) + 7 * 24 * 60 * 60
-  })}.synthetic-signature`;
 }

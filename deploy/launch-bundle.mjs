@@ -372,7 +372,12 @@ function fixedHex(value, length, key) {
 }
 
 function deriveRuntimeConfigFingerprint(env) {
-  const module = require("../apps/api/dist/common/http-security.config.js");
+  let module;
+  try {
+    module = require("../apps/api/dist/common/http-security.config.js");
+  } catch (error) {
+    throw new Error("compiled runtime environment validator is unavailable.", { cause: error });
+  }
   if (typeof module.validateRuntimeEnvironment !== "function") {
     throw new Error("compiled runtime environment validator is unavailable.");
   }

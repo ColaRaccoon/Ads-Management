@@ -300,18 +300,51 @@ describe("Cloudflare R2 direct backup provider", () => {
     const fixture = artifacts();
     const counters = { prisma: 0, source: 0, dump: 0, r2: 0 };
     const input = directInput(fixture, counters);
-    input.dependencies = {
-      ...input.dependencies,
-      createR2Io: undefined,
-      createPrismaIo: async () => {
-        counters.prisma += 1;
-        return prismaIo(counters);
-      }
+    const dependencies = input.dependencies as unknown as Record<string, unknown>;
+    dependencies.createR2Io = undefined;
+    dependencies.loadR2Module = async () => { throw new Error("synthetic missing module"); };
+    dependencies.createPrismaIo = async () => {
+      counters.prisma += 1;
+      return prismaIo(counters);
     };
     await expect(createCloudflareR2BackupAdapter(input)).rejects.toThrow("BACKUP_R2_MODULE_UNAVAILABLE");
+    expect(counters.prisma).toBe(0);
     expect(counters.source).toBe(0);
     expect(counters.dump).toBe(0);
     expect(counters.r2).toBe(0);
+  });
+
+  it("rejects invalid injected S3 module shapes and accepts the exact four-constructor contract", async () => {
+    class FakeCommand { constructor(readonly input: unknown) {} }
+    const invalidModules: unknown[] = [
+      null,
+      {},
+      { S3Client: class {}, HeadObjectCommand: FakeCommand, PutObjectCommand: FakeCommand, GetObjectCommand: FakeCommand }
+    ];
+    for (const loaded of invalidModules) {
+      const fixture = artifacts();
+      const counters = { prisma: 0, source: 0, dump: 0, r2: 0 };
+      const input = directInput(fixture, counters);
+      const dependencies = input.dependencies as unknown as Record<string, unknown>;
+      dependencies.createR2Io = undefined;
+      dependencies.loadR2Module = async () => loaded;
+      await expect(createCloudflareR2BackupAdapter(input)).rejects.toThrow("BACKUP_R2_MODULE_INVALID");
+      expect(counters).toEqual({ prisma: 0, source: 0, dump: 0, r2: 0 });
+    }
+
+    const fixture = artifacts();
+    const counters = { prisma: 0, source: 0, dump: 0, r2: 0 };
+    const input = directInput(fixture, counters);
+    const dependencies = input.dependencies as unknown as Record<string, unknown>;
+    dependencies.createR2Io = undefined;
+    dependencies.loadR2Module = async () => ({
+      S3Client: class { send = async () => ({}); },
+      HeadObjectCommand: FakeCommand,
+      PutObjectCommand: FakeCommand,
+      GetObjectCommand: FakeCommand
+    });
+    await expect(createCloudflareR2BackupAdapter(input)).resolves.toHaveProperty("adapter");
+    expect(counters).toEqual({ prisma: 1, source: 0, dump: 0, r2: 0 });
   });
 
   it("writes encrypted DB/object envelopes no-overwrite, persists manifest exclusively, and emits only a release request", async () => {

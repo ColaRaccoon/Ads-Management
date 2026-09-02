@@ -160,6 +160,7 @@ export type DirectBackupDependencies = {
     accessKeyId: string;
     secretAccessKey: string;
   }) => Promise<R2ObjectIo>;
+  loadR2Module?: () => Promise<unknown>;
   readSourceBody?: (input: {
     target: CloudTargetBinding;
     bucket: string;
@@ -585,7 +586,10 @@ export async function createCloudflareR2BackupAdapter(input: {
     throw new Error("BACKUP_DATABASE_CHUNK_SIZE_INVALID");
   }
 
-  const r2 = await (input.dependencies?.createR2Io ?? createDefaultR2Io)({
+  const createR2Io = input.dependencies?.createR2Io ?? ((request) => createDefaultR2Io(request, {
+    loadModule: input.dependencies?.loadR2Module
+  }));
+  const r2 = await createR2Io({
     binding,
     accessKeyId: input.r2AccessKeyId,
     secretAccessKey: input.r2SecretAccessKey
@@ -806,25 +810,41 @@ async function createDefaultR2Io(input: {
   binding: R2ProviderBinding;
   accessKeyId: string;
   secretAccessKey: string;
-}): Promise<R2ObjectIo> {
-  const moduleName = "@aws-sdk/client-s3";
-  let sdk: Record<string, new (...args: never[]) => unknown>;
-  try { sdk = await import(moduleName) as unknown as typeof sdk; } catch { throw new Error("BACKUP_R2_MODULE_UNAVAILABLE"); }
+}, dependencies: { loadModule?: () => Promise<unknown> } = {}): Promise<R2ObjectIo> {
+  let loaded: unknown;
+  try {
+    const exactModuleName = "@aws-sdk/client-s3";
+    loaded = await (dependencies.loadModule ?? (() => import(exactModuleName)))();
+  } catch {
+    throw new Error("BACKUP_R2_MODULE_UNAVAILABLE");
+  }
+  if (typeof loaded !== "object" || loaded === null) throw new Error("BACKUP_R2_MODULE_INVALID");
+  const sdk = loaded as Record<string, unknown>;
   const S3Client = sdk.S3Client;
   const HeadObjectCommand = sdk.HeadObjectCommand;
   const PutObjectCommand = sdk.PutObjectCommand;
   const GetObjectCommand = sdk.GetObjectCommand;
-  if (!S3Client || !HeadObjectCommand || !PutObjectCommand || !GetObjectCommand) throw new Error("BACKUP_R2_MODULE_INVALID");
-  const client = new S3Client({
+  if (typeof S3Client !== "function" || typeof HeadObjectCommand !== "function" ||
+      typeof PutObjectCommand !== "function" || typeof GetObjectCommand !== "function") {
+    throw new Error("BACKUP_R2_MODULE_INVALID");
+  }
+  type S3Constructor = new (input: unknown) => unknown;
+  const Client = S3Client as unknown as S3Constructor;
+  const client = new Client({
     endpoint: input.binding.destination.endpoint,
     region: "auto",
     forcePathStyle: true,
     credentials: { accessKeyId: input.accessKeyId, secretAccessKey: input.secretAccessKey }
-  } as never) as unknown as { send(command: unknown): Promise<Record<string, unknown>> };
+  } as never) as unknown as { send?: (command: unknown) => Promise<Record<string, unknown>> };
+  if (!client || typeof client.send !== "function") throw new Error("BACKUP_R2_MODULE_INVALID");
+  const send = client.send.bind(client);
+  const Head = HeadObjectCommand as S3Constructor;
+  const Put = PutObjectCommand as S3Constructor;
+  const Get = GetObjectCommand as S3Constructor;
   return {
     inspect: async (key) => {
       try {
-        await client.send(new HeadObjectCommand({ Bucket: input.binding.destination.bucket, Key: key } as never));
+        await send(new Head({ Bucket: input.binding.destination.bucket, Key: key }));
         return "FOUND";
       } catch (error) {
         const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
@@ -834,13 +854,13 @@ async function createDefaultR2Io(input: {
     },
     putNoOverwrite: async (key, body) => {
       try {
-        await client.send(new PutObjectCommand({
+        await send(new Put({
           Bucket: input.binding.destination.bucket,
           Key: key,
           Body: body,
           ContentType: "application/json",
           IfNoneMatch: "*"
-        } as never));
+        }));
       } catch (error) {
         const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
         if (status === 409 || status === 412) throw new Error("BACKUP_R2_NO_OVERWRITE_VIOLATION");
@@ -848,7 +868,7 @@ async function createDefaultR2Io(input: {
       }
     },
     read: async (key) => {
-      const response = await client.send(new GetObjectCommand({ Bucket: input.binding.destination.bucket, Key: key } as never));
+      const response = await send(new Get({ Bucket: input.binding.destination.bucket, Key: key }));
       return readBoundedR2GetResponse(response, key);
     }
   };
