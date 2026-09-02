@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "rootDir": ".",
+    "outDir": "../dist-maintenance",
+    "types": ["node"],
+    "noEmit": false,
+    "declaration": false,
+    "sourceMap": false,
+    "incremental": false
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.spec.ts", "../dist-maintenance", "../node_modules"]
+}

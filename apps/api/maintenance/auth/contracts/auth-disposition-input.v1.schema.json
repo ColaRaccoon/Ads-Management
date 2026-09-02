@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://meta-ads-performance.invalid/contracts/auth-disposition-input.v1.schema.json",
+  "title": "Protected cloud Auth user disposition input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "manifestId", "target", "entries"],
+  "properties": {
+    "version": { "const": "auth-disposition-input/v1" },
+    "manifestId": { "$ref": "#/$defs/opaqueId" },
+    "target": { "$ref": "#/$defs/target" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "opaqueId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$" },
+    "nullableOpaqueId": { "oneOf": [{ "$ref": "#/$defs/opaqueId" }, { "type": "null" }] },
+    "email": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 254,
+      "pattern": "^[!-~]+@[!-~]+$"
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entryId", "action", "appUserId", "normalizedEmail", "providerUserId",
+        "expectedLinkedProviderUserId", "expectedAuthzVersion", "desiredRole", "desiredActive"
+      ],
+      "properties": {
+        "entryId": { "$ref": "#/$defs/opaqueId" },
+        "action": { "enum": ["KEEP", "BOOTSTRAP_SUPER_ADMIN", "LINK", "RE_INVITE", "DISABLE"] },
+        "appUserId": { "$ref": "#/$defs/nullableOpaqueId" },
+        "normalizedEmail": { "$ref": "#/$defs/email" },
+        "providerUserId": { "$ref": "#/$defs/nullableOpaqueId" },
+        "expectedLinkedProviderUserId": { "$ref": "#/$defs/nullableOpaqueId" },
+        "expectedAuthzVersion": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+            { "type": "null" }
+          ]
+        },
+        "desiredRole": { "enum": ["SUPER_ADMIN", "ADMIN", "USER", "GUEST"] },
+        "desiredActive": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "const": "BOOTSTRAP_SUPER_ADMIN" } }, "required": ["action"] },
+          "then": {
+            "properties": {
+              "desiredRole": { "const": "SUPER_ADMIN" },
+              "desiredActive": { "const": true }
+            }
+          }
+        }
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version", "environmentId", "environmentClass", "projectRef", "supabaseOrigin",
+        "database", "releaseGitSha", "issuedAt", "expiresAt"
+      ],
+      "properties": {
+        "version": { "const": "cloud-target-binding/v1" },
+        "environmentId": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,62}$" },
+        "environmentClass": { "enum": ["staging", "production"] },
+        "projectRef": { "type": "string", "pattern": "^[a-z]{20}$" },
+        "supabaseOrigin": { "type": "string", "pattern": "^https://[a-z]{20}\\.supabase\\.co$" },
+        "database": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "connectionMode", "host", "port", "name", "schema", "loginUser",
+            "expectedCurrentUser", "requiredRole", "sslMode", "tlsServerName"
+          ],
+          "properties": {
+            "connectionMode": { "enum": ["direct", "session_pooler"] },
+            "host": { "type": "string", "minLength": 1, "maxLength": 255 },
+            "port": { "const": 5432 },
+            "name": { "type": "string", "pattern": "^[a-z_][a-z0-9_]{0,62}$" },
+            "schema": { "type": "string", "pattern": "^[a-z_][a-z0-9_]{0,62}$" },
+            "loginUser": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]{0,127}$" },
+            "expectedCurrentUser": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]{0,127}$" },
+            "requiredRole": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]{0,127}$" },
+            "sslMode": { "const": "verify-full" },
+            "tlsServerName": { "type": "string", "minLength": 1, "maxLength": 255 }
+          }
+        },
+        "releaseGitSha": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

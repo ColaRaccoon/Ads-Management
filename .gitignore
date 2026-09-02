@@ -5,6 +5,9 @@ node_modules/
 .next/
 dist/
 coverage/
+apps/e2e/test-results/
+apps/e2e/playwright-report/
+apps/e2e/.playwright/
 storage/uploads/*
 storage/reports/*
 apps/api/storage/uploads/*

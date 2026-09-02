@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://meta-ads-performance.invalid/contracts/auth-disposition-plan.v1.schema.json",
+  "title": "Redacted cloud Auth user disposition plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version", "planId", "manifestId", "targetSha256", "projectRef", "releaseGitSha", "manifestBinding",
+    "mode", "entries", "counts"
+  ],
+  "properties": {
+    "version": { "const": "auth-disposition-plan/v1" },
+    "planId": { "$ref": "#/$defs/sha256" },
+    "manifestId": { "$ref": "#/$defs/opaqueId" },
+    "targetSha256": { "$ref": "#/$defs/sha256" },
+    "projectRef": { "type": "string", "pattern": "^[a-z]{20}$" },
+    "releaseGitSha": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+    "manifestBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "keyId", "value"],
+      "properties": {
+        "algorithm": { "const": "HMAC-SHA256" },
+        "keyId": { "$ref": "#/$defs/opaqueId" },
+        "value": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "mode": { "const": "DRY_RUN" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entryId", "action", "outcome", "code"],
+        "properties": {
+          "entryId": { "$ref": "#/$defs/opaqueId" },
+          "action": { "enum": ["KEEP", "BOOTSTRAP_SUPER_ADMIN", "LINK", "RE_INVITE", "DISABLE"] },
+          "outcome": { "enum": ["READY", "UNCHANGED", "BLOCKED"] },
+          "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,80}$" }
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready", "unchanged", "blocked"],
+      "properties": {
+        "ready": { "type": "integer", "minimum": 0 },
+        "unchanged": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "opaqueId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

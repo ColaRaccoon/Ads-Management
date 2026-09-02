@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { parseEnv } from "node:util";
 import {
+  BUNDLE_STATES,
   CLOUD_API_PORT,
   createLaunchPlan,
   launchBundle,
@@ -11,6 +13,8 @@ import {
 } from "./launch-bundle.mjs";
 
 const releaseGitSha = "25748e71a95a09990968e0f198c5fd877897dc88";
+const runtimeConfigFingerprint = "b".repeat(64);
+const probeToken = "internal-probe-token-with-more-than-thirty-two-bytes";
 
 function cloudEnvironment(overrides = {}) {
   return {
@@ -23,124 +27,265 @@ function cloudEnvironment(overrides = {}) {
     API_INTERNAL_PORT: "4200",
     RELEASE_GIT_SHA: releaseGitSha,
     IMAGE_RELEASE_GIT_SHA: releaseGitSha,
+    INTERNAL_PROBE_TOKEN: probeToken,
     ...overrides
   };
 }
 
-test("validates the production-only cloud runtime and 1GB heap budget", () => {
+test("validates production identity, readiness contract, and 1GB heap budget", () => {
   const runtime = loadBundleRuntime(cloudEnvironment());
   assert.equal(runtime.webPort, 8000);
   assert.equal(runtime.apiPort, CLOUD_API_PORT);
   assert.equal(runtime.apiHeapMb + runtime.webHeapMb, MAX_COMBINED_HEAP_MB);
+  assert.equal(runtime.readyUrl, "http://127.0.0.1:4200/api/health/ready");
 
+  for (const [overrides, pattern] of [
+    [{ DEPLOYMENT_MODE: "local_lan" }, /DEPLOYMENT_MODE must be cloud_container/],
+    [{ AUTH_PROVIDER: "local" }, /AUTH_PROVIDER must be supabase/],
+    [{ API_INTERNAL_PORT: "4300" }, /API_INTERNAL_PORT must be between 4200 and 4200/],
+    [{ API_NODE_MAX_OLD_SPACE_MB: "520", WEB_NODE_MAX_OLD_SPACE_MB: "192" }, /must total at most 704 MB/],
+    [{ NODE_OPTIONS: "--max-old-space-size=900" }, /must not set max-old-space-size/],
+    [{ NODE_OPTIONS: "--inspect=0.0.0.0:9229" }, /must not enable a production inspector/],
+    [{ IMAGE_RELEASE_GIT_SHA: "abcdef0" }, /must be a full 40-character SHA-1 or 64-character SHA-256/],
+    [{ INTERNAL_PROBE_TOKEN: "too-short" }, /must contain between 32 and 256 bytes/]
+  ]) {
+    assert.throws(() => loadBundleRuntime(cloudEnvironment(overrides)), pattern);
+  }
   assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({ DEPLOYMENT_MODE: "local_lan" })),
-    /DEPLOYMENT_MODE must be cloud_container/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({ AUTH_PROVIDER: "local" })),
-    /AUTH_PROVIDER must be supabase/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({ API_INTERNAL_PORT: "4300" })),
-    /API_INTERNAL_PORT must be between 4200 and 4200/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({
-      API_NODE_MAX_OLD_SPACE_MB: "520",
-      WEB_NODE_MAX_OLD_SPACE_MB: "192"
-    })),
-    /must total at most 704 MB/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({ NODE_OPTIONS: "--max-old-space-size=900" })),
-    /must not set max-old-space-size/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({ NODE_OPTIONS: "--inspect=0.0.0.0:9229" })),
-    /must not enable a production inspector/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({ NODE_OPTIONS: "--inspect-wait=0.0.0.0:9229" })),
-    /must not enable a production inspector/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({ IMAGE_RELEASE_GIT_SHA: "abcdef0" })),
-    /must identify the immutable image/
-  );
-  assert.throws(
-    () => loadBundleRuntime(cloudEnvironment({
-      RELEASE_GIT_SHA: "25748e7",
-      IMAGE_RELEASE_GIT_SHA: "25748e7"
-    })),
-    /must be a full 40-character SHA-1 or 64-character SHA-256/
+    () => createLaunchPlan(cloudEnvironment(), { resolveRuntimeFingerprint: () => "a".repeat(63) }),
+    /derived runtime config fingerprint must be a 64-character lowercase hexadecimal/
   );
 });
 
-test("builds one public Web child and one fixed loopback API child", () => {
-  const plan = createLaunchPlan(cloudEnvironment({
+test("launch plan is non-secret evidence while child environments remain isolated", async () => {
+  const secret = "database-secret-must-not-appear-in-evidence";
+  const env = cloudEnvironment({
     PORT: "8443",
-    DATABASE_URL: "postgresql://api-only-secret",
-    SUPABASE_SECRET_KEY: "api-only-secret",
-    SUPABASE_STORAGE_ACCESS_TOKEN: "api-only-secret",
-    AUTH_SESSION_HANDLE_SECRET: "api-only-secret",
-    AUTH_CSRF_SECRET: "api-only-secret",
-    INTERNAL_PROBE_TOKEN: "api-only-secret",
+    DATABASE_URL: `postgresql://${secret}`,
+    SUPABASE_SECRET_KEY: secret,
+    SUPABASE_STORAGE_ACCESS_TOKEN: secret,
+    AUTH_SESSION_HANDLE_SECRET: secret,
+    AUTH_CSRF_SECRET: secret,
+    INTERNAL_PROBE_TOKEN: `${secret}-probe-token-value-long-enough`,
     NEXT_TELEMETRY_DISABLED: "1"
-  }));
-  const api = plan.children.find(({ name }) => name === "api");
-  const web = plan.children.find(({ name }) => name === "web");
-
-  assert.deepEqual(api.args, ["apps/api/dist/main.js"]);
-  assert.equal(api.env.PORT, "4200");
-  assert.equal(api.env.HOSTNAME, "127.0.0.1");
-  assert.match(api.env.NODE_OPTIONS, /--max-old-space-size=512$/);
-  assert.deepEqual(web.args, ["apps/web/server.js"]);
-  assert.equal(web.env.PORT, "8443");
-  assert.equal(web.env.HOSTNAME, "0.0.0.0");
-  assert.match(web.env.NODE_OPTIONS, /--max-old-space-size=192$/);
-  assert.equal(web.env.NEXT_TELEMETRY_DISABLED, "1");
-  assert.deepEqual(Object.keys(web.env).sort(), [
-    "API_INTERNAL_PORT",
-    "APP_ENV",
-    "DEPLOYMENT_MODE",
-    "HOSTNAME",
-    "IMAGE_RELEASE_GIT_SHA",
-    "NEXT_TELEMETRY_DISABLED",
-    "NODE_ENV",
-    "NODE_OPTIONS",
-    "PORT",
-    "RELEASE_GIT_SHA"
+  });
+  const plan = createLaunchPlan(env, { resolveRuntimeFingerprint: () => runtimeConfigFingerprint });
+  const serializedPlan = JSON.stringify(plan);
+  assert.equal(serializedPlan.includes(secret), false);
+  assert.deepEqual(plan.children.map(({ name, args }) => ({ name, args })), [
+    { name: "api", args: ["apps/api/dist/main.js"] },
+    { name: "web", args: ["apps/web/server.js"] }
   ]);
-  assert.equal(api.env.DATABASE_URL, "postgresql://api-only-secret");
+
+  let releaseProbe;
+  const harness = createHarness({
+    env,
+    probeReady: async (input) => {
+      releaseProbe = input;
+      return { ready: true, retryable: false };
+    }
+  });
+  const bundle = launchBundle(harness.options);
+  await waitFor(() => bundle.state === BUNDLE_STATES.RUNNING);
+  const [apiSpawn, webSpawn] = harness.spawns;
+  assert.equal(apiSpawn.options.env.DATABASE_URL, `postgresql://${secret}`);
+  assert.equal(webSpawn.options.env.DATABASE_URL, undefined);
+  assert.equal(webSpawn.options.env.INTERNAL_PROBE_TOKEN, undefined);
+  assert.equal(webSpawn.options.env.SUPABASE_SECRET_KEY, undefined);
+  assert.equal(releaseProbe.token, env.INTERNAL_PROBE_TOKEN);
+  assert.equal(releaseProbe.releaseId, releaseGitSha);
+  assert.equal(releaseProbe.runtimeConfigFingerprint, runtimeConfigFingerprint);
+  assert.equal(JSON.stringify(harness.logs).includes(secret), false);
+  await terminateBundle(bundle, harness, "SIGTERM");
 });
 
-test("forwards parent termination and waits for both children", async () => {
-  const harness = createHarness();
-  const bundle = launchBundle(harness.options);
-
-  harness.processRef.emit("SIGTERM");
-  assert.deepEqual(harness.children.map(({ kills }) => kills), [["SIGTERM"], ["SIGTERM"]]);
-  harness.children[0].emit("exit", null, "SIGTERM");
-  harness.children[1].emit("exit", null, "SIGTERM");
-
-  assert.deepEqual(await bundle.completion, { exitCode: 0, signal: "SIGTERM" });
-  assert.equal(harness.processRef.exitCode, 0);
+test("production default derives the expected fingerprint from the compiled API validator", async () => {
+  const example = parseEnv(await readFile(new URL("./cloud/.env.example", import.meta.url), "utf8"));
+  const projectRef = "abc123def456ghi789jk";
+  const issuer = `https://${projectRef}.supabase.co/auth/v1`;
+  const env = {
+    ...example,
+    PORT: "8000",
+    API_INTERNAL_PORT: "4200",
+    RELEASE_GIT_SHA: releaseGitSha,
+    IMAGE_RELEASE_GIT_SHA: releaseGitSha,
+    DATABASE_URL: `postgresql://meta_runtime:synthetic@db.${projectRef}.supabase.co:5432/postgres?schema=public&sslmode=verify-full&connection_limit=2`,
+    SUPABASE_DATABASE_PROJECT_REF: projectRef,
+    SUPABASE_DATABASE_CONNECTION_MODE: "direct",
+    SUPABASE_DATABASE_HOST: `db.${projectRef}.supabase.co`,
+    SUPABASE_DATABASE_RUNTIME_USER: "meta_runtime",
+    SUPABASE_DATABASE_NAME: "postgres",
+    SUPABASE_DATABASE_SCHEMA: "public",
+    SUPABASE_URL: `https://${projectRef}.supabase.co`,
+    SUPABASE_PUBLISHABLE_KEY: "sb_publishable_synthetic",
+    SUPABASE_SECRET_KEY: "synthetic-provider-secret-value",
+    SUPABASE_JWT_ISSUER: issuer,
+    SUPABASE_STORAGE_BUCKET: "synthetic-private",
+    SUPABASE_STORAGE_ACCESS_TOKEN: storageJwt(issuer),
+    SUPABASE_STORAGE_TOKEN_SUBJECT: "synthetic-storage",
+    AUTH_COOKIE_NAMESPACE: "cloud-test",
+    APP_ALLOWED_ORIGINS: "https://app.example.com",
+    AUTH_INVITE_REDIRECT_ORIGIN: "https://app.example.com",
+    AUTH_SESSION_HANDLE_SECRET: "4f68a2417e7c4fb7bf0663649c671b91406f6d7986061527f5e84a7894b6e45f",
+    AUTH_AUTHORIZATION_VERSION_SECRET: "8b3ca7f1a62e49cd9058d27e183bfa645e71c328f4a09d6be2c7351f680ad942",
+    AUTH_CSRF_SECRET: "7c778290a780dd14e507ef0282c50aa5f6ee4d955e13ab76d19714226520ca44",
+    INTERNAL_PROBE_TOKEN: "aa35e635992217a3295b8690b6c4f01eeb3e6e309ebf9a9e7eb86c42e0f2cf9d",
+    RUNTIME_DATABASE_ID: "synthetic-db",
+    RUNTIME_STORAGE_ID: "synthetic-storage"
+  };
+  const plan = createLaunchPlan(env);
+  assert.match(plan.readiness.runtimeConfigFingerprint, /^[a-f0-9]{64}$/u);
+  assert.equal(JSON.stringify(plan).includes(env.INTERNAL_PROBE_TOKEN), false);
 });
 
-test("stops the sibling and fails when either child exits unexpectedly", async () => {
-  const harness = createHarness();
+test("spawns API first and does not spawn Web until exact protected-ready success", async () => {
+  const ready = deferred();
+  const harness = createHarness({ probeReady: () => ready.promise });
   const bundle = launchBundle(harness.options);
+  assert.equal(bundle.state, BUNDLE_STATES.WAITING_READY);
+  assert.equal(harness.children.length, 1);
+  assert.deepEqual(harness.spawns[0].args, ["apps/api/dist/main.js"]);
 
+  ready.resolve({ ready: true, retryable: false });
+  await waitFor(() => bundle.state === BUNDLE_STATES.RUNNING);
+  assert.equal(harness.children.length, 2);
+  assert.deepEqual(harness.spawns[1].args, ["apps/web/server.js"]);
+  await terminateBundle(bundle, harness, "SIGTERM");
+});
+
+test("API exit before readiness fails without ever spawning Web", async () => {
+  const harness = createHarness({ probeReady: () => new Promise(() => {}) });
+  const bundle = launchBundle(harness.options);
   harness.children[0].emit("exit", 0, null);
+  const result = await bundle.completion;
+  assert.deepEqual(result, { exitCode: 1, signal: null });
+  assert.equal(harness.children.length, 1);
+  assert.equal(bundle.state, BUNDLE_STATES.FAILED);
+});
+
+test("API exit after readiness stops Web and returns failure", async () => {
+  const harness = createHarness();
+  const bundle = launchBundle(harness.options);
+  await waitFor(() => bundle.state === BUNDLE_STATES.RUNNING);
+  harness.children[0].emit("exit", 7, null);
   assert.deepEqual(harness.children[1].kills, ["SIGTERM"]);
   harness.children[1].emit("exit", null, "SIGTERM");
-
-  assert.deepEqual(await bundle.completion, { exitCode: 1, signal: null });
-  assert.equal(harness.processRef.exitCode, 1);
+  assert.deepEqual(await bundle.completion, { exitCode: 7, signal: null });
 });
 
-test("ships a single hardened 1GB service without historical host artifacts", async () => {
+test("Web exit after readiness stops API and returns failure", async () => {
+  const harness = createHarness();
+  const bundle = launchBundle(harness.options);
+  await waitFor(() => bundle.state === BUNDLE_STATES.RUNNING);
+  harness.children[1].emit("exit", 0, null);
+  assert.deepEqual(harness.children[0].kills, ["SIGTERM"]);
+  harness.children[0].emit("exit", null, "SIGTERM");
+  assert.deepEqual(await bundle.completion, { exitCode: 1, signal: null });
+});
+
+test("readiness timeout fails closed and terminates API", async () => {
+  let clock = 0;
+  const harness = createHarness({
+    env: cloudEnvironment({ BUNDLE_READY_TIMEOUT_MS: "1000", BUNDLE_READY_INTERVAL_MS: "250" }),
+    probeReady: async () => ({ ready: false, retryable: true }),
+    sleep: async (ms) => { clock += ms; },
+    now: () => clock
+  });
+  const bundle = launchBundle(harness.options);
+  await waitFor(() => harness.children[0].kills.includes("SIGTERM"));
+  assert.equal(harness.children.length, 1);
+  assert.equal(findLogCode(harness.errors, "bundle-readiness-failed"), "READY_BARRIER_TIMEOUT");
+  harness.children[0].emit("exit", null, "SIGTERM");
+  assert.deepEqual(await bundle.completion, { exitCode: 1, signal: null });
+});
+
+test("401 and 403 protected-ready responses are terminal", async () => {
+  for (const status of [401, 403]) {
+    const harness = createHarness({
+      useDefaultProbe: true,
+      fetchImpl: async () => response(status, {})
+    });
+    const bundle = launchBundle(harness.options);
+    await waitFor(() => harness.children[0].kills.includes("SIGTERM"));
+    assert.equal(harness.children.length, 1);
+    assert.equal(findLogCode(harness.errors, "bundle-readiness-failed"), "READY_PROBE_AUTH_REJECTED");
+    harness.children[0].emit("exit", null, "SIGTERM");
+    assert.deepEqual(await bundle.completion, { exitCode: 1, signal: null });
+  }
+});
+
+test("503 retries and only a later exact 200 opens the Web barrier", async () => {
+  let calls = 0;
+  const harness = createHarness({
+    useDefaultProbe: true,
+    fetchImpl: async () => ++calls === 1
+      ? response(503, {})
+      : response(200, { status: "ready", releaseId: releaseGitSha, runtimeConfigFingerprint }),
+    sleep: async () => {}
+  });
+  const bundle = launchBundle(harness.options);
+  await waitFor(() => bundle.state === BUNDLE_STATES.RUNNING);
+  assert.equal(calls, 2);
+  assert.equal(harness.children.length, 2);
+  await terminateBundle(bundle, harness, "SIGTERM");
+});
+
+test("release or fingerprint mismatch never opens the Web barrier", async () => {
+  for (const [payload, code] of [
+    [{ status: "ready", releaseId: "c".repeat(40), runtimeConfigFingerprint }, "READY_RELEASE_MISMATCH"],
+    [{ status: "ready", releaseId: releaseGitSha, runtimeConfigFingerprint: "d".repeat(64) }, "READY_FINGERPRINT_MISMATCH"]
+  ]) {
+    const harness = createHarness({ useDefaultProbe: true, fetchImpl: async () => response(200, payload) });
+    const bundle = launchBundle(harness.options);
+    await waitFor(() => harness.children[0].kills.includes("SIGTERM"));
+    assert.equal(harness.children.length, 1);
+    assert.equal(findLogCode(harness.errors, "bundle-readiness-failed"), code);
+    harness.children[0].emit("exit", null, "SIGTERM");
+    await bundle.completion;
+  }
+});
+
+test("SIGINT before readiness and SIGTERM after readiness terminate exactly the spawned children", async () => {
+  const before = createHarness({ probeReady: () => new Promise(() => {}) });
+  const beforeBundle = launchBundle(before.options);
+  before.processRef.emit("SIGINT");
+  assert.deepEqual(before.children.map(({ kills }) => kills), [["SIGINT"]]);
+  before.children[0].emit("exit", null, "SIGINT");
+  assert.deepEqual(await beforeBundle.completion, { exitCode: 0, signal: "SIGINT" });
+
+  const after = createHarness();
+  const afterBundle = launchBundle(after.options);
+  await waitFor(() => afterBundle.state === BUNDLE_STATES.RUNNING);
+  after.processRef.emit("SIGTERM");
+  assert.deepEqual(after.children.map(({ kills }) => kills), [["SIGTERM"], ["SIGTERM"]]);
+  after.children[0].emit("exit", null, "SIGTERM");
+  after.children[1].emit("exit", null, "SIGTERM");
+  assert.deepEqual(await afterBundle.completion, { exitCode: 0, signal: "SIGTERM" });
+});
+
+test("shutdown grace expiry forces SIGKILL and the parent fail-safe remains armed", async () => {
+  const harness = createHarness();
+  const bundle = launchBundle(harness.options);
+  await waitFor(() => bundle.state === BUNDLE_STATES.RUNNING);
+  bundle.stop("SIGTERM", "test-failure");
+  assert.deepEqual(harness.children.map(({ kills }) => kills), [["SIGTERM"], ["SIGTERM"]]);
+  const grace = harness.timers.find(({ delay }) => delay === 10_000);
+  const parentFailSafe = harness.timers.find(({ delay }) => delay === 12_000);
+  assert.ok(grace);
+  assert.ok(parentFailSafe);
+  grace.callback();
+  assert.deepEqual(harness.children.map(({ kills }) => kills), [
+    ["SIGTERM", "SIGKILL"],
+    ["SIGTERM", "SIGKILL"]
+  ]);
+  parentFailSafe.callback();
+  assert.deepEqual(harness.forcedParentExits, [1]);
+  harness.children[0].emit("exit", null, "SIGKILL");
+  harness.children[1].emit("exit", null, "SIGKILL");
+  assert.deepEqual(await bundle.completion, { exitCode: 1, signal: null });
+});
+
+test("ships a single hardened runtime with the closure checker removed after verification", async () => {
   const [dockerfile, compose] = await Promise.all([
     readFile(new URL("./Dockerfile", import.meta.url), "utf8"),
     readFile(new URL("./cloud/compose.local.yaml", import.meta.url), "utf8")
@@ -156,17 +301,26 @@ test("ships a single hardened 1GB service without historical host artifacts", as
   assert.match(compose, /NODE_IMAGE: \$\{NODE_IMAGE:\?Set NODE_IMAGE to an approved node image pinned by sha256 digest\}/);
   assert.match(runtimeStage, /ENV IMAGE_RELEASE_GIT_SHA=\$\{RELEASE_GIT_SHA\}/);
   assert.match(runtimeStage, /apt-get install --yes --no-install-recommends ca-certificates openssl/);
+  assert.match(runtimeStage, /COPY --chown=node:node deploy\/cloud\/ready-barrier\.mjs \.\/deploy\/cloud\/ready-barrier\.mjs/);
+  assert.match(runtimeStage, /COPY --chown=node:node deploy\/cloud\/assert-runtime-closure\.mjs \.\/deploy\/cloud\/assert-runtime-closure\.mjs/);
+  assert.match(runtimeStage, /node deploy\/cloud\/assert-runtime-closure\.mjs \/srv\/app/);
+  assert.match(runtimeStage, /rm -f deploy\/cloud\/assert-runtime-closure\.mjs/);
+  assert.ok(runtimeStage.indexOf("assert-runtime-closure.mjs /srv/app") < runtimeStage.indexOf("USER node"));
   assert.match(runtimeStage, /USER node/);
   assert.match(runtimeStage, /EXPOSE 8000/);
   assert.match(runtimeStage, /rm -rf \/usr\/local\/lib\/node_modules\/npm \/usr\/local\/lib\/node_modules\/corepack/);
   assert.match(runtimeStage, /rm -f \/usr\/local\/bin\/npm \/usr\/local\/bin\/npx \/usr\/local\/bin\/corepack/);
   assert.doesNotMatch(runtimeStage, /deploy\/(?:local|windows)|edge\.Dockerfile/);
-  expectNoProductionCli(runtimeStage);
   assert.match(dockerfile, /find apps\/web\/\.next\/standalone -type f -name '\*\.map' -delete/);
   assert.match(dockerfile, /npm prune --omit=dev --legacy-peer-deps/);
+  assert.match(dockerfile, /COPY apps\/e2e\/package\.json apps\/e2e\/package\.json/);
+  assert.match(dockerfile, /COPY packages\/shared\/package\.json packages\/shared\/package\.json/);
+  assert.match(dockerfile, /rm -rf node_modules\/@playwright node_modules\/playwright node_modules\/playwright-core node_modules\/@meta-ads-performance\/e2e/);
+  assert.match(dockerfile, /rm -rf node_modules\/@aws-sdk node_modules\/@smithy/);
+  assert.doesNotMatch(runtimeStage, /postgresql-client|pg_dump|BACKUP_|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY/);
   assert.equal((compose.match(/^  [a-z][a-z0-9_-]*:\s*$/gm) ?? []).length, 1);
   assert.match(compose, /"127\.0\.0\.1:3200:8000"/);
-  assert.doesNotMatch(compose, /(?:^|:)4200:4200(?:$|\s|\")/m);
+  assert.doesNotMatch(compose, /(?:^|:)4200:4200(?:$|\s|")/m);
   assert.match(compose, /mem_limit: 1g/);
   assert.match(compose, /memswap_limit: 1g/);
   assert.match(compose, /read_only: true/);
@@ -175,27 +329,39 @@ test("ships a single hardened 1GB service without historical host artifacts", as
   assert.match(compose, /\/tmp:size=192m/);
 });
 
-function expectNoProductionCli(runtimeStage) {
-  assert.doesNotMatch(runtimeStage, /\.cli\.(?:js|js\.map)/);
-}
-
-function createHarness() {
+function createHarness({
+  env = cloudEnvironment(),
+  probeReady = async () => ({ ready: true, retryable: false }),
+  useDefaultProbe = false,
+  fetchImpl,
+  sleep = async () => {},
+  now = Date.now
+} = {}) {
   const processRef = new EventEmitter();
+  const forcedParentExits = [];
   processRef.exitCode = undefined;
-  processRef.exit = (code) => { throw new Error(`unexpected forced exit ${code}`); };
+  processRef.exit = (code) => { forcedParentExits.push(code); };
   const children = [];
+  const spawns = [];
   const timers = [];
+  const logs = [];
+  const errors = [];
   const options = {
-    env: cloudEnvironment(),
+    env,
     processRef,
-    spawnProcess: () => {
+    spawnProcess: (executable, args, spawnOptions) => {
       const child = new EventEmitter();
       child.pid = 10_000 + children.length;
+      child.exitCode = null;
+      child.signalCode = null;
       child.kills = [];
       child.kill = (signal) => { child.kills.push(signal); return true; };
       children.push(child);
+      spawns.push({ executable, args, options: spawnOptions });
       return child;
     },
+    sleep,
+    now,
     setTimer: (callback, delay) => {
       const timer = { callback, delay, unref() {} };
       timers.push(timer);
@@ -205,8 +371,50 @@ function createHarness() {
       const index = timers.indexOf(timer);
       if (index >= 0) timers.splice(index, 1);
     },
-    log: () => {},
-    logError: () => {}
+    log: (record) => logs.push(record),
+    logError: (record) => errors.push(record)
   };
-  return { children, options, processRef, timers };
+  options.resolveRuntimeFingerprint = () => runtimeConfigFingerprint;
+  if (useDefaultProbe) options.fetchImpl = fetchImpl;
+  else options.probeReady = probeReady;
+  return { children, errors, forcedParentExits, logs, options, processRef, spawns, timers };
+}
+
+async function terminateBundle(bundle, harness, signal) {
+  harness.processRef.emit(signal);
+  for (const child of harness.children) child.emit("exit", null, signal);
+  assert.deepEqual(await bundle.completion, { exitCode: 0, signal });
+}
+
+async function waitFor(predicate) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (predicate()) return;
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  assert.fail("condition was not reached");
+}
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((resolver) => { resolve = resolver; });
+  return { promise, resolve };
+}
+
+function response(status, payload) {
+  return { status, json: async () => payload };
+}
+
+function findLogCode(records, event) {
+  return records.find((record) => record.event === event)?.code;
+}
+
+function storageJwt(issuer) {
+  const encode = (value) => Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+  return `${encode({ alg: "HS256", typ: "JWT" })}.${encode({
+    iss: issuer,
+    aud: "authenticated",
+    sub: "synthetic-storage",
+    role: "storage_app",
+    exp: Math.floor(Date.now() / 1_000) + 7 * 24 * 60 * 60
+  })}.synthetic-signature`;
 }

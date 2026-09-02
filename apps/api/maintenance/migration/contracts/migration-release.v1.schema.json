@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://meta-ads-performance.invalid/contracts/migration-release.v1.schema.json",
+  "title": "Immutable Prisma migration release",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version", "releaseId", "releaseGitSha", "runtime", "managedRelations", "migrations", "chainSha256"
+  ],
+  "properties": {
+    "version": { "const": "migration-release/v1" },
+    "releaseId": { "$ref": "#/$defs/sha256" },
+    "releaseGitSha": { "type": "string", "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$" },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodePath", "nodeSha256", "prismaCliPath", "prismaCliSha256", "schemaPath", "schemaSha256"
+      ],
+      "properties": {
+        "nodePath": { "$ref": "#/$defs/absolutePath" },
+        "nodeSha256": { "$ref": "#/$defs/sha256" },
+        "prismaCliPath": { "$ref": "#/$defs/absolutePath" },
+        "prismaCliSha256": { "$ref": "#/$defs/sha256" },
+        "schemaPath": { "$ref": "#/$defs/absolutePath" },
+        "schemaSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "managedRelations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/identifier" }
+    },
+    "migrations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "sqlSha256", "bytes"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[0-9]{14}_[a-z0-9][a-z0-9_]{0,100}$" },
+          "sqlSha256": { "$ref": "#/$defs/sha256" },
+          "bytes": { "type": "integer", "minimum": 1, "maximum": 33554432 }
+        }
+      }
+    },
+    "chainSha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "identifier": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,62}$" },
+    "absolutePath": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 1024,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    }
+  }
+}

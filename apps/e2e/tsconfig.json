@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "types": ["node"]
+  },
+  "files": [
+    "../api/src/domain/cafe24-csv.ts",
+    "../api/src/domain/meta-csv.ts",
+    "../api/src/staging/report-workbook-compatibility.ts"
+  ],
+  "include": [
+    "playwright.config.ts",
+    "playwright.discovery.config.ts",
+    "src/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "playwright-report",
+    "test-results",
+    "../api/dist",
+    "../api/src/**/*.spec.ts"
+  ]
+}

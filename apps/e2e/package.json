@@ -1,0 +1,20 @@
+{
+  "name": "@meta-ads-performance/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "npm run test:offline-source",
+    "test:offline-source": "tsc --noEmit -p tsconfig.json",
+    "test:list": "playwright test --config=playwright.discovery.config.ts --list",
+    "test:approval-target": "playwright test --config=playwright.config.ts --project=resource",
+    "test:approval-cleanup": "playwright test --config=playwright.config.ts --project=cleanup --no-deps",
+    "test:list:approval": "npm run test:list"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0",
+    "@types/node": "22.15.21",
+    "exceljs": "4.4.0",
+    "typescript": "5.8.3"
+  }
+}
