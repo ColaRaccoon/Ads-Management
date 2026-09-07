@@ -402,7 +402,7 @@ describe("Cloudflare R2 direct backup provider", () => {
 
   it("uses the concrete default CLI composition and returns only redacted digest evidence", async () => {
     const actualPlanDigest = backupExecutionPlanSha256({ target, bucket: "private", destination: destination(), cutId });
-    const fixture = artifacts(actualPlanDigest);
+    const fixture = artifacts(actualPlanDigest, Date.parse(target.issuedAt));
     const counters = { prisma: 0, source: 0, dump: 0, r2: 0 };
     const direct = directInput(fixture, counters);
     const directory = mkdtempSync(path.join(os.tmpdir(), "r2-backup-cli-"));
@@ -428,7 +428,7 @@ describe("Cloudflare R2 direct backup provider", () => {
       publicKeyPem: fixture.publicKeyPem.trim(),
       publicKeySha256: fixture.publicKeySha256
     }));
-    const output = await runBackupCli({
+    const cliInput = {
       argv: [
         `--manifest=${files.manifest}`,
         `--provider-binding=${files.binding}`,
@@ -451,12 +451,24 @@ describe("Cloudflare R2 direct backup provider", () => {
         BACKUP_R2_SECRET_ACCESS_KEY: direct.r2SecretAccessKey
       },
       directDependencies: direct.dependencies
-    });
-    expect(JSON.parse(output)).toMatchObject({
-      result: "PASS", retentionDays: 30, retentionApproval: "NOT_APPROVED", releaseResult: "NOT_RUN"
-    });
-    expect(output).not.toContain(fixture.sourceToken);
-    expect(output).not.toContain(fixture.r2SecretAccessKey);
+    };
+    // Freeze only Date for this synthetic approval; keep I/O and timeout timers real.
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(target.issuedAt) });
+    try {
+      const output = await runBackupCli(cliInput);
+      expect(JSON.parse(output)).toMatchObject({
+        result: "PASS", retentionDays: 30, retentionApproval: "NOT_APPROVED", releaseResult: "NOT_RUN"
+      });
+      expect(output).not.toContain(fixture.sourceToken);
+      expect(output).not.toContain(fixture.r2SecretAccessKey);
+
+      const countersBeforeExpiryCheck = { ...counters };
+      vi.setSystemTime(new Date(target.expiresAt));
+      await expect(runBackupCli(cliInput)).rejects.toThrow("TARGET_BINDING_EXPIRED_OR_FUTURE");
+      expect(counters).toEqual(countersBeforeExpiryCheck);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("fails closed instead of omitting an asymmetric ReportExport file reference as a zero-reference PASS", () => {
@@ -668,8 +680,7 @@ describe("Cloudflare R2 direct backup provider", () => {
   });
 });
 
-function artifacts(planDigest = planDigestSha256) {
-  const now = Date.now();
+function artifacts(planDigest = planDigestSha256, now = Date.now()) {
   const sourceToken = "synthetic-source-read-token";
   const r2AccessKeyId = "synthetic-r2-access-id";
   const r2SecretAccessKey = "synthetic-r2-secret";
