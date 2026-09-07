@@ -400,6 +400,119 @@ describe("Cloudflare R2 direct backup provider", () => {
     expect(existsSync(path.join(failed.outputRoot, `backup-cut-${cutId}`, "release-writes-request.json"))).toBe(true);
   });
 
+  it("requires exact pg_dump/server major compatibility before database state, dump, or R2 access and still releases writes", async () => {
+    const passFixture = artifacts();
+    const passCounters = { prisma: 0, databaseState: 0, source: 0, dump: 0, r2: 0 };
+    const passInput = directInput(passFixture, passCounters);
+    let observedExecutable = "";
+    let observedArgs: readonly string[] = [];
+    let observedOptions: Record<string, unknown> = {};
+    const forbiddenEnvironment = {
+      BACKUP_R2_ACCESS_KEY_ID: "must-not-leak",
+      BACKUP_R2_SECRET_ACCESS_KEY: "must-not-leak",
+      BACKUP_SUPABASE_STORAGE_READ_TOKEN: "must-not-leak",
+      AWS_ACCESS_KEY_ID: "must-not-leak",
+      AWS_SECRET_ACCESS_KEY: "must-not-leak",
+      SUPABASE_ACCESS_TOKEN: "must-not-leak",
+      SUPABASE_SERVICE_ROLE_KEY: "must-not-leak",
+      DATABASE_URL: "postgresql://must-not-leak",
+      PGPASSWORD: "must-not-leak",
+      PGPASSFILE: "/must-not-leak/pgpass",
+      PGSERVICE: "must-not-leak",
+      PGUSER: "must-not-leak",
+      PGHOST: "must-not-leak"
+    };
+    for (const [name, value] of Object.entries(forbiddenEnvironment)) vi.stubEnv(name, value);
+    try {
+      passInput.dependencies.execPgDumpVersion = async (executable, args, options) => {
+        observedExecutable = executable;
+        observedArgs = args;
+        observedOptions = options;
+        return { stdout: "pg_dump (PostgreSQL) 17.11 (Debian 17.11-1.pgdg12+2)\n", stderr: "" };
+      };
+      const composition = await createCloudflareR2BackupAdapter(passInput);
+      await expect(runConsistentBackupCut({
+        target, bucket: "private", destination: destination(), cutId, adapter: composition.adapter
+      })).resolves.toMatchObject({ result: "PASS" });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+    expect(observedExecutable).toBe(passInput.pgDumpExecutable);
+    expect(observedArgs).toEqual(["--version"]);
+    expect(observedOptions).toMatchObject({
+      encoding: "utf8", timeout: 5_000, maxBuffer: 4 * 1024, windowsHide: true, shell: false
+    });
+    const versionEnvironment = observedOptions.env as NodeJS.ProcessEnv;
+    expect(Object.keys(versionEnvironment).every((name) => [
+      "PATH", "LANG", "LC_ALL", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR",
+      "SystemRoot", "WINDIR", "TEMP", "TMP"
+    ].includes(name))).toBe(true);
+    expect(Object.keys(forbiddenEnvironment).filter((name) => name in versionEnvironment)).toEqual([]);
+
+    const failures: Array<{
+      name: string;
+      execute: NonNullable<typeof passInput.dependencies.execPgDumpVersion>;
+      code: string;
+      serverVersionNum?: string;
+    }> = [
+      {
+        name: "older client major",
+        execute: async () => ({ stdout: "pg_dump (PostgreSQL) 15.19\n", stderr: "" }),
+        code: "BACKUP_PG_DUMP_MAJOR_MISMATCH"
+      },
+      {
+        name: "newer client major",
+        execute: async () => ({ stdout: "pg_dump (PostgreSQL) 18.1\n", stderr: "" }),
+        code: "BACKUP_PG_DUMP_MAJOR_MISMATCH"
+      },
+      {
+        name: "malformed output",
+        execute: async () => ({ stdout: "pg_dump version unknown\n", stderr: "" }),
+        code: "BACKUP_PG_DUMP_VERSION_INVALID"
+      },
+      {
+        name: "nonzero exit",
+        execute: async () => { throw Object.assign(new Error("exit 1"), { code: 1 }); },
+        code: "BACKUP_PG_DUMP_VERSION_PROBE_FAILED"
+      },
+      {
+        name: "timeout",
+        execute: async () => { throw Object.assign(new Error("timeout"), { code: "ETIMEDOUT" }); },
+        code: "BACKUP_PG_DUMP_VERSION_PROBE_FAILED"
+      },
+      {
+        name: "oversized output",
+        execute: async () => ({ stdout: "x".repeat(4 * 1024 + 1), stderr: "" }),
+        code: "BACKUP_PG_DUMP_VERSION_INVALID"
+      },
+      {
+        name: "malformed server version number",
+        execute: async () => ({ stdout: "pg_dump (PostgreSQL) 17.11\n", stderr: "" }),
+        code: "BACKUP_DATABASE_SERVER_VERSION_INVALID",
+        serverVersionNum: "17.6"
+      }
+    ];
+    for (const failure of failures) {
+      const fixture = artifacts();
+      const counters = { prisma: 0, databaseState: 0, source: 0, dump: 0, r2: 0 };
+      let r2Operations = 0;
+      const input = directInput(fixture, counters, {
+        r2Operation: () => { r2Operations += 1; },
+        serverVersionNum: failure.serverVersionNum
+      });
+      input.dependencies.execPgDumpVersion = failure.execute;
+      const composition = await createCloudflareR2BackupAdapter(input);
+      await expect(runConsistentBackupCut({
+        target, bucket: "private", destination: destination(), cutId, adapter: composition.adapter
+      }), failure.name).resolves.toMatchObject({ result: "FAIL", code: failure.code });
+      expect(counters.databaseState, failure.name).toBe(0);
+      expect(counters.dump, failure.name).toBe(0);
+      expect(r2Operations, failure.name).toBe(0);
+      expect(existsSync(path.join(fixture.outputRoot, `backup-cut-${cutId}`, "release-writes-request.json")), failure.name)
+        .toBe(true);
+    }
+  });
+
   it("uses the concrete default CLI composition and returns only redacted digest evidence", async () => {
     const actualPlanDigest = backupExecutionPlanSha256({ target, bucket: "private", destination: destination(), cutId });
     const fixture = artifacts(actualPlanDigest, Date.parse(target.issuedAt));
@@ -737,19 +850,26 @@ function artifacts(planDigest = planDigestSha256, now = Date.now()) {
 
 function directInput(
   fixture: ReturnType<typeof artifacts>,
-  counters: { prisma: number; source: number; dump: number; r2: number },
-  options: { alwaysFound?: boolean } = {}
+  counters: { prisma: number; databaseState?: number; source: number; dump: number; r2: number },
+  options: { alwaysFound?: boolean; r2Operation?: () => void; serverVersionNum?: string } = {}
 ) {
   const objects = new Map<string, Uint8Array>();
   let nonceCounter = 0;
   const r2: R2ObjectIo = {
-    inspect: async (key) => options.alwaysFound || objects.has(key) ? "FOUND" : "MISSING",
+    inspect: async (key) => {
+      options.r2Operation?.();
+      return options.alwaysFound || objects.has(key) ? "FOUND" : "MISSING";
+    },
     putNoOverwrite: async (key, body) => {
+      options.r2Operation?.();
       if (objects.has(key)) throw new Error("BACKUP_R2_NO_OVERWRITE_VIOLATION");
       counters.r2 += 1;
       objects.set(key, Buffer.from(body));
     },
-    read: async (key) => Buffer.from(objects.get(key) ?? [])
+    read: async (key) => {
+      options.r2Operation?.();
+      return Buffer.from(objects.get(key) ?? []);
+    }
   };
   return {
     target,
@@ -772,11 +892,15 @@ function directInput(
     r2AccessKeyId: fixture.r2AccessKeyId,
     r2SecretAccessKey: fixture.r2SecretAccessKey,
     dependencies: {
-      createPrismaIo: async () => { counters.prisma += 1; return prismaIo(counters); },
+      createPrismaIo: async () => {
+        counters.prisma += 1;
+        return prismaIo(counters, options.serverVersionNum);
+      },
       databaseChunkBytes: 4,
       createR2Io: async () => r2,
       inspectSourceObject: async () => ({ byteSize: 3 }),
       readSourceBody: async () => { counters.source += 1; return Buffer.from("abc"); },
+      execPgDumpVersion: async () => ({ stdout: "pg_dump (PostgreSQL) 17.11\n", stderr: "" }),
       runPgDump: async ({ outputFile }: { outputFile: string }) => { counters.dump += 1; writeFileSync(outputFile, "synthetic dump"); },
       randomBytes: () => {
         nonceCounter += 1;
@@ -855,13 +979,16 @@ function fakeSpawn(
   }) as unknown as typeof spawn;
 }
 
-function prismaIo(_counters: { prisma: number }) {
+function prismaIo(counters: { prisma: number; databaseState?: number }, serverVersionNum = "170006") {
   const body = Buffer.from("abc");
   return {
-    assertIdentity: async () => undefined,
-    databaseState: async () => ({
-      watermark: "0/123", migrationHistoryDigestSha256: "d".repeat(64), kpiDigestSha256: "e".repeat(64)
-    }),
+    assertIdentity: async () => ({ serverVersionNum }),
+    databaseState: async () => {
+      counters.databaseState = (counters.databaseState ?? 0) + 1;
+      return {
+        watermark: "0/123", migrationHistoryDigestSha256: "d".repeat(64), kpiDigestSha256: "e".repeat(64)
+      };
+    },
     listReferenceRows: async () => [{
       model: "UploadBatch" as const,
       recordId: "11111111-1111-4111-8111-111111111111",

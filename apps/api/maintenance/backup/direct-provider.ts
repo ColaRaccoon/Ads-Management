@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from "node:child_process";
+import { ChildProcess, execFile, spawn } from "node:child_process";
 import {
   createCipheriv,
   createDecipheriv,
@@ -73,6 +73,8 @@ export const BACKUP_PG_DUMP_TIMEOUT_MS = 15 * 60_000;
 export const BACKUP_PG_DUMP_STDERR_MAX_BYTES = 16 * 1024;
 export const BACKUP_PG_DUMP_FREE_SPACE_RESERVE_BYTES = 1024 * 1024 * 1024;
 export const BACKUP_PG_DUMP_LINUX_LIMIT_EXECUTABLE = "/usr/bin/prlimit";
+export const BACKUP_PG_DUMP_VERSION_TIMEOUT_MS = 5_000;
+export const BACKUP_PG_DUMP_VERSION_MAX_BYTES = 4 * 1024;
 
 const HASH = /^[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -126,7 +128,7 @@ export type VerifiedWriteBlockReceipt = {
 };
 
 export type BackupPrismaIo = {
-  assertIdentity(target: CloudTargetBinding): Promise<void>;
+  assertIdentity(target: CloudTargetBinding): Promise<{ serverVersionNum: string }>;
   databaseState(target: CloudTargetBinding): Promise<{
     watermark: string;
     migrationHistoryDigestSha256: string;
@@ -149,6 +151,19 @@ export type R2ObjectIo = {
   putNoOverwrite(key: string, body: Uint8Array): Promise<void>;
   read(key: string): Promise<Uint8Array>;
 };
+
+export type PgDumpVersionExec = (
+  executable: string,
+  args: readonly string[],
+  options: {
+    encoding: "utf8";
+    timeout: number;
+    maxBuffer: number;
+    windowsHide: true;
+    shell: false;
+    env: NodeJS.ProcessEnv;
+  }
+) => Promise<{ stdout: string; stderr: string }>;
 
 export type DirectBackupDependencies = {
   now?: () => Date;
@@ -174,6 +189,7 @@ export type DirectBackupDependencies = {
     token: string;
   }) => Promise<{ byteSize: number }>;
   fetchSource?: typeof fetch;
+  execPgDumpVersion?: PgDumpVersionExec;
   runPgDump?: (input: {
     executable: string;
     target: CloudTargetBinding;
@@ -663,7 +679,11 @@ export async function createCloudflareR2BackupAdapter(input: {
     captureDatabaseCut: async (target, cutId): Promise<DatabaseCut> => {
       assertSameTarget(target, input.target);
       if (cutId !== input.cutId) throw new Error("BACKUP_CUT_ID_BINDING_MISMATCH");
-      await prisma.assertIdentity(input.target);
+      const identity = await prisma.assertIdentity(input.target);
+      await assertPgDumpServerMajorCompatibility({
+        executable: pgDumpExecutable,
+        serverVersionNum: identity.serverVersionNum
+      }, { execFileImpl: input.dependencies?.execPgDumpVersion });
       const state = await prisma.databaseState(input.target);
       const root = ensureCutRoot(cutId);
       const dumpFile = path.join(root, "database.dump");
@@ -939,7 +959,7 @@ async function createDefaultPrismaIo(databaseUrl: string, target: CloudTargetBin
   return {
     assertIdentity: async () => {
       const rows = await query(
-        "SELECT current_user AS current_user, pg_has_role(current_user, $1, 'member') AS has_required_role, current_database() AS database_name, current_schema() AS schema_name",
+        "SELECT current_user AS current_user, pg_has_role(current_user, $1, 'member') AS has_required_role, current_database() AS database_name, current_schema() AS schema_name, current_setting('server_version_num') AS server_version_num",
         target.database.requiredRole
       );
       const row = rows[0] as Record<string, unknown> | undefined;
@@ -947,6 +967,7 @@ async function createDefaultPrismaIo(databaseUrl: string, target: CloudTargetBin
           row.database_name !== target.database.name || row.schema_name !== target.database.schema) {
         throw new Error("BACKUP_DATABASE_RUNTIME_IDENTITY_MISMATCH");
       }
+      return { serverVersionNum: strictServerVersionNum(row.server_version_num) };
     },
     databaseState: async () => {
       const watermarkRows = await query("SELECT pg_current_wal_lsn()::text AS watermark");
@@ -1216,6 +1237,82 @@ function assertSourceObjectSize(value: number) {
   if (!Number.isSafeInteger(value) || value < 0 || value > BACKUP_MAX_SOURCE_OBJECT_BYTES) {
     throw new Error("BACKUP_SOURCE_BODY_TOO_LARGE");
   }
+}
+
+export async function assertPgDumpServerMajorCompatibility(input: {
+  executable: string;
+  serverVersionNum: string;
+}, dependencies: {
+  execFileImpl?: PgDumpVersionExec;
+  inheritedEnvironment?: NodeJS.ProcessEnv;
+} = {}): Promise<void> {
+  const serverMajor = postgresServerMajor(input.serverVersionNum);
+  let output: { stdout: string; stderr: string };
+  try {
+    output = await (dependencies.execFileImpl ?? execPgDumpVersion)(input.executable, ["--version"], {
+      encoding: "utf8",
+      timeout: BACKUP_PG_DUMP_VERSION_TIMEOUT_MS,
+      maxBuffer: BACKUP_PG_DUMP_VERSION_MAX_BYTES,
+      windowsHide: true,
+      shell: false,
+      env: buildPgDumpVersionEnvironment(dependencies.inheritedEnvironment)
+    });
+  } catch {
+    throw new Error("BACKUP_PG_DUMP_VERSION_PROBE_FAILED");
+  }
+  if (typeof output.stdout !== "string" || typeof output.stderr !== "string" || output.stderr !== "" ||
+      Buffer.byteLength(output.stdout) + Buffer.byteLength(output.stderr) > BACKUP_PG_DUMP_VERSION_MAX_BYTES) {
+    throw new Error("BACKUP_PG_DUMP_VERSION_INVALID");
+  }
+  const match = /^pg_dump \(PostgreSQL\) ([1-9][0-9]?)(?:\.[0-9]+)+(?: \([^\r\n()]{1,256}\))?\r?\n?$/u.exec(output.stdout);
+  if (!match) throw new Error("BACKUP_PG_DUMP_VERSION_INVALID");
+  const clientMajor = Number(match[1]);
+  if (!Number.isSafeInteger(clientMajor) || clientMajor !== serverMajor) {
+    throw new Error("BACKUP_PG_DUMP_MAJOR_MISMATCH");
+  }
+}
+
+function execPgDumpVersion(
+  executable: string,
+  args: readonly string[],
+  options: Parameters<PgDumpVersionExec>[2]
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    execFile(executable, [...args], options, (error, stdout, stderr) => {
+      if (error) reject(error);
+      else resolve({ stdout, stderr });
+    });
+  });
+}
+
+function strictServerVersionNum(value: unknown): string {
+  if (typeof value !== "string" || !/^[1-9][0-9]{5}$/.test(value)) {
+    throw new Error("BACKUP_DATABASE_SERVER_VERSION_INVALID");
+  }
+  return value;
+}
+
+function postgresServerMajor(serverVersionNum: string): number {
+  const value = Number(strictServerVersionNum(serverVersionNum));
+  const major = Math.trunc(value / 10_000);
+  if (!Number.isSafeInteger(value) || major < 10 || major > 99) {
+    throw new Error("BACKUP_DATABASE_SERVER_VERSION_INVALID");
+  }
+  return major;
+}
+
+function buildPgDumpVersionEnvironment(inherited: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const allowed = [
+    "PATH", "LANG", "LC_ALL", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR",
+    "SystemRoot", "WINDIR", "TEMP", "TMP"
+  ] as const;
+  const normalized = new Map(Object.entries(inherited).map(([key, value]) => [key.toLowerCase(), value]));
+  const env: NodeJS.ProcessEnv = {};
+  for (const name of allowed) {
+    const value = normalized.get(name.toLowerCase());
+    if (typeof value === "string" && value && !value.includes("\0")) env[name] = value;
+  }
+  return env;
 }
 
 export async function runDefaultPgDump(input: {
