@@ -146,6 +146,16 @@ test("keeps Prisma and SQL payloads purpose-scoped", async (t) => {
   await assert.rejects(() => assertMaintenanceArtifact(migrationRoot, "migration"), withCode("MAINTENANCE_MIGRATION_CHAIN_MISSING"));
 });
 
+test("maintenance dependency and runtime stages pin and verify the Bookworm PCRE2 security fix", async () => {
+  const dockerfile = await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8");
+  for (const stage of ["dependencies", "maintenance-base"]) {
+    const section = dockerfile.split(new RegExp(`^FROM .* AS ${stage}\\r?\\n`, "mu"))[1]?.split(/^FROM /mu)[0];
+    assert.ok(section, `Missing ${stage} stage`);
+    assert.match(section, /apt-get install[^\n]*\blibpcre2-8-0=10\.42-1\+deb12u1(?:\s|$)/u);
+    assert.match(section, /dpkg-query --show --showformat='\$\{Version\}\\n' libpcre2-8-0 \| grep -Fx '10\.42-1\+deb12u1'/u);
+  }
+});
+
 test("Dockerfile defines five isolated targets without credential build arguments or public ports", async () => {
   const dockerfile = await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8");
   for (const purpose of MAINTENANCE_PURPOSES) {

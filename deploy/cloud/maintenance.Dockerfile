@@ -5,7 +5,9 @@ FROM ${NODE_IMAGE} AS dependencies
 ARG NODE_IMAGE
 WORKDIR /srv/app
 RUN node -e "if (!/@sha256:[a-f0-9]{64}$/.test(process.env.NODE_IMAGE ?? '')) throw new Error('NODE_IMAGE must be pinned by sha256 digest')"
-RUN apt-get update && apt-get install --yes --no-install-recommends ca-certificates openssl \
+# Keep maintenance build tooling on the same exact security fix as the public runtime.
+RUN apt-get update && apt-get install --yes --no-install-recommends ca-certificates openssl libpcre2-8-0=10.42-1+deb12u1 \
+  && dpkg-query --show --showformat='${Version}\n' libpcre2-8-0 | grep -Fx '10.42-1+deb12u1' \
   && rm -rf /var/lib/apt/lists/*
 RUN npm install --global npm@10.9.4 && npm --version | grep -Fx 10.9.4
 COPY package.json package-lock.json .npmrc ./
@@ -52,7 +54,9 @@ ARG RELEASE_GIT_SHA
 WORKDIR /srv/maintenance
 RUN node -e "if (!/@sha256:[a-f0-9]{64}$/.test(process.env.NODE_IMAGE ?? '')) throw new Error('NODE_IMAGE must be pinned by sha256 digest')" \
   && node -e "if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(process.env.RELEASE_GIT_SHA ?? '')) throw new Error('RELEASE_GIT_SHA must be a full commit id')"
-RUN apt-get update && apt-get install --yes --no-install-recommends ca-certificates openssl \
+# All five purpose images inherit this fail-closed package pin and version check.
+RUN apt-get update && apt-get install --yes --no-install-recommends ca-certificates openssl libpcre2-8-0=10.42-1+deb12u1 \
+  && dpkg-query --show --showformat='${Version}\n' libpcre2-8-0 | grep -Fx '10.42-1+deb12u1' \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
   && rm -rf /var/lib/apt/lists/*
