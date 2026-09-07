@@ -147,7 +147,7 @@ test("keeps Prisma and SQL payloads purpose-scoped", async (t) => {
 });
 
 test("maintenance dependency and runtime stages pin and verify the Bookworm PCRE2 security fix", async () => {
-  const dockerfile = await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8");
+  const dockerfile = (await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8")).replace(/\r\n/gu, "\n");
   for (const stage of ["dependencies", "maintenance-base"]) {
     const section = dockerfile.split(new RegExp(`^FROM .* AS ${stage}\\r?\\n`, "mu"))[1]?.split(/^FROM /mu)[0];
     assert.ok(section, `Missing ${stage} stage`);
@@ -157,7 +157,8 @@ test("maintenance dependency and runtime stages pin and verify the Bookworm PCRE
 });
 
 test("Dockerfile defines five isolated targets without credential build arguments or public ports", async () => {
-  const dockerfile = await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8");
+  // Git archives may honor the Windows checkout line endings; compare logical Dockerfile lines.
+  const dockerfile = (await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8")).replace(/\r\n/gu, "\n");
   for (const purpose of MAINTENANCE_PURPOSES) {
     assert.match(dockerfile, new RegExp(`FROM maintenance-base AS ${purpose}\\n`));
     assert.match(dockerfile, new RegExp(`io\\.meta-ads\\.maintenance\\.purpose=${purpose}`));
