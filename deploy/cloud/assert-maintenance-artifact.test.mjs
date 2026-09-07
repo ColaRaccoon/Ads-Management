@@ -16,9 +16,12 @@ const cliByPurpose = {
 for (const purpose of MAINTENANCE_PURPOSES) {
   test(`accepts the least-privilege ${purpose} artifact`, async (t) => {
     const root = await fixture(t, purpose);
-    const result = await assertMaintenanceArtifact(root, purpose);
+    const result = await assertMaintenanceArtifact(root, purpose, {
+      execFileImpl: async () => ({ stdout: "pg_dump (PostgreSQL) 17.11 (Debian 17.11-1.pgdg12+2)\n", stderr: "" })
+    });
     assert.equal(result.result, "PASS");
     assert.equal(result.purpose, purpose);
+    if (purpose === "backup") assert.equal(result.pgDumpVersion, "17.11");
   });
 }
 
@@ -103,6 +106,65 @@ test("requires backup runtime modules and keeps AWS tooling backup-only", async 
   }
 });
 
+test("backup verifies its fixed pg_dump executable major without database credentials", async (t) => {
+  const root = await fixture(t, "backup");
+  const calls = [];
+  const result = await assertMaintenanceArtifact(root, "backup", {
+    execFileImpl: async (...args) => {
+      calls.push(args);
+      return { stdout: "pg_dump (PostgreSQL) 17.11 (Debian 17.11-1.pgdg12+2)\n", stderr: "" };
+    }
+  });
+  assert.equal(result.pgDumpVersion, "17.11");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], "/usr/bin/pg_dump");
+  assert.deepEqual(calls[0][1], ["--version"]);
+  assert.deepEqual(calls[0][2], {
+    encoding: "utf8", timeout: 5000, maxBuffer: 4096, windowsHide: true, shell: false,
+    env: { PATH: "/usr/bin:/bin", LC_ALL: "C" }
+  });
+});
+
+test("backup rejects old, different-major, malformed and failed pg_dump version probes", async (t) => {
+  const root = await fixture(t, "backup");
+  for (const stdout of [
+    "pg_dump (PostgreSQL) 15.19 (Debian 15.19-0+deb12u1)\n",
+    "pg_dump (PostgreSQL) 18.6\n",
+    "pg_dump (PostgreSQL) 170.1\n",
+    "pg_dump (PostgreSQL) 17\n",
+    "pg_dump (PostgreSQL) 17.11\nunexpected output\n",
+    ""
+  ]) {
+    await assert.rejects(
+      () => assertMaintenanceArtifact(root, "backup", { execFileImpl: async () => ({ stdout, stderr: "" }) }),
+      withCode("MAINTENANCE_BACKUP_PG_DUMP_VERSION_INVALID")
+    );
+  }
+  await assert.rejects(
+    () => assertMaintenanceArtifact(root, "backup", {
+      execFileImpl: async () => ({ stdout: "pg_dump (PostgreSQL) 17.11\n", stderr: "unexpected warning" })
+    }),
+    withCode("MAINTENANCE_BACKUP_PG_DUMP_VERSION_INVALID")
+  );
+  await assert.rejects(
+    () => assertMaintenanceArtifact(root, "backup", {
+      execFileImpl: async () => { throw new Error("version probe unavailable"); }
+    }),
+    withCode("MAINTENANCE_BACKUP_PG_DUMP_VERSION_UNAVAILABLE")
+  );
+});
+
+test("non-backup artifacts never invoke PostgreSQL tooling", async (t) => {
+  for (const purpose of MAINTENANCE_PURPOSES.filter((value) => value !== "backup")) {
+    const root = await fixture(t, purpose);
+    let calls = 0;
+    await assertMaintenanceArtifact(root, purpose, {
+      execFileImpl: async () => { calls += 1; throw new Error("unexpected version probe"); }
+    });
+    assert.equal(calls, 0);
+  }
+});
+
 test("legacy carries exactly its two review schemas", async (t) => {
   for (const missing of [
     "contracts/legacy/legacy-provider-binding.v1.schema.json",
@@ -156,6 +218,25 @@ test("maintenance dependency and runtime stages pin and verify the Bookworm PCRE
   }
 });
 
+test("backup alone installs exact PostgreSQL 17 client from checksum-bound signed Bookworm PGDG", async () => {
+  const dockerfile = (await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8")).replace(/\r\n/gu, "\n");
+  const backup = dockerfile.split(/^FROM maintenance-base AS backup\n/mu)[1]?.split(/^FROM /mu)[0];
+  assert.ok(backup);
+  assert.match(backup, /ADD --checksum=sha256:0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76 --chmod=0644 https:\/\/www\.postgresql\.org\/media\/keys\/ACCC4CF8\.asc \/usr\/share\/keyrings\/postgresql-pgdg\.asc/u);
+  assert.match(backup, /URIs: https:\/\/apt\.postgresql\.org\/pub\/repos\/apt/u);
+  assert.match(backup, /Suites: bookworm-pgdg/u);
+  assert.match(backup, /Components: main 17/u);
+  assert.match(backup, /Signed-By: \/usr\/share\/keyrings\/postgresql-pgdg\.asc/u);
+  assert.match(backup, /amd64\|arm64\|ppc64el/u);
+  assert.match(backup, /postgresql-client-17=17\.11-1\.pgdg12\+2/u);
+  assert.match(backup, /libpq5=17\.11-1\.pgdg12\+2/u);
+  assert.match(backup, /postgresql-client-common=293\.pgdg12\+1/u);
+  assert.match(backup, /dpkg-query --show --showformat='\$\{Version\}\\n' postgresql-client-17 \| grep -Fx '17\.11-1\.pgdg12\+2'/u);
+  assert.match(backup, /dpkg-query --show --showformat='\$\{Version\}\\n' libpq5 \| grep -Fx '17\.11-1\.pgdg12\+2'/u);
+  assert.doesNotMatch(dockerfile, /(?:\bpostgresql-client\s|apt-get\s+(?:dist-upgrade|upgrade)|--allow-unauthenticated|trusted=yes|curl[^\n]*\|[^\n]*sh)/u);
+  assert.equal((dockerfile.match(/apt\.postgresql\.org\/pub\/repos\/apt/gu) ?? []).length, 1);
+});
+
 test("Dockerfile defines five isolated targets without credential build arguments or public ports", async () => {
   // Git archives may honor the Windows checkout line endings; compare logical Dockerfile lines.
   const dockerfile = (await readFile(new URL("./maintenance.Dockerfile", import.meta.url), "utf8")).replace(/\r\n/gu, "\n");
@@ -177,7 +258,7 @@ test("Dockerfile defines five isolated targets without credential build argument
   assert.match(dockerfile, /install -d -m 0700 -o node -g node \/run\/maintenance-output\/migration/u);
   assert.match(dockerfile, /install -d -m 0700 -o node -g node \/run\/maintenance-output\/backup/u);
   assert.match(dockerfile, /install -d -m 0700 -o node -g node \/run\/maintenance-output\/legacy/u);
-  assert.match(dockerfile, /apt-get install --yes --no-install-recommends postgresql-client util-linux/u);
+  assert.match(dockerfile, /apt-get install --yes --no-install-recommends postgresql-client-17=17\.11-1\.pgdg12\+2/u);
   assert.match(dockerfile, /test -x \/usr\/bin\/pg_dump/u);
   assert.match(dockerfile, /test -x \/usr\/bin\/prlimit/u);
   assert.match(dockerfile, /require\('@aws-sdk\/client-s3'\)/u);

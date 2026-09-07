@@ -1,8 +1,12 @@
+import { execFile } from "node:child_process";
 import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 export const MAINTENANCE_PURPOSES = Object.freeze(["auth", "migration", "storage", "backup", "legacy"]);
+const execFileAsync = promisify(execFile);
+const BACKUP_PG_DUMP_EXECUTABLE = "/usr/bin/pg_dump";
 
 const REQUIRED_CLI = Object.freeze({
   auth: ["dist/auth/user-disposition.cli.js"],
@@ -26,7 +30,7 @@ const LEGACY_CONTRACT_FILES = Object.freeze([
   "contracts/legacy/legacy-source-inventory-approval.v1.schema.json"
 ]);
 
-export async function assertMaintenanceArtifact(root, purpose) {
+export async function assertMaintenanceArtifact(root, purpose, { execFileImpl = execFileAsync } = {}) {
   if (!MAINTENANCE_PURPOSES.includes(purpose)) fail("MAINTENANCE_PURPOSE_INVALID");
   const absoluteRoot = path.resolve(root);
   const entries = await walk(absoluteRoot);
@@ -119,7 +123,31 @@ export async function assertMaintenanceArtifact(root, purpose) {
   }
 
   await assertNoPrivateKeyContent(absoluteRoot, entries);
-  return Object.freeze({ purpose, fileCount: files.size, result: "PASS" });
+  const pgDumpVersion = purpose === "backup" ? await requireBackupPgDump17(execFileImpl) : undefined;
+  return Object.freeze({
+    purpose, fileCount: files.size, result: "PASS",
+    ...(pgDumpVersion ? { pgDumpVersion } : {})
+  });
+}
+
+async function requireBackupPgDump17(execFileImpl) {
+  let output;
+  try {
+    // Version-only probe: no inherited database/provider credentials and no shell.
+    output = await execFileImpl(BACKUP_PG_DUMP_EXECUTABLE, ["--version"], {
+      encoding: "utf8", timeout: 5000, maxBuffer: 4096, windowsHide: true, shell: false,
+      env: { PATH: "/usr/bin:/bin", LC_ALL: "C" }
+    });
+  } catch {
+    fail("MAINTENANCE_BACKUP_PG_DUMP_VERSION_UNAVAILABLE");
+  }
+  const match = typeof output?.stdout === "string"
+    ? /^pg_dump \(PostgreSQL\) (17\.\d+)(?: \(Debian [0-9A-Za-z.+:~\-]+\))?\r?\n?$/u.exec(output.stdout)
+    : null;
+  if (!match || typeof output.stderr !== "string" || output.stderr.trim() !== "") {
+    fail("MAINTENANCE_BACKUP_PG_DUMP_VERSION_INVALID");
+  }
+  return match[1];
 }
 
 function isTestOnlyDependency(lower) {

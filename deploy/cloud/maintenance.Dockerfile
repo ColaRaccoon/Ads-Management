@@ -114,7 +114,19 @@ LABEL org.opencontainers.image.revision=${RELEASE_GIT_SHA} io.meta-ads.maintenan
 COPY --from=production-dependencies --chown=node:node /srv/app/node_modules ./node_modules
 COPY --from=build --chown=node:node /srv/app/apps/api/dist-maintenance/shared ./dist/shared
 COPY --from=build --chown=node:node /srv/app/apps/api/dist-maintenance/backup ./dist/backup
-RUN apt-get update && apt-get install --yes --no-install-recommends postgresql-client util-linux \
+# Bookworm's generic client is PostgreSQL 15. Use the official signed PGDG 17 client
+# and matching libpq; the numeric component prevents a silent libpq 18 upgrade.
+ADD --checksum=sha256:0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76 --chmod=0644 https://www.postgresql.org/media/keys/ACCC4CF8.asc /usr/share/keyrings/postgresql-pgdg.asc
+RUN set -eu; architecture="$(dpkg --print-architecture)"; \
+  case "$architecture" in amd64|arm64|ppc64el) ;; *) printf '%s\n' 'Unsupported PGDG Bookworm architecture' >&2; exit 1 ;; esac; \
+  printf '%s\n' 'Types: deb' 'URIs: https://apt.postgresql.org/pub/repos/apt' \
+    'Suites: bookworm-pgdg' "Architectures: $architecture" 'Components: main 17' \
+    'Signed-By: /usr/share/keyrings/postgresql-pgdg.asc' > /etc/apt/sources.list.d/pgdg.sources; \
+  apt-get update && apt-get install --yes --no-install-recommends postgresql-client-17=17.11-1.pgdg12+2 \
+    libpq5=17.11-1.pgdg12+2 postgresql-client-common=293.pgdg12+1 util-linux \
+  && dpkg-query --show --showformat='${Version}\n' postgresql-client-17 | grep -Fx '17.11-1.pgdg12+2' \
+  && dpkg-query --show --showformat='${Version}\n' libpq5 | grep -Fx '17.11-1.pgdg12+2' \
+  && rm -f /etc/apt/sources.list.d/pgdg.sources \
   && rm -rf /var/lib/apt/lists/* \
   && install -d -m 0700 -o node -g node /run/maintenance-output/backup \
   && test -x /usr/bin/pg_dump \
