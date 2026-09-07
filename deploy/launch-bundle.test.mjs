@@ -285,6 +285,17 @@ test("ships a single hardened runtime with the closure checker removed after ver
     readFile(new URL("./cloud/compose.local.yaml", import.meta.url), "utf8")
   ]);
   const runtimeStage = dockerfile.slice(dockerfile.lastIndexOf("FROM ${NODE_IMAGE} AS runtime"));
+  const dependenciesStage = dockerfile.slice(
+    dockerfile.indexOf("FROM ${NODE_IMAGE} AS dependencies"),
+    dockerfile.indexOf("FROM dependencies AS build")
+  );
+
+  for (const stage of [dependenciesStage, runtimeStage]) {
+    assert.match(stage, /apt-get install --yes --no-install-recommends ca-certificates openssl libpcre2-8-0=10\.42-1\+deb12u1/);
+    assert.ok(stage.includes("dpkg-query --show --showformat='${Version}\\n' libpcre2-8-0 | grep -Fx '10.42-1+deb12u1'"));
+    assert.doesNotMatch(stage, /apt(?:-get)?\s+(?:upgrade|dist-upgrade|full-upgrade)\b/);
+    assert.doesNotMatch(stage, /--allow-unauthenticated|trusted=yes/);
+  }
 
   assert.match(dockerfile, /NEXT_PUBLIC_API_BASE_URL=\/backend-api/);
   assert.match(dockerfile, /NEXT_PUBLIC_AUTH_PROVIDER=supabase/);
