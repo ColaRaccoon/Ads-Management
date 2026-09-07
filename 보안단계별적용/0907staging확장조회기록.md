@@ -165,3 +165,63 @@
 - D가 screenshot/hash와 부모가 전달한 사용자 JSON semantic decode를 보존 전사와 독립
   canonical 비교해 전체 일치를 확인했다. 최종 문서·증거 평가 PASS, 신규 OPEN P0/P1/P2/P3 0.
   이는 D가 채팅의 raw escape 변환 자체를 별도로 관찰했다는 의미는 아니다.
+
+## 사용자 수동 실행으로 완료된 Phase 2b (07:32–07:33 UTC)
+
+- 사용자가 exact Phase 2b의 전체 JSON을 attachment로 전달했다. 함께 전달한 화면은
+  `Meta Ads Performance Security Dev` org/project, Free, 결과 1 row와 SQL 하단의
+  LIMIT/ROLLBACK을 보여준다. raw result 121,073 bytes, SHA256
+  `5ca246d9a59a190dd502da383472cfe0eeee4c88805d4bded6b598e4c2ad00ac`;
+  screenshot 117,297 bytes, SHA256
+  `1d6ea49e1b3801e079a2d1090e01bf4d92209336684538e037a18ef00b628584`.
+- raw 전체를 Git에 복제하지 않고 비밀 없는 검증 요약을
+  `증거/0907-staging-inventory-phase2b-result-summary.json`에 보존한다. SHA256
+  `ed471094e1eaec147e2d29a3a375d2e2201746e35f967169ab97fa5f0dae1bbf`이며,
+  raw의 status/count/role name/중요 ACL 집합과 프로그램 대조 `SUMMARY_MATCH`다.
+- 결과는 `SCOPED_CATALOG_INVENTORY_ONLY`, DB/principal `postgres`, read-only ON,
+  5s/1s timeout, server `170006`, protected items excluded true, effective privileges
+  evaluated false다. role 30/array30, direct membership 24/array24, current ACL object 7,
+  future default record 12, ACL group 309로 모두 query 상한 이내다.
+- 비보호 role 목록에는 앱 전용 runtime/migration/backup 이름 후보가 관찰되지 않았다.
+  이는 보호 principal 또는 전체 workload 관계의 부재 증명이 아니지만 기존 managed role을
+  새 앱 role로 재사용할 근거도 없다. source는 role 이름을 hardcode하지 않고 target binding에
+  결박하므로 향후 exact 전용 role 이름을 gate에서 정해야 한다.
+- 현재 `postgres` DB의 explicit ACL에서 PUBLIC은 CONNECT와 TEMPORARY를 가진다.
+  따라서 새 runtime/backup role에서만 TEMPORARY를 REVOKE해도 PUBLIC 경유 권한이 남는다.
+  기본 DB에서 PUBLIC TEMPORARY를 제거하려면 모든 DB role에 영향이 생기므로, managed role
+  보존 grant와 원상복구를 포함한 별도 설계·승인 없이 G-DB-00에 숨겨 실행하지 않는다.
+- 기존 postgres/supabase_admin의 future default ACL은 public에 만드는 table/sequence/function을
+  anon/authenticated/service_role에 넓게 grant하는 관찰값을 포함한다. 기존 `postgres`를
+  migration credential로 재사용하지 않고, 새 migration owner와 그 role만의 default ACL을
+  별도로 설계한다. 기존 managed-role default ACL 전체 변경은 범위 밖이다.
+- Storage table ACL에는 anon/authenticated의 DML 등 direct grant가 관찰되지만, Phase 2a의
+  RLS ON/보호 대상 제외 policy 집계0과 결합해도 실제 노출 또는 deny를 확정하지 않는다.
+  Storage 실제 역할/JWT/policy 접근 검증은 G-STO gate까지 NOT RUN이다.
+- D가 raw JSON을 독립 파싱하고 counts/array/상한/principal resolution, screenshot과 SQL 경계를
+  검토했다. Phase 2b scoped catalog PASS, 신규 P0/P1/P2/P3 0. `patima_app` literal 0은 query가
+  제외했기 때문이므로 부재 판정이 아니다. effective/transitive privilege와 최소권한은 NOT RUN.
+- 이 결과만으로 G-SUP-STG-03 전체 또는 R2A가 끝나지는 않는다. 당시 fresh Auth 설정과 보호
+  owner 제외로 미확정인 pristine/Prisma history는 아직 NOT RUN이었다. G-DB-00/02와 이후 Auth/Storage/Data
+  mutation은 각각 별도 gate 전 실행하지 않으며 `operationalReady=false`를 유지한다.
+
+## Dashboard Auth configuration read-only inventory (07:43–07:45 UTC)
+
+- main이 agent-created hidden tab으로 exact org/project를 다시 결박하고 Auth URL configuration,
+  Sign In / Providers, Emails/SMTP 설정만 읽었다. production, Auth Users, key/API secret, Storage
+  object 목록은 열지 않았고 Save/토글/입력/provider mutation은 0건이다.
+- 비밀과 사용자 식별정보가 없는 관찰 요약을
+  `증거/0907-staging-auth-config-readonly-summary.json`에 보존했다. SHA256
+  `475d8b6f242db9b50482bfc75c70bc0f1d480013cf2acb418c2573fa738cc52b`.
+- Site URL은 `http://localhost:3200`, 허용 redirect는
+  `http://localhost:3200/invite/accept` 1개다. 신규 가입, manual linking, anonymous sign-in은
+  OFF이고 confirm email은 ON이다.
+- 내장 provider는 Email만 Enabled로 관찰됐고 Phone/SAML/Web3/social provider들은 Disabled다.
+  custom SMTP는 OFF이며 Dashboard는 default template 사용 및 custom SMTP 설정 전 template
+  편집 불가를 표시했다. 보안 알림 switch의 관찰된 enabled 수는 0이다.
+- read-only Auth configuration inventory는 PASS다. 실제 이메일 송수신, signup/login/invite,
+  redirect 동작, template render, SMTP deliverability와 test identity lifecycle은 실행하지 않았으므로
+  NOT RUN이다. 이 설정을 staging용 hostname으로 바꾸는 작업은 `G-AUTH-01`, 시험 identity는
+  `G-AUTH-07` 승인 전 실행하지 않는다.
+- 따라서 승인된 G-SUP-STG-03의 비밀 없는 Dashboard/Auth 및 제한 catalog 조회는 현재 가능한
+  범위까지 완료됐지만, 보호 owner 제외 때문에 Prisma history/pristine은 여전히 미확정이다.
+  이를 staging application 준비 또는 R2A 완료로 승격하지 않고 `operationalReady=false`를 유지한다.
