@@ -1,0 +1,54 @@
+{
+  "scope": "CATALOG_ONLY_PROTECTED_OWNERSHIP_EXCLUDED",
+  "database": "postgres",
+  "relation_count": 3,
+  "column_count": 13,
+  "enum_count": 0,
+  "truncated": false,
+  "current_user": "postgres",
+  "server_version": "17.6",
+  "server_version_num": "170006",
+  "transaction_read_only": "on",
+  "statement_timeout": "5s",
+  "lock_timeout": "1s",
+  "public_enums": [],
+  "relations": [
+    {
+      "schema": "auth",
+      "table": "users",
+      "rls": true,
+      "rls_forced": false,
+      "columns": [
+        { "name": "id", "type": "uuid", "not_null": true },
+        { "name": "email", "type": "varchar", "not_null": false },
+        { "name": "email_confirmed_at", "type": "timestamptz", "not_null": false },
+        { "name": "banned_until", "type": "timestamptz", "not_null": false },
+        { "name": "deleted_at", "type": "timestamptz", "not_null": false },
+        { "name": "is_anonymous", "type": "bool", "not_null": true }
+      ]
+    },
+    {
+      "schema": "storage",
+      "table": "buckets",
+      "rls": true,
+      "rls_forced": false,
+      "columns": [
+        { "name": "id", "type": "text", "not_null": true },
+        { "name": "public", "type": "bool", "not_null": false },
+        { "name": "file_size_limit", "type": "int8", "not_null": false },
+        { "name": "allowed_mime_types", "type": "_text", "not_null": false }
+      ]
+    },
+    {
+      "schema": "storage",
+      "table": "objects",
+      "rls": true,
+      "rls_forced": false,
+      "columns": [
+        { "name": "id", "type": "uuid", "not_null": true },
+        { "name": "bucket_id", "type": "text", "not_null": false },
+        { "name": "name", "type": "text", "not_null": false }
+      ]
+    }
+  ]
+}

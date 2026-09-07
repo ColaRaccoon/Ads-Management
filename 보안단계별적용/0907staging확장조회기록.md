@@ -82,3 +82,55 @@
 - D의 최종 문서·handoff 독립 평가 PASS, 해당 범위 신규 P0/P1/P2/P3 0.
   이는 main의 UI 관찰 기록과 로컬 source/SQL 대조 평가이며 D의 별도 실제 DB 실행이 아니다.
   기존 actual-backup blocker와 SQL NOT RUN은 유지한다. main 전체 diff/`git diff --check` PASS.
+
+## 사용자 수동 실행으로 해소된 Phase 1 (05:39–05:40 UTC)
+
+- 사용자가 검토 SQL을 실행한 결과 `C:\Users\seong\Desktop\rs.txt`를 전달했고,
+  이어 **exact staging `ehnfrrmbkvlsbpvqcvkr`에서 실행했다**고 명시 확인했다. 함께 전달한
+  화면은 `Meta Ads Performance Security Dev` org/project, Free, SQL 결과 1 row와 쿼리 하단의
+  LIMIT/ROLLBACK을 보여준다. 화면만으로 ref를 읽을 수 없으므로 사용자 확인과 함께 결속한다.
+- 외부 원본 증거: rs.txt 1,922 bytes, SHA256
+  `a68ce0e26ab3267af637c28a29d6740210d64fe67a8f460a6c0ec67d73905ba0`;
+  screenshot 118,079 bytes, SHA256
+  `5b00aff2232fe528715acc8e1e7c4004f01b3773ec9f733d35eca327ad249b09`.
+  비밀 없는 정규화 전사는 `증거/0907-staging-inventory-phase1-result.json`에 보존하며
+  SHA256은 `699df19f62e506fefa4f5d58429e46e824f4d52bc7d4716deab2110820535df9`다.
+  JSON key 순서를 무시한 원본과 전사의 의미 비교는 `SEMANTIC_MATCH`다.
+- Phase 1 catalog 결과: `transaction_read_only=on`, statement/lock timeout `5s`/`1s`,
+  PostgreSQL `17.6` (`170006`), current database/principal `postgres`/`postgres`,
+  relation/column/enum count `3/13/0`, `truncated=false`.
+- 허용 catalog에 보인 relation은 `auth.users`, `storage.buckets`, `storage.objects`뿐이며
+  셋 모두 RLS ON/forced OFF다. public relation/enum은 0이다. 이는 보호 owner 제외 범위이며
+  pristine/full schema/Prisma history 부재를 확정하지 않는다. RLS ON만으로 anonymous/
+  authenticated 실제 deny 또는 exact bucket 보호를 PASS 처리하지 않는다.
+- D가 원본 text·screenshot과 해시, 결과/SQL 경계를 독립 검토했다. Phase 1 제한 catalog
+  조회만 PASS, 신규 P0/P1/P2/P3 0. Auth/Storage data aggregate, role/grant, policy 효과,
+  migration history, backup/restore와 운영 준비는 계속 NOT RUN이다.
+- PostgreSQL 17은 이제 Dashboard 표시뿐 아니라 SQL server major로도 확인됐다.
+  pg_dump 15.19 호환성 blocker의 근거가 강화됐으며 해소된 것이 아니다.
+
+## 후속 집계 준비 (아직 NOT RUN)
+
+- main과 B가 Auth/Storage 데이터 참조에는 Phase 1에서 실제 확인된 relation/column만 사용하고,
+  권한 쿼리는 PG17 catalog를 사전 정적 검토해 둘로 분리했다. D가 아래 exact bytes를
+  독립 정적 검토했으며 신규 OPEN P0/P1/P2/P3 0이다.
+- Phase 2a `증거/0907-staging-inventory-phase2a-auth-storage.sql`, SHA256
+  `3093ced8e894cb79011e473c11dcc321157a091238af600ff07b843f8b5c8a4c`:
+  Auth 상태·정규화 중복 숫자, exact bucket 설정/object 수, 다른 bucket 수, Storage table별
+  policy command/direct-role 집계만 반환한다. 이메일/UUID/object key/다른 bucket 이름/
+  policy 이름·식은 출력하지 않는다. Auth 10,000행, policy 64그룹, MIME 32개×128자
+  상한 초과와 exact bucket 불일치/RLS-visible subset은 성공 대신 BLOCKED다.
+- Phase 2b `증거/0907-staging-inventory-phase2b-roles-acl.sql`, SHA256
+  `76012752936b39767a6a8973ddc2d78de10e9e4ca0eba6a4585aef5d30ff095f`:
+  비밀 아닌 role 속성, PG17 direct membership 옵션, 현재 DB/세 schema/허용 relation ACL,
+  future default ACL을 bounded JSON으로 반환한다. `pg_authid`/password/role config/정책식은
+  조회하지 않으며 보호 principal이 owner/member/grantor/grantee인 관련 항목을 제외한다.
+- 두 쿼리 모두 `BEGIN READ ONLY`, 5s/1s timeout, PostgreSQL `170006`, DB/principal
+  `postgres`, Phase 1 catalog 상태를 guard하고 마지막에 `ROLLBACK`한다. Phase 2a는 성공
+  status `INVENTORY_ONLY`, Phase 2b는 `SCOPED_CATALOG_INVENTORY_ONLY`여야 한다.
+- 실행 순서는 2a 먼저다. SQL 오류 또는 `BLOCKED_*`이면 즉시 중단하고 2b를 실행하지 않는다.
+  2a 성공 후에만 2b를 실행한다. 새 빈 exact staging SQL Editor를 사용하고 Save/공유하지 않으며
+  각 `inventory_json` 결과만 전달한다. production ref 화면에서는 실행하지 않는다.
+- role/ACL 결과는 protected-filtered direct catalog inventory다. empty/null ACL, 빠진 object,
+  transitive membership, schema/column/sequence 권한과 실제 effective 권한은 UNKNOWN/NOT RUN이며
+  이를 최소권한 PASS로 격상하지 않는다. Storage policy 집계도 exact bucket deny 증거가 아니다.
