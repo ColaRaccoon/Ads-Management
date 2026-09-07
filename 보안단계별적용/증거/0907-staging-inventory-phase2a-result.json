@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "total_users": 1,
+    "deleted_users": 0,
+    "anonymous_users": 0,
+    "missing_email_users": 0,
+    "email_confirmed_users": 1,
+    "currently_banned_users": 0,
+    "email_unconfirmed_users": 0,
+    "anonymous_status_null_users": 0,
+    "invalid_nonempty_email_users": 0,
+    "duplicate_normalized_email_groups": 0,
+    "duplicate_normalized_email_extra_users": 0
+  },
+  "bucket": {
+    "id": "meta-ads-security-step7-dev",
+    "public": false,
+    "object_count": 0,
+    "mime_type_count": 0,
+    "mime_array_state": "NULL",
+    "allowed_mime_types": null,
+    "file_size_limit_bytes": 52428800
+  },
+  "status": "INVENTORY_ONLY",
+  "lock_timeout": "1s",
+  "statement_timeout": "5s",
+  "storage_relations": [
+    {
+      "rls": true,
+      "table": "buckets",
+      "rls_forced": false,
+      "policy_count": 0
+    },
+    {
+      "rls": true,
+      "table": "objects",
+      "rls_forced": false,
+      "policy_count": 0
+    }
+  ],
+  "other_bucket_count": 0,
+  "server_version_num": "170006",
+  "storage_policy_scope": "TABLE_WIDE_DIRECT_ROLE_COUNTS_PROTECTED_ITEMS_EXCLUDED_NOT_BUCKET_AUTHORIZATION_TEST",
+  "transaction_read_only": "on",
+  "app_user_reference_status": "NOT_RUN_NO_ALLOWED_PUBLIC_APPUSER_RELATION",
+  "storage_policy_effect_status": "NOT_RUN_TABLE_COUNTS_DO_NOT_PROVE_BUCKET_ACCESS",
+  "row_security_filtering_active": false,
+  "storage_policy_command_role_groups": []
+}

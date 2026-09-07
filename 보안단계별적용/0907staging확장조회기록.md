@@ -109,7 +109,7 @@
 - PostgreSQL 17은 이제 Dashboard 표시뿐 아니라 SQL server major로도 확인됐다.
   pg_dump 15.19 호환성 blocker의 근거가 강화됐으며 해소된 것이 아니다.
 
-## 후속 집계 준비 (아직 NOT RUN)
+## 후속 집계 계약
 
 - main과 B가 Auth/Storage 데이터 참조에는 Phase 1에서 실제 확인된 relation/column만 사용하고,
   권한 쿼리는 PG17 catalog를 사전 정적 검토해 둘로 분리했다. D가 아래 exact bytes를
@@ -134,3 +134,34 @@
 - role/ACL 결과는 protected-filtered direct catalog inventory다. empty/null ACL, 빠진 object,
   transitive membership, schema/column/sequence 권한과 실제 effective 권한은 UNKNOWN/NOT RUN이며
   이를 최소권한 PASS로 격상하지 않는다. Storage policy 집계도 exact bucket deny 증거가 아니다.
+
+## 사용자 수동 실행으로 완료된 Phase 2a (07:26 UTC)
+
+- 사용자가 위 exact Phase 2a SQL의 `inventory_json`을 대화에 전달했다. 함께 전달한 화면은
+  `Meta Ads Performance Security Dev` org/project, Free, 결과 1 row, SQL 하단의 LIMIT/ROLLBACK을
+  보여준다. 이전 exact staging 확인과 연속된 실행 증거로 결속한다.
+- screenshot 115,977 bytes, SHA256
+  `cce54d27e39d89917073ec7edc6060866c695dbb2a7f649f0f205d285c818709`.
+  비밀 없는 결과 전사는 `증거/0907-staging-inventory-phase2a-result.json`, SHA256
+  `bf6ae285e346e404147161a829196d49917b6a55621b9a795b59988aeb94072d`다.
+- guard/result는 `INVENTORY_ONLY`, read-only ON, 5s/1s timeout, server `170006`,
+  RLS-visible subset filtering false다. Phase 2a의 성공 조건을 충족했다.
+- Auth: 총 1명, email confirmed 1명. unconfirmed/deleted/currently banned/anonymous/
+  missing email/invalid nonempty email/normalized duplicate group·extra user는 모두 0이다.
+  기존 “약 10명” 정보는 fresh aggregate와 불일치하므로 현재 근거로 사용하지 않는다.
+  삭제·유실·project 변경 등 원인을 추정하지 않으며 이번 작업의 Auth mutation은 0이다.
+  이 duplicate 결과는 API의 320자 ASCII normalizer 기준일 뿐 maintenance/provider의 별도
+  254자 규칙, Auth 로그인 또는 provider identity 연결 PASS가 아니다. staging test identity
+  구성은 후속 Auth gate에서 다룬다.
+- exact bucket `meta-ads-security-step7-dev`: private, 50 MiB (`52428800` bytes),
+  object 0, MIME allow-list NULL/0개. 다른 bucket 0개다.
+- `storage.buckets`/`storage.objects`는 RLS ON/forced OFF이고 보호 대상 제외 table-level
+  policy와 command/direct-role group 집계는 0이다. 실제 anon/authenticated deny/allow,
+  exact bucket scoped access, lifecycle과 앱 요구 policy의 존재·적합성은 계속 미확인/NOT RUN이다.
+- 허용 public AppUser relation이 없어 Auth-AppUser reference/collision은 NOT RUN이다.
+  migration/schema가 준비됐다는 뜻이 아니다.
+- Phase 2a 제한 집계만 PASS다. Phase 2b role/ACL은 이제 실행 가능하지만 아직 NOT RUN이다.
+  그 결과도 effective 최소권한 PASS가 아니며, 오류/`BLOCKED_*`이면 즉시 중단한다.
+- D가 screenshot/hash와 부모가 전달한 사용자 JSON semantic decode를 보존 전사와 독립
+  canonical 비교해 전체 일치를 확인했다. 최종 문서·증거 평가 PASS, 신규 OPEN P0/P1/P2/P3 0.
+  이는 D가 채팅의 raw escape 변환 자체를 별도로 관찰했다는 의미는 아니다.
