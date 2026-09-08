@@ -2,7 +2,8 @@
 
 작성 기준: 2026-09-08 KST  
 SSOT: `0901클라우드실배포잔여작업계획.md`  
-현재 판정: **LOCAL PREPARATION / provider NOT RUN / operationalReady=false**
+현재 판정: **PROVIDER PHASE 1 MAIN_REPORTED PASS / credential·migration·후속 단계 NOT RUN /
+operationalReady=false**
 
 ## 1. 범위와 release 경계
 
@@ -69,8 +70,10 @@ creator 자신이 임시로 하나 더 만든 뒤 DB/schema bootstrap 직후 그
    - 세 개의 서로 다른 client-side 생성 credential을 psql variable 또는 보호된 local secret
      file로만 주입한다. SQL/인자/process listing/log에 secret을 쓰지 않는다.
    - `password_encryption=scram-sha-256` 세션에서 각 role의 password를 설정하고 LOGIN을 켠다.
-   - direct login을 세 역할 각각 확인하되 URL과 password는 출력하지 않는다. 이 phase의 exact
-     runner는 안전한 credential path가 확정된 뒤 별도 생성·재검토한다.
+   - 현재 host의 direct IPv6는 도달 불가이므로 exact session pooler에서 role별 suffixed login과
+     `current_database/current_user/session_user`, TLS를 각각 확인한다. direct role login은 별도
+     IPv6-capable runner 전까지 NOT RUN으로 남긴다. URL과 password는 출력하지 않는다. 이 phase의
+     exact runner는 안전한 credential path가 확정된 뒤 별도 생성·재검토한다.
 3. **G-DB-02 — staging migration**
    - exact migration image index
      `f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd`와 이 bundle의
@@ -127,12 +130,13 @@ PG17 결과가 cloud 계약이다.
 
 - 현재 실행 host의 direct endpoint는 A record 없이 IPv6만 있고 local IPv6 default route가 없어
   auth 이전에 도달 불가다. staging base `postgres`의 session pooler/TLS `verify-full` read-only
-  preflight는 PASS했지만 `CREATE DATABASE`와 생성 직후 custom DB routing은 아직 NOT RUN이다.
+  preflight와 승인된 phase 1 `CREATE DATABASE`, suffixed admin login의 custom DB routing은 PASS했다.
 - migration과 backup은 IPv6 가능한 runner의 direct endpoint 또는 별도 승인·검증된 session pooler,
   TLS `verify-full` 후보를 유지한다. 함수 이름이나 과거 direct 전제를 실제 route 증거로 간주하지 않는다.
-- runtime은 session pooler 후보지만 custom database `meta_ads_staging` routing과 username suffix는
-  provider 실제 연결 전 **UNKNOWN/NOT RUN**이다. `current_database()`가 exact DB를 반환하고
-  connection limit·prepared statement 계약이 확인될 때만 선택한다.
+- runtime은 session pooler 후보지만 role credential과 runtime username suffix/routing은 여전히
+  **UNKNOWN/NOT RUN**이다. admin routing PASS를 runtime 결과로 확대하지 않는다. role별
+  `current_database()`가 exact DB를 반환하고 connection limit·prepared statement 계약이 확인될
+  때만 선택한다.
 - 별도 DB가 Supabase managed backup, Dashboard, extension/upgrade lifecycle에 동일하게 포함되는지
   아직 증명하지 않았다.
 - Auth/Storage HTTP와 별도 app DB의 invite/login/link/private-object lifecycle은 NOT RUN이다.
@@ -146,6 +150,16 @@ G-DB-00 phase 1 성공은 exact target receipt, 세 NOLOGIN restricted role, 새
 관리 edge 외 membership 0이다. collision·권한 오류·부분 적용·endpoint 불일치가 있으면 다음
 단계를 실행하지 않는다.
 
+2026-09-08 14:42 KST exact staging session pooler에서 승인된 phase 1을 한 번 실행했고 exit 0이었다.
+preflight와 `10/20`, 별도 read-only postcondition, 종료 후 session state 집계가 PASS했다. DB OID는
+`25404`, runtime/migration/backup role OID는 각각 `25397/25399/25401`이다. base ACL fingerprint는
+전후 `94af03f1e723fcb05d1fd0a1590bbf99`로 같고, final target session count는 0이었다. exact receipt는
+`증거/0908-staging-db-roles/provider-phase1-receipt.json`, SHA-256
+`d596ccd6bc43d479705d43cdd720221cdc71dec3c242f52ace1d70cdaba04059`다. raw stdout 파일은
+보존하지 않았으므로 provider 실행값은 MAIN_REPORTED structured receipt이며, 독립 평가는 파일·hash와
+assertion의 내부 일관성까지만 증명한다. 이 PASS는 NOLOGIN bootstrap과 admin custom DB
+routing까지만 증명한다.
+
 비파괴 containment는 exact database/role OID를 입력한 `90-rollback-containment.sql`로 새 DB를
 `ALLOW_CONNECTIONS=false`로 닫고 세 role을 NOLOGIN으로 바꾸는 것이다. 기존 세션을 자동 종료하거나
 DB를 삭제하지 않는다. 실제 삭제는 backup receipt, exact OID, dependency, active session, 승인 token을
@@ -154,5 +168,6 @@ DB를 삭제하지 않는다. 실제 삭제는 backup receipt, exact OID, depend
 사용하지 않는다. DB가 먼저 삭제된 뒤 role 삭제가 dependency로 실패할 수 있는 부분 완료도
 명시적으로 허용하며, 이 경우 NOLOGIN containment를 유지하고 재평가한다.
 
-완료 조건 전에는 `operationalReady=false`다. production, push, main merge, tag는 별도 승인 전
-실행하지 않는다.
+credential activation, role별 연결, migration, grant, backup/restore, Auth/Storage/app lifecycle은
+계속 NOT RUN이다. 완료 조건 전에는 `operationalReady=false`다. production, push, main merge,
+tag는 별도 승인 전 실행하지 않는다.

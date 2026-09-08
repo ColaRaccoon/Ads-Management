@@ -1,0 +1,193 @@
+{
+  "version": "r2a-staging-provider-phase1-receipt/v1",
+  "recordedAtUtc": "2026-09-08T05:47:42.3534609Z",
+  "recordedAtKst": "2026-09-08 14:47:42 +09:00",
+  "status": "PASS_NOLOGIN_BOOTSTRAP",
+  "operationalReady": false,
+  "evidenceClass": "MAIN_REPORTED_STRUCTURED_RECEIPT_NO_RAW_STDOUT_FILE",
+  "approval": {
+    "gate": "G-DB-00 phase 1",
+    "exactUserText": "완료 — G-DB-00 phase 1 승인",
+    "capturedAtUtc": "2026-09-08T05:26:06.2387902Z",
+    "scopeReusedForLaterMutation": false
+  },
+  "source": {
+    "branch": "codex/security-rbac",
+    "preExecutionHead": "24e39d4561368a664c7d3452f0e6d2d4c647a6be",
+    "releaseGitSha": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+    "preExecutionWorktreeClean": true,
+    "releaseSourceChanged": false
+  },
+  "target": {
+    "organizationId": "synohgzwspodxmfemoks",
+    "projectRef": "ehnfrrmbkvlsbpvqcvkr",
+    "projectName": "Meta Ads Performance Security Dev",
+    "region": "ap-northeast-2",
+    "plan": "Free",
+    "connectionMode": "session_pooler",
+    "host": "aws-0-ap-northeast-2.pooler.supabase.com",
+    "port": 5432,
+    "initialDatabase": "postgres",
+    "loginUser": "postgres.ehnfrrmbkvlsbpvqcvkr",
+    "applicationDatabase": "meta_ads_staging",
+    "productionExcludedRef": "iygjmosbelbosfxidqxv",
+    "transactionPoolerUsed": false,
+    "directFallbackUsed": false,
+    "patimaAppQueriedOrChanged": false
+  },
+  "credentialBoundary": {
+    "source": "%APPDATA%/postgresql/pgpass.conf",
+    "baseEntryCount": 1,
+    "applicationDatabaseEntryCount": 1,
+    "passwordFieldsNonempty": true,
+    "passwordFieldsComparedEqualInMemory": true,
+    "ownerMatchedWindowsUser": true,
+    "broadAllowAclCount": 0,
+    "secretPrinted": false,
+    "secretHashRecorded": false,
+    "secretStoredInGit": false,
+    "passwordResetReceipt": "USER_REPORTED"
+  },
+  "transport": {
+    "sslMode": "verify-full",
+    "caBytes": 1367,
+    "caSha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+    "clientImage": "postgres:17.6-bookworm",
+    "clientImageMultiArchIndex": "f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3",
+    "connectTimeoutSeconds": 8,
+    "psqlFlags": ["-X", "-w", "ON_ERROR_STOP=1", "VERBOSITY=verbose"],
+    "environmentAllowlist": true,
+    "passwordCopiedOnlyToContainerTmpfsMode0600": true,
+    "containerReadOnlyRoot": true,
+    "containerRemovedAfterExit": true
+  },
+  "scripts": {
+    "adminPreflight": {
+      "path": "보안단계별적용/증거/0908-staging-db-roles/00-admin-preflight.sql",
+      "bytes": 2488,
+      "sha256": "ea6ac796565111f4160dda40139379f20c5b6c11242508985ea959240b7faa36"
+    },
+    "adminBootstrap": {
+      "path": "보안단계별적용/증거/0908-staging-db-roles/10-admin-bootstrap.sql",
+      "bytes": 3111,
+      "sha256": "bcef6f1669ce6a6636520880d3cbd515cc00eb2b586b3ed616fe4f19d5f8a634"
+    },
+    "applicationBootstrap": {
+      "path": "보안단계별적용/증거/0908-staging-db-roles/20-app-bootstrap.sql",
+      "bytes": 3076,
+      "sha256": "207ff4bd27936a2954ae3fed75c1a51e50a8d3fc254141e21bebca1c1cea82a1"
+    },
+    "providerWrapper": {
+      "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-provider-wrapper.sql",
+      "bytes": 469,
+      "sha256": "dbba8bbbe3b2bfc8ab1d4c2c286f53409a832782b359fce932e9c24bba81e898"
+    },
+    "providerPostcondition": {
+      "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-provider-postcondition.sql",
+      "bytes": 11948,
+      "sha256": "74bb5eb501d11534d5e915af20bc5454d3acbe01096959d5d43981a8c9d45884"
+    },
+    "failureInspection": {
+      "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-failure-inspect.sql",
+      "bytes": 2851,
+      "sha256": "3224133da6eaf70b7a0fbedf9afd76e114cf302bb8ef14dc2cfc7ff7d4faedef",
+      "executed": false
+    },
+    "postExitSessionClassification": {
+      "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-session-classification.sql",
+      "bytes": 891,
+      "sha256": "3c1db9af4001eb689da6c90f413253252d3cd7c4deb88f7062556450d71c5e3c"
+    },
+    "preExecutionManifestSha256": "0bec9e088f321a3d5308f52ae3efaa0e60f3b50975ee6adcf4327a48a232565d"
+  },
+  "localPreExecutionValidation": {
+    "exactProviderShapedPg17Pass": true,
+    "mountAndPrivatePassfilePass": true,
+    "providerNetworkRequests": 0,
+    "attempts": [
+      "attempt_1_expected_preflight_rejection_for_builtin_superuser_shape",
+      "attempt_2_initialization_temporary_server_socket_race_before_wrapper",
+      "attempt_3_provider_shaped_non_superuser_admin_full_wrapper_pass"
+    ],
+    "matchingContainersAfterCleanup": 0
+  },
+  "providerExecution": {
+    "startedAtUtc": "2026-09-08T05:42:26.8584556Z",
+    "endedAtUtc": "2026-09-08T05:42:29.9045179Z",
+    "exitCode": 0,
+    "wallTimeSeconds": 3.0402403,
+    "ddlOrWholeScriptRetryCount": 0,
+    "fallbackCount": 0,
+    "preflightStatus": "PREFLIGHT_PASS_NO_MUTATION",
+    "adminBootstrapStatus": "ADMIN_BOOTSTRAP_PARTIAL_PENDING_APP_BOOTSTRAP",
+    "applicationBootstrapStatus": "APP_BOOTSTRAP_PASS_NOLOGIN",
+    "basePostconditionStatus": "PHASE1_BASE_POSTCONDITION_PASS",
+    "applicationPostconditionStatus": "PHASE1_APP_POSTCONDITION_PASS",
+    "structuredReceiptDerivedFromObservedToolOutput": true,
+    "rawStdoutFileStored": false
+  },
+  "observed": {
+    "serverVersionNum": "170006",
+    "backendCurrentUser": "postgres",
+    "backendSessionUser": "postgres",
+    "database": {
+      "name": "meta_ads_staging",
+      "oid": 25404,
+      "owner": "meta_ads_stg_migration",
+      "allowConnections": true,
+      "sessionPoolerAdminRouting": "PASS"
+    },
+    "roles": [
+      { "name": "meta_ads_stg_runtime", "oid": 25397, "login": false, "inherit": false, "superuser": false, "createDatabase": false, "createRole": false, "replication": false, "bypassRls": false, "connectionLimit": 2 },
+      { "name": "meta_ads_stg_migration", "oid": 25399, "login": false, "inherit": false, "superuser": false, "createDatabase": false, "createRole": false, "replication": false, "bypassRls": false, "connectionLimit": 2 },
+      { "name": "meta_ads_stg_backup", "oid": 25401, "login": false, "inherit": false, "superuser": false, "createDatabase": false, "createRole": false, "replication": false, "bypassRls": false, "connectionLimit": 2 }
+    ],
+    "creatorManagementEdgeCount": 3,
+    "temporarySelfSetEdgeCount": 0,
+    "basePostgresAclBeforeMd5": "94af03f1e723fcb05d1fd0a1590bbf99",
+    "basePostgresAclAfterMd5": "94af03f1e723fcb05d1fd0a1590bbf99",
+    "basePostgresAclUnchanged": true,
+    "databasePublicPrivilegeCount": 0,
+    "schema": {
+      "name": "public",
+      "owner": "meta_ads_stg_migration",
+      "publicPrivilegeCount": 0
+    },
+    "migrationGlobalFunctionAndTypeDefaultAclCount": 2,
+    "publicRelationCount": 0,
+    "publicEnumCount": 0,
+    "publicRoutineCount": 0,
+    "publicUserTriggerCount": 0,
+    "targetBackendCountDuringVerification": 1,
+    "postExitTargetSessionStateTotal": 0
+  },
+  "effects": {
+    "providerCatalogRolesCreated": 3,
+    "providerDatabasesCreated": 1,
+    "providerSchemasCreated": 0,
+    "existingPublicSchemaOwnerAndAclChangedInNewDatabase": true,
+    "defaultAclRowsCreatedInNewDatabase": 2,
+    "applicationTablesOrDataChanged": false,
+    "authChanged": false,
+    "storageChanged": false,
+    "productionChanged": false,
+    "connectionOrAuthOrDdlLogsPossible": true
+  },
+  "rollback": {
+    "containmentExecuted": false,
+    "destructiveRollbackExecuted": false,
+    "containmentScriptSha256": "240efad5104394d3caf6b1137aab1efd9c7580b0cd68e528f514e3f407dbb98b",
+    "exactOidsRecorded": true,
+    "separateApprovalRequired": true
+  },
+  "notRun": [
+    "role LOGIN or SCRAM credential activation",
+    "runtime or migration role session-pooler authentication",
+    "Prisma migration and application table creation",
+    "post-migration grants and full catalog verification",
+    "managed backup coverage and restore",
+    "R2 upload",
+    "Auth, Storage, application, Koyeb, or production lifecycle",
+    "containment or destructive rollback"
+  ]
+}
