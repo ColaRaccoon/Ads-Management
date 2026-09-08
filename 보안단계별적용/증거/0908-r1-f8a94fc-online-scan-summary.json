@@ -1,0 +1,273 @@
+{
+  "schemaVersion": "meta-ads/r1-online-scan-summary/v1",
+  "approval": "R1 새 release online advisory + 6-image Scout metadata 전송 승인",
+  "branch": "codex/security-rbac",
+  "executionHead": "4e7e9c427b858e7f3414e9e7e295311d934d829d",
+  "releaseSourceCommit": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+  "localVerificationSummary": {
+    "path": "보안단계별적용/증거/0908-r1a-f8a94fc-local-verification-summary.json",
+    "sha256": "e92e26ac9d022ac298ccc804bf27927522703b9bcf273b9786e589342a4af27e"
+  },
+  "evidenceDirectory": "C:\\Users\\seong\\AppData\\Local\\Temp\\meta-ads-scan-f8a94fc-20260908T0011Z",
+  "executionEvidenceBoundary": "COMMAND_TIME_EXIT_DISK_AND_ATTEMPT_COUNT_ARE_MAIN_REPORTED_IN_LEDGER; OUTPUT_HASHES_AND_CONTENT_ARE_INDEPENDENTLY_READABLE",
+  "onlineProductionAudit": {
+    "recipient": "https://registry.npmjs.org",
+    "attemptCountMainReported": 1,
+    "startedAt": "2026-09-08T00:30:02.5030621Z",
+    "endedAt": "2026-09-08T00:30:03.7691977Z",
+    "exitCode": 0,
+    "validJson": true,
+    "errorFieldPresent": false,
+    "vulnerabilities": { "info": 0, "low": 0, "moderate": 0, "high": 0, "critical": 0, "total": 0 },
+    "lockSha256Before": "42eb0902b3ab57c58659368fcc593edec61d54f216dac5584a42fc4307df20f3",
+    "lockSha256After": "42eb0902b3ab57c58659368fcc593edec61d54f216dac5584a42fc4307df20f3",
+    "reportBytes": 366,
+    "reportSha256": "f95ccb3b9aea1bf99d267a032daef24004cbce4b964796d69bc6a8ca147caf27",
+    "warning": "npm 10.9.4 accepted but warned that --audit-registry is an unknown CLI config and will stop working in a future major"
+  },
+  "executionLedgers": {
+    "npmAuditSha256": "7ba6b5674db7595aa95a1dcebc2fe60a392deef5b0fb98700277213e5ccec558",
+    "publicSha256": "2b8029e01824c6fb510a77b644a42b674772a0bee81b6eb6123a4140afa2b6e1",
+    "authSha256": "1afbd1f35a1803b023cda1bd120b429332e121ee461786b16f3eb6a3d44712e6",
+    "migrationSha256": "f1439393e4898320d15c29914e8feec8a2f337d789f1b2c94b8980f71a83a059",
+    "storageSha256": "89706446fc44eecc96ff4c499d1f52077dea9f4397625d42edbb457a0d63d9e5",
+    "backupSha256": "54cec2401211e07694fd1ee5b20f785e5f22ff179008a55fb03d50720f0dc0a2",
+    "legacySha256": "5b0ad165d62545bce29d9e192f6e9ad2ebe4db0de7e6fedcbed895591430ebc9"
+  },
+  "scout": {
+    "version": "1.20.3",
+    "platform": "linux/amd64",
+    "attemptCountPerImageMainReported": 1,
+    "automaticRetries": 0,
+    "scans": [
+      {
+        "purpose": "public",
+        "indexSha256": "aca7055edfaa6848a93f4caabe4669f12ceca4b906597cfc38ae89287651ae7d",
+        "startedAt": "2026-09-08T00:31:26.5267591Z",
+        "endedAt": "2026-09-08T00:32:03.0499770Z",
+        "exitCode": 2,
+        "indexedPackages": 643,
+        "sarifBytes": 363823,
+        "sarifSha256": "3f80cc3e3aec7d966ffae51acbb1cc10f9bc70b77a57219c75799cc8e60cf869",
+        "severity": { "critical": 3, "high": 10, "medium": 7, "low": 31, "unspecified": 5 },
+        "freeBeforeBytes": 10279108608,
+        "requiredBeforeBytes": 1713384172,
+        "freeAfterBytes": 10409287680,
+        "cleanupWarning": "SAME_INDEX_FILE_IN_USE_PRESERVED"
+      },
+      {
+        "purpose": "auth",
+        "indexSha256": "bc54264137bfdfb4d2d4c1aeaa21960b4332ba9089ab040b0206059895ecdd97",
+        "startedAt": "2026-09-08T00:33:35.0553377Z",
+        "endedAt": "2026-09-08T00:33:53.6868291Z",
+        "exitCode": 2,
+        "indexedPackages": 362,
+        "sarifBytes": 363823,
+        "sarifSha256": "3f80cc3e3aec7d966ffae51acbb1cc10f9bc70b77a57219c75799cc8e60cf869",
+        "severity": { "critical": 3, "high": 10, "medium": 7, "low": 31, "unspecified": 5 },
+        "freeBeforeBytes": 10408865792,
+        "requiredBeforeBytes": 1386235724,
+        "freeAfterBytes": 10282393600,
+        "cleanupWarning": null
+      },
+      {
+        "purpose": "migration",
+        "indexSha256": "f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd",
+        "startedAt": "2026-09-08T00:34:38.2838173Z",
+        "endedAt": "2026-09-08T00:35:14.4795141Z",
+        "exitCode": 2,
+        "indexedPackages": 637,
+        "sarifBytes": 363823,
+        "sarifSha256": "3f80cc3e3aec7d966ffae51acbb1cc10f9bc70b77a57219c75799cc8e60cf869",
+        "severity": { "critical": 3, "high": 10, "medium": 7, "low": 31, "unspecified": 5 },
+        "freeBeforeBytes": 10282442752,
+        "requiredBeforeBytes": 1649160544,
+        "freeAfterBytes": 9904590848,
+        "cleanupWarning": "SAME_INDEX_FILE_IN_USE_PRESERVED"
+      },
+      {
+        "purpose": "storage",
+        "indexSha256": "f66caaf6d6ce289c2d6a8d8c3fb649cef03f714eddd3a7584e86f4d38ee1d672",
+        "startedAt": "2026-09-08T00:36:48.0209856Z",
+        "endedAt": "2026-09-08T00:37:08.5648491Z",
+        "exitCode": 2,
+        "indexedPackages": 362,
+        "sarifBytes": 363823,
+        "sarifSha256": "3f80cc3e3aec7d966ffae51acbb1cc10f9bc70b77a57219c75799cc8e60cf869",
+        "severity": { "critical": 3, "high": 10, "medium": 7, "low": 31, "unspecified": 5 },
+        "freeBeforeBytes": 9902149632,
+        "requiredBeforeBytes": 1386228834,
+        "freeAfterBytes": 9776152576,
+        "cleanupWarning": null
+      },
+      {
+        "purpose": "backup",
+        "indexSha256": "b6054c05dc2b314dc4047e1ec1b0cbc05baece1475e51e3575f75b7a84c4dd8f",
+        "startedAt": "2026-09-08T00:37:54.7001853Z",
+        "endedAt": "2026-09-08T00:38:15.0876106Z",
+        "exitCode": 2,
+        "indexedPackages": 412,
+        "sarifBytes": 438465,
+        "sarifSha256": "1c9d9980047d0d1b984e207f7bd6b859b0de10e4682c37bbcf2e3103b0f1bce4",
+        "severity": { "critical": 3, "high": 10, "medium": 7, "low": 40, "unspecified": 5 },
+        "freeBeforeBytes": 9774247936,
+        "requiredBeforeBytes": 1419419374,
+        "freeAfterBytes": 9646948352,
+        "cleanupWarning": null
+      },
+      {
+        "purpose": "legacy",
+        "indexSha256": "b4527854d1c2e655401aee38af745a32e2a470b76e8ebd63ec60cb76ddb3ce74",
+        "startedAt": "2026-09-08T00:39:01.5936008Z",
+        "endedAt": "2026-09-08T00:39:21.3083151Z",
+        "exitCode": 2,
+        "indexedPackages": 362,
+        "sarifBytes": 363823,
+        "sarifSha256": "3f80cc3e3aec7d966ffae51acbb1cc10f9bc70b77a57219c75799cc8e60cf869",
+        "severity": { "critical": 3, "high": 10, "medium": 7, "low": 31, "unspecified": 5 },
+        "freeBeforeBytes": 9646870528,
+        "requiredBeforeBytes": 1386240000,
+        "freeAfterBytes": 9520525312,
+        "cleanupWarning": null
+      }
+    ],
+    "allFindingsFixedVersion": "not fixed",
+    "normalizedRuleTupleDeltaAgainstEb4d4675": { "added": 0, "removed": 0 },
+    "criticalHigh": [
+      { "package": "perl", "version": "5.36.0-7+deb12u3", "severity": "critical", "cve": "CVE-2026-12087" },
+      { "package": "perl", "version": "5.36.0-7+deb12u3", "severity": "critical", "cve": "CVE-2026-13221" },
+      { "package": "openssl", "version": "3.0.20-1~deb12u2", "severity": "critical", "cve": "CVE-2026-75803" },
+      { "package": "perl", "version": "5.36.0-7+deb12u3", "severity": "high", "cve": "CVE-2026-48959" },
+      { "package": "perl", "version": "5.36.0-7+deb12u3", "severity": "high", "cve": "CVE-2026-48962" },
+      { "package": "openssl", "version": "3.0.20-1~deb12u2", "severity": "high", "cve": "CVE-2026-54874" },
+      { "package": "openssl", "version": "3.0.20-1~deb12u2", "severity": "high", "cve": "CVE-2026-63072" },
+      { "package": "openssl", "version": "3.0.20-1~deb12u2", "severity": "high", "cve": "CVE-2026-63076" },
+      { "package": "util-linux", "version": "2.38.1-5+deb12u3", "severity": "high", "cve": "CVE-2026-76642" },
+      { "package": "util-linux", "version": "2.38.1-5+deb12u3", "severity": "high", "cve": "CVE-2026-78408" },
+      { "package": "util-linux", "version": "2.38.1-5+deb12u3", "severity": "high", "cve": "CVE-2026-78409" },
+      { "package": "util-linux", "version": "2.38.1-5+deb12u3", "severity": "high", "cve": "CVE-2026-78410" },
+      { "package": "zlib", "version": "1:1.2.13.dfsg-1", "severity": "high", "cve": "CVE-2026-85091" }
+    ]
+  },
+  "officialCurrentReview": {
+    "checkedAtMainReported": "2026-09-08T00:54:24.1052000Z",
+    "nodeBaseOfficialRegistry": {
+      "checkedAtMainReported": "2026-09-08T01:02:41.5549176Z",
+      "retrieval": "READ_ONLY_WEB",
+      "exactTagSearchUrl": "https://hub.docker.com/_/node/tags?name=-bookworm-slim&page=1",
+      "fullDigestAliasDetailUrl": "https://hub.docker.com/layers/library/node/22-slim/",
+      "aliasDetailPageAlsoKnownAs": [
+        "22-bookworm-slim",
+        "22.23-bookworm-slim",
+        "22.23.2-bookworm-slim",
+        "22.23.2-slim",
+        "jod-bookworm-slim",
+        "jod-slim"
+      ],
+      "tag": "node:22-bookworm-slim",
+      "nodeVersion": "22.23.2",
+      "indexSha256": "83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5",
+      "linuxAmd64ManifestSha256": "4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96",
+      "matchesBuildProvenanceResolvedDependency": true,
+      "allSixBuildProvenancesResolvedSameBase": true,
+      "tagDigestChangeObserved": false
+    },
+    "debianSecurityTracker": {
+      "retrieval": "READ_ONLY_WEB",
+      "baseUrl": "https://security-tracker.debian.org/tracker/",
+      "targetCves": [
+        "CVE-2026-12087",
+        "CVE-2026-13221",
+        "CVE-2026-48959",
+        "CVE-2026-48962",
+        "CVE-2026-75803",
+        "CVE-2026-54874",
+        "CVE-2026-63072",
+        "CVE-2026-63076",
+        "CVE-2026-76642",
+        "CVE-2026-78408",
+        "CVE-2026-78409",
+        "CVE-2026-78410",
+        "CVE-2026-85091"
+      ],
+      "installedSourcePackages": [
+        {
+          "package": "perl",
+          "version": "5.36.0-7+deb12u3",
+          "targetCveCount": 4,
+          "bookwormStatus": "vulnerable"
+        },
+        {
+          "package": "openssl",
+          "version": "3.0.20-1~deb12u2",
+          "targetCveCount": 4,
+          "bookwormStatus": "vulnerable"
+        },
+        {
+          "package": "util-linux",
+          "version": "2.38.1-5+deb12u3",
+          "targetCveCount": 4,
+          "bookwormStatus": "vulnerable"
+        },
+        {
+          "package": "zlib",
+          "version": "1:1.2.13.dfsg-1",
+          "targetCveCount": 1,
+          "bookwormStatus": "vulnerable"
+        }
+      ],
+      "allInstalledBookwormVersionsStillVulnerable": true,
+      "bookwormFixedVersionPublishedForTargetCves": false
+    },
+    "cisaKev": {
+      "canonicalUrl": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+      "canonicalDirectFetch": "HTTP_403_NOT_USED_AS_CONTENT_EVIDENCE",
+      "officialMirrorRepository": "https://github.com/cisagov/kev-data",
+      "mirrorStatement": "CISA-operated repository states it mirrors cisa.gov/kev and updates shortly after the canonical source",
+      "immutableCommit": "ac9d37166471fbed6a03dff6c84f05e9c6b1d2c2",
+      "immutableJsonUrl": "https://raw.githubusercontent.com/cisagov/kev-data/ac9d37166471fbed6a03dff6c84f05e9c6b1d2c2/known_exploited_vulnerabilities.json",
+      "catalogVersion": "2026.09.04",
+      "dateReleased": "2026-09-04T16:47:03.5197Z",
+      "count": 1695,
+      "targetCveMatches": [],
+      "targetCveMatchCount": 0
+    }
+  },
+  "independentReview": {
+    "analysisAgent": {
+      "newFindings": {
+        "p0": 0,
+        "p1": 0,
+        "p2": 0,
+        "p3": 0
+      },
+      "executionFieldsBoundary": "MAIN_REPORTED",
+      "officialDebianOrKevRefreshByAgent": "NOT_RUN"
+    },
+    "releaseEvaluator": {
+      "newFindings": {
+        "p0": 0,
+        "p1": 0,
+        "p2": 0,
+        "p3": 0
+      },
+      "existingFinding": "P1-REL-001_OPEN_PENDING_NEW_EXACT_RISK_ACCEPTANCE"
+    }
+  },
+  "cleanup": {
+    "forcedDeletionOrUnlock": false,
+    "preservedArchives": [
+      { "indexSha256": "aca7055edfaa6848a93f4caabe4669f12ceca4b906597cfc38ae89287651ae7d", "bytes": 289871360 },
+      { "indexSha256": "f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd", "bytes": 257787392 }
+    ]
+  },
+  "riskAcceptance": "NOT_APPROVED_FOR_F8A94FC_IMAGES",
+  "notRun": [
+    "REGISTRY_PUBLISH",
+    "KOYEB_DEPLOYMENT",
+    "ACTUAL_STAGING_FULL_CMD",
+    "ACTUAL_SUPABASE_MUTATION",
+    "ACTUAL_DATABASE_DUMP_RESTORE"
+  ],
+  "operationalReady": false
+}
