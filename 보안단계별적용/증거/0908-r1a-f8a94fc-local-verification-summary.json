@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "meta-ads/r1a-local-verification-summary/v1",
+  "recordedAt": "2026-09-08T00:11:26.9719078Z",
+  "source": {
+    "branch": "codex/security-rbac",
+    "fullCommit": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+    "worktreeAtVerification": "CLEAN"
+  },
+  "scope": "LOCAL_ONLY_NO_PROVIDER_NO_REGISTRY",
+  "images": [
+    {
+      "purpose": "public",
+      "indexSha256": "aca7055edfaa6848a93f4caabe4669f12ceca4b906597cfc38ae89287651ae7d",
+      "linuxAmd64ManifestSha256": "b4b84b8465d4aed333a46cbf2a53e0555555f04d19cb92197d35de2e3e4153dd",
+      "configSha256": "3f4ae88ab74eb910103b96b311ea47753dca93de7c262842882b6768eadc69f5",
+      "attestationManifestSha256": "b9925726577729c2d9786381347b14baac7c346c396874c9fce1423354f73639",
+      "spdxSha256": "921d67c2454ff3b8636fe132b195e98116170added1ad97db42ce881ec00d3cd",
+      "provenanceSha256": "119cfb6ab7d41a5ec22f2ffce3b2fa06f66520882f7932f2b82cb64d15d5bbf3",
+      "sizeBytes": 286266742,
+      "runtimeFileCount": 33669
+    },
+    {
+      "purpose": "auth",
+      "indexSha256": "bc54264137bfdfb4d2d4c1aeaa21960b4332ba9089ab040b0206059895ecdd97",
+      "linuxAmd64ManifestSha256": "a6202ceaebdc2e6111220a0aa671377cd84505af8bb14ecbd39620ac44a3d49f",
+      "configSha256": "34f22dc279d67ef5af303ae1b770759fa36d5ca2e5b068fc977f3877c37e85be",
+      "attestationManifestSha256": "c4e3e3bc03cb13cb700bdd98ac24e6a61f22f350065f7ecc6d5299443f564bff",
+      "spdxSha256": "56a45d9d219174066d2799418cb2838afec931c378d6e1f740c3fa9df1923fed",
+      "provenanceSha256": "d3a85ce995969dc91bfd9ff0adfcbb8799d0e2dd380eb296c9a4803bb015ce98",
+      "sizeBytes": 122692518,
+      "runtimeFileCount": 16430
+    },
+    {
+      "purpose": "migration",
+      "indexSha256": "f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd",
+      "linuxAmd64ManifestSha256": "093a60831ba1e7f0edb429f4e781618f0fb850a911594f8174b5cf2ef53d25ec",
+      "configSha256": "9927e9838311a38aadec5fab7eb71294ffffdc584ede97905f94eb613dc8d5e4",
+      "attestationManifestSha256": "ddd48a9368963b97d364cf875f1d7ecb2e1990ffc24af824bafee60fe6ceeef1",
+      "spdxSha256": "26a3377d0670823f19bdde18afcd94c5357f93d21537fa78cce55d4131e039eb",
+      "provenanceSha256": "1d6ea64b73c3f05f1060f669d05929b8a24550466c8abea9aaa1d140a0493152",
+      "sizeBytes": 254154928,
+      "runtimeFileCount": 32935
+    },
+    {
+      "purpose": "storage",
+      "indexSha256": "f66caaf6d6ce289c2d6a8d8c3fb649cef03f714eddd3a7584e86f4d38ee1d672",
+      "linuxAmd64ManifestSha256": "e71f0a096072621704c42a7d384eb0d58ec5d476bee12accfe6a45068dcff30f",
+      "configSha256": "b83af39e04b2a300f19366b3653cc4fdca47d33924a3697e91048e526dccf2ba",
+      "attestationManifestSha256": "4c0d6ce7ae0ceb8cb6440930db1b0b004b6d321ba9eb723dd005eb74ecb57aa3",
+      "spdxSha256": "8d4384ce8bd8b588dbd2eff905fbdce8094c29636e00d25ce1af62204ebdf6e2",
+      "provenanceSha256": "b30de83f365750556f08f9180556a3d50c4e3a857f260782335499aa2c4244b3",
+      "sizeBytes": 122689073,
+      "runtimeFileCount": 16430
+    },
+    {
+      "purpose": "backup",
+      "indexSha256": "b6054c05dc2b314dc4047e1ec1b0cbc05baece1475e51e3575f75b7a84c4dd8f",
+      "linuxAmd64ManifestSha256": "87f695a0f8d0d4e48a6433219a05e7e8c5e25403ff2616f1f824ba3d30f1e292",
+      "configSha256": "1a75f0ba4a867039e2aeffe4a9d85f66b40625d036f88a3ca197662555cb83bf",
+      "attestationManifestSha256": "297b39c5ffd7989c81580e379eedc6759a5d88db45c9554ae66a7bf4358e17e8",
+      "spdxSha256": "bbde9578bbebbda2b7299034a4d5b647da0652fb00e2f08fe249499469ff650a",
+      "provenanceSha256": "a290e8855297cae87f7135b1a613ef269dea3dd09a3fdf0fa2285fb16c0ecb1f",
+      "sizeBytes": 139284343,
+      "runtimeFileCount": 19718,
+      "pgDumpVersion": "17.11",
+      "postgresqlClient17": "17.11-1.pgdg12+2",
+      "libpq5": "17.11-1.pgdg12+2",
+      "postgresqlClientCommon": "293.pgdg12+1"
+    },
+    {
+      "purpose": "legacy",
+      "indexSha256": "b4527854d1c2e655401aee38af745a32e2a470b76e8ebd63ec60cb76ddb3ce74",
+      "linuxAmd64ManifestSha256": "782d1ad1e0b2d29a6abb9121e7e7e6650cbe7a42f5f65dd77921d2411141b543",
+      "configSha256": "ae85f683e2d484f99987578ea5ce3eaffdecec8d6ed08b32e32da4c4335046a0",
+      "attestationManifestSha256": "8a063996b88a07d6b46e349a86aaeb95df4a8b4c2362dcb8eef42d3c0e1e0a7c",
+      "spdxSha256": "31c9692abddd99af13ea4bd6a121e4820dfb9cea2da074012024cc0c003700f5",
+      "provenanceSha256": "847a2ec2055548be28a7803598e752363248d6acdb5390453a4f7555710b8941",
+      "sizeBytes": 122694656,
+      "runtimeFileCount": 16430
+    }
+  ],
+  "commonImageChecks": {
+    "platform": "linux/amd64",
+    "user": "node",
+    "uid": 1000,
+    "gid": 1000,
+    "nodeVersion": "22.23.2",
+    "qsVersion": "6.16.0",
+    "pcre2Version": "10.42-1+deb12u1",
+    "network": "none",
+    "readOnlyRootFilesystem": true,
+    "capabilitiesDropped": "ALL",
+    "noNewPrivileges": true,
+    "pidsLimit": 256,
+    "memoryBytes": 1073741824,
+    "memorySwapBytes": 1073741824,
+    "exitCode": 0,
+    "oomKilled": false,
+    "memoryEventCounts": 0
+  },
+  "syntheticResourceProfiles": [
+    { "scenario": "baseline", "cgroupPeakBytes": 49655808, "thresholdBytes": 734003200, "result": "PASS" },
+    { "scenario": "text-max", "cgroupPeakBytes": 104009728, "thresholdBytes": 891289600, "result": "PASS" },
+    { "scenario": "xlsx-max", "cgroupPeakBytes": 668004352, "thresholdBytes": 891289600, "result": "PASS" },
+    { "scenario": "bundle-max", "cgroupPeakBytes": 746172416, "thresholdBytes": 891289600, "result": "PASS" },
+    { "scenario": "report-max", "cgroupPeakBytes": 601604096, "thresholdBytes": 891289600, "result": "PASS" },
+    { "scenario": "concurrent-request", "cgroupPeakBytes": 578191360, "thresholdBytes": 891289600, "acceptedRequests": 1, "rejectedRequests": 1, "rejectedStatus": 503, "rejectionCode": "HEAVY_OPERATION_BUSY", "result": "PASS" }
+  ],
+  "sourceVerification": {
+    "fullRegressionCleanRetry": "PASS",
+    "firstFullRegressionAttempt": "ONE_EXISTING_TEST_TIMEOUT_THEN_ISOLATED_PASS",
+    "lint": "PASS",
+    "prismaValidate": "PASS",
+    "prismaGenerate": "PASS",
+    "build": "PASS",
+    "productionDependencyAuditOffline": "0_VULNERABILITIES",
+    "cloudRuntimeTests": "14_OF_14_PASS"
+  },
+  "attestationVerification": {
+    "spdxVersion": "SPDX-2.3",
+    "slsaPredicateType": "https://slsa.dev/provenance/v1",
+    "payloadHashesMatchBlobNames": true,
+    "subjectsMatchLinuxAmd64Manifests": true
+  },
+  "notRun": [
+    "CVE_SCAN_FOR_F8A94FC_IMAGES",
+    "ACTUAL_PRODUCTION_CMD_WITH_STAGING_ADAPTERS",
+    "ACTUAL_DATABASE_DUMP_RESTORE",
+    "ACTUAL_SUPABASE_AUTH_STORAGE_DATA_FLOWS",
+    "REGISTRY_PUBLISH",
+    "KOYEB_DEPLOYMENT"
+  ],
+  "operationalReady": false
+}

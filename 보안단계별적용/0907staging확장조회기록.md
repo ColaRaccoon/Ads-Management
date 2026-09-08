@@ -225,3 +225,27 @@
 - 따라서 승인된 G-SUP-STG-03의 비밀 없는 Dashboard/Auth 및 제한 catalog 조회는 현재 가능한
   범위까지 완료됐지만, 보호 owner 제외 때문에 Prisma history/pristine은 여전히 미확정이다.
   이를 staging application 준비 또는 R2A 완료로 승격하지 않고 `operationalReady=false`를 유지한다.
+
+## 2026-09-08 PG17 호환 보정과 G-DB-00 전 격리 방향
+
+- Phase 2b/SQL에서 확인한 staging server major 17에 맞춰 backup image를 `pg_dump 17.11`로
+  고정하고, dump 전에 실제 server/client major exact equality를 검사하도록 source를 보정했다.
+  새 source/image의 local build·test·version check는 PASS지만 staging DB 연결, dump, R2 upload,
+  restore는 실행하지 않았으므로 backup/restore는 계속 **NOT RUN**이다.
+- 공식 Supabase/PostgreSQL 계약을 기준으로 같은 project cluster에 별도 application database를
+  만들고 그 DB의 `public` schema만 앱 migration/runtime에 사용하는 방향이 현재 최소 영향안이다.
+  Dashboard/PostgREST/Auth/Storage의 관리 대상은 기본 `postgres` DB이므로 Auth/Storage는 기존
+  HTTP API를 유지하고 application row만 별도 DB로 분리한다. source의 Auth/Storage reference는
+  UUID이며 DB foreign key에 의존하지 않지만 이 연결은 actual target에서 아직 검증하지 않았다.
+- 별도 DB에서만 PUBLIC TEMPORARY를 회수하면 현재 기본 `postgres` DB의 managed 역할과
+  `patima_app` 사용에 직접 영향을 주지 않는 설계가 가능하다. 그러나 PostgreSQL role은 cluster
+  단위이므로 새 역할의 기본 DB 접근과 transitive/effective grant, default privilege를 별도 검증해야
+  하며 cluster 전체 완전 격리를 주장하지 않는다.
+- migration runner는 현재 schema `public` 계약이므로 별도 DB+`public`은 source 변경 없이 가능한
+  후보지만, custom schema를 택하면 코드 변경과 새 release 검증이 필요하다. Supabase platform이
+  별도 DB를 managed backup에 포함하는지는 확인되지 않았으므로 독립 `pg_dump`/restore proof를
+  필수로 유지한다.
+- 따라서 다음 `G-DB-00`은 DB 이름, runtime/migration/backup role 이름, owner/grant/default ACL,
+  connection 방식/session limit 2, credential 저장 경로, 기본 DB 접근 경계와 rollback SQL을 exact로
+  설계·독립 검토한 뒤에만 제시한다. 이 문단은 설계 방향 기록이지 DB 생성/role/grant 승인이나
+  provider 변경이 아니다. 이번 provider mutation은 0건이고 `operationalReady=false`다.
