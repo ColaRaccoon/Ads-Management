@@ -2,8 +2,8 @@
 
 작성 기준: 2026-09-08 KST  
 SSOT: `0901클라우드실배포잔여작업계획.md`  
-현재 판정: **PROVIDER PHASE 1 MAIN_REPORTED PASS / credential·migration·후속 단계 NOT RUN /
-operationalReady=false**
+현재 판정: **PROVIDER PHASE 1 MAIN_REPORTED PASS / PHASE 2 LOCAL PREPARED·PROVIDER NOT RUN /
+credential activation·migration·후속 단계 NOT RUN / operationalReady=false**
 
 ## 1. 범위와 release 경계
 
@@ -29,8 +29,12 @@ Storage는 Supabase HTTP API 및 기존 `postgres` DB의 managed schema에 남�
 세 역할의 공통 속성은 `NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION
 NOBYPASSRLS CONNECTION LIMIT 2`다. 첫 bootstrap에서는 모두 `NOLOGIN`으로 생성한다.
 서로 다른 client-side credential을 안전한 Git 외부 경로에 준비한 뒤 별도 G-DB-00으로
-`LOGIN`과 SCRAM password를 활성화한다. password/verifier/URI는 Git, SQL 파일, 터미널 출력,
-Dashboard query history, 증거 JSON에 넣지 않는다.
+`LOGIN`과 SCRAM password를 활성화한다. password/URI는 Git, SQL 파일, 터미널 출력,
+Dashboard query history, 증거 JSON에 넣지 않는다. client/container stdout·stderr에서 plaintext와
+verifier가 나오지 않는 경로는 local rehearsal로 검증했지만, Supavisor Pooler Logs와 PostgreSQL
+DDL/activity/server log가 verifier를 저장·표시·마스킹하는지는 공식 보장을 확인하지 못해
+**UNKNOWN**이다. 따라서 connection/auth/DDL metadata log와 verifier log residual 가능성을 승인
+gate에 명시한다.
 
 `meta_ads_stg_migration`이 새 DB, `public` schema, migration 생성 객체의 owner다. runtime은
 소스에서 확인한 table별 DML만 받고 DDL/TEMP/role 관리/ownership을 받지 않는다. backup은
@@ -67,13 +71,25 @@ creator 자신이 임시로 하나 더 만든 뒤 DB/schema bootstrap 직후 그
      exact suffixed admin login pgpass entry를 준비한다. reconnect는 `-reuse-previous=on`으로 검증된
      host/login/port/TLS를 유지하고 database name만 바꾼다.
 2. **G-DB-00 phase 2 — credential 활성화**
-   - 세 개의 서로 다른 client-side 생성 credential을 psql variable 또는 보호된 local secret
-     file로만 주입한다. SQL/인자/process listing/log에 secret을 쓰지 않는다.
-   - `password_encryption=scram-sha-256` 세션에서 각 role의 password를 설정하고 LOGIN을 켠다.
+   - `phase2-prepare-credentials.ps1`이 .NET CSPRNG 32 byte로 서로 다른 Base64url credential 3개를
+     만들고 `%APPDATA%\MetaAdsSecurity\staging-db-roles`에 DPAPI CurrentUser 암호문으로만 원자적
+     저장한다. directory/file ACL은 현재 user SID와 SYSTEM만 허용하며 값과 hash는 출력하지 않는다.
+     이미 같은 exact store가 있으면 회전 없이 검증만 하고, marker나 예상 밖 항목이 있으면 중단한다.
+   - `phase2-provider-run.ps1 -Mode Execute`는 plaintext를 local memory와 user/SYSTEM-only 임시
+     pgpass에만 복호화한다. 서로 다른 16-byte salt와 PBKDF2-HMAC-SHA256 4096으로 PostgreSQL 형식
+     SCRAM verifier를 client-side 생성하고, `--interactive` redirected stdin의 세 고정 `\prompt`
+     줄로만 psql에 공급한다. plaintext는 SQL/stdin/argv/environment/wire에 넣지 않는다.
+   - `password_encryption=scram-sha-256`, `scram_iterations=4096`을 assert한 한 admin transaction에서
+     exact OID 세 role의 verifier를 설정하고 LOGIN을 켠다. phase 1 상태, creator edge, DB ACL,
+     base ACL fingerprint와 target session 0이 다르면 mutation 전에 중단한다.
    - 현재 host의 direct IPv6는 도달 불가이므로 exact session pooler에서 role별 suffixed login과
-     `current_database/current_user/session_user`, TLS를 각각 확인한다. direct role login은 별도
-     IPv6-capable runner 전까지 NOT RUN으로 남긴다. URL과 password는 출력하지 않는다. 이 phase의
-     exact runner는 안전한 credential path가 확정된 뒤 별도 생성·재검토한다.
+     `current_database/current_user/session_user`, role OID/속성/최소권한/default ACL/TLS와 named
+     PREPARE→EXECUTE→DEALLOCATE를 각각 확인한다. `PGREQUIREAUTH=scram-sha-256`, 공식 CA,
+     `sslmode=verify-full`, session port 5432만 사용한다. direct role login은 별도 IPv6-capable
+     runner 전까지 NOT RUN으로 남긴다. URL과 password는 출력하지 않는다.
+   - wrong-password/cross-secret probe, transaction pooler, automatic retry는 0이다. Supavisor의 새
+     user+database+mode 전파 지연 상한은 UNKNOWN이므로 첫 실패를 credential 실패로 단정하거나
+     재시도하지 않는다.
 3. **G-DB-02 — staging migration**
    - exact migration image index
      `f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd`와 이 bundle의
@@ -137,6 +153,9 @@ PG17 결과가 cloud 계약이다.
   **UNKNOWN/NOT RUN**이다. admin routing PASS를 runtime 결과로 확대하지 않는다. role별
   `current_database()`가 exact DB를 반환하고 connection limit·prepared statement 계약이 확인될
   때만 선택한다.
+- phase 2 exact saved activation/role/final SQL은 provider-shaped local PG17과 self-signed synthetic
+  CA의 TLS `verify-full`에서 PASS했다. 이 결과는 Supabase TLS/pooler routing을 증명하지 않아
+  provider 항목은 계속 NOT RUN이다.
 - 별도 DB가 Supabase managed backup, Dashboard, extension/upgrade lifecycle에 동일하게 포함되는지
   아직 증명하지 않았다.
 - Auth/Storage HTTP와 별도 app DB의 invite/login/link/private-object lifecycle은 NOT RUN이다.
@@ -168,6 +187,50 @@ DB를 삭제하지 않는다. 실제 삭제는 backup receipt, exact OID, depend
 사용하지 않는다. DB가 먼저 삭제된 뒤 role 삭제가 dependency로 실패할 수 있는 부분 완료도
 명시적으로 허용하며, 이 경우 NOLOGIN containment를 유지하고 재평가한다.
 
-credential activation, role별 연결, migration, grant, backup/restore, Auth/Storage/app lifecycle은
-계속 NOT RUN이다. 완료 조건 전에는 `operationalReady=false`다. production, push, main merge,
-tag는 별도 승인 전 실행하지 않는다.
+Phase 2 runner는 승인된 exact target/OID/phase-1 receipt/CA/PG17 image/SQL·entrypoint hash를
+재검증하고 실행 전에 Git 외부 execution-state intent를 user/SYSTEM-only ACL, WriteThrough,
+`Flush(true)`, same-directory atomic move로 기록한다. Docker control/run/cleanup은 같은 sanitized
+environment와 literal `npipe:////./pipe/dockerDesktopLinuxEngine`에 고정한다. 각 container는
+execution별 owner label, `--cidfile`, full container ID에 결속하며 이름 충돌 container는 삭제하지
+않는다. cleanup과 임시 secret directory 삭제가 모두 확인된 뒤에만 atomic `active_verified`
+marker를 publish한다.
+
+activation의 `COMMIT` 결과가 불명확하거나 commit 뒤 positive verify가 실패하면 activation을 다시
+실행하지 않는다. known no-provider-attempt 또는 pre-COMMIT rollback 상태도 VerifyOnly 대상이 아니다.
+exact admin read-only catalog와 Pooler Logs로 먼저 분류하고 remote credential이 이미 active일
+개연성이 확인된 경우에만 **새 별도 승인**으로 `-Mode VerifyOnly`을 단 한 번 실행한다. VerifyOnly은
+activation SQL과 verifier 생성을 완전히 건너뛰고 세 role positive login과 final admin read-only
+verify만 수행한다. hard-stop의 승인된 Execute transient state만 exact 불변식과 attempt count 0일 때
+허용하며, mismatch·두 번째 attempt·stale temp·cleanup failure는 fail closed하고 별도 containment 또는
+local recovery를 재설계한다.
+
+2026-09-08 local synthetic rehearsal은 exact saved activation/role/final SQL, non-TTY verifier feeder,
+세 SCRAM-required positive login, TLS `verify-full`, forced-failure transaction rollback을 PASS했다.
+DPAPI prepare의 atomic create/idempotent no-rotation 및 activation marker atomic publish/read도 별도
+local test를 PASS했다. 이들은 actual staging credential을 만들거나 provider에 접속하지 않았으며
+provider mutation은 0이다.
+
+Phase 2 승인 후보의 exact artifact는 다음과 같다. 실행 직전 main은 bytes와 SHA-256을 모두 다시
+확인하며 하나라도 다르면 승인 token을 사용하지 않는다.
+
+| artifact | bytes | SHA-256 |
+|---|---:|---|
+| `phase2-prepare-credentials.ps1` | 3,701 | `9f739f75dcbe379391aaacb57d30a1dbedb073409c77bb6f7d389f4484a887dd` |
+| `phase2-provider-run.ps1` | 38,142 | `15eb19263d06ba3babd4786692abf7a7b8ed907d89934237336becc650f51002` |
+| `phase2-secret-lib.ps1` | 9,672 | `48ddce9d009f8c2e4aa46f18060608ed818807ceba546ea401666a20950fec2c` |
+| `phase2-provider-activation.sql` | 8,884 | `8b8527e25caff9fa9edab37420bd4808fbdf953fd75182a17e8e8c0c080671a7` |
+| `phase2-role-verify.sql` | 7,142 | `846762928ddc6012202fe989336536fd07c34dd37cd126591e81fe3da8043efe` |
+| `phase2-final-admin-verify.sql` | 4,837 | `3c13be90502d9947cc13f7bf42eea1e796001a12cdb7ef1755b6b600ef26f184` |
+| `phase2-container-entrypoint.sh` | 462 | `3116be65ed91b60e9e3db6f191440eedab020a671d1c438c965b32fe4d9e2c41` |
+| `phase2-local-forced-failure.sql` | 612 | `2302e83e9ace0aceec35596f1f8b059d02f89795db62029b8c0439f066a3ce09` |
+| `phase2-local-rehearsal.ps1` | 15,618 | `0a14b68d6c7466487e4bdf3b2380b85dcf7ad8a383e79edbad38f6e464c0851f` |
+| `phase2-local-rehearsal-summary.json` | 1,503 | `9e956deb85e71b6f14bdfae94005e51b806b6d26ac80d766cdae254b53ff3320` |
+
+최종 고정 runner는 A/B/C 독립 정적·모의 검토에서 신규 P0/P1/P2/P3 0건/GO였다. actual provider
+성공을 평가한 결과가 아니며, 승인 전 상태는 계속 provider NOT RUN이다. stale temp가 있으면 자동
+삭제하지 않고 owner-label/CID와 secret 잔류를 수동 분류·정리한 뒤 untouched attempt-0 state에만
+새 승인 VerifyOnly 1회를 허용한다.
+
+actual credential prepare/activation, role별 provider 연결, migration, grant, backup/restore,
+Auth/Storage/app lifecycle은 계속 NOT RUN이다. Phase 2는 새 exact 승인 대기 상태다. 완료 조건 전에는
+`operationalReady=false`다. production, push, main merge, tag는 별도 승인 전 실행하지 않는다.

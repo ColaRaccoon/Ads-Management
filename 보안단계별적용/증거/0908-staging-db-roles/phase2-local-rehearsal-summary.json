@@ -1,0 +1,31 @@
+{
+  "version": "r2a-phase2-local-rehearsal/v1",
+  "status": "PASS",
+  "startedAtUtc": "2026-09-08T07:41:04.1475847+00:00",
+  "endedAtUtc": "2026-09-08T07:41:16.1750049+00:00",
+  "postgresMajor": 17,
+  "providerShapedNonSuperuserAdmin": "PASS",
+  "exactSavedActivationScript": "PASS",
+  "nonTtyVerifierPromptFeeder": "PASS",
+  "newRolePlaintextInActivationSqlStdinArgvEnvironmentOrWire": 0,
+  "roleLoginPlaintextPassfileAndClientMemory": "EXPECTED_EPHEMERAL_PROTECTED",
+  "clientSideScramVerifierBooleanOnly": "PASS_LOCAL_SYNTHETIC",
+  "forcedFailureTransactionRollback": "PASS",
+  "positiveScramRequiredRoleLogins": 3,
+  "plaintextInActivationArgvOrOutput": 0,
+  "verifierInActivationOutput": 0,
+  "exactSavedRoleVerifyScript": "PASS_LOCAL_TLS_VERIFY_FULL",
+  "exactSavedFinalAdminVerifyScript": "PASS_LOCAL_TLS_VERIFY_FULL",
+  "localTlsVerifyFull": "PASS_SELF_SIGNED_SYNTHETIC_CA",
+  "providerTlsVerifyFull": "NOT_CLAIMED",
+  "providerPoolerRouting": "NOT_CLAIMED",
+  "providerMutation": 0,
+  "operationalReady": false,
+  "artifactHashes": {
+    "activationSql": "8b8527e25caff9fa9edab37420bd4808fbdf953fd75182a17e8e8c0c080671a7",
+    "roleVerifySql": "846762928ddc6012202fe989336536fd07c34dd37cd126591e81fe3da8043efe",
+    "finalVerifySql": "3c13be90502d9947cc13f7bf42eea1e796001a12cdb7ef1755b6b600ef26f184",
+    "forcedFailureSql": "2302e83e9ace0aceec35596f1f8b059d02f89795db62029b8c0439f066a3ce09",
+    "containerEntrypoint": "3116be65ed91b60e9e3db6f191440eedab020a671d1c438c965b32fe4d9e2c41"
+  }
+}

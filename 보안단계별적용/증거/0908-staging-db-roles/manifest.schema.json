@@ -11,7 +11,7 @@
   "properties": {
     "$schema": { "const": "./manifest.schema.json" },
     "version": { "const": "r2a-staging-db-role-manifest/v1" },
-    "status": { "enum": ["LOCAL_PREPARED", "LOCAL_REHEARSAL_PASS", "PROVIDER_PHASE1_PASS_NOLOGIN"] },
+    "status": { "enum": ["LOCAL_PREPARED", "LOCAL_REHEARSAL_PASS", "PROVIDER_PHASE1_PASS_NOLOGIN", "PROVIDER_PHASE1_PASS_PHASE2_LOCAL_PREPARED"] },
     "operationalReady": { "const": false },
     "target": {
       "type": "object",

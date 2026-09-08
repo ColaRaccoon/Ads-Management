@@ -1,7 +1,7 @@
 {
   "$schema": "./manifest.schema.json",
   "version": "r2a-staging-db-role-manifest/v1",
-  "status": "PROVIDER_PHASE1_PASS_NOLOGIN",
+  "status": "PROVIDER_PHASE1_PASS_PHASE2_LOCAL_PREPARED",
   "operationalReady": false,
   "target": {
     "organizationId": "synohgzwspodxmfemoks",
@@ -72,8 +72,8 @@
     "migrationHistoryRows": 37
   },
   "files": [
-    { "path": "보안단계별적용/.gitattributes", "bytes": 269, "sha256": "b735ead30af1af9626c276e9507a2d55339a6b379a84945e29f09a3e3447505a" },
-    { "path": "보안단계별적용/0908staging별도DB역할설계.md", "bytes": 13545, "sha256": "3fbd73ee0be94d74c067e63e5bf34aa46de01797c7decee6cb5a33c01fc48c37" },
+    { "path": "보안단계별적용/.gitattributes", "bytes": 316, "sha256": "30ce4aaca092a2017454af0d26369fd715facb0c146510eefeb17661670b27ab" },
+    { "path": "보안단계별적용/0908staging별도DB역할설계.md", "bytes": 19266, "sha256": "3828030861fa0fb1ac9dc412d9f2057c4adc6a45e6937355388b4936f6c5e724" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/00-admin-preflight.sql", "bytes": 2488, "sha256": "ea6ac796565111f4160dda40139379f20c5b6c11242508985ea959240b7faa36" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/10-admin-bootstrap.sql", "bytes": 3111, "sha256": "bcef6f1669ce6a6636520880d3cbd515cc00eb2b586b3ed616fe4f19d5f8a634" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/20-app-bootstrap.sql", "bytes": 3076, "sha256": "207ff4bd27936a2954ae3fed75c1a51e50a8d3fc254141e21bebca1c1cea82a1" },
@@ -84,13 +84,23 @@
     { "path": "보안단계별적용/증거/0908-staging-db-roles/image-hash-check.cjs", "bytes": 1466, "sha256": "15d8846741007c26afeda88cf8a5ab2f3fc19de5aaa11cc0fc98e06c582acd1a" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/local-rehearsal-summary.json", "bytes": 6510, "sha256": "3e511bf60af1cacf9c009f637d4b6860138107241fbbd016543f57e270e1a922" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/local-rehearsal.ps1", "bytes": 15635, "sha256": "1ed77b49ec859998d5b4a45ed593e89b21c2e3374876339dedb07f8ac0ff4d85" },
-    { "path": "보안단계별적용/증거/0908-staging-db-roles/manifest.schema.json", "bytes": 3363, "sha256": "289955ef256d3b1a7ccb6cbc1507ed53f9374ffc6aaaf92b8cf59257d77b85dc" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/manifest.schema.json", "bytes": 3409, "sha256": "03077e5e5d48a9ef366e86cc7606cbdeb37a0fa7541611540aa537d4f25322c5" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/migration-release.json", "bytes": 8062, "sha256": "96ccb7daecef9844de3e4e876f95aadda7a3041eafd0a02055fd614b1dc5f8dc" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/pooler-readonly-preflight.json", "bytes": 3150, "sha256": "9a4c19b6ea9a19738639dd021bfcf9ea29a4914194cd9447656aa225834bd25b" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-provider-wrapper.sql", "bytes": 469, "sha256": "dbba8bbbe3b2bfc8ab1d4c2c286f53409a832782b359fce932e9c24bba81e898" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-provider-postcondition.sql", "bytes": 11948, "sha256": "74bb5eb501d11534d5e915af20bc5454d3acbe01096959d5d43981a8c9d45884" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-failure-inspect.sql", "bytes": 2851, "sha256": "3224133da6eaf70b7a0fbedf9afd76e114cf302bb8ef14dc2cfc7ff7d4faedef" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-session-classification.sql", "bytes": 891, "sha256": "3c1db9af4001eb689da6c90f413253252d3cd7c4deb88f7062556450d71c5e3c" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-container-entrypoint.sh", "bytes": 462, "sha256": "3116be65ed91b60e9e3db6f191440eedab020a671d1c438c965b32fe4d9e2c41" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-final-admin-verify.sql", "bytes": 4837, "sha256": "3c13be90502d9947cc13f7bf42eea1e796001a12cdb7ef1755b6b600ef26f184" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-local-forced-failure.sql", "bytes": 612, "sha256": "2302e83e9ace0aceec35596f1f8b059d02f89795db62029b8c0439f066a3ce09" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-local-rehearsal-summary.json", "bytes": 1503, "sha256": "9e956deb85e71b6f14bdfae94005e51b806b6d26ac80d766cdae254b53ff3320" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-local-rehearsal.ps1", "bytes": 15618, "sha256": "0a14b68d6c7466487e4bdf3b2380b85dcf7ad8a383e79edbad38f6e464c0851f" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-prepare-credentials.ps1", "bytes": 3701, "sha256": "9f739f75dcbe379391aaacb57d30a1dbedb073409c77bb6f7d389f4484a887dd" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-provider-activation.sql", "bytes": 8884, "sha256": "8b8527e25caff9fa9edab37420bd4808fbdf953fd75182a17e8e8c0c080671a7" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-provider-run.ps1", "bytes": 38142, "sha256": "15eb19263d06ba3babd4786692abf7a7b8ed907d89934237336becc650f51002" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-role-verify.sql", "bytes": 7142, "sha256": "846762928ddc6012202fe989336536fd07c34dd37cd126591e81fe3da8043efe" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/phase2-secret-lib.ps1", "bytes": 9672, "sha256": "48ddce9d009f8c2e4aa46f18060608ed818807ceba546ea401666a20950fec2c" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/provider-phase1-receipt.json", "bytes": 8059, "sha256": "d596ccd6bc43d479705d43cdd720221cdc71dec3c242f52ace1d70cdaba04059" }
   ],
   "localRehearsal": {
@@ -101,6 +111,12 @@
     "catalogAndGrantVerification": "PASS_WITH_BASE_DB_RESIDUAL",
     "manualPgDumpAndList": "PASS",
     "syntheticContainmentAndRollback": "PASS",
+    "phase2SummaryPath": "보안단계별적용/증거/0908-staging-db-roles/phase2-local-rehearsal-summary.json",
+    "phase2ExactSavedActivationRoleAndFinalSql": "PASS_LOCAL_TLS_VERIFY_FULL",
+    "phase2ForcedFailureTransactionRollback": "PASS",
+    "phase2PositiveScramRequiredRoleLogins": 3,
+    "phase2DpapiAtomicIdempotentMarkerTest": "PASS_LOCAL_REDIRECTED_APPDATA_TEST_STORE_REMOVED",
+    "phase2ProviderExecution": "NOT_RUN",
     "providerEquivalence": "NOT_CLAIMED"
   },
   "provider": {
@@ -112,6 +128,11 @@
     "directConnection": "BLOCKED_IPV6_NO_LOCAL_ROUTE_BEFORE_TLS_AUTH_SQL",
     "sessionPoolerCustomDatabaseRouting": "PASS_ADMIN_POSTGRES_TO_META_ADS_STAGING_ONLY",
     "phase1NoLoginBootstrap": "PASS_RECEIPT_PROVIDER_PHASE1_RECEIPT_JSON",
+    "phase2ActualCredentialPreparation": "NOT_RUN",
+    "phase2ProviderActivationAndRoleVerification": "NOT_RUN",
+    "phase2WrongOrCrossCredentialTests": "NOT_RUN_PROHIBITED",
+    "phase2AutomaticRetry": "NOT_RUN_PROHIBITED",
+    "phase2ProviderVerifierLogging": "UNKNOWN",
     "migrationRunnerInspectPlanExecuteJournal": "NOT_RUN",
     "managedBackupAdditionalDatabaseCoverage": "NOT_RUN",
     "restore": "NOT_RUN",
@@ -121,8 +142,10 @@
     "New roles inherit CONNECT and TEMPORARY on the existing postgres database from PUBLIC; this is not full cluster isolation.",
     "The creator retains ADMIN true, INHERIT false, SET false management membership edges for the three new roles.",
     "Admin postgres session-pooler routing to meta_ads_staging passed; runtime, migration, and backup role credential authentication remain NOT RUN.",
-    "Credential activation requires a secure client-side path and a separate exact G-DB-00 approval.",
+    "Phase 2 has a locally rehearsed DPAPI/SCRAM path but actual credential preparation and provider activation require a separate exact G-DB-00 approval.",
     "Provider admin session-pooler TLS verify-full passed; role-specific SCRAM authentication and TLS remain NOT RUN.",
+    "Client/container output non-disclosure was tested locally; Supavisor and PostgreSQL provider-side verifier logging or masking remains UNKNOWN.",
+    "Supavisor propagation timing for a new user+database+session-mode combination is UNKNOWN; no automatic or wrong-password retry is allowed.",
     "Manual local pg_dump and pg_restore --list do not prove provider backup upload or restore."
   ]
 }
