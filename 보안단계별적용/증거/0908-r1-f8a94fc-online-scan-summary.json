@@ -234,7 +234,7 @@
     }
   },
   "independentReview": {
-    "analysisAgent": {
+    "preApprovalAnalysisAgent": {
       "newFindings": {
         "p0": 0,
         "p1": 0,
@@ -244,7 +244,7 @@
       "executionFieldsBoundary": "MAIN_REPORTED",
       "officialDebianOrKevRefreshByAgent": "NOT_RUN"
     },
-    "releaseEvaluator": {
+    "preApprovalReleaseEvaluator": {
       "newFindings": {
         "p0": 0,
         "p1": 0,
@@ -261,7 +261,41 @@
       { "indexSha256": "f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd", "bytes": 257787392 }
     ]
   },
-  "riskAcceptance": "NOT_APPROVED_FOR_F8A94FC_IMAGES",
+  "riskAcceptance": {
+    "status": "ACCEPTED_TIME_BOUND",
+    "approvalText": "새 G-REL-01 승인 — 위 f8a94fc exact 6-image/공통 13 C/H/SARIF 범위, owner: ColaRaccoon production owner, expiry: 2026-09-10 23:59:59 KST",
+    "receivedAtMainReported": "2026-09-08T01:12:03.4308677Z",
+    "firstOwnerReviewAt": "2026-09-08T10:12:03+09:00",
+    "owner": "ColaRaccoon production owner",
+    "expiresAt": "2026-09-10T23:59:59+09:00",
+    "nextPeriodicReviewDueBy": "2026-09-09T10:12:03+09:00",
+    "maximumReviewIntervalHours": 24,
+    "additionalReviewRequiredImmediatelyBefore": [
+      "REGISTRY_PUBLISH",
+      "KOYEB_DEPLOYMENT",
+      "MAINTENANCE_EXECUTION"
+    ],
+    "scope": {
+      "sourceCommit": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+      "imageCount": 6,
+      "criticalHighCount": 13,
+      "commonSarifSha256": "3f80cc3e3aec7d966ffae51acbb1cc10f9bc70b77a57219c75799cc8e60cf869",
+      "backupSarifSha256": "1c9d9980047d0d1b984e207f7bd6b859b0de10e4682c37bbcf2e3103b0f1bce4"
+    },
+    "earlyInvalidationConditions": [
+      "SOURCE_OR_IMAGE_OR_SARIF_CHANGE",
+      "CRITICAL_OR_HIGH_SET_CHANGE",
+      "BOOKWORM_OR_BASE_FIX_AVAILABLE",
+      "CISA_KEV_OR_ACTUAL_EXPLOIT_STATUS_CHANGE",
+      "REACHABILITY_OR_HARDENING_CHANGE",
+      "ACTUAL_VALIDATION_FAILURE",
+      "PERIODIC_OR_PRE_EXECUTION_REVIEW_MISSED",
+      "EXPIRY_REACHED"
+    ],
+    "providerMutationAuthorized": false,
+    "registryPublishAuthorized": false,
+    "gitPushMergeTagAuthorized": false
+  },
   "notRun": [
     "REGISTRY_PUBLISH",
     "KOYEB_DEPLOYMENT",
