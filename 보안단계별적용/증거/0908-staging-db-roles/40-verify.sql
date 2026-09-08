@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP on
 \pset pager off
 
-\connect meta_ads_staging meta_ads_stg_migration
+\connect -reuse-previous=on meta_ads_staging
 
 BEGIN READ ONLY;
 SET LOCAL statement_timeout = '15s';

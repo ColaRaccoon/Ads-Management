@@ -1,8 +1,8 @@
 \set ON_ERROR_STOP on
 \pset pager off
 
--- The same direct endpoint and postgres session must be bound to the approved staging receipt.
-\connect meta_ads_staging postgres
+-- Reuse the exact approved endpoint/login/TLS parameters; change only the database name.
+\connect -reuse-previous=on meta_ads_staging
 
 BEGIN;
 SET LOCAL statement_timeout = '10s';
@@ -49,7 +49,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE meta_ads_stg_migration
 COMMIT;
 
 -- Remove only the temporary self-granted SET edge. The creator management ADMIN/NOSET edge remains.
-\connect postgres postgres
+\connect -reuse-previous=on postgres
 BEGIN;
 SET LOCAL statement_timeout = '10s';
 SET LOCAL lock_timeout = '2s';

@@ -32,7 +32,7 @@
   \set expected_backup_oid '0'
 \endif
 
-\connect postgres postgres
+\connect -reuse-previous=on postgres
 
 SET statement_timeout = '30s';
 SET lock_timeout = '2s';

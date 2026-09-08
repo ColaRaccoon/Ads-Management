@@ -201,8 +201,27 @@ try {
     --entrypoint /bin/sh $backupImage -c `
     'pg_dump --schema=public --format=custom --no-owner --no-acl --file=/tmp/r2a.dump && test -s /tmp/r2a.dump && pg_restore --list /tmp/r2a.dump >/tmp/r2a.list && test -s /tmp/r2a.list && pg_dump --version'
 
+  $savedErrorActionPreference = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  $containmentGuardOutput = & docker exec $databaseContainer psql -v ON_ERROR_STOP=1 `
+    -v VERBOSITY=verbose -U postgres -d postgres -f /r2a/90-rollback-containment.sql 2>&1 | Out-String
+  $containmentGuardExitCode = $LASTEXITCODE
+  $ErrorActionPreference = $savedErrorActionPreference
+  if ($containmentGuardExitCode -eq 0 -or $containmentGuardOutput -notmatch '22012: division by zero') {
+    throw 'R2A_CONTAINMENT_MISSING_OID_GUARD_MISMATCH'
+  }
+  Write-Output 'EXPECTED_DENY containment_missing_receipt_oids'
+
+  $oidText = & docker exec $databaseContainer psql -At -v ON_ERROR_STOP=1 `
+    -U postgres -d postgres -c `
+    "SELECT d.oid,(SELECT oid FROM pg_roles WHERE rolname='meta_ads_stg_runtime'),(SELECT oid FROM pg_roles WHERE rolname='meta_ads_stg_migration'),(SELECT oid FROM pg_roles WHERE rolname='meta_ads_stg_backup') FROM pg_database d WHERE d.datname='meta_ads_staging';"
+  if ($LASTEXITCODE -ne 0) { throw 'R2A_LOCAL_OID_QUERY_FAILED' }
+  $oids = $oidText.Trim().Split('|')
+
   Invoke-DockerChecked exec $databaseContainer psql -v ON_ERROR_STOP=1 `
-    -U postgres -d postgres -f /r2a/90-rollback-containment.sql
+    -U postgres -d postgres -v expected_database_oid=$($oids[0]) `
+    -v expected_runtime_oid=$($oids[1]) -v expected_migration_oid=$($oids[2]) `
+    -v expected_backup_oid=$($oids[3]) -f /r2a/90-rollback-containment.sql
   $savedErrorActionPreference = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
   $containmentOutput = & docker exec $databaseContainer psql -v ON_ERROR_STOP=1 `
@@ -221,12 +240,6 @@ try {
       $runtimeNoLoginQueryExitCode -ne 0 -or $runtimeNoLogin -ne 't') {
     throw 'R2A_CONTAINMENT_LOGIN_DENIAL_MISMATCH'
   }
-
-  $oidText = & docker exec $databaseContainer psql -At -v ON_ERROR_STOP=1 `
-    -U postgres -d postgres -c `
-    "SELECT d.oid,(SELECT oid FROM pg_roles WHERE rolname='meta_ads_stg_runtime'),(SELECT oid FROM pg_roles WHERE rolname='meta_ads_stg_migration'),(SELECT oid FROM pg_roles WHERE rolname='meta_ads_stg_backup') FROM pg_database d WHERE d.datname='meta_ads_staging';"
-  if ($LASTEXITCODE -ne 0) { throw 'R2A_LOCAL_OID_QUERY_FAILED' }
-  $oids = $oidText.Trim().Split('|')
 
   # This deletion affects only the disposable local target created above.
   Invoke-DockerChecked exec $databaseContainer psql -v ON_ERROR_STOP=1 `

@@ -1,0 +1,94 @@
+{
+  "version": "r2a-staging-pooler-readonly-preflight/v1",
+  "recordedAtUtc": "2026-09-08T04:56:07.6573909Z",
+  "recordedAtKst": "2026-09-08 13:56:07 +09:00",
+  "status": "PASS_READ_ONLY_ROLLBACK",
+  "operationalReady": false,
+  "approval": {
+    "gate": "G-DB-POOLER-RO-01",
+    "userApproved": true,
+    "scopeReusedForMutation": false
+  },
+  "target": {
+    "organizationId": "synohgzwspodxmfemoks",
+    "projectRef": "ehnfrrmbkvlsbpvqcvkr",
+    "projectName": "Meta Ads Performance Security Dev",
+    "connectionMode": "session_pooler",
+    "host": "aws-0-ap-northeast-2.pooler.supabase.com",
+    "port": 5432,
+    "database": "postgres",
+    "loginUser": "postgres.ehnfrrmbkvlsbpvqcvkr",
+    "productionExcludedRef": "iygjmosbelbosfxidqxv"
+  },
+  "credentialBoundary": {
+    "source": "%APPDATA%/postgresql/pgpass.conf",
+    "directEntryCount": 1,
+    "poolerEntryCount": 1,
+    "placeholderCount": 0,
+    "otherOrInvalidEntryCount": 0,
+    "broadAllowAclCount": 0,
+    "secretReadIntoEvidence": false,
+    "secretPrinted": false,
+    "secretHashRecorded": false,
+    "passwordResetReceipt": "USER_REPORTED"
+  },
+  "directEndpointAttempt": {
+    "status": "BLOCKED_BEFORE_AUTH",
+    "host": "db.ehnfrrmbkvlsbpvqcvkr.supabase.co",
+    "aRecordCount": 0,
+    "aaaa": "2406:da12:5ca:b700:35d7:cc97:c7a5:fc61",
+    "localIpv6DefaultRouteCount": 0,
+    "tcp5432": false,
+    "passwordTested": false,
+    "tlsHandshakeRun": false,
+    "sqlRun": false
+  },
+  "transport": {
+    "sslMode": "verify-full",
+    "caSource": "Supabase Dashboard Database Settings download",
+    "caBytes": 1367,
+    "caSha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+    "clientImage": "postgres:17.6-bookworm",
+    "clientImageMultiArchIndex": "f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3",
+    "connectTimeoutSeconds": 8
+  },
+  "execution": {
+    "script": "보안단계별적용/증거/0908-staging-db-roles/00-admin-preflight.sql",
+    "scriptSha256": "ea6ac796565111f4160dda40139379f20c5b6c11242508985ea959240b7faa36",
+    "exitCode": 0,
+    "wallTimeSeconds": 1.8684494,
+    "transaction": "BEGIN READ ONLY",
+    "statementTimeout": "5s",
+    "lockTimeout": "1s",
+    "searchPath": "pg_catalog",
+    "termination": "ROLLBACK"
+  },
+  "observed": {
+    "status": "PREFLIGHT_PASS_NO_MUTATION",
+    "database": "postgres",
+    "currentUser": "postgres",
+    "sessionUser": "postgres",
+    "serverVersionNum": "170006",
+    "transactionReadOnly": "on",
+    "targetRoleCount": 0,
+    "targetDatabaseCount": 0,
+    "basePostgresPublicConnect": true,
+    "basePostgresPublicTemporary": true
+  },
+  "effects": {
+    "mainProviderMutationCount": 0,
+    "databaseCatalogOrDataChanges": 0,
+    "connectionOrAuthLogPossible": true,
+    "localDockerImagePulled": true,
+    "temporaryCaRetainedOutsideGit": true
+  },
+  "notRun": [
+    "CREATE DATABASE through the session pooler",
+    "session pooler routing to meta_ads_staging",
+    "G-DB-00 phase 1 bootstrap",
+    "role credential activation",
+    "migration and post-migration grants",
+    "managed backup and restore",
+    "Auth, Storage, data, or application lifecycle"
+  ]
+}

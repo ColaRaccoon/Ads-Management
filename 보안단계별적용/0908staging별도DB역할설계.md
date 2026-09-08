@@ -55,12 +55,16 @@ creator 자신이 임시로 하나 더 만든 뒤 DB/schema bootstrap 직후 그
 1. **G-DB-00 phase 1 — NOLOGIN bootstrap**
    - `00-admin-preflight.sql`, `10-admin-bootstrap.sql`, `20-app-bootstrap.sql`의 실행 직전
      raw byte SHA-256을 다시 계산한다.
-   - direct endpoint와 Dashboard의 staging ref를 같은 receipt에 결속한다. SQL만으로 project
-     ref를 증명할 수 없으므로 endpoint 확인이 없으면 실행하지 않는다.
+   - 승인된 direct 또는 session-pooler endpoint와 Dashboard의 staging ref를 같은 receipt에
+     결속한다. SQL만으로 project ref를 증명할 수 없으므로 endpoint/login suffix 확인이 없으면
+     실행하지 않는다. 현재 host는 direct IPv6 route가 없어 exact session-pooler tuple을 사용한다.
    - role/database collision, current DB/user, PG major, CREATEDB/CREATEROLE, base PUBLIC ACL이
      예상과 다르면 중단한다.
    - 세 NOLOGIN role과 disabled 상태의 새 DB를 생성하고, 새 DB의 PUBLIC 권한을 제거한 뒤
      explicit CONNECT만 부여하고 연결을 연다. 기존 base DB ACL은 바꾸지 않는다.
+   - session pooler 실행 전 `postgres`와 아직 존재하지 않는 `meta_ads_staging` 두 database에 대한
+     exact suffixed admin login pgpass entry를 준비한다. reconnect는 `-reuse-previous=on`으로 검증된
+     host/login/port/TLS를 유지하고 database name만 바꾼다.
 2. **G-DB-00 phase 2 — credential 활성화**
    - 세 개의 서로 다른 client-side 생성 credential을 psql variable 또는 보호된 local secret
      file로만 주입한다. SQL/인자/process listing/log에 secret을 쓰지 않는다.
@@ -121,7 +125,11 @@ PG17 결과가 cloud 계약이다.
 
 ## 5. 연결 경로와 아직 증명하지 않은 것
 
-- migration과 backup은 direct endpoint, TLS `verify-full` 후보를 유지한다.
+- 현재 실행 host의 direct endpoint는 A record 없이 IPv6만 있고 local IPv6 default route가 없어
+  auth 이전에 도달 불가다. staging base `postgres`의 session pooler/TLS `verify-full` read-only
+  preflight는 PASS했지만 `CREATE DATABASE`와 생성 직후 custom DB routing은 아직 NOT RUN이다.
+- migration과 backup은 IPv6 가능한 runner의 direct endpoint 또는 별도 승인·검증된 session pooler,
+  TLS `verify-full` 후보를 유지한다. 함수 이름이나 과거 direct 전제를 실제 route 증거로 간주하지 않는다.
 - runtime은 session pooler 후보지만 custom database `meta_ads_staging` routing과 username suffix는
   provider 실제 연결 전 **UNKNOWN/NOT RUN**이다. `current_database()`가 exact DB를 반환하고
   connection limit·prepared statement 계약이 확인될 때만 선택한다.
@@ -138,9 +146,10 @@ G-DB-00 phase 1 성공은 exact target receipt, 세 NOLOGIN restricted role, 새
 관리 edge 외 membership 0이다. collision·권한 오류·부분 적용·endpoint 불일치가 있으면 다음
 단계를 실행하지 않는다.
 
-비파괴 containment는 `90-rollback-containment.sql`로 세 role을 NOLOGIN으로 바꾸는 것이다.
-기존 세션을 자동 종료하거나 DB를 삭제하지 않는다. 실제 삭제는 backup receipt, exact OID,
-dependency, active session, 승인 token을 재확인하고 별도 승인한 경우에만
+비파괴 containment는 exact database/role OID를 입력한 `90-rollback-containment.sql`로 새 DB를
+`ALLOW_CONNECTIONS=false`로 닫고 세 role을 NOLOGIN으로 바꾸는 것이다. 기존 세션을 자동 종료하거나
+DB를 삭제하지 않는다. 실제 삭제는 backup receipt, exact OID, dependency, active session, 승인 token을
+재확인하고 별도 승인한 경우에만
 `99-rollback-destructive.sql`을 실행한다. `DROP OWNED`, `REASSIGN OWNED`, `CASCADE`, FORCE는
 사용하지 않는다. DB가 먼저 삭제된 뒤 role 삭제가 dependency로 실패할 수 있는 부분 완료도
 명시적으로 허용하며, 이 경우 NOLOGIN containment를 유지하고 재평가한다.

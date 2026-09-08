@@ -2,7 +2,7 @@
 \pset pager off
 
 -- Run as meta_ads_stg_migration only after the exact 37-migration G-DB-02 receipt.
-\connect meta_ads_staging meta_ads_stg_migration
+\connect -reuse-previous=on meta_ads_staging
 
 BEGIN;
 SET LOCAL statement_timeout = '15s';

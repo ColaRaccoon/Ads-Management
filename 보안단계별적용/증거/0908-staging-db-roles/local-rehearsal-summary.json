@@ -1,7 +1,7 @@
 {
   "version": "r2a-staging-db-role-local-rehearsal/v1",
-  "recordedAtUtc": "2026-09-08T02:54:57.2637651Z",
-  "recordedAtKst": "2026-09-08 11:54:57 +09:00",
+  "recordedAtUtc": "2026-09-08T04:56:07.6573909Z",
+  "recordedAtKst": "2026-09-08 13:56:07 +09:00",
   "status": "LOCAL_REHEARSAL_PASS",
   "operationalReady": false,
   "releaseGitSha": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
@@ -49,10 +49,11 @@
   },
   "finalExactSavedScriptRun": {
     "exitCode": 0,
-    "wallTimeSeconds": 15.2117186,
+    "wallTimeSeconds": 16.4745771,
     "preflight": "PASS_NO_MUTATION",
     "noLoginBootstrap": "PASS",
     "temporarySelfGrantedSetEdgeRemoved": true,
+    "databaseOnlyReconnectPreservesApprovedConnectionParameters": "PASS_LOCAL_PSQL17",
     "prismaMigrateDeploy": {
       "status": "PASS",
       "applied": 37,
@@ -78,7 +79,8 @@
       "unexpected_view_materialized_view_sequence_rejected_before_grant",
       "public_database_schema_table_function_type_acl_drift_rejected",
       "future_runtime_default_table_grant_rejected",
-      "missing_global_default_function_public_revoke_rejected"
+      "missing_global_default_function_public_revoke_rejected",
+      "containment_missing_receipt_oids_rejected"
     ],
     "positiveConnectionChecks": [
       "runtime_SELECT_products_limit_0",
@@ -99,6 +101,7 @@
       "public_acl_drift",
       "default_acl_drift",
       "missing_default_function_revoke",
+      "containment_missing_receipt_oids",
       "contained_runtime_LOGIN"
     ],
     "manualBackup": {
@@ -107,13 +110,13 @@
       "dumpBytes": "NOT_RECORDED_TMPFS_DESTROYED",
       "restoreExecution": "NOT_RUN"
     },
-    "containment": "PASS_THREE_ROLES_NOLOGIN",
+    "containment": "PASS_DATABASE_CLOSED_THREE_ROLES_NOLOGIN_EXACT_OIDS",
     "syntheticDestructiveRollback": "PASS_DATABASE_AND_ROLES_REMOVED",
     "cleanup": "PASS_NO_MATCHING_CONTAINER_OR_NETWORK_REMAINED"
   },
   "attemptHistory": {
-    "fullWorkflowAttempts": 12,
-    "finalExactSavedBytesPassAttempt": 12,
+    "fullWorkflowAttempts": 15,
+    "finalExactSavedBytesPassAttempt": 15,
     "earlierAttemptsNotPassEvidence": [
       "attempt_1_missing_explicit_SET_ROLE_for_database_owner_operations_and_launcher_exit_guard_gap",
       "attempt_2_powershell_helper_parameter_ambiguity_before_database_start",
@@ -125,7 +128,10 @@
       "attempt_8_containment_connection_sqlstate_unavailable_before_psql_verbosity",
       "attempt_9_containment_fatal_text_binding_not_portable_to_powershell_error_record",
       "attempt_10_saved_runner_pass_before_required_global_default_revoke_row_existence_guard",
-      "attempt_11_saved_runner_pass_before_bounded_post_reconnect_temporary_SET_edge_revoke_fix"
+      "attempt_11_saved_runner_pass_before_bounded_post_reconnect_temporary_SET_edge_revoke_fix",
+      "attempt_12_saved_runner_pass_before_pooler_connection_parameter_preserving_reconnect_fix",
+      "attempt_13_saved_runner_pass_before_pooler_agnostic_reconnect_comment_fix",
+      "attempt_14_saved_runner_pass_before_exact_OID_database_closed_containment_fix"
     ]
   },
   "deliberateResidual": {
@@ -140,8 +146,8 @@
     "Supabase provider role or database mutation",
     "provider SCRAM credential generation or activation",
     "TLS verify-full",
-    "direct endpoint reachability",
-    "session pooler custom database routing",
+    "direct endpoint TLS, authentication, and SQL after IPv6 reachability failed before them",
+    "session pooler custom database routing after the postgres database read-only preflight passed",
     "maintenance runner INSPECT PLAN_CHILD EXECUTE journal path",
     "Supabase managed backup coverage for the additional database",
     "actual database restore",
