@@ -1,0 +1,6 @@
+/0908staging별도DB역할설계.md text eol=lf
+/증거/0908-staging-db-roles/*.sql text eol=lf
+/증거/0908-staging-db-roles/*.json text eol=lf
+/증거/0908-staging-db-roles/*.ps1 text eol=lf
+/증거/0908-staging-db-roles/*.cjs text eol=lf
+/.gitattributes text eol=lf

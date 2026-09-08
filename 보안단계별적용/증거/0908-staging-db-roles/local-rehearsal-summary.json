@@ -1,0 +1,152 @@
+{
+  "version": "r2a-staging-db-role-local-rehearsal/v1",
+  "recordedAtUtc": "2026-09-08T02:54:57.2637651Z",
+  "recordedAtKst": "2026-09-08 11:54:57 +09:00",
+  "status": "LOCAL_REHEARSAL_PASS",
+  "operationalReady": false,
+  "releaseGitSha": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+  "environment": {
+    "scope": "DISPOSABLE_LOCAL_ONLY",
+    "providerNetworkRequests": 0,
+    "hostPublishedPorts": 0,
+    "network": "DOCKER_INTERNAL_BRIDGE_DYNAMIC_SUFFIX",
+    "databaseStorage": "TMPFS_DESTROYED_AFTER_RUN",
+    "fakeProjectRef": "aaaaaaaaaaaaaaaaaaaa",
+    "fakeDatabaseHost": "db.aaaaaaaaaaaaaaaaaaaa.supabase.co",
+    "productionRefPresent": false,
+    "patimaAppQueriedOrChanged": false
+  },
+  "images": {
+    "postgres": {
+      "multiArchIndex": "f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3",
+      "linuxAmd64Manifest": "45cd22f8d32e189d245403954882f88e7a8714301fda80dab6da90f1265b25a3",
+      "version": "17.6",
+      "platform": "linux/amd64"
+    },
+    "migration": {
+      "index": "f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd",
+      "platform": "linux/amd64",
+      "ociRevision": "f8a94fcf43aa4705befcaafbcb91045e154ae54b"
+    },
+    "backup": {
+      "index": "b6054c05dc2b314dc4047e1ec1b0cbc05baece1475e51e3575f75b7a84c4dd8f",
+      "platform": "linux/amd64",
+      "pgDumpVersion": "17.11"
+    }
+  },
+  "releaseBinding": {
+    "releaseId": "d7190cc24805ad7c8d0469aa407060b59a5a82449c3f1e3b2c434bc5db0af994",
+    "managedRelationCountExcludingPrismaHistory": 53,
+    "migrationCount": 37,
+    "migrationSqlBytes": 122467,
+    "migrationChainSha256": "3620f082569de51cebbd5218c8fa1bf38005e60c1dee7b45d5d8eac20d930f6b",
+    "imageInternalChecks": {
+      "migrationEntries": "PASS",
+      "nodeSha256": "PASS",
+      "prismaCliSha256": "PASS",
+      "schemaSha256": "PASS"
+    }
+  },
+  "finalExactSavedScriptRun": {
+    "exitCode": 0,
+    "wallTimeSeconds": 15.2117186,
+    "preflight": "PASS_NO_MUTATION",
+    "noLoginBootstrap": "PASS",
+    "temporarySelfGrantedSetEdgeRemoved": true,
+    "prismaMigrateDeploy": {
+      "status": "PASS",
+      "applied": 37,
+      "pending": 0
+    },
+    "catalog": {
+      "tables": 54,
+      "enums": 20,
+      "functions": 1,
+      "userTriggers": 2,
+      "migrationHistoryRows": 37
+    },
+    "grants": {
+      "runtimeTablesWithAnyDml": 48,
+      "runtimeDirectDmlDeniedTables": 6,
+      "backupSelectTables": 54,
+      "runtimeMatrixCatalogCheck": "PASS",
+      "backupMatrixCatalogCheck": "PASS",
+      "publicDatabaseSchemaObjectAclZero": "PASS",
+      "ownerOnlyGlobalDefaultFunctionAndTypeAcl": "PASS"
+    },
+    "guardNegativeRehearsals": [
+      "unexpected_view_materialized_view_sequence_rejected_before_grant",
+      "public_database_schema_table_function_type_acl_drift_rejected",
+      "future_runtime_default_table_grant_rejected",
+      "missing_global_default_function_public_revoke_rejected"
+    ],
+    "positiveConnectionChecks": [
+      "runtime_SELECT_products_limit_0",
+      "backup_SELECT_products_limit_0",
+      "backup_SELECT_prisma_history_count_37"
+    ],
+    "expectedDenials": [
+      "runtime_CREATE_TEMP",
+      "runtime_CREATE_TABLE",
+      "runtime_TRUNCATE_products",
+      "runtime_SELECT_prisma_history",
+      "runtime_SELECT_historical_backup_table",
+      "runtime_EXECUTE_app_trigger_function",
+      "backup_INSERT_app_settings",
+      "backup_CREATE_TEMP",
+      "backup_CREATE_TABLE",
+      "non_table_catalog_contamination",
+      "public_acl_drift",
+      "default_acl_drift",
+      "missing_default_function_revoke",
+      "contained_runtime_LOGIN"
+    ],
+    "manualBackup": {
+      "pgDumpCustomNoOwnerNoAcl": "PASS_NONEMPTY",
+      "pgRestoreList": "PASS_NONEMPTY",
+      "dumpBytes": "NOT_RECORDED_TMPFS_DESTROYED",
+      "restoreExecution": "NOT_RUN"
+    },
+    "containment": "PASS_THREE_ROLES_NOLOGIN",
+    "syntheticDestructiveRollback": "PASS_DATABASE_AND_ROLES_REMOVED",
+    "cleanup": "PASS_NO_MATCHING_CONTAINER_OR_NETWORK_REMAINED"
+  },
+  "attemptHistory": {
+    "fullWorkflowAttempts": 12,
+    "finalExactSavedBytesPassAttempt": 12,
+    "earlierAttemptsNotPassEvidence": [
+      "attempt_1_missing_explicit_SET_ROLE_for_database_owner_operations_and_launcher_exit_guard_gap",
+      "attempt_2_powershell_helper_parameter_ambiguity_before_database_start",
+      "attempt_3_ad_hoc_full_workflow_pass_before_saved_runner_was_frozen",
+      "attempt_4_saved_runner_inline_node_quoting_failure_after_bootstrap",
+      "attempt_5_saved_runner_expected_stderr_handling_failure_after_catalog_verify",
+      "attempt_6_saved_runner_pass_before_independent_default_acl_and_drift_findings",
+      "attempt_7_non_table_guard_error_capture_suppressed_by_powershell_error_preference",
+      "attempt_8_containment_connection_sqlstate_unavailable_before_psql_verbosity",
+      "attempt_9_containment_fatal_text_binding_not_portable_to_powershell_error_record",
+      "attempt_10_saved_runner_pass_before_required_global_default_revoke_row_existence_guard",
+      "attempt_11_saved_runner_pass_before_bounded_post_reconnect_temporary_SET_edge_revoke_fix"
+    ]
+  },
+  "deliberateResidual": {
+    "status": "OPEN_ACCEPTED_FOR_GATE_PROPOSAL_NOT_FULL_ISOLATION",
+    "baseDatabase": "postgres",
+    "cause": "EXISTING_PUBLIC_CONNECT_AND_TEMPORARY",
+    "newRolesEffectiveBaseConnect": true,
+    "newRolesEffectiveBaseTemporary": true,
+    "baseAclChangedByDesign": false
+  },
+  "notRun": [
+    "Supabase provider role or database mutation",
+    "provider SCRAM credential generation or activation",
+    "TLS verify-full",
+    "direct endpoint reachability",
+    "session pooler custom database routing",
+    "maintenance runner INSPECT PLAN_CHILD EXECUTE journal path",
+    "Supabase managed backup coverage for the additional database",
+    "actual database restore",
+    "R2 upload",
+    "Auth or Storage lifecycle",
+    "full production CMD and application readiness"
+  ]
+}
