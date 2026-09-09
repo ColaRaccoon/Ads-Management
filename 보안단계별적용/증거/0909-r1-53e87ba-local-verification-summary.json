@@ -1,0 +1,1242 @@
+{
+  "version": "r1-53e87ba-local-release-verification/v1",
+  "source": {
+    "fullCommit": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076"
+  },
+  "nodeBaseIndex": "83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5",
+  "evidenceDirectory": "C:\\Users\\seong\\AppData\\Local\\Temp\\meta-ads-release-53e87ba-20260909T0236Z",
+  "images": [
+    {
+      "purpose": "public",
+      "indexSha256": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+      "linuxAmd64ManifestSha256": "f1b9a331233ad3ae887ef8463b6c3f6ba0153f6aff82db28a9994b0224401113",
+      "configSha256": "ed1b0f517b0baf6d82d96784cf4fa9eb11ea60d1b79447df8d868ee46ee1f454",
+      "attestationManifestSha256": "19994392205d299b2645612e7d6ef21e738fea0ef02b221a487e2a9c032406ba",
+      "spdxSha256": "0660e64e2360f477e3b14268fa5cace836fb97941b885aee5a4528e0f213281f",
+      "provenanceSha256": "f78659a0410fd3d01f3466185fc9b0d6c56e33453b0e443066c9dedbb0708103",
+      "sizeBytes": 286652680,
+      "rawBlobHashesVerified": 6,
+      "tupleBinding": "PASS",
+      "sourceBaseUserPorts": "PASS"
+    },
+    {
+      "purpose": "auth",
+      "indexSha256": "0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+      "linuxAmd64ManifestSha256": "809fad704b324e08ce13d06c6ab35ec1e4d6a7a93bd9302c87cf4b8271d2209c",
+      "configSha256": "a7efe869088ba1a83b91a4df993fa351fff1be8602966031a727345e882ac501",
+      "attestationManifestSha256": "64ee01d6e54b1e8c06d1320b675b4a9da620a096e6514ab8b7d81b587c6d6cab",
+      "spdxSha256": "ed36987dbb42fcb9912d1a408a65b6013207bef342f83590a5fbd6adedf7d7f7",
+      "provenanceSha256": "8d177edecfeda9088366850ae070a95c45afb9787caf523fe0ce8f84f1825794",
+      "sizeBytes": 122739971,
+      "rawBlobHashesVerified": 6,
+      "tupleBinding": "PASS",
+      "sourceBaseUserPorts": "PASS"
+    },
+    {
+      "purpose": "migration",
+      "indexSha256": "bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+      "linuxAmd64ManifestSha256": "969284db5a1b9a59b4c379681a93112f6f98996046e319af1298bfe8f675ac77",
+      "configSha256": "920c6a4293f8e6324bdfb14d8f344f0638f918e10df4a8bdd2868980cea94a5c",
+      "attestationManifestSha256": "bc96afa8113d9a09e9946f4513098e829a41d1b9fcd734575e4dae403802f7fa",
+      "spdxSha256": "23cb37bca51d2e56fbecb221ace5debf64ece27b7c799c998763d00ee01d62f5",
+      "provenanceSha256": "add21ecb612740a68adb103900d2a5ac50213fd98d6059b8582cb6e0cf9279a5",
+      "sizeBytes": 254117533,
+      "rawBlobHashesVerified": 6,
+      "tupleBinding": "PASS",
+      "sourceBaseUserPorts": "PASS"
+    },
+    {
+      "purpose": "storage",
+      "indexSha256": "8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+      "linuxAmd64ManifestSha256": "04d277f6d1628cd3f669203d6c370f2ee88c93dcdfbc73c6ef10645a228bcaa3",
+      "configSha256": "376f45bdbb8f62047fd0a3c2135fda24b132410693a0de89bf851b28a8f2fa9f",
+      "attestationManifestSha256": "f031f50a5abc5454ec4023809d5cf98885837d10778ee4bcae455e7facdb1841",
+      "spdxSha256": "51a2e805a5f8d9fffb27faec69d3116ec949ae62fd2fbc238bc71de3ab73163b",
+      "provenanceSha256": "cb7f116e637c3d0545a121ca8cf07041272c4d19af77537f633b59c35f94b682",
+      "sizeBytes": 122736524,
+      "rawBlobHashesVerified": 6,
+      "tupleBinding": "PASS",
+      "sourceBaseUserPorts": "PASS"
+    },
+    {
+      "purpose": "backup",
+      "indexSha256": "64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+      "linuxAmd64ManifestSha256": "4901625d84e2085c4aca83bed19293bf55e3c491e927a929fb45e0722d219434",
+      "configSha256": "db5bc5830f2cc35e6d9f954cd66032fcd75feee4fd948249d7f07919aa75706b",
+      "attestationManifestSha256": "2acaa5813c22f920f26cf9c0f7b12410d41d7d117fa466df9ffc7df44183b248",
+      "spdxSha256": "4ebc776c65818c4ff7e37b22f5763b0937d3bb93fcb9d3e4540d3bad01300855",
+      "provenanceSha256": "cc3cca5e90978252d7acf5786c471e13ec3206ad5b8a7958644f304e35efa6e3",
+      "sizeBytes": 139331742,
+      "rawBlobHashesVerified": 6,
+      "tupleBinding": "PASS",
+      "sourceBaseUserPorts": "PASS"
+    },
+    {
+      "purpose": "legacy",
+      "indexSha256": "c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+      "linuxAmd64ManifestSha256": "e3be26d3e2d9efeb15701ae7a91ef424b014e231bff45bb8f80e9ca052e26103",
+      "configSha256": "3c439584e13f5afa0c0136aad980e7e05a51ef8252f91469f5697620879c36c7",
+      "attestationManifestSha256": "39a3bfc2f4a4c0ceec827af36473d58a6a0eecf9f81a7f0706735712eb68a139",
+      "spdxSha256": "23d90710bafbd5a2fd62f39f2bdd2a68f32a43b6de47573fc1a3961c87392d19",
+      "provenanceSha256": "dc8373b91d97a5f7600647b2011477a6638f8af293ae54b6faf1b9667192a94b",
+      "sizeBytes": 122742116,
+      "rawBlobHashesVerified": 6,
+      "tupleBinding": "PASS",
+      "sourceBaseUserPorts": "PASS"
+    }
+  ],
+  "builds": [
+    {
+      "purpose": "public",
+      "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+      "startUtc": "2026-09-09T02:37:38.332956Z",
+      "endUtc": "2026-09-09T02:39:10.9078074Z",
+      "exitCode": 0,
+      "attempt": 1,
+      "freeBytes": 12298391552
+    },
+    {
+      "purpose": "auth",
+      "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+      "startUtc": "2026-09-09T02:39:11.0655387Z",
+      "endUtc": "2026-09-09T02:39:53.8852787Z",
+      "exitCode": 0,
+      "attempt": 1,
+      "freeBytes": 12302303232
+    },
+    {
+      "purpose": "migration",
+      "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+      "startUtc": "2026-09-09T02:39:54.0155274Z",
+      "endUtc": "2026-09-09T02:41:02.3316907Z",
+      "exitCode": 0,
+      "attempt": 1,
+      "freeBytes": 12298006528
+    },
+    {
+      "purpose": "storage",
+      "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+      "startUtc": "2026-09-09T02:41:02.4622328Z",
+      "endUtc": "2026-09-09T02:41:14.5727926Z",
+      "exitCode": 0,
+      "attempt": 1,
+      "freeBytes": 12297928704
+    },
+    {
+      "purpose": "backup",
+      "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+      "startUtc": "2026-09-09T02:41:14.6649486Z",
+      "endUtc": "2026-09-09T02:41:43.3198511Z",
+      "exitCode": 0,
+      "attempt": 1,
+      "freeBytes": 12298010624
+    },
+    {
+      "purpose": "legacy",
+      "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+      "startUtc": "2026-09-09T02:41:43.3922415Z",
+      "endUtc": "2026-09-09T02:41:56.2471918Z",
+      "exitCode": 0,
+      "attempt": 1,
+      "freeBytes": 12298977280
+    }
+  ],
+  "rawOciVerification": {
+    "main": "PASS_36_OF_36",
+    "independentA": "PASS_36_OF_36_SOURCE_BASE_SUBJECT_6_OF_6"
+  },
+  "runtime": [
+    {
+      "mode": "closure-public",
+      "record": {
+        "mode": "closure-public",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "3aaf73e5fcbdf033b88eff167fe56b2115b33e23ef5d1b17a201d1e1b498cadf",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:29.966095827Z",
+          "FinishedAt": "2026-09-09T02:43:32.530650148Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": []
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "result": "PASS",
+        "fileCount": 33673
+      },
+      "recordSha256": "044c70fc4596d5ea0fc0a151d7b1afbff3c2e9f46dcf931d82451a447f772e58",
+      "stdoutSha256": "90df729dbd6c232f16c19eb8ca851d2d18ed2a1c76b14cd2463076f642890bb2"
+    },
+    {
+      "mode": "closure-auth",
+      "record": {
+        "mode": "closure-auth",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+        "cid": "14aa9a82c27436737aa797583cee53af776b364d441e522113dae421e9925875",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+          "configImage": "meta-ads-maintenance-auth@sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:33.520159431Z",
+          "FinishedAt": "2026-09-09T02:43:34.599386487Z"
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "purpose": "auth",
+        "fileCount": 16433,
+        "result": "PASS"
+      },
+      "recordSha256": "75a1cd1d6bcc08ec98b58d24cf1fe18259560b301e88ad59245922a8c52213c6",
+      "stdoutSha256": "0019287bb6a305a67d4f855fd11cb7ae419f675eba1d51713d24e61caf7ba8ee"
+    },
+    {
+      "mode": "closure-migration",
+      "record": {
+        "mode": "closure-migration",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+        "cid": "4e3a382fc9d78c7143f110e29c019e3dabe296cbb155e6b33b9387454d21bfa7",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+          "configImage": "meta-ads-maintenance-migration@sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:35.583264201Z",
+          "FinishedAt": "2026-09-09T02:43:37.781627719Z"
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "purpose": "migration",
+        "fileCount": 32905,
+        "result": "PASS"
+      },
+      "recordSha256": "adb4de93acd2b34a68352d5019bd8198a3d630a6e7a138578e2d58760bfcd1a9",
+      "stdoutSha256": "5c19146af6e38dadf87a9670b5b0a875ca521cebd67b1301bfb48a198c4b03d8"
+    },
+    {
+      "mode": "closure-storage",
+      "record": {
+        "mode": "closure-storage",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+        "cid": "4da41b0c05ab43719aeda63fa4bb893c08501da0af51b7d3a05a9bf2c3e461d0",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+          "configImage": "meta-ads-maintenance-storage@sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:38.813917141Z",
+          "FinishedAt": "2026-09-09T02:43:39.962409953Z"
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "purpose": "storage",
+        "fileCount": 16433,
+        "result": "PASS"
+      },
+      "recordSha256": "88f73a8fc51212179e4fe26162b08e532af75bf9c5b5569877d143ce6e300011",
+      "stdoutSha256": "f3a72aedb2d6fff302dccbbdc06b41d5b0e24397806d347687b9419061b423a4"
+    },
+    {
+      "mode": "closure-backup",
+      "record": {
+        "mode": "closure-backup",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+        "cid": "9308622a25a7973e924288df5873a2d7f77246f836b084b52fbf42e207e50bfb",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+          "configImage": "meta-ads-maintenance-backup@sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:40.926408129Z",
+          "FinishedAt": "2026-09-09T02:43:42.378656484Z"
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "purpose": "backup",
+        "fileCount": 19721,
+        "result": "PASS",
+        "pgDumpVersion": "17.11"
+      },
+      "recordSha256": "8c6d74c19c6123739104886aee50f3523f4835bb599363324dbe1684d8a17f83",
+      "stdoutSha256": "f129ca86f8e3a217e7f7178e9f6d78c3c96af17b46072ee98581345576c73a15"
+    },
+    {
+      "mode": "closure-legacy",
+      "record": {
+        "mode": "closure-legacy",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+        "cid": "53846d1eabbd1fbfbbe7594660caa3e83a50904cac6224d45e470ce3168712a2",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+          "configImage": "meta-ads-maintenance-legacy@sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:43.348235139Z",
+          "FinishedAt": "2026-09-09T02:43:44.518808455Z"
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "purpose": "legacy",
+        "fileCount": 16433,
+        "result": "PASS"
+      },
+      "recordSha256": "2dbaecc2c70a0739ca6df04894958e8c5658e2994e91b4240a0810f24c054610",
+      "stdoutSha256": "2903558acc6707c9838b7ad2ddff18f3d4fd8800e4ee7cb1aba437d3b05369f3"
+    },
+    {
+      "mode": "generate",
+      "record": {
+        "mode": "generate",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "59345cb2524fdc007b495e5ddf8a36b980b3a748c2a0cf1d675677ac24ca3484",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:45.499547148Z",
+          "FinishedAt": "2026-09-09T02:43:47.81464615Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": []
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "scenario": "generate",
+        "result": "PASS",
+        "fixtures": {
+          "bundle-ads.xlsx": 20955458,
+          "bundle-sales.xlsx": 20955458,
+          "margin-max.csv": 7277918,
+          "workbook-max.xlsx": 25084226
+        }
+      },
+      "recordSha256": "82135660d89ee6b032161068f813148e72c3e77a6170ef6f2e9b4c9e9e8750d4",
+      "stdoutSha256": "a1478eb270e675b68571a6c5c78e65f78df3da4a6643b1943ec275f69d705d52"
+    },
+    {
+      "mode": "baseline",
+      "record": {
+        "mode": "baseline",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "f3de4801ce665d2c859170450c3b71463b187cff7c90187f8ffadf14c942c7c2",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:48.745886392Z",
+          "FinishedAt": "2026-09-09T02:43:49.313628601Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": []
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "scenario": "baseline",
+        "result": "PASS",
+        "durationMs": 433,
+        "workload": {
+          "baseline": true
+        },
+        "thresholdBytes": 734003200,
+        "violations": [],
+        "processPeak": {
+          "rss": 94097408,
+          "heapUsed": 20762672,
+          "external": 2573248,
+          "arrayBuffers": 55243,
+          "tmpBytes": 0
+        },
+        "cgroup": {
+          "before": {
+            "current": 9416704,
+            "peak": 9416704,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "after": {
+            "current": 47726592,
+            "peak": 47726592,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "oomDelta": 0,
+          "oomKillDelta": 0
+        }
+      },
+      "recordSha256": "d5d3e926f394126f964935bfd4da882a34bb5b226c475b3bf93925aa5ceebbd7",
+      "stdoutSha256": "c3b7e7500e09246dbd829b89abcb067e75e93ff4bdc3eff74c9e88fbd31d3f37"
+    },
+    {
+      "mode": "text-max",
+      "record": {
+        "mode": "text-max",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "aeb668af100cb274dc4c6b51c8c7667e740b8259b1ca59fbeb3821822145f559",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:50.249704873Z",
+          "FinishedAt": "2026-09-09T02:43:51.009680901Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": []
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "scenario": "text-max",
+        "result": "PASS",
+        "durationMs": 624,
+        "workload": {
+          "inputBytes": 7277918,
+          "inspection": {
+            "kind": "CSV",
+            "rowCount": 100000,
+            "columnCount": 3
+          }
+        },
+        "thresholdBytes": 891289600,
+        "violations": [],
+        "processPeak": {
+          "rss": 152735744,
+          "heapUsed": 63460192,
+          "external": 17129340,
+          "arrayBuffers": 14611335,
+          "tmpBytes": 0
+        },
+        "cgroup": {
+          "before": {
+            "current": 9519104,
+            "peak": 9707520,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "after": {
+            "current": 103116800,
+            "peak": 103116800,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "oomDelta": 0,
+          "oomKillDelta": 0
+        }
+      },
+      "recordSha256": "ee2fc42a660bbcc972c671a9540889094229d396f7173bbc851ce527ce3b0eb4",
+      "stdoutSha256": "8f17795a5371e27f3ecda7e3ce5e565deaa37a78456c58c5d43abf0b3a2d390a"
+    },
+    {
+      "mode": "xlsx-max",
+      "record": {
+        "mode": "xlsx-max",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "6414e5f76db878a9cd6b83ac5549ec0bf9ce97825483e561a95b3dae444fec84",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:51.97659612Z",
+          "FinishedAt": "2026-09-09T02:43:57.343156462Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": [
+              {
+                "Start": "2026-09-09T02:43:57.076166024Z",
+                "End": "2026-09-09T02:43:57.2312901Z",
+                "ExitCode": 1,
+                "Output": ""
+              }
+            ]
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "scenario": "xlsx-max",
+        "result": "PASS",
+        "durationMs": 5189,
+        "workload": {
+          "inputBytes": 25084226,
+          "inspection": {
+            "kind": "XLSX",
+            "worksheetCount": 1,
+            "rowCount": 100000,
+            "columnCount": 12,
+            "entryCount": 12,
+            "expandedBytes": 62337552
+          }
+        },
+        "thresholdBytes": 891289600,
+        "violations": [],
+        "processPeak": {
+          "rss": 698400768,
+          "heapUsed": 452745776,
+          "external": 142273197,
+          "arrayBuffers": 139758808,
+          "tmpBytes": 0
+        },
+        "cgroup": {
+          "before": {
+            "current": 9154560,
+            "peak": 9154560,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "after": {
+            "current": 664219648,
+            "peak": 678948864,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "oomDelta": 0,
+          "oomKillDelta": 0
+        }
+      },
+      "recordSha256": "4bf9b40560dcf8dc9dd89348571c2192ac090ebdcbbc3416af4c9ebbaa30f75b",
+      "stdoutSha256": "5ac5bceec1142148ff8eab6d937e441421eb82eb0ca8cbfa262b4a4927859414"
+    },
+    {
+      "mode": "bundle-max",
+      "record": {
+        "mode": "bundle-max",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "4a647f655fd5a23bff11a8f47f3d683624c2e6e6dd8ca7570e5a83daa24ff2d5",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:43:58.358388351Z",
+          "FinishedAt": "2026-09-09T02:44:07.397619182Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": [
+              {
+                "Start": "2026-09-09T02:44:03.44869651Z",
+                "End": "2026-09-09T02:44:03.557586666Z",
+                "ExitCode": 1,
+                "Output": ""
+              }
+            ]
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "scenario": "bundle-max",
+        "result": "PASS",
+        "durationMs": 8897,
+        "workload": {
+          "inputBytes": 49188834,
+          "inspection": {
+            "totalBytes": 49188834,
+            "inspections": {
+              "sales": {
+                "kind": "XLSX",
+                "worksheetCount": 1,
+                "rowCount": 100000,
+                "columnCount": 12,
+                "entryCount": 12,
+                "expandedBytes": 58208784
+              },
+              "ads": {
+                "kind": "XLSX",
+                "worksheetCount": 1,
+                "rowCount": 100000,
+                "columnCount": 12,
+                "entryCount": 12,
+                "expandedBytes": 58208784
+              },
+              "margin": {
+                "kind": "CSV",
+                "rowCount": 100000,
+                "columnCount": 3
+              }
+            }
+          }
+        },
+        "thresholdBytes": 891289600,
+        "violations": [],
+        "processPeak": {
+          "rss": 757833728,
+          "heapUsed": 439730192,
+          "external": 162249037,
+          "arrayBuffers": 159734648,
+          "tmpBytes": 0
+        },
+        "cgroup": {
+          "before": {
+            "current": 9531392,
+            "peak": 9531392,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "after": {
+            "current": 256692224,
+            "peak": 726466560,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "oomDelta": 0,
+          "oomKillDelta": 0
+        }
+      },
+      "recordSha256": "e121f4f90e5216946deac01bfa6760bcd583b4ac6674da7b4381aa4a5fa3d2b5",
+      "stdoutSha256": "ee1b9e0f4149bce67c2821b92f3a76a24b97d34dddc3daab5231744665cef8a7"
+    },
+    {
+      "mode": "report-max",
+      "record": {
+        "mode": "report-max",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "e0837b8ce178c7a20da9efe305d51ff7abd4b17cf4ae9b533d18eac3c9df6fb3",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:44:08.35824094Z",
+          "FinishedAt": "2026-09-09T02:44:13.140990563Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": []
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "scenario": "report-max",
+        "result": "PASS",
+        "durationMs": 4623,
+        "workload": {
+          "sourceRows": 25000,
+          "columns": 24,
+          "outputBytes": 3713142,
+          "spooledCopies": 2
+        },
+        "thresholdBytes": 891289600,
+        "violations": [],
+        "processPeak": {
+          "rss": 563011584,
+          "heapUsed": 434555496,
+          "external": 35481356,
+          "arrayBuffers": 32927821,
+          "tmpBytes": 7426284
+        },
+        "cgroup": {
+          "before": {
+            "current": 10006528,
+            "peak": 10006528,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "after": {
+            "current": 531673088,
+            "peak": 602796032,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "oomDelta": 0,
+          "oomKillDelta": 0
+        }
+      },
+      "recordSha256": "185c717f2859c6390669d75736c6e5759e35b73667e17760c2c3bd7b7dd0d6f8",
+      "stdoutSha256": "b001a33a376007502b444eed017837b2a1671e5799bbcae1d8c68a706d75f23e"
+    },
+    {
+      "mode": "concurrent-request",
+      "record": {
+        "mode": "concurrent-request",
+        "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+        "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+        "cid": "07c9db42a75fc4ea6c0adaf32fc2cce4b80138da9f2e2504a728ef8171596b3c",
+        "owner": "security-rbac-53e87ba-0909",
+        "before": {
+          "image": "sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "configImage": "meta-ads-cloud@sha256:dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+          "user": "1000:1000",
+          "network": "none",
+          "readOnlyRootfs": true,
+          "memory": 1073741824,
+          "memorySwap": 1073741824,
+          "pidsLimit": 256,
+          "tmpfs": {
+            "/tmp": "rw,noexec,nosuid,size=192m,uid=1000,gid=1000,mode=1777"
+          },
+          "capDrop": [
+            "ALL"
+          ],
+          "securityOpt": [
+            "no-new-privileges"
+          ]
+        },
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-09-09T02:44:14.143415631Z",
+          "FinishedAt": "2026-09-09T02:44:18.936753496Z",
+          "Health": {
+            "Status": "unhealthy",
+            "FailingStreak": 0,
+            "Log": []
+          }
+        },
+        "exitCode": 0,
+        "passed": true,
+        "scope": "SYNTHETIC_CMD_OVERRIDE_NO_PROVIDER",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false,
+        "containerRemoved": true
+      },
+      "probe": {
+        "scenario": "concurrent-request",
+        "result": "PASS",
+        "durationMs": 4600,
+        "workload": {
+          "acceptedRequests": 1,
+          "rejectedRequests": 1,
+          "rejectedStatus": 503,
+          "retryAfterSeconds": 7,
+          "rejectionCode": "HEAVY_OPERATION_BUSY",
+          "workload": {
+            "sourceRows": 25000,
+            "columns": 24,
+            "outputBytes": 3713142,
+            "spooledCopies": 2
+          }
+        },
+        "thresholdBytes": 891289600,
+        "violations": [],
+        "processPeak": {
+          "rss": 602066944,
+          "heapUsed": 436990720,
+          "external": 37434645,
+          "arrayBuffers": 32854399,
+          "tmpBytes": 7426284
+        },
+        "cgroup": {
+          "before": {
+            "current": 9437184,
+            "peak": 9437184,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "after": {
+            "current": 565571584,
+            "peak": 597536768,
+            "limit": 1073741824,
+            "events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "oomDelta": 0,
+          "oomKillDelta": 0
+        }
+      },
+      "recordSha256": "80a7957ce3a2a066789260ea6bcf0be943d757b81e43dd011f1c3a7cebccb957",
+      "stdoutSha256": "7efee1251074a46ebd5d8259874fb7c8374e85a8930faf08ad8310b0525e42a8"
+    }
+  ],
+  "independentD": "SCRIPT_TWO_P2_FIXED; SAVED_RUNTIME_RECORDS_AND_STDOUT_13_OF_13_HASH_AND_CONTENT_PASS; BUILD_LEDGER_6_OF_6_MATCH; EXECUTION_CLEANUP_AND_REJECTION_MAIN_REPORTED; LOCAL_RECORD_AND_NEW_SCAN_GATE_GO",
+  "freshOnlineScan": {
+    "status": "NOT_RUN_APPROVAL_REVIEW_REJECTED",
+    "npmAttempts": 0,
+    "scoutAttempts": 0,
+    "reason": "New private source/image dependency metadata transmission requires explicit destination and payload approval",
+    "bypassAttempted": false
+  },
+  "releaseAcceptance": "VOID_OLD_REVIEW_MISS; NEW_ACCEPTANCE_NOT_GRANTED",
+  "dbBundle": "ORIGINAL_30_FILE_BYTES_UNCHANGED; NEW_RELEASE_REBIND_PENDING",
+  "providerPhase2Attempt": 0,
+  "actualCredentialStorePrepared": false,
+  "actualProductionCmd": "NOT_RUN",
+  "operationalReady": false
+}
