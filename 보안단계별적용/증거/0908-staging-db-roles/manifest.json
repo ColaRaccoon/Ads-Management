@@ -1,7 +1,7 @@
 {
   "$schema": "./manifest.schema.json",
   "version": "r2a-staging-db-role-manifest/v1",
-  "status": "PROVIDER_PHASE1_PASS_PHASE2_LOCAL_PREPARED",
+  "status": "PROVIDER_PHASE2_COMMIT_ACK_VERIFY_FAILED",
   "operationalReady": false,
   "target": {
     "organizationId": "synohgzwspodxmfemoks",
@@ -73,7 +73,7 @@
   },
   "files": [
     { "path": "보안단계별적용/.gitattributes", "bytes": 316, "sha256": "30ce4aaca092a2017454af0d26369fd715facb0c146510eefeb17661670b27ab" },
-    { "path": "보안단계별적용/0908staging별도DB역할설계.md", "bytes": 20585, "sha256": "292e244f6c9a68b704b1b178a69c72aa6f230dca5133d2150802b179b7e03381" },
+    { "path": "보안단계별적용/0908staging별도DB역할설계.md", "bytes": 21528, "sha256": "41698d95f5dfe758ab6c62060c7862d2e02acca2890ef24bb846622ff1990596" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/00-admin-preflight.sql", "bytes": 2488, "sha256": "ea6ac796565111f4160dda40139379f20c5b6c11242508985ea959240b7faa36" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/10-admin-bootstrap.sql", "bytes": 3111, "sha256": "bcef6f1669ce6a6636520880d3cbd515cc00eb2b586b3ed616fe4f19d5f8a634" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/20-app-bootstrap.sql", "bytes": 3076, "sha256": "207ff4bd27936a2954ae3fed75c1a51e50a8d3fc254141e21bebca1c1cea82a1" },
@@ -84,7 +84,7 @@
     { "path": "보안단계별적용/증거/0908-staging-db-roles/image-hash-check.cjs", "bytes": 1466, "sha256": "15d8846741007c26afeda88cf8a5ab2f3fc19de5aaa11cc0fc98e06c582acd1a" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/local-rehearsal-summary.json", "bytes": 6510, "sha256": "3e511bf60af1cacf9c009f637d4b6860138107241fbbd016543f57e270e1a922" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/local-rehearsal.ps1", "bytes": 15635, "sha256": "1ed77b49ec859998d5b4a45ed593e89b21c2e3374876339dedb07f8ac0ff4d85" },
-    { "path": "보안단계별적용/증거/0908-staging-db-roles/manifest.schema.json", "bytes": 3409, "sha256": "03077e5e5d48a9ef366e86cc7606cbdeb37a0fa7541611540aa537d4f25322c5" },
+    { "path": "보안단계별적용/증거/0908-staging-db-roles/manifest.schema.json", "bytes": 3453, "sha256": "155ccbb53f5141f5a5da0f2f0f48a2ea0ad5d58a11673c98fda05499e1a90f89" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/migration-release.json", "bytes": 8876, "sha256": "38db177537034eaee0e43c459c169132e09199d44dedb9ef96235a98b8450903" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/pooler-readonly-preflight.json", "bytes": 3150, "sha256": "9a4c19b6ea9a19738639dd021bfcf9ea29a4914194cd9447656aa225834bd25b" },
     { "path": "보안단계별적용/증거/0908-staging-db-roles/phase1-provider-wrapper.sql", "bytes": 469, "sha256": "dbba8bbbe3b2bfc8ab1d4c2c286f53409a832782b359fce932e9c24bba81e898" },
@@ -127,7 +127,7 @@
       "actualMigrationExecution": "NOT_RUN",
       "providerExecution": "NOT_RUN"
     },
-    "phase2ProviderExecution": "NOT_RUN",
+    "phase2ProviderExecution": "ATTEMPTED_ONCE_COMMIT_ACK_VERIFY_FAILED",
     "providerEquivalence": "NOT_CLAIMED"
   },
   "provider": {
@@ -139,8 +139,19 @@
     "directConnection": "BLOCKED_IPV6_NO_LOCAL_ROUTE_BEFORE_TLS_AUTH_SQL",
     "sessionPoolerCustomDatabaseRouting": "PASS_ADMIN_POSTGRES_TO_META_ADS_STAGING_ONLY",
     "phase1NoLoginBootstrap": "PASS_RECEIPT_PROVIDER_PHASE1_RECEIPT_JSON",
-    "phase2ActualCredentialPreparation": "NOT_RUN",
-    "phase2ProviderActivationAndRoleVerification": "NOT_RUN",
+    "phase2ActualCredentialPreparation": "DONE_DPAPI_THREE_RETAINED",
+    "phase2ProviderActivationAndRoleVerification": "COMMIT_ACK_OBSERVED_ROLE_VERIFY_FAILED_ZERO_OF_THREE",
+    "phase2ProviderAttemptCount": 1,
+    "phase2ExecutionStateStatus": "COMMITTED_VERIFY_FAILED",
+    "phase2CommitAckObserved": true,
+    "phase2VerifiedRoleCount": 0,
+    "phase2FailureReceipt": {
+      "path": "보안단계별적용/증거/0909-g-db-00-phase2-execute-failure.json",
+      "bytes": 2085,
+      "sha256": "14b5d577b5427fbdd97fb669bded3af5dbd139a05f82ca74ee04ef3b2937d5f1"
+    },
+    "phase2ReadOnlyClassification": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL",
+    "phase2VerifyOnly": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL",
     "phase2WrongOrCrossCredentialTests": "NOT_RUN_PROHIBITED",
     "phase2AutomaticRetry": "NOT_RUN_PROHIBITED",
     "phase2ProviderVerifierLogging": "UNKNOWN",
@@ -152,11 +163,12 @@
   "residuals": [
     "New roles inherit CONNECT and TEMPORARY on the existing postgres database from PUBLIC; this is not full cluster isolation.",
     "The creator retains ADMIN true, INHERIT false, SET false management membership edges for the three new roles.",
-    "Admin postgres session-pooler routing to meta_ads_staging passed; runtime, migration, and backup role credential authentication remain NOT RUN.",
-    "Phase 2 has a locally rehearsed DPAPI/SCRAM path but actual credential preparation and provider activation require a separate exact G-DB-00 approval.",
-    "Provider admin session-pooler TLS verify-full passed; role-specific SCRAM authentication and TLS remain NOT RUN.",
+    "Admin postgres session-pooler routing to meta_ads_staging passed; phase 2 activation COMMIT was acknowledged but role authentication verification failed before any role passed.",
+    "Actual DPAPI credentials and COMMITTED_VERIFY_FAILED execution state are retained; active_verified marker is absent.",
+    "Provider admin session-pooler TLS verify-full passed; role-specific SCRAM/TLS verification is 0 of 3 after one failed attempt.",
     "Client/container output non-disclosure was tested locally; Supavisor and PostgreSQL provider-side verifier logging or masking remains UNKNOWN.",
     "Supavisor propagation timing for a new user+database+session-mode combination is UNKNOWN; no automatic or wrong-password retry is allowed.",
-    "Manual local pg_dump and pg_restore --list do not prove provider backup upload or restore."
+    "Manual local pg_dump and pg_restore --list do not prove provider backup upload or restore.",
+    "Phase 2 Execute ran once: activation COMMIT acknowledgement was observed, but the first role positive verification failed; no retry is allowed."
   ]
 }

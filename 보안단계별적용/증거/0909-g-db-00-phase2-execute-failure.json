@@ -1,0 +1,60 @@
+{
+  "version": "g-db-00-phase2-execute-failure/v1",
+  "status": "COMMITTED_VERIFY_FAILED",
+  "executionBoundary": "MAIN_REPORTED_SANITIZED_RUNNER_AND_LOCAL_STATE",
+  "startedAtKst": "2026-09-09T15:19:30.8962851+09:00",
+  "updatedAtKst": "2026-09-09T15:19:34.1595110+09:00",
+  "approvedBundleCommit": "c0fafda3522b352e699a8cfa80d3b43074723c97",
+  "approvedManifestSha256": "312428954f1e6b4a355b199f37ab30e9a9d384ecfc306cd9444bf519a8832216",
+  "target": {
+    "projectRef": "ehnfrrmbkvlsbpvqcvkr",
+    "host": "aws-0-ap-northeast-2.pooler.supabase.com",
+    "port": 5432,
+    "database": "meta_ads_staging",
+    "databaseOid": 25404,
+    "roleOids": {
+      "runtime": 25397,
+      "migration": 25399,
+      "backup": 25401
+    }
+  },
+  "attempt": {
+    "mode": "Execute",
+    "providerAttemptCount": 1,
+    "startedAtUtc": "2026-09-09T06:19:30.8962851Z",
+    "updatedAtUtc": "2026-09-09T06:19:34.1595110Z",
+    "activationAttempted": true,
+    "activationCommitAckObserved": true,
+    "clientExitCode": 2,
+    "error": "R2A_DOCKER_PSQL_FAILED_EXIT_2_RAW_OUTPUT_SUPPRESSED",
+    "positiveRoleVerificationCount": 0,
+    "finalAdminVerify": false,
+    "automaticRetryCount": 0,
+    "negativeAuthTestCount": 0,
+    "verifyOnlyAttemptCount": 0
+  },
+  "credentialState": {
+    "actualCredentialsPrepared": true,
+    "roleCount": 3,
+    "storage": "DPAPI_CURRENT_USER_AND_USER_SYSTEM_ONLY_ACL",
+    "retainedForClassificationAndPotentialVerifyOnly": true,
+    "secretValuesOrHashesEmitted": false,
+    "activationMarkerPresent": false
+  },
+  "cleanup": {
+    "phase2TempChildCount": 0,
+    "phase2OwnedContainerCount": 0,
+    "executionLockPresent": false
+  },
+  "classification": {
+    "rootCause": "UNKNOWN",
+    "poolerPropagation": "UNKNOWN",
+    "providerLogsReviewed": false,
+    "adminReadOnlyCatalog": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL",
+    "verifyOnly": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL",
+    "containment": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL",
+    "destructiveRollback": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL"
+  },
+  "stagingMigration": "NOT_RUN",
+  "operationalReady": false
+}

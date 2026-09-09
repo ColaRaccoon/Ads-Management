@@ -205,6 +205,16 @@ verify만 수행한다. hard-stop의 승인된 Execute transient state만 exact 
 허용하며, mismatch·두 번째 attempt·stale temp·cleanup failure는 fail closed하고 별도 containment 또는
 local recovery를 재설계한다.
 
+2026-09-09 15:19 KST 승인된 phase 2 Execute를 정확히 한 번 실행했다. activation SQL은 commit marker를
+반환했고 local execution-state는 `commitAckObserved=true`를 기록했으나, 첫 role positive login에서
+psql exit 2가 발생해 상태는 `COMMITTED_VERIFY_FAILED`, verified role 0/3, final admin verify=false다.
+runner는 raw 출력을 억제했고 retry·wrong-password·cross-secret test는 0이다. 임시 디렉터리와 소유
+container는 모두 제거됐으며 actual DPAPI credential 3개와 execution-state는 분류를 위해 보호된 store에
+유지한다. `active_verified` marker는 없다. 원인과 pooler 전파 상태는 UNKNOWN이다. activation은
+재실행하지 않는다. 별도 승인된 admin read-only catalog 및 Pooler Logs 분류 전에는 VerifyOnly이나
+containment를 실행하지 않는다. 비밀 없는 실패 receipt는
+`증거/0909-g-db-00-phase2-execute-failure.json`이다.
+
 2026-09-08 local synthetic rehearsal은 exact saved activation/role/final SQL, non-TTY verifier feeder,
 세 SCRAM-required positive login, TLS `verify-full`, forced-failure transaction rollback을 PASS했다.
 DPAPI prepare의 atomic create/idempotent no-rotation 및 activation marker atomic publish/read도 별도
