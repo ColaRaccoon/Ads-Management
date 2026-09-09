@@ -1,0 +1,263 @@
+{
+  "version": "r1-53e87ba-partial-online-scan/v1",
+  "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+  "executionHead": "51de1f628a172c2456c20758590288714eb86d82",
+  "userApproval": "EXPLICIT_NEW_SOURCE_SIX_IMAGE_NPM_DOCKER_SCOUT_METADATA_TRANSFER",
+  "npmVersion": "10.9.4",
+  "scoutVersion": "1.20.3",
+  "evidenceDirectory": "C:\\Users\\seong\\AppData\\Local\\Temp\\meta-ads-release-53e87ba-20260909T0236Z",
+  "audit": {
+    "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+    "head": "51de1f628a172c2456c20758590288714eb86d82",
+    "mode": "audit",
+    "index": null,
+    "platform": null,
+    "startedAt": "2026-09-09T03:04:43.467Z",
+    "endedAt": "2026-09-09T03:04:51.021Z",
+    "attemptCount": 1,
+    "exitCode": 0,
+    "signal": null,
+    "error": null,
+    "reportValid": true,
+    "errorFieldPresent": false,
+    "counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "lockUnchanged": true,
+    "freeBefore": 7054315520,
+    "required": 1073741824,
+    "freeAfter": 7054036992,
+    "cleanupWarning": false,
+    "suspiciousError": false,
+    "stdoutBytes": 366,
+    "stdoutSha256": "f95ccb3b9aea1bf99d267a032daef24004cbce4b964796d69bc6a8ca147caf27",
+    "stderrBytes": 0,
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "executionFieldsBoundary": "MAIN_REPORTED",
+    "stopRequired": false
+  },
+  "public": {
+    "ledger": {
+      "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+      "head": "51de1f628a172c2456c20758590288714eb86d82",
+      "mode": "public",
+      "index": "dc5d3adcb545f525ac6c912bc326872e651bc8f3448c010084911543d131133e",
+      "platform": "f1b9a331233ad3ae887ef8463b6c3f6ba0153f6aff82db28a9994b0224401113",
+      "startedAt": "2026-09-09T03:05:52.641Z",
+      "endedAt": "2026-09-09T03:06:28.292Z",
+      "attemptCount": 1,
+      "exitCode": 2,
+      "signal": null,
+      "error": null,
+      "reportValid": true,
+      "errorFieldPresent": false,
+      "counts": {
+        "results": 56
+      },
+      "lockUnchanged": true,
+      "freeBefore": 7046426624,
+      "required": 1714156048,
+      "freeAfter": 7185154048,
+      "cleanupWarning": true,
+      "suspiciousError": true,
+      "stdoutBytes": 363810,
+      "stdoutSha256": "85ea074fbab43c58ca7b4c9015df8935b187540671342ce6a43d3f3ec07da98d",
+      "stderrBytes": 921,
+      "stderrSha256": "03d84a051da6317147ec8207c86b5f285fdbf07b147014533edaac0a524b4f2a",
+      "executionFieldsBoundary": "MAIN_REPORTED",
+      "stopRequired": true
+    },
+    "counts": {
+      "CRITICAL": 3,
+      "HIGH": 11,
+      "MEDIUM": 7,
+      "LOW": 31,
+      "UNSPECIFIED": 4
+    },
+    "criticalHigh": [
+      {
+        "id": "CVE-2026-78409",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-48962",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-48959",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-54874",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-63072",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-63076",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-78410",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-78408",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-85091",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/zlib@1%3A1.2.13.dfsg-1?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-57432",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-76642",
+        "severity": "HIGH",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-12087",
+        "severity": "CRITICAL",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-13221",
+        "severity": "CRITICAL",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      },
+      {
+        "id": "CVE-2026-75803",
+        "severity": "CRITICAL",
+        "fixedVersion": "not fixed",
+        "purls": [
+          "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+        ]
+      }
+    ],
+    "fixedApplicationAdvisoriesPresent": 0,
+    "analysis": "VALID_REPORT",
+    "cleanup": "FAILED_FILE_IN_USE",
+    "failureClass": "ONLY_SAME_INDEX_TEMP_ARCHIVE_UNLINK_FAILURE_REPORTED; LOCK_OWNER_UNKNOWN"
+  },
+  "remaining": [
+    {
+      "purpose": "auth",
+      "attemptCount": 0,
+      "status": "NOT_RUN_STOPPED_PER_APPROVED_CLEANUP_CONDITION"
+    },
+    {
+      "purpose": "migration",
+      "attemptCount": 0,
+      "status": "NOT_RUN_STOPPED_PER_APPROVED_CLEANUP_CONDITION"
+    },
+    {
+      "purpose": "storage",
+      "attemptCount": 0,
+      "status": "NOT_RUN_STOPPED_PER_APPROVED_CLEANUP_CONDITION"
+    },
+    {
+      "purpose": "backup",
+      "attemptCount": 0,
+      "status": "NOT_RUN_STOPPED_PER_APPROVED_CLEANUP_CONDITION"
+    },
+    {
+      "purpose": "legacy",
+      "attemptCount": 0,
+      "status": "NOT_RUN_STOPPED_PER_APPROVED_CLEANUP_CONDITION"
+    }
+  ],
+  "disk": {
+    "freeBytesAtRead": 7190990848,
+    "publicScoutStaleArchiveBytes": 290256896,
+    "newImagesBuiltThisContinuation": 0,
+    "newOciArchivesExportedThisContinuation": 0,
+    "deletedImages": 0,
+    "pruneRuns": 0,
+    "reclaimableNumbersAreNotDeletionAuthorization": true
+  },
+  "officialReview": {
+    "observedKst": "2026-09-09 12:07:12",
+    "nodeBaseUnchanged": true,
+    "bookwormFixFor14OsCriticalHigh": "NONE_OBSERVED",
+    "cisaCatalog": "2026.09.08",
+    "cisaTotal": 1699,
+    "exact14Matches": 0,
+    "reachability": "NOT_PROVEN_UNREACHABLE"
+  },
+  "independentReview": {
+    "B": "PRE_EXECUTION_OCI_36_OF_36_AND_DOC_ONLY_HEAD_DIFF_PASS",
+    "D": "AUDIT_AND_PUBLIC_OUTPUT_BYTES_HASH_AND_56_COUNTS_PASS; STOP_CONDITION_COMPLIED; EXECUTION_MAIN_REPORTED",
+    "A": "OFFICIAL_NODE_DEBIAN_CISA_AND_READ_ONLY_STORAGE_REVIEW"
+  },
+  "riskAcceptance": "NEW_NOT_GRANTED; OLD_VOID_REVIEW_MISS",
+  "providerPhase2Attempt": 0,
+  "actualCredentialStorePrepared": false,
+  "operationalReady": false,
+  "continuationPreparation": {
+    "status": "LOCAL_PREPARED_NOT_APPROVED_NOT_RUN",
+    "runner": "run-remaining-maintenance-scan.cjs",
+    "runnerSha256": "27d623414e4aa5be6a7d0fb75cf815bdf7834439af32b583b21f6e694905cfaf",
+    "B": "HELPER_14_INITIAL_AND_15_ADDITIONAL_CASES_PASS",
+    "D": "INDEPENDENT_15_CASES_PASS_FINDINGS_RESOLVED",
+    "headRebinding": "DOC_ONLY_EXECUTION_HEAD_REBIND_REQUIRED_BEFORE_EXECUTION"
+  }
+}
