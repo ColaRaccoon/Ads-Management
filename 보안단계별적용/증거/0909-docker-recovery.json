@@ -1,0 +1,32 @@
+{
+  "version": "docker-recovery-0909/v1",
+  "observedKst": "2026-09-09 14:19",
+  "status": "ENGINE_RECOVERED_RESTART_RECURRENCE_UNRESOLVED",
+  "cleanupThread": "01a08455-e5d6-7ad1-934d-c2bad13ee0f6",
+  "directFailure": "AF_UNIX_RUNTIME_SOCKET_ERROR_1920_DOCKER_INFERENCE",
+  "cleanupCausedFailure": "NOT_PROVEN",
+  "repair": "PRESERVE_SOCKET_ONLY_RUNTIME_DIRECTORIES_BY_RENAME_THEN_START_DESKTOP_VIA_WINDOWS_SHELL",
+  "preservedDirectories": [
+    "Docker/run.recovery-20260909-1422",
+    "Docker/run.recovery-20260909-1424",
+    "docker-secrets-engine.recovery-20260909-1424"
+  ],
+  "preservedDirectoriesBase": "LOCALAPPDATA",
+  "serverVersion": "29.3.1",
+  "localNodeSmoke": "PASS_v22.23.2_NETWORK_NONE_PULL_NEVER_NONROOT_READONLY",
+  "ownSmokeContainersRemoved": true,
+  "containersRemaining": 0,
+  "exactCurrentReleaseImagesVerified": 6,
+  "volumesPreserved": 4,
+  "normalStop": "PASS",
+  "normalRestart": "FAIL_SAME_SOCKET_ERROR",
+  "secondRecovery": "PASS",
+  "windowsReboot": "NOT_RUN",
+  "newImagePulls": 0,
+  "newImageBuilds": 0,
+  "imageOrVolumeDeletion": 0,
+  "databasePhase2Attempt": 0,
+  "operationalReady": false,
+  "requiredPg17Image": "MISSING_REMOVED_BY_OTHER_CLEANUP_THREAD_NOT_RESTORED",
+  "evidenceBoundary": "MAIN_REPORTED_LOCAL_ENGINE_ONLY"
+}
