@@ -8,6 +8,9 @@ import { assertLocalEdgeBodyDigest } from "../auth/request-security.service";
 
 const MIB = 1024 * 1024;
 const REQUEST_UPLOAD_STATE = Symbol("request-upload-state");
+// Application upload metadata is flat. Multer 2.3's structural limits are opt-in;
+// a short field name must not be able to allocate a nested or sparse array.
+const FLAT_MULTIPART_FIELD_LIMITS = { fieldNestingDepth: 0, fieldArrayIndexLimit: 0 };
 
 export type UploadProfileId =
   | "META_CSV"
@@ -205,6 +208,7 @@ function boundedMemoryOptions(input: {
     preservePath: false,
     storage: new AggregateBoundedMemoryStorage(input.maxTotalBytes, input.perFieldMaxBytes),
     limits: {
+      ...FLAT_MULTIPART_FIELD_LIMITS,
       fieldNameSize: 64,
       fieldSize: 16 * 1024,
       fields: 10,

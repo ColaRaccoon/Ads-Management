@@ -1,0 +1,1832 @@
+{
+  "schemaVersion": "meta-ads/r1-rescan-summary/v1",
+  "releaseSourceCommit": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+  "executionHead": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+  "approvalScope": "USER_APPROVED_PRECEDING_EXACT_R1_0909_SCAN_PROPOSAL",
+  "evidenceDirectory": "C:\\Users\\seong\\AppData\\Local\\Temp\\meta-ads-scan-f8a94fc-20260909T0148Z",
+  "executionEvidenceBoundary": "COMMAND_TIMES_EXITS_ATTEMPTS_RECIPIENTS_DISK_ARE_MAIN_REPORTED; SAVED_REPORT_BYTES_INDEPENDENTLY_VERIFIABLE",
+  "localOci": {
+    "checkedAt": "2026-09-09T01:58:50.303Z",
+    "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+    "scope": "LOCAL_OCI_BYTES_ONLY_NO_CONTAINER_OR_PROVIDER",
+    "images": [
+      {
+        "purpose": "public",
+        "blobHashesVerified": 6,
+        "indexPlatformConfigBinding": "PASS",
+        "sourceRevision": "PASS",
+        "spdxSubject": "PASS",
+        "provenanceSubjectAndBase": "PASS"
+      },
+      {
+        "purpose": "auth",
+        "blobHashesVerified": 6,
+        "indexPlatformConfigBinding": "PASS",
+        "sourceRevision": "PASS",
+        "spdxSubject": "PASS",
+        "provenanceSubjectAndBase": "PASS"
+      },
+      {
+        "purpose": "migration",
+        "blobHashesVerified": 6,
+        "indexPlatformConfigBinding": "PASS",
+        "sourceRevision": "PASS",
+        "spdxSubject": "PASS",
+        "provenanceSubjectAndBase": "PASS"
+      },
+      {
+        "purpose": "storage",
+        "blobHashesVerified": 6,
+        "indexPlatformConfigBinding": "PASS",
+        "sourceRevision": "PASS",
+        "spdxSubject": "PASS",
+        "provenanceSubjectAndBase": "PASS"
+      },
+      {
+        "purpose": "backup",
+        "blobHashesVerified": 6,
+        "indexPlatformConfigBinding": "PASS",
+        "sourceRevision": "PASS",
+        "spdxSubject": "PASS",
+        "provenanceSubjectAndBase": "PASS"
+      },
+      {
+        "purpose": "legacy",
+        "blobHashesVerified": 6,
+        "indexPlatformConfigBinding": "PASS",
+        "sourceRevision": "PASS",
+        "spdxSubject": "PASS",
+        "provenanceSubjectAndBase": "PASS"
+      }
+    ],
+    "rawBlobCount": 36,
+    "operationalReady": false
+  },
+  "npmVersion": "11.9.0",
+  "scoutVersion": "1.20.3",
+  "onlineProductionAudit": {
+    "ledger": {
+      "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+      "head": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+      "mode": "audit",
+      "index": null,
+      "platform": null,
+      "startedAt": "2026-09-09T02:01:02.345Z",
+      "endedAt": "2026-09-09T02:01:08.993Z",
+      "attemptCount": 1,
+      "exitCode": 1,
+      "signal": null,
+      "error": null,
+      "reportValid": true,
+      "errorFieldPresent": false,
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 1,
+        "high": 4,
+        "critical": 0,
+        "total": 5
+      },
+      "lockUnchanged": true,
+      "freeBefore": 12017336320,
+      "required": 1073741824,
+      "freeAfter": 11989708800,
+      "cleanupWarning": false,
+      "suspiciousError": false,
+      "stdoutBytes": 5374,
+      "stdoutSha256": "dcd9b702bbe915b46eeedc85f3c6f6b418008761cf37ff2cd9a32d6565dfb469",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "executionFieldsBoundary": "MAIN_REPORTED",
+      "stopRequired": false
+    },
+    "report": {
+      "auditReportVersion": 2,
+      "vulnerabilities": {
+        "@nestjs/core": {
+          "name": "@nestjs/core",
+          "severity": "high",
+          "isDirect": true,
+          "via": [
+            "@nestjs/platform-express"
+          ],
+          "effects": [
+            "@nestjs/platform-express"
+          ],
+          "range": ">=7.6.0-next.1",
+          "nodes": [
+            "node_modules/@nestjs/core"
+          ],
+          "fixAvailable": {
+            "name": "@nestjs/core",
+            "version": "7.5.5",
+            "isSemVerMajor": true
+          }
+        },
+        "@nestjs/platform-express": {
+          "name": "@nestjs/platform-express",
+          "severity": "high",
+          "isDirect": true,
+          "via": [
+            "@nestjs/core",
+            "multer"
+          ],
+          "effects": [
+            "@nestjs/core"
+          ],
+          "range": "*",
+          "nodes": [
+            "node_modules/@nestjs/platform-express"
+          ],
+          "fixAvailable": {
+            "name": "@nestjs/core",
+            "version": "7.5.5",
+            "isSemVerMajor": true
+          }
+        },
+        "csv-parse": {
+          "name": "csv-parse",
+          "severity": "moderate",
+          "isDirect": true,
+          "via": [
+            {
+              "source": 1193670,
+              "name": "csv-parse",
+              "dependency": "csv-parse",
+              "title": "node-csv: Prototype replacement still reachable via columns path",
+              "url": "https://github.com/advisories/GHSA-8cw4-87c7-c6xx",
+              "severity": "moderate",
+              "cwe": [
+                "CWE-1321"
+              ],
+              "cvss": {
+                "score": 0,
+                "vectorString": null
+              },
+              "range": "<7.0.2"
+            }
+          ],
+          "effects": [],
+          "range": "<7.0.2",
+          "nodes": [
+            "node_modules/csv-parse"
+          ],
+          "fixAvailable": {
+            "name": "csv-parse",
+            "version": "7.0.2",
+            "isSemVerMajor": true
+          }
+        },
+        "multer": {
+          "name": "multer",
+          "severity": "high",
+          "isDirect": true,
+          "via": [
+            {
+              "source": 1193790,
+              "name": "multer",
+              "dependency": "multer",
+              "title": "multer vulnerable to Denial of Service via crafted multipart field names",
+              "url": "https://github.com/advisories/GHSA-wc9g-mqfw-jrwm",
+              "severity": "high",
+              "cwe": [
+                "CWE-248"
+              ],
+              "cvss": {
+                "score": 7.5,
+                "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+              },
+              "range": "<2.3.0"
+            },
+            {
+              "source": 1193791,
+              "name": "multer",
+              "dependency": "multer",
+              "title": "multer vulnerable to Denial of Service via file descriptor leak on aborted uploads",
+              "url": "https://github.com/advisories/GHSA-qfvm-cv95-jqjf",
+              "severity": "high",
+              "cwe": [
+                "CWE-400",
+                "CWE-459"
+              ],
+              "cvss": {
+                "score": 7.5,
+                "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+              },
+              "range": "=2.2.0"
+            },
+            {
+              "source": 1193792,
+              "name": "multer",
+              "dependency": "multer",
+              "title": "multer vulnerable to file size limit bypass via async fileFilter race condition",
+              "url": "https://github.com/advisories/GHSA-qvfw-j98x-7q72",
+              "severity": "low",
+              "cwe": [
+                "CWE-362"
+              ],
+              "cvss": {
+                "score": 3.7,
+                "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"
+              },
+              "range": "<2.3.0"
+            },
+            {
+              "source": 1193793,
+              "name": "multer",
+              "dependency": "multer",
+              "title": "multer vulnerable to Denial of Service via oversized array index in field names",
+              "url": "https://github.com/advisories/GHSA-535w-7cp7-47q4",
+              "severity": "high",
+              "cwe": [
+                "CWE-400"
+              ],
+              "cvss": {
+                "score": 7.5,
+                "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+              },
+              "range": "<2.3.0"
+            }
+          ],
+          "effects": [
+            "@nestjs/platform-express"
+          ],
+          "range": "<=2.2.0",
+          "nodes": [
+            "node_modules/multer"
+          ],
+          "fixAvailable": {
+            "name": "@nestjs/core",
+            "version": "7.5.5",
+            "isSemVerMajor": true
+          }
+        },
+        "sharp": {
+          "name": "sharp",
+          "severity": "high",
+          "isDirect": false,
+          "via": [
+            {
+              "source": 1193725,
+              "name": "sharp",
+              "dependency": "sharp",
+              "title": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+              "url": "https://github.com/advisories/GHSA-rgj7-g3m4-5g8c",
+              "severity": "high",
+              "cwe": [
+                "CWE-122"
+              ],
+              "cvss": {
+                "score": 0,
+                "vectorString": null
+              },
+              "range": "<0.35.4"
+            }
+          ],
+          "effects": [],
+          "range": "<0.35.4",
+          "nodes": [
+            "node_modules/sharp"
+          ],
+          "fixAvailable": true
+        }
+      },
+      "metadata": {
+        "vulnerabilities": {
+          "info": 0,
+          "low": 0,
+          "moderate": 1,
+          "high": 4,
+          "critical": 0,
+          "total": 5
+        },
+        "dependencies": {
+          "prod": 314,
+          "dev": 276,
+          "optional": 93,
+          "peer": 13,
+          "peerOptional": 0,
+          "total": 629
+        }
+      }
+    }
+  },
+  "images": [
+    {
+      "purpose": "public",
+      "ledger": {
+        "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+        "head": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+        "mode": "public",
+        "index": "aca7055edfaa6848a93f4caabe4669f12ceca4b906597cfc38ae89287651ae7d",
+        "platform": "b4b84b8465d4aed333a46cbf2a53e0555555f04d19cb92197d35de2e3e4153dd",
+        "startedAt": "2026-09-09T02:01:38.401Z",
+        "endedAt": "2026-09-09T02:01:41.866Z",
+        "attemptCount": 1,
+        "exitCode": 2,
+        "signal": null,
+        "error": null,
+        "reportValid": true,
+        "errorFieldPresent": false,
+        "counts": {
+          "results": 62
+        },
+        "lockUnchanged": true,
+        "freeBefore": 11990671360,
+        "required": 1713384172,
+        "freeAfter": 11989315584,
+        "cleanupWarning": false,
+        "suspiciousError": false,
+        "stdoutBytes": 388773,
+        "stdoutSha256": "753463e872c6a9359e0389cb1ae90fdae838e8bfe2aefa33280e8db30343fa9f",
+        "stderrBytes": 420,
+        "stderrSha256": "cceccd0b1326ae4287c2f5bde50bfc9e0aba45709cb38586bae2b5ffa086f21f",
+        "executionFieldsBoundary": "MAIN_REPORTED",
+        "stopRequired": false
+      },
+      "counts": {
+        "CRITICAL": 3,
+        "HIGH": 15,
+        "MEDIUM": 8,
+        "LOW": 32,
+        "UNSPECIFIED": 4
+      },
+      "criticalHigh": [
+        {
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48962",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48959",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-54874",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63072",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63076",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-77037",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-77078",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-82333",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-85091",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/zlib@1%3A1.2.13.dfsg-1?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-57432",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "GHSA-rgj7-g3m4-5g8c",
+          "severity": "HIGH",
+          "fixedVersion": "0.35.4",
+          "purls": [
+            "pkg:npm/sharp@0.35.3"
+          ]
+        },
+        {
+          "id": "CVE-2026-12087",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-13221",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-75803",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        }
+      ],
+      "normalizedTupleDelta": {
+        "added": [
+          [
+            "CVE-2026-77063",
+            "LOW",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-85063",
+            "MEDIUM",
+            "<7.0.2",
+            "7.0.2",
+            [
+              "pkg:npm/csv-parse@5.6.0"
+            ]
+          ],
+          [
+            "CVE-2026-77037",
+            "HIGH",
+            "=2.2.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-77078",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-82333",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-57432",
+            "HIGH",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ],
+          [
+            "GHSA-rgj7-g3m4-5g8c",
+            "HIGH",
+            "<0.35.4",
+            "0.35.4",
+            [
+              "pkg:npm/sharp@0.35.3"
+            ]
+          ]
+        ],
+        "removed": [
+          [
+            "CVE-2026-57432",
+            "UNSPECIFIED",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "purpose": "auth",
+      "ledger": {
+        "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+        "head": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+        "mode": "auth",
+        "index": "bc54264137bfdfb4d2d4c1aeaa21960b4332ba9089ab040b0206059895ecdd97",
+        "platform": "a6202ceaebdc2e6111220a0aa671377cd84505af8bb14ecbd39620ac44a3d49f",
+        "startedAt": "2026-09-09T02:02:01.664Z",
+        "endedAt": "2026-09-09T02:02:04.539Z",
+        "attemptCount": 1,
+        "exitCode": 2,
+        "signal": null,
+        "error": null,
+        "reportValid": true,
+        "errorFieldPresent": false,
+        "counts": {
+          "results": 61
+        },
+        "lockUnchanged": true,
+        "freeBefore": 11991629824,
+        "required": 1386235724,
+        "freeAfter": 11991232512,
+        "cleanupWarning": false,
+        "suspiciousError": false,
+        "stdoutBytes": 383156,
+        "stdoutSha256": "d8362bdfbdc073f5b68b4bc04d7e6d78d7350f8a065696639c127d288969815a",
+        "stderrBytes": 431,
+        "stderrSha256": "2602358e1ba036cd62ed0b777610fd389a9411bb504b797a2bf4da57956e40ee",
+        "executionFieldsBoundary": "MAIN_REPORTED",
+        "stopRequired": false
+      },
+      "counts": {
+        "CRITICAL": 3,
+        "HIGH": 14,
+        "MEDIUM": 8,
+        "LOW": 32,
+        "UNSPECIFIED": 4
+      },
+      "criticalHigh": [
+        {
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48962",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48959",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-54874",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63072",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63076",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-77037",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-77078",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-82333",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-85091",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/zlib@1%3A1.2.13.dfsg-1?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-57432",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-12087",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-13221",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-75803",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        }
+      ],
+      "normalizedTupleDelta": {
+        "added": [
+          [
+            "CVE-2026-77063",
+            "LOW",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-85063",
+            "MEDIUM",
+            "<7.0.2",
+            "7.0.2",
+            [
+              "pkg:npm/csv-parse@5.6.0"
+            ]
+          ],
+          [
+            "CVE-2026-77037",
+            "HIGH",
+            "=2.2.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-77078",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-82333",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-57432",
+            "HIGH",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ],
+        "removed": [
+          [
+            "CVE-2026-57432",
+            "UNSPECIFIED",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "purpose": "migration",
+      "ledger": {
+        "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+        "head": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+        "mode": "migration",
+        "index": "f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd",
+        "platform": "093a60831ba1e7f0edb429f4e781618f0fb850a911594f8174b5cf2ef53d25ec",
+        "startedAt": "2026-09-09T02:02:04.761Z",
+        "endedAt": "2026-09-09T02:02:07.515Z",
+        "attemptCount": 1,
+        "exitCode": 2,
+        "signal": null,
+        "error": null,
+        "reportValid": true,
+        "errorFieldPresent": false,
+        "counts": {
+          "results": 61
+        },
+        "lockUnchanged": true,
+        "freeBefore": 11991228416,
+        "required": 1649160544,
+        "freeAfter": 11990843392,
+        "cleanupWarning": false,
+        "suspiciousError": false,
+        "stdoutBytes": 383308,
+        "stdoutSha256": "2a4d993a23620ca9ca4532f6a72ccf1422f7072290247d48c44d5685a522781a",
+        "stderrBytes": 436,
+        "stderrSha256": "840a44f765f34d5ae305642dc6e2f19143443e66507602c4fbe7f54d79a89596",
+        "executionFieldsBoundary": "MAIN_REPORTED",
+        "stopRequired": false
+      },
+      "counts": {
+        "CRITICAL": 3,
+        "HIGH": 14,
+        "MEDIUM": 8,
+        "LOW": 32,
+        "UNSPECIFIED": 4
+      },
+      "criticalHigh": [
+        {
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48962",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48959",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-54874",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63072",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63076",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-77037",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-77078",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-82333",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-85091",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/zlib@1%3A1.2.13.dfsg-1?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-57432",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-12087",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-13221",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-75803",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        }
+      ],
+      "normalizedTupleDelta": {
+        "added": [
+          [
+            "CVE-2026-77063",
+            "LOW",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-85063",
+            "MEDIUM",
+            "<7.0.2",
+            "7.0.2",
+            [
+              "pkg:npm/csv-parse@5.6.0"
+            ]
+          ],
+          [
+            "CVE-2026-77037",
+            "HIGH",
+            "=2.2.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-77078",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-82333",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-57432",
+            "HIGH",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ],
+        "removed": [
+          [
+            "CVE-2026-57432",
+            "UNSPECIFIED",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "purpose": "storage",
+      "ledger": {
+        "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+        "head": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+        "mode": "storage",
+        "index": "f66caaf6d6ce289c2d6a8d8c3fb649cef03f714eddd3a7584e86f4d38ee1d672",
+        "platform": "e71f0a096072621704c42a7d384eb0d58ec5d476bee12accfe6a45068dcff30f",
+        "startedAt": "2026-09-09T02:02:07.728Z",
+        "endedAt": "2026-09-09T02:02:10.151Z",
+        "attemptCount": 1,
+        "exitCode": 2,
+        "signal": null,
+        "error": null,
+        "reportValid": true,
+        "errorFieldPresent": false,
+        "counts": {
+          "results": 61
+        },
+        "lockUnchanged": true,
+        "freeBefore": 11990839296,
+        "required": 1386228834,
+        "freeAfter": 11990437888,
+        "cleanupWarning": false,
+        "suspiciousError": false,
+        "stdoutBytes": 383156,
+        "stdoutSha256": "d8362bdfbdc073f5b68b4bc04d7e6d78d7350f8a065696639c127d288969815a",
+        "stderrBytes": 434,
+        "stderrSha256": "0b0ee9ace5afe0fc100a28b314fcbbfce61212ccfa28f92f41e14acf595e6124",
+        "executionFieldsBoundary": "MAIN_REPORTED",
+        "stopRequired": false
+      },
+      "counts": {
+        "CRITICAL": 3,
+        "HIGH": 14,
+        "MEDIUM": 8,
+        "LOW": 32,
+        "UNSPECIFIED": 4
+      },
+      "criticalHigh": [
+        {
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48962",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48959",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-54874",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63072",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63076",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-77037",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-77078",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-82333",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-85091",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/zlib@1%3A1.2.13.dfsg-1?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-57432",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-12087",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-13221",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-75803",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        }
+      ],
+      "normalizedTupleDelta": {
+        "added": [
+          [
+            "CVE-2026-77063",
+            "LOW",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-85063",
+            "MEDIUM",
+            "<7.0.2",
+            "7.0.2",
+            [
+              "pkg:npm/csv-parse@5.6.0"
+            ]
+          ],
+          [
+            "CVE-2026-77037",
+            "HIGH",
+            "=2.2.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-77078",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-82333",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-57432",
+            "HIGH",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ],
+        "removed": [
+          [
+            "CVE-2026-57432",
+            "UNSPECIFIED",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "purpose": "backup",
+      "ledger": {
+        "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+        "head": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+        "mode": "backup",
+        "index": "b6054c05dc2b314dc4047e1ec1b0cbc05baece1475e51e3575f75b7a84c4dd8f",
+        "platform": "87f695a0f8d0d4e48a6433219a05e7e8c5e25403ff2616f1f824ba3d30f1e292",
+        "startedAt": "2026-09-09T02:02:10.376Z",
+        "endedAt": "2026-09-09T02:02:14.042Z",
+        "attemptCount": 1,
+        "exitCode": 2,
+        "signal": null,
+        "error": null,
+        "reportValid": true,
+        "errorFieldPresent": false,
+        "counts": {
+          "results": 70
+        },
+        "lockUnchanged": true,
+        "freeBefore": 11990433792,
+        "required": 1419419374,
+        "freeAfter": 11990036480,
+        "cleanupWarning": false,
+        "suspiciousError": false,
+        "stdoutBytes": 457798,
+        "stdoutSha256": "838a8a730944a4208309c2fd236cbc8e9b9b64d6f4f864195d8c5dd132448314",
+        "stderrBytes": 433,
+        "stderrSha256": "569fbfa77f935f92b2d8b9b9e08338a11ea93b5ac23ae0e93dd837c816ae22db",
+        "executionFieldsBoundary": "MAIN_REPORTED",
+        "stopRequired": false
+      },
+      "counts": {
+        "CRITICAL": 3,
+        "HIGH": 14,
+        "MEDIUM": 8,
+        "LOW": 41,
+        "UNSPECIFIED": 4
+      },
+      "criticalHigh": [
+        {
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48962",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48959",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-54874",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63072",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63076",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-77037",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-77078",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-82333",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-85091",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/zlib@1%3A1.2.13.dfsg-1?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-57432",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-12087",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-13221",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-75803",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        }
+      ],
+      "normalizedTupleDelta": {
+        "added": [
+          [
+            "CVE-2026-77063",
+            "LOW",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-85063",
+            "MEDIUM",
+            "<7.0.2",
+            "7.0.2",
+            [
+              "pkg:npm/csv-parse@5.6.0"
+            ]
+          ],
+          [
+            "CVE-2026-77037",
+            "HIGH",
+            "=2.2.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-77078",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-82333",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-57432",
+            "HIGH",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ],
+        "removed": [
+          [
+            "CVE-2026-57432",
+            "UNSPECIFIED",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "purpose": "legacy",
+      "ledger": {
+        "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+        "head": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+        "mode": "legacy",
+        "index": "b4527854d1c2e655401aee38af745a32e2a470b76e8ebd63ec60cb76ddb3ce74",
+        "platform": "782d1ad1e0b2d29a6abb9121e7e7e6650cbe7a42f5f65dd77921d2411141b543",
+        "startedAt": "2026-09-09T02:02:14.257Z",
+        "endedAt": "2026-09-09T02:02:16.757Z",
+        "attemptCount": 1,
+        "exitCode": 2,
+        "signal": null,
+        "error": null,
+        "reportValid": true,
+        "errorFieldPresent": false,
+        "counts": {
+          "results": 61
+        },
+        "lockUnchanged": true,
+        "freeBefore": 11990032384,
+        "required": 1386240000,
+        "freeAfter": 11989581824,
+        "cleanupWarning": false,
+        "suspiciousError": false,
+        "stdoutBytes": 383156,
+        "stdoutSha256": "d8362bdfbdc073f5b68b4bc04d7e6d78d7350f8a065696639c127d288969815a",
+        "stderrBytes": 433,
+        "stderrSha256": "c0edd118abf43a8d10ef25d0242a763bf85711802965790a2c81d9115d2531f9",
+        "executionFieldsBoundary": "MAIN_REPORTED",
+        "stopRequired": false
+      },
+      "counts": {
+        "CRITICAL": 3,
+        "HIGH": 14,
+        "MEDIUM": 8,
+        "LOW": 32,
+        "UNSPECIFIED": 4
+      },
+      "criticalHigh": [
+        {
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48962",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-48959",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-54874",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63072",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-63076",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-77037",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-77078",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-82333",
+          "severity": "HIGH",
+          "fixedVersion": "2.3.0",
+          "purls": [
+            "pkg:npm/multer@2.2.0"
+          ]
+        },
+        {
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-85091",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/zlib@1%3A1.2.13.dfsg-1?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-57432",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-12087",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-13221",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        },
+        {
+          "id": "CVE-2026-75803",
+          "severity": "CRITICAL",
+          "fixedVersion": "not fixed",
+          "purls": [
+            "pkg:deb/debian/openssl@3.0.20-1~deb12u2?os_distro=bookworm&os_name=debian&os_version=12"
+          ]
+        }
+      ],
+      "normalizedTupleDelta": {
+        "added": [
+          [
+            "CVE-2026-77063",
+            "LOW",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-85063",
+            "MEDIUM",
+            "<7.0.2",
+            "7.0.2",
+            [
+              "pkg:npm/csv-parse@5.6.0"
+            ]
+          ],
+          [
+            "CVE-2026-77037",
+            "HIGH",
+            "=2.2.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-77078",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-82333",
+            "HIGH",
+            "<2.3.0",
+            "2.3.0",
+            [
+              "pkg:npm/multer@2.2.0"
+            ]
+          ],
+          [
+            "CVE-2026-57432",
+            "HIGH",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ],
+        "removed": [
+          [
+            "CVE-2026-57432",
+            "UNSPECIFIED",
+            ">0",
+            "not fixed",
+            [
+              "pkg:deb/debian/perl@5.36.0-7%2Bdeb12u3?os_distro=bookworm&os_name=debian&os_version=12"
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "independentReview": {
+    "A": "LOCAL_OCI_36_OF_36_RAW_BYTES_AND_SOURCE_BASE_BINDING_PASS",
+    "C": "SEVERITIES_DELTAS_AUDIT_AND_SEVEN_OUTPUT_HASHES_PASS",
+    "D": "SAVED_AUDIT_AND_SARIF_HASHES_7_OF_7_AND_CRITICAL_HIGH_SETS_6_OF_6_PASS; EXECUTION_FIELDS_MAIN_REPORTED; RELEASE_NO_GO"
+  },
+  "riskAcceptance": {
+    "status": "VOID_REVIEW_MISS_AND_CHANGED_CRITICAL_HIGH_SET",
+    "existingOsCriticalHigh": 13,
+    "currentOsCriticalHigh": 14,
+    "fixableApplicationDependencies": [
+      "multer 2.3.0",
+      "csv-parse 7.0.2",
+      "sharp 0.35.4"
+    ]
+  },
+  "providerPhase2": "NOT_RUN",
+  "operationalReady": false
+}

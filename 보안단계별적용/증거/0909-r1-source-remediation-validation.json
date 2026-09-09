@@ -1,0 +1,131 @@
+{
+  "version": "r1-local-remediation-source-validation/v1",
+  "baseHead": "4d51c61ce78fe79f7e079b59fa8d7ea222195fc1",
+  "reportedBy": "MAIN_REPORTED",
+  "sourceFiles": [
+    {
+      "path": "package.json",
+      "bytes": 1730,
+      "sha256": "87ca79bde4398d6d307967ad2152b48f722e89d1c2f8c1738830d062b4aae9ac"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 313071,
+      "sha256": "d1e6b30443f7340dbf3d0bb59eef7915473e513ec4d4117a9bd44f94c6a3de5b"
+    },
+    {
+      "path": "apps/api/package.json",
+      "bytes": 2003,
+      "sha256": "0aedac70fc1af160e813edb7a15323b0a474d744775328645ac16ca6bdc00ce0"
+    },
+    {
+      "path": "apps/api/src/file-security/upload-profiles.ts",
+      "bytes": 10774,
+      "sha256": "267349cc8378913fc6c28992c20e03dfc0e3ea69c9075d772b4f66d15fcecfc4"
+    },
+    {
+      "path": "apps/api/src/file-security/dependency-security-regression.spec.ts",
+      "bytes": 4104,
+      "sha256": "cdfec02ab94e7a16103b26c84f80608f9b1ede04e5ddb7b159f01c62bf709a04"
+    }
+  ],
+  "nodeImage": "node:22-bookworm-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5",
+  "npm": "10.9.4",
+  "evidenceDirectory": "C:\\Users\\seong\\AppData\\Local\\Temp\\meta-ads-remediation-20260909T0210Z",
+  "logs": [
+    {
+      "file": "prisma-validate.log",
+      "bytes": 582,
+      "sha256": "641301ae5f1164c5ad1113053e1b07db9a02b2084d1d5328603864106748e997"
+    },
+    {
+      "file": "prisma-generate.log",
+      "bytes": 1804,
+      "sha256": "405cb572346b6c57896308909e2c027180c63090d27963c782217ebef1355248"
+    },
+    {
+      "file": "corrected-lint.log",
+      "bytes": 435,
+      "sha256": "9fcd5224eaf0bf9e7b567a3e57c542bda351f6090c6c46e2a6b9c88b7fdcb48a"
+    },
+    {
+      "file": "test.log",
+      "bytes": 20201,
+      "sha256": "bc1591d22d2f5dae5e97069e3fe5b49879b81ecd6b766bc832093c764aca292f"
+    },
+    {
+      "file": "isolated-startup.log",
+      "bytes": 2328,
+      "sha256": "440b2c88f17f95f91c8b708bbf02525a951c5a483c034fd369ec1b1476324c0d"
+    },
+    {
+      "file": "nativefs-isolated-startup.log",
+      "bytes": 756,
+      "sha256": "5dd0c396172c568d306b24584a1cf69ddbcd285642206a7dc95eda89428aa29d"
+    },
+    {
+      "file": "nativefs-api-bounded-workers.log",
+      "bytes": 11757,
+      "sha256": "c4dc76c9038133105f436e6622b2931b47be73008ff6c833901c42de79690940"
+    },
+    {
+      "file": "nativefs-build.log",
+      "bytes": 1500,
+      "sha256": "b61d7d27f75442a401fd8e3fa7e7624c649abf50a4133152871da3ddfe0bc813"
+    },
+    {
+      "file": "nativefs-maintenance-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "nativefs-cloud-tests.log",
+      "bytes": 11128,
+      "sha256": "67de41684a75ff81b68efc71751c619346c9d1ad94e7eedbbdd81bbaa1cd86bd"
+    },
+    {
+      "file": "nativefs-cloud-runtime.log",
+      "bytes": 3133,
+      "sha256": "6b3fa8d2bbf0a2182264ff791b1a1645a8c26f8b352a297458045927b77bf0e1"
+    },
+    {
+      "file": "nativefs-offline-audit.log",
+      "bytes": 366,
+      "sha256": "f95ccb3b9aea1bf99d267a032daef24004cbce4b964796d69bc6a8ca147caf27"
+    },
+    {
+      "file": "steps.txt",
+      "bytes": 755,
+      "sha256": "8435e943ed505a9ebf65fae747f50a3736f9616fe3e4829539ad63a4beade848"
+    }
+  ],
+  "results": {
+    "prismaValidate": "PASS",
+    "prismaGenerate": "PASS",
+    "lint": "PASS_AFTER_TEST_ADAPTER_TYPE_CORRECTION",
+    "apiTestsPassed": 1178,
+    "apiTestsSkipped": 23,
+    "webTestsPassed": 279,
+    "cloudTestsPassed": 52,
+    "launcherTestsPassed": 14,
+    "build": "PASS",
+    "maintenanceCompile": "PASS",
+    "offlineAuditFindings": 0,
+    "onlineAuditOfRemediatedSource": "NOT_RUN"
+  },
+  "failureHistory": [
+    "Initial lint failed on new regression adapter options type; corrected without weakening assertions.",
+    "Windows bind-mounted full API suite: startup-order 5000ms timeout, 1177 passed/23 skipped. Isolated repeat also timed out.",
+    "Same source copied inside Linux container: unchanged default timeout, isolated 3 tests pass (target 333ms), full API with maxWorkers=2 passes. Supports filesystem-delay hypothesis, does not prove root cause."
+  ],
+  "limitations": [
+    "Offline audit is not fresh online advisory validation.",
+    "23 skipped API tests are NOT RUN; no actual DB/Auth/Storage/provider verification.",
+    "4GiB validation container is not the production 1GiB resource acceptance proof.",
+    "New release images and new risk acceptance remain pending."
+  ],
+  "independentReview": "D_SOURCE_5_OF_5_AND_LOG_13_OF_13_BYTES_HASH_PASS; RECORDED_TEST_RESULTS_VERIFIED; EXECUTION_AND_SILENT_COMPILE_EXIT_MAIN_REPORTED; SOURCE_COMMIT_GO",
+  "providerPhase2Attempt": 0,
+  "actualCredentialStorePrepared": false,
+  "operationalReady": false
+}
