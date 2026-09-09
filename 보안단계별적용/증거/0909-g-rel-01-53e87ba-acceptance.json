@@ -1,0 +1,32 @@
+{
+  "version": "g-rel-01-53e87ba-acceptance/v1",
+  "status": "ACCEPTED_TIME_BOUND",
+  "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+  "scope": "EXACT_SIX_IMAGES_COMMON_14_CRITICAL_HIGH_AND_TWO_SARIF_HASHES_PER_HANDOFF_SECTION_18",
+  "owner": "ColaRaccoon production owner",
+  "approvalResponse": "승인할게",
+  "approvalRecordedUtc": "2026-09-09T04:57:20Z",
+  "firstOwnerReviewKst": "2026-09-09 13:57:20",
+  "nextOwnerReviewDeadlineKst": "2026-09-10 13:57:20",
+  "expiryKst": "2026-09-10 23:59:59",
+  "reviewBeforeEveryPublishDeployMaintenance": true,
+  "automaticReviewScheduled": false,
+  "officialReview": {
+    "observedKst": "2026-09-09 13:58:19",
+    "nodeBaseChanged": false,
+    "bookwormFixObserved": false,
+    "cisaCatalog": "2026.09.08",
+    "cisaCount": 1699,
+    "exact14Matches": 0
+  },
+  "scanSummarySha256": "1f9d19c396348200dc4a55b7673c4075b7cd399303c6a93e2bbcf3c65c962be6",
+  "localSummarySha256": "7c610f675a210fe1d2859ae53e904d7f7b67ee9bc0f53e8dcc94ff219b0335ee",
+  "independentReview": "D_EXACT_BINDING_PASS; A_OFFICIAL_CONDITIONS_UNCHANGED",
+  "executionBoundary": "APPROVAL_RECEIPT_TIME_MAIN_REPORTED",
+  "R1": "CONDITIONAL_PASS_IMAGE_BASE_CVE_ONLY",
+  "oldAcceptance": "VOID_REVIEW_MISS_NOT_REUSED",
+  "providerPhase2Approval": "NOT_GRANTED",
+  "actualCredentialPreparation": "NOT_RUN",
+  "providerPhase2Attempt": 0,
+  "operationalReady": false
+}
