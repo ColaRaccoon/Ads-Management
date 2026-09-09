@@ -1,0 +1,1259 @@
+{
+  "version": "r1a-53e87ba-maintenance-boundary/v1",
+  "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+  "scope": "LOCAL_NO_NETWORK_SYNTHETIC_INPUTS; NO_PROVIDER_OR_REAL_CREDENTIALS",
+  "evidenceDirectory": "C:\\Users\\seong\\AppData\\Local\\Temp\\meta-ads-release-53e87ba-20260909T0236Z",
+  "cases": [
+    {
+      "record": {
+        "purpose": "auth",
+        "case": "noenv",
+        "container": "r1a-auth-noenv-53e87ba-20260909",
+        "containerId": "c9184b8d27861fb20d7b253b40eccaa9d0a3716bdd6d1c5c63b263a837dfc607",
+        "imageDigest": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "AUTH_MANIFEST_BINDING_KEY_FILE_REQUIRED"
+        },
+        "boundary": {
+          "Image": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:12.56134709Z",
+            "FinishedAt": "2026-09-09T03:37:12.876952413Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "user-disposition"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "59c3c8f134c5878ae5540df810ce9ef5fb09dd228b3206f0dfdf32042c09ece8",
+      "bytes": 1593
+    },
+    {
+      "record": {
+        "purpose": "auth",
+        "case": "foreigncred",
+        "container": "r1a-auth-foreigncred-53e87ba-20260909",
+        "containerId": "8d6567fedf3483eb1888426067166d55ac2adccff69977afa44bfaff4202e642",
+        "imageDigest": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_FOREIGN_CREDENTIAL_PRESENT"
+        },
+        "boundary": {
+          "Image": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:13.664808681Z",
+            "FinishedAt": "2026-09-09T03:37:13.794234499Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "user-disposition"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "285bd685797d60041528c84ffb6f66ea35152792bb40541f95be121a0faa1e9e",
+      "bytes": 1605
+    },
+    {
+      "record": {
+        "purpose": "auth",
+        "case": "foreigncmd",
+        "container": "r1a-auth-foreigncmd-53e87ba-20260909",
+        "containerId": "acb720cd44f519995d2efe7883a940f13f6dbe90863170ce4c3d384b215bfdd4",
+        "imageDigest": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_COMMAND_NOT_ALLOWED"
+        },
+        "boundary": {
+          "Image": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:14.535065268Z",
+            "FinishedAt": "2026-09-09T03:37:14.694729348Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "backup"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "2a390e3024608e32d8f253892ac3f966f64cf985c6cff18cd494a3515a6cb5e9",
+      "bytes": 1586
+    },
+    {
+      "record": {
+        "purpose": "auth",
+        "case": "closure",
+        "container": "r1a-auth-closure-53e87ba-20260909",
+        "containerId": "f43d65b7d599f045520084ba9ec0fb65b48a752c0c4e7fd1208d77283ff9a4bc",
+        "imageDigest": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+        "exit": 0,
+        "payload": {
+          "purpose": "auth",
+          "fileCount": 16433,
+          "result": "PASS"
+        },
+        "boundary": {
+          "Image": "sha256:0d5009f713cdb41cbcf3f37fbb58807ab903bee9b8ad8cf380d97c71046add98",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:15.426356782Z",
+            "FinishedAt": "2026-09-09T03:37:17.028561118Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node"
+          ],
+          "Cmd": [
+            "/srv/maintenance/assert-maintenance-artifact.mjs",
+            "/srv/maintenance",
+            "auth"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "ed097b745459b10bfb6b0fe2700d46846f5b11ab423de604a46c866d1b023b3e",
+      "bytes": 1571
+    },
+    {
+      "record": {
+        "purpose": "migration",
+        "case": "noenv",
+        "container": "r1a-migration-noenv-53e87ba-20260909",
+        "containerId": "5ce38a669f2097acc76ec47278eabefc2ce3fb81d07fc1e65797cef6d2059f86",
+        "imageDigest": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_PURPOSE_CREDENTIAL_REQUIRED"
+        },
+        "boundary": {
+          "Image": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:17.771550957Z",
+            "FinishedAt": "2026-09-09T03:37:17.89974258Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "migrate-deploy"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "82ebc479ba2247720dfd01ccaeb83091281eab89f6c46ea381e3fa045c9d0de7",
+      "bytes": 1601
+    },
+    {
+      "record": {
+        "purpose": "migration",
+        "case": "foreigncred",
+        "container": "r1a-migration-foreigncred-53e87ba-20260909",
+        "containerId": "eb00b69a6089d9ec54f56782783eca7ff4c334c203412942183a631eaea1bbfe",
+        "imageDigest": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_FOREIGN_CREDENTIAL_PRESENT"
+        },
+        "boundary": {
+          "Image": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:18.613009369Z",
+            "FinishedAt": "2026-09-09T03:37:18.762251166Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "migrate-deploy"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "39eb41ae9eff783d7694dd72c2c02667f1ec145eb050aa03f33b0171f0923955",
+      "bytes": 1613
+    },
+    {
+      "record": {
+        "purpose": "migration",
+        "case": "foreigncmd",
+        "container": "r1a-migration-foreigncmd-53e87ba-20260909",
+        "containerId": "36bcd838dbcc74ed8b888b141823907606fce347e0419b7c0556eab49218c429",
+        "imageDigest": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_COMMAND_NOT_ALLOWED"
+        },
+        "boundary": {
+          "Image": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:19.48721659Z",
+            "FinishedAt": "2026-09-09T03:37:19.625285321Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "user-disposition"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "9c783f2fce52836f7bd28d0e52f7f1d0d95d55f5cdda9693bac96afea88cb9cf",
+      "bytes": 1605
+    },
+    {
+      "record": {
+        "purpose": "migration",
+        "case": "closure",
+        "container": "r1a-migration-closure-53e87ba-20260909",
+        "containerId": "d03c4d074d8f0d4d126ae7b5ce04b02e1cf500c90621a842c9c412c01d42a53c",
+        "imageDigest": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+        "exit": 0,
+        "payload": {
+          "purpose": "migration",
+          "fileCount": 32905,
+          "result": "PASS"
+        },
+        "boundary": {
+          "Image": "sha256:bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:20.371463351Z",
+            "FinishedAt": "2026-09-09T03:37:23.066931493Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node"
+          ],
+          "Cmd": [
+            "/srv/maintenance/assert-maintenance-artifact.mjs",
+            "/srv/maintenance",
+            "migration"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "5329eda16a585189fa52516d5993dd36d917a9e63ee1acfa2fa4892e51c1c1d7",
+      "bytes": 1591
+    },
+    {
+      "record": {
+        "purpose": "storage",
+        "case": "noenv",
+        "container": "r1a-storage-noenv-53e87ba-20260909",
+        "containerId": "026c9acb40fb4b47e31996e09b686d81c9780c16a2ab4aae6fe59fdb30a25a72",
+        "imageDigest": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+        "exit": 1,
+        "payload": {
+          "event": "storage-policy-plan",
+          "result": "FAIL",
+          "code": "STORAGE_POLICY_CLI_FAILED"
+        },
+        "boundary": {
+          "Image": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:23.829411248Z",
+            "FinishedAt": "2026-09-09T03:37:24.006060168Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "policy"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "b6e59b2a3401dbaaef77efa0f67c9771b19856857aba4fbef88bab94e8f08ac7",
+      "bytes": 1573
+    },
+    {
+      "record": {
+        "purpose": "storage",
+        "case": "foreigncred",
+        "container": "r1a-storage-foreigncred-53e87ba-20260909",
+        "containerId": "7e7e868c46fb23daa53401dc2b17a6d8a436142d5cbaac2f5741fdd931d95ab5",
+        "imageDigest": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_FOREIGN_CREDENTIAL_PRESENT"
+        },
+        "boundary": {
+          "Image": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:24.734713682Z",
+            "FinishedAt": "2026-09-09T03:37:24.853710599Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "policy"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "82b3610c272fd663b3f385ef57cde1f7f99ea0905ba089f4954ed1cfb5954ca1",
+      "bytes": 1601
+    },
+    {
+      "record": {
+        "purpose": "storage",
+        "case": "foreigncmd",
+        "container": "r1a-storage-foreigncmd-53e87ba-20260909",
+        "containerId": "cab9613554bbddd8848a51a49dcc13d1b409953a27089a2fed03fdfc0e39bb0a",
+        "imageDigest": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_COMMAND_NOT_ALLOWED"
+        },
+        "boundary": {
+          "Image": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:25.574483269Z",
+            "FinishedAt": "2026-09-09T03:37:25.69333592Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "migrate-deploy"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "3c123940350733c3722927ffc78e66e4514916e4dbe583ab6c1c5ad5870ce1c5",
+      "bytes": 1599
+    },
+    {
+      "record": {
+        "purpose": "storage",
+        "case": "closure",
+        "container": "r1a-storage-closure-53e87ba-20260909",
+        "containerId": "57b1d2a9014c1a5522ee8ba26535012b16a90433f281c134f64574273b6351aa",
+        "imageDigest": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+        "exit": 0,
+        "payload": {
+          "purpose": "storage",
+          "fileCount": 16433,
+          "result": "PASS"
+        },
+        "boundary": {
+          "Image": "sha256:8ed1547bfb4c4d280a2d7d6ca4b0e8ff1e66e1bf1d7df247a1d47c064cf9fbc8",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:26.408552996Z",
+            "FinishedAt": "2026-09-09T03:37:27.518778964Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node"
+          ],
+          "Cmd": [
+            "/srv/maintenance/assert-maintenance-artifact.mjs",
+            "/srv/maintenance",
+            "storage"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "52528ed69623f8ec0ff62941d036411a2328afb3d3a509ece3816051faaa294b",
+      "bytes": 1583
+    },
+    {
+      "record": {
+        "purpose": "backup",
+        "case": "noenv",
+        "container": "r1a-backup-noenv-53e87ba-20260909",
+        "containerId": "af0fe4b3dd99e4e20dc69f81b65549bc8685b99bc7e680bc581e9e7f5771ae37",
+        "imageDigest": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+        "exit": 1,
+        "payload": {
+          "event": "backup-plan",
+          "result": "FAIL",
+          "code": "BACKUP_CLI_FAILED"
+        },
+        "boundary": {
+          "Image": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:28.272383605Z",
+            "FinishedAt": "2026-09-09T03:37:28.427658458Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "backup"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "e42afe0ff757aaf49496c05136a10807fee1f450d7c59cc82c91812528cc417c",
+      "bytes": 1555
+    },
+    {
+      "record": {
+        "purpose": "backup",
+        "case": "foreigncred",
+        "container": "r1a-backup-foreigncred-53e87ba-20260909",
+        "containerId": "62f0ee9a7e948b36cd7aa3dde9abca1f49deac7b0756fd920301ee1b8e5bbd84",
+        "imageDigest": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_FOREIGN_CREDENTIAL_PRESENT"
+        },
+        "boundary": {
+          "Image": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:29.130216202Z",
+            "FinishedAt": "2026-09-09T03:37:29.260754143Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "backup"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "90a962cd3e68ae628b2212c3240a0ebf64388cd84c9b04217e6f0c709ca39597",
+      "bytes": 1599
+    },
+    {
+      "record": {
+        "purpose": "backup",
+        "case": "foreigncmd",
+        "container": "r1a-backup-foreigncmd-53e87ba-20260909",
+        "containerId": "7240f3890cd2a91b6ed1eecc0400f5a022b5362f8484006f1c7a66f892357123",
+        "imageDigest": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_COMMAND_NOT_ALLOWED"
+        },
+        "boundary": {
+          "Image": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:29.978199989Z",
+            "FinishedAt": "2026-09-09T03:37:30.095897739Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "inventory"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "462c8554cb815f6db7ebf6163a0ec2493d7599557115a13830a53c2bda08d06d",
+      "bytes": 1593
+    },
+    {
+      "record": {
+        "purpose": "backup",
+        "case": "closure",
+        "container": "r1a-backup-closure-53e87ba-20260909",
+        "containerId": "2266c2c120c5baea127ab1a54054366c8834e622f10a7e5b7369a732c257572a",
+        "imageDigest": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+        "exit": 0,
+        "payload": {
+          "purpose": "backup",
+          "fileCount": 19721,
+          "result": "PASS",
+          "pgDumpVersion": "17.11"
+        },
+        "boundary": {
+          "Image": "sha256:64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:30.835836803Z",
+            "FinishedAt": "2026-09-09T03:37:32.73527216Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node"
+          ],
+          "Cmd": [
+            "/srv/maintenance/assert-maintenance-artifact.mjs",
+            "/srv/maintenance",
+            "backup"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "62814727ca906bdfb71eac6f1529829b1f7e799e73f877c52e1ea8ec9a74843f",
+      "bytes": 1609
+    },
+    {
+      "record": {
+        "purpose": "legacy",
+        "case": "noenv",
+        "container": "r1a-legacy-noenv-53e87ba-20260909",
+        "containerId": "2357a1e4deab281324ab60e81403fc40587e6ba1f4076cb69f62a40d7ce0a0ff",
+        "imageDigest": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+        "exit": 1,
+        "payload": {
+          "event": "legacy-reference-inventory",
+          "result": "FAIL",
+          "code": "LEGACY_CLI_FAILED"
+        },
+        "boundary": {
+          "Image": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:33.480088218Z",
+            "FinishedAt": "2026-09-09T03:37:33.642680952Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "inventory"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "8422e5a08a5e1c73a771beb3431973b414c4844e56a302271fa1a062f8e6e8cc",
+      "bytes": 1573
+    },
+    {
+      "record": {
+        "purpose": "legacy",
+        "case": "foreigncred",
+        "container": "r1a-legacy-foreigncred-53e87ba-20260909",
+        "containerId": "631942d79176c57928abc30d6af4311b898df43044281270f95b8bee99e40286",
+        "imageDigest": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_FOREIGN_CREDENTIAL_PRESENT"
+        },
+        "boundary": {
+          "Image": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:34.353349536Z",
+            "FinishedAt": "2026-09-09T03:37:34.475351293Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "inventory"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "867dd0829864f5344f32a920138779d73e9d1fd9d50b787c263575fc4bdc4f5b",
+      "bytes": 1602
+    },
+    {
+      "record": {
+        "purpose": "legacy",
+        "case": "foreigncmd",
+        "container": "r1a-legacy-foreigncmd-53e87ba-20260909",
+        "containerId": "cc94b2cd493bad3f39ce02988278f72ed259e0a2f05c3f00fce1e6b388286083",
+        "imageDigest": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+        "exit": 1,
+        "payload": {
+          "event": "maintenance-entrypoint",
+          "result": "FAIL",
+          "code": "MAINTENANCE_COMMAND_NOT_ALLOWED"
+        },
+        "boundary": {
+          "Image": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:35.18503678Z",
+            "FinishedAt": "2026-09-09T03:37:35.311492135Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node",
+            "/srv/maintenance/maintenance-entrypoint.mjs"
+          ],
+          "Cmd": [
+            "policy"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "3010f8eabfb82e1c2e9e25ae9d3ff021d4ffb14d242eee871167d4a412fb9a89",
+      "bytes": 1589
+    },
+    {
+      "record": {
+        "purpose": "legacy",
+        "case": "closure",
+        "container": "r1a-legacy-closure-53e87ba-20260909",
+        "containerId": "252aa62637173d0daaea8b0ad2a30449a289cbf3204841180e446512c1d9a74f",
+        "imageDigest": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+        "exit": 0,
+        "payload": {
+          "purpose": "legacy",
+          "fileCount": 16433,
+          "result": "PASS"
+        },
+        "boundary": {
+          "Image": "sha256:c9ad9f17601cdd720107a430fcd3ea9154d076098f95852cc8f08b4ef3c83f9c",
+          "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-09T03:37:36.03182764Z",
+            "FinishedAt": "2026-09-09T03:37:37.160460371Z"
+          },
+          "User": "1000:1000",
+          "Entrypoint": [
+            "node"
+          ],
+          "Cmd": [
+            "/srv/maintenance/assert-maintenance-artifact.mjs",
+            "/srv/maintenance",
+            "legacy"
+          ],
+          "NetworkMode": "none",
+          "ReadonlyRootfs": true,
+          "Memory": 1073741824,
+          "MemorySwap": 1073741824,
+          "PidsLimit": 256,
+          "CapDrop": [
+            "ALL"
+          ],
+          "SecurityOpt": [
+            "no-new-privileges"
+          ],
+          "PortBindings": {},
+          "Binds": null,
+          "Tmpfs": {
+            "/tmp": "rw,noexec,nosuid,nodev,size=192m,mode=1777"
+          }
+        },
+        "containerRemoved": true,
+        "result": "PASS",
+        "scope": "LOCAL_NO_NETWORK_SYNTHETIC_FAIL_CLOSED",
+        "executionBoundary": "MAIN_REPORTED",
+        "operationalReady": false
+      },
+      "rawSha256": "30f2b2cf4476376c4910e49e6b7ffd26be94003bcfbfaebe80e238819e40b4c7",
+      "bytes": 1578
+    }
+  ],
+  "total": 20,
+  "passed": 20,
+  "independentReview": "A_SCRIPT_THREE_P2_FIXED; D_RAW_20_OF_20_BYTES_HASH_CONTENT_AND_HARDENING_EXPECTED_CODES_PASS; ACTUAL_EXECUTION_AND_CLEANUP_MAIN_REPORTED",
+  "actualProviderExecution": "NOT_RUN",
+  "operationalReady": false
+}
