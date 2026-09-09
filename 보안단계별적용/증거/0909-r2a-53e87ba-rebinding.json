@@ -1,0 +1,66 @@
+{
+  "version": "r2a-release-rebinding/v1",
+  "status": "LOCAL_RELEASE_REBINDING_PASS_PROVIDER_NOT_RUN",
+  "observedKst": "2026-09-09 14:27:31",
+  "source": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
+  "migrationImageIndex": "bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4",
+  "backupImageIndex": "64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863",
+  "historicalRelease": {
+    "source": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+    "releaseId": "d7190cc24805ad7c8d0469aa407060b59a5a82449c3f1e3b2c434bc5db0af994"
+  },
+  "newRelease": {
+    "releaseId": "9bfd01c2097d18836d76b56d3def91410d928572aab530f3a5b75b188ed3014f",
+    "migrationChainSha256": "3620f082569de51cebbd5218c8fa1bf38005e60c1dee7b45d5d8eac20d930f6b",
+    "migrationCount": 37,
+    "migrationBytes": 122467,
+    "managedRelationCount": 53,
+    "runtimeMatchesHistoricalRelease": true,
+    "migrationEntriesMatchHistoricalRelease": true
+  },
+  "runtime": {
+    "nodeSha256": "3517c2df0b2f8cd7f422b4b8450ef81c6889f08eb03e281d6de9079b15e6a327",
+    "prismaCliSha256": "245fcbc1156ee5d35f04ab5ea18e1558df1a6d92dedd9bae80e49f58d3ef9920",
+    "schemaSha256": "af3dfb56cbc26a876fe14758747b96644d5504b3d72ccc53d6b4bd7eae41562c"
+  },
+  "localExecution": {
+    "dockerContext": "desktop-linux",
+    "dockerServerVersion": "29.3.1",
+    "pullPolicy": "never",
+    "network": "none",
+    "readOnlyRootfs": true,
+    "user": "1000:1000",
+    "capDrop": ["ALL"],
+    "noNewPrivileges": true,
+    "pidsLimit": 64,
+    "memoryBytes": 536870912,
+    "memorySwapBytes": 536870912,
+    "generateExitCode": 0,
+    "verifyExitCode": 0,
+    "oomKilled": false,
+    "ownedContainersRemoved": true,
+    "providerNetworkUsed": false
+  },
+  "localRawEvidence": {
+    "generateOutputSha256": "38db177537034eaee0e43c459c169132e09199d44dedb9ef96235a98b8450903",
+    "generateReceiptSha256": "c28e2bef851b1e408396307263bcb047f536a76be5198b68696e65537d536ba3",
+    "verifyOutputSha256": "7d4448b071fb0942a1b31513ed167d1d14ea27536eea381345e06718353cd407",
+    "verifyReceiptSha256": "88e921ea75209014204ff8b90918642aa158f1a1ed929d24c371534daa123929",
+    "location": "%LOCALAPPDATA%\\Temp\\meta-ads-r2a-rebind-53e87ba-20260909T0500Z"
+  },
+  "preContainerFailures": [
+    "DOCKER_ENGINE_PIPE_UNAVAILABLE_CREATE_FAILED",
+    "WINDOWS_POWERSHELL_BIND_PATH_CREATE_FAILED_MAIN_REPORTED_CAUSE_UTF8"
+  ],
+  "newImageBuilds": 0,
+  "newImagePulls": 1,
+  "phase1ReceiptChanged": false,
+  "phase2ArtifactBytesChanged": false,
+  "actualCredentialPreparation": "NOT_RUN",
+  "providerPhase2Attempt": 0,
+  "stagingMigration": "NOT_RUN",
+  "requiredPg17Image": "RESTORED_EXACT_DIGEST_AFTER_REBIND_NO_CONTAINER_RUN",
+  "providerPhase2Approval": "NOT_GRANTED",
+  "operationalReady": false,
+  "evidenceBoundary": "MAIN_REPORTED_LOCAL_IMAGE_BYTES_ONLY"
+}

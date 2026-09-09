@@ -15,9 +15,10 @@ credential activation·migration·후속 단계 NOT RUN / operationalReady=false
 - 새 application database는 `meta_ads_staging`, schema는 `public`이다.
 - 역할은 `meta_ads_stg_runtime`, `meta_ads_stg_migration`, `meta_ads_stg_backup`이다.
 - 외부 변경 전 준비 파일은 모두 `보안단계별적용/**`에 둔다. 이 경로는 release build
-  context에서 제외되므로 source `f8a94fcf43aa4705befcaafbcb91045e154ae54b`와 승인된
-  exact 6-image는 바뀌지 않는다.
-- 이 설계·로컬 rehearsal은 G-DB-00/G-DB-02 승인이 아니며 Supabase mutation은 0건이다.
+  context에서 제외된다. 현재 phase 2 준비 bundle은 source
+  `53e87ba3ebf9c062463072ce5e4c8db77d8e9076`와 그 source에서 만든 exact 6-image에 재결속했다.
+- 최초 설계·로컬 rehearsal 자체의 Supabase mutation은 0건이었다. 이후 별도 승인된 phase 1은
+  provider에서 PASS했지만, 이 문서와 재결속 작업은 G-DB-00 phase 2/G-DB-02 승인이 아니다.
 
 ## 2. 확정 architecture와 정직한 격리 경계
 
@@ -92,7 +93,7 @@ creator 자신이 임시로 하나 더 만든 뒤 DB/schema bootstrap 직후 그
      재시도하지 않는다.
 3. **G-DB-02 — staging migration**
    - exact migration image index
-     `f8d53394a68c7257eb4fc5c6f4d226d6fb96cbd410664992f454cadc649c34fd`와 이 bundle의
+     `bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4`와 이 bundle의
      `migration-release.json`을 사용한다.
    - image 내부 37 `migration.sql` raw bytes를 실행 직전에 재해시하고 release의 37 entry와
      일치해야 한다. current runner가 SQL raw bytes를 자체 재해시하지 않는 gap을 이 preflight로
@@ -212,6 +213,18 @@ provider mutation은 0이다.
 
 Phase 2 승인 후보의 exact artifact는 다음과 같다. 실행 직전 main은 bytes와 SHA-256을 모두 다시
 확인하며 하나라도 다르면 승인 token을 사용하지 않는다.
+
+2026-09-09 재결속에서는 source `53e87ba3ebf9c062463072ce5e4c8db77d8e9076`, migration image
+index `bb886aecaadaa75d9995ce9fdadd33552528a34d58b9885e3cc34cdf4e12a2a4`, backup image index
+`64ee17e94ff83587995161ae59beb8878e995ec988f49a98c8eddf163d2ba863`를 사용했다. network none,
+read-only, user `1000:1000`, cap-drop ALL, no-new-privileges, pids 64, memory/swap 512MiB,
+`--pull never`의 로컬 컨테이너에서 migration image 내부의 Node/Prisma/schema와 37개
+`migration.sql` raw bytes를 읽었다. 기존 release와 runtime 및 37개 migration entry가 같고 chain
+SHA-256 `3620f082569de51cebbd5218c8fa1bf38005e60c1dee7b45d5d8eac20d930f6b`가 불변임을 확인했다.
+새 canonical release ID는 `9bfd01c2097d18836d76b56d3def91410d928572aab530f3a5b75b188ed3014f`다.
+두 검증 컨테이너는 종료 후 제거됐으며 provider 접속, 실제 migration, credential 준비는 NOT RUN이다.
+비밀 없는 receipt는 `증거/0909-r2a-53e87ba-rebinding.json`에 둔다. 과거 f8a94fc local rehearsal을
+새 source에서 재실행한 것으로 보지 않으며, phase 1 receipt의 역사적 provider 사실도 수정하지 않는다.
 
 | artifact | bytes | SHA-256 |
 |---|---:|---|

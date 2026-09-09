@@ -1,7 +1,6 @@
 {
   "version": "migration-release/v1",
-  "releaseId": "d7190cc24805ad7c8d0469aa407060b59a5a82449c3f1e3b2c434bc5db0af994",
-  "releaseGitSha": "f8a94fcf43aa4705befcaafbcb91045e154ae54b",
+  "releaseGitSha": "53e87ba3ebf9c062463072ce5e4c8db77d8e9076",
   "runtime": {
     "nodePath": "/usr/local/bin/node",
     "nodeSha256": "3517c2df0b2f8cd7f422b4b8450ef81c6889f08eb03e281d6de9079b15e6a327",
@@ -66,43 +65,192 @@
     "upload_rows"
   ],
   "migrations": [
-    { "name": "20260529000000_init", "sqlSha256": "3c8b88e0713c80de0499fcb90b96411417d2953fbb8f5aba9ac0048295ee4550", "bytes": 22644 },
-    { "name": "20260529150000_add_exchange_rates", "sqlSha256": "9cfd8137dc5b3026f8594d880e8ac60cd44e0270964a14f54f8c604c8fc125b5", "bytes": 1181 },
-    { "name": "20260529153000_fix_exchange_rate_unique_index_name", "sqlSha256": "6f2d6e00afd3efa94ede7612d8b3c8c0753f931cd36f8ccebdf70291e8a11ec9", "bytes": 245 },
-    { "name": "20260529162500_remove_ad_cost_multiplier", "sqlSha256": "247236f0944c00eb31af52702e353b96645e699ed6e32371baeea799401dc161", "bytes": 153 },
-    { "name": "20260601000000_add_meta_ad_daily_metrics", "sqlSha256": "b2db9c46ea0a2c58f31bee02b8f9ec8442716b0d18f3ab4a8cca1b3992c171ec", "bytes": 7628 },
-    { "name": "20260604000000_add_creative_change_logs", "sqlSha256": "1893ad8b49ab2105729c3ecc42c8b166d90678916e432e2bd1d3d9bead0496b0", "bytes": 5583 },
-    { "name": "20260608000000_cleanup_orphan_creatives", "sqlSha256": "c0a80cafd9674aa0f8032f85b86357205c1f022530041d3c4e3b9a44e2c52975", "bytes": 2383 },
-    { "name": "20260610000000_add_product_change_logs", "sqlSha256": "e719a298d0cd9f97ba7822a29d12c0c0f26390bce68b2e885c06461f93aa0d0e", "bytes": 796 },
-    { "name": "20260611000000_add_cafe24_sales", "sqlSha256": "2906da1d95dc3ed81b08b7b7c4bf10e71be9d4c2103af72cba969f227b82d8f6", "bytes": 7122 },
-    { "name": "20260611001000_add_cafe24_order_line_current_versions", "sqlSha256": "01d5f312e22947e1bf413c0ef149fe38ac9fe267309c6b69ca028c6301b9b320", "bytes": 2479 },
-    { "name": "20260625000000_add_coupang_module_models", "sqlSha256": "6648ca79bfa2ff47717d181230c0d2495caa2fd9ed91807f836ae1365b6d649d", "bytes": 12457 },
-    { "name": "20260626000000_add_coupang_promotion_prices", "sqlSha256": "df97f94cca6d7af5b0cb96114cbf0cf063ab4cc86c3a605eb8b986815bf25abe", "bytes": 3439 },
-    { "name": "20260701000000_add_coupang_ad_metric_ad_name", "sqlSha256": "976ce38bdecde9c7b014875ba3d758ab5e9454779f1d0edbb59c28aa44344579", "bytes": 61 },
-    { "name": "20260703000000_add_coupang_product_groups", "sqlSha256": "6539fb5413543d4a87e19e72f967c31d268e616b2e1c2a6294b3435dbf9dff91", "bytes": 1076 },
-    { "name": "20260709000000_add_coupang_manual_purchases", "sqlSha256": "ddcc1055517035b66c6c1574fe017151e61e46e31b3d942289fbf17999d976b7", "bytes": 2341 },
-    { "name": "20260710000000_add_coupang_manual_purchase_vat", "sqlSha256": "5034e828dc6e47cbb8cbe9fcab95787bbd3e9591a6e051f16aaabe0c699efa95", "bytes": 368 },
-    { "name": "20260721000000_add_coupang_manual_purchase_sales_amount", "sqlSha256": "4f4794d4c4a4dd12d4d3125b10856ce5264a76d2379c21d7d0d3b9871f087d49", "bytes": 149 },
-    { "name": "20260721173000_add_coupang_manual_purchase_product_cost", "sqlSha256": "d904e42e12989eeb08014ef9d9d57584bb7abd195929e8c1686be8f732720ef8", "bytes": 3384 },
-    { "name": "20260722000000_backfill_coupang_manual_purchase_sales_amount", "sqlSha256": "c77a195c247bb8671be62931db7a089fed2a247378123b8ab43f24215d48ce74", "bytes": 744 },
-    { "name": "20260722150000_split_coupang_shipping_fees", "sqlSha256": "87589cb39f5a14af73f7f752ca1e368ad9503af1fc9a64020d7bed9fd26dd415", "bytes": 623 },
-    { "name": "20260722200000_add_global_coupang_sales_fee_rules", "sqlSha256": "da72ac728440b265c34fb726f449337ee022e73d9ee8e1e7f937cf6bfab91586", "bytes": 3887 },
-    { "name": "20260723110000_normalize_coupang_cost_rule_history", "sqlSha256": "89964999bedc69fa6adf475bbc577fb3cb98c338dedeab7ed9b2bd835ac63b37", "bytes": 9847 },
-    { "name": "20260724000000_normalize_manual_purchase_accounting", "sqlSha256": "60190e2d7562571125e775764b8decbb4fc0be43695110047117d857afcd9806", "bytes": 1287 },
-    { "name": "20260724010000_remove_coupang_manual_purchase_vat", "sqlSha256": "91e63ecf70b8e05294bd4dceccefeb27311c86b0880e544b40a024e28961b7d7", "bytes": 603 },
-    { "name": "20260724170000_add_coupang_daily_report_categories", "sqlSha256": "4d72f0070e853a9ee4f7f43016f39803a5988fea17f817120e5e6a72299a742b", "bytes": 1663 },
-    { "name": "20260731000000_add_cafe24_coupon_rules", "sqlSha256": "e525c35de525853fd29e0e82a090235da8444a8ee54a85ab9eb7352fbd5aa0ad", "bytes": 1676 },
-    { "name": "20260810170000_add_meta_video_play_counts", "sqlSha256": "541c5f6ba793c281eba3e8e641a4efcf671b4858cede5e2b129970185117c4e0", "bytes": 5427 },
-    { "name": "20260820090000_add_meta_add_to_cart_count", "sqlSha256": "693feb16fbc76524287f09b27c112997a2cecfaa807f5895b56322744b80d64b", "bytes": 1511 },
-    { "name": "20260824110000_add_security_auth", "sqlSha256": "6b867f1d564a5c6c383a13aa6d45448bc872650d80af99c581b7f1cb731a1d9f", "bytes": 4077 },
-    { "name": "20260824140000_add_actor_attribution", "sqlSha256": "6fd63d3541ab1d023ca5beb8982e9009d84dc08571d6e6c139679c62c690e6fd", "bytes": 5520 },
-    { "name": "20260825090000_add_user_lifecycle_audit", "sqlSha256": "780f8bb357263382698fb80058677f41159afe88b2f8db0ca4178f7e1693b21f", "bytes": 3144 },
-    { "name": "20260825110000_protect_security_audit_truncate", "sqlSha256": "c378bab4bbd506f786434929661463bfa84318d3b95882e5796e3ec7d39c2d63", "bytes": 422 },
-    { "name": "20260825150000_add_distributed_rate_limits", "sqlSha256": "349c028706866d18a66a22edb81ec6cd1a463ba88870e327e689084af0456d5f", "bytes": 831 },
-    { "name": "20260825170000_minimize_cafe24_coupang_raw_rows", "sqlSha256": "476827c4c03aa04f765fd22ca7c080cc008407a61134d03e4c94f54684bd81eb", "bytes": 696 },
-    { "name": "20260825210000_add_storage_tombstones", "sqlSha256": "b27decf14c9d6dfae19621404b3258a4dc2f867950d9981e9607ae3385ffe4b0", "bytes": 2049 },
-    { "name": "20260826010000_add_local_native_auth", "sqlSha256": "0e4876a6c3fe0f3aa9637b7bbb9577b3acff8cd384ea681d50ed2621fcfed8ea", "bytes": 4590 },
-    { "name": "20260826020000_add_local_edge_request_nonces", "sqlSha256": "c154a5778e4768b9341ac4f8514815f8c214aef53aeed0eec821c1c2e0c3a94e", "bytes": 381 }
+    {
+      "name": "20260529000000_init",
+      "sqlSha256": "3c8b88e0713c80de0499fcb90b96411417d2953fbb8f5aba9ac0048295ee4550",
+      "bytes": 22644
+    },
+    {
+      "name": "20260529150000_add_exchange_rates",
+      "sqlSha256": "9cfd8137dc5b3026f8594d880e8ac60cd44e0270964a14f54f8c604c8fc125b5",
+      "bytes": 1181
+    },
+    {
+      "name": "20260529153000_fix_exchange_rate_unique_index_name",
+      "sqlSha256": "6f2d6e00afd3efa94ede7612d8b3c8c0753f931cd36f8ccebdf70291e8a11ec9",
+      "bytes": 245
+    },
+    {
+      "name": "20260529162500_remove_ad_cost_multiplier",
+      "sqlSha256": "247236f0944c00eb31af52702e353b96645e699ed6e32371baeea799401dc161",
+      "bytes": 153
+    },
+    {
+      "name": "20260601000000_add_meta_ad_daily_metrics",
+      "sqlSha256": "b2db9c46ea0a2c58f31bee02b8f9ec8442716b0d18f3ab4a8cca1b3992c171ec",
+      "bytes": 7628
+    },
+    {
+      "name": "20260604000000_add_creative_change_logs",
+      "sqlSha256": "1893ad8b49ab2105729c3ecc42c8b166d90678916e432e2bd1d3d9bead0496b0",
+      "bytes": 5583
+    },
+    {
+      "name": "20260608000000_cleanup_orphan_creatives",
+      "sqlSha256": "c0a80cafd9674aa0f8032f85b86357205c1f022530041d3c4e3b9a44e2c52975",
+      "bytes": 2383
+    },
+    {
+      "name": "20260610000000_add_product_change_logs",
+      "sqlSha256": "e719a298d0cd9f97ba7822a29d12c0c0f26390bce68b2e885c06461f93aa0d0e",
+      "bytes": 796
+    },
+    {
+      "name": "20260611000000_add_cafe24_sales",
+      "sqlSha256": "2906da1d95dc3ed81b08b7b7c4bf10e71be9d4c2103af72cba969f227b82d8f6",
+      "bytes": 7122
+    },
+    {
+      "name": "20260611001000_add_cafe24_order_line_current_versions",
+      "sqlSha256": "01d5f312e22947e1bf413c0ef149fe38ac9fe267309c6b69ca028c6301b9b320",
+      "bytes": 2479
+    },
+    {
+      "name": "20260625000000_add_coupang_module_models",
+      "sqlSha256": "6648ca79bfa2ff47717d181230c0d2495caa2fd9ed91807f836ae1365b6d649d",
+      "bytes": 12457
+    },
+    {
+      "name": "20260626000000_add_coupang_promotion_prices",
+      "sqlSha256": "df97f94cca6d7af5b0cb96114cbf0cf063ab4cc86c3a605eb8b986815bf25abe",
+      "bytes": 3439
+    },
+    {
+      "name": "20260701000000_add_coupang_ad_metric_ad_name",
+      "sqlSha256": "976ce38bdecde9c7b014875ba3d758ab5e9454779f1d0edbb59c28aa44344579",
+      "bytes": 61
+    },
+    {
+      "name": "20260703000000_add_coupang_product_groups",
+      "sqlSha256": "6539fb5413543d4a87e19e72f967c31d268e616b2e1c2a6294b3435dbf9dff91",
+      "bytes": 1076
+    },
+    {
+      "name": "20260709000000_add_coupang_manual_purchases",
+      "sqlSha256": "ddcc1055517035b66c6c1574fe017151e61e46e31b3d942289fbf17999d976b7",
+      "bytes": 2341
+    },
+    {
+      "name": "20260710000000_add_coupang_manual_purchase_vat",
+      "sqlSha256": "5034e828dc6e47cbb8cbe9fcab95787bbd3e9591a6e051f16aaabe0c699efa95",
+      "bytes": 368
+    },
+    {
+      "name": "20260721000000_add_coupang_manual_purchase_sales_amount",
+      "sqlSha256": "4f4794d4c4a4dd12d4d3125b10856ce5264a76d2379c21d7d0d3b9871f087d49",
+      "bytes": 149
+    },
+    {
+      "name": "20260721173000_add_coupang_manual_purchase_product_cost",
+      "sqlSha256": "d904e42e12989eeb08014ef9d9d57584bb7abd195929e8c1686be8f732720ef8",
+      "bytes": 3384
+    },
+    {
+      "name": "20260722000000_backfill_coupang_manual_purchase_sales_amount",
+      "sqlSha256": "c77a195c247bb8671be62931db7a089fed2a247378123b8ab43f24215d48ce74",
+      "bytes": 744
+    },
+    {
+      "name": "20260722150000_split_coupang_shipping_fees",
+      "sqlSha256": "87589cb39f5a14af73f7f752ca1e368ad9503af1fc9a64020d7bed9fd26dd415",
+      "bytes": 623
+    },
+    {
+      "name": "20260722200000_add_global_coupang_sales_fee_rules",
+      "sqlSha256": "da72ac728440b265c34fb726f449337ee022e73d9ee8e1e7f937cf6bfab91586",
+      "bytes": 3887
+    },
+    {
+      "name": "20260723110000_normalize_coupang_cost_rule_history",
+      "sqlSha256": "89964999bedc69fa6adf475bbc577fb3cb98c338dedeab7ed9b2bd835ac63b37",
+      "bytes": 9847
+    },
+    {
+      "name": "20260724000000_normalize_manual_purchase_accounting",
+      "sqlSha256": "60190e2d7562571125e775764b8decbb4fc0be43695110047117d857afcd9806",
+      "bytes": 1287
+    },
+    {
+      "name": "20260724010000_remove_coupang_manual_purchase_vat",
+      "sqlSha256": "91e63ecf70b8e05294bd4dceccefeb27311c86b0880e544b40a024e28961b7d7",
+      "bytes": 603
+    },
+    {
+      "name": "20260724170000_add_coupang_daily_report_categories",
+      "sqlSha256": "4d72f0070e853a9ee4f7f43016f39803a5988fea17f817120e5e6a72299a742b",
+      "bytes": 1663
+    },
+    {
+      "name": "20260731000000_add_cafe24_coupon_rules",
+      "sqlSha256": "e525c35de525853fd29e0e82a090235da8444a8ee54a85ab9eb7352fbd5aa0ad",
+      "bytes": 1676
+    },
+    {
+      "name": "20260810170000_add_meta_video_play_counts",
+      "sqlSha256": "541c5f6ba793c281eba3e8e641a4efcf671b4858cede5e2b129970185117c4e0",
+      "bytes": 5427
+    },
+    {
+      "name": "20260820090000_add_meta_add_to_cart_count",
+      "sqlSha256": "693feb16fbc76524287f09b27c112997a2cecfaa807f5895b56322744b80d64b",
+      "bytes": 1511
+    },
+    {
+      "name": "20260824110000_add_security_auth",
+      "sqlSha256": "6b867f1d564a5c6c383a13aa6d45448bc872650d80af99c581b7f1cb731a1d9f",
+      "bytes": 4077
+    },
+    {
+      "name": "20260824140000_add_actor_attribution",
+      "sqlSha256": "6fd63d3541ab1d023ca5beb8982e9009d84dc08571d6e6c139679c62c690e6fd",
+      "bytes": 5520
+    },
+    {
+      "name": "20260825090000_add_user_lifecycle_audit",
+      "sqlSha256": "780f8bb357263382698fb80058677f41159afe88b2f8db0ca4178f7e1693b21f",
+      "bytes": 3144
+    },
+    {
+      "name": "20260825110000_protect_security_audit_truncate",
+      "sqlSha256": "c378bab4bbd506f786434929661463bfa84318d3b95882e5796e3ec7d39c2d63",
+      "bytes": 422
+    },
+    {
+      "name": "20260825150000_add_distributed_rate_limits",
+      "sqlSha256": "349c028706866d18a66a22edb81ec6cd1a463ba88870e327e689084af0456d5f",
+      "bytes": 831
+    },
+    {
+      "name": "20260825170000_minimize_cafe24_coupang_raw_rows",
+      "sqlSha256": "476827c4c03aa04f765fd22ca7c080cc008407a61134d03e4c94f54684bd81eb",
+      "bytes": 696
+    },
+    {
+      "name": "20260825210000_add_storage_tombstones",
+      "sqlSha256": "b27decf14c9d6dfae19621404b3258a4dc2f867950d9981e9607ae3385ffe4b0",
+      "bytes": 2049
+    },
+    {
+      "name": "20260826010000_add_local_native_auth",
+      "sqlSha256": "0e4876a6c3fe0f3aa9637b7bbb9577b3acff8cd384ea681d50ed2621fcfed8ea",
+      "bytes": 4590
+    },
+    {
+      "name": "20260826020000_add_local_edge_request_nonces",
+      "sqlSha256": "c154a5778e4768b9341ac4f8514815f8c214aef53aeed0eec821c1c2e0c3a94e",
+      "bytes": 381
+    }
   ],
-  "chainSha256": "3620f082569de51cebbd5218c8fa1bf38005e60c1dee7b45d5d8eac20d930f6b"
+  "chainSha256": "3620f082569de51cebbd5218c8fa1bf38005e60c1dee7b45d5d8eac20d930f6b",
+  "releaseId": "9bfd01c2097d18836d76b56d3def91410d928572aab530f3a5b75b188ed3014f"
 }
