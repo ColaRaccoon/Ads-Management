@@ -1,0 +1,57 @@
+{
+  "version": "r2a-phase2-recovery-runner-static/v1",
+  "status": "PASS",
+  "observedAtKst": "2026-09-09T16:56:24.2665576+09:00",
+  "artifacts": {
+    "prepare": {
+      "bytes": 19699,
+      "sha256": "04d135b828aa0d377ea78bc51845912a8bd209560440c8c1118e97b717c38904"
+    },
+    "runner": {
+      "bytes": 49458,
+      "sha256": "02bb2ef1814c541711dc8369518592f2738c5c46a4e55630ef292d2e9211704e"
+    },
+    "recoverySql": {
+      "bytes": 8942,
+      "sha256": "2edb6432079fab1b89f3bd7fe492a161bc37c506d98a4862299616f827ed78c3"
+    }
+  },
+  "prepareRedirectedAppData": {
+    "firstRun": "PHASE2_RECOVERY_CANDIDATES_PREPARED_NOT_ACTIVATED",
+    "secondRun": "PHASE2_RECOVERY_CANDIDATES_ALREADY_PREPARED_NO_ROTATION",
+    "roleCount": 3,
+    "candidateBytesUnchangedOnSecondRun": true,
+    "actualAppDataOrCredentialStoreAccess": 0,
+    "providerMutation": 0,
+    "originalBytesAndExactAclInvariant": true
+  },
+  "runnerStatic": {
+    "powershellParserErrors": 0,
+    "recoveryExecuteOnly": true,
+    "oldActivationSqlReferenceAbsent": true,
+    "recoverySqlHashPinned": true,
+    "pinnedPg17PullNever": true,
+    "tlsVerifyFullAndScramRequired": true,
+    "separateRecoveryRootStateMarkerLockAndTemp": true,
+    "originalStoreByteAndAclInvariantCheck": true,
+    "validExecutionStateCases": 12,
+    "secondProviderAttemptRejected": true,
+    "automaticRetryCount": 0,
+    "negativeAuthTestCount": 0,
+    "verifyOnlyAttemptCount": 0,
+    "hardenedSourceLockOutsideOriginalRoot": true,
+    "officialCaProtectedCopyAndHashPinned": true,
+    "pinnedImageLocalLinuxAmd64InspectBeforeAttempt": true,
+    "markerPublishedAfterCleanupAndOriginalInvariant": true,
+    "stateValidatorFixturesReproducedByLocalRehearsal": 12
+  },
+  "secretBoundary": {
+    "actualSecretMaterialUsed": false,
+    "secretValuesOrHashesEmitted": false,
+    "verifierEmitted": false,
+    "rawProviderOutputStored": false
+  },
+  "dockerExecutionForThisStaticCheck": 0,
+  "providerCalls": 0,
+  "operationalReady": false
+}

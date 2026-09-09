@@ -280,3 +280,44 @@ password, verifier, URI, token은 저장하지 않았다. catalog는 exact PASS�
 비파괴 containment뿐이다. destructive rollback, migration, grant, backup/restore, Auth/Storage는
 계속 NOT RUN이며 `operationalReady=false`다. 비밀 없는 분류 receipt는
 `증거/0909-g-db-00-phase2-readonly-classification.json`이다.
+
+## 8. credential recovery 로컬 번들
+
+`CREDENTIAL_OR_VERIFIER_MISMATCH` 뒤 기존 activation 또는 VerifyOnly를 재사용하지 않도록 recovery를
+별도 namespace와 상태기계로 설계했다. 원래 `%APPDATA%\MetaAdsSecurity\staging-db-roles`의 DPAPI
+credential3개와 `COMMITTED_VERIFY_FAILED` state는 입력 불변식이며 수정·삭제·덮어쓰지 않는다.
+새 후보는 승인 후에만 별도 `staging-db-roles-recovery` root에 DPAPI CurrentUser와 user/SYSTEM-only
+ACL로 atomic 생성한다. prepare와 runner는 원본 root 밖의 같은 source lock을 사용하고 원본 root와
+네 파일의 owner·ACL 보호 상태·exact SDDL·raw bytes/hash를 전후 비교한다. 후보3개는 서로 다르고 기존3개 모두와 다름을 메모리에서 확인하지만 값이나
+그 파생 hash를 출력·Git·evidence에 기록하지 않는다. 두 번째 prepare는 no-rotation으로 끝난다.
+
+`phase2-provider-credential-recovery.sql`은 PG17, SCRAM 4096, exact DB/role OID, 현재 LOGIN=true,
+role 속성, base/database ACL, membership, active session0을 transaction 안에서 먼저 검사한다. stdin으로
+받은 세 새 SCRAM verifier로 exact 세 role의 `PASSWORD`만 교체한다. LOGIN, grant/revoke, owner, ACL,
+schema/data/migration은 변경하지 않는다. postcondition 뒤에만 COMMIT marker를 반환한다.
+
+전용 runner는 `RecoveryExecute`와 전용 approval token만 허용한다. exact session pooler, official CA,
+pinned PG17의 로컬 digest·linux/amd64 사전 검사, `--pull never`, TLS `verify-full`, SCRAM-required,
+official CA의 reparse/ACL/hash 검사와 보호된 실행별 복사본, read-only/cap-drop/NNP/resource limit,
+execution별 recovery owner label/CID에 고정한다. recovery intent를 먼저 durable state로 기록하고 provider
+attempt를 최대1회로 제한한다. COMMIT marker 뒤 candidate credential로 runtime/migration/backup positive
+login을 각각1회 수행한 다음 final admin catalog를 검사한다. wrong-password/cross-secret, transaction
+pooler, direct IPv6 fallback, 자동 재시도는 없다.
+
+명시적 psql exit3은 `RECOVERY_PRECOMMIT_SCRIPT_FAILED_ROLLBACK_EXPECTED`, 그 밖의 COMMIT 전 불명확한
+종료는 `RECOVERY_COMMIT_OUTCOME_UNKNOWN`, COMMIT ack 뒤 role/final 검증 실패는
+`RECOVERY_COMMITTED_VERIFY_FAILED`, provider 검증 뒤 cleanup 실패와 marker finalize 실패는 별도 상태로
+보존한다. 어떤 실패에서도 recovery SQL을 재실행하지 않는다. 모든 소유 container와 임시 secret이
+정리되고 원본 exact ACL/bytes 불변 검사가 끝난 뒤에만 recovery root에 별도 `active_verified` marker를 atomic publish한다. 원래 activation
+marker는 계속 absent다. 후속 consumer 전환은 이 phase의 성공 receipt 뒤 별도 단계로 남는다.
+
+로컬 리허설은 cached pinned PG17을 `--pull never`로 재사용하고 internal Docker network만 사용했다.
+exact recovery SQL의 정상 PASSWORD-only 회전, 새 credential positive3, final admin, forced pre-COMMIT
+rollback과 prior credential positive3 보존, role/ACL/owner/membership 불변이 PASS했다. wrong/cross test0,
+provider/external network0, actual APPDATA 접근0, secret/verifier/secret-derived hash 출력0이며 container,
+network, temp는 모두 제거됐다. 별도 redirected APPDATA prepare는 최초 생성과 두 번째 no-rotation을
+PASS했고, 실제 runner에서 state validator 함수를 추출해 상태 12개와 second-attempt 거부를 재현 검증했다.
+
+이 번들은 `LOCAL PREPARED`일 뿐이다. actual recovery candidate 생성, provider verifier 회전,
+role positive login은 새 commit·manifest·prepare·runner·SQL에 결속된 exact 승인 전 **NOT RUN**이다.
+성공 후에도 migration/grant/backup/Auth/Storage와 `operationalReady=true` 전환은 별도 gate다.
