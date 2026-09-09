@@ -1,0 +1,101 @@
+{
+  "version": "g-db-00-phase2-readonly-classification/v1",
+  "status": "CREDENTIAL_OR_VERIFIER_MISMATCH",
+  "evidenceBoundary": "MAIN_REPORTED_SANITIZED_ADMIN_CATALOG_AND_DASHBOARD_POOLER_LOGS",
+  "observedAtKst": "2026-09-09T15:50:33.9062446+09:00",
+  "approvedGate": {
+    "commit": "b2af0238cc47c2937d8a8838963483035db7c9d7",
+    "manifestSha256": "59a57b4cdc8b71b1fe46ec4d81113cc9b4ea71879977b8861481381fb81d4dcf",
+    "finalAdminSqlSha256": "3c13be90502d9947cc13f7bf42eea1e796001a12cdb7ef1755b6b600ef26f184",
+    "adminCatalogExecutionLimit": 1,
+    "poolerLogWindowKst": {
+      "start": "2026-09-09T15:18:30+09:00",
+      "end": "2026-09-09T15:21:00+09:00"
+    }
+  },
+  "target": {
+    "organizationId": "synohgzwspodxmfemoks",
+    "projectRef": "ehnfrrmbkvlsbpvqcvkr",
+    "host": "aws-0-ap-northeast-2.pooler.supabase.com",
+    "port": 5432,
+    "adminDatabase": "postgres",
+    "applicationDatabase": "meta_ads_staging",
+    "databaseOid": 25404,
+    "roleOids": {
+      "runtime": 25397,
+      "migration": 25399,
+      "backup": 25401
+    }
+  },
+  "priorFailure": {
+    "receiptPath": "보안단계별적용/증거/0909-g-db-00-phase2-execute-failure.json",
+    "receiptBytes": 2085,
+    "receiptSha256": "14b5d577b5427fbdd97fb669bded3af5dbd139a05f82ca74ee04ef3b2937d5f1",
+    "status": "COMMITTED_VERIFY_FAILED",
+    "providerExecuteAttemptCount": 1,
+    "commitAckObserved": true,
+    "positiveRoleVerificationCount": 0,
+    "activeVerifiedMarkerPresent": false
+  },
+  "adminCatalog": {
+    "executionCount": 1,
+    "startedAtKst": "2026-09-09T15:46:18.0593590+09:00",
+    "endedAtKst": "2026-09-09T15:46:19.0382146+09:00",
+    "transactionMode": "BEGIN_READ_ONLY_ROLLBACK",
+    "result": "PASS",
+    "databaseOidMatched": true,
+    "roleOidLoginAndAttributesMatched": true,
+    "databaseAndBaseAclMatched": true,
+    "membershipMatched": true,
+    "targetSessionCount": 0,
+    "providerMutation": false,
+    "rawOutputStored": false
+  },
+  "poolerLogs": {
+    "source": "SUPABASE_DASHBOARD_POOLER_LOGS",
+    "windowStartKst": "2026-09-09T15:18:30+09:00",
+    "windowEndKst": "2026-09-09T15:21:00+09:00",
+    "rowsReviewed": 6,
+    "classificationRelevantRows": 1,
+    "eventAtKst": "2026-09-09T15:19:33+09:00",
+    "roleClass": "runtime",
+    "category": "PASSWORD_AUTHENTICATION_FAILED",
+    "authenticationPath": "ONE_OFF_AUTH_QUERY_OBSERVED",
+    "temporallyCorrelatedWithFirstPositiveRoleVerification": true,
+    "providerMutation": false,
+    "rawLogsStored": false
+  },
+  "classification": {
+    "result": "CREDENTIAL_OR_VERIFIER_MISMATCH",
+    "credentialVersusVerifierCause": "UNRESOLVED_WITHOUT_SECRET_COMPARISON",
+    "remoteActiveLikely": false,
+    "poolerPropagationOrRoutingTransientClaimed": false,
+    "verifyOnlyAllowed": false,
+    "nextAllowedPath": "SEPARATE_CREDENTIAL_RECOVERY_OR_CONTAINMENT_GATE"
+  },
+  "actions": {
+    "activationRerun": "NOT_RUN_PROHIBITED",
+    "verifyOnly": "NOT_RUN_PROHIBITED_BY_CREDENTIAL_OR_VERIFIER_MISMATCH",
+    "automaticRetry": "NOT_RUN_PROHIBITED",
+    "wrongPasswordOrCrossSecretTest": "NOT_RUN_PROHIBITED",
+    "credentialRecovery": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL",
+    "containment": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL",
+    "destructiveRollback": "NOT_RUN_REQUIRES_SEPARATE_APPROVAL"
+  },
+  "credentialState": {
+    "protectedDpapiRoleRecordCount": 3,
+    "executionState": "COMMITTED_VERIFY_FAILED",
+    "retainedUnchanged": true,
+    "secretValuesOrHashesEmitted": false
+  },
+  "secretBoundary": {
+    "rawLog": false,
+    "userOrUsernameSuffix": false,
+    "password": false,
+    "verifier": false,
+    "connectionUri": false,
+    "token": false
+  },
+  "stagingMigration": "NOT_RUN",
+  "operationalReady": false
+}

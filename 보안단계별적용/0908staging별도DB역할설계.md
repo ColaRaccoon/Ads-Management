@@ -257,3 +257,26 @@ SHA-256 `3620f082569de51cebbd5218c8fa1bf38005e60c1dee7b45d5d8eac20d930f6b`가 �
 actual credential prepare/activation, role별 provider 연결, migration, grant, backup/restore,
 Auth/Storage/app lifecycle은 계속 NOT RUN이다. Phase 2는 새 exact 승인 대기 상태다. 완료 조건 전에는
 `operationalReady=false`다. production, push, main merge, tag는 별도 승인 전 실행하지 않는다.
+
+## 7. 2026-09-09 phase 2 read-only 분류 결과
+
+별도 exact 승인을 받은 뒤 기존 admin session pooler에서 SHA-256
+`3c13be90502d9947cc13f7bf42eea1e796001a12cdb7ef1755b6b600ef26f184`의
+`phase2-final-admin-verify.sql`을 2026-09-09 15:46:18–15:46:19 KST에 정확히 한 번 실행했다.
+`BEGIN READ ONLY`/`ROLLBACK` 범위에서 database OID, 세 role OID·LOGIN·속성, DB/base ACL,
+membership가 모두 일치했고 target session count는 0이었다. 이 PASS는 Execute 당시의
+`finalAdminVerify=false`를 소급 변경하지 않으며 별도 분류용 catalog 결과다.
+
+Supabase Dashboard Pooler Logs를 승인된 2026-09-09 15:18:30–15:21:00 KST 범위로 제한해
+6건을 확인했다. 그중 첫 runtime positive verification과 같은 15:19:33 KST에 password
+authentication failure 1건과 one-off auth query 경로가 관찰됐다. 로그 원문, username suffix,
+password, verifier, URI, token은 저장하지 않았다. catalog는 exact PASS지만 명확한 인증 불일치
+징후가 있으므로 최종 분류는 `CREDENTIAL_OR_VERIFIER_MISMATCH`다. credential과 verifier 중 어느
+쪽이 원인인지는 secret 비교 없이 구분하지 않았고 pooler propagation/routing transient도 주장하지 않는다.
+
+따라서 `Mode VerifyOnly`, activation 재실행, 자동 재시도와 wrong-password/cross-secret test는 금지한다.
+기존 actual DPAPI credential3개와 `COMMITTED_VERIFY_FAILED` state는 변경 없이 보호 보존한다.
+다음 허용 경로는 새 artifact와 별도 exact 승인에 결속된 credential recovery 또는 기존 exact OID의
+비파괴 containment뿐이다. destructive rollback, migration, grant, backup/restore, Auth/Storage는
+계속 NOT RUN이며 `operationalReady=false`다. 비밀 없는 분류 receipt는
+`증거/0909-g-db-00-phase2-readonly-classification.json`이다.
