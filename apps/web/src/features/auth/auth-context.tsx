@@ -45,7 +45,7 @@ export const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [forcedStatus, setForcedStatus] = useState<AuthStatus | null>(null);
-  const [acceptingInvitation, setAcceptingInvitation] = useState(false);
+  const [changingSession, setChangingSession] = useState(false);
   const permissionRefresh = useRef<Promise<unknown> | null>(null);
   const previousIdentity = useRef<string | null>(null);
   const previousAuthorizationVersion = useRef<string | null>(null);
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: AUTH_ME_QUERY_KEY,
     queryFn: fetchAuthMe,
     // Clearing an anonymous query must not immediately start another 401 loop.
-    enabled: forcedStatus !== "anonymous" && forcedStatus !== "not-provisioned" && !acceptingInvitation,
+    enabled: forcedStatus !== "anonymous" && forcedStatus !== "not-provisioned" && !changingSession,
     staleTime: AUTH_STALE_MS,
     retry: false,
     refetchOnWindowFocus: true,
@@ -165,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient, refreshAuth]);
 
   const login = useCallback(async (identifier: string, password: string) => {
+    setChangingSession(true);
     await queryClient.cancelQueries();
     invalidateApiSession();
     queryClient.clear();
@@ -182,6 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       if (!isAccountStateError(error)) setForcedStatus("anonymous");
       throw error;
+    } finally {
+      setChangingSession(false);
     }
   }, [queryClient]);
 
@@ -198,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const acceptInvitation = useCallback(async (tokenHash: string) => {
-    setAcceptingInvitation(true);
+    setChangingSession(true);
     await queryClient.cancelQueries({ queryKey: AUTH_ME_QUERY_KEY });
     // Discard older anonymous reads before sending the one-use invitation.
     invalidateApiSession();
@@ -209,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await replaceSession(me, "onboarding");
     } finally {
-      setAcceptingInvitation(false);
+      setChangingSession(false);
     }
   }, [queryClient, replaceSession]);
 

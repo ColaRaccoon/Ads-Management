@@ -55,6 +55,25 @@ afterEach(() => {
 });
 
 describe("AuthProvider cache and revalidation integration", () => {
+  it("logs in after logout without a competing anonymous read or page reload", async () => {
+    const queryClient = createQueryClient();
+    apiMocks.get.mockResolvedValueOnce(authMe("v1", ["data.read"]));
+    renderProvider(queryClient);
+    expect(await screen.findByText("authenticated:user-1:data.read")).toBeTruthy();
+    apiMocks.post.mockResolvedValueOnce(undefined);
+    fireEvent.click(screen.getByRole("button", { name: "logout" }));
+    expect(await screen.findByText("anonymous:none:")).toBeTruthy();
+    await waitFor(() => expect(apiMocks.post).toHaveBeenCalledWith("/auth/logout"));
+    const reads = apiMocks.get.mock.calls.length;
+    let finishLogin!: (value: unknown) => void;
+    apiMocks.post.mockImplementationOnce(() => new Promise(resolve => { finishLogin = resolve; }));
+    fireEvent.click(screen.getByRole("button", { name: "login" }));
+    expect(await screen.findByText("loading:none:")).toBeTruthy();
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
+    expect(apiMocks.get).toHaveBeenCalledTimes(reads);
+    await act(async () => finishLogin(authMe("v2", ["data.read"])));
+    expect(await screen.findByText("authenticated:user-1:data.read")).toBeTruthy();
+  });
   it("does not refetch anonymous /auth/me when its lifecycle event clears the cache", async () => {
     const queryClient = createQueryClient();
     apiMocks.get.mockRejectedValue({ code: "AUTHENTICATION_REQUIRED" });
@@ -162,6 +181,7 @@ function AuthProbe() {
     <button type="button" onClick={() => void auth.acceptInvitation("opaque-hash")}>accept</button>
     <button type="button" onClick={() => void auth.completeInvitation("a-strong-password")}>complete</button>
     <button type="button" onClick={() => void auth.logout()}>logout</button>
+    <button type="button" onClick={() => void auth.login("test-user", "test-password")}>login</button>
   </div>;
 }
 
