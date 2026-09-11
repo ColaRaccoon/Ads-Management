@@ -45,6 +45,7 @@ export const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [forcedStatus, setForcedStatus] = useState<AuthStatus | null>(null);
+  const [acceptingInvitation, setAcceptingInvitation] = useState(false);
   const permissionRefresh = useRef<Promise<unknown> | null>(null);
   const previousIdentity = useRef<string | null>(null);
   const previousAuthorizationVersion = useRef<string | null>(null);
@@ -52,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const authQuery = useQuery({
     queryKey: AUTH_ME_QUERY_KEY,
     queryFn: fetchAuthMe,
+    // Clearing an anonymous query must not immediately start another 401 loop.
+    enabled: forcedStatus !== "anonymous" && forcedStatus !== "not-provisioned" && !acceptingInvitation,
     staleTime: AUTH_STALE_MS,
     retry: false,
     refetchOnWindowFocus: true,
@@ -195,12 +198,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const acceptInvitation = useCallback(async (tokenHash: string) => {
-    const me = parseAuthMe(await apiPost<unknown>("/auth/invitations/accept", { tokenHash }));
-    if (!me.user.isActive || me.user.inviteStatus !== "VERIFIED_PENDING_PASSWORD") {
-      throw new Error("Invalid invitation acceptance response.");
+    setAcceptingInvitation(true);
+    await queryClient.cancelQueries({ queryKey: AUTH_ME_QUERY_KEY });
+    // Discard older anonymous reads before sending the one-use invitation.
+    invalidateApiSession();
+    try {
+      const me = parseAuthMe(await apiPost<unknown>("/auth/invitations/accept", { tokenHash }));
+      if (!me.user.isActive || me.user.inviteStatus !== "VERIFIED_PENDING_PASSWORD") {
+        throw new Error("Invalid invitation acceptance response.");
+      }
+      return await replaceSession(me, "onboarding");
+    } finally {
+      setAcceptingInvitation(false);
     }
-    return replaceSession(me, "onboarding");
-  }, [replaceSession]);
+  }, [queryClient, replaceSession]);
 
   const completeInvitation = useCallback(async (password: string) => {
     const me = parseAuthMe(await apiPost<unknown>("/auth/password", { password }));

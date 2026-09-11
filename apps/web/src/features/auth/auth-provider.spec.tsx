@@ -8,6 +8,7 @@ import { AuthProvider, AUTH_ME_QUERY_KEY } from "./auth-context";
 import { useAuth } from "./use-auth";
 
 const apiMocks = vi.hoisted(() => ({
+  listener: null as null | ((event: { type: string; code?: string }) => void),
   get: vi.fn(),
   post: vi.fn(),
   invalidate: vi.fn()
@@ -27,7 +28,10 @@ vi.mock("@/lib/api", () => ({
     ? String((error as { code: unknown }).code)
     : null,
   invalidateApiSession: apiMocks.invalidate,
-  subscribeAuthLifecycle: () => () => undefined
+  subscribeAuthLifecycle: (listener: typeof apiMocks.listener) => {
+    apiMocks.listener = listener;
+    return () => { apiMocks.listener = null; };
+  }
 }));
 
 vi.mock("./auth-coordination", () => ({
@@ -51,6 +55,17 @@ afterEach(() => {
 });
 
 describe("AuthProvider cache and revalidation integration", () => {
+  it("does not refetch anonymous /auth/me when its lifecycle event clears the cache", async () => {
+    const queryClient = createQueryClient();
+    apiMocks.get.mockRejectedValue({ code: "AUTHENTICATION_REQUIRED" });
+    renderProvider(queryClient);
+    expect(await screen.findByText("anonymous:none:")).toBeTruthy();
+    const calls = apiMocks.get.mock.calls.length;
+    act(() => apiMocks.listener?.({ type: "session-invalid", code: "AUTHENTICATION_REQUIRED" }));
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
+    expect(apiMocks.get).toHaveBeenCalledTimes(calls);
+    expect(queryClient.getQueryData(AUTH_ME_QUERY_KEY)).toBeUndefined();
+  });
   it("recovers from a transient bfcache /auth/me failure on a later refetch", async () => {
     const queryClient = createQueryClient();
     apiMocks.get.mockResolvedValueOnce(authMe("v1", ["data.read"]));
