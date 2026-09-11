@@ -29,8 +29,8 @@ export default function CompleteInvitationPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting.current) return;
-    if (password.length < 12 || password.length > 128) {
-      setError("비밀번호는 12자 이상 128자 이하로 입력해 주세요.");
+    if (password.length < 7 || password.length > 128) {
+      setError("비밀번호는 7자 이상 128자 이하로 입력해 주세요.");
       return;
     }
     if (password !== confirmation) {
@@ -65,7 +65,7 @@ export default function CompleteInvitationPage() {
             <input
               type="password"
               autoComplete="new-password"
-              minLength={12}
+              minLength={7}
               maxLength={128}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -78,7 +78,7 @@ export default function CompleteInvitationPage() {
             <input
               type="password"
               autoComplete="new-password"
-              minLength={12}
+              minLength={7}
               maxLength={128}
               value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}

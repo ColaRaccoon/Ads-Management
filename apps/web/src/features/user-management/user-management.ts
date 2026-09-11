@@ -262,7 +262,7 @@ export function passwordErrorMessage(
   provider: WebAuthProvider = WEB_AUTH_PROVIDER
 ): string {
   const code = apiErrorCode(error);
-  if (code === "PASSWORD_POLICY_INVALID") return "비밀번호 정책을 충족하지 않습니다. 12자 이상으로 다시 입력해 주세요.";
+  if (code === "PASSWORD_POLICY_INVALID") return "비밀번호 정책을 충족하지 않습니다. 7자 이상으로 다시 입력해 주세요.";
   if (code === "ONBOARDING_SESSION_REQUIRED") return provider === "supabase"
     ? "초대 설정 세션이 만료되었습니다. 총관리자에게 새 초대를 요청해 주세요."
     : "최초 설정 세션이 만료되었습니다. 총관리자에게 새 설정 코드를 요청해 주세요.";

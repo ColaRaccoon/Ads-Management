@@ -39,7 +39,7 @@ export function validateNewPassword(password: string) {
     /[\uD800-\uDFFF]/u.test(password.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/gu, "")) ||
     password !== password.normalize("NFKC") ||
     password !== password.trim() ||
-    codePoints < 12 ||
+    codePoints < 7 ||
     codePoints > 128 ||
     bytes > 256
   ) {
