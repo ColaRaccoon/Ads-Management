@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import React, { createRef, ReactNode } from "react";
+import React, { createRef, ReactNode, useState } from "react";
+import LoginPage from "../../app/login/page";
+import { ApiError } from "../../lib/api";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { DailyCategoryFilter } from "../../app/coupang/daily-report/category-filter";
 import { AppFrame } from "../../components/app-frame";
@@ -37,6 +39,30 @@ afterEach(() => {
 });
 
 describe("authenticated component integration", () => {
+  it("keeps the login form mounted and displays invalid credentials after loading", async () => {
+    navigation.pathname = "/login";
+    let fail!: () => void;
+    function Harness() {
+      const [status, setStatus] = useState<AuthStatus>("anonymous");
+      const value = authValue(status, []);
+      value.login = async () => {
+        setStatus("loading");
+        await new Promise<void>((_, reject) => { fail = () => { setStatus("anonymous"); reject(new ApiError(401, "Invalid credentials", "INVALID_CREDENTIALS")); }; });
+        throw new Error("unreachable");
+      };
+      return <AuthContext.Provider value={value}><AppFrame><LoginPage /></AppFrame></AuthContext.Provider>;
+    }
+    render(<Harness />);
+    const identifier = screen.getByRole("textbox");
+    fireEvent.change(identifier, { target: { value: "test-user" } });
+    fireEvent.change(screen.getByLabelText("비밀번호"), { target: { value: "wrong-test-password" } });
+    fireEvent.submit(screen.getByRole("button", { name: "로그인" }).closest("form")!);
+    expect(await screen.findByRole("button", { name: "로그인 중…" })).toBeTruthy();
+    fail();
+    expect((await screen.findByRole("alert")).textContent).toContain("또는 비밀번호가 올바르지 않습니다");
+    expect(screen.getByRole("textbox")).toBe(identifier);
+    expect(navigation.replace).not.toHaveBeenCalled();
+  });
   it("keeps business children and AppShell out of the DOM while auth is loading", () => {
     renderWithAuth(
       <AppFrame><div data-testid="business-data">sensitive business data</div></AppFrame>,

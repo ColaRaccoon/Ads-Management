@@ -19,7 +19,7 @@ export function appFrameDecision(
     return { mode: "bare" };
   }
 
-  if (status === "loading") return { mode: "loading" };
+  if (status === "loading") return pathname === "/login" ? { mode: "bare" } : { mode: "loading" };
 
   if (status === "not-provisioned") {
     return pathname === "/forbidden"

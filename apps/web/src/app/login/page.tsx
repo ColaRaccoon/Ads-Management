@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { safeNextPath } from "@/features/auth/auth-redirect";
 import { WEB_AUTH_PROVIDER } from "@/features/auth/auth-provider";
 import { useAuth } from "@/features/auth/use-auth";
+import { apiErrorCode } from "@/lib/api";
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -24,8 +25,13 @@ export default function LoginPage() {
       await auth.login(identifier, password);
       const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
       router.replace(next);
-    } catch {
-      setError(`로그인할 수 없습니다. ${supabaseAuth ? "이메일" : "사용자 이름"}과 비밀번호를 확인하거나 관리자에게 문의해 주세요.`);
+    } catch (requestError) {
+      const code = apiErrorCode(requestError);
+      setError(code === "INVALID_CREDENTIALS"
+        ? `${supabaseAuth ? "이메일" : "사용자 이름"} 또는 비밀번호가 올바르지 않습니다. 다시 확인해 주세요.`
+        : code === "RATE_LIMITED"
+          ? "로그인 시도가 많습니다. 잠시 후 다시 시도해 주세요."
+          : "로그인을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
