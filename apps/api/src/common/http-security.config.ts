@@ -11,7 +11,7 @@ import {
   UPLOAD_PROFILES
 } from "../file-security/upload-profiles";
 
-export const HTTP_SECURITY_CONFIG = Symbol("HTTP_SECURITY_CONFIG");
+export { HTTP_SECURITY_CONFIG } from "./http-security.token";
 
 export type DeploymentMode = "legacy" | "local_lan" | "cloud_container";
 
