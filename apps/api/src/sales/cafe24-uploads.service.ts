@@ -9,7 +9,7 @@ import {
   SecurityAuditResult,
   UploadStatus
 } from "@prisma/client";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { asDateOnly, parseDateRange } from "../common/date-range";
 import { PrismaService } from "../common/prisma.service";
@@ -160,6 +160,13 @@ export class Cafe24UploadsService {
       const matcherRules = await this.matcherRules();
       updated = await this.prisma.$transaction(
         async (tx) => {
+          // New, distinct order keys can be inserted in batches. Keep the existing
+          // version/conflict path whenever a key already exists or repeats.
+          const keys = parsedRows.map(({ parsed, rawRow }) => effectiveCafe24OrderLineKey(parsed.parsedRow, rawRow));
+          const newLines: Prisma.Cafe24OrderLineCreateManyInput[] | undefined = duplicateKeys.length === 0 &&
+            await tx.cafe24OrderLine.count({ where: { orderLineKey: { in: keys }, isCurrent: true } }) === 0
+            ? [] : undefined;
+          const newErrors: Prisma.Cafe24UploadRowErrorCreateManyInput[] = [];
           for (const { rowNumber, rawRow, sanitizedRawRow, sourceRowHash, parsed } of parsedRows) {
             failedRowNumber = rowNumber;
             const parsedRow = parsed.parsedRow;
@@ -245,15 +252,15 @@ export class Cafe24UploadsService {
                 validationStatus,
                 validationErrors: [...issues, ...warnings]
               },
-              tx
+              tx,
+              newLines
             );
             warningCount += warnings.length + saved.policyWarnings.length;
             const line = saved.line;
 
             const rowErrors = [...issues, ...warnings, ...saved.policyWarnings];
             if (rowErrors.length > 0) {
-              await tx.cafe24UploadRowError.createMany({
-                data: rowErrors.map((issue) => ({
+              const errors = rowErrors.map((issue) => ({
                   uploadBatchId: batch.id,
                   orderLineId: line.id,
                   rowNumber,
@@ -262,8 +269,18 @@ export class Cafe24UploadsService {
                   errorCode: issue.errorCode,
                   message: issue.message,
                   rawValue: issue.rawValue
-                }))
-              });
+                }));
+              if (newLines) newErrors.push(...errors);
+              else await tx.cafe24UploadRowError.createMany({ data: errors });
+            }
+          }
+
+          if (newLines) {
+            for (let offset = 0; offset < newLines.length; offset += 100) {
+              await tx.cafe24OrderLine.createMany({ data: newLines.slice(offset, offset + 100) });
+            }
+            for (let offset = 0; offset < newErrors.length; offset += 100) {
+              await tx.cafe24UploadRowError.createMany({ data: newErrors.slice(offset, offset + 100) });
             }
           }
 
@@ -766,10 +783,11 @@ export class Cafe24UploadsService {
     return rule;
   }
 
-  private async saveCafe24OrderLine(input: SaveCafe24OrderLineInput, client?: Prisma.TransactionClient) {
+  private async saveCafe24OrderLine(input: SaveCafe24OrderLineInput, client?: Prisma.TransactionClient,
+    newLines?: Prisma.Cafe24OrderLineCreateManyInput[]) {
     const policyWarnings: RowIssue[] = [];
     const save = async (tx: Prisma.TransactionClient) => {
-      const existingCurrentLines = await tx.cafe24OrderLine.findMany({
+      const existingCurrentLines = newLines ? [] : await tx.cafe24OrderLine.findMany({
         where: { orderLineKey: input.orderLineKey, isCurrent: true },
         orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }]
       });
@@ -800,8 +818,7 @@ export class Cafe24UploadsService {
         });
       }
 
-      const created = await tx.cafe24OrderLine.create({
-        data: {
+      const data: Prisma.Cafe24OrderLineCreateManyInput = {
           uploadBatchId: input.batchId,
           rowNumber: input.rowNumber,
           sourceRowHash: input.sourceRowHash,
@@ -833,8 +850,13 @@ export class Cafe24UploadsService {
           importVersion: storedState.importVersion,
           isCurrent: storedState.isCurrent,
           rawRow: Prisma.DbNull
-        }
-      });
+        };
+      if (newLines) {
+        const id = randomUUID();
+        newLines.push({ ...data, id });
+        return { id };
+      }
+      const created = await tx.cafe24OrderLine.create({ data });
 
       if (storedState.supersedeExisting && existingCurrentLines.length > 0) {
         await tx.cafe24OrderLine.updateMany({

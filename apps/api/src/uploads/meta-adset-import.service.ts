@@ -10,6 +10,7 @@ import {
   UploadStatus
 } from "@prisma/client";
 import { createHash, randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { PrismaService } from "../common/prisma.service";
 import { formatDateOnly } from "../domain/date-number";
@@ -436,6 +437,6 @@ export class MetaAdsetImportService {
 
 function sameStorageOwnership(current: UploadBatch, expected: UploadBatch) {
   return current.status === UploadStatus.VALIDATING &&
-    JSON.stringify(current.columnSchema) === JSON.stringify(expected.columnSchema);
+    isDeepStrictEqual(current.columnSchema, expected.columnSchema);
 }
 function isPrismaUniqueConflict(error:unknown){return error instanceof Prisma.PrismaClientKnownRequestError&&error.code==="P2002";}

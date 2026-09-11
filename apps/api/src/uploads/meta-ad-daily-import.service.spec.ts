@@ -1,6 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { AdStage, ConflictPolicy, MatchSource, Prisma, UploadLevel, UploadStatus } from "@prisma/client";
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { describe, expect, it } from "vitest";
 import { META_AD_DAILY_CSV_COLUMNS } from "../domain/meta-ad-daily-csv";
 import { MetaAdDailyImportService } from "./meta-ad-daily-import.service";
@@ -13,6 +14,11 @@ import { snapshotAdMetricKey } from "./upload-keys";
 const ACTOR_ID = "11111111-1111-4111-8111-111111111111";
 
 describe("MetaAdDailyImportService response and snapshot contract", () => {
+  it("continues importing when JSONB changes object key order after storage", async () => {
+    const harness = dailyImportHarness({ reorderStoredJson: true });
+    const result = await harness.service.importMetaAdDailyCsv(file(dailyCsv()), ConflictPolicy.SKIP, ACTOR_ID);
+    expect(result).toMatchObject({ status: UploadStatus.IMPORTED, importedAdMetricCount: 1 });
+  });
   it("returns the established ad import fields through the real parser/orchestrator path", async () => {
     const harness = dailyImportHarness();
 
@@ -184,6 +190,7 @@ describe("MetaAdDailyImportService storage recovery", () => {
 });
 
 function dailyImportHarness(options: {
+  reorderStoredJson?: boolean;
   metricResult?: { imported: boolean; skipped: boolean };
   duplicated?: Record<string, unknown>;
   storageObjectState?: "missing" | "existing";
@@ -216,11 +223,13 @@ function dailyImportHarness(options: {
   let transactionTail: Promise<void> = Promise.resolve();
   const prisma = {
     uploadBatch: {
-      findUnique: async () => currentBatch,
+      findUnique: async () => options.reorderStoredJson && currentBatch
+        ? { ...currentBatch, columnSchema: reorderJson(currentBatch.columnSchema) } : currentBatch,
       create: async ({ data }: { data: Record<string, unknown> }) => {
         batchCreates.push(data);
         if(options.createRaceWinner){currentBatch={...options.createRaceWinner};throw new Prisma.PrismaClientKnownRequestError("unique",{code:"P2002",clientVersion:"test"})}
         currentBatch = { ...batch, ...data, id: batch.id };
+        if (options.reorderStoredJson) currentBatch.columnSchema = JSON.parse(JSON.stringify(currentBatch.columnSchema));
         return currentBatch;
       },
       update: async ({ data }: { data: Record<string, unknown> }) => {
@@ -365,7 +374,7 @@ function matchesBatch(batch: Record<string, unknown>, where: Record<string, unkn
   if (where.id && where.id !== batch.id) return false;
   if (where.status && where.status !== batch.status) return false;
   const jsonFilter = where.columnSchema as { equals?: unknown } | undefined;
-  return jsonFilter?.equals === undefined || JSON.stringify(jsonFilter.equals) === JSON.stringify(batch.columnSchema);
+  return jsonFilter?.equals === undefined || isDeepStrictEqual(jsonFilter.equals, batch.columnSchema);
 }
 
 function deferred<T>() {
@@ -412,4 +421,11 @@ async function rejected(promise: Promise<unknown>) {
     return error;
   }
   throw new Error("Expected promise to reject");
+}
+
+function reorderJson(value: unknown): unknown {
+  if (value instanceof Date) return value.toJSON();
+  if (Array.isArray(value)) return value.map(reorderJson);
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, entry]) => [key, reorderJson(entry)]));
+  return value;
 }
