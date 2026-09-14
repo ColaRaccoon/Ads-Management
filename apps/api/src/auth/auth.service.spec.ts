@@ -145,7 +145,7 @@ describe("AuthService", () => {
     expect(service.me(principal).user.inviteStatus).toBe(InviteStatus.VERIFIED_PENDING_PASSWORD);
   });
 
-  it("accepts an exact one-time invitation identity and creates cookies only after local commit", async () => {
+  it.each(["invite", "recovery"] as const)("accepts an exact one-time %s identity only after local commit", async (tokenType) => {
     const invited = {
       ...baseUser,
       inviteStatus: InviteStatus.INVITED,
@@ -172,7 +172,7 @@ describe("AuthService", () => {
       }
     });
     const service = makeService(transactionPrisma(tx), provider, matchingVerifier());
-    const result = await service.acceptInvitation("opaque-link-hash");
+    const result = await service.acceptInvitation("opaque-link-hash", tokenType);
     expect(result.response.user.inviteStatus).toBe(InviteStatus.VERIFIED_PENDING_PASSWORD);
     expect(result.response.permissions).toEqual([]);
     expect(result.cookies.sessionId).toBe(appSessionId);
@@ -194,7 +194,7 @@ describe("AuthService", () => {
     expect(JSON.stringify(thrown.getResponse())).not.toMatch(/raw expired|link-hash/i);
   });
 
-  it("rejects replay after the invitation left INVITED and revokes the provider session", async () => {
+  it.each([InviteStatus.VERIFIED_PENDING_PASSWORD, InviteStatus.ACTIVE])("rejects recovery for %s accounts and revokes the provider session", async (inviteStatus) => {
     const replayed = {
       ...baseUser,
       inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD,
@@ -211,7 +211,7 @@ describe("AuthService", () => {
       user: { ...providerSession().user, invitationRequestId: replayed.invitationRequestId }
     });
     await expect(makeService(transactionPrisma(tx), provider, matchingVerifier())
-      .acceptInvitation("replayed-link-hash"))
+      .acceptInvitation("replayed-link-hash", "recovery"))
       .rejects.toMatchObject({ code: "INVITATION_INVALID_OR_EXPIRED" });
     expect(provider.revokeSession).toHaveBeenCalledWith("access-token");
     expect(tx.appUser.update).not.toHaveBeenCalled();

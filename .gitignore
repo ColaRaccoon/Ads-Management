@@ -18,3 +18,7 @@ apps/api/storage/security-dev/
 *.tsbuildinfo
 .DS_Store
 deploy/staging.env
+
+# Local provider CLI state and historical deployment receipts
+supabase/.temp/
+보안단계별적용/증거/

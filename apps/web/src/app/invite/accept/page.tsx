@@ -18,6 +18,7 @@ export default function InvitationAcceptPage() {
   const supabaseAuth = WEB_AUTH_PROVIDER === "supabase";
   const initialized = useRef(false);
   const tokenHash = useRef<string | null>(null);
+  const tokenType = useRef<"invite" | "recovery">("invite");
   const submitting = useRef(false);
   const [state, setState] = useState<AcceptanceState>("initializing");
   const [message, setMessage] = useState<string | null>(null);
@@ -27,9 +28,14 @@ export default function InvitationAcceptPage() {
   useLayoutEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
+    tokenType.current = new URLSearchParams(window.location.hash.slice(1)).get("token_type") === "recovery"
+      ? "recovery" : "invite";
     tokenHash.current = takeInvitationTokenHash(window.location, window.history);
     setState(tokenHash.current ? "ready" : "unavailable");
-  }, []);
+    if (!tokenHash.current && supabaseAuth) {
+      setMessage("초대 확인 정보가 없습니다. 메일의 원래 링크를 다시 열어 주세요. 같은 화면이 나오면 관리자에게 비밀번호 설정 링크 복구를 요청해 주세요.");
+    }
+  }, [supabaseAuth]);
 
   useEffect(() => {
     const onPageShow = (event: PageTransitionEvent) => {
@@ -68,7 +74,8 @@ export default function InvitationAcceptPage() {
     setMessage(null);
     setActiveSessionConflict(false);
     try {
-      await auth.acceptInvitation(tokenHash.current);
+      if (tokenType.current === "recovery") await auth.acceptInvitation(tokenHash.current, "recovery");
+      else await auth.acceptInvitation(tokenHash.current);
       tokenHash.current = null;
       setState("accepted");
       router.replace("/complete-invitation");
@@ -90,9 +97,9 @@ export default function InvitationAcceptPage() {
         <h1 id="invitation-heading">{supabaseAuth ? "업무 계정 초대 확인" : "업무 계정 최초 설정"}</h1>
         {state === "initializing" ? (
           <p aria-busy="true" aria-live="polite">{supabaseAuth ? "초대 링크를" : "일회용 설정 코드를"} 안전하게 준비하고 있습니다.</p>
-        ) : (
+        ) : state !== "unavailable" && state !== "restored" ? (
           <p>아래 버튼을 눌러야 {supabaseAuth ? "초대 링크가" : "설정 코드가"} 확인됩니다. {supabaseAuth ? "링크를" : "화면을"} 연 것만으로는 계정이 활성화되지 않습니다.</p>
-        )}
+        ) : null}
         {state === "ready" ? (
           <div className="read-only-notice">{supabaseAuth ? "초대를" : "코드를"} 확인한 뒤 최초 비밀번호 설정 화면으로 이동합니다.</div>
         ) : null}

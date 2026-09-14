@@ -161,7 +161,9 @@ export class AuthController {
       this.cookies.setLocalSessionCookies(response, result.sessionToken);
       return result.response;
     }
-    const result = await this.authService.acceptInvitation(body.tokenHash);
+    const result = body.tokenType
+      ? await this.authService.acceptInvitation(body.tokenHash, body.tokenType)
+      : await this.authService.acceptInvitation(body.tokenHash);
     this.cookies.setAuthenticatedCookies(response, result.cookies);
     return result.response;
   }

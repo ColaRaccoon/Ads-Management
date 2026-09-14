@@ -27,6 +27,29 @@ describe("databaseUrlWithConnectionLimit", () => {
     expect(new URL(result!).searchParams.get("schema")).toBe("public");
   });
 
+  it("enforces TLS and certificate verification for verify-full deployments", () => {
+    const result = new URL(databaseUrlWithConnectionLimit(
+      `${databaseUrl}&sslmode=verify-full&sslaccept=accept_invalid_certs`, "1"
+    )!);
+    expect(result.searchParams.get("sslmode")).toBe("require");
+    expect(result.searchParams.get("sslaccept")).toBe("strict");
+    expect(result.searchParams.get("schema")).toBe("public");
+  });
+
+  it("passes the configured trust root using Prisma's certificate option", () => {
+    const result = new URL(databaseUrlWithConnectionLimit(
+      `${databaseUrl}&sslmode=verify-full&sslrootcert=%2Frun%2Fca.pem`, "1"
+    )!);
+    expect(result.searchParams.get("sslcert")).toBe("/run/ca.pem");
+    expect(result.searchParams.has("sslrootcert")).toBe(false);
+  });
+
+  it("preserves explicit local development TLS settings", () => {
+    const result = new URL(databaseUrlWithConnectionLimit(`${databaseUrl}&sslmode=disable`, "1")!);
+    expect(result.searchParams.get("sslmode")).toBe("disable");
+    expect(result.searchParams.has("sslaccept")).toBe(false);
+  });
+
   it("defers a missing DATABASE_URL to Prisma's normal validation", () => {
     expect(databaseUrlWithConnectionLimit(undefined, "1")).toBeUndefined();
   });

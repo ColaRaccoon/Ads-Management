@@ -15,7 +15,7 @@ COPY apps/api/package.json apps/api/package.json
 COPY apps/e2e/package.json apps/e2e/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY packages/shared/package.json packages/shared/package.json
-RUN --mount=type=cache,target=/root/.npm npm ci \
+RUN npm ci \
   --workspace @meta-ads-performance/api \
   --workspace @meta-ads-performance/web \
   --workspace @meta-ads-performance/shared \
@@ -59,6 +59,8 @@ RUN apt-get update && apt-get install --yes --no-install-recommends ca-certifica
   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
   && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
+COPY deploy/cloud/certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/supabase-prod-ca-2021.crt
+RUN update-ca-certificates
 ENV APP_ENV=production
 ENV DEPLOYMENT_MODE=cloud_container
 ENV AUTH_PROVIDER=supabase

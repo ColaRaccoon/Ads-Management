@@ -95,11 +95,11 @@ export class SupabaseAuthAdapter implements IdentityProvider {
     return toProviderUser(result.data.user);
   }
 
-  async verifyInvitationToken(tokenHash: string): Promise<ProviderSession> {
+  async verifyInvitationToken(tokenHash: string, tokenType: "invite" | "recovery" = "invite"): Promise<ProviderSession> {
     const client = this.createPublicClient();
     let result: Awaited<ReturnType<typeof client.auth.verifyOtp>>;
     try {
-      result = await client.auth.verifyOtp({ token_hash: tokenHash, type: "invite" });
+      result = await client.auth.verifyOtp({ token_hash: tokenHash, type: tokenType });
     } catch {
       throw new ProviderUnavailableError();
     }

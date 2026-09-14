@@ -14,6 +14,17 @@ export function databaseUrlWithConnectionLimit(
     : DEFAULT_PRISMA_CONNECTION_LIMIT;
   const url = new URL(databaseUrl);
   url.searchParams.set("connection_limit", String(connectionLimit));
+  // Prisma 6 does not implement libpq's verify-full mode. Translate the
+  // validated deployment setting so neither TLS nor certificate checks fall back.
+  if (url.searchParams.get("sslmode") === "verify-full") {
+    url.searchParams.set("sslmode", "require");
+    url.searchParams.set("sslaccept", "strict");
+    const rootCertificate = url.searchParams.get("sslrootcert");
+    if (rootCertificate) {
+      url.searchParams.set("sslcert", rootCertificate);
+      url.searchParams.delete("sslrootcert");
+    }
+  }
   return url.toString();
 }
 

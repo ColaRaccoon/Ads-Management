@@ -33,7 +33,7 @@ export type AuthContextValue = {
   isAuthenticated: boolean;
   status: AuthStatus;
   login(identifier: string, password: string): Promise<AuthMe>;
-  acceptInvitation(tokenHash: string): Promise<AuthMe>;
+  acceptInvitation(tokenHash: string, tokenType?: "invite" | "recovery"): Promise<AuthMe>;
   completeInvitation(password: string): Promise<AuthMe>;
   logout(): Promise<void>;
   can(permission: Permission): boolean;
@@ -200,13 +200,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return me;
   }, [queryClient]);
 
-  const acceptInvitation = useCallback(async (tokenHash: string) => {
+  const acceptInvitation = useCallback(async (tokenHash: string, tokenType?: "invite" | "recovery") => {
     setChangingSession(true);
     await queryClient.cancelQueries({ queryKey: AUTH_ME_QUERY_KEY });
     // Discard older anonymous reads before sending the one-use invitation.
     invalidateApiSession();
     try {
-      const me = parseAuthMe(await apiPost<unknown>("/auth/invitations/accept", { tokenHash }));
+      const me = parseAuthMe(await apiPost<unknown>("/auth/invitations/accept", { tokenHash, ...(tokenType ? { tokenType } : {}) }));
       if (!me.user.isActive || me.user.inviteStatus !== "VERIFIED_PENDING_PASSWORD") {
         throw new Error("Invalid invitation acceptance response.");
       }

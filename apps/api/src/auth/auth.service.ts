@@ -344,10 +344,14 @@ export class AuthService {
     return Boolean(session && !session.revokedAt);
   }
 
-  async acceptInvitation(tokenHash: string): Promise<AuthResult> {
+  async acceptInvitation(tokenHash: string, tokenType?: "invite" | "recovery"): Promise<AuthResult> {
     let providerSession: ProviderSession;
     try {
-      providerSession = await this.provider.verifyInvitationToken(tokenHash);
+      // Recovery proves mailbox ownership, but the INVITED state, identity and
+      // invitation request checks below still apply. This is not a general reset.
+      providerSession = tokenType
+        ? await this.provider.verifyInvitationToken(tokenHash, tokenType)
+        : await this.provider.verifyInvitationToken(tokenHash);
     } catch (error) {
       await this.recordAnonymousAudit("USER_INVITATION_ACCEPT_FAILED", SecurityAuditResult.FAILURE);
       if (error instanceof ProviderUnavailableError) throw authError("AUTH_PROVIDER_UNAVAILABLE");

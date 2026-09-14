@@ -163,7 +163,7 @@ describe("active transport input inventory", () => {
       visit(sourceFile);
     }
     expect(ACTIVE_DTO_FILES).toHaveLength(18);
-    expect(undefinedOnlyCount).toBe(161);
+    expect(undefinedOnlyCount).toBe(162);
     expect(explicitNullableCount).toBe(37);
   });
 });

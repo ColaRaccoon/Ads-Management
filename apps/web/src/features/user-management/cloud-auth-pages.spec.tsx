@@ -73,6 +73,24 @@ describe("Supabase Auth web experience", () => {
     expect(await screen.findByRole("button", { name: "초대 수락" })).toBeTruthy();
   });
 
+  it("explains missing invitation information without misleading acceptance instructions", () => {
+    renderWithAuth(<InvitationAcceptPage />, authValue("anonymous", []));
+    expect(screen.getByRole("alert").textContent).toContain("초대 확인 정보가 없습니다");
+    expect(document.body.textContent).not.toContain("아래 버튼을 눌러야");
+  });
+
+  it("passes recovery only after explicit acceptance and removes the fragment", async () => {
+    const token = "abcdefghijklmnopqrstuvwxyz012345";
+    window.history.replaceState(null, "", `/invite/accept#token_hash=${token}&token_type=recovery`);
+    const auth = authValue("anonymous", []);
+    renderWithAuth(<InvitationAcceptPage />, auth);
+    expect(window.location.hash).toBe("");
+    expect(auth.acceptInvitation).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "초대 수락" }));
+    await waitFor(() => expect(auth.acceptInvitation).toHaveBeenCalledWith(token, "recovery"));
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/complete-invitation"));
+  });
+
   it("describes email login after invitation completion", () => {
     renderWithAuth(<CompleteInvitationPage />, authValue("onboarding", []));
     expect(screen.getByText("설정이 완료되면 이메일과 비밀번호로 로그인합니다.")).toBeTruthy();

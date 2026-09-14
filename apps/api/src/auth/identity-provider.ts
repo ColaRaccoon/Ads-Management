@@ -8,7 +8,7 @@ export interface IdentityProvider {
   revokeSession(accessToken: string): Promise<void>;
   getUserById(authUserId: string): Promise<ProviderUser>;
   inviteUserByEmail(email: string, redirectTo: string, requestId: string): Promise<ProviderUser>;
-  verifyInvitationToken(tokenHash: string): Promise<ProviderSession>;
+  verifyInvitationToken(tokenHash: string, tokenType?: "invite" | "recovery"): Promise<ProviderSession>;
   updatePassword(accessToken: string, password: string): Promise<ProviderUser>;
   deleteInvitationUser(authUserId: string): Promise<void>;
 }
