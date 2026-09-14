@@ -158,6 +158,17 @@ describe("runtime environment validation", () => {
     })).toThrow("must be a full 40-character SHA-1 or 64-character SHA-256");
   });
 
+  it("accepts three cloud connections when the URL matches and uploads remain serialized", () => {
+    expect(validateRuntimeEnvironment({
+      ...production,
+      PRISMA_CONNECTION_LIMIT: "3",
+      DATABASE_URL: production.DATABASE_URL.replace("connection_limit=2", "connection_limit=3")
+    })).toMatchObject({
+      PRISMA_CONNECTION_LIMIT: "3",
+      HEAVY_OPERATION_CONCURRENCY: "1"
+    });
+  });
+
   it("resolves an empty APP_ENV consistently from NODE_ENV", () => {
     expect(loadHttpSecurityConfig({ ...production, APP_ENV: "", NODE_ENV: "production" }))
       .toMatchObject({ production: true });

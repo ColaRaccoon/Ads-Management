@@ -113,3 +113,65 @@ this local rehearsal to modify the operating Supabase project. Staging and
 production deployment, registry publication, migrations, bucket policy changes,
 DNS and traffic switching remain separate approval gates. Until those gates
 have run against the approved target, `operationalReady=false`.
+
+## CSV upload and authentication connection contention
+
+Meta CSV imports and authentication share one Prisma pool. A long upload
+transaction can occupy the only connection when `PRISMA_CONNECTION_LIMIT=1`.
+The cloud example uses `3`; keep `HEAVY_OPERATION_CONCURRENCY=1`.
+If `DATABASE_URL` explicitly contains `connection_limit`, it must match
+`PRISMA_CONNECTION_LIMIT`. Changing a source default or this example does not
+change an explicitly configured deployment. Additional connections do not reserve one
+for authentication, so validate mixed traffic and database/pooler capacity before
+applying the candidate. Increasing request timeouts is not the remedy.
+
+The opt-in test
+`apps/api/src/uploads/upload-auth-contention.postgres.integration.spec.ts`
+compares pools of one and two with the same synthetic 500-row CSV, three imports
+per pool, and simultaneous login, refresh and lightweight database reads after
+the first real row write. It uses the actual parser, import services, Prisma,
+PostgreSQL transactions and AuthService. External identity/JWT verification and
+object storage calls are test doubles; exchange rates are preloaded fixtures.
+It also checks imported counts and aggregates, SKIP behavior, rollback after a
+mid-write failure, incorrect passwords and inactive accounts.
+
+Set `UPLOAD_AUTH_TEST_CONNECTION_LIMIT=3` to validate three connections alone.
+Only `1`, `2`, or `3` is accepted; omitting the variable retains the original
+one-versus-two comparison. The example below selects three without rerunning
+the other schemas.
+
+Run from the repository root against a **new disposable local PostgreSQL**
+database named `meta_ads_contention`, using role `contention_test`. Never use a
+forwarded production connection. Selected schemas must be fresh; the test
+refuses existing users/upload batches and does not clear database contents.
+Replace the password and port below with the disposable instance values. No
+production environment or `.env` file is needed.
+
+```powershell
+$previousDatabaseUrl = $env:DATABASE_URL
+try {
+  $env:UPLOAD_AUTH_TEST_DATABASE_URL = 'postgresql://contention_test:<LOCAL_TEST_PASSWORD>@127.0.0.1:55419/meta_ads_contention'
+  $env:CONFIRM_DISPOSABLE_UPLOAD_AUTH_DB = 'meta_ads_contention'
+  $env:RUN_UPLOAD_AUTH_CONTENTION = '1'
+  $env:UPLOAD_AUTH_TEST_CONNECTION_LIMIT = '3'
+  foreach ($poolSize in 3) {
+    $env:DATABASE_URL = "$($env:UPLOAD_AUTH_TEST_DATABASE_URL)?schema=test_upload_auth_$poolSize"
+    node node_modules/prisma/build/index.js db push --schema apps/api/prisma/schema.prisma --skip-generate
+    if ($LASTEXITCODE -ne 0) { throw 'Disposable schema preparation failed' }
+  }
+  npm.cmd --workspace @meta-ads-performance/api run test -- src/uploads/upload-auth-contention.postgres.integration.spec.ts
+  if ($LASTEXITCODE -ne 0) { throw 'Upload/auth contention verification failed' }
+} finally {
+  $env:DATABASE_URL = $previousDatabaseUrl
+  Remove-Item Env:UPLOAD_AUTH_TEST_DATABASE_URL, Env:CONFIRM_DISPOSABLE_UPLOAD_AUTH_DB, Env:RUN_UPLOAD_AUTH_CONTENTION, Env:UPLOAD_AUTH_TEST_CONNECTION_LIMIT -ErrorAction SilentlyContinue
+}
+```
+
+JSON output includes per-request success/error codes and elapsed time, import
+and parsing time, process CPU, sampled RSS and event-loop delay. Request latency
+includes all service work (including failure auditing); it is not a direct
+measurement of pool wait or SQL transaction duration. The default comparison
+runs both pools sequentially, so RSS includes retained heap/JIT state and cannot
+isolate the memory cost of an extra connection. This is a service/DB contention
+test, not HTTP/browser, real-provider latency, maximum-file, or 1GB deployment
+acceptance. Preserve the output before disposing of the test instance.
