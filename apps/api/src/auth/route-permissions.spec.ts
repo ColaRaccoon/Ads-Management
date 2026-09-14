@@ -229,7 +229,7 @@ describe("role permission guard matrix for every active method/path", () => {
   it("rejects anonymous requests before any non-public handler", async () => {
     const authenticate = new AuthenticationGuard(
       { authenticateAccessToken: vi.fn() } as never,
-      { readAccessToken: vi.fn() } as never,
+      { readAccessToken: vi.fn(), readSessionHandle: vi.fn() } as never,
       new Reflector()
     );
     for (const [key, expected] of expectedRoutes) {

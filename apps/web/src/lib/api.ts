@@ -1,3 +1,4 @@
+import { userActivityAge } from "../features/auth/session-activity";
 import { DateRange } from "./date-range";
 import { authCoordinator } from "../features/auth/auth-coordination";
 
@@ -74,11 +75,7 @@ export async function apiRequest<T>(
     !retryAfterRefresh &&
     !AUTH_MUTATION_PATHS.has(normalizePath(path))
   ) {
-    try {
-      await refreshAccessToken();
-    } catch {
-      throw error;
-    }
+    await refreshAccessToken();
     return apiRequest<T>(path, options, true);
   }
   if (error.code === "ACCESS_TOKEN_EXPIRED" && retryAfterRefresh) {
@@ -175,6 +172,8 @@ async function request(path: string, options: ApiRequestOptions) {
   const method = (options.method ?? "GET").toUpperCase();
   const headers = new Headers(options.headers);
   const body = requestBody(options.body, headers);
+  const activityAge = userActivityAge();
+  if (activityAge !== undefined) headers.set("x-user-activity-age", String(activityAge));
   if (isMutation(method)) {
     const csrfToken = readCsrfToken();
     if (csrfToken) headers.set("x-csrf-token", csrfToken);
@@ -228,7 +227,7 @@ async function refreshAccessToken() {
       return;
     }
     handleAuthLifecycle(error);
-    emitAuthLifecycle({ type: "refresh-failed", code: error.code });
+    // Temporary provider/network failures preserve the session for a later retry.
     throw error;
   }).then(() => undefined).finally(() => {
     refreshPromise = null;

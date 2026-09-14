@@ -27,6 +27,8 @@ import { invitationError, InvitationHttpException } from "./invitation.errors";
 import { securityAuditData, userAuditSnapshot, writeSecurityAudit } from "../security-audit/security-audit.types";
 import { canTransitionInvitation, lockInvitationState } from "../users/invite-state-machine";
 
+import { sessionIsIdle } from "./session-idle";
+
 type AuthTokens = {
   accessToken: string;
   refreshToken: string;
@@ -125,7 +127,7 @@ export class AuthService {
     }
   }
 
-  async authenticateAccessToken(accessToken: string): Promise<AuthenticatedUser> {
+  async authenticateAccessToken(accessToken: string, activityAgeMs?: number): Promise<AuthenticatedUser> {
     const token = await this.jwtVerifier.verify(accessToken);
     const user = await this.prisma.appUser.findUnique({ where: { authUserId: token.subject } });
     this.assertAuthenticatableUser(user);
@@ -135,10 +137,15 @@ export class AuthService {
     });
     if (!session || session.appUserId !== user.id) throw authError("SESSION_INVALID");
     if (session.revokedAt) throw authError("SESSION_REVOKED");
-    await this.prisma.appAuthSession.update({
-      where: { id: session.id },
-      data: { lastSeenAt: new Date() }
-    });
+    // Check expiry before accepting activity; polling and token rotation are not input.
+    if (sessionIsIdle(session.lastSeenAt)) throw authError("SESSION_INVALID");
+    if (activityAgeMs !== undefined && Number.isFinite(activityAgeMs) && activityAgeMs >= 0 && activityAgeMs <= 60_000) {
+      const lastSeenAt = new Date(Date.now() - activityAgeMs);
+      await this.prisma.appAuthSession.updateMany({
+        where: { id: session.id, revokedAt: null, lastSeenAt: { lt: lastSeenAt } },
+        data: { lastSeenAt }
+      });
+    }
     return this.toPrincipal(user, session.id);
   }
 
@@ -184,6 +191,7 @@ export class AuthService {
       });
       if (!appSession) return { error: authError("SESSION_INVALID") } as const;
       if (appSession.revokedAt) return { error: authError("SESSION_REVOKED") } as const;
+      if (sessionIsIdle(appSession.lastSeenAt)) return { error: authError("SESSION_INVALID") } as const;
       if (
         appSession.refreshedAt &&
         appSession.refreshedAt.getTime() >= requestClock.observedAt.getTime()
@@ -240,7 +248,7 @@ export class AuthService {
         const refreshedAt = refreshClock.observedAt;
         await tx.appAuthSession.update({
           where: { id: appSession.id },
-          data: { refreshedAt, lastSeenAt: refreshedAt }
+          data: { refreshedAt }
         });
         const principal = this.toPrincipal(appSession.appUser, appSession.id);
         return {

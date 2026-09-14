@@ -48,6 +48,26 @@ describe("API error payload parsing", () => {
 });
 
 describe("authenticated API request layer", () => {
+  it.each([503, 429])("keeps the session after a temporary refresh error (%i)", async (status) => {
+    const events = vi.fn();
+    subscribeAuthLifecycle(events);
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(errorResponse(401, "ACCESS_TOKEN_EXPIRED"))
+      .mockResolvedValueOnce(errorResponse(status, status === 503 ? "AUTH_PROVIDER_UNAVAILABLE" : "RATE_LIMITED")));
+    await expect(apiGet("/auth/me")).rejects.toMatchObject({ status });
+    expect(events).not.toHaveBeenCalled();
+  });
+
+  it("ends the session when refresh is definitively revoked", async () => {
+    const events = vi.fn();
+    subscribeAuthLifecycle(events);
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(errorResponse(401, "ACCESS_TOKEN_EXPIRED"))
+      .mockResolvedValueOnce(errorResponse(401, "SESSION_REVOKED")));
+    await expect(apiGet("/auth/me")).rejects.toMatchObject({ code: "SESSION_REVOKED" });
+    expect(events).toHaveBeenCalledWith({ type: "session-invalid", code: "SESSION_REVOKED" });
+  });
+
   it("includes credentials and applies JSON and CSRF headers to mutations", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () => jsonResponse({ ok: true }));
     vi.stubGlobal("fetch", fetchMock);

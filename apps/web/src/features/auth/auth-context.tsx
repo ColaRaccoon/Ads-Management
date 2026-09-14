@@ -17,6 +17,7 @@ import {
   invalidateApiSession,
   subscribeAuthLifecycle
 } from "@/lib/api";
+import { resetUserActivity, watchUserActivity } from "./session-activity";
 import { authCoordinator } from "./auth-coordination";
 import { clearUserQueries } from "./auth-cache";
 import { authLoginPayload } from "./auth-provider";
@@ -174,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await authCoordinator.runExclusive(async () =>
         parseAuthMe(await apiPost<unknown>("/auth/login", authLoginPayload(identifier, password)))
       );
+      resetUserActivity(me.user.id);
       queryClient.setQueryData(AUTH_ME_QUERY_KEY, me);
       previousIdentity.current = me.user.id;
       previousAuthorizationVersion.current = me.authorizationVersion;
@@ -192,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await queryClient.cancelQueries();
     invalidateApiSession();
     queryClient.clear();
+    resetUserActivity(me.user.id);
     queryClient.setQueryData(AUTH_ME_QUERY_KEY, me);
     previousIdentity.current = me.user.id;
     previousAuthorizationVersion.current = me.authorizationVersion;
@@ -242,6 +245,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const status = forcedStatus ?? statusFromQuery(authQuery);
   const me = status === "authenticated" ? authQuery.data ?? null : null;
+  const activityUserId = me?.user.id;
+  useEffect(() => {
+    if (!activityUserId) return;
+    return watchUserActivity(activityUserId, () => { void logout(); }, () => {
+      void apiGet("/auth/me").catch(() => undefined);
+    });
+  }, [activityUserId, logout]);
   const permissionSet = useMemo(() => new Set(me?.permissions ?? []), [me?.permissions]);
   const can = useCallback((permission: Permission) => permissionSet.has(permission), [permissionSet]);
 

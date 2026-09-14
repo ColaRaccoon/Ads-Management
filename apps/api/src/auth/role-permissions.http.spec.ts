@@ -217,6 +217,7 @@ const serviceMock = new Proxy({}, {
     {
       provide: AuthCookieService,
       useValue: {
+        readSessionHandle: () => undefined,
         readAccessToken: (request: { headers: Record<string, string | string[] | undefined> }) => {
           const role = request.headers["x-test-role"];
           return Array.isArray(role) ? role[0] : role;

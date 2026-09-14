@@ -110,6 +110,41 @@ describe("AuthService", () => {
     await expect(service.authenticateAccessToken("access-token")).rejects.toMatchObject({ code });
   });
 
+  it.each([7_199_999, 7_200_000, 7_200_001])("enforces the two-hour boundary before accepting activity (%i)", async (age) => {
+    const now = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(now);
+    const prisma = { appUser: { findUnique: vi.fn().mockResolvedValue(baseUser) },
+      appAuthSession: { findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId,
+        revokedAt: null, lastSeenAt: new Date(now - age) }), updateMany: vi.fn() } };
+    try {
+      const request = makeService(prisma, providerFake(), matchingVerifier()).authenticateAccessToken("token", 0);
+      if (age < 7_200_000) {
+        await expect(request).resolves.toMatchObject({ id: appUserId });
+        expect(prisma.appAuthSession.updateMany).toHaveBeenCalledOnce();
+      } else {
+        await expect(request).rejects.toMatchObject({ code: "SESSION_INVALID" });
+        expect(prisma.appAuthSession.updateMany).not.toHaveBeenCalled();
+      }
+    } finally { clock.mockRestore(); }
+  });
+
+  it("does not extend idle time on a background authenticated read", async () => {
+    const prisma = { appUser: { findUnique: vi.fn().mockResolvedValue(baseUser) },
+      appAuthSession: { findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId,
+        revokedAt: null, lastSeenAt: new Date() }), updateMany: vi.fn(), update: vi.fn() } };
+    await makeService(prisma, providerFake(), matchingVerifier()).authenticateAccessToken("token");
+    expect(prisma.appAuthSession.updateMany).not.toHaveBeenCalled();
+    expect(prisma.appAuthSession.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects refresh of an idle session without contacting the provider", async () => {
+    const tx = refreshTransaction({ lastSeenAt: new Date(Date.now() - 7_200_000) });
+    const provider = providerFake();
+    const service = makeService(transactionPrisma(tx), provider, matchingVerifier());
+    await expect(service.refresh("refresh", signedHandleFor(service))).rejects.toMatchObject({ code: "SESSION_INVALID" });
+    expect(provider.refreshSession).not.toHaveBeenCalled();
+  });
+
   it("reads the current role from AppUser on every request", async () => {
     const findUser = vi.fn()
       .mockResolvedValueOnce(baseUser)
@@ -117,7 +152,7 @@ describe("AuthService", () => {
     const prisma = {
       appUser: { findUnique: findUser },
       appAuthSession: {
-        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, revokedAt: null }),
+        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, lastSeenAt: new Date(), revokedAt: null }),
         update: vi.fn().mockResolvedValue({})
       }
     };
@@ -134,7 +169,7 @@ describe("AuthService", () => {
     const prisma = {
       appUser: { findUnique: vi.fn().mockResolvedValue(onboarding) },
       appAuthSession: {
-        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, revokedAt: null }),
+        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, lastSeenAt: new Date(), revokedAt: null }),
         update: vi.fn().mockResolvedValue({})
       }
     };
@@ -323,7 +358,7 @@ describe("AuthService", () => {
         update: vi.fn().mockResolvedValue(active)
       },
       appAuthSession: {
-        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, revokedAt: null })
+        findUnique: vi.fn().mockResolvedValue({ id: appSessionId, appUserId, lastSeenAt: new Date(), revokedAt: null })
       }
     };
     const provider = providerFake();
@@ -349,7 +384,7 @@ describe("AuthService", () => {
   it("keeps onboarding blocked after local activation failure and allows same-session retry", async () => {
     let user: any = { ...baseUser, inviteStatus: InviteStatus.VERIFIED_PENDING_PASSWORD };
     const active = { ...baseUser, inviteStatus: InviteStatus.ACTIVE, authzVersion: 2 };
-    const session = { id: appSessionId, appUserId, revokedAt: null };
+    const session = { id: appSessionId, appUserId, lastSeenAt: new Date(), revokedAt: null };
     const tx = {
       $executeRaw: vi.fn(),
       appUser: {
@@ -409,7 +444,7 @@ describe("AuthService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: appSessionId,
           appUser: baseUser,
-          revokedAt: null,
+          lastSeenAt: new Date(), revokedAt: null,
           refreshedAt: new Date("2026-08-24T00:00:00.001Z")
         })
       }
@@ -447,7 +482,7 @@ describe("AuthService", () => {
     });
     expect(tx.appAuthSession.update).toHaveBeenCalledWith({
       where: { id: appSessionId },
-      data: { refreshedAt: expect.any(Date), lastSeenAt: expect.any(Date) }
+      data: { refreshedAt: expect.any(Date) }
     });
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), { timeout: 30_000 });
   });
@@ -499,7 +534,7 @@ describe("AuthService", () => {
       appUser: baseUser,
       appUserId,
       providerSessionId,
-      revokedAt: null,
+      lastSeenAt: new Date(), revokedAt: null,
       refreshedAt
     }));
     tx.appAuthSession.update.mockImplementation(async ({ data }: any) => {
@@ -542,7 +577,7 @@ describe("AuthService", () => {
           appUser: baseUser,
           appUserId,
           providerSessionId,
-          revokedAt: null,
+          lastSeenAt: new Date(), revokedAt: null,
           refreshedAt: null
         }),
         update: vi.fn()
@@ -579,7 +614,7 @@ describe("AuthService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: appSessionId,
           providerSessionId,
-          revokedAt: null,
+          lastSeenAt: new Date(), revokedAt: null,
           appUser: baseUser
         }),
         update: vi.fn().mockImplementation(async () => { order.push("local-revoke"); })
@@ -603,7 +638,7 @@ describe("AuthService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: appSessionId,
           providerSessionId,
-          revokedAt: null,
+          lastSeenAt: new Date(), revokedAt: null,
           appUser: baseUser
         }),
         update
@@ -702,7 +737,7 @@ function refreshTransaction(overrides: Record<string, unknown> = {}) {
         appUser: baseUser,
         appUserId,
         providerSessionId,
-        revokedAt: null,
+        lastSeenAt: new Date(), revokedAt: null,
         refreshedAt: null,
         ...overrides
       }),

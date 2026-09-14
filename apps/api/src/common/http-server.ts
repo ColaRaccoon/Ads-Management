@@ -31,7 +31,7 @@ export function configureHttpServer(
     },
     credentials: true,
     methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Idempotency-Key", "X-CSRF-Token", "X-Request-Id"],
+    allowedHeaders: ["Content-Type", "Idempotency-Key", "X-CSRF-Token", "X-Request-Id", "X-User-Activity-Age"],
     exposedHeaders: ["Retry-After", "X-Request-Id"],
     maxAge: 600
   });

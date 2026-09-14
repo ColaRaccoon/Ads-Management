@@ -10,6 +10,7 @@ import {
   PUBLIC_ROUTE
 } from "./route-decorators";
 import { AUTH_CONFIG, AuthConfig } from "./auth.config";
+import { activityAge } from "./session-idle";
 import { LocalAuthService } from "./local-auth.service";
 
 @Injectable()
@@ -33,8 +34,16 @@ export class AuthenticationGuard implements CanActivate {
       request.authenticatedUser = await this.localAuth.authenticateSession(sessionToken);
     } else {
       const accessToken = this.cookies.readAccessToken(request);
-      if (!accessToken) throw authError("AUTHENTICATION_REQUIRED");
-      request.authenticatedUser = await this.authService.authenticateAccessToken(accessToken);
+      if (!accessToken) {
+        const handle = this.cookies.readSessionHandle(request);
+        if (handle && this.cookies.verifySessionHandle(handle) && this.cookies.readRefreshToken(request)) {
+          throw authError("ACCESS_TOKEN_EXPIRED");
+        }
+        throw authError("AUTHENTICATION_REQUIRED");
+      }
+      request.authenticatedUser = await this.authService.authenticateAccessToken(
+        accessToken, activityAge(request.headers?.["x-user-activity-age"])
+      );
     }
     return true;
   }
