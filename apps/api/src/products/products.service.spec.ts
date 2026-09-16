@@ -1,5 +1,12 @@
 import { Prisma } from "@prisma/client";
+import { plainToInstance } from "class-transformer";
 import { describe, expect, it, vi } from "vitest";
+import {
+  CorrectProductCostRuleDto,
+  CorrectProductCpaRuleDto,
+  ProductCostSnapshotDto,
+  ProductCpaSnapshotDto
+} from "./dto/product-transport.dto";
 import { ProductsService } from "./products.service";
 
 describe("ProductsService deleteProduct", () => {
@@ -90,6 +97,107 @@ describe("ProductsService deleteProduct", () => {
 });
 
 describe("ProductsService product rule history", () => {
+  it("inherits omitted costs and note from a transformed partial snapshot", async () => {
+    const fixture = productRuleHistoryFixture({
+      costRules: [costRule("cost-old", "2026-06-01", null, { note: "keep" })]
+    });
+    const body = transformedRuleDto(ProductCostSnapshotDto, {
+      effectiveFrom: "2026-08-21", salePriceKrw: 39800
+    });
+    expect(Object.hasOwn(body, "productCostKrw")).toBe(true);
+    expect(body.productCostKrw).toBeUndefined();
+
+    const result = await new ProductsService(fixture.prisma as never).saveCostRuleSnapshot("product-1", body);
+
+    expect(Number(result.rule.salePriceKrw)).toBe(39800);
+    expect(Number(result.rule.vatKrw)).toBe(3980);
+    expect(Number(result.rule.productCostKrw)).toBe(6000);
+    expect(Number(result.rule.shippingKrw)).toBe(2800);
+    expect(Number(result.rule.extraCostKrw)).toBe(0);
+    expect(Number(result.rule.fxRateKrwPerUsd)).toBe(1350);
+    expect(result.rule.note).toBe("keep");
+  });
+
+  it("inherits omitted CPA ratios from a transformed partial snapshot", async () => {
+    const fixture = productRuleHistoryFixture({ cpaRules: [cpaRule("cpa-old", "2026-06-01", null)] });
+    const result = await new ProductsService(fixture.prisma as never).saveCpaRuleSnapshot("product-1",
+      transformedRuleDto(ProductCpaSnapshotDto, { effectiveFrom: "2026-08-21", targetRatio: 0.7 })
+    );
+
+    expect(Number(result.rule.targetRatio)).toBe(0.7);
+    expect(Number(result.rule.watchRatio)).toBe(1.1);
+    expect(Number(result.rule.stopRatio)).toBe(1.25);
+  });
+
+  it("preserves omitted dates, values and note in transformed cost and CPA corrections", async () => {
+    const fixture = productRuleHistoryFixture({
+      costRules: [costRule("cost-old", "2026-06-01", null, { note: "keep" })],
+      cpaRules: [cpaRule("cpa-old", "2026-06-01", null)]
+    });
+    const service = new ProductsService(fixture.prisma as never);
+    const cost = await service.correctCostRule("product-1", "cost-old",
+      transformedRuleDto(CorrectProductCostRuleDto, { shippingKrw: 3200 })
+    );
+    const cpa = await service.correctCpaRule("product-1", "cpa-old",
+      transformedRuleDto(CorrectProductCpaRuleDto, { stopRatio: 1.2 })
+    );
+
+    expect(cost.effectiveFrom).toBe("2026-06-01");
+    expect(Number(cost.rule.salePriceKrw)).toBe(38900);
+    expect(Number(cost.rule.productCostKrw)).toBe(6000);
+    expect(Number(cost.rule.shippingKrw)).toBe(3200);
+    expect(cost.rule.note).toBe("keep");
+    expect(cpa.effectiveFrom).toBe("2026-06-01");
+    expect(Number(cpa.rule.targetRatio)).toBe(0.8);
+    expect(Number(cpa.rule.watchRatio)).toBe(1.1);
+    expect(Number(cpa.rule.stopRatio)).toBe(1.2);
+  });
+
+  it.each(["cost", "cpa"] as const)("rejects empty and incomplete first transformed %s snapshots", async (kind) => {
+    const fixture = productRuleHistoryFixture();
+    const service = new ProductsService(fixture.prisma as never);
+    const save = (values: Record<string, unknown>) => kind === "cost"
+      ? service.saveCostRuleSnapshot("product-1", transformedRuleDto(ProductCostSnapshotDto, values))
+      : service.saveCpaRuleSnapshot("product-1", transformedRuleDto(ProductCpaSnapshotDto, values));
+    const prefix = kind === "cost" ? "PRODUCT_COST_RULE" : "PRODUCT_CPA_RULE";
+
+    await expectErrorCode(save({ effectiveFrom: "2026-08-21" }), `${prefix}_SNAPSHOT_EMPTY`);
+    await expectErrorCode(save({
+      effectiveFrom: "2026-08-21", [kind === "cost" ? "salePriceKrw" : "targetRatio"]: 1
+    }), `${prefix}_BASE_REQUIRED`);
+    expect(fixture.costRules).toHaveLength(0);
+    expect(fixture.cpaRules).toHaveLength(0);
+  });
+
+  it.each(["cost", "cpa"] as const)("rejects empty transformed %s corrections", async (kind) => {
+    const fixture = productRuleHistoryFixture({
+      costRules: [costRule("cost-old", "2026-06-01", null)],
+      cpaRules: [cpaRule("cpa-old", "2026-06-01", null)]
+    });
+    const service = new ProductsService(fixture.prisma as never);
+    await expectErrorCode(kind === "cost"
+      ? service.correctCostRule("product-1", "cost-old", transformedRuleDto(CorrectProductCostRuleDto, {}))
+      : service.correctCpaRule("product-1", "cpa-old", transformedRuleDto(CorrectProductCpaRuleDto, {})),
+    kind === "cost" ? "PRODUCT_COST_RULE_CORRECTION_EMPTY" : "PRODUCT_CPA_RULE_CORRECTION_EMPTY");
+  });
+
+  it.each(["cost", "cpa"] as const)("rejects explicit null numbers while allowing note clearing for %s", async (kind) => {
+    const fixture = productRuleHistoryFixture({
+      costRules: [costRule("cost-old", "2026-06-01", null, { note: "keep" })],
+      cpaRules: [cpaRule("cpa-old", "2026-06-01", null, "keep")]
+    });
+    const service = new ProductsService(fixture.prisma as never);
+    const save = (values: Record<string, unknown>) => kind === "cost"
+      ? service.saveCostRuleSnapshot("product-1", transformedRuleDto(ProductCostSnapshotDto, values))
+      : service.saveCpaRuleSnapshot("product-1", transformedRuleDto(ProductCpaSnapshotDto, values));
+
+    await expectErrorCode(save({
+      effectiveFrom: "2026-08-21", [kind === "cost" ? "productCostKrw" : "targetRatio"]: null
+    }), "INVALID_NUMBER");
+    const result = await save({ effectiveFrom: "2026-08-21", note: null });
+    expect(result.rule.note).toBeNull();
+  });
+
   it("creates a cost snapshot and closes the previous rule on the prior date", async () => {
     const fixture = productRuleHistoryFixture({
       costRules: [costRule("cost-old", "2026-06-01", null, { salePriceKrw: 38900 })]
@@ -316,6 +424,18 @@ describe("ProductsService product rule history", () => {
     ]);
   });
 });
+
+function transformedRuleDto(Dto: new () => Record<string, unknown>, values: Record<string, unknown>) {
+  const fields = Dto === ProductCostSnapshotDto || Dto === CorrectProductCostRuleDto
+    ? ["salePriceKrw", "productCostKrw", "shippingKrw", "extraCostKrw", "fxRateKrwPerUsd"]
+    : ["targetRatio", "watchRatio", "stopRatio"];
+  // Production's ES2022 class fields create own undefined properties. Seed them
+  // explicitly so this regression also holds when Vitest lowers class fields.
+  return plainToInstance(Dto, {
+    ...Object.fromEntries([...fields, "effectiveFrom", "note"].map((field) => [field, undefined])),
+    ...values
+  });
+}
 
 function fakePrismaForDelete(input: { hasOperationalData?: boolean } = {}) {
   const productCreateCalls: any[] = [];
@@ -548,7 +668,7 @@ function costRule(
   };
 }
 
-function cpaRule(id: string, effectiveFrom: string, effectiveTo: string | null) {
+function cpaRule(id: string, effectiveFrom: string, effectiveTo: string | null, note: string | null = null) {
   const createdAt = new Date("2026-06-01T00:00:00.000Z");
   return {
     id,
@@ -558,7 +678,7 @@ function cpaRule(id: string, effectiveFrom: string, effectiveTo: string | null) 
     stopRatio: new Prisma.Decimal(1.25),
     effectiveFrom: new Date(`${effectiveFrom}T00:00:00.000Z`),
     effectiveTo: effectiveTo ? new Date(`${effectiveTo}T00:00:00.000Z`) : null,
-    note: null,
+    note,
     createdAt,
     updatedAt: createdAt
   };

@@ -215,25 +215,25 @@ export class ProductsService {
         assertRequiredFields(body, COST_REQUIRED_FIRST_SNAPSHOT_FIELDS, "PRODUCT_COST_RULE_BASE_REQUIRED");
       }
 
-      const salePriceKrw = hasOwn(body, "salePriceKrw")
+      const salePriceKrw = hasProvidedField(body, "salePriceKrw")
         ? decimal(body.salePriceKrw, "salePriceKrw")
         : baseRule!.salePriceKrw;
       const snapshot = {
         salePriceKrw,
-        vatKrw: hasOwn(body, "salePriceKrw") || !baseRule ? salePriceKrw.mul(0.1) : baseRule.vatKrw,
-        productCostKrw: hasOwn(body, "productCostKrw")
+        vatKrw: hasProvidedField(body, "salePriceKrw") || !baseRule ? salePriceKrw.mul(0.1) : baseRule.vatKrw,
+        productCostKrw: hasProvidedField(body, "productCostKrw")
           ? decimal(body.productCostKrw, "productCostKrw")
           : baseRule!.productCostKrw,
-        shippingKrw: hasOwn(body, "shippingKrw")
+        shippingKrw: hasProvidedField(body, "shippingKrw")
           ? decimal(body.shippingKrw, "shippingKrw")
           : baseRule!.shippingKrw,
-        extraCostKrw: hasOwn(body, "extraCostKrw")
+        extraCostKrw: hasProvidedField(body, "extraCostKrw")
           ? decimal(body.extraCostKrw, "extraCostKrw")
           : baseRule!.extraCostKrw,
         fxRateKrwPerUsd: baseRule?.fxRateKrwPerUsd ?? await this.resolveLegacyFxRate(body.fxRateKrwPerUsd, tx),
         effectiveFrom,
         effectiveTo: null,
-        note: hasOwn(body, "note") ? nullableString(body.note) : baseRule?.note ?? null
+        note: hasProvidedField(body, "note") ? nullableString(body.note) : baseRule?.note ?? null
       };
       const saved = sameDateRule
         ? await tx.productCostRule.update({ where: { id: sameDateRule.id }, data: snapshot })
@@ -288,7 +288,7 @@ export class ProductsService {
         });
       }
 
-      const effectiveFrom = hasOwn(body, "effectiveFrom")
+      const effectiveFrom = hasProvidedField(body, "effectiveFrom")
         ? asDateOnly(requiredString(body.effectiveFrom, "effectiveFrom"))
         : existing.effectiveFrom;
       const collision = await tx.productCostRule.findFirst({
@@ -302,7 +302,7 @@ export class ProductsService {
         });
       }
 
-      const salePriceKrw = hasOwn(body, "salePriceKrw") ? decimal(body.salePriceKrw, "salePriceKrw") : undefined;
+      const salePriceKrw = hasProvidedField(body, "salePriceKrw") ? decimal(body.salePriceKrw, "salePriceKrw") : undefined;
       await tx.productCostRule.update({
         where: { id: ruleId },
         data: {
@@ -312,8 +312,8 @@ export class ProductsService {
           shippingKrw: decimalIfPresent(body, "shippingKrw"),
           extraCostKrw: decimalIfPresent(body, "extraCostKrw"),
           fxRateKrwPerUsd: decimalIfPresent(body, "fxRateKrwPerUsd"),
-          effectiveFrom: hasOwn(body, "effectiveFrom") ? effectiveFrom : undefined,
-          note: hasOwn(body, "note") ? nullableString(body.note) : undefined
+          effectiveFrom: hasProvidedField(body, "effectiveFrom") ? effectiveFrom : undefined,
+          note: hasProvidedField(body, "note") ? nullableString(body.note) : undefined
         }
       });
       await this.normalizeCostRuleRanges(tx, productId);
@@ -367,12 +367,12 @@ export class ProductsService {
       }
 
       const snapshot = {
-        targetRatio: hasOwn(body, "targetRatio") ? decimal(body.targetRatio, "targetRatio") : baseRule!.targetRatio,
-        watchRatio: hasOwn(body, "watchRatio") ? decimal(body.watchRatio, "watchRatio") : baseRule!.watchRatio,
-        stopRatio: hasOwn(body, "stopRatio") ? decimal(body.stopRatio, "stopRatio") : baseRule!.stopRatio,
+        targetRatio: hasProvidedField(body, "targetRatio") ? decimal(body.targetRatio, "targetRatio") : baseRule!.targetRatio,
+        watchRatio: hasProvidedField(body, "watchRatio") ? decimal(body.watchRatio, "watchRatio") : baseRule!.watchRatio,
+        stopRatio: hasProvidedField(body, "stopRatio") ? decimal(body.stopRatio, "stopRatio") : baseRule!.stopRatio,
         effectiveFrom,
         effectiveTo: null,
-        note: hasOwn(body, "note") ? nullableString(body.note) : baseRule?.note ?? null
+        note: hasProvidedField(body, "note") ? nullableString(body.note) : baseRule?.note ?? null
       };
       const saved = sameDateRule
         ? await tx.productCpaRule.update({ where: { id: sameDateRule.id }, data: snapshot })
@@ -427,7 +427,7 @@ export class ProductsService {
         });
       }
 
-      const effectiveFrom = hasOwn(body, "effectiveFrom")
+      const effectiveFrom = hasProvidedField(body, "effectiveFrom")
         ? asDateOnly(requiredString(body.effectiveFrom, "effectiveFrom"))
         : existing.effectiveFrom;
       const collision = await tx.productCpaRule.findFirst({
@@ -447,8 +447,8 @@ export class ProductsService {
           targetRatio: decimalIfPresent(body, "targetRatio"),
           watchRatio: decimalIfPresent(body, "watchRatio"),
           stopRatio: decimalIfPresent(body, "stopRatio"),
-          effectiveFrom: hasOwn(body, "effectiveFrom") ? effectiveFrom : undefined,
-          note: hasOwn(body, "note") ? nullableString(body.note) : undefined
+          effectiveFrom: hasProvidedField(body, "effectiveFrom") ? effectiveFrom : undefined,
+          note: hasProvidedField(body, "note") ? nullableString(body.note) : undefined
         }
       });
       await this.normalizeCpaRuleRanges(tx, productId);
@@ -672,15 +672,17 @@ function nullableString(value: unknown): string | null {
 }
 
 function decimalIfPresent(body: Record<string, unknown>, field: string): Prisma.Decimal | undefined {
-  return hasOwn(body, field) ? decimal(body[field], field) : undefined;
+  return hasProvidedField(body, field) ? decimal(body[field], field) : undefined;
 }
 
-function hasOwn(body: Record<string, unknown>, field: string) {
-  return Object.prototype.hasOwnProperty.call(body, field);
+function hasProvidedField(body: Record<string, unknown>, field: string) {
+  // ES2022 DTO instances own optional fields even when the request omitted them.
+  // Keep explicit null values so numeric validation and note clearing still apply.
+  return Object.prototype.hasOwnProperty.call(body, field) && body[field] !== undefined;
 }
 
 function assertServerManagedEffectiveTo(body: Record<string, unknown>, code: string) {
-  if (hasOwn(body, "effectiveTo")) {
+  if (hasProvidedField(body, "effectiveTo")) {
     throw new BadRequestException({
       code,
       message: "effectiveTo는 다음 규칙의 시작일을 기준으로 서버가 자동 계산합니다."
@@ -693,7 +695,7 @@ function assertAtLeastOneField(
   fields: readonly string[],
   code: string
 ) {
-  if (!fields.some((field) => hasOwn(body, field))) {
+  if (!fields.some((field) => hasProvidedField(body, field))) {
     throw new BadRequestException({ code, message: "저장할 규칙 값을 하나 이상 입력해주세요." });
   }
 }
@@ -703,7 +705,7 @@ function assertRequiredFields(
   fields: readonly string[],
   code: string
 ) {
-  const missingFields = fields.filter((field) => !hasOwn(body, field));
+  const missingFields = fields.filter((field) => !hasProvidedField(body, field));
   if (missingFields.length > 0) {
     throw new BadRequestException({
       code,
