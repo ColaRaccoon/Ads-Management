@@ -175,3 +175,45 @@ runs both pools sequentially, so RSS includes retained heap/JIT state and cannot
 isolate the memory cost of an extra connection. This is a service/DB contention
 test, not HTTP/browser, real-provider latency, maximum-file, or 1GB deployment
 acceptance. Preserve the output before disposing of the test instance.
+
+## Serverless idle behavior
+
+Railway Serverless must be enabled and applied by deploying a new container.
+Confirm actual `SLEEPING` through the control API, then measure the first document
+request and protected readiness after waking. Do not poll application URLs during
+idle observation. Public bots and maintenance checks can wake the service.
+
+Authenticated web tabs pause recurring checks after five minutes without shared
+user activity. Returning business requests await authorization revalidation;
+ongoing uploads remain mounted and are not replayed. The separate two-hour idle
+logout and per-request server permission checks remain enforced. Report recovery
+runs at startup and retries unresolved work; a clean service does not scan every
+minute. The production image disables Next.js telemetry.
+
+`PRISMA_IDLE_DISCONNECT_MS=60000` opts into releasing the entire idle Prisma pool
+once no query or transaction has been active for one minute. Unset/`0` disables
+it. Model/raw operations and the full transaction callback or batch hold leases;
+new work waits for a disconnect already in progress before reconnecting. This
+never shuts down the server or disconnects after every request. Preserve
+`PRISMA_CONNECTION_LIMIT=3` and `HEAVY_OPERATION_CONCURRENCY=1`.
+
+Prisma 6.12's `max_idle_connection_lifetime` is checked on checkout and did not
+close sockets proactively in an isolated PostgreSQL test. The production
+Supabase session pooler also did not apply the attempted startup
+`idle_session_timeout` option. Neither URL option was applied to production.
+Do not substitute server-enforced idle termination without verifying first-query
+reconnection, active queries and transaction gaps against the actual endpoint.
+
+Storage renewal remains on Supabase. Its read-only readiness check tolerates a
+bounded cold start and accepts an already-applied sleeping deployment, while
+credential errors and application readiness failures stay terminal. See
+[`storage-renewal`](../../scripts/cloud/storage-renewal/README.md).
+
+Disable Serverless and redeploy to restore always-on operation. Set the idle
+pool option to `0` and redeploy only if rolling back pool cleanup too; preserve
+current credentials and the three-connection setting. No database restoration
+or migration is part of this rollback. Initial document 502s cannot be fixed by
+browser API retry code because the application has not loaded yet.
+
+References: [Railway Serverless](https://docs.railway.com/deployments/serverless),
+[Prisma 6 connections](https://www.prisma.io/docs/orm/v6/prisma-client/setup-and-configuration/databases-connections/connection-management).

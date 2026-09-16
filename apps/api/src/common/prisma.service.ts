@@ -1,5 +1,6 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
+import { PrismaIdlePool, resolvePrismaIdleDisconnectMs } from "./prisma-idle";
 
 export const DEFAULT_PRISMA_CONNECTION_LIMIT = 1;
 
@@ -30,17 +31,36 @@ export function databaseUrlWithConnectionLimit(
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  private readonly idlePool?: PrismaIdlePool;
+
   constructor() {
     const datasourceUrl = databaseUrlWithConnectionLimit(process.env.DATABASE_URL);
     super(datasourceUrl ? { datasourceUrl } : {});
+    const idleMs = resolvePrismaIdleDisconnectMs(process.env.PRISMA_IDLE_DISCONNECT_MS);
+    if (idleMs > 0) {
+      const logger = new Logger(PrismaService.name);
+      const pool = new PrismaIdlePool(idleMs, () => super.$disconnect(), () => {
+        logger.warn("Idle database pool close failed; retrying after the next idle window.");
+      });
+      this.idlePool = pool;
+      this.$use((params, next) => pool.run(() => next(params)));
+      // Middleware leases alone do not cover gaps inside an interactive
+      // transaction. Keep its entire lifetime (and array transactions) leased.
+      const transaction = this.$transaction.bind(this);
+      this.$transaction = ((...args: unknown[]) => pool.run(() =>
+        Reflect.apply(transaction, this, args)
+      )) as typeof this.$transaction;
+    }
   }
 
   async onModuleInit() {
-    await this.$connect();
+    if (this.idlePool) await this.idlePool.run(() => this.$connect());
+    else await this.$connect();
   }
 
   async onModuleDestroy() {
-    await this.$disconnect();
+    if (this.idlePool) await this.idlePool.shutdown();
+    else await this.$disconnect();
   }
 }
 

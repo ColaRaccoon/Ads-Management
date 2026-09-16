@@ -5,6 +5,7 @@ import path from "node:path";
 import { loadAuthConfig } from "../auth/auth.config";
 import { resolveUploadStructureLimits } from "../file-security/upload-preflight";
 import { validateSupabaseDatabaseTarget } from "./supabase-database-target";
+import { resolvePrismaIdleDisconnectMs } from "./prisma-idle";
 import {
   resolveCoupangBundleMaxTotalBytes,
   resolveProfileMaxFileBytes,
@@ -330,6 +331,7 @@ export function validateRuntimeEnvironment(
     cloudContainer ? 3 : 20,
     1
   );
+  const prismaIdleDisconnectMs = resolvePrismaIdleDisconnectMs(env.PRISMA_IDLE_DISCONNECT_MS);
   const heavyOperationConcurrency = boundedInteger(
     env.HEAVY_OPERATION_CONCURRENCY,
     "HEAVY_OPERATION_CONCURRENCY",
@@ -391,6 +393,7 @@ export function validateRuntimeEnvironment(
     REPORT_STORAGE_DIR: reportStorageDir,
     STORAGE_PROVIDER: storageProvider,
     PRISMA_CONNECTION_LIMIT: String(prismaConnectionLimit),
+    PRISMA_IDLE_DISCONNECT_MS: String(prismaIdleDisconnectMs),
     SUPABASE_STORAGE_RETENTION_DAYS: String(storageRetentionDays),
     SUPABASE_STORAGE_TIMEOUT_MS: String(storageTimeoutMs),
     SUPABASE_STORAGE_MAX_OBJECT_BYTES: String(storageMaxObjectBytes),
@@ -474,6 +477,7 @@ function runtimeConfigFingerprint(env: NodeJS.ProcessEnv, production: boolean) {
     deploymentMode: parseDeploymentMode(env.DEPLOYMENT_MODE),
     releaseId: cloudReleaseId(env.RELEASE_GIT_SHA, parseDeploymentMode(env.DEPLOYMENT_MODE)),
     prismaConnectionLimit: env.PRISMA_CONNECTION_LIMIT?.trim() || "1",
+    prismaIdleDisconnectMs: resolvePrismaIdleDisconnectMs(env.PRISMA_IDLE_DISCONNECT_MS),
     heavyOperationConcurrency: env.HEAVY_OPERATION_CONCURRENCY?.trim() || "1",
     reportMaxSourceRows: env.REPORT_MAX_SOURCE_ROWS?.trim() || "25000"
   })).digest("hex");

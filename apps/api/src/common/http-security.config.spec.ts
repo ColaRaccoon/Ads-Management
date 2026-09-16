@@ -255,6 +255,16 @@ describe("runtime environment validation", () => {
     })).toThrow("database, Auth, and Storage must use the same Supabase project ref");
   });
 
+  it("binds opt-in idle pool cleanup to validated runtime identity", () => {
+    const disabled = validateRuntimeEnvironment(production);
+    const enabled = validateRuntimeEnvironment({ ...production, PRISMA_IDLE_DISCONNECT_MS: "60000" });
+    expect(disabled.PRISMA_IDLE_DISCONNECT_MS).toBe("0");
+    expect(enabled.PRISMA_IDLE_DISCONNECT_MS).toBe("60000");
+    expect(enabled.RUNTIME_CONFIG_FINGERPRINT).not.toBe(disabled.RUNTIME_CONFIG_FINGERPRINT);
+    expect(() => validateRuntimeEnvironment({ ...production, PRISMA_IDLE_DISCONNECT_MS: "-1" }))
+      .toThrow("PRISMA_IDLE_DISCONNECT_MS");
+  });
+
   it("fails production startup without durable scoped Storage and explicit deployment identity", () => {
     expect(() => validateRuntimeEnvironment({ ...production, STORAGE_PROVIDER: "local" }))
       .toThrow("cloud_container requires explicit STORAGE_PROVIDER=supabase");
