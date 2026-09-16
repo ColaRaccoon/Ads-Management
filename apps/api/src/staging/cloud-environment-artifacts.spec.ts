@@ -17,7 +17,7 @@ describe("cloud environment artifact", () => {
       ...example,
       PORT: "8000",
       RELEASE_GIT_SHA: "25748e71a95a09990968e0f198c5fd877897dc88",
-      DATABASE_URL: `postgresql://meta_runtime:synthetic@db.${projectRef}.supabase.co:5432/postgres?schema=public&sslmode=verify-full&connection_limit=2`,
+      DATABASE_URL: `postgresql://meta_runtime:synthetic@db.${projectRef}.supabase.co:5432/postgres?schema=public&sslmode=verify-full&connection_limit=${example.PRISMA_CONNECTION_LIMIT}`,
       SUPABASE_DATABASE_PROJECT_REF: projectRef,
       SUPABASE_DATABASE_CONNECTION_MODE: "direct",
       SUPABASE_DATABASE_HOST: `db.${projectRef}.supabase.co`,
@@ -46,7 +46,7 @@ describe("cloud environment artifact", () => {
       DEPLOYMENT_MODE: "cloud_container",
       AUTH_PROVIDER: "supabase",
       STORAGE_PROVIDER: "supabase",
-      PRISMA_CONNECTION_LIMIT: "2",
+      PRISMA_CONNECTION_LIMIT: example.PRISMA_CONNECTION_LIMIT,
       RELEASE_GIT_SHA: environment.RELEASE_GIT_SHA
     });
   });

@@ -26,6 +26,7 @@ ARG RELEASE_GIT_SHA
 COPY . .
 RUN node deploy/cloud/assert-build-context-clean.mjs
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV APP_ENV=production
 ENV DEPLOYMENT_MODE=cloud_container
 ENV AUTH_PROVIDER=supabase
@@ -59,6 +60,7 @@ RUN apt-get update && apt-get install --yes --no-install-recommends ca-certifica
   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
   && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY deploy/cloud/certs/supabase-prod-ca-2021.crt /usr/local/share/ca-certificates/supabase-prod-ca-2021.crt
 RUN update-ca-certificates
 ENV APP_ENV=production

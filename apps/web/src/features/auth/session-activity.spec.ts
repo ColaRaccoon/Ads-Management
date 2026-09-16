@@ -1,9 +1,34 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resetUserActivity, SESSION_IDLE_MS, userActivityAge, watchUserActivity } from "./session-activity";
+import { POLLING_IDLE_MS, resetUserActivity, SESSION_IDLE_MS, userActivityAge, watchUserActivity } from "./session-activity";
 let stop: (() => void) | undefined;
 afterEach(() => { stop?.(); stop = undefined; localStorage.clear(); vi.useRealTimers(); });
 describe("two-hour user inactivity", () => {
+  it("pauses polling after five minutes without ending the session and resumes on input", () => {
+    vi.useFakeTimers(); const idle = vi.fn(); const heartbeat = vi.fn(); const polling = vi.fn();
+    stop = watchUserActivity("user", idle, heartbeat, polling);
+    vi.advanceTimersByTime(POLLING_IDLE_MS);
+    expect(polling).toHaveBeenLastCalledWith(false);
+    expect(idle).not.toHaveBeenCalled();
+    expect(heartbeat).not.toHaveBeenCalled();
+    window.dispatchEvent(new Event("pointerdown"));
+    expect(polling).toHaveBeenLastCalledWith(true);
+    expect(heartbeat).toHaveBeenCalledOnce();
+  });
+  it("shares resumed activity across tabs but focus alone does not extend the deadline", () => {
+    vi.useFakeTimers(); const idle = vi.fn(); const heartbeat = vi.fn(); const polling = vi.fn();
+    stop = watchUserActivity("user", idle, heartbeat, polling);
+    vi.advanceTimersByTime(POLLING_IDLE_MS);
+    window.dispatchEvent(new Event("focus"));
+    expect(heartbeat).toHaveBeenCalledOnce();
+    expect(polling).toHaveBeenLastCalledWith(false);
+    expect(userActivityAge()).toBeUndefined();
+    localStorage.setItem("meta-ads.activity.user", String(Date.now()));
+    vi.advanceTimersByTime(1_000);
+    expect(polling).toHaveBeenLastCalledWith(true);
+    expect(heartbeat).toHaveBeenCalledTimes(2);
+    expect(idle).not.toHaveBeenCalled();
+  });
   it("does not count background reads as input and logs out at two hours", () => {
     vi.useFakeTimers(); const idle = vi.fn(); const heartbeat = vi.fn();
     stop = watchUserActivity("user", idle, heartbeat);

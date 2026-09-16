@@ -6,6 +6,7 @@ import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, AUTH_ME_QUERY_KEY } from "./auth-context";
 import { useAuth } from "./use-auth";
+import { POLLING_IDLE_MS } from "./session-activity";
 
 const apiMocks = vi.hoisted(() => ({
   listener: null as null | ((event: { type: string; code?: string }) => void),
@@ -49,12 +50,30 @@ vi.mock("./auth-coordination", () => ({
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
+  vi.useRealTimers();
   vi.clearAllMocks();
   coordinatorMocks.listener = null;
   coordinatorMocks.runExclusive.mockImplementation((task: () => Promise<unknown>) => task());
 });
 
 describe("AuthProvider cache and revalidation integration", () => {
+  it("stops idle polling while retaining the authenticated tree, then refreshes on input", async () => {
+    vi.useFakeTimers();
+    apiMocks.get.mockResolvedValue(authMe("v1", ["data.read"]));
+    const queryClient = createQueryClient();
+    renderProvider(queryClient);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(screen.getByText("authenticated:user-1:data.read")).toBeTruthy();
+    await act(async () => { await vi.advanceTimersByTimeAsync(POLLING_IDLE_MS); });
+    const reads = apiMocks.get.mock.calls.length;
+    await act(async () => { await vi.advanceTimersByTimeAsync(10 * 60_000); });
+    expect(apiMocks.get).toHaveBeenCalledTimes(reads);
+    expect(screen.getByText("authenticated:user-1:data.read")).toBeTruthy();
+    await act(async () => { fireEvent.pointerDown(window); await vi.advanceTimersByTimeAsync(1); });
+    expect(apiMocks.get).toHaveBeenCalledTimes(reads + 1);
+    expect(screen.getByText("authenticated:user-1:data.read")).toBeTruthy();
+  });
   it("logs in after logout without a competing anonymous read or page reload", async () => {
     const queryClient = createQueryClient();
     apiMocks.get.mockResolvedValueOnce(authMe("v1", ["data.read"]));

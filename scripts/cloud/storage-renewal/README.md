@@ -34,6 +34,26 @@ anon/authenticated/업무 runtime 역할의 스키마·Vault 접근은 거부된
 
 ## 검증·장애 확인
 
+### 절전 복귀 대응 (2026-09-16 소스 변경, 별도 Edge 배포 필요)
+
+- 현재 토큰 발급 시각 이후 생성된 활성 배포의 `SUCCESS` 또는 `SLEEPING` 상태를 확인한 뒤
+  readiness를 요청한다. 잠든 배포도 깨울 수 있지만 과거 토큰의 배포나 실패·배포 중 상태는 통과하지 못한다.
+  상태 정의는 [Railway 배포 API 문서](https://docs.railway.com/integrations/api/manage-deployments)를 따른다.
+- 보호된 앱 readiness GET에만 최대 3회, 회당 최대 20초, 2초 간격으로 재시도한다.
+  readiness 전체 상한은 35초이며, 함수 시작부터 80초가 지나면 추가 요청을 중단한다.
+  기존 Cron HTTP 제한 90초 안에 응답할 여유를 두며 앞선 JWKS/Storage/Railway 호출도 같은 남은 예산을 사용한다.
+- 네트워크 오류·요청 시간 초과·게이트웨이 502/503만 재시도한다. 앱이 반환한 구조화된 오류
+  (`SERVICE_NOT_READY` 포함), 401/403, 리다이렉트, 잘못된 200 응답은 즉시 실패한다.
+  실제 DB/인증 공급자/Storage 장애 및 만료 자격증명으로 발생한 앱 503을 숨기지 않는다.
+- 토큰 검증, 대상 검사, Storage sentinel, 갱신 mutation에는 재시도를 추가하지 않는다.
+  만료 토큰은 기존대로 점검 실패이며, 갱신 경로의 제한된 교체 동작은 유지한다.
+- `node --test scripts/cloud/storage-renewal/core.test.mjs scripts/cloud/storage-renewal/readiness.test.mjs`
+  로 기존 갱신 안전성 및 복귀 재시도 경계를 함께 검사한다.
+- 운영 반영 시 `index.ts`, `core.mjs`, `readiness.mjs`를 포함해 기존 Edge 함수를 배포해야 한다.
+  보호 secret·Cron 일정은 유지하고 `cron.sql`을 다시 실행하지 않는다.
+  배포 후 인증 거부와 실제 수면 상태에서 `check` 성공을 별도로 관측해야 한다.
+  이 변경은 첫 HTML 문서 요청의 502를 해결하거나 콜드 스타트 성공을 보장하지 않는다.
+
 - `node --test scripts/cloud/storage-renewal/core.test.mjs`: 9개 통과.
 - Deno 타입 검사, 실제 함수 배포, 인증 거부, 첫 갱신·배포·readiness, Vault/HTTP 호출과 감사 통과.
 - HTTP 실패와 배포 미완료를 성공으로 인정하지 않는 DB 검사 통과.

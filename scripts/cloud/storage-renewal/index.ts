@@ -1,7 +1,9 @@
 import { SignJWT, importJWK, createLocalJWKSet, jwtVerify, decodeJwt } from 'npm:jose@5.10.0';
 import { TARGET, renewStorage } from './core.mjs';
+import { INVOCATION_BUDGET_MS, requestTimeout, checkApplicationReadiness, assertAppliedDeployment } from './readiness.mjs';
 
 Deno.serve(async (request: Request) => {
+  const deadlineMs = Date.now() + INVOCATION_BUDGET_MS;
   const expected = Deno.env.get('STORAGE_RENEWAL_CALL_SECRET');
   if(request.method!=='POST'||!expected||request.headers.get('authorization')!==`Bearer ${expected}`) return new Response('Forbidden',{status:403});
   try {
@@ -10,14 +12,14 @@ Deno.serve(async (request: Request) => {
     const railwayToken=Deno.env.get('STORAGE_RENEWAL_RAILWAY_PROJECT_TOKEN');
     const jwk=JSON.parse(Deno.env.get('STORAGE_RENEWAL_SIGNING_JWK')??'null');
     if(!railwayToken||jwk?.kid!==TARGET.kid) throw Error('CONFIG_INVALID');
-    const jwksResponse=await fetch(TARGET.origin+'/auth/v1/.well-known/jwks.json',{signal:AbortSignal.timeout(15000),redirect:'error'});
+    const jwksResponse=await fetch(TARGET.origin+'/auth/v1/.well-known/jwks.json',{signal:requestTimeout(deadlineMs,15000),redirect:'error'});
     if(!jwksResponse.ok)throw Error('JWKS_FAILED');
     const jwks=await jwksResponse.json();
     const publicKey=jwks.keys?.find((k:Record<string,string>)=>k.kid===TARGET.kid);
     if(!publicKey||['kty','crv','x','y'].some(k=>publicKey[k]!==jwk[k]))throw Error('KEY_MISMATCH');
     const localJwks=createLocalJWKSet(jwks);
     const railway=async(query:string,variables:unknown)=>{
-      const response=await fetch('https://backboard.railway.com/graphql/v2',{method:'POST',headers:{'Project-Access-Token':railwayToken,'Content-Type':'application/json'},body:JSON.stringify({query,variables}),signal:AbortSignal.timeout(20000),redirect:'error'});
+      const response=await fetch('https://backboard.railway.com/graphql/v2',{method:'POST',headers:{'Project-Access-Token':railwayToken,'Content-Type':'application/json'},body:JSON.stringify({query,variables}),signal:requestTimeout(deadlineMs,20000),redirect:'error'});
       const body=await response.json();
       if(!response.ok||body.errors)throw Error('RAILWAY_REQUEST_FAILED');
       return body.data;
@@ -27,10 +29,8 @@ Deno.serve(async (request: Request) => {
       force:input.mode==='renew-now',
       readiness:async(variables:Record<string,string>,iat:number)=>{
         const data=await railway('query($e:String!,$s:String!){serviceInstance(environmentId:$e,serviceId:$s){activeDeployments{id status createdAt}}}',{e:TARGET.environmentId,s:TARGET.serviceId});
-        if(!data.serviceInstance.activeDeployments.some((d:{status:string;createdAt:string})=>d.status==='SUCCESS' && Date.parse(d.createdAt)>=iat*1000)) throw Error('DEPLOYMENT_NOT_APPLIED');
-        if(!variables.INTERNAL_PROBE_TOKEN)throw Error('PROBE_CONFIG_MISSING');
-        const response=await fetch('https://patimagroup-work.com/backend-api/health/ready',{headers:{'x-internal-probe-token':variables.INTERNAL_PROBE_TOKEN},signal:AbortSignal.timeout(20000),redirect:'error'});
-        if(!response.ok)throw Error('APPLICATION_NOT_READY');
+        assertAppliedDeployment(data.serviceInstance?.activeDeployments,iat);
+        await checkApplicationReadiness({token:variables.INTERNAL_PROBE_TOKEN,deadlineMs});
       },
       api: async (operation:string, token?:string)=>{
         const query=operation==='read'
@@ -51,7 +51,7 @@ Deno.serve(async (request: Request) => {
       },
       issue:async (subject:string,iat:number,exp:number)=>new SignJWT({role:'storage_app'}).setProtectedHeader({alg:'ES256',kid:TARGET.kid,typ:'JWT'}).setIssuer(TARGET.origin+'/auth/v1').setAudience('authenticated').setSubject(subject).setIssuedAt(iat).setExpirationTime(exp).sign(await importJWK(jwk,'ES256')),
       probe:async(token:string,apiKey:string)=>{
-        const response=await fetch(TARGET.origin+'/storage/v1/object/'+TARGET.bucket+'/health/readiness-sentinel',{method:'HEAD',headers:{apikey:apiKey,authorization:'Bearer '+token},signal:AbortSignal.timeout(15000),redirect:'error'});
+        const response=await fetch(TARGET.origin+'/storage/v1/object/'+TARGET.bucket+'/health/readiness-sentinel',{method:'HEAD',headers:{apikey:apiKey,authorization:'Bearer '+token},signal:requestTimeout(deadlineMs,15000),redirect:'error'});
         if(!response.ok)throw Error('STORAGE_PROBE_FAILED');
       }
     });

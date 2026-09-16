@@ -17,7 +17,7 @@ import {
   invalidateApiSession,
   subscribeAuthLifecycle
 } from "@/lib/api";
-import { resetUserActivity, watchUserActivity } from "./session-activity";
+import { resetUserActivity, setActivityRevalidator, watchUserActivity } from "./session-activity";
 import { authCoordinator } from "./auth-coordination";
 import { clearUserQueries } from "./auth-cache";
 import { authLoginPayload } from "./auth-provider";
@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [forcedStatus, setForcedStatus] = useState<AuthStatus | null>(null);
   const [changingSession, setChangingSession] = useState(false);
+  const [pollingActive, setPollingActive] = useState(true);
   const permissionRefresh = useRef<Promise<unknown> | null>(null);
   const previousIdentity = useRef<string | null>(null);
   const previousAuthorizationVersion = useRef<string | null>(null);
@@ -59,8 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: AUTH_STALE_MS,
     retry: false,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchInterval: AUTH_VISIBLE_REFETCH_MS,
+    refetchOnReconnect: pollingActive,
+    // Pause only recurring reads: retain the mounted tree and pending uploads.
+    refetchInterval: pollingActive ? AUTH_VISIBLE_REFETCH_MS : false,
     refetchIntervalInBackground: false
   });
 
@@ -84,6 +86,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
   }, [queryClient]);
+
+  useEffect(() => setActivityRevalidator(async () => {
+    const previousUserId = previousIdentity.current;
+    const previousVersion = previousAuthorizationVersion.current;
+    const me = await refreshAuth();
+    if (!me || !me.user.isActive || me.user.inviteStatus !== "ACTIVE") {
+      throw new Error("인증 상태를 다시 확인한 후 시도해 주세요.");
+    }
+    if (previousUserId !== me.user.id || previousVersion !== me.authorizationVersion) {
+      // The original action was chosen using stale grants. Let the refreshed
+      // screen settle and require a new user action instead of sending it.
+      throw new Error("계정 또는 권한이 변경되었습니다. 확인 후 다시 시도해 주세요.");
+    }
+  }), [refreshAuth]);
 
   useEffect(() => subscribeAuthLifecycle((event) => {
     if (event.type === "permission-denied") {
@@ -248,10 +264,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const activityUserId = me?.user.id;
   useEffect(() => {
     if (!activityUserId) return;
+    setPollingActive(true);
     return watchUserActivity(activityUserId, () => { void logout(); }, () => {
-      void apiGet("/auth/me").catch(() => undefined);
-    });
-  }, [activityUserId, logout]);
+      void refreshAuth();
+    }, setPollingActive);
+  }, [activityUserId, logout, refreshAuth]);
   const permissionSet = useMemo(() => new Set(me?.permissions ?? []), [me?.permissions]);
   const can = useCallback((permission: Permission) => permissionSet.has(permission), [permissionSet]);
 

@@ -54,6 +54,8 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly serviceStartedAt = new Date();
   private reconciliationTimer?: NodeJS.Timeout;
   private reconciliationInFlight?: Promise<ReportReconciliationResult>;
+  private reconciliationRequestedThrough?: Date;
+  private shuttingDown = false;
   private readonly activeExports = new Set<string>();
 
   constructor(
@@ -66,14 +68,11 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
 
   async onApplicationBootstrap() {
     await this.runReconciliationCycle(this.serviceStartedAt);
-    this.reconciliationTimer = setInterval(() => {
-      void this.runReconciliationCycle(new Date(Date.now() - 5 * 60_000));
-    }, 60_000);
-    this.reconciliationTimer.unref();
   }
 
   async onModuleDestroy() {
-    if (this.reconciliationTimer) clearInterval(this.reconciliationTimer);
+    this.shuttingDown = true;
+    if (this.reconciliationTimer) clearTimeout(this.reconciliationTimer);
     if (this.reconciliationInFlight) {
       await Promise.race([
         this.reconciliationInFlight.catch(() => undefined),
@@ -86,18 +85,24 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   async runReconciliationCycle(cutoff = new Date(Date.now() - 5 * 60_000)) {
-    if (this.reconciliationInFlight) return this.reconciliationInFlight;
+    if (this.reconciliationInFlight) {
+      this.scheduleReconciliation(cutoff);
+      return this.reconciliationInFlight;
+    }
     const lease = this.heavyOperationGate?.tryAcquire();
     if (this.heavyOperationGate && !lease) {
+      this.scheduleReconciliation(cutoff);
       return { scanned: 0, created: 0, failed: 0, unresolved: 0 };
     }
     const operation = this.reconcileStaleCreatingReports(cutoff, 30_000)
       .then((result) => {
         this.reconciliationState?.record(result);
+        if (result.unresolved > 0) this.scheduleReconciliation(cutoff);
         return result;
       })
       .catch(() => {
         this.reconciliationState?.recordFailure();
+        this.scheduleReconciliation(cutoff);
         return { scanned: 0, created: 0, failed: 0, unresolved: 1 };
       });
     this.reconciliationInFlight = operation;
@@ -109,10 +114,35 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
     }
   }
 
+  private scheduleReconciliation(through: Date) {
+    if (this.shuttingDown) return;
+    if (!this.reconciliationRequestedThrough || through > this.reconciliationRequestedThrough) {
+      this.reconciliationRequestedThrough = through;
+    }
+    if (this.reconciliationTimer) return;
+    // Only unresolved work or an uncertain export arms a retry. An empty
+    // database must not generate outbound traffic every minute while idle.
+    this.reconciliationTimer = setTimeout(() => {
+      this.reconciliationTimer = undefined;
+      const cutoff = new Date(Math.max(this.serviceStartedAt.getTime(), Date.now() - 5 * 60_000));
+      if (this.reconciliationRequestedThrough && this.reconciliationRequestedThrough <= cutoff) {
+        this.reconciliationRequestedThrough = undefined;
+      }
+      void this.runReconciliationCycle(cutoff).finally(() => {
+        // A new failed export may not be old enough for this scan, or may
+        // arrive during it. Keep its retry until the five-minute grace passes.
+        if (this.reconciliationRequestedThrough) {
+          this.scheduleReconciliation(this.reconciliationRequestedThrough);
+        }
+      });
+    }, 60_000);
+    this.reconciliationTimer.unref();
+  }
+
   /**
-   * Reconciles only rows that pre-date this service process. An in-process
-   * export may legitimately be between its atomic payload publish and its DB
-   * finalize; startup rows cannot belong to such a live request.
+   * Startup scans pre-date this process; retries also cover older failed
+   * attempts from this process. Active local exports remain excluded while
+   * between atomic payload publication and DB finalize.
    */
   async reconcileStaleCreatingReports(cutoff = this.serviceStartedAt, maximumDurationMs = 30_000) {
     const result = { scanned: 0, created: 0, failed: 0, unresolved: 0 };
@@ -227,6 +257,10 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
         status: "CREATING",
         createdBy: actorId
       }
+    }).catch((error: unknown) => {
+      // The create may have committed even when its acknowledgement was lost.
+      this.scheduleReconciliation(new Date(Date.now() + 1));
+      throw error;
     });
 
     let stored: StoredFile | undefined;
@@ -267,6 +301,7 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       if (committed) return committed;
       throw new Error("REPORT_FINALIZE_COMPARE_AND_SET_LOST");
     } catch (error) {
+      this.scheduleReconciliation(new Date(Date.now() + 1));
       if (stored) {
         const committed = await this.reconcileStoredReport(report.id, reference, stored);
         if (committed) return committed;

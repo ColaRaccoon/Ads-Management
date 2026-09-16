@@ -1,9 +1,10 @@
-import { userActivityAge } from "../features/auth/session-activity";
+import { ensureActivityAuthorization, userActivityAge } from "../features/auth/session-activity";
 import { DateRange } from "./date-range";
 import { authCoordinator } from "../features/auth/auth-coordination";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/backend-api";
 const AUTH_MUTATION_PATHS = new Set(["/auth/login", "/auth/refresh", "/auth/logout"]);
+const AUTH_PREFLIGHT_EXEMPT_PATHS = new Set([...AUTH_MUTATION_PATHS, "/auth/me", "/auth/invitations/accept"]);
 const SESSION_ENDING_CODES = new Set([
   "AUTHENTICATION_REQUIRED",
   "SESSION_INVALID",
@@ -60,6 +61,10 @@ export async function apiRequest<T>(
   retryAfterRefresh = false
 ): Promise<T> {
   const requestEpoch = sessionEpoch;
+  if (!AUTH_PREFLIGHT_EXEMPT_PATHS.has(normalizePath(path))) {
+    await ensureActivityAuthorization();
+    assertSessionEpoch(requestEpoch);
+  }
   const response = await request(path, options);
   assertSessionEpoch(requestEpoch);
   if (response.ok) {
