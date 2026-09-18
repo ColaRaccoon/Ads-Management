@@ -444,7 +444,7 @@ describe("Cafe24UploadsService duplicate upload guard", () => {
     ).refreshCafe24BatchIssueCounts(["batch-incomplete"]);
 
     expect(updateManyCalls[0]).toEqual({
-      where: { orderLineKey: "order-key" },
+      where: { orderLineKey: { in: ["order-key"] } },
       data: { isCurrent: false }
     });
   });
@@ -491,6 +491,45 @@ describe("Cafe24UploadsService duplicate upload guard", () => {
 });
 
 describe("Cafe24UploadsService deleteUpload", () => {
+  it("deletes 360 current orders without per-order restoration queries when no history exists", async () => {
+    const prisma = fakeDeletePrisma({
+      deletingLines: Array.from({ length: 360 }, (_, index) => ({ id: `line-${index}`, orderLineKey: `key-${index}`, isCurrent: true })),
+      remainingLines: []
+    });
+    await new Cafe24UploadsService(prisma as never, {} as never).deleteUpload("batch-new");
+
+    expect(prisma.cafe24OrderLine.findManyCalls).toHaveLength(2);
+    expect(prisma.cafe24OrderLine.updateManyCalls).toHaveLength(1);
+    expect(prisma.cafe24OrderLine.groupByCalls).toHaveLength(0);
+    expect(prisma.transactionOptions).toEqual([{ timeout: 60_000 }]);
+  });
+
+  it("bounds restoration queries across chunks and restores one latest usable version per key", async () => {
+    const deletingLines = Array.from({ length: 501 }, (_, index) => ({ id: `new-${index}`, orderLineKey: `key-${index}`, isCurrent: true }));
+    const remainingLines = deletingLines.flatMap((line, index) => [1, 2].map((version) => ({
+      id: `old-${index}-v${version}`, orderLineKey: line.orderLineKey, importVersion: version,
+      validationStatus: RowValidationStatus.VALID, createdAt: date("2026-09-16"),
+      uploadBatchId: `old-batch-${version}`, rowCount: 501, storedRowCount: 501
+    })));
+    const prisma = fakeDeletePrisma({ deletingLines, remainingLines });
+    await new Cafe24UploadsService(prisma as never, {} as never).deleteUpload("batch-new");
+
+    expect(prisma.cafe24OrderLine.findManyCalls).toHaveLength(3);
+    expect(prisma.cafe24OrderLine.groupByCalls).toHaveLength(2);
+    const promotions = prisma.cafe24OrderLine.updateManyCalls.filter((call) => call.data.isCurrent);
+    const restored = promotions.flatMap((call) => call.where.id.in);
+    expect(restored).toHaveLength(501);
+    expect(restored.every((id: string) => id.endsWith("-v2"))).toBe(true);
+    expect(new Set(restored).size).toBe(501);
+  });
+
+  it("does not change current versions when deleting only historical rows", async () => {
+    const prisma = fakeDeletePrisma({ deletingLines: [{ id: "old", orderLineKey: "key", isCurrent: false }] });
+    await new Cafe24UploadsService(prisma as never, {} as never).deleteUpload("batch-new");
+    expect(prisma.cafe24OrderLine.findManyCalls).toHaveLength(1);
+    expect(prisma.cafe24OrderLine.updateManyCalls).toHaveLength(0);
+  });
+
   it("restores the previous version as current when deleting a current upload batch", async () => {
     const prisma = fakeDeletePrisma();
     const service = new Cafe24UploadsService(prisma as never, {} as never);
@@ -503,18 +542,18 @@ describe("Cafe24UploadsService deleteUpload", () => {
     });
     expect(prisma.cafe24OrderLine.deleteManyCalls[0]).toEqual({ where: { uploadBatchId: "batch-new" } });
     expect(prisma.cafe24OrderLine.updateManyCalls[0]).toEqual({
-      where: { orderLineKey: "order-key" },
+      where: { orderLineKey: { in: ["order-key"] } },
       data: { isCurrent: false }
     });
     expect(prisma.cafe24OrderLine.findManyCalls[1]).toMatchObject({
       where: {
-        orderLineKey: "order-key",
+        orderLineKey: { in: ["order-key"] },
         validationStatus: { not: RowValidationStatus.ERROR }
       },
-      orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }]
+      orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }, { id: "desc" }]
     });
-    expect(prisma.cafe24OrderLine.updateCalls[0]).toEqual({
-      where: { id: "line-old" },
+    expect(prisma.cafe24OrderLine.updateManyCalls[1]).toEqual({
+      where: { id: { in: ["line-old"] } },
       data: { isCurrent: true, supersededByOrderLineId: null }
     });
   });
@@ -549,11 +588,11 @@ describe("Cafe24UploadsService deleteUpload", () => {
     await service.deleteUpload("batch-new");
 
     expect(prisma.cafe24OrderLine.findManyCalls[1].where).toEqual({
-      orderLineKey: "order-key",
+      orderLineKey: { in: ["order-key"] },
       validationStatus: { not: RowValidationStatus.ERROR }
     });
-    expect(prisma.cafe24OrderLine.updateCalls[0]).toEqual({
-      where: { id: "line-valid-older" },
+    expect(prisma.cafe24OrderLine.updateManyCalls[1]).toEqual({
+      where: { id: { in: ["line-valid-older"] } },
       data: { isCurrent: true, supersededByOrderLineId: null }
     });
   });
@@ -588,11 +627,11 @@ describe("Cafe24UploadsService deleteUpload", () => {
     await service.deleteUpload("batch-new");
 
     expect(prisma.cafe24OrderLine.findManyCalls[1].where).toEqual({
-      orderLineKey: "order-key",
+      orderLineKey: { in: ["order-key"] },
       validationStatus: { not: RowValidationStatus.ERROR }
     });
-    expect(prisma.cafe24OrderLine.updateCalls[0]).toEqual({
-      where: { id: "line-complete-older" },
+    expect(prisma.cafe24OrderLine.updateManyCalls[1]).toEqual({
+      where: { id: { in: ["line-complete-older"] } },
       data: { isCurrent: true, supersededByOrderLineId: null }
     });
   });
@@ -628,8 +667,8 @@ describe("Cafe24UploadsService deleteUpload", () => {
 
     await service.deleteUpload("batch-new");
 
-    expect(prisma.cafe24OrderLine.updateCalls[0]).toEqual({
-      where: { id: "line-imported-older" },
+    expect(prisma.cafe24OrderLine.updateManyCalls[1]).toEqual({
+      where: { id: { in: ["line-imported-older"] } },
       data: { isCurrent: true, supersededByOrderLineId: null }
     });
   });
@@ -834,6 +873,7 @@ function fakeSavePrisma(input: { existingCurrent: { id: string; importVersion: n
 
 function fakeDeletePrisma(
   input: {
+    deletingLines?: Array<{ id: string; orderLineKey: string; isCurrent: boolean }>;
     remainingLines?: Array<{
       id: string;
       uploadBatchId?: string;
@@ -851,6 +891,8 @@ function fakeDeletePrisma(
   const deleteManyCalls: any[] = [];
   const updateManyCalls: any[] = [];
   const updateCalls: any[] = [];
+  const groupByCalls: any[] = [];
+  const transactionOptions: any[] = [];
   const remainingLines = input.remainingLines ?? [
     {
       id: "line-old",
@@ -875,11 +917,11 @@ function fakeDeletePrisma(
       findMany: async (args: any) => {
         findManyCalls.push(args);
         if (args.where?.uploadBatchId) {
-          return [{ id: "line-new", orderLineKey: "order-key", isCurrent: true }];
+          return input.deletingLines ?? [{ id: "line-new", orderLineKey: "order-key", isCurrent: true }];
         }
         const excludedStatus = args.where?.validationStatus?.not;
         return remainingLines
-          .filter((line) => line.orderLineKey === args.where?.orderLineKey)
+          .filter((line) => args.where?.orderLineKey?.in.includes(line.orderLineKey))
           .filter((line) => !excludedStatus || line.validationStatus !== excludedStatus)
           .sort((left, right) => {
             const versionDelta = right.importVersion - left.importVersion;
@@ -887,11 +929,17 @@ function fakeDeletePrisma(
           })
           .map((line) => ({
             id: line.id,
+            orderLineKey: line.orderLineKey,
             uploadBatchId: line.uploadBatchId ?? "batch-old",
             batch: { rowCount: line.rowCount ?? 1, status: line.status ?? UploadStatus.IMPORTED }
           }));
       },
       count: async (args: any) => rowCoverageByBatch.get(args.where.uploadBatchId)?.storedRowCount ?? 0,
+      groupBy: async (args: any) => {
+        groupByCalls.push(args);
+        return [...rowCoverageByBatch].filter(([id]) => args.where.uploadBatchId.in.includes(id))
+          .map(([uploadBatchId, counts]) => ({ uploadBatchId, _count: { _all: counts.storedRowCount } }));
+      },
       deleteMany: async (args: unknown) => {
         deleteManyCalls.push(args);
         return { count: 1 };
@@ -915,12 +963,17 @@ function fakeDeletePrisma(
       findManyCalls,
       deleteManyCalls,
       updateManyCalls,
-      updateCalls
+      updateCalls,
+      groupByCalls
     },
     cafe24UploadBatch: {
       findUnique: async () => ({ id: "batch-new" })
     },
-    $transaction: async (callback: (tx: unknown) => unknown) => callback(tx)
+    transactionOptions,
+    $transaction: async (callback: (tx: unknown) => unknown, options?: unknown) => {
+      transactionOptions.push(options);
+      return callback(tx);
+    }
   };
 }
 

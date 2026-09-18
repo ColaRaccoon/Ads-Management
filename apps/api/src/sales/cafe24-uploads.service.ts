@@ -380,7 +380,7 @@ export class Cafe24UploadsService {
         });
       }
       return deleted;
-    });
+    }, { timeout: 60_000 });
   }
 
   async rematchCafe24Lines(query: { from?: string; to?: string; take?: string }, actorId?: string) {
@@ -983,31 +983,44 @@ export class Cafe24UploadsService {
   }
 
   private async restoreCurrentCafe24OrderLines(tx: Prisma.TransactionClient, orderLineKeys: string[]) {
-    for (const orderLineKey of orderLineKeys) {
+    // Bound database round trips by chunks, not by individual orders. A daily
+    // upload can contain hundreds of keys with no prior version to restore.
+    const keys = uniqueNonEmpty(orderLineKeys);
+    const chunkSize = 500;
+    for (let offset = 0; offset < keys.length; offset += chunkSize) {
+      const keyChunk = keys.slice(offset, offset + chunkSize);
       await tx.cafe24OrderLine.updateMany({
-        where: { orderLineKey },
+        where: { orderLineKey: { in: keyChunk } },
         data: { isCurrent: false }
       });
       const candidates = await tx.cafe24OrderLine.findMany({
-        where: { orderLineKey, validationStatus: { not: RowValidationStatus.ERROR } },
-        orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }],
+        where: { orderLineKey: { in: keyChunk }, validationStatus: { not: RowValidationStatus.ERROR } },
+        orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         select: {
           id: true,
+          orderLineKey: true,
           uploadBatchId: true,
           batch: { select: { rowCount: true, status: true } }
         }
       });
-      let latest: { id: string } | null = null;
+      if (candidates.length === 0) continue;
+      const batchCounts = await tx.cafe24OrderLine.groupBy({
+        by: ["uploadBatchId"],
+        where: { uploadBatchId: { in: uniqueNonEmpty(candidates.map((candidate) => candidate.uploadBatchId)) } },
+        _count: { _all: true }
+      });
+      const storedRows = new Map(batchCounts.map((batch) => [batch.uploadBatchId, batch._count._all]));
+      const latestByKey = new Map<string, string>();
       for (const candidate of candidates) {
-        const storedRowCount = await tx.cafe24OrderLine.count({ where: { uploadBatchId: candidate.uploadBatchId } });
+        if (latestByKey.has(candidate.orderLineKey)) continue;
+        const storedRowCount = storedRows.get(candidate.uploadBatchId) ?? 0;
         if (isUsableCafe24UploadBatch({ status: candidate.batch.status, rowCount: candidate.batch.rowCount, storedRowCount })) {
-          latest = candidate;
-          break;
+          latestByKey.set(candidate.orderLineKey, candidate.id);
         }
       }
-      if (latest) {
-        await tx.cafe24OrderLine.update({
-          where: { id: latest.id },
+      if (latestByKey.size > 0) {
+        await tx.cafe24OrderLine.updateMany({
+          where: { id: { in: [...latestByKey.values()] } },
           data: { isCurrent: true, supersededByOrderLineId: null }
         });
       }
