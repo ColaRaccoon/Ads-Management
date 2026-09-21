@@ -158,7 +158,7 @@ export function classifyDailySalesQuantityHighlight(
 export function buildCoupangDailyXlsxInput(
   exportRows: CoupangDailyExportRow[]
 ): XlsxWorkbookInput {
-  const filteredRows = filterCoupangDailyXlsxRows(exportRows);
+  const filteredRows = sortCoupangDailyXlsxRows(filterCoupangDailyXlsxRows(exportRows));
   const rows: Array<XlsxCell[] | XlsxRow> = [
     COUPANG_DAILY_XLSX_COLUMNS.map((column, columnIndex): XlsxCell => ({
       value: columnIndex === 0
@@ -244,6 +244,45 @@ export function filterCoupangDailyXlsxRows(
   }
 
   return filteredRows;
+}
+
+function sortCoupangDailyXlsxRows(exportRows: CoupangDailyExportRow[]) {
+  const summaryRows: CoupangDailyExportRow[] = [];
+  const blocks: CoupangDailyExportRow[][] = [];
+  for (const row of exportRows) {
+    if (row.visualBlockKey === null) {
+      summaryRows.push(row);
+      continue;
+    }
+    const lastBlock = blocks.at(-1);
+    if (lastBlock?.[0].visualBlockKey === row.visualBlockKey) {
+      lastBlock.push(row);
+    } else {
+      blocks.push([row]);
+    }
+  }
+
+  // Compare group totals and standalone products without splitting their notes/options.
+  blocks.sort((left, right) => compareFinalProfit(left[0], right[0]));
+  return [
+    ...summaryRows,
+    ...blocks.flatMap((block, visualBlockIndex) => {
+      const options = block.filter((row) => row.rowKind === "옵션").sort(compareFinalProfit);
+      let optionIndex = 0;
+      return block.map((row) => ({
+        ...(row.rowKind === "옵션" ? options[optionIndex++] : row),
+        visualBlockIndex
+      }));
+    })
+  ];
+}
+
+function compareFinalProfit(left: CoupangDailyExportRow, right: CoupangDailyExportRow) {
+  const leftProfit = finiteExportNumber(left.marginKrw);
+  const rightProfit = finiteExportNumber(right.marginKrw);
+  if (leftProfit === null) return rightProfit === null ? 0 : 1;
+  if (rightProfit === null) return -1;
+  return rightProfit - leftProfit;
 }
 
 function filterSalesActiveBlock(blockRows: CoupangDailyExportRow[]) {

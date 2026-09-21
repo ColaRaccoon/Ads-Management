@@ -46,6 +46,7 @@ const increasedOption = exportRow({
 const tenDecreaseOption = exportRow({
   rowKind: "옵션",
   productName: "베이지",
+  marginKrw: 10_000,
   reportedSalesQuantity: 10,
   previousReportedSalesQuantity: 20,
   manualPurchaseQuantity: 0,
@@ -78,6 +79,50 @@ const singleNote = noteRow({
 });
 
 describe("Coupang daily XLSX builder", () => {
+  it("sorts groups and standalone products by final profit, keeping notes and sorting options", () => {
+    const source = [
+      total,
+      decreasedSingle,
+      singleNote,
+      { ...group, marginKrw: 30_000 },
+      { ...tenDecreaseOption, marginKrw: -10_000 },
+      { ...increasedOption, marginKrw: 40_000 },
+      groupNote,
+      exportRow({ productName: "최고 순이익 제품", marginKrw: 50_000, visualBlockKey: "product:best" })
+    ];
+    const before = structuredClone(source);
+    const input = buildCoupangDailyXlsxInput(source);
+    expect(input.rows.slice(1).map((row) => rowCells(row)[0].value)).toEqual([
+      "전체 합계", "최고 순이익 제품", "웨이브 밸런스바", "블랙", "베이지",
+      "기타사항: 블랙 리뷰 보강", "논슬립 슬라이드 매트", "기타사항: 신규 상품 체험단"
+    ]);
+    expect(input.rows.slice(2).map((row) => rowCells(row)[0].fill)).toEqual([
+      "GROUP_MINT", "GROUP_BLUE", "GROUP_BLUE", "GROUP_BLUE", "GROUP_BLUE",
+      "GROUP_SAND", "GROUP_SAND"
+    ]);
+    expect(input.merges).toEqual([
+      { fromRow: 7, fromColumn: 1, toRow: 7, toColumn: 11 },
+      { fromRow: 9, fromColumn: 1, toRow: 9, toColumn: 11 }
+    ]);
+    expect(source).toEqual(before);
+  });
+
+  it("keeps ties stable and puts missing profits after zero and negative profits", () => {
+    const profits = [null, -20, 0, 10, "", 10, -5, Number.NaN, Number.POSITIVE_INFINITY] as const;
+    const input = buildCoupangDailyXlsxInput([
+      { ...total, rowKind: "선택합계" },
+      ...profits.map((marginKrw, index) => exportRow({
+        productName: `제품 ${index}`,
+        visualBlockKey: `product:${index}`,
+        marginKrw
+      }))
+    ]);
+    expect(input.rows.slice(1).map((row) => rowCells(row)[0].value)).toEqual([
+      "전체 합계", "제품 3", "제품 5", "제품 2", "제품 6", "제품 1",
+      "제품 0", "제품 4", "제품 7", "제품 8"
+    ]);
+  });
+
   it("uses the exact eleven report columns and widths", () => {
     expect(COUPANG_DAILY_XLSX_COLUMNS.map((column) => column.header)).toEqual([
       "제품명",
