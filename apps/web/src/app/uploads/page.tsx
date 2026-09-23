@@ -70,6 +70,7 @@ type MetaUploadResult = {
 export default function UploadsPage() {
   const canManageImports = useCan("imports.manage");
   const [file, setFile] = useState<File | null>(null);
+  const [recoveringUpload, setRecoveringUpload] = useState(false);
   const [cafe24File, setCafe24File] = useState<File | null>(null);
   const [conflictPolicy, setConflictPolicy] = useState("SKIP");
   const [cafe24ConflictPolicy, setCafe24ConflictPolicy] = useState("SKIP");
@@ -82,7 +83,8 @@ export default function UploadsPage() {
   const upload = useMutation({
     mutationFn: async () => {
       if (!file) throw new Error("CSV 파일을 선택하세요.");
-      return uploadCsv(file, conflictPolicy) as Promise<MetaUploadResult>;
+      setRecoveringUpload(false);
+      return uploadCsv(file, conflictPolicy, () => setRecoveringUpload(true)) as Promise<MetaUploadResult>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries();
@@ -150,6 +152,9 @@ export default function UploadsPage() {
               업로드
             </button>
             {upload.isError ? <span style={{ color: "#b42318" }}>{String(upload.error.message)}</span> : null}
+            {upload.isPending ? <span role="status">{recoveringUpload
+              ? "응답 연결이 끊겨 서버의 처리 결과를 확인하고 있습니다. 파일을 다시 업로드하지 마세요."
+              : "광고 데이터를 저장하고 있습니다. 처리 완료까지 몇 분 걸릴 수 있습니다."}</span> : null}
             {deleteUpload.isError ? <span style={{ color: "#b42318" }}>{String(deleteUpload.error.message)}</span> : null}
             {summary ? (
               <div className="warning-strip">

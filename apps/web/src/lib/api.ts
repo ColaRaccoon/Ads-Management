@@ -1,6 +1,7 @@
 import { ensureActivityAuthorization, userActivityAge } from "../features/auth/session-activity";
 import { DateRange } from "./date-range";
 import { authCoordinator } from "../features/auth/auth-coordination";
+import { MetaUploadBatch, recoverMetaUpload } from "./meta-upload-recovery";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/backend-api";
 const AUTH_MUTATION_PATHS = new Set(["/auth/login", "/auth/refresh", "/auth/logout"]);
@@ -111,11 +112,37 @@ export function apiDelete<T>(path: string): Promise<T> {
   return apiRequest<T>(path, { method: "DELETE" });
 }
 
-export async function uploadCsv(file: File, conflictPolicy = "SKIP"): Promise<any> {
+export async function uploadCsv(file: File, conflictPolicy = "SKIP", onRecovering?: () => void): Promise<any> {
+  const requestEpoch = sessionEpoch;
+  const hash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer())))
+    .map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  const previous = await apiGet<MetaUploadBatch[]>("/uploads");
+  assertSessionEpoch(requestEpoch);
   const formData = new FormData();
   formData.append("file", file);
   formData.append("conflictPolicy", conflictPolicy);
-  return apiRequest("/uploads/meta-ad-daily-csv", { method: "POST", body: formData });
+  try {
+    return await apiRequest("/uploads/meta-ad-daily-csv", { method: "POST", body: formData });
+  } catch (error) {
+    assertSessionEpoch(requestEpoch);
+    if (!isTemporaryUploadFailure(error)) throw error;
+    onRecovering?.();
+    return recoverMetaUpload({
+      hash, policy: conflictPolicy, previousIds: new Set(previous.map((batch) => batch.id)),
+      list: async () => {
+        assertSessionEpoch(requestEpoch);
+        const batches = await apiGet<MetaUploadBatch[]>("/uploads");
+        assertSessionEpoch(requestEpoch);
+        return batches;
+      },
+      isTemporary: isTemporaryUploadFailure
+    });
+  }
+}
+
+function isTemporaryUploadFailure(error: unknown) {
+  return error instanceof TypeError ||
+    (error instanceof ApiError && [502, 503, 504].includes(error.status));
 }
 
 export async function uploadCafe24Csv(file: File, conflictPolicy = "SKIP"): Promise<any> {
