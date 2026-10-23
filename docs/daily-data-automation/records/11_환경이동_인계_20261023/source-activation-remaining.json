@@ -1,0 +1,75 @@
+{
+  "at": "2026-10-23T17:39:06.882972+09:00",
+  "kind": "SOURCE_ACTIVATION_REMAINING_ACTUAL_VALUES",
+  "actualConnections": {
+    "GOOGLE": null,
+    "META": null,
+    "CAFE24": null
+  },
+  "actualCredentialRefs": {
+    "GOOGLE": null,
+    "META": null,
+    "CAFE24": null
+  },
+  "actualPolicies": 0,
+  "actualSyncRuns": 0,
+  "leaseDrainState": "No source connection or run exists; no production source lease was created by this execution",
+  "featureEnabled": false,
+  "scheduleEnabled": false,
+  "schedules": [],
+  "fixedCandidate": "C7; no first-one-day automatic bootstrap feature was added",
+  "nextManualComparison": {
+    "businessDay": "2026-10-23",
+    "windowKst": "2026-10-24T02:00:00+09:00",
+    "automaticBootstrap": false,
+    "normalCsvPrimaryUntilReviewedSelection": true,
+    "simultaneousWritersRequired": false,
+    "normalGoogleCsvUploadExists": false
+  },
+  "technicalWorkBeforeAnyCollection": [
+    "Use supported protected access in the next environment; the current browser session and local DPAPI are not portable credentials.",
+    "Create disabled/PENDING production connections through the normal authenticated settings.manage API and record their real IDs. Do not seed READY or impersonate an authenticated actor through SQL.",
+    "Materialize only currently valid, approved credentials through supported production vault/resolver paths and bind normal metadata. The prior local Meta DPAPI is not an encrypted production envelope.",
+    "Cafe24 requires one current grant owner/pair revision and lease-safe handoff. Last completed receipt showed an access expiry already elapsed; no refresh/reissue or owner transfer was executed during this product deployment.",
+    "Cutoff Oct23 is now explicitly chosen. Use verificationDay=fromDate=2026-10-23 for initial Meta verification. The read-only conflict check currently found zero CSV/current or API history at/after cutoff; recheck after actual comparison inputs before activation. These verify-and-activate endpoints mutate policy/enabled state.",
+    "Take a fresh complete before-image of the selected account/date policy/current/link/coverage and user writes after pause/drain or fencing. The old seven-table fingerprints prove preservation, not a reusable source rollback snapshot.",
+    "Use normal completed-one-day paths at the manual window, compare page completeness/account totals/conditional fields and preserve CSV/API histories. Enable the standard schedules only after all three source checks and normal source selection pass."
+  ],
+  "normalAdministrativeSurface": {
+    "api": "/backend-api/source-connections and existing normal bind/verify/run endpoints",
+    "permission": "settings.manage / imports.manage as appropriate",
+    "newSourceManagementWebFormFound": false,
+    "noCookieTokenOrProfileExtraction": true,
+    "phase08Cafe24ScheduledBootstrapIsNotProductionProvisioning": true,
+    "normalAuthenticatedApiTransportNotYetAvailableInThisSession": true
+  },
+  "schedulePlanRef": "production-schedule-plan-v3.json",
+  "existingStorageObservation": {
+    "whenKst": "2026-10-24 after 04:20",
+    "action": "Read the existing 04:00 renew /04:15 verify /04:20 audit results; do not invoke renew/check again. A successful existing renewal may redeploy the same currently pinned C7 image.",
+    "lastVerifiedJwtExpiryKst": "2026-10-25T04:00:01+09:00"
+  },
+  "notPermittedByDeploymentApproval": [
+    "new provider credential issuance/refresh/revocation",
+    "new candidate or first-day automatic bootstrap feature",
+    "phase08 hold release",
+    "railway06 resume or stopping its restored service",
+    "full DB restore, bulk deletion, lost audit/history or unconditional old37-image rollback"
+  ],
+  "localAutomationCreated": false,
+  "phase12": "NOT_STARTED",
+  "pendingHumanDecisions": [],
+  "cutoffDecisionRef": "cutoff-decision-20261023.json",
+  "approvedCutoffLocalDay": {
+    "CAFE24": "2026-10-23",
+    "GOOGLE": "2026-10-23",
+    "META": "2026-10-23"
+  },
+  "metaCurrentConflictReview": {
+    "ref": "meta-cutoff-conflict-readonly.json",
+    "conflictPresent": false,
+    "pointInTimeOnly": true,
+    "mustRecheckBeforeActualActivation": true
+  },
+  "manualMetaCsvHandling": "Keep the Oct23 Meta CSV/export as comparison material first. Uploading it into current before initial verification would create the existing C7 source conflict. If conflicting current rows appear, preserve them and stop for the supported reviewed source-selection path; do not bulk-delete or force READY/current with SQL."
+}

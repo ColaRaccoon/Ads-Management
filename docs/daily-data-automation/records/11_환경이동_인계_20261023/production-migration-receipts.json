@@ -1,0 +1,191 @@
+{
+  "kind": "CONSUMED_C7_MIGRATION_AUDIT_ONLY",
+  "notAnExecutionScript": true,
+  "sessionPrincipal": "postgres",
+  "transactionLocalOwner": "meta_ads_app",
+  "temporaryOwnGrantRemovedBeforeEveryCommit": true,
+  "originalSupabaseAdminMembershipPreserved": true,
+  "ownerTemplateRef": "migration-owner-execution.review.sql",
+  "ownerTemplateLfSha256": "63838cbd8a99725621a96557370be8192da2438408badf311bd5f4fe650e6627",
+  "files": [
+    {
+      "ordinal": 1,
+      "name": "20260929090000_common_sync_foundation",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20260929090000_common_sync_foundation/migration.sql",
+      "migrationSha256": "5ec6513bcfb8f9d5f314c7f3a1571e923ba8510fabd3a452e5da3c931afac7ff",
+      "executedEnvelopeSha256": "cc88e8732e22b0e16b8c41af812f83166d763186fc45ce256d89a6fd6177e5a6",
+      "ledgerId": "52f1732b-3e65-4eb7-a791-d21861aa4864",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:41.6686475+00:00",
+      "localConsumedSqlRef": "migration-sql/01-20260929090000_common_sync_foundation.sql"
+    },
+    {
+      "ordinal": 2,
+      "name": "20260929170000_canonical_import_origins",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20260929170000_canonical_import_origins/migration.sql",
+      "migrationSha256": "5594e493b9431a9448b156a23f7bc2a2fd2b85a1b6425f5832d3753508254101",
+      "executedEnvelopeSha256": "cc78ad345e0f632999bc1f9e42ab760dd761112131969e86fab9220074902dc6",
+      "ledgerId": "df5143ac-d3e5-4fc9-90f2-0359a7ebca20",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:43.7162454+00:00",
+      "localConsumedSqlRef": "migration-sql/02-20260929170000_canonical_import_origins.sql"
+    },
+    {
+      "ordinal": 3,
+      "name": "20260930093000_meta_action_report_time",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20260930093000_meta_action_report_time/migration.sql",
+      "migrationSha256": "eef3b216e5e522cd025669645db0970aa239ea885762b4f53b57a43575f6ae3a",
+      "executedEnvelopeSha256": "959fbb86becaea267f641a56f5bb7af1fb20917f0ac40c71d5f3879ebfb31152",
+      "ledgerId": "b1176e51-b7b7-4761-b55f-bc8d3c6c3fe2",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:44.5816412+00:00",
+      "localConsumedSqlRef": "migration-sql/03-20260930093000_meta_action_report_time.sql"
+    },
+    {
+      "ordinal": 4,
+      "name": "20260930130000_cafe24_oauth_attempts",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20260930130000_cafe24_oauth_attempts/migration.sql",
+      "migrationSha256": "0a6795d8cbd9dc751f314e841caa177e3a265730d99bc4eb8b0bc3c689eead8c",
+      "executedEnvelopeSha256": "d86f5a72506702aa0c6a674606b2c61ee65b0f9bc07a588966eda12971130b5c",
+      "ledgerId": "f496ce3f-2dc0-4097-95ba-97c6b7c4a386",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:45.3608486+00:00",
+      "localConsumedSqlRef": "migration-sql/04-20260930130000_cafe24_oauth_attempts.sql"
+    },
+    {
+      "ordinal": 5,
+      "name": "20260930131000_cafe24_requery_state",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20260930131000_cafe24_requery_state/migration.sql",
+      "migrationSha256": "ccbba4d4da6d467d7478fb5c2503ebb07a4fe748af00251f0f1b1ce25e53892b",
+      "executedEnvelopeSha256": "d12e9044b482d90f38b0455f2d77cf20fd774d976f3558583f93ac1f493e247b",
+      "ledgerId": "b02784fb-ab4f-46f2-a4ed-f8d53c966792",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:46.0965640+00:00",
+      "localConsumedSqlRef": "migration-sql/05-20260930131000_cafe24_requery_state.sql"
+    },
+    {
+      "ordinal": 6,
+      "name": "20260930160000_meta_nonadditive_reach",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20260930160000_meta_nonadditive_reach/migration.sql",
+      "migrationSha256": "96f152f138cc96cf06cecc7ba79e07f4d428bc1566b0fe1275dbb3754da73aa0",
+      "executedEnvelopeSha256": "a2994c426519717398b84f0301944b6b363ee2893c5bef628642eafbf8538828",
+      "ledgerId": "d2951932-8061-47ee-9fb4-87a10bd94206",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:46.9306221+00:00",
+      "localConsumedSqlRef": "migration-sql/06-20260930160000_meta_nonadditive_reach.sql"
+    },
+    {
+      "ordinal": 7,
+      "name": "20261001135600_cafe24_observed_revisions",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261001135600_cafe24_observed_revisions/migration.sql",
+      "migrationSha256": "0146f5e3e85e342888af6b1ecc9372e901e983fa4b0455177e9b2964279ef0ef",
+      "executedEnvelopeSha256": "8ada78718c740922a31dd9513a4d03685215d48bb6e8472625b8442c5fabe983",
+      "ledgerId": "1f63fcd0-717c-4ec5-b5e5-e3c28cc0eabe",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:47.7639276+00:00",
+      "localConsumedSqlRef": "migration-sql/07-20261001135600_cafe24_observed_revisions.sql"
+    },
+    {
+      "ordinal": 8,
+      "name": "20261002110000_cafe24_day_snapshot_fingerprints",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261002110000_cafe24_day_snapshot_fingerprints/migration.sql",
+      "migrationSha256": "9929e4b92efeb1fdb192cb64680598df851776e5de38718741a66f2f6425c9ac",
+      "executedEnvelopeSha256": "fb05c0e07c3cad6fbfdf8ac2445aff15a3d1c6090dc855c06c220c0b84364fbd",
+      "ledgerId": "cde3eadb-1021-4224-9fc2-7feca4b86467",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:48.5253737+00:00",
+      "localConsumedSqlRef": "migration-sql/08-20261002110000_cafe24_day_snapshot_fingerprints.sql"
+    },
+    {
+      "ordinal": 9,
+      "name": "20261006110000_cafe24_provider_payment_inputs",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261006110000_cafe24_provider_payment_inputs/migration.sql",
+      "migrationSha256": "dcb9ee4417231b7c0a80ac1af8035f84046f629c4d92a91f1bcb6dfad55a7ecd",
+      "executedEnvelopeSha256": "21e87107688edfec3ef13717183a321d33d154e808a49d519b89fcb2719fd65d",
+      "ledgerId": "81083c62-12a5-4684-8c1e-a057a8df8d04",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:49.2691629+00:00",
+      "localConsumedSqlRef": "migration-sql/09-20261006110000_cafe24_provider_payment_inputs.sql"
+    },
+    {
+      "ordinal": 10,
+      "name": "20261007100000_cafe24_option_composition_514",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261007100000_cafe24_option_composition_514/migration.sql",
+      "migrationSha256": "be2448028be981941c50fd2190a52282d8d6c6ba80f848f69612f42b476a8015",
+      "executedEnvelopeSha256": "26768fbbab099929316af7bdb9e5523d6e881da6f26db4ae4fc396288b49cace",
+      "ledgerId": "553c0c9a-bb0c-465c-8e9c-58a0f9c8e026",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:50.0854923+00:00",
+      "localConsumedSqlRef": "migration-sql/10-20261007100000_cafe24_option_composition_514.sql"
+    },
+    {
+      "ordinal": 11,
+      "name": "20261008143000_meta_conditional_metrics",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261008143000_meta_conditional_metrics/migration.sql",
+      "migrationSha256": "2ade3d4b1990605d75eb7a7f65b3b1716ce31ec27c10e7d2e7cbd24adbc2c32d",
+      "executedEnvelopeSha256": "c3ecdc0b532a73ae4cac5abd19b4dc92480a773c5fdb9202697f8241016dce70",
+      "ledgerId": "1321222e-06b3-4b1a-95ae-a6170934ac2f",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:51.0970800+00:00",
+      "localConsumedSqlRef": "migration-sql/11-20261008143000_meta_conditional_metrics.sql"
+    },
+    {
+      "ordinal": 12,
+      "name": "20261008170000_meta_current_metadata",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261008170000_meta_current_metadata/migration.sql",
+      "migrationSha256": "28f199e30bebc7c823555eb710868189060dbf13646ca69a1d2b4789f6b67cfd",
+      "executedEnvelopeSha256": "173a2e18a0b80a1135b16455b9e62593dbf143acd91c3d3e46e108317f67a4cd",
+      "ledgerId": "5e7fda98-c1ea-46d1-b9ce-c13b45abfa43",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:51.9456902+00:00",
+      "localConsumedSqlRef": "migration-sql/12-20261008170000_meta_current_metadata.sql"
+    },
+    {
+      "ordinal": 13,
+      "name": "20261012150000_meta_provider_purchase_value",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261012150000_meta_provider_purchase_value/migration.sql",
+      "migrationSha256": "64b050d905a410c3495673032ccca9dc17334b5584f5dc76fec33b336ff48eae",
+      "executedEnvelopeSha256": "f6248e7b3cf20f9fc62136183099165e8ae9071b2459c5cf5b621fedbff6d40b",
+      "ledgerId": "4aa42d74-e0ab-4780-a29d-bdf72d13a5fe",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:52.7214882+00:00",
+      "localConsumedSqlRef": "migration-sql/13-20261012150000_meta_provider_purchase_value.sql"
+    },
+    {
+      "ordinal": 14,
+      "name": "20261012170000_scheduled_unit_checkpoints",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261012170000_scheduled_unit_checkpoints/migration.sql",
+      "migrationSha256": "f707bbb34aa242e4f6b4f6970cde177a3ad9a92b93988242eef077a8535014de",
+      "executedEnvelopeSha256": "eec7a66c9cae0a1ae2308cd530506e27c3469a01acd2fb3fd93fa01a0abcb0f4",
+      "ledgerId": "c624ca4e-2d0c-4249-9fa7-62747650d578",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:53.5308193+00:00",
+      "localConsumedSqlRef": "migration-sql/14-20261012170000_scheduled_unit_checkpoints.sql"
+    },
+    {
+      "ordinal": 15,
+      "name": "20261020160000_cafe24_observation_epochs",
+      "candidateMigrationPath": "apps/api/prisma/migrations/20261020160000_cafe24_observation_epochs/migration.sql",
+      "migrationSha256": "0242d0a231ffe93fa35f1a94c5effaedb0f671a29a8a8d66b7a3b7d7aae7ad99",
+      "executedEnvelopeSha256": "ea27b37452c858b3e2991fb98ccad9dd69a6c9daa6dd44062fe07912d0bb57cd",
+      "ledgerId": "4f2175f9-8016-48c5-a6a7-3781b871cc3d",
+      "committed": true,
+      "finishedAt": "2026-10-23T08:06:54.3676420+00:00",
+      "localConsumedSqlRef": "migration-sql/15-20261020160000_cafe24_observation_epochs.sql"
+    }
+  ],
+  "tests": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "onlyNewEnvelopeTests": true,
+    "oldRegressionRepeated": false
+  },
+  "postDeployLedgerExact": {
+    "rows": 55,
+    "historicalRolledBack": 3,
+    "all55RowsExact": true,
+    "successful": 52,
+    "all52SuccessfulChecksumsMatch": true
+  }
+}

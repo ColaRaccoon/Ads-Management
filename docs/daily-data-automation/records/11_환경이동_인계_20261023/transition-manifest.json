@@ -1,6 +1,6 @@
 {
   "execute": false,
-  "approvalRef": null,
+  "approvalRef": "production-execution-approval.json",
   "productionServiceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
   "productionProjectRef": "iygjmosbelbosfxidqxv",
   "productionSchema": "meta_ads",
@@ -8,12 +8,12 @@
   "deploymentEnvironmentId": "railway-production-01ab3d5a",
   "release": "a49bec345f995ec71f25f9e569caa5fe20578235",
   "candidateImageId": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
-  "registryManifestDigest": null,
+  "registryManifestDigest": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
   "operatingStartCommand": "setpriv --no-new-privs node deploy/launch-bundle.mjs",
   "expectedReadinessFingerprint": "f8b27a3b7d531a418c9df09c8a163b7903ff3dba0e11d8a53fc9bfd5a34f95e6",
-  "migrationExecutionPrincipalAndRunner": "postgres / existing Management database/query / exact 15 per-file transactions and new ledger rows",
+  "migrationExecutionPrincipalAndRunner": "postgres session / SET LOCAL ROLE meta_ads_app per exact reviewed transaction; temporary own grant revoked before each COMMIT",
   "runtimeGrantSqlSha256": "64028eed0840228315b710106c5bf92696e9634aa6894f9828fb591a8a7ea1cd",
-  "maintenanceStartKst": "2026-10-25T02:00:00+09:00",
+  "maintenanceStartKst": "2026-10-23T17:04:12.349400+09:00",
   "approvedOutageHardLimitMinutes": 60,
   "productionConnectionIds": {
     "GOOGLE": null,
@@ -21,56 +21,52 @@
     "CAFE24": null
   },
   "approvedCutoffLocalDay": {
-    "GOOGLE": "2026-10-24",
-    "META": "2026-10-24",
-    "CAFE24": "2026-10-24"
+    "CAFE24": "2026-10-23",
+    "GOOGLE": "2026-10-23",
+    "META": "2026-10-23"
   },
   "approvedManualVerificationDay": {
-    "GOOGLE": "2026-10-24",
-    "META": "2026-10-24",
-    "CAFE24": "2026-10-24"
+    "GOOGLE": "2026-10-23",
+    "META": "2026-10-23",
+    "CAFE24": "2026-10-23"
   },
   "weeklyAnchorAt": {
-    "GOOGLE": "2026-11-01T03:05:00+09:00",
-    "META": "2026-11-01T03:07:00+09:00"
+    "GOOGLE": "2026-10-31T03:05:00+09:00",
+    "META": "2026-10-31T03:07:00+09:00"
   },
   "productionCredentialRefs": {
     "GOOGLE": null,
     "META": null,
     "CAFE24": null
   },
-  "beforeImageProtectedRef": null,
+  "beforeImageProtectedRef": "local evidence: seven-table original-column fingerprints verified unchanged; no source-policy/current rollback snapshot yet",
   "storageDriftResolutionRef": "storage-token-repair.json",
   "scheduleInstallSqlSha256": null,
   "scheduleReviewTemplateSha256": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
   "proposedJobCount": 77,
   "datePolicyApproved": true,
-  "kind": "PHASE11_PRODUCT_PLAN_AFTER_TWO_APPROVED_PREPARATION_CHANGES",
+  "kind": "C7_DEPLOYED_SOURCE_ACTIVATION_PENDING",
   "preparedAt": "2026-10-23T15:38:48.754416+09:00",
   "railwayProjectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
   "railwayEnvironmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
   "storageDiagnosisRef": "storage-token-repair.json",
   "runtimeAccessRef": "runtime-access-plan.json",
   "migrationRunnerRef": "migration-runner-plan.json",
-  "scheduleProposalRef": "production-schedule-plan-v2.json",
-  "scheduleProposalSha256": "11f74a080e59c1a0334fab68d1e94df24b4c6fcac3d879eb068a43409467d4cd",
+  "scheduleProposalRef": "production-schedule-plan-v3.json",
+  "scheduleProposalSha256": "9305a8b3909fca642ed5a5428cb83132451789bc7b2aeea811562d27273885e3",
   "expectedFingerprintRef": "derived-readiness-fingerprints.json",
   "executionGeneratedFields": [
-    "production connection IDs",
-    "protected credential envelopes/refs",
-    "registry manifest digest after exact image transport",
-    "after-drain before-images",
-    "actual runtime readiness result",
-    "bound final SQL hash and exact anchor dates"
+    "production connection IDs and supported credential refs still absent",
+    "fresh source-policy/current/link/coverage rollback snapshot and exact bound schedule SQL remain"
   ],
   "readLimitsRef": "remaining-resolution.json",
   "userDecisionsOnly": [],
-  "maintenanceLocalTimeKst": "02:00:00",
-  "maintenanceLocalDateKst": "2026-10-25",
+  "maintenanceLocalTimeKst": "17:04:12",
+  "maintenanceLocalDateKst": "2026-10-23",
   "selectedCutoffBoundaryKst": {
-    "GOOGLE": "2026-10-24T00:00:00+09:00",
-    "CAFE24": "2026-10-24T00:00:00+09:00",
-    "META": "2026-10-24T00:00:00+09:00"
+    "CAFE24": "2026-10-23T00:00:00+09:00",
+    "GOOGLE": "2026-10-23T00:00:00+09:00",
+    "META": "2026-10-23T00:00:00+09:00"
   },
   "userDecisionRef": "handoff-index.json",
   "scheduleDateUpdateRef": "handoff-index.json",
@@ -78,16 +74,16 @@
   "targetOutageMinutes": 10,
   "plannedRollbackStartByElapsedMinutes": 45,
   "plannedRecoveryReserveMinutes": 15,
-  "requestedAutomaticModeDateKst": "2026-10-25",
+  "requestedAutomaticModeDateKst": "2026-10-24",
   "requestedAutomaticModeDateIsFinalExecutionApproval": false,
   "reusedEvidenceRoot": ".",
-  "plannedComparisonStartKst": "2026-10-25T02:00:00+09:00",
-  "plannedAutomaticModeDateKst": "2026-10-25",
-  "plannedFirstDailyOccurrenceKst": "2026-10-26T02:00:00+09:00",
+  "plannedComparisonStartKst": "2026-10-24T02:00:00+09:00",
+  "plannedAutomaticModeDateKst": "2026-10-24",
+  "plannedFirstDailyOccurrenceKst": "2026-10-25T02:00:00+09:00",
   "datePolicyApprovedByProvider": {
+    "CAFE24": true,
     "GOOGLE": true,
-    "META": true,
-    "CAFE24": true
+    "META": true
   },
   "gitPublicationApproved": true,
   "gitPublicationRef": "git-publication.json",
@@ -97,7 +93,7 @@
   "candidateSetprivFilesystemVerified": true,
   "callbackChangeRef": "cafe24-callback-change.review.json",
   "narrowOperationalApprovalsMissing": [],
-  "metaCutoffProvenance": "planning binding to minimum boundary of explicitly selected initial day; no earlier day, execution approval remains absent",
+  "metaCutoffProvenance": "Direct human reply chooses Oct23; read-only counts found no current CSV/API history at or after cutoff. Recheck before activation.",
   "approvedPreparationChangesRef": "approved-preparation-changes.json",
   "storageNextObservationRef": "storage-next-observation.review.json",
   "storageRenewalResolutionPending": false,
@@ -105,5 +101,30 @@
   "storageOldProjectTokenInvalidationLikely": true,
   "storageCredentialRepairApplied": true,
   "storageReadinessCheckHealthy": true,
-  "actualScheduledRenewalObservedAfterRepair": false
+  "actualScheduledRenewalObservedAfterRepair": false,
+  "updatedAt": "2026-10-23T17:39:06.882972+09:00",
+  "executeMeaning": "Consumed deployment receipt, not a replay command. No next source mutation is authorized by this Boolean.",
+  "deploymentResultRef": "production-deployment-result.json",
+  "sourceActivationRemainingRef": "source-activation-remaining.json",
+  "registryImage": "ghcr.io/colaraccoon/meta-ads-performance-c7@sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+  "activeDeploymentId": "13f4e0f7-e184-4935-8cc1-8cfdbbbd338f",
+  "actualReadiness": {
+    "status": "ready",
+    "releaseId": "a49bec345f995ec71f25f9e569caa5fe20578235",
+    "runtimeConfigFingerprint": "f8b27a3b7d531a418c9df09c8a163b7903ff3dba0e11d8a53fc9bfd5a34f95e6"
+  },
+  "migrationExecutionCompleted": true,
+  "migrationApplied": 15,
+  "successfulMigrations": 52,
+  "phase11": "IN_PROGRESS",
+  "phase12": "NOT_STARTED",
+  "actualCumulativeOutageSeconds": 748.5123072,
+  "datePolicyStatus": "Explicit human cutoff Oct23; manual comparison Oct24 02:00 KST; no source policy or schedule installed.",
+  "runtimeFlags": {
+    "DAILY_SYNC_ENABLED": false,
+    "DAILY_SYNC_SCHEDULE_ENABLED": false,
+    "DAILY_SYNC_SCHEDULES": []
+  },
+  "cutoffDecisionRef": "cutoff-decision-20261023.json",
+  "automaticModeIsConditionalPlanNotInstalledSchedule": true
 }

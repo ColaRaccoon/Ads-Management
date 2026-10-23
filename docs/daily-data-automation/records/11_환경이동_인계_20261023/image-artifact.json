@@ -1,6 +1,6 @@
 {
   "at": "2026-10-23T14:16:11.925638+09:00",
-  "status": "EXACT_IMAGE_AND_HANDOFF_AVAILABLE_NO_RUNTIME_EXECUTION",
+  "status": "EXACT_C7_PUBLISHED_AND_DEPLOYED",
   "recovery": {
     "at": "2026-10-23T14:02:36.520368+09:00",
     "status": "EXACT_C7_IMAGE_RECOVERED_OFFLINE",
@@ -59,9 +59,25 @@
     "signedDownloadUrlSaved": false
   },
   "restoreRules": [
-    "Use existing protected GitHub access with repository push permission; do not issue or refresh credentials automatically.",
-    "GET the asset API with Accept application/octet-stream; keep Authorization on api.github.com only. Never print or persist a signed redirect URL.",
-    "Verify archive size and SHA-256, then every OCI blob digest and the pinned root index. Never execute or import into an engine during read-only preparation.",
-    "Registry publication and actual deployment are separate authorized execution steps. Keep C7 source/release/image identity; do not rebuild from the current Git checkout."
-  ]
+    "Use the immutable currentRegistry.registryImage; verify the pinned digest and current protected readiness without rebuilding.",
+    "Do not replay the consumed publication workflow or deployment helpers.",
+    "The original draft asset remains a recovery artifact with its original archive SHA; no sessions/credentials are part of the Git handoff.",
+    "Never return unconditionally to the old37 image after source API history exists."
+  ],
+  "updatedAt": "2026-10-23T17:33:25.971847+09:00",
+  "currentRegistry": {
+    "registryImage": "ghcr.io/colaraccoon/meta-ads-performance-c7@sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+    "ociIndexDigest": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+    "linuxAmd64ManifestDigest": "sha256:8bce91f47b9a4b93a5b335b108ae43b94199b4469acd02499ae4ac18ee672bd0",
+    "publicAnonymousReadVerified": true,
+    "exactBytesPreserved": true,
+    "newImageBuilt": false,
+    "imageExecution": false,
+    "successfulWorkflowRun": 39918051481,
+    "workflowHead": "cb13c6cabe91c70b21afa7907c6045b93f8e39f1",
+    "metadataOnlyRead": true
+  },
+  "activeDeploymentId": "13f4e0f7-e184-4935-8cc1-8cfdbbbd338f",
+  "currentImage": "ghcr.io/colaraccoon/meta-ads-performance-c7@sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+  "recoveryAndDraftMetadataBelowAreHistorical": true
 }

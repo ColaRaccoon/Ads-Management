@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-23T17:33:25.971847+09:00",
+  "kind": "AUTHENTICATED_READ_ONLY_PRODUCTION_SMOKE",
+  "userConfirmedLogin": true,
+  "host": "https://patimagroup-work.com",
+  "passedRoutes": [
+    "/dashboard",
+    "/uploads",
+    "/sales",
+    "/coupang/dashboard",
+    "/settings/users",
+    "/settings/security-audit"
+  ],
+  "checks": "authenticated page headings, upload controls, existing KPI/table views and no observed fatal/access error",
+  "uploadsPerformed": 0,
+  "fakeBusinessRowsCreated": 0,
+  "applicationMutationsPerformed": 0,
+  "limitation": "Read-only smoke; no actual new CSV upload or business write was performed. KPI values and personal/account details were not exported.",
+  "cookiesTokensProfilesExported": false
+}

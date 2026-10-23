@@ -1,36 +1,44 @@
 {
-  "kind": "PORTABLE_NON_SECRET_PLANNING_HANDOFF",
+  "kind": "PORTABLE_NON_SECRET_PRODUCTION_DEPLOYMENT_HANDOFF",
   "createdAt": "2026-10-23T13:09:32.770380+09:00",
   "execute": false,
-  "executionApproval": false,
+  "executionApproval": true,
   "state": {
     "phase10ApprovedScope": "DONE",
-    "operations": "NO-GO",
-    "phase11": "NOT_STARTED",
+    "operations": "DEPLOYED_PENDING_SOURCE_BINDING_INITIAL_RECONCILIATION_AND_ACTIVATION",
+    "phase11": "IN_PROGRESS",
     "phase12": "NOT_STARTED",
     "railway06Automation": "PAUSED"
   },
   "sourceCheckout": {
     "branch": "codex/daily-data-automation-01",
     "baseHead": "10004435a76477af07aa156e5d03ea3a12b7aad6",
-    "deliveryCommit": "containing Git commit; use git rev-parse HEAD"
+    "deliveryCommit": "containing Git commit; use git rev-parse HEAD",
+    "executionStartHead": "665b65c8d9eb797e9aa38260f15fc2e464cb2004",
+    "lastPublishedImageTransportHead": "cb13c6cabe91c70b21afa7907c6045b93f8e39f1"
   },
   "agreedPlan": {
-    "windowStartKst": "2026-10-25T02:00:00+09:00",
+    "initialManualWindowKst": "2026-10-24T02:00:00+09:00",
     "verificationBusinessDay": {
+      "CAFE24": "2026-10-23",
+      "GOOGLE": "2026-10-23",
+      "META": "2026-10-23"
+    },
+    "previousExplicitCutoff": {
       "CAFE24": "2026-10-24",
       "GOOGLE": "2026-10-24",
       "META": "2026-10-24"
     },
-    "cutoff": {
-      "CAFE24": "2026-10-24",
-      "GOOGLE": "2026-10-24",
-      "META": "2026-10-24"
-    },
+    "cutoffConflictPending": false,
     "outageLimitIncludingRecoveryMinutes": 60,
     "automaticModeOnlyAfterSuccessfulComparison": true,
     "notAScheduledAutomation": true,
-    "metaCutoffProvenance": "planning binding to minimum boundary of explicitly selected initial day; no earlier day, execution approval remains absent"
+    "cutoff": {
+      "CAFE24": "2026-10-23",
+      "GOOGLE": "2026-10-23",
+      "META": "2026-10-23"
+    },
+    "cutoffDecisionRef": "cutoff-decision-20261023.json"
   },
   "candidate": {
     "release": "a49bec345f995ec71f25f9e569caa5fe20578235",
@@ -38,15 +46,17 @@
     "runtimeFiles": 495,
     "migrationFiles": 52,
     "imageId": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
-    "registryManifestDigest": null,
+    "registryManifestDigest": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
     "imageBytesTransferred": true,
     "currentGitCheckoutIsNotProvenIdenticalToCandidate": true,
     "ociIndexDigest": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
     "linuxAmd64ManifestDigest": "sha256:8bce91f47b9a4b93a5b335b108ae43b94199b4469acd02499ae4ac18ee672bd0",
     "candidateSetprivFilesystemVerified": true,
-    "artifactRef": "image-artifact.json"
+    "artifactRef": "image-artifact.json",
+    "currentRegistryImage": "ghcr.io/colaraccoon/meta-ads-performance-c7@sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+    "activeDeploymentId": "13f4e0f7-e184-4935-8cc1-8cfdbbbd338f"
   },
-  "currentPlanAuthority": "deployment-preparation-status.json and parent section15 for current remaining work; storage-token-repair.json/section14 for verified Storage HEALTHY; transition-manifest.json for unapproved product plan.",
+  "currentPlanAuthority": "production-deployment-result.json and parent section16 are current; source-activation-remaining.json contains actual remaining work. cutoff-decision-20261023.json resolves the date decision. Earlier planning evidence is historical.",
   "copiedPlanEvidence": [
     {
       "name": "runtime-access-plan.json",
@@ -122,19 +132,11 @@
     }
   ],
   "historicalScheduleOverrides": {
-    "oldManualDaysAndT0RelativeCutoffs": "superseded for all three sources by fixed first business day 2026-10-24",
-    "firstCafe24DailyKst": "2026-10-26T02:00:00+09:00",
-    "firstGoogleWeeklyKst": "2026-11-01T03:05:00+09:00",
-    "firstGoogleDays": [
-      "2026-10-25",
-      "2026-10-31"
-    ],
-    "metaDatesStillUnselected": false,
-    "sqlTemplatesMustNotBeExecuted": true,
-    "firstMetaWeeklyKst": "2026-11-01T03:07:00+09:00",
-    "weeklyDaySeparation": 0,
-    "weeklyMinuteOffset": 2,
-    "currentPlanRef": "production-schedule-plan-v2.json"
+    "v2": "Superseded by explicit Oct23 cutoff; immutable uninstalled old plan",
+    "v3": "Approved Oct23 boundary and manual-day plan; uninstalled and conditional on all source checks",
+    "actualRuntimeDefinitions": [],
+    "currentPlanRef": "production-schedule-plan-v3.json",
+    "sqlTemplatesMustNotBeExecuted": true
   },
   "excludedFromGitHandoff": [
     "credential/token/key files and entire environment files",
@@ -144,33 +146,32 @@
     "image bytes and non-exported protected before-images"
   ],
   "separateProtectedTransferNotYetPerformed": [
-    "necessary non-exported source evidence by narrow allowlist where the new environment needs it",
-    "current valid provider credential access through supported protected handoff; never copy sessions or restore old credentials",
-    "final registry target/publication is an authorized execution output; exact image bytes are already available as unpublished GitHub draft asset"
+    "supported current production provider credential/vault access; no browser/CLI/DPAPI transport",
+    "fresh selected-source policy/current/link/coverage before-image after future pause/drain/fencing; no old snapshot replay"
   ],
   "restartSteps": [
-    "Read parent section15 and deployment-preparation-status.json for remaining work, then section14/storage-token-repair.json for the completed healthy Storage check. Product deployment/migration/automatic transition remain unapproved.",
-    "Do not replay consumed callback save, diagnostic source deployment, token creation, Edge secret update, either separately scoped check or old helpers",
-    "If needed, read existing next 04:00/04:15/04:20 KST scheduled results as follow-up for actual renewal. The existing renew path may redeploy the same active image; no manual renewal or schedule change was authorized here",
-    "Product C7 deployment, migrations, source collection and automatic transition still require their separate final authorization; phase11/12 NOT_STARTED",
-    "Verify containing branch tip without reset/stash/clean and use supported existing protected access; never transfer sessions, cookies, profiles or expired CLI state"
+    "Read parent section16 and production-deployment-result.json first, then source-activation-remaining.json; product deployment/migration already approved and completed.",
+    "Verify current remote branch tip and normalized hashes without reset/stash/clean; use supported protected access, never transfer browser/CLI cookies/sessions/profiles/DPAPI.",
+    "Finish normal production source connections/credential bindings and the approved Oct23 source boundary; do not seed READY, use phase08 bootstrap, reissue/refresh credentials or activate source automation as an incidental check.",
+    "Perform the agreed completed-day manual comparison in the next environment, then bind exact standard schedule anchors/IDs/SQL only after all three checks pass.",
+    "After Oct24 04:20 KST read only the existing Storage renew/verify/audit outcomes; do not invoke consumed helpers or manual renew/check."
   ],
   "notDone": [
-    "existing next scheduled Storage renewal outcome after repair is a read-only follow-up, not a repeat check",
-    "other-environment handoff and final operating stop/recovery / image registry / exact migration-execution bindings",
-    "outputs generated during separately authorized execution: connections/credential refs, fresh before-image, candidate readiness and bound schedule SQL",
-    "Oct24 completed-day material and separately authorized Oct25 comparison/product/source transition"
+    "production source connection IDs / supported credential refs / single Cafe24 current owner binding",
+    "completed-day manual comparisons and reviewed policy/current selections",
+    "standard schedule installation/activation and phase12 actual scheduled observation",
+    "next existing Storage scheduled renewal result"
   ],
   "preparationDocument": {
     "relativePath": "../11_운영전환_복구_준비서_20261023.md",
-    "sha256": "a42e99e98272b45d4b58c67201c067a97bf270d8a158253d880275dbe69ed562",
-    "sha256LfNormalized": "a42e99e98272b45d4b58c67201c067a97bf270d8a158253d880275dbe69ed562"
+    "sha256": "623eb9af0537ccdebb6413dc9cc49a3594af7a288622e1be3f41aa95f1b7f94c",
+    "sha256LfNormalized": "623eb9af0537ccdebb6413dc9cc49a3594af7a288622e1be3f41aa95f1b7f94c"
   },
   "localPlanningFiles": [
     {
       "name": "transition-manifest.json",
-      "sha256": "90e4c26c852a7630af7ea1a54c745de8fd29f8a78c0a9b93160c7e1e4ab1ec35",
-      "sha256LfNormalized": "90e4c26c852a7630af7ea1a54c745de8fd29f8a78c0a9b93160c7e1e4ab1ec35"
+      "sha256": "5762f17a879da5d8b3832528647974f11369a57a500633e3a2ea9db03705c31c",
+      "sha256LfNormalized": "5762f17a879da5d8b3832528647974f11369a57a500633e3a2ea9db03705c31c"
     },
     {
       "name": "repository-inventory.json",
@@ -189,8 +190,8 @@
     },
     {
       "name": "image-artifact.json",
-      "sha256": "462b71034708aa57461005dff0cc38d74364e204498583c96ef5ffda0354f116",
-      "sha256LfNormalized": "462b71034708aa57461005dff0cc38d74364e204498583c96ef5ffda0354f116"
+      "sha256": "042b3be940337bf1ae5c7e08fe3cd8f1fb9b7e9e40b9218f42799521d5ec1133",
+      "sha256LfNormalized": "042b3be940337bf1ae5c7e08fe3cd8f1fb9b7e9e40b9218f42799521d5ec1133"
     },
     {
       "name": "cafe24-callback-change.review.json",
@@ -229,8 +230,58 @@
     },
     {
       "name": "deployment-preparation-status.json",
-      "sha256": "f27afd37d34d0f7151780f9e6827295223e7f6a6669cdc88eab7f8a42038445a",
-      "sha256LfNormalized": "f27afd37d34d0f7151780f9e6827295223e7f6a6669cdc88eab7f8a42038445a"
+      "sha256": "85c9878c6f8040458628cfe82111b9df0afce8a64d88245eef085b0d03e9f150",
+      "sha256LfNormalized": "85c9878c6f8040458628cfe82111b9df0afce8a64d88245eef085b0d03e9f150"
+    },
+    {
+      "name": "production-deployment-result.json",
+      "sha256": "1fc17f49c3632647b5ebe3bed8f791426843f59d261f32cffc8e196cd58384ed",
+      "sha256LfNormalized": "1fc17f49c3632647b5ebe3bed8f791426843f59d261f32cffc8e196cd58384ed"
+    },
+    {
+      "name": "production-execution-approval.json",
+      "sha256": "bba2c63c1d35ad6f4576fb9559e4d9b2bfca56d3a842696b5152c8fc235e3066",
+      "sha256LfNormalized": "bba2c63c1d35ad6f4576fb9559e4d9b2bfca56d3a842696b5152c8fc235e3066"
+    },
+    {
+      "name": "production-migration-receipts.json",
+      "sha256": "14191ba98c3b0bc01aee76df9703bd0d14819bc8351b889da9a049088c7c81d2",
+      "sha256LfNormalized": "14191ba98c3b0bc01aee76df9703bd0d14819bc8351b889da9a049088c7c81d2"
+    },
+    {
+      "name": "production-ui-smoke.json",
+      "sha256": "1868d15c76f6663230ebb4ac46febbf37fd97b879c5d3ae4d707ef199dec2d87",
+      "sha256LfNormalized": "1868d15c76f6663230ebb4ac46febbf37fd97b879c5d3ae4d707ef199dec2d87"
+    },
+    {
+      "name": "source-activation-remaining.json",
+      "sha256": "7493509cc785ceec23846bc0ef5dd1b03b8e29c28c86ac6de609e2fbc8075597",
+      "sha256LfNormalized": "7493509cc785ceec23846bc0ef5dd1b03b8e29c28c86ac6de609e2fbc8075597"
+    },
+    {
+      "name": "production-schedule-plan-v3.json",
+      "sha256": "9305a8b3909fca642ed5a5428cb83132451789bc7b2aeea811562d27273885e3",
+      "sha256LfNormalized": "9305a8b3909fca642ed5a5428cb83132451789bc7b2aeea811562d27273885e3"
+    },
+    {
+      "name": "migration-owner-execution.review.sql",
+      "sha256": "63838cbd8a99725621a96557370be8192da2438408badf311bd5f4fe650e6627",
+      "sha256LfNormalized": "63838cbd8a99725621a96557370be8192da2438408badf311bd5f4fe650e6627"
+    },
+    {
+      "name": "cutoff-decision-20261023.json",
+      "sha256": "e8c02a2a69617ba428ff3121009c5a713a8fc9c35695d9e5bc0a5ed66e5624ba",
+      "sha256LfNormalized": "e8c02a2a69617ba428ff3121009c5a713a8fc9c35695d9e5bc0a5ed66e5624ba"
+    },
+    {
+      "name": "meta-cutoff-conflict-readonly.json",
+      "sha256": "39fc628aca18da17c6c03834f97e2bd4d53a0b7b794a67e1a12e3435e149a605",
+      "sha256LfNormalized": "39fc628aca18da17c6c03834f97e2bd4d53a0b7b794a67e1a12e3435e149a605"
+    },
+    {
+      "name": "git-closeout-publication.json",
+      "sha256": "b2d63716b0f846d4d66aa341374f3769ff65d012210dc47169d34e43aeb53976",
+      "sha256LfNormalized": "b2d63716b0f846d4d66aa341374f3769ff65d012210dc47169d34e43aeb53976"
     }
   ],
   "publication": {
@@ -239,10 +290,11 @@
     "branch": "codex/daily-data-automation-01",
     "commitIdentity": "containing Git commit; use git rev-parse HEAD",
     "verification": "origin branch tip equals local HEAD after push",
-    "scope": "Git handoff only; no deployment or credential changes",
+    "scope": "Git closeout and non-secret handoff; the separate approved production deployment is recorded in production-deployment-result.json",
     "detailRef": "git-publication.json",
     "followupRef": "remaining-resolution.json",
-    "imageDraftRef": "image-artifact.json"
+    "imageDraftRef": "image-artifact.json",
+    "latestCloseoutRef": "git-closeout-publication.json"
   },
   "hashVerification": {
     "copiedPlanEvidence.sha256": "immutable original evidence exact-byte SHA256; historical CRLF bytes can differ from Git transport",
@@ -250,7 +302,7 @@
     "preparationDocumentAndLocalPlanningFiles": "sha256 records current exact local bytes; sha256LfNormalized is the cross-platform checkout comparison",
     "storageDiagnosticSource": "see storage-diagnostics-change.review.json: preserve exact source ZIP binding and separately verify normalized Git source hashes"
   },
-  "updatedAt": "2026-10-23T16:00:28.389552+09:00",
+  "updatedAt": "2026-10-23T17:39:06.882972+09:00",
   "completedApprovedPreparationChangesRef": "approved-preparation-changes.json",
   "pendingStorageReadOnlyObservationRef": "storage-next-observation.review.json",
   "attachments": [
@@ -277,5 +329,24 @@
     "repeat completed credential/usage/CDN/isolation/phase10 checks",
     "new exact sentinel CDN success gate",
     "new date/outage-limit choice from the user"
-  ]
+  ],
+  "currentDeploymentResultRef": "production-deployment-result.json",
+  "currentSourceActivationRemainingRef": "source-activation-remaining.json",
+  "currentExecutionApprovalRef": "production-execution-approval.json",
+  "currentResultDocuments": [
+    {
+      "relativePath": "../11_배포결과.md",
+      "sha256LfNormalized": "a0be027ccd3411a06d3f26f5d1ee348d179f688a0d6e60af2dfd0b2df4e31c26"
+    },
+    {
+      "relativePath": "../11_결과.md",
+      "sha256LfNormalized": "b25e2db9fe0273c2a232cc98e867c5912c02898e1453f897e0e069b4b7fae26e"
+    }
+  ],
+  "currentCutoffDecisionRef": "cutoff-decision-20261023.json",
+  "remainingUserDecisions": [],
+  "homeResumePrompt": {
+    "relativePath": "../11_집환경_재개프롬프트_20261023.md",
+    "sha256LfNormalized": "e705a5f4d108e2ceacdc2fa7e83ce1dac047ee82fbfe42d197e395254b028457"
+  }
 }

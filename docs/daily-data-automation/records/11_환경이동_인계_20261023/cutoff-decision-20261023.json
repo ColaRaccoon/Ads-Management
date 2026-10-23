@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-23T17:39:06.882972+09:00",
+  "kind": "DIRECT_HUMAN_CUTOFF_DECISION",
+  "reply": "cutoff 10/23으로 변경 — 같은 날 Meta CSV와 API 원천 충돌을 먼저 검토",
+  "cutoffLocalDay": "2026-10-23",
+  "initialManualBusinessDay": "2026-10-23",
+  "manualWindowKst": "2026-10-24T02:00:00+09:00",
+  "candidate": "C7 unchanged",
+  "metaConflictReviewRef": "meta-cutoff-conflict-readonly.json",
+  "operationsAppliedByThisDecision": 0,
+  "pendingHumanDecisions": []
+}
