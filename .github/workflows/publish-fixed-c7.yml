@@ -1,0 +1,79 @@
+name: Publish exact reviewed C7 image
+
+on:
+  push:
+    branches: [codex/daily-data-automation-01]
+    paths: [.github/workflows/publish-fixed-c7.yml]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-exact-c7-20261023
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      IMAGE: ghcr.io/colaraccoon/meta-ads-performance-c7
+      TAG: c7-a49bec345f995-e3fb7eedf91e
+    steps:
+      - name: Download the reviewed draft artifact without forwarding credentials
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, os, urllib.request, urllib.error
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          api = 'https://api.github.com/repos/ColaRaccoon/Ads-Management/releases/assets/668041912'
+          req = urllib.request.Request(api, headers={
+              'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+              'Accept': 'application/octet-stream',
+              'User-Agent': 'MetaAds-Exact-C7-Transfer'})
+          try:
+              response = urllib.request.build_opener(NoRedirect()).open(req, timeout=45)
+          except urllib.error.HTTPError as error:
+              if error.code != 302:
+                  raise RuntimeError('Draft artifact unavailable') from None
+              location = error.headers['Location']
+              if not location.startswith('https://release-assets.githubusercontent.com/'):
+                  raise RuntimeError('Unexpected asset redirect') from None
+              response = urllib.request.urlopen(location, timeout=90)
+          digest, size = hashlib.sha256(), 0
+          with response, open('/tmp/c7.oci.tar', 'wb') as output:
+              while data := response.read(1024 * 1024):
+                  output.write(data)
+                  digest.update(data)
+                  size += len(data)
+          assert size == 177766400
+          assert digest.hexdigest() == '606b1ee90330dd990242f9ba8ffd92fd095ad8fb2a5dc11a9171ad148a2909b3'
+          print('Exact reviewed archive SHA-256 and byte count verified.')
+          PY
+      - name: Install the standard image transfer tool
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v skopeo >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq skopeo
+          fi
+      - name: Transfer exact OCI bytes without building or running the image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$GH_TOKEN" | skopeo login --authfile /tmp/registry-auth.json --username "$GITHUB_ACTOR" --password-stdin ghcr.io
+          skopeo copy --all --preserve-digests --authfile /tmp/registry-auth.json oci-archive:/tmp/c7.oci.tar "docker://$IMAGE:$TAG"
+          skopeo inspect --raw --authfile /tmp/registry-auth.json "docker://$IMAGE:$TAG" > /tmp/registry-index.json
+          printf '%s  %s\n' e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964 /tmp/registry-index.json | sha256sum --check --status
+          rm -f /tmp/registry-auth.json
+          echo 'Exact C7 OCI index published and verified; no application deployment performed.'
