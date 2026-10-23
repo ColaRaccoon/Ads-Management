@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-23T11:00:10.189112+09:00",
+  "status": "PROPOSED_NOT_APPLIED",
+  "fixedMigrationTablesAlreadyGranted": 15,
+  "newEpochTables": [
+    "cafe24_observed_epoch_day_checkpoints",
+    "cafe24_observed_epoch_order_revisions"
+  ],
+  "additionalGrantee": "meta_ads_prod_runtime",
+  "additionalPrivileges": [
+    "SELECT",
+    "INSERT",
+    "UPDATE"
+  ],
+  "additionalPoliciesPerTable": [
+    "SELECT",
+    "INSERT",
+    "UPDATE"
+  ],
+  "extraDeleteGrant": false,
+  "forceRlsRetained": true,
+  "roleLoginChanges": false,
+  "bodySha256": "64028eed0840228315b710106c5bf92696e9634aa6894f9828fb591a8a7ea1cd",
+  "reviewFileSha256": "88beb3a606f369823e43530f41884cc255875a35c1cbc1da75e7670398aebbe2",
+  "existingGrantTargets": [
+    "meta_ads_prod_runtime",
+    "meta_ads_prod_migration"
+  ],
+  "stagingRoleTargetsPresent": false,
+  "comment": "The fixed 15 migrations themselves grant CRUD/policies to these existing production roles; do not duplicate all 17 tables or claim their DELETE rights are absent. No bulk deletion is authorized."
+}

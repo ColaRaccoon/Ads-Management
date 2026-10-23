@@ -4,6 +4,7 @@ import { PrismaService } from "../common/prisma.service";
 import { parseDateRange } from "../common/date-range";
 import { DecisionClassifier } from "../domain/decision-classifier";
 import { MetricsService, parseDeliveryStatusFilter } from "../metrics/metrics.service";
+import { overallDashboardDecisionInput } from "./overall-dashboard-decision";
 
 @Injectable()
 export class DecisionsService {
@@ -40,22 +41,14 @@ export class DecisionsService {
     ]);
 
     const logs: Prisma.DecisionLogCreateManyInput[] = [];
-    const overallDecisions = this.classifier.classify({
-      scopeType: "OVERALL",
-      stage: "UNKNOWN",
+    const overallDecisions = this.classifier.classify(overallDashboardDecisionInput({
       purchaseCount: summary.totals.purchaseCount,
-      spendKrw: summary.totals.spendKrw,
-      cpaKrw: summary.totals.cpaKrw,
       marginKrw: summary.totals.marginKrw,
       dataDays: summary.selectedPeriod.dataDays,
       ctrLinkPct: summary.totals.ctrLinkPct,
       landingPageViews: summary.totals.landingPageViews,
-      breakEvenCpaKrw: null,
-      targetCpaKrw: null,
-      watchCpaKrw: null,
-      stopCpaKrw: null,
       ...settings
-    });
+    }));
     logs.push(...this.toLogs(decisionRun.id, range, "OVERALL", overallDecisions, summary.totals, {}, actorId));
 
     for (const product of products) {
@@ -164,6 +157,9 @@ export class DecisionsService {
       stageGroups.set(adset.stage, [...(stageGroups.get(adset.stage) ?? []), adset]);
     }
     for (const [stage, rows] of stageGroups.entries()) {
+      const mixed = rows.some((row) => row.totals.hasApiMetrics) &&
+        new Set(rows.flatMap((row) => row.totals.attributionContexts)).size > 1;
+      if (mixed || rows.some((row) => row.totals.purchaseCount === null || row.totals.marginKrw === null)) continue;
       const marginKrw = rows.reduce((sum, row) => sum + (row.totals.marginKrw ?? 0), 0);
       if (marginKrw !== 0) {
         logs.push({

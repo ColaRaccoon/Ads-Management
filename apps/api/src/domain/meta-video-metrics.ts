@@ -30,17 +30,20 @@ export type MetaVideoPlayCountField = (typeof META_VIDEO_PLAY_COLUMNS)[number]["
 export type MetaVideoPlayRateField = (typeof META_VIDEO_PLAY_COLUMNS)[number]["rateField"];
 
 export type MetaVideoMetricRow = {
-  reach: number;
+  reach: number; source?: string;
 } & Record<MetaVideoPlayCountField, number | null>;
 
-export type MetaVideoMetricTotals = MetaVideoMetricRow & Record<MetaVideoPlayRateField, number | null>;
+export type MetaVideoMetricTotals = Omit<MetaVideoMetricRow, "reach"> & {
+  reach: number | null;
+} & Record<MetaVideoPlayRateField, number | null>;
 
 /**
- * Period reach is the sum of ad/day reach rows, because the source data does not
- * contain user identifiers that would allow cross-row reach deduplication.
+ * Ad/day reach is only valid for one row. A separate provider period query is
+ * required for deduplicated reach across ads or dates, regardless of source.
  */
 export function aggregateMetaVideoMetrics(rows: readonly MetaVideoMetricRow[]): MetaVideoMetricTotals {
-  const reach = rows.reduce((sum, row) => sum + row.reach, 0);
+  const reach = rows.length > 1
+    ? null : rows.reduce((sum, row) => sum + row.reach, 0);
   const totals: MetaVideoMetricTotals = {
     reach,
     videoPlay3sCount: null,
@@ -57,13 +60,13 @@ export function aggregateMetaVideoMetrics(rows: readonly MetaVideoMetricRow[]): 
 
   for (const column of META_VIDEO_PLAY_COLUMNS) {
     const complete = rows.length > 0 && rows.every(
-      (row) => row[column.countField] !== null || row.reach === 0
+      (row) => row[column.countField] !== null || row.source !== "API" && row.reach === 0
     );
     const count = complete
       ? rows.reduce((sum, row) => sum + (row[column.countField] ?? 0), 0)
       : null;
     totals[column.countField] = count;
-    totals[column.rateField] = count === null || reach === 0 ? null : count / reach * 100;
+    totals[column.rateField] = count === null || reach === null || reach === 0 ? null : count / reach * 100;
   }
 
   return totals;

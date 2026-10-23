@@ -1,0 +1,62 @@
+{
+  "kind": "GIT_HANDOFF_ONLY_AUTHORIZED",
+  "preparedAt": "2026-10-23T13:41:30.578907+09:00",
+  "branch": "codex/daily-data-automation-01",
+  "baseHead": "9e9a1f82bb02346575565b031a43e17e13758dc8",
+  "remote": "https://github.com/ColaRaccoon/Ads-Management.git",
+  "deliveryCommit": "the Git commit containing this file; resolve with git rev-parse HEAD",
+  "verifyDelivery": "origin branch tip must equal local HEAD after push",
+  "authorized": {
+    "gitCleanupCommitPush": true,
+    "operationalExecution": false,
+    "credentialMutation": false
+  },
+  "preservation": {
+    "existingTrackedModified": 82,
+    "existingTrackedDeleted": 240,
+    "sourceCodeAndMigrationBytesUnchangedByCleanup": true
+  },
+  "cleanup": {
+    "at": "2026-10-23T13:41:30.578907+09:00",
+    "method": "non-destructive Git exclusion",
+    "confirmedTemporaryFiles": [
+      "1048576",
+      "3145728",
+      "32768",
+      "4194304",
+      "scripts/cloud/daily-data-sync/__pycache__/"
+    ],
+    "filesDeletedOrMoved": 0,
+    "localDataAndExistingChangesPreserved": true,
+    "automaticReview": {
+      "action": "PowerShell move of four console files and one Python cache plus empty cache directory removal",
+      "outcome": "rejected: blocked by policy",
+      "specificReasonProvided": false,
+      "saferResolution": "retain files locally and exclude from Git; no alternate deletion mechanism attempted"
+    },
+    "excludedPrivateClasses": [
+      "root reports/ business exports",
+      "machine-local %SystemDrive%/ databases",
+      "*.db/*.sqlite*",
+      "*.dpapi",
+      "application_default_credentials.json",
+      "existing .env exclusions"
+    ]
+  },
+  "checks": {
+    "changesScannedForSecrets": true,
+    "findingsTriage": "synthetic fixtures, variable parsers and public machine service-principal metadata; no actual secret found",
+    "privateDataAndDatabasesExcluded": true,
+    "workflowsPresent": false,
+    "activeGitHooksPresent": false,
+    "storedGitCredentialDirectReadOnly": true,
+    "credentialHelpersAndInteractiveAuthDisabledForNetwork": true,
+    "credentialRefresh": false,
+    "fullRegressionOrBuildRepeated": false
+  },
+  "remainingNonGitTransfer": [
+    "current valid protected credential access",
+    "exact preserved C7 candidate/image bytes and registry digest",
+    "nonexported protected evidence by allowlist only"
+  ]
+}

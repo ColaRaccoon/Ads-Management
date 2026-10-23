@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const root='C:/Users/seong/AppData/Local/MetaAdsPhase10Evaluation';
+const evidenceName=process.argv[2]??'ui-light-load-candidate-v4.json',label=process.argv[3]??'light-load-review-20261019';
+assert.match(evidenceName,/^[a-z0-9-]+\.json$/);assert.match(label,/^[a-z0-9-]+$/);
+const raw=await readFile(`${root}/${evidenceName}`,'utf8'),run=JSON.parse(raw);
+const acceptanceRaw=await readFile(run.acceptanceFile,'utf8'),acceptance=JSON.parse(acceptanceRaw);
+const hash=b=>createHash('sha256').update(b).digest('hex');
+assert.equal(hash(acceptanceRaw),run.acceptanceSha256);assert.equal(run.requests.length,40);assert.equal(run.concurrency,4);
+assert.equal(new Set(run.requests.map(r=>r.index)).size,40);assert(run.requests.every(r=>Number.isFinite(r.elapsedMs)&&r.elapsedMs>0&&Number.isSafeInteger(r.bytes)&&r.bytes>0));
+assert(Date.parse(acceptance.recordedAt)<Math.min(...run.requests.map(r=>Date.parse(r.finishedAt)-r.elapsedMs)));
+const summarize=rows=>{const sorted=rows.map(r=>r.elapsedMs).sort((a,b)=>a-b),errors=rows.filter(r=>r.httpStatus!==200).length;return{requests:rows.length,errors,errorRate:errors/rows.length,totalBytes:rows.reduce((sum,r)=>sum+r.bytes,0),p95Ms:sorted[Math.ceil(sorted.length*.95)-1]};};
+const overall=summarize(run.requests);assert.equal(overall.p95Ms,run.summary.p95Ms);assert.equal(overall.totalBytes,run.summary.totalBytes);assert.equal(overall.errors,run.summary.errors);
+const endpoints=run.endpoints.map(e=>{const summary=summarize(run.requests.filter(r=>r.path===e.path));assert.equal(summary.p95Ms,e.summary.p95Ms);return{path:e.path,...summary};});
+assert(overall.p95Ms>acceptance.maximumP95Ms);assert.equal(run.status,'FAIL');assert.equal(run.sessionMayRemain,false);
+const out={kind:'PHASE10_INDEPENDENT_LOAD_REVIEW',observedAt:new Date().toISOString(),sourceEvidenceSha256:hash(raw),acceptanceSha256:hash(acceptanceRaw),candidateSourceSha:run.sourceSha,deploymentId:run.deploymentId,classification:run.classification,acceptancePredatesTest:true,maximumP95Ms:acceptance.maximumP95Ms,concurrency:run.concurrency,overall,endpoints,result:'FAIL_P95_EXCEEDS_FIXED_ACCEPTANCE',lastAppHttpAt:run.lastAppHttpAt,sessionMayRemain:false,notVerified:run.notVerified,appHttpRequests:0,providerRequests:0,remoteWrites:0};
+await writeFile(`${root}/independent/${label}.json`,JSON.stringify(out,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify(out));

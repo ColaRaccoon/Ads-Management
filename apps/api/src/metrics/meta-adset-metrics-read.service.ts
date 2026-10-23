@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { AdStage, DecisionType, Prisma } from "@prisma/client";
+import { AdStage, DecisionType, Prisma, SourceDataKind } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
+import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { parseDateRange } from "../common/date-range";
 import { formatDateOnly } from "../domain/date-number";
 import { deliveryStatusWhere, isUuid, parseDeliveryStatusFilter } from "./metric-filters";
@@ -73,23 +74,30 @@ export class MetaAdsetMetricsReadService {
           }
         : {})
     };
-    const metrics = await client.metaAdsetDailyMetric.findMany({
+    const candidates = await client.metaAdsetDailyMetric.findMany({
       where,
       include: { product: true, metaAdset: true },
       orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }, { id: "asc" }]
     });
+    const metrics = await selectCurrentSourceRows(
+      client, SourceDataKind.META_ADSET, candidates, (row) => row.metricDate
+    );
     const decorated = await this.decorationService.decorate(metrics, client);
     const groups = groupBy(decorated, (row) => row.metric.metaAdsetId);
     const rows = Array.from(groups.entries()).map(([metaAdsetId, items]) => {
       const aggregate = this.decorationService.aggregate(items);
       const first = items[0];
       const last = items[items.length - 1];
+      const observation = items.filter((item) => item.metric.metadataObservedAt)
+        .sort((a, b) => b.metric.metadataObservedAt!.getTime() - a.metric.metadataObservedAt!.getTime())[0]?.metric;
       return {
         metaAdsetId,
         adsetName: last.metric.adsetName,
         product: last.metric.product,
         stage: last.metric.stage,
         deliveryStatus: last.metric.deliveryStatus,
+        currentMetadata: observation?.currentMetadata ?? null,
+        metadataObservedAt: observation?.metadataObservedAt ?? null,
         totals: aggregate.totals,
         dataDays: aggregate.dataDays,
         thresholds: last.thresholds,
@@ -124,7 +132,7 @@ export class MetaAdsetMetricsReadService {
   ) {
     const range = parseDateRange(from, to);
     const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
-    return client.metaAdsetDailyMetric.findMany({
+    const candidates = await client.metaAdsetDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: range.fromDate, lte: range.toDate },
@@ -133,6 +141,15 @@ export class MetaAdsetMetricsReadService {
       },
       orderBy: [{ metricDate: "desc" }, { adsetName: "asc" }, { id: "asc" }],
       include: { metaAdset: true }
+    });
+    const selected = await selectCurrentSourceRows(client, SourceDataKind.META_ADSET,
+      candidates, (row) => row.metricDate);
+    return selected.map((row) => {
+      const raw = row.rawRow;
+      const derivedMultiAd = row.source === "CSV" && raw && typeof raw === "object" &&
+        !Array.isArray(raw) && raw.source === "meta_ad_daily_metrics" &&
+        typeof raw.adCount === "number" && raw.adCount > 1;
+      return derivedMultiAd ? { ...row, reach: null, frequency: null } : row;
     });
   }
 }

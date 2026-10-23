@@ -16,12 +16,12 @@ export class UploadsService {
     private readonly lifecycleService: UploadLifecycleService
   ) {}
 
-  importMetaAdDailyCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string) {
-    return this.adDailyImportService.importMetaAdDailyCsv(file, conflictPolicy, actorId);
+  importMetaAdDailyCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string, sourceConnectionId?: string) {
+    return this.adDailyImportService.importMetaAdDailyCsv(file, conflictPolicy, actorId, sourceConnectionId);
   }
 
-  importMetaAdsetCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string) {
-    return this.adsetImportService.importMetaAdsetCsv(file, conflictPolicy, actorId);
+  importMetaAdsetCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string, sourceConnectionId?: string) {
+    return this.adsetImportService.importMetaAdsetCsv(file, conflictPolicy, actorId, sourceConnectionId);
   }
 
   listUploads(take = 50) {

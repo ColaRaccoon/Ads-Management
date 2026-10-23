@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {input,rawHarness} from './phase10-cafe-epoch-live-v2-20261021.test.mjs';
+import {prepareLive,runLive} from './phase10-cafe-epoch-live-local-v2-20261021.mjs';
+test('fresh local70 real reader/epoch/CSVv5 shadow Foundation writer plus replay, synthetic provider only',async()=>{
+ const plan=prepareLive(input());const privateFrames=[],publicFrames=[];
+ const fixtures=new Map(['2026-10-16','2026-10-17'].map(day=>[day,rawHarness({day})]));
+ const result=await runLive(plan,{privateRoot:process.env.CAFE_EPOCH_SYNTHETIC_PRIVATE_ROOT,request:(url,options)=>{let day=url.searchParams.get('start_date');if(!day){const target=[...fixtures].find(([,v])=>v.calls.some(c=>c.url.pathname.endsWith('/orders'))&&v.calls.filter(c=>c.url.pathname.endsWith('/count')).length<3&&v.calls.length<6);day=target?.[0];}if(!fixtures.has(day))throw Error('SYNTHETIC_FIXTURE_DAY');return fixtures.get(day).request(url,options);},emit:async frame=>{if(frame.kind==='PRIVATE_NORMALIZED'){privateFrames.push({day:frame.day,bytes:frame.normalizedPayloadBytes,sha256:frame.normalizedPayloadSha256});}else publicFrames.push(frame);}});
+ assert.equal(result.status,'PASS',JSON.stringify({failure:result.failure,postgresStopExit:result.postgresStopExit,days:result.days.length}));assert.equal(result.days.length,2);assert.equal(result.providerRequests,12);assert.equal(result.localObservationCommits,2);assert.equal(result.localCanonicalCompletedRuns,4);assert.equal(result.postgresStopExit,0);assert.equal(result.localRls.force,70);assert.equal(result.localRls.runtimeBypass,false);assert.equal(privateFrames.length,2);assert.equal(publicFrames.length,2);assert(result.days.every(d=>d.csvPrimaryPolicyVersion===5&&d.apiShadowOnly&&d.identicalReplayNoDuplicate));
+});

@@ -1,4 +1,5 @@
 export function formatNumber(value: unknown, digits = 0): string {
+  if (value === null || value === undefined) return "-";
   const number = Number(value);
   if (!Number.isFinite(number)) {
     return "-";
@@ -7,6 +8,7 @@ export function formatNumber(value: unknown, digits = 0): string {
 }
 
 export function formatKrw(value: unknown): string {
+  if (value === null || value === undefined) return "-";
   const number = Number(value);
   if (!Number.isFinite(number)) {
     return "-";
@@ -15,6 +17,7 @@ export function formatKrw(value: unknown): string {
 }
 
 export function formatUsd(value: unknown): string {
+  if (value === null || value === undefined) return "-";
   const number = Number(value);
   if (!Number.isFinite(number)) {
     return "-";

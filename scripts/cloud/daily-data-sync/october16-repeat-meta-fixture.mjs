@@ -1,0 +1,42 @@
+// Explicit fresh test setup; every day must subsequently be fetched by the real runner.
+import {createHash} from 'node:crypto';import {pathToFileURL} from 'node:url';
+import {october16Definitions} from './october16-repeat-profile.mjs';
+const q=s=>`'${s.replaceAll("'","''")}'`;
+const SOURCE='f7592804a9763eb228d7c97be00479431700e78b7c57e4544b4c6a863556e4df';
+const META='1277dc2a-ea20-41eb-8a1c-ab1bfcc564f6',DUE='2026-10-16T03:30:00.000Z';
+export const OCT16_META_FIXTURE_ACTION='SYNC_META_OCTOBER16_REPEAT_TEST_FIXTURE';
+export const OCT16_META_REQUEST_KEY='schedule:phase08-meta:'+createHash('sha256').update(DUE).digest('hex');
+const digest=table=>`(SELECT md5(coalesce(jsonb_agg(to_jsonb(x) ORDER BY to_jsonb(x)::text)::text,'[]')) FROM ${table} x)`;
+export function buildOctober16MetaFixture({actorId,authId,sourceSha}){
+ if(sourceSha!==SOURCE||![actorId,authId].every(x=>typeof x==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(x)))throw Error('OCT16_FIXTURE_SCOPE');
+ const snapshot=compare=>`DO $snap$ DECLARE item record;part text;joined text:='';BEGIN FOR item IN SELECT tablename FROM pg_tables WHERE schemaname='phase08_meta_ads' ORDER BY tablename LOOP
+ EXECUTE format('SELECT md5(coalesce(string_agg(md5(to_jsonb(x)::text),'''' ORDER BY md5(to_jsonb(x)::text)),'''')) FROM phase08_meta_ads.%I x WHERE NOT ((%L=''sync_runs'' AND to_jsonb(x)->>''id''=current_setting(''daily_data_sync.oct16_fixture_run'')) OR (%L=''run_units'' AND to_jsonb(x)->>''run_id''=current_setting(''daily_data_sync.oct16_fixture_run'')) OR (%L=''security_audit_events'' AND to_jsonb(x)->>''id''=current_setting(''daily_data_sync.oct16_fixture_audit'')))',item.tablename,item.tablename,item.tablename,item.tablename) INTO part;joined:=joined||item.tablename||':'||part||';';END LOOP;
+ ${compare?"IF md5(joined) IS DISTINCT FROM current_setting('daily_data_sync.oct16_fixture_business') THEN RAISE EXCEPTION 'OCT16_FIXTURE_BUSINESS';END IF;":"PERFORM set_config('daily_data_sync.oct16_fixture_business',md5(joined),true);"}END $snap$;`;
+ const frozen=`SELECT md5(jsonb_build_object('settings',${digest('daily_data_sync_ops.settings')},'schedules',${digest('daily_data_sync_ops.schedules')},'jobs',${digest('cron.job')},'attempts',${digest('daily_data_sync_ops.attempts')},'vault',${digest('vault.secrets')},'policies',${digest('pg_catalog.pg_policies')},'call',(SELECT md5(prosrc) FROM pg_proc WHERE oid='daily_data_sync_ops.call(text,boolean)'::regprocedure))::text)`;
+ const defs=october16Definitions('test').map(d=>`IF NOT EXISTS(SELECT 1 FROM daily_data_sync_ops.schedules WHERE key=${q(d.key)} AND connection_id=${q(d.connectionId)}::uuid AND provider=${q(d.provider)} AND cadence_days=${d.provider==='CAFE24'?1:7} AND anchor_at=${q(d.anchorAt)}::timestamptz AND window_minutes=${d.windowMinutes} AND NOT paused) THEN RAISE EXCEPTION 'OCT16_FIXTURE_PROFILE';END IF;`).join('\n');
+ return {state:'PHASE08_OCTOBER16_META_FIXTURE_PREPARED',requestKey:OCT16_META_REQUEST_KEY,sql:`BEGIN ISOLATION LEVEL REPEATABLE READ;SET LOCAL statement_timeout=15000;SET LOCAL lock_timeout=5000;
+ SELECT pg_advisory_xact_lock(hashtextextended('daily-data-sync-08-management',0));SELECT pg_advisory_xact_lock(hashtextextended('daily-data-sync-08-phase08-meta',0));
+ SELECT id FROM phase08_meta_ads.source_connections ORDER BY id FOR UPDATE;SELECT key FROM daily_data_sync_ops.schedules ORDER BY key FOR UPDATE;
+ SELECT set_config('daily_data_sync.oct16_fixture_run',gen_random_uuid()::text,true),set_config('daily_data_sync.oct16_fixture_audit',gen_random_uuid()::text,true);
+ DO $guard$ BEGIN IF current_database()<>'postgres' OR current_user<>'postgres' OR to_regnamespace('storage_renewal_ops') IS NOT NULL OR clock_timestamp()<timestamptz '2026-10-16T02:50:00Z' OR clock_timestamp()>=timestamptz '2026-10-16T03:29:00Z'
+ OR (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='phase08_meta_ads' AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity)<>68
+ OR (SELECT count(*) FROM phase08_meta_ads.source_connections)<>3 OR (SELECT count(*) FROM daily_data_sync_ops.schedules)<>3 OR (SELECT count(*) FROM daily_data_sync_ops.settings)<>1
+ OR NOT EXISTS(SELECT 1 FROM daily_data_sync_ops.settings WHERE singleton AND stopped AND target_id='phase08-full-app' AND origin='https://phase08-daily-data-sync-production.up.railway.app')
+ OR EXISTS(SELECT 1 FROM phase08_meta_ads.sync_leases WHERE expires_at>clock_timestamp()) OR (SELECT count(*) FROM cron.job WHERE jobname LIKE 'daily-data-sync-08-%')<>149 OR (SELECT count(*) FROM cron.job WHERE jobname LIKE 'daily-data-sync-08-%' AND active)<>149
+ OR (SELECT md5(prosrc) FROM pg_proc WHERE oid='daily_data_sync_ops.call(text,boolean)'::regprocedure)<>'e53b9aad9453733a4113c09d0ee69657'
+ OR (SELECT md5(jsonb_agg(to_jsonb(x) ORDER BY id)::text) FROM daily_data_sync_ops.attempts x WHERE id<=152) IS DISTINCT FROM 'c044e6c4249188e410d31aacf57422dc'
+ OR NOT EXISTS(SELECT 1 FROM phase08_meta_ads.source_connections WHERE id='${META}' AND provider='META' AND external_account_id='2138525300002203' AND shop_key='default' AND currency_code='USD' AND time_zone='Asia/Seoul' AND enabled AND access_state='READY' AND credential_ref LIKE 'vault://meta/%' AND credential_expires_at>clock_timestamp()+interval '7 days')
+ OR EXISTS(SELECT 1 FROM phase08_meta_ads.sync_runs WHERE connection_id='${META}' AND request_key='${OCT16_META_REQUEST_KEY}') OR EXISTS(SELECT 1 FROM daily_data_sync_ops.attempts WHERE schedule_key='phase08-meta' AND scheduled_for=timestamptz '${DUE}')
+ OR EXISTS(SELECT 1 FROM phase08_meta_ads.security_audit_events WHERE action='${OCT16_META_FIXTURE_ACTION}')
+ OR NOT EXISTS(SELECT 1 FROM phase08_meta_ads.app_users a JOIN auth.users u ON u.id=a.auth_user_id WHERE a.id=${q(actorId)}::uuid AND a.auth_user_id=${q(authId)}::uuid AND a.role='SUPER_ADMIN' AND a.is_active AND a.invite_status='ACTIVE' AND a.email=u.email AND u.email_confirmed_at IS NOT NULL)
+ THEN RAISE EXCEPTION 'OCT16_FIXTURE_GUARD';END IF;${defs}END $guard$;
+ SELECT set_config('daily_data_sync.oct16_fixture_ops',(${frozen}),true);
+ ${snapshot(false)}
+ INSERT INTO phase08_meta_ads.sync_runs(id,connection_id,trigger,request_key,from_date,to_date,status,actor_user_id,deadline_at) VALUES(current_setting('daily_data_sync.oct16_fixture_run')::uuid,'${META}','SCHEDULED','${OCT16_META_REQUEST_KEY}',date '2026-10-09',date '2026-10-15','QUEUED',NULL,NULL);
+ INSERT INTO phase08_meta_ads.run_units(run_id,unit_key,status,attempts,fetched_count,published_count) SELECT current_setting('daily_data_sync.oct16_fixture_run')::uuid,to_char(day,'YYYY-MM-DD'),'QUEUED',0,0,0 FROM generate_series(date '2026-10-09',date '2026-10-15',interval '1 day') day;
+ INSERT INTO phase08_meta_ads.security_audit_events(id,actor_user_id,actor_type,action,target_type,target_id,result,after_json) VALUES(current_setting('daily_data_sync.oct16_fixture_audit')::uuid,${q(actorId)}::uuid,'USER','${OCT16_META_FIXTURE_ACTION}','SYNC_RUN',current_setting('daily_data_sync.oct16_fixture_run'),'REQUESTED',jsonb_build_object('requestKey','${OCT16_META_REQUEST_KEY}','sourceSha','${SOURCE}','fixtureOnly',true,'automaticQueue',false,'successfulUnitsInherited',0,'freshCollectionRequired',true,'originalDeadlineAt','2026-10-16T05:00:00.000Z'));
+ ${snapshot(true)}
+ DO $guard$ BEGIN IF (${frozen}) IS DISTINCT FROM current_setting('daily_data_sync.oct16_fixture_ops') OR clock_timestamp()>=timestamptz '2026-10-16T03:29:00Z' OR (SELECT count(*) FROM phase08_meta_ads.run_units WHERE run_id=current_setting('daily_data_sync.oct16_fixture_run')::uuid AND unit_key BETWEEN '2026-10-09' AND '2026-10-15' AND status='QUEUED' AND attempts=0 AND fetched_count=0 AND published_count=0)<>7 THEN RAISE EXCEPTION 'OCT16_FIXTURE_FINAL';END IF;END $guard$;
+ SELECT 'PHASE08_OCTOBER16_META_FIXTURE_APPLIED' AS state,1 AS new_runs,7 AS new_units,0 AS inherited_successful_units,0 AS provider_requests,true AS prior_business_preserved;COMMIT;`};
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){let raw='';try{for await(const p of process.stdin){raw+=p;if(Buffer.byteLength(raw)>65536)throw Error('BOUND');}process.stdout.write(JSON.stringify(buildOctober16MetaFixture(JSON.parse(raw))));}catch{process.stdout.write(JSON.stringify({state:'PHASE08_OCTOBER16_META_FIXTURE_REJECTED',rawErrorSuppressed:true}));process.exitCode=1;}finally{raw='';}}

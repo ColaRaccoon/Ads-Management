@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install --yes --no-install-recommends ca-certifica
 RUN npm install --global npm@10.9.4 && npm --version | grep -Fx 10.9.4
 COPY package.json package-lock.json .npmrc ./
 COPY apps/api/package.json apps/api/package.json
-COPY apps/e2e/package.json apps/e2e/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=cache,target=/root/.npm npm ci \

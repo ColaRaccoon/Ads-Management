@@ -1,0 +1,54 @@
+param([Parameter(Mandatory)][ValidateSet('approve','restore')][string]$Mode,[switch]$ExecuteApproved)
+Set-StrictMode -Version Latest;$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue'
+. "$PSScriptRoot/scheduler-live-helpers.ps1"
+. "$PSScriptRoot/operator-session.ps1"
+$stage='APPROVAL';$submitted=$false;$ctx=$null;$operator=$null;$prepared=$null
+try{
+ if(-not $ExecuteApproved){throw 'approval'};Import-Phase08SchedulerChildDefinitions;$pins=Get-Phase08SchedulerPins
+ $outPath=Assert-Phase08SchedulerOutputPath ("C:/Users/seong/AppData/Local/MetaAdsPhase08Evaluation/october16-meta-retry-$Mode-actual-20261016.json")
+ $marker=Assert-Phase08SchedulerOutputPath ("C:/Users/seong/AppData/Local/MetaAdsPhase08Evaluation/october16-meta-retry-$Mode-attempt-20261016.json")
+ if($pins.sourceSha -cne '898bb25b5cc3fca6437d8a284b11e71045cb6e74e073acb848affa0498ae58d9'){throw 'source'}
+ $stage='V19_RECEIPT';$receiptPath='C:/Users/seong/AppData/Local/MetaAdsPhase08Evaluation/october16-v19-deployment-initial-actual-20261016.json'
+ $info=Get-Item -LiteralPath $receiptPath;if($info.Length -gt 16384 -or $info.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'receipt'}
+ $receipt=Get-Content -LiteralPath $receiptPath -Raw|ConvertFrom-Json -AsHashtable -DateKind String
+ if($receipt.state -cne 'PHASE08_OCTOBER16_DEPLOYMENT_VERIFIED' -or $receipt.action -cne 'initial' -or $receipt.sourceSha -cne $pins.sourceSha -or ($Mode -ceq 'approve' -and $receipt.deploymentId -cne $pins.deploymentId) -or $receipt.previousDeploymentId -cne '905cce5f-4fdc-4f19-99b1-ec5aaa2b6f62' -or $receipt.region -cne 'sin'){throw 'receipt'}
+ foreach($k in @('frozenSourceNewBuild','sleepApplication','resourceConfigurationPreserved','globalStopped')){if($receipt[$k] -isnot [bool] -or -not $receipt[$k]){throw 'receipt-bool'}}
+ if($receipt.sameImageVerified -isnot [bool] -or $receipt.sameImageVerified){throw 'receipt-image'}
+ foreach($pair in @(@('immutableFiles',475),@('cpu',1),@('memoryBytes',1000000000),@('replicas',1),@('databaseForceRls',68),@('liveLeasesObserved',0),@('providerRequests',0),@('databaseWrites',0),@('operatingChanges',0))){$k=$pair[0];if(($receipt[$k] -isnot [int] -and $receipt[$k] -isnot [long]) -or $receipt[$k] -ne $pair[1]){throw 'receipt-count'}}
+ $seen=[DateTimeOffset]::Parse($receipt.observedAt);if($seen -gt [DateTimeOffset]::UtcNow.AddSeconds(5) -or ($Mode -ceq 'approve' -and $seen -lt [DateTimeOffset]::UtcNow.AddMinutes(-30)) -or ($Mode -ceq 'restore' -and $seen.UtcDateTime.ToString('yyyy-MM-dd') -cne '2026-10-16')){throw 'receipt-time'}
+ $ctx=Read-Phase08ProtectedJson;Assert-Phase08SchedulerContext $ctx $pins;$operator=Read-Phase08Operator
+ $graph=Get-Phase08SchedulerGraphState $ctx $pins
+ $defs=Invoke-Phase08ConfigurationChild "$PSScriptRoot/october16-profile-bridge.mjs" @{action='definitions';phase='test'}
+ $null=Invoke-Phase08SchedulerNode @{action='loaded';definitions=@($defs.definitions);appSchedules=@($graph.appSchedules);managementSchedules=@()}
+ if($Mode -ceq 'restore'){
+  $stage='RESTART_RECEIPT';$restartPath='C:/Users/seong/AppData/Local/MetaAdsPhase08Evaluation/october16-v19-deployment-restart-actual-20261016.json'
+  $i=Get-Item -LiteralPath $restartPath;if($i.Length -gt 16384 -or $i.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'restart-path'}
+  $restart=Get-Content -LiteralPath $restartPath -Raw|ConvertFrom-Json -AsHashtable -DateKind String
+  if($restart.state -cne 'PHASE08_OCTOBER16_DEPLOYMENT_VERIFIED' -or $restart.action -cne 'restart' -or $restart.sourceSha -cne $pins.sourceSha -or $restart.deploymentId -cne $pins.deploymentId -or $restart.previousDeploymentId -cne $receipt.deploymentId -or $restart.region -cne 'sin'){throw 'restart'}
+  foreach($k in @('sameImageVerified','sleepApplication','resourceConfigurationPreserved','globalStopped')){if($restart[$k] -isnot [bool] -or -not $restart[$k]){throw 'restart-bool'}}
+  if($restart.frozenSourceNewBuild -isnot [bool] -or $restart.frozenSourceNewBuild){throw 'restart-image'}
+  foreach($pair in @(@('immutableFiles',475),@('cpu',1),@('memoryBytes',1000000000),@('replicas',1),@('databaseForceRls',68),@('liveLeasesObserved',0),@('providerRequests',0),@('databaseWrites',0),@('operatingChanges',0))){$k=$pair[0];if(($restart[$k] -isnot [int] -and $restart[$k] -isnot [long]) -or $restart[$k] -ne $pair[1]){throw 'restart-count'}}
+  $rs=[DateTimeOffset]::Parse($restart.observedAt);if($rs -le $seen -or $rs -gt [DateTimeOffset]::UtcNow.AddSeconds(5) -or $rs.UtcDateTime.ToString('yyyy-MM-dd') -cne '2026-10-16'){throw 'restart-time'}
+  $stage='COMPLETE_PROOFS'
+  foreach($kind in @('weekly','cafe')){
+   $p=Invoke-Phase08ConfigurationChild "$PSScriptRoot/october16-proof.mjs" @{action=($kind+'-sql')}
+   $expected=if($kind -ceq 'weekly'){'META_WEEKLY_SQL_PREPARED'}else{'CAFE_AFTERNOON_SQL_PREPARED'}
+   if($p.state -cne $expected -or $p.sql -isnot [string] -or $p.sql.Length -gt 65536 -or -not $p.sql.StartsWith('BEGIN READ ONLY;') -or -not $p.sql.EndsWith('COMMIT;')){throw 'proof-sql'}
+   $pr=@(Invoke-Phase08Management -Action Query -Query $p.sql)
+   $proof=Invoke-Phase08ConfigurationChild "$PSScriptRoot/october16-proof.mjs" @{action=('project-'+$kind);rows=@($pr)}
+   $wanted=if($kind -ceq 'weekly'){'PHASE08_META_AFTERNOON_WEEKLY_READONLY'}else{'PHASE08_CAFE_AFTERNOON_READONLY'}
+   if($proof.state -cne $wanted -or $proof.verified -isnot [bool] -or -not $proof.verified){throw 'proof-failed'}
+  }
+ }
+ $stage='CURRENT_FUNCTION';$rows=@(Invoke-Phase08Management -Action Query -Query "BEGIN READ ONLY;SELECT pg_get_functiondef('daily_data_sync_ops.call(text,boolean)'::regprocedure) AS definition;COMMIT;")
+ if($rows.Count -ne 1 -or $rows[0].definition -isnot [string]){throw 'function'}
+ $stage='REVIEWED_BATCH';$prepared=Invoke-Phase08ConfigurationChild "$PSScriptRoot/october16-meta-reviewed-retry.mjs" @{mode=$Mode;sourceSha=$pins.sourceSha;actorId=$operator.appId;authId=$operator.authId;currentCallDefinition=$rows[0].definition}
+ if($prepared.state -cne 'PHASE08_OCTOBER16_META_RETRY_PREPARED' -or $prepared.mode -cne $Mode -or $prepared.sql -isnot [string] -or $prepared.sql.Length -gt 131072 -or -not $prepared.sql.StartsWith('BEGIN ISOLATION LEVEL REPEATABLE READ;') -or $prepared.resultCallMd5 -isnot [string] -or $prepared.resultCallMd5 -cnotmatch '^[a-f0-9]{32}$'){throw 'batch'}
+ $null=Write-Phase08SchedulerPublicEvidence @{classification='OCTOBER16_META_REVIEWED_RETRY_PLANNED';mode=$Mode;observedAt=[DateTimeOffset]::UtcNow.ToString('o');providerRequests=0} $marker
+ $stage='SINGLE_BATCH';$submitted=$true;$r=@(Invoke-Phase08Management -Action Query -Query $prepared.sql)
+ if($r.Count -ne 1 -or @($r[0].PSObject.Properties.Name).Count -ne 6 -or $r[0].state -cne 'PHASE08_OCTOBER16_META_RETRY_APPLIED' -or $r[0].mode -cne $Mode -or $r[0].history_preserved -isnot [bool] -or -not $r[0].history_preserved -or $r[0].call_md5 -cne $prepared.resultCallMd5){throw 'result'}
+ foreach($p in @(@('reviewed_units',$(if($Mode -ceq 'approve'){1}else{0})),@('provider_requests',0))){$n=$p[0];if(($r[0].$n -isnot [int] -and $r[0].$n -isnot [long]) -or $r[0].$n -ne $p[1]){throw 'count'}}
+ $out=@{state='PHASE08_OCTOBER16_META_RETRY_VERIFIED';mode=$Mode;observedAt=[DateTimeOffset]::UtcNow.ToString('o');sourceSha=$pins.sourceSha;deploymentId=$pins.deploymentId;reviewedUnits=$r[0].reviewed_units;callMd5=$r[0].call_md5;attemptsPreserved=$true;deadlinePreserved=$true;checkpointPreserved=$true;oldAttemptsAndBusinessPreserved=$true;cafeUntouched=$true;providerRequests=0;operatingChanges=0;retryPerformed=$false}
+ $null=Write-Phase08SchedulerPublicEvidence $out $outPath;$out|ConvertTo-Json -Compress
+}catch{@{state='PHASE08_OCTOBER16_META_RETRY_FAILED';stage=$stage;outcomeUncertain=$submitted;inspectBeforeRetry=$true;retryPerformed=$false;rawErrorSuppressed=$true}|ConvertTo-Json -Compress;exit 1}
+finally{$ctx=$null;$operator=$null;$prepared=$null;$rows=$null;$r=$null;$receipt=$null;$restart=$null;$proof=$null;$pr=$null}

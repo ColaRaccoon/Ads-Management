@@ -1,0 +1,21 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createCipheriv,createHash} from 'node:crypto';
+import {classifyCheckpoint,diagnoseCheckpoint} from './october16-checkpoint-diagnostic.mjs';
+const ID='0c35defe-45fc-4a54-bc79-704df7bca5b1',RUN='11111111-1111-4111-8111-111111111111';
+const env={SUPABASE_DATABASE_PROJECT_REF:'ehnfrrmbkvlsbpvqcvkr',SUPABASE_URL:'https://ehnfrrmbkvlsbpvqcvkr.supabase.co',DEPLOYMENT_ENVIRONMENT_ID:'phase08-daily-data-sync-08',SUPABASE_DATABASE_SCHEMA:'phase08_meta_ads',SUPABASE_DATABASE_RUNTIME_USER:'phase08_runtime',DAILY_SYNC_CHECKPOINT_KEY_B64:Buffer.alloc(32,4).toString('base64'),DAILY_SYNC_CAFE24_VERIFIED_V1_STATUSES:'["N30"]'};
+const order={order_id:'SYNTHETIC_PRIVATE_ID',shop_no:1,order_date:'2026-10-15T12:00:00+09:00',updated_date:'2026-10-16T10:15:17+09:00',payment_amount:'100',currency:'KRW',payment_method:['card']};
+const item={order_item_code:'PRIVATE_ITEM',product_no:'1',product_name:'PRIVATE_NAME',option_value:'PRIVATE_OPTION',quantity:'1',product_price:'100',order_status:'N10'};
+const state=()=>({version:1,connectionId:ID,day:'2026-10-15',startedAt:'2026-10-16T01:15:16.000Z',stage:'ITEMS_FIRST',count:2,pages:1,first:[{...order},{...order,order_id:'PRIVATE_SECOND'}],second:[],items:[[item]],cursor:1,verifiedItems:0});
+const material=()=>({projectRef:'ehnfrrmbkvlsbpvqcvkr',databaseUrl:'postgresql://phase08_runtime.ehnfrrmbkvlsbpvqcvkr:synthetic@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?schema=phase08_meta_ads&sslmode=verify-full',env:{...env}});
+test('offline classifier exposes only types/codes/counts and separates unknown status/future revision from unavailable failed response',()=>{
+ const result=classifyCheckpoint(state(),env),text=JSON.stringify(result);assert.equal(result.unknownApprovedStatusCounts['ITEM:N10'],1);assert.equal(result.futureUpdatedOrders,2);assert.equal(result.storedPrefixChecked,1);assert.equal(result.currentCursorItemsAvailable,false);assert.equal(result.failedUncommittedResponseAvailable,false);for(const value of ['PRIVATE','100','card'])assert(!text.includes(value));
+ const invalid=state();invalid.cursor=0;assert.throws(()=>classifyCheckpoint(invalid,env));const bad=state();bad.first[0].payment_amount='PRIVATE_BAD';assert.equal(classifyCheckpoint(bad,env).diagnosticCounts.CAFE24_FIELD_PAYMENT_AMOUNT,1);
+});
+test('readonly bound query/AAD identity and encrypted shape validation; protected input and buffers cleared on success/tamper/foreign identity',async()=>{
+ for(const scenario of ['good','tag','identity','factory']){
+  const input=material(),key=Buffer.from(env.DAILY_SYNC_CHECKPOINT_KEY_B64,'base64'),iv=Buffer.alloc(12,2),cipher=createCipheriv('aes-256-gcm',key,iv);cipher.setAAD(Buffer.from(`${ID}:${RUN}:2026-10-15`));const ciphertext=Buffer.concat([cipher.update(JSON.stringify(state())),cipher.final()]),tag=cipher.getAuthTag();if(scenario==='tag')tag[0]^=1;let calls=0,disconnected=0;
+  const tx={$executeRawUnsafe:async sql=>{assert.match(sql,/^SET (TRANSACTION READ ONLY|LOCAL statement_timeout)/);},$queryRawUnsafe:async(sql,...params)=>{calls++;if(calls===1)return[{database:'postgres',role:scenario==='identity'?'foreign':'phase08_runtime',schema:'phase08_meta_ads',readonly:'on',tables:68}];assert.equal(params[0],ID);assert.match(sql,/r.trigger='SCHEDULED'/);assert.match(sql,/r.from_date='2026-10-15'/);assert.match(sql,/c.unit_key='2026-10-15'/);assert.equal(params[1],'schedule:phase08-cafe24:'+createHash('sha256').update('2026-10-16T01:15:00.000Z').digest('hex'));return[{id:RUN,ciphertext,iv,auth_tag:tag,expires_at:new Date('2026-10-16T03:00:16Z')}];}};
+  const factory=()=>{if(scenario==='factory')throw Error('SYNTHETIC_PRIVATE');return{$transaction:async fn=>fn(tx),$disconnect:async()=>{disconnected++;}};};
+  if(scenario==='good'){const result=await diagnoseCheckpoint(input,factory);assert.equal(result.databaseWrites,0);assert.equal(result.providerRequests,0);}else await assert.rejects(diagnoseCheckpoint(input,factory));
+  assert.equal(input.env,undefined);assert.equal(input.databaseUrl,undefined);if(['good','tag'].includes(scenario))assert(ciphertext.every(n=>n===0));if(scenario!=='factory')assert.equal(disconnected,1);
+ }
+});

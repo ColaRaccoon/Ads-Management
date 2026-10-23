@@ -1,0 +1,105 @@
+{
+  "at": "2026-10-23T13:09:32.770380+09:00",
+  "scope": "names and sizes only; no business/report/database contents read",
+  "untrackedFilesBeforeHandoffFiles": 1244,
+  "untrackedGroups": {
+    "%SystemDrive%/ProgramData": 3,
+    "1048576": 1,
+    "3145728": 1,
+    "32768": 1,
+    "4194304": 1,
+    "apps/api": 113,
+    "apps/web": 14,
+    "deploy/cafe24-test.Dockerfile": 1,
+    "deploy/cafe24-test": 11,
+    "deploy/cloud": 2,
+    "docs/cafe24-meta-api-cost-eligibility-2026-09-21.md": 1,
+    "docs/daily-data-automation": 58,
+    "docs/upload-automation-feasibility-2026-09-21.md": 1,
+    "reports/2026-10-19-knee-meta-coupang": 46,
+    "reports/2026-10-21-venom-meta-coupang": 55,
+    "reports/2026-10-22-cafe24-mapping": 11,
+    "reports/cafe24-mapping-audit-20261022.cjs": 1,
+    "reports/cafe24-mapping-repair-20261022.cjs": 1,
+    "reports/cafe24-mapping-verify-20261022.cjs": 1,
+    "scripts/cloud": 918,
+    "supabase/functions": 2,
+    "구글광고_데이터_자동화계획서.md": 1
+  },
+  "existingTrackedModified": 82,
+  "existingTrackedDeleted": 240,
+  "staged": 0,
+  "classifications": [
+    {
+      "kind": "required-preserve",
+      "paths": [
+        "apps/api/src/daily-sync/",
+        "apps/api/prisma/migrations/20260929090000_common_sync_foundation/ through 20261020160000_cafe24_observation_epochs/",
+        "deploy/Dockerfile",
+        "docs/daily-data-automation/",
+        "approved original Google plan"
+      ],
+      "reason": "product, exact migration delta, contract and handoff; not disposable because untracked"
+    },
+    {
+      "kind": "already-ignored-not-needed-in-git",
+      "paths": [
+        "node_modules/",
+        "apps/web/.next/",
+        "apps/api/dist/",
+        "apps/api/dist-cafe24/",
+        ".env",
+        ".security-dev/",
+        "supabase/.temp/"
+      ],
+      "deleteRequiredForUpload": false
+    },
+    {
+      "kind": "review-before-any-stage-or-delete",
+      "paths": [
+        "scripts/cloud/daily-data-sync/",
+        "reports/",
+        "%SystemDrive%/",
+        "1048576",
+        "3145728",
+        "32768",
+        "4194304"
+      ],
+      "reason": "historical execution helpers, business output, local DBs and tiny generated-looking files; names alone do not prove disposable or safe to publish"
+    }
+  ],
+  "knownTinyRootFiles": [
+    {
+      "path": "1048576",
+      "bytes": 6
+    },
+    {
+      "path": "3145728",
+      "bytes": 5
+    },
+    {
+      "path": "32768",
+      "bytes": 6
+    },
+    {
+      "path": "4194304",
+      "bytes": 6
+    }
+  ],
+  "localDatabaseArtifact": {
+    "path": "%SystemDrive%/",
+    "files": 3,
+    "bytes": 987712,
+    "contentsRead": false,
+    "publishApproved": false
+  },
+  "priorTestDeletionsRestored": false,
+  "filesDeletedOrMoved": 0,
+  "gitAddCommitPush": 0,
+  "completeRepositorySecretScanPerformed": false,
+  "readyToUploadWholeWorktree": false,
+  "gitPublicationApproved": true,
+  "cleanupMethod": "non-destructive .gitignore exclusions; originals retained",
+  "permanentDeletes": 0,
+  "currentScopeNote": "initial inventory retained for provenance; current Git selection verified in git-publication.json"
+}

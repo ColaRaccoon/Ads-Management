@@ -7,6 +7,7 @@ export const PUBLIC_ROUTE = "public";
 export const AUTHENTICATED_ROUTE = "authenticated";
 export const PERMISSION_ROUTE = "permission";
 export const INTERNAL_PROBE_ROUTE = "internal-probe";
+export const MACHINE_SYNC_ROUTE = "machine-sync";
 export const REQUIRED_PERMISSIONS = "auth:required-permissions";
 
 export const Public = () => SetMetadata(AUTH_ROUTE_ACCESS, PUBLIC_ROUTE);
@@ -19,6 +20,7 @@ export const RequirePermissions = (...permissions: Permission[]) => applyDecorat
 );
 
 export const InternalProbe = () => SetMetadata(AUTH_ROUTE_ACCESS, INTERNAL_PROBE_ROUTE);
+export const MachineSync = () => SetMetadata(AUTH_ROUTE_ACCESS, MACHINE_SYNC_ROUTE);
 
 export const CurrentUser = createParamDecorator((_data: unknown, context: ExecutionContext) => {
   const request = context.switchToHttp().getRequest<AuthenticatedRequest>();

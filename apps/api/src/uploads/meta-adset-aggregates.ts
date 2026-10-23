@@ -8,13 +8,13 @@ export function aggregateAdRows(rows: AdDailyMetricRow[]): AdsetAggregateInput {
   const last = rows[rows.length - 1];
   const productAttribution = aggregateProductAttribution(rows);
   const spendUsd = sum(rows, (row) => decimalNumber(row.spendUsd));
-  const purchaseCount = sum(rows, (row) => row.purchaseCount);
-  const reach = sum(rows, (row) => row.reach);
+  const purchaseCount = sum(rows, (row) => row.purchaseCount ?? 0);
+  const reach = rows.length === 1 ? rows[0].reach : null;
   const impressions = sum(rows, (row) => bigintNumber(row.impressions));
   const linkClicks = sum(rows, (row) => row.linkClicks);
-  const shopClicks = sum(rows, (row) => row.shopClicks);
+  const shopClicks = sum(rows, (row) => row.shopClicks ?? 0);
   const clicksAll = sum(rows, (row) => row.clicksAll);
-  const landingPageViews = sum(rows, (row) => row.landingPageViews);
+  const landingPageViews = sum(rows, (row) => row.landingPageViews ?? 0);
 
   return {
     metaAdsetId: first.metaAdsetRefId,
@@ -28,7 +28,8 @@ export function aggregateAdRows(rows: AdDailyMetricRow[]): AdsetAggregateInput {
     resultIndicator: firstNonNull(rows.map((row) => row.resultIndicator)),
     purchaseCount,
     reach,
-    frequency: ratio(impressions, reach),
+    frequency: rows.length === 1 && rows[0].frequency !== null
+      ? decimalNumber(rows[0].frequency) : null,
     costPerResultUsd: ratio(spendUsd, purchaseCount),
     adsetBudgetLabel: firstNonNull(rows.map((row) => row.adsetBudgetLabel)),
     adsetBudgetType: firstNonNull(rows.map((row) => row.adsetBudgetType)),

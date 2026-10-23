@@ -15,6 +15,8 @@ import { SecurityAuditModule } from "./security-audit/security-audit.module";
 import { UsersModule } from "./users/users.module";
 import { validateRuntimeEnvironment } from "./common/http-security.config";
 import { HealthModule } from "./health/health.module";
+import { DailySyncModule } from "./daily-sync/daily-sync.module";
+import { StorefrontModule } from "./storefront/storefront.module";
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { HealthModule } from "./health/health.module";
     AuthModule,
     UsersModule,
     HealthModule,
+    DailySyncModule,
+    StorefrontModule,
     UploadsModule,
     ProductsModule,
     MappingsModule,

@@ -15,13 +15,13 @@ export type DecisionTypeValue =
 export type DecisionInput = {
   scopeType?: "OVERALL" | "PRODUCT" | "ADSET" | "STAGE";
   stage: AdStageValue;
-  purchaseCount: number;
+  purchaseCount: number | null;
   spendKrw: number;
   cpaKrw: number | null;
   marginKrw: number | null;
   dataDays: number;
   ctrLinkPct: number | null;
-  landingPageViews: number;
+  landingPageViews: number | null;
   breakEvenCpaKrw: number | null;
   targetCpaKrw: number | null;
   watchCpaKrw: number | null;
@@ -40,6 +40,7 @@ export type ClassifiedDecision = {
 export class DecisionClassifier {
   classify(input: DecisionInput): ClassifiedDecision[] {
     const decisions: ClassifiedDecision[] = [];
+    if (input.purchaseCount === null) return decisions;
 
     if ((input.scopeType === "OVERALL" || input.scopeType === "PRODUCT") && input.marginKrw !== null) {
       decisions.push(
@@ -101,7 +102,7 @@ export class DecisionClassifier {
       input.stopCpaKrw !== null &&
       input.spendKrw < input.stopCpaKrw &&
       ((input.ctrLinkPct ?? 0) >= input.goodCtrLinkPct ||
-        input.landingPageViews >= input.goodLandingPageViewCount)
+        input.landingPageViews !== null && input.landingPageViews >= input.goodLandingPageViewCount)
     ) {
       decisions.push({
         decision: "WATCH",

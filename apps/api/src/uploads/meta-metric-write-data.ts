@@ -5,6 +5,8 @@ import { decimalOrNull } from "./upload-keys";
 export function adDailyMetricCreateData(input: AdMetricImportInput, importVersion: number) {
   return {
     uploadBatchId: input.batchId,
+    connectionId: input.connectionId ?? null,
+    source: "CSV" as const,
     uploadRowId: input.uploadRowId,
     campaignRefId: input.campaignRefId,
     metaAdsetRefId: input.metaAdsetRefId,
@@ -59,7 +61,7 @@ export function adDailyMetricCreateData(input: AdMetricImportInput, importVersio
     stageMatchSource: input.stageMatchSource,
     productMatchRuleId: input.productMatchRuleId,
     importVersion,
-    isCurrent: true,
+    isCurrent: input.publishCurrent !== false,
     supersededByMetricId: null,
     rawRow: input.rawRow as Prisma.InputJsonObject
   };
@@ -68,6 +70,8 @@ export function adDailyMetricCreateData(input: AdMetricImportInput, importVersio
 export function adsetMetricCreateData(input: MetricImportInput, importVersion: number) {
   return {
     uploadBatchId: input.batchId,
+    connectionId: input.connectionId ?? null,
+    source: "CSV" as const,
     uploadRowId: input.uploadRowId,
     metaAdsetId: input.metaAdsetId,
     metricDate: input.parsedRow.metricDate,
@@ -104,15 +108,17 @@ export function adsetMetricCreateData(input: MetricImportInput, importVersion: n
     stageMatchSource: input.stageMatchSource,
     productMatchRuleId: input.productMatchRuleId,
     importVersion,
-    isCurrent: true,
+    isCurrent: input.publishCurrent !== false,
     supersededByMetricId: null,
     rawRow: input.rawRow as Prisma.InputJsonObject
   };
 }
 
-export function adsetAggregateMetricCreateData(batchId: string, input: AdsetAggregateInput, importVersion: number) {
+export function adsetAggregateMetricCreateData(batchId: string, input: AdsetAggregateInput, importVersion: number, connectionId: string | null = null) {
   return {
     uploadBatchId: batchId,
+    connectionId,
+    source: "CSV" as const,
     uploadRowId: null,
     metaAdsetId: input.metaAdsetId,
     metricDate: input.metricDate,

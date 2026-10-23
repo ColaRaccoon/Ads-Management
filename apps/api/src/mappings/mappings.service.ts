@@ -6,9 +6,12 @@ import {
   Prisma,
   RowValidationStatus,
   SecurityAuditActorType,
-  SecurityAuditResult
+  SecurityAuditResult,
+  SourceDataKind,
+  SourceKind
 } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
+import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { asDateOnly, parseDateRange } from "../common/date-range";
 import { AdsetNameNormalizer } from "../domain/adset-name-normalizer";
 import { formatDateOnly } from "../domain/date-number";
@@ -61,7 +64,7 @@ export class MappingsService {
 
   async rematchCurrentMetrics(body: Record<string, unknown> = {}, actorId?: string) {
     const range = dateRangeFromBody(body);
-    const [metrics, unmatchedAdMetrics] = await Promise.all([
+    const [adsetCandidates, adCandidates] = await Promise.all([
       this.prisma.metaAdsetDailyMetric.findMany({
         where: {
           isCurrent: true,
@@ -73,7 +76,9 @@ export class MappingsService {
           metricDate: true,
           adsetName: true,
           metaAdsetId: true,
-          uploadRowId: true
+          uploadRowId: true,
+          source: true,
+          connectionId: true
         },
         orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }]
       }),
@@ -90,10 +95,16 @@ export class MappingsService {
           metricDate: true,
           adNameSnapshot: true,
           adsetNameSnapshot: true,
-          campaignNameSnapshot: true
+          campaignNameSnapshot: true,
+          source: true,
+          connectionId: true
         },
         orderBy: [{ metricDate: "asc" }, { adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
       })
+    ]);
+    const [metrics, unmatchedAdMetrics] = await Promise.all([
+      selectRematchRows(this.prisma, SourceDataKind.META_ADSET, adsetCandidates),
+      selectRematchRows(this.prisma, SourceDataKind.META_AD, adCandidates)
     ]);
 
     if (metrics.length === 0 && unmatchedAdMetrics.length === 0) {
@@ -118,9 +129,11 @@ export class MappingsService {
       };
     }
 
-    const adsetMetricKeys = new Set(metrics.map((metric) => adsetDateKey(metric.metaAdsetId, metric.metricDate)));
+    const adsetMetricKeys = new Set(metrics.map((metric) => adsetDateKey(
+      metric.metaAdsetId, metric.metricDate, metric.source, metric.connectionId)));
     const standaloneAdMetrics = unmatchedAdMetrics.filter(
-      (metric) => !adsetMetricKeys.has(adsetDateKey(metric.metaAdsetRefId, metric.metricDate))
+      (metric) => !adsetMetricKeys.has(adsetDateKey(
+        metric.metaAdsetRefId, metric.metricDate, metric.source, metric.connectionId))
     );
     let rematchedCount = 0;
     let rematchedAdMetricCount = 0;
@@ -137,10 +150,14 @@ export class MappingsService {
           where: { id: metric.id },
           select: {
             id: true, metricDate: true, adsetName: true, metaAdsetId: true,
-            uploadRowId: true, isCurrent: true, productId: true
+            uploadRowId: true, isCurrent: true, productId: true,
+            source: true, connectionId: true
           }
         });
         if (!currentMetric?.isCurrent || currentMetric.productId) {
+          return { ...emptyMetaRematchOutcome(), resolvedAdset: 1 };
+        }
+        if ((await selectRematchRows(tx, SourceDataKind.META_ADSET, [currentMetric])).length === 0) {
           return { ...emptyMetaRematchOutcome(), resolvedAdset: 1 };
         }
         const { matcher, histories, rules } = await this.freshProductMatchInputs(tx, currentMetric.metaAdsetId);
@@ -149,17 +166,21 @@ export class MappingsService {
           where: {
             isCurrent: true,
             metaAdsetRefId: currentMetric.metaAdsetId,
-            metricDate: currentMetric.metricDate
+            metricDate: currentMetric.metricDate,
+            source: currentMetric.source,
+            connectionId: currentMetric.connectionId
           },
           select: {
             id: true, uploadRowId: true, metaAdsetRefId: true, metricDate: true,
             adNameSnapshot: true, adsetNameSnapshot: true, campaignNameSnapshot: true,
-            productId: true, productMatchSource: true, productMatchRuleId: true
+            productId: true, productMatchSource: true, productMatchRuleId: true,
+            source: true, connectionId: true
           },
           orderBy: [{ adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
         });
 
-        if (sourceRows.length === 0) {
+        const selectedSourceRows = await selectRematchRows(tx, SourceDataKind.META_AD, sourceRows);
+        if (selectedSourceRows.length === 0) {
           const result = matcher.match(currentMetric.adsetName, metricDate, histories, rules);
           if (!result.productId) return emptyMetaRematchOutcome();
           await tx.metaAdsetDailyMetric.update({
@@ -202,7 +223,7 @@ export class MappingsService {
           };
         }
 
-        const sourceMatches = sourceRows.map((row) => {
+        const sourceMatches = selectedSourceRows.map((row) => {
           if (row.productId) {
             return {
               id: row.id, uploadRowId: row.uploadRowId, productId: row.productId,
@@ -305,10 +326,13 @@ export class MappingsService {
           select: {
             id: true, uploadRowId: true, metaAdsetRefId: true, metricDate: true,
             adNameSnapshot: true, adsetNameSnapshot: true, campaignNameSnapshot: true,
-            productId: true, isCurrent: true
+            productId: true, isCurrent: true, source: true, connectionId: true
           }
         });
         if (!currentMetric?.isCurrent || currentMetric.productId) {
+          return { ...emptyMetaRematchOutcome(), resolvedAd: 1 };
+        }
+        if ((await selectRematchRows(tx, SourceDataKind.META_AD, [currentMetric])).length === 0) {
           return { ...emptyMetaRematchOutcome(), resolvedAd: 1 };
         }
         const { matcher, histories, rules } = await this.freshProductMatchInputs(tx, currentMetric.metaAdsetRefId);
@@ -595,11 +619,12 @@ export class MappingsService {
     metaAdsetId: string,
     actorId?: string
   ) {
-    const latest = await tx.metaAdsetDailyMetric.findFirst({
+    const candidates = await tx.metaAdsetDailyMetric.findMany({
       where: { metaAdsetId, isCurrent: true, productId: { not: null } },
       orderBy: { metricDate: "desc" },
-      select: { productId: true }
+      select: { productId: true, metricDate: true, source: true, connectionId: true }
     });
+    const latest = (await selectRematchRows(tx, SourceDataKind.META_ADSET, candidates))[0];
     if (!latest?.productId) return;
     await tx.metaAdset.update({ where: { id: metaAdsetId }, data: { currentProductId: latest.productId } });
     if (actorId) {
@@ -888,8 +913,18 @@ function timestamp(value: Date | null | undefined): number {
   return value ? value.getTime() : 0;
 }
 
-function adsetDateKey(metaAdsetId: string, metricDate: Date): string {
-  return `${metaAdsetId}:${formatDateOnly(metricDate)}`;
+function adsetDateKey(
+  metaAdsetId: string, metricDate: Date, source: SourceKind, connectionId: string | null
+): string {
+  return JSON.stringify([connectionId, source, metaAdsetId, formatDateOnly(metricDate)]);
+}
+
+function selectRematchRows<T extends { source: SourceKind; connectionId: string | null; metricDate: Date }>(
+  client: PrismaService | Prisma.TransactionClient,
+  dataKind: SourceDataKind,
+  rows: T[]
+): Promise<T[]> {
+  return selectCurrentSourceRows(client, dataKind, rows, (row) => row.metricDate);
 }
 
 function dateRangeFromBody(body: Record<string, unknown>) {

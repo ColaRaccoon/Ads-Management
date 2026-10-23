@@ -12,10 +12,24 @@ const nextConfig = {
     const apiTarget = process.env.NODE_ENV === "production"
       ? "http://127.0.0.1:4200/api"
       : process.env.API_PROXY_TARGET ?? "http://localhost:4100/api";
-    return [{
+    const callbackTarget = apiTarget.replace(/\/api$/, "");
+    const callbackHost = [{ type: "host", value: "grand-fascination-staging.up.railway.app" }];
+    const phase08CallbackHost = [{ type: "host", value: "phase08-daily-data-sync-production\\.up\\.railway\\.app" }];
+    return [
+      ...["callback", "complete", "failed"].map((step) => ({
+        source: `/backend-api/integrations/cafe24/oauth/${step}`,
+        has: callbackHost,
+        destination: `${callbackTarget}/integrations/cafe24/oauth/${step}`
+      })),
+      ...["callback", "complete", "failed"].map((step) => ({
+        source: `/backend-api/integrations/cafe24/oauth/${step}`,
+        has: phase08CallbackHost,
+        destination: `${callbackTarget}/integrations/cafe24/oauth/${step}`
+      })), {
       source: "/backend-api/:path*",
       destination: `${apiTarget}/:path*`
-    }];
+      }
+    ];
   },
   async headers() {
     return [{

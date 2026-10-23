@@ -1,0 +1,24 @@
+{
+  "originals": [
+    {
+      "name": "meta-failed-day09-diagnostic.mjs",
+      "bytes": 21647,
+      "sha256": "5bf6356b7edd6641463a73b2ddbc7d9dbee219f1f5614d6ddcbf75b53f657868"
+    },
+    {
+      "name": "meta-day09-diagnostic-result.mjs",
+      "bytes": 7403,
+      "sha256": "2619aa28614e5383538b2021407ff794cd9f9486f2beaafa2cc3c7f98376ce5e"
+    },
+    {
+      "name": "meta-day09-diagnostic-protected.ps1",
+      "bytes": 2759,
+      "sha256": "fa9e77ec8d596d99ca586d4f49b6f85787d49e2d4139bbc5559ed85b87b196a9"
+    },
+    {
+      "name": "run-meta-failed-day09-diagnostic.ps1",
+      "bytes": 5637,
+      "sha256": "99d5d9f206dd06484b9535d6226d0e37d67868ca755f975a7e2ad29af46f7368"
+    }
+  ]
+}

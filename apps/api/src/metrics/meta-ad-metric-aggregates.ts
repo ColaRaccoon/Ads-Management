@@ -1,3 +1,4 @@
+import { aggregateMetricReasons, hasMixedMetaAttribution, sumComplete } from "../domain/meta-conditional-metrics";
 import { numberFrom } from "../common/date-range";
 import { formatDateOnly } from "../domain/date-number";
 import { MarginCalculator } from "../domain/margin-calculator";
@@ -6,6 +7,7 @@ import { aggregateMetaVideoMetrics } from "../domain/meta-video-metrics";
 import { PeriodMetricCalculator } from "../domain/period-metric-calculator";
 import { findEffectiveRuleForDate } from "../domain/effective-rule";
 import { AdDailyMetricRow, CreativeFinancialContext } from "./metric-types";
+import {aggregateMetaProviderPurchases} from "./meta-provider-purchases";
 
 const marginCalculator = new MarginCalculator();
 
@@ -15,11 +17,11 @@ export function aggregateAdDailyRows(calculator: PeriodMetricCalculator, rows: A
       metricDate: formatDateOnly(row.metricDate),
       spendUsd: numberFrom(row.spendUsd),
       spendKrw: null,
-      resultCount: adPurchaseCount(row),
+      resultCount: adPurchaseCount(row) ?? 0,
       impressions: numberFrom(row.impressions),
       linkClicks: row.linkClicks,
       clicksAll: row.clicksAll,
-      landingPageViews: row.landingPageViews,
+      landingPageViews: row.landingPageViews ?? 0,
       revenueKrw: null,
       marginKrw: null
     }))
@@ -29,6 +31,8 @@ export function aggregateAdDailyRows(calculator: PeriodMetricCalculator, rows: A
     totals: {
       ...totals,
       ...videoTotals,
+      ...conditionalTotals(rows, totals),
+      ...aggregateMetaProviderPurchases(rows),
       cpmUsd: divideOrNull(totals.spendUsd * 1000, totals.impressions)
     },
     dataDays: totals.dataDays
@@ -61,12 +65,12 @@ export function aggregateCreativeDailyRows(
         : spendUsd * exchangeRateKrwPerUsd;
     const salePriceKrw = costRule ? numberFrom(costRule.salePriceKrw) : null;
     const revenueKrw =
-      purchaseCount === 0
+      purchaseCount === null ? null : purchaseCount === 0
         ? 0
         : salePriceKrw !== null && Number.isFinite(salePriceKrw)
           ? purchaseCount * salePriceKrw
           : null;
-    const margin = costRule && spendKrw !== null
+    const margin = costRule && spendKrw !== null && purchaseCount !== null
       ? marginCalculator.margin(
           {
             spendUsd,
@@ -91,11 +95,11 @@ export function aggregateCreativeDailyRows(
       metricDate,
       spendUsd,
       spendKrw,
-      resultCount: purchaseCount,
+      resultCount: purchaseCount ?? 0,
       impressions: numberFrom(row.impressions),
       linkClicks: row.linkClicks,
       clicksAll: row.clicksAll,
-      landingPageViews: row.landingPageViews,
+      landingPageViews: row.landingPageViews ?? 0,
       revenueKrw,
       marginKrw
     };
@@ -103,8 +107,8 @@ export function aggregateCreativeDailyRows(
   const totals = calculator.calculate(periodRows);
   const videoTotals = aggregateMetaVideoMetrics(rows);
   const hasUnknownSpendKrw = periodRows.some((row) => row.spendUsd > 0 && row.spendKrw === null);
-  const hasUnknownRevenueKrw = periodRows.some((row) => row.resultCount > 0 && row.revenueKrw === null);
-  const hasUnknownMarginKrw = periodRows.some((row) => row.marginKrw === null);
+  const hasUnknownRevenueKrw = hasMixedMetaAttribution(rows) || rows.some((row) => adPurchaseCount(row) === null) || periodRows.some((row) => row.resultCount > 0 && row.revenueKrw === null);
+  const hasUnknownMarginKrw = hasMixedMetaAttribution(rows) || periodRows.some((row) => row.marginKrw === null);
   const spendKrw = hasUnknownSpendKrw ? null : totals.spendKrw;
   const revenueKrw = hasUnknownRevenueKrw ? null : totals.revenueKrw;
   const marginKrw = hasUnknownMarginKrw ? null : totals.marginKrw;
@@ -113,10 +117,12 @@ export function aggregateCreativeDailyRows(
     totals: {
       ...totals,
       ...videoTotals,
+      ...conditionalTotals(rows, totals),
+      ...aggregateMetaProviderPurchases(rows),
       spendKrw,
       revenueKrw,
       marginKrw,
-      cpaKrw: spendKrw === null ? null : divideOrNull(spendKrw, totals.purchaseCount),
+      cpaKrw: spendKrw === null || hasMixedMetaAttribution(rows) || rows.some((row) => adPurchaseCount(row) === null) ? null : divideOrNull(spendKrw, totals.purchaseCount),
       roas: spendKrw === null || revenueKrw === null ? null : divideOrNull(revenueKrw, spendKrw),
       cpmUsd: divideOrNull(totals.spendUsd * 1000, totals.impressions)
     },
@@ -124,15 +130,16 @@ export function aggregateCreativeDailyRows(
   };
 }
 
-export function adPurchaseCount(row: { resultIndicator: string | null; resultCount: number; purchaseCount: number }) {
-  return isPurchaseResult(row.resultIndicator) ? row.resultCount : row.purchaseCount;
+export function adPurchaseCount(row: { source?: string; resultIndicator: string | null; resultCount: number | null; purchaseCount: number | null }) {
+  return row.source === "API" ? row.purchaseCount : isPurchaseResult(row.resultIndicator) ? row.resultCount : row.purchaseCount;
 }
 
 export function aggregateAddToCartRatePct(
-  rows: readonly Pick<AdDailyMetricRow, "reach" | "addToCartCount">[]
+  rows: readonly (Pick<AdDailyMetricRow, "reach" | "addToCartCount"> & { source?: string })[]
 ) {
+  if (rows.length > 1) return null;
   const complete = rows.length > 0 && rows.every(
-    (row) => row.addToCartCount !== null || row.reach === 0
+    (row) => row.addToCartCount !== null || row.source !== "API" && row.reach === 0
   );
   if (!complete) {
     return null;
@@ -190,4 +197,29 @@ export function singleUniqueNonEmpty(values: Array<string | null | undefined>) {
 
 export function summarizeParseStatus(values: Array<"PARSED" | "FALLBACK">) {
   return values.includes("FALLBACK") ? "FALLBACK" : "PARSED";
+}
+
+function conditionalTotals(rows: AdDailyMetricRow[], totals: { cpaUsd: number | null; cpaKrw: number | null }) {
+  const mixed = hasMixedMetaAttribution(rows);
+  const purchaseCount = mixed ? null : sumComplete(rows.map(adPurchaseCount));
+  const metricUnavailableReasons = aggregateMetricReasons(rows);
+  if (purchaseCount === null) metricUnavailableReasons.purchaseCount ??= "PARTIAL_METRIC";
+  const landingPageViews = mixed ? null : sumComplete(rows.map((row) => row.landingPageViews));
+  const shopClicks = sumComplete(rows.map((row) => row.shopClicks));
+  const attributions = [...new Set(rows.map((row) => row.attributionSetting))];
+  const conversionOverrides: Record<string, null> = {};
+  if (mixed) {
+    metricUnavailableReasons.purchaseCount = "MIXED_ATTRIBUTION";
+    metricUnavailableReasons.landingPageViews = "MIXED_ATTRIBUTION";
+    for (const field of ["videoPlay3s", "videoPlay25", "videoPlay50", "videoPlay75", "videoPlay100"]) {
+      conversionOverrides[`${field}Count`] = null;
+      conversionOverrides[`${field}RatePct`] = null;
+      metricUnavailableReasons[`${field}Count`] = "MIXED_ATTRIBUTION";
+    }
+  }
+  return { ...conversionOverrides, purchaseCount, landingPageViews, shopClicks, metricUnavailableReasons,
+    hasApiMetrics: rows.some((row) => row.source === "API"), attributionContexts: [...new Set(rows.map((row) => JSON.stringify([row.attributionSetting, row.actionReportTime, [...(row.attributionWindows ?? [])].sort()])))],
+    attributionSettings: attributions, actionReportTimes: [...new Set(rows.map((row) => row.actionReportTime))],
+    cpaUsd: purchaseCount === null ? null : totals.cpaUsd,
+    cpaKrw: purchaseCount === null ? null : totals.cpaKrw };
 }

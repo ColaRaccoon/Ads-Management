@@ -1,3 +1,5 @@
+import { formatMetaMetricReasons } from "./meta-conditional-display";
+import { formatMetaCurrentObservations } from "./meta-current-metadata-display";
 import type { MetaCreativePerformanceRow } from "@/types/meta";
 import { formatMetaDeliveryStatus, META_VIDEO_RATE_COLUMNS, percentToRatio } from "./meta-video-display";
 import { buildXlsxWorkbook, type XlsxCell, type XlsxCellStyle, type XlsxWorkbookInput } from "./xlsx";
@@ -10,6 +12,8 @@ type MetaAdsExportColumn = {
 };
 
 const META_ADS_EXPORT_COLUMNS: MetaAdsExportColumn[] = [
+  { header: "미확정 지표 사유", width: 48, style: "Text", value: (row) => formatMetaMetricReasons(row.totals.metricUnavailableReasons) },
+  { header: "현재 자산 관찰 (과거 실적 상태/예산 아님)", width: 60, style: "Text", value: (row) => formatMetaCurrentObservations(row.currentMetadataObservations) },
   { header: "제품", width: 18, style: "Text", value: (row) => row.productName ?? "-" },
   { header: "소재", width: 18, style: "Text", value: (row) => row.materialNo ?? row.displayName },
   { header: "활성상태", width: 12, style: "Text", value: (row) => formatMetaDeliveryStatus(row.deliveryStatus) },

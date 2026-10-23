@@ -32,10 +32,11 @@ EXCHANGE_RATE_LOOKBACK_DAYS=10
 
 ## 실행
 
+2026-10-08 사용자 요청으로 테스트 소스·fixture·테스트 명령을 제거했습니다. 현재 체크아웃은 타입 검사(`npm.cmd run lint`)와 빌드 검증을 사용합니다. 이전 작업 기록의 테스트 결과는 당시 증거로 보존합니다.
+
 ```powershell
 npm.cmd install
 npm.cmd run prisma:validate
-npm.cmd run test
 npm.cmd run build
 npm.cmd run dev
 ```

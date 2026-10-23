@@ -1,0 +1,26 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {refreshPhase10CafeOnce} from './phase10-api-cafe-refresh.mjs';
+const ID='0c35defe-45fc-4a54-bc79-704df7bca5b1';
+function fixture(scenario='success'){
+ let revision=6,calls=0,backups=0,reads=0,active=false;const events=[];
+ const connection={id:ID,provider:'CAFE24',externalAccountId:'didadi0729',shopKey:'shop1',currencyCode:'KRW',timeZone:'Asia/Seoul',enabled:true,accessState:'READY',credentialRef:`source_credentials:${ID}:CAFE24_REFRESH`,credentialExpiresAt:new Date('2026-10-31T17:00:16Z')};
+ const rows=()=>['CAFE24_ACCESS','CAFE24_REFRESH'].map(kind=>({id:kind,connectionId:ID,kind,keyVersion:1,revision:scenario==='revision'?5:revision,
+  ciphertext:Buffer.alloc(22,4),iv:Buffer.alloc(12,3),authTag:Buffer.alloc(16,2),refreshOwner:null,refreshUntil:null,
+  expiresAt:new Date(kind==='CAFE24_ACCESS'?(revision===6?'2026-10-17T19:00:16Z':'2026-10-19T10:00:00Z'):'2026-10-31T17:00:16Z')}));
+ const tx={$executeRawUnsafe:async sql=>assert.match(sql,/^SET (TRANSACTION READ ONLY|LOCAL statement_timeout)/),
+  $queryRawUnsafe:async()=>{reads++;return[{database:'postgres',role:'phase08_runtime',schema:'phase08_meta_ads',readonly:'on',tables:68,leases:scenario==='lease'?1:0}];},
+  sourceConnection:{findUnique:async()=>({...connection})},sourceCredential:{findMany:async()=>rows()}};
+ const factory=()=>({$transaction:async fn=>{active=true;try{return await fn(tx);}finally{active=false;}},$disconnect:async()=>{}});
+ const protect=()=>{events.push('backup');backups++;if(scenario==='backup')throw Error('PRIVATE');return{path:'C:/Users/seong/AppData/Local/MetaAdsPhase08Runtime/synthetic.dpapi',sha256:'a'.repeat(64),currentUserDpapi:true,currentUserOnlyAcl:true};};
+ const request=async()=>{assert.equal(active,false);events.push('POST');calls++;return Response.json({scopes:scenario==='scope'?['mall.read_order','mall.write_order']:['mall.read_order'],synthetic:true});};
+ const makeAuth=(_db,tracked)=>({accessToken:async()=>{assert.equal(backups,1);assert.equal(reads,2);
+  const args=['https://didadi0729.cafe24api.com/api/v2/oauth/token',{method:'POST',body:'grant_type=refresh_token&refresh_token=PRIVATE_TOKEN',headers:{Authorization:'Basic PRIVATE'}}];
+  await tracked(...args);if(scenario==='retry')await tracked(...args);revision=7;return'PRIVATE_ACCESS_TOKEN';}});
+ const input={projectRef:'ehnfrrmbkvlsbpvqcvkr',classification:'SAME_SCOPE_EXACT_PAIR_REFRESH_ONCE',operationKey:'20261019-synthetic-refresh',databaseUrl:'postgresql://phase08_runtime.ehnfrrmbkvlsbpvqcvkr:synthetic@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres?schema=phase08_meta_ads&sslmode=verify-full',env:{SUPABASE_DATABASE_SCHEMA:'phase08_meta_ads',SUPABASE_DATABASE_RUNTIME_USER:'phase08_runtime',DAILY_SYNC_ACTIVE_KEY_VERSION:'1',DAILY_SYNC_CREDENTIAL_KEY_V1:Buffer.alloc(32,7).toString('base64'),DAILY_SYNC_CAFE24_CLIENT_ID:'SYNTHETIC12345',DAILY_SYNC_CAFE24_CLIENT_SECRET:'PRIVATE_SYNTHETIC_SECRET',DAILY_SYNC_CAFE24_REDIRECT_URI:'https://phase08-daily-data-sync-production.up.railway.app/backend-api/integrations/cafe24/oauth/callback',DAILY_SYNC_CAFE24_ISOLATED_ORIGIN:'https://phase08-daily-data-sync-production.up.railway.app'}};
+ return{input,factory,protect,request,makeAuth,calls:()=>calls,backups:()=>backups,events};
+}
+test('same pair is protected before one POST, revision7 is independently read back and no raw values escape',async()=>{const f=fixture(),out=await refreshPhase10CafeOnce(f.input,f);assert.equal(out.providerTokenPostRequests,1);assert.equal(out.providerOrderRequests,0);assert.deepEqual(out.afterRevisions,[7,7]);assert.deepEqual(f.events,['backup','POST']);assert(!JSON.stringify(out).includes('PRIVATE_'));assert.equal(f.input.env,undefined);});
+test('live lease or wrong revision blocks before local backup and token POST',async()=>{for(const mode of['lease','revision']){const f=fixture(mode);await assert.rejects(refreshPhase10CafeOnce(f.input,f));assert.equal(f.calls(),0);assert.equal(f.backups(),0);}});
+test('backup failure blocks all remote mutation and leaves a safe failure receipt',async()=>{const f=fixture('backup');await assert.rejects(refreshPhase10CafeOnce(f.input,f),error=>{assert.equal(error.safeDiagnostic.stage,'PROTECTED_BACKUP');assert.equal(error.safeDiagnostic.submitted,false);return true;});assert.equal(f.calls(),0);});
+test('a second exchange attempt is blocked before the transport and requires actual-state inspection',async()=>{const f=fixture('retry');await assert.rejects(refreshPhase10CafeOnce(f.input,f),error=>{assert.equal(error.safeDiagnostic.submitted,true);assert.equal(error.safeDiagnostic.providerTokenPostRequests,1);assert.equal(error.safeDiagnostic.blockedRepeatRequests,1);assert.equal(error.safeDiagnostic.inspectActualStateBeforeAnyRetry,true);assert(!JSON.stringify(error.safeDiagnostic).includes('PRIVATE_'));return true;});assert.equal(f.calls(),1);});
+test('successful token response with additional provider permission is refused after exactly one POST',async()=>{const f=fixture('scope');await assert.rejects(refreshPhase10CafeOnce(f.input,f),error=>{assert.equal(error.safeDiagnostic.stage,'TOKEN_SCOPE_EXACT');assert.equal(error.safeDiagnostic.submitted,true);assert.equal(error.safeDiagnostic.providerTokenPostRequests,1);return true;});assert.equal(f.calls(),1);});

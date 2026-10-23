@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-23T11:12:04.289000+09:00",
+  "status": "INTERNAL_FAILURE_BOUNDARY_NARROWED_EXACT_CAUSE_UNOBSERVABLE_READONLY",
+  "exactFunctionId": "6811fd3f-598e-45be-bac0-7a04a5f85261",
+  "failedWindowUtc": [
+    "2026-10-22T18:59:50Z",
+    "2026-10-22T19:15:10Z"
+  ],
+  "established": [
+    "renew and check executions have generic handler ERROR plus HTTP503",
+    "public JWKS HTTP200 at both failed execution times",
+    "last healthy window records Storage HEAD200 and function HTTP200",
+    "current stored JWT public signature, scope, expiration and deployment-issued-at condition are valid",
+    "three required Edge secret metadata entries were last updated 2026-09-14",
+    "version4/body contains expected kid, Project-Access-Token, 403/503 and generic error path",
+    "one renewal-labeled token record remains in exact Railway production environment"
+  ],
+  "inferredBoundary": "After successful public JWKS read and before the first observed Storage probe. Missing log rows are not proof of missing calls.",
+  "leadingUnresolved": "Edge-to-Railway variables read/access or adjacent protected-key/token validation; the exact response/exception was discarded by catch.",
+  "notEstablished": [
+    "Exact root exception or HTTP/GraphQL result from Edge project-token call",
+    "Edge secret value equals the masked Railway token metadata",
+    "Current failure would recur after external Railway recovery",
+    "Storage or application readiness success now"
+  ],
+  "notJustified": [
+    "Automatic refresh",
+    "Reissuing/revoking credentials by guess",
+    "Redeploying or changing the renewal function",
+    "Running renew/check to diagnose",
+    "Declaring shared-credential disposal incomplete"
+  ],
+  "correctedTimestampProof": "renewal-component-boundary-corrected.json",
+  "initialTimestampDiagnosticError": "PowerShell coerced UTC DateTime into a local-time string before parsing; corrected offline from preserved ISO Z values. Earlier false results retained, not used.",
+  "exactRepair": null,
+  "credentialChanges": 0,
+  "edgeInvocations": 0,
+  "storageRequests": 0,
+  "appReadinessRequests": 0,
+  "documentation": [
+    "https://supabase.com/docs/guides/observability/advanced-log-filtering",
+    "https://supabase.com/changelog/48235-migration-of-supabase-management-api-logs-all-analytics-endpoint-to-logs-endpoint"
+  ]
+}

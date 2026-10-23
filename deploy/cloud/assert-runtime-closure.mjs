@@ -21,7 +21,7 @@ export async function assertRuntimeClosure(root) {
     const relative = entry.relative;
     const lower = relative.toLowerCase();
     const basename = path.posix.basename(lower);
-    const dependencyPath = relative.startsWith("node_modules/");
+    const dependencyPath = isDependencyPath(relative);
     if (entry.type === "symlink" && !dependencyPath) fail("RUNTIME_SYMLINK_FORBIDDEN");
     if (isTestOnlyDependency(lower)) fail("RUNTIME_TEST_DEPENDENCY_PRESENT");
     if (isBackupOnlyDependency(lower)) fail("RUNTIME_BACKUP_TOOLING_PRESENT");
@@ -57,10 +57,16 @@ async function assertNoPrivateKeyContent(root, entries) {
   const privateKeyMarkers = ["PRIVATE", "RSA PRIVATE", "EC PRIVATE"]
     .map((kind) => Buffer.from(`-----BEGIN ${kind} KEY-----`));
   for (const entry of entries) {
-    if (entry.type !== "file" || entry.relative.startsWith("node_modules/") || entry.size > 1_048_576) continue;
+    if (entry.type !== "file" || isDependencyPath(entry.relative) || entry.size > 1_048_576) continue;
     const value = await readFile(path.join(root, ...entry.relative.split("/")));
     if (privateKeyMarkers.some((marker) => value.includes(marker))) fail("RUNTIME_PRIVATE_KEY_PRESENT");
   }
+}
+
+// npm may install a workspace's runtime dependency below that workspace rather
+// than hoisting it. Both layouts have the same existing dependency exceptions.
+function isDependencyPath(relative) {
+  return /^(?:node_modules\/|apps\/(?:api|web)\/node_modules\/)/u.test(relative);
 }
 
 async function walk(root) {

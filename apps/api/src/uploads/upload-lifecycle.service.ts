@@ -134,6 +134,7 @@ export class UploadLifecycleService {
         where: { uploadBatchId: id },
         select: {
           id: true,
+          connectionId: true,
           creativeId: true,
           metricDate: true,
           metaCampaignId: true,
@@ -144,11 +145,19 @@ export class UploadLifecycleService {
       });
       const adsetMetrics = await tx.metaAdsetDailyMetric.findMany({
         where: { uploadBatchId: id },
-        select: { id: true, metricDate: true, metaAdsetId: true }
+        select: { id: true, connectionId: true, metricDate: true, metaAdsetId: true }
       });
 
       const deletedAdMetricIds = adMetrics.map((metric) => metric.id);
       const deletedAdsetMetricIds = adsetMetrics.map((metric) => metric.id);
+      const boundAdIds = adMetrics.filter((metric) => metric.connectionId).map((metric) => metric.id);
+      const boundAdsetIds = adsetMetrics.filter((metric) => metric.connectionId).map((metric) => metric.id);
+      if (boundAdIds.length || boundAdsetIds.length) await tx.sourceRecordLink.deleteMany({ where: {
+        source: "CSV", OR: [
+          ...(boundAdIds.length ? [{ recordTable: "meta_ad_daily_metrics", recordId: { in: boundAdIds } }] : []),
+          ...(boundAdsetIds.length ? [{ recordTable: "meta_adset_daily_metrics", recordId: { in: boundAdsetIds } }] : [])
+        ]
+      } });
 
       const deletedAdMetrics = await tx.metaAdDailyMetric.deleteMany({ where: { uploadBatchId: id } });
       const deletedAdsetMetrics = await tx.metaAdsetDailyMetric.deleteMany({ where: { uploadBatchId: id } });
@@ -300,22 +309,29 @@ export class UploadLifecycleService {
   async restoreCurrentAdMetrics(tx: Prisma.TransactionClient, metrics: DeletedAdMetricKey[]) {
     let restoredCount = 0;
     for (const metric of uniqueAdMetricKeys(metrics)) {
+      const scope = {
+        metricDate: metric.metricDate,
+        metaCampaignId: metric.metaCampaignId,
+        metaAdsetId: metric.metaAdsetId,
+        adIdentityKey: metric.adIdentityKey,
+        connectionId: metric.connectionId ?? null,
+        source: "CSV" as const
+      };
+      if (metric.connectionId) {
+        const current = await tx.metaAdDailyMetric.findMany({ where: { ...scope, isCurrent: true },
+          select: { id: true } });
+        if (current.length) await tx.sourceRecordLink.updateMany({ where: {
+          connectionId: metric.connectionId, source: "CSV", dataKind: "META_AD",
+          recordTable: "meta_ad_daily_metrics", isCurrent: true,
+          recordId: { in: current.map((row) => row.id) }
+        }, data: { isCurrent: false } });
+      }
       await tx.metaAdDailyMetric.updateMany({
-        where: {
-          metricDate: metric.metricDate,
-          metaCampaignId: metric.metaCampaignId,
-          metaAdsetId: metric.metaAdsetId,
-          adIdentityKey: metric.adIdentityKey
-        },
+        where: scope,
         data: { isCurrent: false }
       });
       const replacement = await tx.metaAdDailyMetric.findFirst({
-        where: {
-          metricDate: metric.metricDate,
-          metaCampaignId: metric.metaCampaignId,
-          metaAdsetId: metric.metaAdsetId,
-          adIdentityKey: metric.adIdentityKey
-        },
+        where: scope,
         orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }],
         select: { id: true }
       });
@@ -324,6 +340,10 @@ export class UploadLifecycleService {
           where: { id: replacement.id },
           data: { isCurrent: true, supersededByMetricId: null }
         });
+        if (metric.connectionId) await tx.sourceRecordLink.updateMany({ where: {
+          connectionId: metric.connectionId, source: "CSV", dataKind: "META_AD",
+          recordTable: "meta_ad_daily_metrics", recordId: replacement.id
+        }, data: { isCurrent: true } });
         restoredCount += 1;
       }
     }
@@ -333,12 +353,23 @@ export class UploadLifecycleService {
   async restoreCurrentAdsetMetrics(tx: Prisma.TransactionClient, metrics: DeletedAdsetMetricKey[]) {
     let restoredCount = 0;
     for (const metric of uniqueAdsetMetricKeys(metrics)) {
+      const scope = { metricDate: metric.metricDate, metaAdsetId: metric.metaAdsetId,
+        connectionId: metric.connectionId ?? null, source: "CSV" as const };
+      if (metric.connectionId) {
+        const current = await tx.metaAdsetDailyMetric.findMany({ where: { ...scope, isCurrent: true },
+          select: { id: true } });
+        if (current.length) await tx.sourceRecordLink.updateMany({ where: {
+          connectionId: metric.connectionId, source: "CSV", dataKind: "META_ADSET",
+          recordTable: "meta_adset_daily_metrics", isCurrent: true,
+          recordId: { in: current.map((row) => row.id) }
+        }, data: { isCurrent: false } });
+      }
       await tx.metaAdsetDailyMetric.updateMany({
-        where: { metricDate: metric.metricDate, metaAdsetId: metric.metaAdsetId },
+        where: scope,
         data: { isCurrent: false }
       });
       const replacement = await tx.metaAdsetDailyMetric.findFirst({
-        where: { metricDate: metric.metricDate, metaAdsetId: metric.metaAdsetId },
+        where: scope,
         orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }],
         select: { id: true }
       });
@@ -347,6 +378,10 @@ export class UploadLifecycleService {
           where: { id: replacement.id },
           data: { isCurrent: true, supersededByMetricId: null }
         });
+        if (metric.connectionId) await tx.sourceRecordLink.updateMany({ where: {
+          connectionId: metric.connectionId, source: "CSV", dataKind: "META_ADSET",
+          recordTable: "meta_adset_daily_metrics", recordId: replacement.id
+        }, data: { isCurrent: true } });
         restoredCount += 1;
       }
     }
@@ -363,6 +398,7 @@ export class UploadLifecycleService {
     const remainingMetrics = await tx.metaAdDailyMetric.findMany({
       where: { creativeId: { in: creativeIds } },
       select: {
+        connectionId: true,
         creativeId: true,
         metaCampaignId: true,
         metaAdsetId: true,

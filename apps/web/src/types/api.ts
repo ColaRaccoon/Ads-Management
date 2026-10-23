@@ -10,8 +10,8 @@ export type DashboardSummary = {
     selectedDays: number;
     dataDays: number;
   };
-  totals: Record<string, number | null>;
-  averages: Record<string, number | null>;
+  totals: import("../lib/api").DashboardSummary["totals"];
+  averages: import("../lib/api").DashboardSummary["averages"];
   comparisons: Record<string, unknown>;
   health: {
     unmatchedCount: number;

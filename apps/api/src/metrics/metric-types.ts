@@ -26,7 +26,7 @@ export type DecoratedMetric = {
   metric: MetricWithRelations;
   metricDate: string;
   spendUsd: number;
-  purchaseCount: number;
+  purchaseCount: number | null;
   spendKrw: number | null;
   revenueKrw: number | null;
   marginKrw: number | null;

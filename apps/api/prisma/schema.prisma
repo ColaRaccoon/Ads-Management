@@ -200,6 +200,73 @@ enum StorageTombstoneState {
   @@map("storage_tombstone_state")
 }
 
+enum SourceProvider {
+  GOOGLE
+  META
+  CAFE24
+}
+
+enum SourceDataKind {
+  GOOGLE_CAMPAIGN
+  META_AD
+  META_ADSET
+  CAFE24_ORDER
+}
+
+enum SourceKind {
+  CSV
+  API
+}
+
+enum SourceAccessState {
+  PENDING
+  READY
+  REAUTH_REQUIRED
+  BLOCKED
+}
+
+enum SyncTrigger {
+  MANUAL
+  SCHEDULED
+  BACKFILL
+  RETRY
+}
+
+enum SyncRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+  ACTION_REQUIRED
+  CANCELLED
+}
+
+enum RunUnitStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  ACTION_REQUIRED
+}
+
+enum SourceCoverageState {
+  NOT_CONNECTED
+  NOT_COLLECTED
+  RUNNING
+  COMPLETE_ZERO
+  COMPLETE_NONZERO
+  PARTIAL
+  FAILED
+  STALE
+  UNSUPPORTED
+}
+
+enum SourceBindingMethod {
+  EXACT_ID
+  REVIEWED_LEGACY
+}
+
 model AppUser {
   id              String           @id @default(uuid()) @db.Uuid
   username        String?          @unique @db.VarChar(64)
@@ -221,6 +288,8 @@ model AppUser {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   authSessions    AppAuthSession[]
+  sourcePoliciesChanged SourcePolicy[] @relation("SourcePolicyChanger")
+  syncRunsStarted SyncRun[] @relation("SyncRunActor")
   localCredential LocalCredential?
   localSetupTokens LocalAccountSetupToken[] @relation("LocalSetupTokenSubject")
   localSetupTokensCreated LocalAccountSetupToken[] @relation("LocalSetupTokenCreator")
@@ -434,6 +503,7 @@ model ProductCpaRule {
 
 model MetaAdset {
   id                String                    @id @default(uuid()) @db.Uuid
+  connectionId      String?                   @map("connection_id") @db.Uuid
   platform          String                    @default("META")
   externalAdsetId   String?                   @map("external_adset_id")
   campaignRefId     String?                   @map("campaign_ref_id") @db.Uuid
@@ -467,6 +537,7 @@ model MetaAdset {
 
 model MetaCampaign {
   id                 String              @id @default(uuid()) @db.Uuid
+  connectionId       String?             @map("connection_id") @db.Uuid
   platform           String              @default("META")
   externalCampaignId String              @map("meta_campaign_id")
   campaignName       String              @map("campaign_name")
@@ -479,13 +550,14 @@ model MetaCampaign {
   adDailyMetrics     MetaAdDailyMetric[]
   creativePlacements CreativePlacement[]
 
-  @@unique([platform, externalCampaignId])
+  @@index([connectionId, platform, externalCampaignId])
   @@index([platform, campaignName])
   @@map("meta_campaigns")
 }
 
 model MetaAd {
   id                 String              @id @default(uuid()) @db.Uuid
+  connectionId       String?             @map("connection_id") @db.Uuid
   platform           String              @default("META")
   campaignRefId      String              @map("campaign_ref_id") @db.Uuid
   metaAdsetRefId     String              @map("meta_adset_ref_id") @db.Uuid
@@ -506,7 +578,7 @@ model MetaAd {
   dailyMetrics       MetaAdDailyMetric[]
   placements         CreativePlacement[]
 
-  @@unique([platform, metaCampaignId, metaAdsetId, adIdentityKey])
+  @@index([connectionId, platform, metaCampaignId, metaAdsetId, adIdentityKey])
   @@index([platform, externalAdId])
   @@index([campaignRefId])
   @@index([metaAdsetRefId])
@@ -559,6 +631,7 @@ model CreativeAlias {
 
 model CreativePlacement {
   id             String        @id @default(uuid()) @db.Uuid
+  connectionId   String?       @map("connection_id") @db.Uuid
   creativeId     String        @map("creative_id") @db.Uuid
   metaCampaignId String        @map("meta_campaign_id")
   metaAdsetId    String        @map("meta_adset_id")
@@ -578,8 +651,9 @@ model CreativePlacement {
   metaAd         MetaAd?       @relation(fields: [metaAdRefId], references: [id])
   campaign       MetaCampaign? @relation(fields: [campaignRefId], references: [id])
   metaAdset      MetaAdset?    @relation(fields: [metaAdsetRefId], references: [id])
+  connection     SourceConnection? @relation(fields: [connectionId], references: [id], onDelete: Restrict)
 
-  @@unique([creativeId, metaCampaignId, metaAdsetId, originalAdName])
+  @@index([connectionId, creativeId])
   @@index([creativeId, lastSeenOn])
   @@index([metaCampaignId, metaAdsetId])
   @@map("creative_placements")
@@ -813,9 +887,13 @@ model Cafe24UploadBatch {
 
 model Cafe24OrderLine {
   id                  String              @id @default(uuid()) @db.Uuid
-  uploadBatchId       String              @map("upload_batch_id") @db.Uuid
-  rowNumber           Int                 @map("row_number")
-  sourceRowHash       String              @map("source_row_hash") @db.Char(64)
+  uploadBatchId       String?             @map("upload_batch_id") @db.Uuid
+  connectionId        String?             @map("connection_id") @db.Uuid
+  syncRunId           String?             @map("sync_run_id") @db.Uuid
+  source              SourceKind          @default(CSV)
+  providerUpdatedAt   DateTime?           @map("provider_updated_at") @db.Timestamptz(3)
+  rowNumber           Int?                @map("row_number")
+  sourceRowHash       String?             @map("source_row_hash") @db.Char(64)
   orderLineKey        String              @map("order_line_key")
   orderNo             String              @map("order_no")
   lineOrderNo         String              @map("line_order_no")
@@ -826,7 +904,16 @@ model Cafe24OrderLine {
   salePriceKrw        Decimal             @default(0) @map("sale_price_krw") @db.Decimal(14, 2)
   totalOrderKrw       Decimal?            @map("total_order_krw") @db.Decimal(14, 2)
   totalPaidKrw        Decimal             @default(0) @map("total_paid_krw") @db.Decimal(14, 2)
+  totalPaidInputSource String?             @map("total_paid_input_source") @db.VarChar(64)
   paymentMethod       String?             @map("payment_method")
+  providerPaymentCodes Json?              @map("provider_payment_codes")
+  providerCouponSignal Boolean?           @map("provider_coupon_signal")
+  actualOrderPriceKrw Decimal?            @map("actual_order_price_krw") @db.Decimal(18, 2)
+  actualPaymentKrw    Decimal?            @map("actual_payment_krw") @db.Decimal(18, 2)
+  actualShippingFeeKrw Decimal?           @map("actual_shipping_fee_krw") @db.Decimal(18, 2)
+  initialOrderPriceKrw Decimal?           @map("initial_order_price_krw") @db.Decimal(18, 2)
+  initialPaymentKrw   Decimal?            @map("initial_payment_krw") @db.Decimal(18, 2)
+  initialShippingFeeKrw Decimal?          @map("initial_shipping_fee_krw") @db.Decimal(18, 2)
   orderedAt           DateTime?           @map("ordered_at")
   orderDate           DateTime?           @map("order_date") @db.Date
   productId           String?             @map("product_id") @db.Uuid
@@ -839,7 +926,7 @@ model Cafe24OrderLine {
   supersededByOrderLineId String?         @map("superseded_by_order_line_id") @db.Uuid
   rawRow              Json?               @map("raw_row")
   createdAt           DateTime            @default(now()) @map("created_at")
-  batch               Cafe24UploadBatch   @relation(fields: [uploadBatchId], references: [id], onDelete: Cascade)
+  batch               Cafe24UploadBatch?  @relation(fields: [uploadBatchId], references: [id], onDelete: Cascade)
   product             Product?            @relation(fields: [productId], references: [id])
   matchRule           Cafe24ProductRule?  @relation(fields: [cafe24ProductRuleId], references: [id])
   rowErrors           Cafe24UploadRowError[]
@@ -1300,7 +1387,11 @@ model CoupangUploadRowError {
 
 model MetaAdsetDailyMetric {
   id                            String            @id @default(uuid()) @db.Uuid
-  uploadBatchId                 String            @map("upload_batch_id") @db.Uuid
+  uploadBatchId                 String?           @map("upload_batch_id") @db.Uuid
+  connectionId                  String?           @map("connection_id") @db.Uuid
+  syncRunId                     String?           @map("sync_run_id") @db.Uuid
+  source                        SourceKind        @default(CSV)
+  sourceRevision                String?           @map("source_revision") @db.VarChar(256)
   uploadRowId                   String?           @unique @map("upload_row_id") @db.Uuid
   metaAdsetId                   String            @map("meta_adset_id") @db.Uuid
   metricDate                    DateTime          @map("metric_date") @db.Date
@@ -1310,9 +1401,16 @@ model MetaAdsetDailyMetric {
   adsetNameKey                  String            @map("adset_name_key")
   deliveryStatus                String?           @map("delivery_status")
   attributionSetting            String?           @map("attribution_setting")
-  resultCount                   Int               @default(0) @map("result_count")
+  actionReportTime               String?           @map("action_report_time") @db.VarChar(64)
+  attributionWindows            String[]          @default([]) @map("attribution_windows")
+  metricUnavailableReasons      Json?             @map("metric_unavailable_reasons")
+  currentMetadata               Json?             @map("current_metadata")
+  metadataObservedAt            DateTime?         @map("metadata_observed_at") @db.Timestamptz(6)
+  resultCount                   Int?              @default(0) @map("result_count")
+  purchaseCount                 Int?              @map("purchase_count")
+  purchaseValueUsd              Decimal?          @map("purchase_value_usd") @db.Decimal(14, 4)
   resultIndicator               String?           @map("result_indicator")
-  reach                         Int               @default(0)
+  reach                         Int?
   frequency                     Decimal?          @db.Decimal(12, 6)
   costPerResultUsd              Decimal?          @map("cost_per_result_usd") @db.Decimal(14, 4)
   adsetBudgetLabel              String?           @map("adset_budget_label")
@@ -1323,13 +1421,13 @@ model MetaAdsetDailyMetric {
   impressions                   BigInt            @default(0)
   cpmUsd                        Decimal?          @map("cpm_usd") @db.Decimal(14, 4)
   linkClicks                    Int               @default(0) @map("link_clicks")
-  shopClicks                    Int               @default(0) @map("shop_clicks")
+  shopClicks                    Int?              @default(0) @map("shop_clicks")
   cpcLinkUsd                    Decimal?          @map("cpc_link_usd") @db.Decimal(14, 4)
   ctrLinkPct                    Decimal?          @map("ctr_link_pct") @db.Decimal(10, 6)
   clicksAll                     Int               @default(0) @map("clicks_all")
   ctrAllPct                     Decimal?          @map("ctr_all_pct") @db.Decimal(10, 6)
   cpcAllUsd                     Decimal?          @map("cpc_all_usd") @db.Decimal(14, 4)
-  landingPageViews              Int               @default(0) @map("landing_page_views")
+  landingPageViews              Int?              @default(0) @map("landing_page_views")
   costPerLandingPageViewUsd     Decimal?          @map("cost_per_landing_page_view_usd") @db.Decimal(14, 4)
   productId                     String?           @map("product_id") @db.Uuid
   stage                         AdStage           @default(UNKNOWN)
@@ -1339,16 +1437,16 @@ model MetaAdsetDailyMetric {
   importVersion                 Int               @default(1) @map("import_version")
   isCurrent                     Boolean           @default(true) @map("is_current")
   supersededByMetricId          String?           @map("superseded_by_metric_id") @db.Uuid
-  rawRow                        Json              @map("raw_row")
+  rawRow                        Json?             @map("raw_row")
   createdAt                     DateTime          @default(now()) @map("created_at")
   updatedAt                     DateTime          @updatedAt @map("updated_at")
-  batch                         UploadBatch       @relation(fields: [uploadBatchId], references: [id])
+  batch                         UploadBatch?      @relation(fields: [uploadBatchId], references: [id])
   uploadRow                     UploadRow?        @relation(fields: [uploadRowId], references: [id])
   metaAdset                     MetaAdset         @relation(fields: [metaAdsetId], references: [id])
   product                       Product?          @relation(fields: [productId], references: [id])
   productMatchRule              ProductMatchRule? @relation(fields: [productMatchRuleId], references: [id])
 
-  @@unique([metricDate, metaAdsetId, importVersion])
+  @@index([source, connectionId, metricDate])
   @@index([metricDate])
   @@index([productId, metricDate])
   @@index([stage, metricDate])
@@ -1357,7 +1455,11 @@ model MetaAdsetDailyMetric {
 
 model MetaAdDailyMetric {
   id                            String            @id @default(uuid()) @db.Uuid
-  uploadBatchId                 String            @map("upload_batch_id") @db.Uuid
+  uploadBatchId                 String?           @map("upload_batch_id") @db.Uuid
+  connectionId                  String?           @map("connection_id") @db.Uuid
+  syncRunId                     String?           @map("sync_run_id") @db.Uuid
+  source                        SourceKind        @default(CSV)
+  sourceRevision                String?           @map("source_revision") @db.VarChar(256)
   uploadRowId                   String?           @unique @map("upload_row_id") @db.Uuid
   campaignRefId                 String            @map("campaign_ref_id") @db.Uuid
   metaAdsetRefId                String            @map("meta_adset_ref_id") @db.Uuid
@@ -1376,9 +1478,15 @@ model MetaAdDailyMetric {
   adNameSnapshot                String            @map("ad_name_snapshot")
   adDeliveryStatus              String?           @map("ad_delivery_status")
   attributionSetting            String?           @map("attribution_setting")
+  actionReportTime               String?           @map("action_report_time") @db.VarChar(64)
+  attributionWindows            String[]          @default([]) @map("attribution_windows")
+  metricUnavailableReasons      Json?             @map("metric_unavailable_reasons")
+  currentMetadata               Json?             @map("current_metadata")
+  metadataObservedAt            DateTime?         @map("metadata_observed_at") @db.Timestamptz(6)
   resultIndicator               String?           @map("result_indicator")
-  resultCount                   Int               @default(0) @map("result_count")
-  purchaseCount                 Int               @default(0) @map("purchase_count")
+  resultCount                   Int?              @default(0) @map("result_count")
+  purchaseCount                 Int?              @default(0) @map("purchase_count")
+  purchaseValueUsd              Decimal?          @map("purchase_value_usd") @db.Decimal(14, 4)
   reach                         Int               @default(0)
   videoPlay3sCount              Int?              @map("video_play_3s_count")
   videoPlay25Count              Int?              @map("video_play_25_count")
@@ -1398,13 +1506,13 @@ model MetaAdDailyMetric {
   impressions                   BigInt            @default(0)
   cpmUsd                        Decimal?          @map("cpm_usd") @db.Decimal(14, 4)
   linkClicks                    Int               @default(0) @map("link_clicks")
-  shopClicks                    Int               @default(0) @map("shop_clicks")
+  shopClicks                    Int?              @default(0) @map("shop_clicks")
   cpcLinkUsd                    Decimal?          @map("cpc_link_usd") @db.Decimal(14, 4)
   ctrLinkPct                    Decimal?          @map("ctr_link_pct") @db.Decimal(10, 6)
   clicksAll                     Int               @default(0) @map("clicks_all")
   ctrAllPct                     Decimal?          @map("ctr_all_pct") @db.Decimal(10, 6)
   cpcAllUsd                     Decimal?          @map("cpc_all_usd") @db.Decimal(14, 4)
-  landingPageViews              Int               @default(0) @map("landing_page_views")
+  landingPageViews              Int?              @default(0) @map("landing_page_views")
   costPerLandingPageViewUsd     Decimal?          @map("cost_per_landing_page_view_usd") @db.Decimal(14, 4)
   productId                     String?           @map("product_id") @db.Uuid
   stage                         AdStage           @default(UNKNOWN)
@@ -1414,10 +1522,10 @@ model MetaAdDailyMetric {
   importVersion                 Int               @default(1) @map("import_version")
   isCurrent                     Boolean           @default(true) @map("is_current")
   supersededByMetricId          String?           @map("superseded_by_metric_id") @db.Uuid
-  rawRow                        Json              @map("raw_row")
+  rawRow                        Json?             @map("raw_row")
   createdAt                     DateTime          @default(now()) @map("created_at")
   updatedAt                     DateTime          @updatedAt @map("updated_at")
-  batch                         UploadBatch       @relation(fields: [uploadBatchId], references: [id])
+  batch                         UploadBatch?      @relation(fields: [uploadBatchId], references: [id])
   uploadRow                     UploadRow?        @relation(fields: [uploadRowId], references: [id])
   campaign                      MetaCampaign      @relation(fields: [campaignRefId], references: [id])
   metaAdset                     MetaAdset         @relation(fields: [metaAdsetRefId], references: [id])
@@ -1426,7 +1534,7 @@ model MetaAdDailyMetric {
   product                       Product?          @relation(fields: [productId], references: [id])
   productMatchRule              ProductMatchRule? @relation(fields: [productMatchRuleId], references: [id])
 
-  @@unique([metricDate, metaCampaignId, metaAdsetId, adIdentityKey, importVersion])
+  @@index([source, connectionId, metricDate])
   @@index([metricDate])
   @@index([metaCampaignId, metricDate])
   @@index([metaAdsetId, metricDate])
@@ -1566,4 +1674,373 @@ model AppSetting {
 
   @@index([updatedBy])
   @@map("app_settings")
+}
+
+// The automation schema is additive. Existing CSV reads/writes never depend on it.
+model SourceConnection {
+  id                  String            @id @default(uuid()) @db.Uuid
+  provider            SourceProvider
+  externalAccountId   String            @map("external_account_id") @db.VarChar(256)
+  shopKey             String            @default("default") @map("shop_key") @db.VarChar(256)
+  displayName         String            @map("display_name") @db.VarChar(256)
+  currencyCode        String            @map("currency_code") @db.VarChar(3)
+  timeZone            String            @map("time_zone") @db.VarChar(128)
+  credentialRef       String?           @map("credential_ref") @db.VarChar(256)
+  credentialExpiresAt DateTime?         @map("credential_expires_at") @db.Timestamptz(3)
+  accessState         SourceAccessState @default(PENDING) @map("access_state")
+  enabled             Boolean           @default(false)
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  policies            SourcePolicy[]
+  runs                SyncRun[]
+  lease               SyncLease?
+  coverage            SourceCoverage[]
+  googleCosts         GoogleCampaignDailyCost[]
+  recordLinks         SourceRecordLink[]
+  creativePlacements  CreativePlacement[]
+  cafe24Versions      Cafe24OrderApiVersion[]
+  credentials         SourceCredential[]
+  cafe24OauthAttempts Cafe24OauthAttempt[]
+  cafe24SweepState    Cafe24SweepState?
+  cafe24ObservedRevisions Cafe24ObservedOrderRevision[]
+  cafe24ObservedDays  Cafe24ObservedDayCheckpoint[]
+  cafe24ObservedEpochRevisions Cafe24ObservedEpochOrderRevision[]
+  cafe24ObservedEpochDays Cafe24ObservedEpochDayCheckpoint[]
+
+  @@unique([provider, externalAccountId, shopKey])
+  @@map("source_connections")
+}
+
+// Only a digest of the one-time OAuth state is persisted. No code or token enters this table.
+model Cafe24OauthAttempt {
+  id           String           @id @default(uuid()) @db.Uuid
+  connectionId String           @map("connection_id") @db.Uuid
+  stateHash    String           @unique @map("state_hash") @db.Char(64)
+  actorUserId  String?          @map("actor_user_id") @db.Uuid
+  expiresAt    DateTime         @map("expires_at") @db.Timestamptz(3)
+  consumedAt   DateTime?        @map("consumed_at") @db.Timestamptz(3)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  connection   SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@index([connectionId, expiresAt])
+  @@map("cafe24_oauth_attempts")
+}
+
+model Cafe24SweepState {
+  connectionId        String           @id @map("connection_id") @db.Uuid
+  earliestOrderDate   DateTime         @map("earliest_order_date") @db.Date
+  historicalCursor    Int              @default(0) @map("historical_cursor")
+  lastSuccessStartedAt DateTime?       @map("last_success_started_at") @db.Timestamptz(3)
+  activeSweepId       String?          @map("active_sweep_id") @db.Uuid
+  activeStartedAt     DateTime?        @map("active_started_at") @db.Timestamptz(3)
+  activePlan          Json?            @map("active_plan")
+  activeRunIndex      Int              @default(0) @map("active_run_index")
+  activeAttempt       Int              @default(0) @map("active_attempt")
+  updatedAt           DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  connection          SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@map("cafe24_sweep_states")
+}
+
+// Observation-only: no provider modification timestamp or cache freshness is inferred.
+model Cafe24ObservedOrderRevision {
+  connectionId    String           @map("connection_id") @db.Uuid
+  orderKeyHash    String           @map("order_key_hash") @db.Char(64)
+  revision        Int
+  orderDate       DateTime         @map("order_date") @db.Date
+  contentHash     String           @map("content_hash") @db.Char(64)
+  firstObservedAt DateTime         @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt  DateTime         @map("last_observed_at") @db.Timestamptz(3)
+  observationId   String           @map("observation_id") @db.Uuid
+  isCurrent       Boolean          @default(true) @map("is_current")
+  connection      SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@id([connectionId, orderKeyHash, revision])
+  @@index([connectionId, orderDate, isCurrent])
+  @@map("cafe24_observed_order_revisions")
+}
+
+model Cafe24ObservedDayCheckpoint {
+  connectionId   String           @map("connection_id") @db.Uuid
+  orderDate      DateTime         @map("order_date") @db.Date
+  queryStartedAt DateTime         @map("query_started_at") @db.Timestamptz(3)
+  completedAt    DateTime         @map("completed_at") @db.Timestamptz(3)
+  observationId  String           @map("observation_id") @db.Uuid
+  keyVersion     Int              @map("key_version")
+  orderCount     Int              @map("order_count")
+  itemCount      Int              @map("item_count")
+  snapshotHash   String           @map("snapshot_hash") @db.Char(64)
+  connection     SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@id([connectionId, orderDate])
+  @@map("cafe24_observed_day_checkpoints")
+}
+
+// Separate observation epochs never reinterpret or overwrite the quarantined V1 tables.
+model Cafe24ObservedEpochOrderRevision {
+  connectionId String @map("connection_id") @db.Uuid
+  keyVersion Int @map("key_version")
+  epochReference String @map("epoch_reference") @db.Uuid
+  epochStartedAt DateTime @map("epoch_started_at") @db.Timestamptz(3)
+  keyCommitment String @map("key_commitment") @db.Char(64)
+  keyIdentityCommitment String @map("key_identity_commitment") @db.Char(64)
+  baselineApprovalSha256 String @map("baseline_approval_sha256") @db.Char(64)
+  sourceClosureSha256 String @map("source_closure_sha256") @db.Char(64)
+  orderKeyHash String @map("order_key_hash") @db.Char(64)
+  revision Int
+  orderDate DateTime @map("order_date") @db.Date
+  contentHash String @map("content_hash") @db.Char(64)
+  firstObservedAt DateTime @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt DateTime @map("last_observed_at") @db.Timestamptz(3)
+  observationId String @map("observation_id") @db.Uuid
+  isCurrent Boolean @default(true) @map("is_current")
+  integrityHash String @map("integrity_hash") @db.Char(64)
+  connection SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  checkpoint Cafe24ObservedEpochDayCheckpoint @relation(fields: [connectionId, keyVersion, orderDate], references: [connectionId, keyVersion, orderDate], onDelete: Restrict, map: "cafe24_epoch_revisions_checkpoint_fkey")
+
+  @@id([connectionId, keyVersion, orderKeyHash, revision], map: "cafe24_epoch_revisions_pkey")
+  @@index([connectionId, keyVersion, epochReference, orderDate, isCurrent], map: "cafe24_epoch_revisions_day_idx")
+  @@map("cafe24_observed_epoch_order_revisions")
+}
+
+model Cafe24ObservedEpochDayCheckpoint {
+  connectionId String @map("connection_id") @db.Uuid
+  keyVersion Int @map("key_version")
+  epochReference String @map("epoch_reference") @db.Uuid
+  epochStartedAt DateTime @map("epoch_started_at") @db.Timestamptz(3)
+  keyCommitment String @map("key_commitment") @db.Char(64)
+  keyIdentityCommitment String @map("key_identity_commitment") @db.Char(64)
+  baselineApprovalSha256 String @map("baseline_approval_sha256") @db.Char(64)
+  sourceClosureSha256 String @map("source_closure_sha256") @db.Char(64)
+  orderDate DateTime @map("order_date") @db.Date
+  queryStartedAt DateTime @map("query_started_at") @db.Timestamptz(3)
+  completedAt DateTime @map("completed_at") @db.Timestamptz(3)
+  observationId String @map("observation_id") @db.Uuid
+  checkpointRevision Int @map("checkpoint_revision")
+  orderCount Int @map("order_count")
+  itemCount Int @map("item_count")
+  snapshotHash String @map("snapshot_hash") @db.Char(64)
+  integrityHash String @map("integrity_hash") @db.Char(64)
+  connection SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  revisions Cafe24ObservedEpochOrderRevision[]
+
+  @@id([connectionId, keyVersion, orderDate], map: "cafe24_epoch_days_pkey")
+  @@index([connectionId, keyVersion, epochReference], map: "cafe24_epoch_days_scope_idx")
+  @@map("cafe24_observed_epoch_day_checkpoints")
+}
+
+model SourcePolicy {
+  id              String           @id @default(uuid()) @db.Uuid
+  connectionId    String           @map("connection_id") @db.Uuid
+  dataKind        SourceDataKind   @map("data_kind")
+  fromDate        DateTime         @map("from_date") @db.Date
+  toDate          DateTime?        @map("to_date") @db.Date
+  primarySource   SourceKind       @map("primary_source")
+  couponInputSource String?         @map("coupon_input_source") @db.VarChar(64)
+  effectiveAt     DateTime         @default(now()) @map("effective_at") @db.Timestamptz(3)
+  version         Int
+  changedByUserId String?          @map("changed_by_user_id") @db.Uuid
+  reason          String           @db.VarChar(256)
+  connection      SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  changedBy       AppUser?         @relation("SourcePolicyChanger", fields: [changedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([connectionId, dataKind, fromDate])
+  @@map("source_policies")
+}
+
+model SyncRun {
+  id                String           @id @default(uuid()) @db.Uuid
+  connectionId      String           @map("connection_id") @db.Uuid
+  trigger           SyncTrigger
+  requestKey        String           @map("request_key") @db.VarChar(256)
+  fromDate          DateTime         @map("from_date") @db.Date
+  toDate            DateTime         @map("to_date") @db.Date
+  status            SyncRunStatus    @default(QUEUED)
+  attemptCount      Int              @default(0) @map("attempt_count")
+  rowsFetched       Int              @default(0) @map("rows_fetched")
+  rowsPublished     Int              @default(0) @map("rows_published")
+  startedAt         DateTime?        @map("started_at") @db.Timestamptz(3)
+  finishedAt        DateTime?        @map("finished_at") @db.Timestamptz(3)
+  deadlineAt        DateTime?        @map("deadline_at") @db.Timestamptz(3)
+  nextAttemptAt     DateTime?        @map("next_attempt_at") @db.Timestamptz(3)
+  safeErrorCode     String?          @map("safe_error_code") @db.VarChar(64)
+  providerRequestId String?          @map("provider_request_id") @db.VarChar(256)
+  actorUserId       String?          @map("actor_user_id") @db.Uuid
+  connection        SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  units             RunUnit[]
+  actor             AppUser?         @relation("SyncRunActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  ownedLeases       SyncLease[]      @relation("SyncLeaseOwner")
+  attemptedCoverage SourceCoverage[] @relation("CoverageAttempt")
+  successfulCoverage SourceCoverage[] @relation("CoverageSuccess")
+  googleCosts       GoogleCampaignDailyCost[]
+  recordLinks       SourceRecordLink[]
+  cafe24Versions    Cafe24OrderApiVersion[]
+
+  @@unique([connectionId, requestKey])
+  @@index([status, nextAttemptAt])
+  @@map("sync_runs")
+}
+
+model RunUnit {
+  runId           String        @map("run_id") @db.Uuid
+  unitKey         String        @map("unit_key") @db.VarChar(256)
+  status          RunUnitStatus @default(QUEUED)
+  attempts        Int           @default(0)
+  fetchedCount    Int           @default(0) @map("fetched_count")
+  publishedCount  Int           @default(0) @map("published_count")
+  checkpointValue String?       @map("checkpoint_value") @db.VarChar(512)
+  completedAt     DateTime?     @map("completed_at") @db.Timestamptz(3)
+  run             SyncRun       @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@id([runId, unitKey])
+  @@map("run_units")
+}
+
+model SyncLease {
+  connectionId String           @id @map("connection_id") @db.Uuid
+  ownerRunId   String           @map("owner_run_id") @db.Uuid
+  generation   BigInt           @default(1)
+  expiresAt    DateTime         @map("expires_at") @db.Timestamptz(3)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  connection   SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  owner       SyncRun          @relation("SyncLeaseOwner", fields: [ownerRunId], references: [id], onDelete: Restrict)
+
+  @@map("sync_leases")
+}
+
+model SourceCoverage {
+  connectionId        String              @map("connection_id") @db.Uuid
+  dataKind            SourceDataKind      @map("data_kind")
+  metricDate          DateTime            @map("metric_date") @db.Date
+  source              SourceKind
+  state               SourceCoverageState @default(NOT_COLLECTED)
+  lastAttemptRunId    String?             @map("last_attempt_run_id") @db.Uuid
+  lastSuccessRunId    String?             @map("last_success_run_id") @db.Uuid
+  lastSuccessAt       DateTime?           @map("last_success_at") @db.Timestamptz(3)
+  lastAttemptAt       DateTime?           @map("last_attempt_at") @db.Timestamptz(3)
+  rowCount            Int?                @map("row_count")
+  totalAmount         Decimal?            @map("total_amount") @db.Decimal(24, 6)
+  reconciliationStatus String?            @map("reconciliation_status") @db.VarChar(64)
+  warningCodes        String[]            @default([]) @map("warning_codes")
+  connection          SourceConnection    @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  lastAttemptRun      SyncRun?             @relation("CoverageAttempt", fields: [lastAttemptRunId], references: [id], onDelete: Restrict)
+  lastSuccessRun      SyncRun?             @relation("CoverageSuccess", fields: [lastSuccessRunId], references: [id], onDelete: Restrict)
+
+  @@id([connectionId, dataKind, metricDate])
+  @@index([metricDate, state])
+  @@map("source_coverage")
+}
+
+model GoogleCampaignDailyCost {
+  id              String           @id @default(uuid()) @db.Uuid
+  connectionId    String           @map("connection_id") @db.Uuid
+  metricDate      DateTime         @map("metric_date") @db.Date
+  campaignId      String           @map("campaign_id") @db.VarChar(256)
+  campaignName    String           @map("campaign_name") @db.VarChar(256)
+  channelType     String           @map("channel_type") @db.VarChar(64)
+  costMicros      BigInt           @map("cost_micros")
+  impressions     BigInt
+  clicks          BigInt
+  conversionCount Decimal?         @map("conversion_count") @db.Decimal(18, 6)
+  conversionValue Decimal?         @map("conversion_value") @db.Decimal(18, 6)
+  source          SourceKind
+  syncRunId       String           @map("sync_run_id") @db.Uuid
+  fetchedAt       DateTime         @map("fetched_at") @db.Timestamptz(3)
+  version         Int
+  isCurrent       Boolean          @default(true) @map("is_current")
+  connection      SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  syncRun         SyncRun          @relation(fields: [syncRunId], references: [id], onDelete: Restrict)
+
+  @@unique([connectionId, metricDate, campaignId, version])
+  @@index([connectionId, metricDate])
+  @@map("google_campaign_daily_costs")
+}
+
+model SourceRecordLink {
+  id               String              @id @default(uuid()) @db.Uuid
+  connectionId     String              @map("connection_id") @db.Uuid
+  dataKind         SourceDataKind      @map("data_kind")
+  canonicalKeyHash String              @map("canonical_key_hash") @db.Char(64)
+  source           SourceKind
+  recordTable      String              @map("record_table") @db.VarChar(64)
+  recordId         String              @map("record_id") @db.Uuid
+  syncRunId        String?             @map("sync_run_id") @db.Uuid
+  version          Int
+  isCurrent        Boolean             @default(true) @map("is_current")
+  boundAt          DateTime            @default(now()) @map("bound_at") @db.Timestamptz(3)
+  bindingMethod    SourceBindingMethod @map("binding_method")
+  connection       SourceConnection    @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  syncRun          SyncRun?            @relation(fields: [syncRunId], references: [id], onDelete: Restrict)
+
+  @@unique([connectionId, dataKind, source, recordTable, recordId])
+  @@index([connectionId, dataKind, canonicalKeyHash, isCurrent])
+  @@map("source_record_links")
+}
+
+model Cafe24OrderApiVersion {
+  id                  String           @id @default(uuid()) @db.Uuid
+  connectionId        String           @map("connection_id") @db.Uuid
+  canonicalKeyHash    String           @map("canonical_key_hash") @db.Char(64)
+  orderNo             String           @map("order_no") @db.VarChar(256)
+  lineOrderNo         String           @map("line_order_no") @db.VarChar(256)
+  productNo           String           @map("product_no") @db.VarChar(256)
+  optionName          String           @map("option_name") @db.VarChar(514)
+  orderedAt           DateTime         @map("ordered_at") @db.Timestamptz(3)
+  orderDate           DateTime         @map("order_date") @db.Date
+  providerUpdatedAt   DateTime?        @map("provider_updated_at") @db.Timestamptz(3)
+  fetchedAt           DateTime?        @map("fetched_at") @db.Timestamptz(3)
+  contentFingerprint  String?          @map("content_fingerprint") @db.Char(64)
+  fingerprintKeyVersion Int?           @map("fingerprint_key_version")
+  quantity            Decimal          @db.Decimal(14, 4)
+  salePriceKrw        Decimal          @map("sale_price_krw") @db.Decimal(18, 2)
+  totalOrderKrw       Decimal?         @map("total_order_krw") @db.Decimal(18, 2)
+  totalPaidKrw        Decimal          @map("total_paid_krw") @db.Decimal(18, 2)
+  totalPaidInputSource String?          @map("total_paid_input_source") @db.VarChar(64)
+  paymentMethod       String?          @map("payment_method") @db.VarChar(256)
+  providerPaymentCodes Json?           @map("provider_payment_codes")
+  providerCouponSignal Boolean?        @map("provider_coupon_signal")
+  actualOrderPriceKrw Decimal?         @map("actual_order_price_krw") @db.Decimal(18, 2)
+  actualPaymentKrw    Decimal?         @map("actual_payment_krw") @db.Decimal(18, 2)
+  actualShippingFeeKrw Decimal?        @map("actual_shipping_fee_krw") @db.Decimal(18, 2)
+  initialOrderPriceKrw Decimal?        @map("initial_order_price_krw") @db.Decimal(18, 2)
+  initialPaymentKrw   Decimal?         @map("initial_payment_krw") @db.Decimal(18, 2)
+  initialShippingFeeKrw Decimal?       @map("initial_shipping_fee_krw") @db.Decimal(18, 2)
+  orderStatus         String?          @map("order_status") @db.VarChar(64)
+  lineStatus          String?          @map("line_status") @db.VarChar(64)
+  cancelledAt         DateTime?        @map("cancelled_at") @db.Timestamptz(3)
+  cancelAmountKrw     Decimal?         @map("cancel_amount_krw") @db.Decimal(18, 2)
+  refundedAt          DateTime?        @map("refunded_at") @db.Timestamptz(3)
+  refundAmountKrw     Decimal?         @map("refund_amount_krw") @db.Decimal(18, 2)
+  discountAmountKrw   Decimal?         @map("discount_amount_krw") @db.Decimal(18, 2)
+  couponAmountKrw     Decimal?         @map("coupon_amount_krw") @db.Decimal(18, 2)
+  version             Int
+  isCurrent           Boolean          @default(true) @map("is_current")
+  syncRunId           String           @map("sync_run_id") @db.Uuid
+  connection          SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  syncRun             SyncRun          @relation(fields: [syncRunId], references: [id], onDelete: Restrict)
+
+  @@unique([connectionId, canonicalKeyHash, version])
+  @@index([connectionId, orderDate])
+  @@map("cafe24_order_api_versions")
+}
+
+// Only opaque ciphertext is persisted. The AES key lives outside PostgreSQL.
+model SourceCredential {
+  id             String           @id @default(uuid()) @db.Uuid
+  connectionId   String           @map("connection_id") @db.Uuid
+  kind           String           @db.VarChar(32)
+  ciphertext     Bytes
+  iv             Bytes
+  authTag        Bytes            @map("auth_tag")
+  keyVersion     Int              @map("key_version")
+  revision       Int              @default(1)
+  refreshOwner   String?          @map("refresh_owner") @db.Uuid
+  refreshUntil   DateTime?        @map("refresh_until") @db.Timestamptz(3)
+  expiresAt      DateTime?        @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  connection     SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@unique([connectionId, kind])
+  @@map("source_credentials")
 }

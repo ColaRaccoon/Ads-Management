@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { AdStage, Prisma } from "@prisma/client";
+import { AdStage, Prisma, SourceDataKind } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
+import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { dateRangeDays, parseDateRange } from "../common/date-range";
 import { formatDateOnly, toDateOnly } from "../domain/date-number";
 import { CreativeNameParser } from "../domain/creative-name-parser";
@@ -37,13 +38,17 @@ export class MetaAdMetricsReadService {
 
   async campaignMetrics(query: CampaignMetricQuery) {
     const metrics = await this.currentAdMetrics(query);
-    const groups = groupBy(metrics, (row) => row.metaCampaignId);
-    return Array.from(groups.entries()).map(([metaCampaignId, rows]) => {
+    const groups = groupBy(metrics, (row) => `${row.connectionId ?? "legacy"}:${row.metaCampaignId}`);
+    return Array.from(groups.values()).map((rows) => {
       const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
       const last = rows[rows.length - 1];
+      const observation = latestMetadataRow(rows);
       return {
-        metaCampaignId,
+        connectionId: last.connectionId,
+        metaCampaignId: last.metaCampaignId,
         campaignName: last.campaignNameSnapshot,
+        currentMetadata: observation?.currentMetadata ?? null,
+        metadataObservedAt: observation?.metadataObservedAt ?? null,
         adsetCount: new Set(rows.map((row) => row.metaAdsetId)).size,
         adCount: new Set(rows.map((row) => `${row.metaAdsetId}:${row.adIdentityKey}`)).size,
         deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
@@ -56,12 +61,14 @@ export class MetaAdMetricsReadService {
 
   async adMetrics(query: AdMetricQuery) {
     const metrics = await this.currentAdMetrics(query);
-    const groups = groupBy(metrics, (row) => `${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`);
+    const groups = groupBy(metrics, (row) => `${row.connectionId ?? "legacy"}:${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`);
     return Array.from(groups.entries()).map(([, rows]) => {
       const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
       const first = rows[0];
       const last = rows[rows.length - 1];
+      const observation = latestMetadataRow(rows);
       return {
+        connectionId: last.connectionId,
         metaAdRefId: last.metaAdRefId,
         metaCampaignId: last.metaCampaignId,
         campaignName: last.campaignNameSnapshot,
@@ -72,6 +79,8 @@ export class MetaAdMetricsReadService {
         syntheticAdKey: last.syntheticAdKey,
         adIdentityKey: last.adIdentityKey,
         adName: last.adNameSnapshot,
+        currentMetadata: observation?.currentMetadata ?? null,
+        metadataObservedAt: observation?.metadataObservedAt ?? null,
         productId: last.productId,
         stage: last.stage,
         deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
@@ -87,25 +96,31 @@ export class MetaAdMetricsReadService {
     const metrics = await this.currentAdMetrics(query);
     const financialContext = await this.creativeFinancialContext(metrics);
     const parsedMetrics = this.parseCreativeRows(metrics);
-    const groups = groupBy(parsedMetrics, (item) => item.parsedName.creativeKey);
-    const lifetimesByCreativeKey = await this.creativeLifetimes(Array.from(groups.keys()));
+    const groups = groupBy(parsedMetrics, (item) =>
+      `${item.row.connectionId ?? "legacy"}:${item.parsedName.creativeKey}`
+    );
+    const lifetimesByCreativeKey = await this.creativeLifetimes(
+      uniqueNonEmpty(parsedMetrics.map((item) => item.parsedName.creativeKey))
+    );
     const normalizedQuery = query.q?.trim().toLowerCase() ?? "";
 
     return Array.from(groups.entries())
-      .map(([creativeKey, items]) => {
+      .map(([, items]) => {
         const rows = items.map((item) => item.row);
         const aggregate = aggregateCreativeDailyRows(this.periodCalculator, rows, financialContext);
         const first = rows[0];
         const last = rows[rows.length - 1];
+        const creativeKey = items[0].parsedName.creativeKey;
         const lastParsedName = items[items.length - 1].parsedName;
         const dateCodes = uniqueNonEmpty(items.map((item) => item.parsedName.dateCode)).sort();
         const settings = uniqueNonEmpty(items.map((item) => item.parsedName.setting));
         const originalAdNames = uniqueNonEmpty(rows.map((row) => row.adNameSnapshot));
-        const lifetime = lifetimesByCreativeKey.get(creativeKey);
+        const lifetime = last.connectionId ? null : lifetimesByCreativeKey.get(creativeKey);
         const firstSeenOn = lifetime?.firstSeenOn ?? first.metricDate;
         const lastSeenOn = lifetime?.lastSeenOn ?? last.metricDate;
 
         return {
+          connectionId: last.connectionId,
           creativeId: firstNonNull(rows.map((row) => row.creativeId)),
           creativeIds: uniqueNonEmpty(rows.map((row) => row.creativeId)),
           creativeKey,
@@ -121,6 +136,7 @@ export class MetaAdMetricsReadService {
           adsetCount: new Set(rows.map((row) => `${row.metaCampaignId}:${row.metaAdsetId}`)).size,
           adCount: new Set(rows.map((row) => `${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`)).size,
           deliveryStatus: summarizeDeliveryStatus(rows.map((row) => row.adDeliveryStatus)),
+          currentMetadataObservations: latestMetadataObservations(rows),
           totals: aggregate.totals,
           dataDays: dateRangeDays(formatDateOnly(firstSeenOn), formatDateOnly(lastSeenOn)) || aggregate.dataDays,
           firstSeenOn: formatDateOnly(firstSeenOn),
@@ -177,6 +193,7 @@ export class MetaAdMetricsReadService {
             const aggregate = aggregateAdDailyRows(this.periodCalculator, dateRows);
             return {
               date,
+              metricUnavailableReasons: aggregate.totals.metricUnavailableReasons,
               reach: aggregate.totals.reach,
               cpmUsd: aggregate.totals.cpmUsd,
               cpcLinkUsd: aggregate.totals.cpcLinkUsd,
@@ -245,7 +262,7 @@ export class MetaAdMetricsReadService {
   async adsForAdset(metaAdsetId: string, from?: string, to?: string, deliveryStatusInput?: string) {
     const range = parseDateRange(from, to);
     const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
-    const metrics = await this.prisma.metaAdDailyMetric.findMany({
+    const candidates = await this.prisma.metaAdDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: range.fromDate, lte: range.toDate },
@@ -254,11 +271,15 @@ export class MetaAdMetricsReadService {
       },
       orderBy: [{ metricDate: "asc" }, { adNameSnapshot: "asc" }]
     });
-    const groups = groupBy(metrics, (row) => `${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`);
+    const metrics = await selectCurrentSourceRows(
+      this.prisma, SourceDataKind.META_AD, candidates, (row) => row.metricDate
+    );
+    const groups = groupBy(metrics, (row) => `${row.connectionId ?? "legacy"}:${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`);
     return Array.from(groups.values()).map((rows) => {
       const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
       const last = rows[rows.length - 1];
       return {
+        connectionId: last.connectionId,
         metaAdRefId: last.metaAdRefId,
         metaAdId: last.metaAdId,
         syntheticAdKey: last.syntheticAdKey,
@@ -274,7 +295,7 @@ export class MetaAdMetricsReadService {
   async adsetsForCampaign(metaCampaignId: string, from?: string, to?: string, deliveryStatusInput?: string) {
     const range = parseDateRange(from, to);
     const deliveryStatus = parseDeliveryStatusFilter(deliveryStatusInput);
-    const metrics = await this.prisma.metaAdDailyMetric.findMany({
+    const candidates = await this.prisma.metaAdDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: range.fromDate, lte: range.toDate },
@@ -283,11 +304,15 @@ export class MetaAdMetricsReadService {
       },
       orderBy: [{ metricDate: "asc" }, { adsetNameSnapshot: "asc" }]
     });
-    const groups = groupBy(metrics, (row) => `${row.metaCampaignId}:${row.metaAdsetId}`);
+    const metrics = await selectCurrentSourceRows(
+      this.prisma, SourceDataKind.META_AD, candidates, (row) => row.metricDate
+    );
+    const groups = groupBy(metrics, (row) => `${row.connectionId ?? "legacy"}:${row.metaCampaignId}:${row.metaAdsetId}`);
     return Array.from(groups.values()).map((rows) => {
       const aggregate = aggregateAdDailyRows(this.periodCalculator, rows);
       const last = rows[rows.length - 1];
       return {
+        connectionId: last.connectionId,
         metaAdsetRefId: last.metaAdsetRefId,
         metaAdsetId: last.metaAdsetId,
         adsetName: last.adsetNameSnapshot,
@@ -317,7 +342,7 @@ export class MetaAdMetricsReadService {
           : { metaAdsetId: query.adsetId }
       );
     }
-    return this.prisma.metaAdDailyMetric.findMany({
+    const candidates = await this.prisma.metaAdDailyMetric.findMany({
       where: {
         isCurrent: true,
         metricDate: { gte: range.fromDate, lte: range.toDate },
@@ -328,6 +353,7 @@ export class MetaAdMetricsReadService {
       },
       orderBy: [{ metricDate: "asc" }, { campaignNameSnapshot: "asc" }, { adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
     });
+    return selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD, candidates, (row) => row.metricDate);
   }
 
   async creativeLifetimes(creativeKeys: string[]) {
@@ -382,4 +408,20 @@ export class MetaAdMetricsReadService {
       parsedName: this.creativeNameParser.parse(row.adNameSnapshot)
     }));
   }
+}
+
+function latestMetadataObservations(rows: AdDailyMetricRow[]) {
+  const latest = new Map<string, AdDailyMetricRow>();
+  for (const row of rows) {
+    if (!row.currentMetadata || !row.metadataObservedAt) continue;
+    const key = `${row.metaCampaignId}:${row.metaAdsetId}:${row.adIdentityKey}`;
+    const previous = latest.get(key);
+    if (!previous || row.metadataObservedAt > previous.metadataObservedAt!) latest.set(key, row);
+  }
+  return [...latest.values()].map((row) => ({ adId: row.metaAdId, adsetId: row.metaAdsetId,
+    currentMetadata: row.currentMetadata, metadataObservedAt: row.metadataObservedAt }));
+}
+function latestMetadataRow(rows: AdDailyMetricRow[]) {
+  return rows.filter((row) => row.currentMetadata && row.metadataObservedAt)
+    .sort((a, b) => b.metadataObservedAt!.getTime() - a.metadataObservedAt!.getTime())[0];
 }

@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourceProvider {
+  GOOGLE
+  META
+  CAFE24
+}
+
+enum SourceDataKind {
+  GOOGLE_CAMPAIGN
+  META_AD
+  META_ADSET
+  CAFE24_ORDER
+}
+
+enum SourceAccessState {
+  PENDING
+  READY
+  REAUTH_REQUIRED
+  BLOCKED
+}
+
+// Type-only peers of sync-contract in the narrowly scoped callback image.
+enum SyncTrigger {
+  MANUAL
+  SCHEDULED
+  BACKFILL
+  RETRY
+}
+
+enum SyncRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+  ACTION_REQUIRED
+  CANCELLED
+}
+
+enum SecurityAuditActorType {
+  USER
+  SYSTEM
+  ANONYMOUS
+
+  @@map("security_audit_actor_type")
+}
+
+enum SecurityAuditResult {
+  REQUESTED
+  PROVIDER_SUCCEEDED
+  SUCCESS
+  FAILURE
+  PARTIAL
+
+  @@map("security_audit_result")
+}
+
+model SourceConnection {
+  id                  String            @id @default(uuid()) @db.Uuid
+  provider            SourceProvider
+  externalAccountId   String            @map("external_account_id") @db.VarChar(256)
+  shopKey             String            @default("default") @map("shop_key") @db.VarChar(256)
+  displayName         String            @map("display_name") @db.VarChar(256)
+  currencyCode        String            @map("currency_code") @db.VarChar(3)
+  timeZone            String            @map("time_zone") @db.VarChar(128)
+  credentialRef       String?           @map("credential_ref") @db.VarChar(256)
+  credentialExpiresAt DateTime?         @map("credential_expires_at") @db.Timestamptz(3)
+  accessState         SourceAccessState @default(PENDING) @map("access_state")
+  enabled             Boolean           @default(false)
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  credentials         SourceCredential[]
+  cafe24OauthAttempts Cafe24OauthAttempt[]
+  cafe24ObservedRevisions Cafe24ObservedOrderRevision[]
+  cafe24ObservedDays Cafe24ObservedDayCheckpoint[]
+
+  @@unique([provider, externalAccountId, shopKey])
+  @@map("source_connections")
+}
+
+model Cafe24OauthAttempt {
+  id           String           @id @default(uuid()) @db.Uuid
+  connectionId String           @map("connection_id") @db.Uuid
+  stateHash    String           @unique @map("state_hash") @db.Char(64)
+  actorUserId  String?          @map("actor_user_id") @db.Uuid
+  expiresAt    DateTime         @map("expires_at") @db.Timestamptz(3)
+  consumedAt   DateTime?        @map("consumed_at") @db.Timestamptz(3)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  connection   SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@index([connectionId, expiresAt])
+  @@map("cafe24_oauth_attempts")
+}
+
+model SourceCredential {
+  id             String           @id @default(uuid()) @db.Uuid
+  connectionId   String           @map("connection_id") @db.Uuid
+  kind           String           @db.VarChar(32)
+  ciphertext     Bytes
+  iv             Bytes
+  authTag        Bytes            @map("auth_tag")
+  keyVersion     Int              @map("key_version")
+  revision       Int              @default(1)
+  refreshOwner   String?          @map("refresh_owner") @db.Uuid
+  refreshUntil   DateTime?        @map("refresh_until") @db.Timestamptz(3)
+  expiresAt      DateTime?        @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  connection     SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@unique([connectionId, kind])
+  @@map("source_credentials")
+}
+
+model SecurityAuditEvent {
+  id          String                 @id @default(uuid()) @db.Uuid
+  actorUserId String?                @map("actor_user_id") @db.Uuid
+  actorType   SecurityAuditActorType @map("actor_type")
+  action      String                 @db.VarChar(96)
+  targetType  String                 @map("target_type") @db.VarChar(64)
+  targetId    String?                @map("target_id") @db.VarChar(128)
+  result      SecurityAuditResult
+  beforeJson  Json?                  @map("before_json")
+  afterJson   Json?                  @map("after_json")
+  requestId   String?                @map("request_id") @db.Uuid
+  createdAt   DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt, id])
+  @@map("security_audit_events")
+}
+
+model Cafe24ObservedOrderRevision {
+  connectionId    String           @map("connection_id") @db.Uuid
+  orderKeyHash    String           @map("order_key_hash") @db.Char(64)
+  revision        Int
+  orderDate       DateTime         @map("order_date") @db.Date
+  contentHash     String           @map("content_hash") @db.Char(64)
+  firstObservedAt DateTime         @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt  DateTime         @map("last_observed_at") @db.Timestamptz(3)
+  observationId   String           @map("observation_id") @db.Uuid
+  isCurrent       Boolean          @default(true) @map("is_current")
+  connection      SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@id([connectionId, orderKeyHash, revision])
+  @@index([connectionId, orderDate, isCurrent])
+  @@map("cafe24_observed_order_revisions")
+}
+
+model Cafe24ObservedDayCheckpoint {
+  connectionId   String           @map("connection_id") @db.Uuid
+  orderDate      DateTime         @map("order_date") @db.Date
+  queryStartedAt DateTime         @map("query_started_at") @db.Timestamptz(3)
+  completedAt    DateTime         @map("completed_at") @db.Timestamptz(3)
+  observationId  String           @map("observation_id") @db.Uuid
+  keyVersion     Int              @map("key_version")
+  orderCount     Int              @map("order_count")
+  itemCount      Int              @map("item_count")
+  snapshotHash   String           @map("snapshot_hash") @db.Char(64)
+  connection     SourceConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@id([connectionId, orderDate])
+  @@map("cafe24_observed_day_checkpoints")
+}

@@ -558,9 +558,19 @@ function validateStorageJwtClaims(env: NodeJS.ProcessEnv, payload: unknown) {
   if (claims.iss !== expectedIssuer || claims.aud !== expectedAudience || claims.sub !== expectedSubject) {
     throw new Error("SUPABASE_STORAGE_ACCESS_TOKEN must be bound to the configured project and subject.");
   }
-  if (claims.role !== "storage_app") {
-    throw new Error("SUPABASE_STORAGE_ACCESS_TOKEN must use the least-privilege storage_app role.");
+  if (claims.role !== expectedStorageTokenRole(env)) {
+    throw new Error("SUPABASE_STORAGE_ACCESS_TOKEN must use the configured least-privilege storage role.");
   }
+}
+
+export function expectedStorageTokenRole(env: NodeJS.ProcessEnv): "storage_app" | "phase08_storage_app" {
+  const role = env.SUPABASE_STORAGE_TOKEN_ROLE?.trim() || "storage_app";
+  if (role === "storage_app") return role;
+  if (role === "phase08_storage_app" && env.SUPABASE_DATABASE_PROJECT_REF === "ehnfrrmbkvlsbpvqcvkr" &&
+      env.SUPABASE_DATABASE_SCHEMA === "phase08_meta_ads" && env.SUPABASE_DATABASE_RUNTIME_USER === "phase08_runtime" &&
+      env.DEPLOYMENT_ENVIRONMENT_ID === "phase08-daily-data-sync-08" &&
+      env.SUPABASE_URL === "https://ehnfrrmbkvlsbpvqcvkr.supabase.co") return role;
+  throw new Error("SUPABASE_STORAGE_TOKEN_ROLE is not allowed for this deployment identity.");
 }
 
 function storageReadinessKey(env: NodeJS.ProcessEnv, production: boolean) {

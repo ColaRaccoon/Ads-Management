@@ -6,6 +6,7 @@ import { useState } from "react";
 import { apiDelete, apiGet, uploadCafe24Csv, uploadCsv } from "@/lib/api";
 import { DataTable } from "@/components/data-table";
 import { useCan } from "@/features/auth/use-auth";
+import { storefrontError } from "@/lib/storefront-display";
 
 type UploadBatchRow = {
   id: string;
@@ -133,8 +134,8 @@ export default function UploadsPage() {
     <section className="page">
       <div className="page-title">
         <div>
-          <h1>Uploads</h1>
-          <p>Meta 광고 단위 CSV를 업로드하고 배치 이력을 관리합니다.</p>
+          <h1>자사몰 데이터 업로드</h1>
+          <p>기존 Meta·Cafe24 CSV 업로드와 이력을 관리합니다. 자동 연결 자료가 있는 기간은 서버의 원천 선택 정책을 따릅니다.</p>
         </div>
       </div>
       <div className="grid two">
@@ -151,7 +152,7 @@ export default function UploadsPage() {
               <UploadCloud size={16} />
               업로드
             </button>
-            {upload.isError ? <span style={{ color: "#b42318" }}>{String(upload.error.message)}</span> : null}
+            {upload.isError ? <span role="alert" style={{ color: "#b42318" }}>{storefrontError(upload.error, upload.error.message)}</span> : null}
             {upload.isPending ? <span role="status">{recoveringUpload
               ? "응답 연결이 끊겨 서버의 처리 결과를 확인하고 있습니다. 파일을 다시 업로드하지 마세요."
               : "광고 데이터를 저장하고 있습니다. 처리 완료까지 몇 분 걸릴 수 있습니다."}</span> : null}
@@ -179,6 +180,7 @@ export default function UploadsPage() {
             <span><AlertTriangle size={15} />캠페인, 광고세트, 광고 식별 컬럼 누락 시 import 차단</span>
             <span><AlertTriangle size={15} />동일 파일 SHA-256 중복 감지</span>
             <span><AlertTriangle size={15} />광고 ID가 없으면 synthetic key로 생성하고 경고 표시</span>
+            <span><AlertTriangle size={15} />자동 연결이 관리하는 계정·기간과 충돌하면 원천 선택 후 다시 진행해야 합니다. SKIP / OVERWRITE 선택만으로 자동 연결 자료를 덮어쓰지 않습니다.</span>
           </div>
         </div>
       </div>
@@ -196,7 +198,7 @@ export default function UploadsPage() {
             <UploadCloud size={16} />
             Upload
           </button>
-          {cafe24Upload.isError ? <span style={{ color: "#b42318" }}>{String(cafe24Upload.error.message)}</span> : null}
+          {cafe24Upload.isError ? <span role="alert" style={{ color: "#b42318" }}>{storefrontError(cafe24Upload.error, cafe24Upload.error.message)}</span> : null}
           {deleteCafe24Upload.isError ? <span style={{ color: "#b42318" }}>{String(deleteCafe24Upload.error.message)}</span> : null}
           {cafe24Upload.data ? (
             <div className="warning-strip">

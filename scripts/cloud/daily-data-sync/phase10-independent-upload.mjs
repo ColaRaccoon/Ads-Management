@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {readFile,readdir,lstat,writeFile} from 'node:fs/promises';
+import {join,resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+const root='C:/Users/seong/AppData/Local/MetaAdsPhase10Evaluation';
+const version=process.argv[2]??'v3';assert.match(version,/^v\d+$/);
+const label=process.argv[3]??`upload-${version}-20261019`;assert.match(label,/^[a-z0-9-]+$/);
+const candidate=join(root,`candidate-20261019-${version}`),upload=join(root,`upload-${version}`);
+const hash=b=>createHash('sha256').update(b).digest('hex');
+const proof=JSON.parse(await readFile(join(root,`evidence/upload-${version}-verified.json`),'utf8'));
+const manifest=JSON.parse(await readFile(join(candidate,'source-content-manifest.json'),'utf8'));
+assert.equal(proof.commit,execFileSync('git',['rev-parse','HEAD'],{cwd:candidate,encoding:'utf8'}).trim());
+assert.equal(proof.sourceContentSha256,manifest.sourceContentSha256);
+assert.equal(hash(JSON.stringify(manifest.files)),proof.sourceContentSha256);
+const expected=[...manifest.files.map(f=>f.name),'source-content-manifest.json','deploy/Dockerfile'].sort();
+const walk=async(dir,prefix='')=>{const names=[];for(const entry of await readdir(dir,{withFileTypes:true})){const name=prefix+entry.name,info=await lstat(join(dir,entry.name));assert(!info.isSymbolicLink());if(info.isDirectory())names.push(...await walk(join(dir,entry.name),name+'/'));else{assert(info.isFile());names.push(name);}}return names;};
+assert.deepEqual((await walk(upload)).sort(),expected);
+assert.deepEqual(proof.files.map(f=>f.name).sort(),expected);assert.equal(proof.fileCount,manifest.files.length+2);
+for(const file of proof.files){assert(resolve(upload,file.name).startsWith(resolve(upload)+'\\'));const bytes=await readFile(join(upload,file.name));assert.equal(hash(bytes),file.sha256);assert.equal(bytes.length,file.size);assert.equal(hash(bytes),hash(await readFile(join(candidate,file.name))));}
+const out={kind:'PHASE10_INDEPENDENT_UPLOAD_CLOSURE',recordedAt:new Date().toISOString(),commit:proof.commit,sourceContentSha256:proof.sourceContentSha256,fileCount:proof.fileCount,allUploadBytesMatchCandidate:true,allUploadBytesMatchProof:true,allActualFilesEnumerated:true,noReparsePoints:true,unexpectedFiles:0,providerRequests:0,remoteWrites:0};
+await writeFile(join(root,'independent',label+'.json'),JSON.stringify(out,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify(out));

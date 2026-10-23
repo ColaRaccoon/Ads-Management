@@ -1,3 +1,4 @@
+import { formatMetaMetricReasons } from "@/lib/meta-conditional-display";
 import { money, numberFmt } from "@/lib/date-range";
 import { formatMetaDeliveryStatus, formatPercent } from "@/lib/meta-video-display";
 import { deliveryStatusClass } from "./report-model";
@@ -84,9 +85,10 @@ export function formatRoas(value: number | null | undefined) {
 
 function CreativeNameCell({ row }: { row: CreativePerformanceRow }) {
   return (
-    <div className="daily-creative-name">
+    <div className="daily-creative-name" title={formatMetaMetricReasons(row.totals.metricUnavailableReasons)}>
       <strong>{row.materialNo ?? row.displayName}</strong>
       {row.materialNo ? <span>{row.displayName}</span> : null}
+      {formatMetaMetricReasons(row.totals.metricUnavailableReasons) ? <small>미확정 지표</small> : null}
     </div>
   );
 }

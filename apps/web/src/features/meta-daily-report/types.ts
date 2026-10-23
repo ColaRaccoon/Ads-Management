@@ -16,9 +16,11 @@ export type ColumnDefinition = {
 };
 
 export type ProductTotals = {
+  providerPurchaseValueUsd?:number|null;providerPurchaseRoas?:number|null;providerPurchaseContext?:string|null;
   spendUsd: number;
   spendKrw: number | null;
-  purchaseCount: number;
+  purchaseCount: number | null;
+  metricUnavailableReasons?: Record<string, string>;
   cpaUsd: number | null;
   cpaKrw: number | null;
   revenueKrw: number | null;

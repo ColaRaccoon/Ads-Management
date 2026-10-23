@@ -6,12 +6,14 @@ import {
   AUTHENTICATED_ROUTE,
   AUTH_ROUTE_ACCESS,
   INTERNAL_PROBE_ROUTE,
+  MACHINE_SYNC_ROUTE,
   PERMISSION_ROUTE,
   PUBLIC_ROUTE,
   REQUIRED_PERMISSIONS
 } from "./route-decorators";
 import type { Permission } from "./role-permissions";
 import { INTERNAL_PROBE_AUTHORIZED, InternalProbeRequest } from "./internal-probe.guard";
+import { MACHINE_SYNC_AUTHORIZED, MachineSyncRequest } from "./machine-sync.guard";
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -25,6 +27,11 @@ export class PermissionGuard implements CanActivate {
     if (access === INTERNAL_PROBE_ROUTE) {
       const request = context.switchToHttp().getRequest<InternalProbeRequest>();
       if (request[INTERNAL_PROBE_AUTHORIZED]) return true;
+      throw authError("PERMISSION_DENIED");
+    }
+    if (access === MACHINE_SYNC_ROUTE) {
+      const request = context.switchToHttp().getRequest<MachineSyncRequest>();
+      if (request[MACHINE_SYNC_AUTHORIZED]) return true;
       throw authError("PERMISSION_DENIED");
     }
 

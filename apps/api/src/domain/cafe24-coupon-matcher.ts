@@ -5,7 +5,10 @@ export type Cafe24CouponScopeValue = "GLOBAL" | "PRODUCT";
 export type Cafe24CouponOrderLineInput = {
   orderDate: Date | null;
   paymentMethod: string | null;
+  source?: "CSV" | "API";
+  providerCouponSignal?: boolean | null;
   totalOrderKrw: number | null;
+  totalOrderInputSource?: "CSV_TOTAL_ORDER" | "API_ACTUAL_PRODUCT_PLUS_SHIPPING" | "UNKNOWN";
   totalPaidKrw: number | null;
   productId: string | null;
   salePriceKrw: number;
@@ -26,7 +29,7 @@ export type Cafe24CouponRuleInput = {
   createdAt: Date;
 };
 
-export type CouponMatchStatus = "NO_COUPON" | "APPLIED" | "UNMATCHED";
+export type CouponMatchStatus = "NO_COUPON" | "APPLIED" | "UNMATCHED" | "UNKNOWN";
 
 export type CouponMatchConfidence = "NONE" | "EXACT" | "ESTIMATED";
 
@@ -43,21 +46,25 @@ export type CouponWarningCode =
   | "PARTIAL_PRODUCT_MAPPING"
   | "NON_POSITIVE_ALLOCATION_BASE"
   | "RULE_TIE_RESOLVED_BY_PRIORITY"
-  | "IGNORED_RESIDUAL_EXISTS";
+  | "IGNORED_RESIDUAL_EXISTS"
+  | "COUPON_SIGNAL_UNKNOWN"
+  | "COUPON_BASIS_UNKNOWN";
 
 export type Cafe24CouponResolution = {
   orderNo: string;
   orderDate: Date | null;
   couponDetected: boolean;
+  couponUseSignal: boolean | null;
   status: CouponMatchStatus;
   confidence: CouponMatchConfidence;
   totalOrderKrw: number | null;
+  totalOrderInputSource: "CSV_TOTAL_ORDER" | "API_ACTUAL_PRODUCT_PLUS_SHIPPING" | "UNKNOWN";
   totalPaidKrw: number | null;
   observedGapKrw: number | null;
   selectedRuleId: string | null;
   selectedRuleName: string | null;
   selectedScope: Cafe24CouponScopeValue | null;
-  couponDeductionKrw: number;
+  couponDeductionKrw: number | null;
   ignoredResidualKrw: number;
   allocationsByProductId: Map<string, number>;
   warningCodes: CouponWarningCode[];
@@ -71,15 +78,29 @@ export function resolveCafe24CouponOrder(input: {
 }): Cafe24CouponResolution {
   const orderDate = firstDate(input.lines);
   const totalOrderKrw = firstFiniteAmount(input.lines.map((line) => line.totalOrderKrw));
+  const totalOrderInputSource = input.lines[0]?.totalOrderInputSource ?? "CSV_TOTAL_ORDER";
   const totalPaidKrw = firstFiniteAmount(input.lines.map((line) => line.totalPaidKrw));
-  const couponDetected = input.lines.some((line) => paymentTokens(line.paymentMethod).includes("쿠폰"));
+  const signals = input.lines.map((line) => line.source === "API"
+    ? line.providerCouponSignal ?? null : hasCafe24CouponPaymentToken(line.paymentMethod));
+  const couponUseSignal = input.lines.every((line) => line.source !== "API")
+    ? signals.some((signal) => signal === true)
+    : signals.length === 0 || signals.some((signal) => signal === null) ||
+      new Set(signals).size !== 1 ? null : signals[0];
+  const couponDetected = couponUseSignal === true;
   const base = baseResolution({
     orderNo: input.orderNo,
     orderDate,
     couponDetected,
+    couponUseSignal,
     totalOrderKrw,
+    totalOrderInputSource,
     totalPaidKrw
   });
+
+  if (couponUseSignal === null) {
+    return { ...base, status: "UNKNOWN", couponDeductionKrw: null,
+      warningCodes: ["COUPON_SIGNAL_UNKNOWN"] };
+  }
 
   if (!couponDetected) {
     return {
@@ -87,6 +108,11 @@ export function resolveCafe24CouponOrder(input: {
       observedGapKrw:
         totalOrderKrw === null || totalPaidKrw === null ? null : totalOrderKrw - totalPaidKrw
     };
+  }
+
+  if (input.lines.some((line) => line.source === "API" && line.totalOrderKrw === null)) {
+    return { ...base, status: "UNKNOWN", couponDeductionKrw: null,
+      warningCodes: ["COUPON_BASIS_UNKNOWN"] };
   }
 
   if (input.lines.some((line) => line.isValid === false)) {
@@ -187,22 +213,27 @@ function baseResolution(input: {
   orderNo: string;
   orderDate: Date | null;
   couponDetected: boolean;
+  couponUseSignal: boolean | null;
   totalOrderKrw: number | null;
+  totalOrderInputSource: "CSV_TOTAL_ORDER" | "API_ACTUAL_PRODUCT_PLUS_SHIPPING" | "UNKNOWN";
   totalPaidKrw: number | null;
 }): Cafe24CouponResolution {
   return {
     orderNo: input.orderNo,
     orderDate: input.orderDate,
     couponDetected: input.couponDetected,
-    status: input.couponDetected ? "UNMATCHED" : "NO_COUPON",
+    couponUseSignal: input.couponUseSignal,
+    status: input.couponUseSignal === null ? "UNKNOWN" :
+      input.couponDetected ? "UNMATCHED" : "NO_COUPON",
     confidence: "NONE",
     totalOrderKrw: input.totalOrderKrw,
+    totalOrderInputSource: input.totalOrderInputSource,
     totalPaidKrw: input.totalPaidKrw,
     observedGapKrw: null,
     selectedRuleId: null,
     selectedRuleName: null,
     selectedScope: null,
-    couponDeductionKrw: 0,
+    couponDeductionKrw: input.couponUseSignal === null ? null : 0,
     ignoredResidualKrw: 0,
     allocationsByProductId: new Map(),
     warningCodes: [],
@@ -236,6 +267,11 @@ function paymentTokens(paymentMethod: string | null): string[] {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+}
+
+/** Keep API-publish input validation aligned with the legacy coupon calculation. */
+export function hasCafe24CouponPaymentToken(paymentMethod: string | null): boolean {
+  return paymentTokens(paymentMethod).includes("쿠폰");
 }
 
 function isRuleEligible(rule: Cafe24CouponRuleInput, orderDate: Date, productIds: Set<string>): boolean {

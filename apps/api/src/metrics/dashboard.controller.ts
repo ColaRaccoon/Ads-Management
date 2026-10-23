@@ -7,6 +7,12 @@ import { DashboardSummaryQueryDto, DashboardTrendsQueryDto } from "./dto/metrics
 export class DashboardController {
   constructor(private readonly metricsService: MetricsService) {}
 
+  @Get("meta-collection")
+  @RequirePermissions("data.read")
+  metaCollection(@Query() query: DashboardSummaryQueryDto) {
+    return this.metricsService.metaCollection(query.from, query.to);
+  }
+
   @Get("summary")
   @RequirePermissions("data.read")
   summary(@Query() query: DashboardSummaryQueryDto) {

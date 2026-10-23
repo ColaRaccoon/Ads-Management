@@ -1,11 +1,24 @@
 # 운영 Storage 토큰 자동 갱신
 
+## 2026-10-08 갱신 배포 장애 수정
+
+운영 Edge Function 버전 4에 반영했다. 토큰 교체는 `skipDeploys:true`로 저장하고,
+기존 활성 배포를 `deploymentRedeploy(usePreviousImageTag:true)`로 실행한다.
+변수 자동 배포가 변경 없는 소스를 매번 재빌드하면서 Debian 패키지 버전 폐기에 막히는
+문제를 피하고, 동일 이미지에 새 인증정보를 적용한다. 활성 배포가 없거나 배포 진행 중이면
+토큰 변경 전에 실패한다. 결과가 불명확한 쓰기·배포 요청은 자동 반복하지 않는다.
+후속 readiness 검사는 새 토큰 발급 이후의 성공 배포를 계속 요구한다.
+
+실제 `renew-now` → 이미지 재사용 배포 SUCCESS → `check` HEALTHY 및 보호 readiness 200을
+검증했다. 인증 없는 함수 호출은 403이다. 예약 시각과 보호 secret은 유지했다.
+추가 검증: `node --test scripts/cloud/storage-renewal/railway-deployment.test.mjs`.
+
 2026-09-14 적용·첫 갱신 검증 완료. PC가 꺼져 있어도 Supabase에서 실행한다.
 앱의 권한·서명키·Storage subject를 유지한다. 업무 데이터는 변경하지 않는다.
 
 ## 현재 실행
 
-- Supabase `iygjmosbelbosfxidqxv`, Edge Function `storage-renewal` 버전 1 / ACTIVE.
+- Supabase `iygjmosbelbosfxidqxv`, Edge Function `storage-renewal` 버전 4 / ACTIVE (2026-10-08).
 - 매일 한국시간 04:00: 남은 기간이 3일 이하일 때 같은 `storage_app` 역할의 6일 JWT를 발급한다.
 - 04:15: 서명·Storage sentinel·갱신 이후 Railway 성공 배포·보호된 앱 readiness를 검사한다.
 - 04:20: 앞선 두 실행의 존재·성공·만료 여유를 확인한다.

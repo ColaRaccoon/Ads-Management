@@ -20,6 +20,7 @@ import { HttpSecurityGuard } from "./http-security.guard";
 import { LocalAuthService } from "./local-auth.service";
 import { LocalAuthMaintenanceService } from "./local-auth-maintenance.service";
 import { AuthenticatedMutationRateGuard } from "./authenticated-mutation-rate.guard";
+import { MachineSyncGuard } from "./machine-sync.guard";
 
 @Module({
   imports: [CommonModule],
@@ -41,10 +42,12 @@ import { AuthenticatedMutationRateGuard } from "./authenticated-mutation-rate.gu
     PermissionGuard,
     HttpSecurityGuard,
     AuthenticatedMutationRateGuard,
+    MachineSyncGuard,
     { provide: APP_GUARD, useExisting: HttpSecurityGuard },
     { provide: APP_GUARD, useExisting: AuthenticationGuard },
     { provide: APP_GUARD, useExisting: AuthenticatedMutationRateGuard },
     { provide: APP_GUARD, useExisting: InternalProbeGuard },
+    { provide: APP_GUARD, useExisting: MachineSyncGuard },
     { provide: APP_GUARD, useExisting: PermissionGuard }
   ],
   exports: [
@@ -58,6 +61,7 @@ import { AuthenticatedMutationRateGuard } from "./authenticated-mutation-rate.gu
     InternalProbeGuard,
     HttpSecurityGuard,
     AuthenticatedMutationRateGuard,
+    MachineSyncGuard,
     PermissionGuard
   ]
 })

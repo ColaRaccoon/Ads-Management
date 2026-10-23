@@ -38,6 +38,10 @@ export class MetricsService {
     return this.dashboardMetricsService.dashboardTrends(from, to, groupBy, deliveryStatusInput);
   }
 
+  metaCollection(from?: string, to?: string) {
+    return this.dashboardMetricsService.metaCollection(from, to);
+  }
+
   productMetrics(from?: string, to?: string, deliveryStatusInput?: string, client?: PrismaService | Prisma.TransactionClient) {
     return this.adsetMetricsReadService.productMetrics(from, to, deliveryStatusInput, client);
   }

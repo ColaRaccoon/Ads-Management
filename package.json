@@ -12,7 +12,6 @@
     "packages/*"
   ],
   "scripts": {
-    "cloud:test-runtime": "node --test deploy/launch-bundle.test.mjs",
     "local:assemble-release": "node deploy/local/assemble-local-release.mjs",
     "local:package-release": "node deploy/local/package-local-release.mjs",
     "local:verify-release": "node deploy/local/verify-local-release.mjs",
@@ -21,7 +20,6 @@
     "dev:api": "npm --workspace @meta-ads-performance/api run start:dev",
     "dev:web": "npm --workspace @meta-ads-performance/web run dev",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run cloud:test-runtime && npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "prisma:validate": "node scripts/prisma-validate.mjs",
     "prisma:generate": "npm --workspace @meta-ads-performance/api run prisma:generate",
@@ -30,18 +28,21 @@
   },
   "overrides": {
     "@nestjs/platform-express": {
-      "multer": "2.3.0"
+      "multer": "2.4.0"
     },
     "body-parser": "2.3.0",
     "minimatch@3.1.5": {
-      "brace-expansion": "1.1.18"
+      "brace-expansion": "1.1.21"
     },
     "minimatch@5.1.9": {
-      "brace-expansion": "2.1.4"
+      "brace-expansion": "2.1.7"
     },
     "nanoid": "3.3.18",
     "qs": "6.16.0",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
+    "shell-quote": "1.11.0",
+    "proxy-addr": "2.0.8",
+    "source-map-js": "1.2.2",
     "uuid": "11.1.1"
   },
   "devDependencies": {

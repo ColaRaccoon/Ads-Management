@@ -4,6 +4,8 @@
 node_modules/
 .next/
 dist/
+dist-cafe24/
+deploy/cafe24-test/.build/
 coverage/
 apps/e2e/test-results/
 apps/e2e/playwright-report/
@@ -22,3 +24,24 @@ deploy/staging.env
 # Local provider CLI state and historical deployment receipts
 supabase/.temp/
 보안단계별적용/증거/
+deploy/cafe24-test/.verify/
+
+# Local command artifacts, Python cache and machine-local databases
+__pycache__/
+*.py[cod]
+/%SystemDrive%/
+/1048576
+/3145728
+/32768
+/4194304
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.gz
+*.dpapi
+application_default_credentials.json
+
+# Private business exports and one-off report output
+/reports/

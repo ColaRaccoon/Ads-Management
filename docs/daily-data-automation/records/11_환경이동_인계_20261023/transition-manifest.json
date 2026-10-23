@@ -1,0 +1,96 @@
+{
+  "execute": false,
+  "approvalRef": null,
+  "productionServiceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+  "productionProjectRef": "iygjmosbelbosfxidqxv",
+  "productionSchema": "meta_ads",
+  "runtimeTargetId": "bundle-loopback-api",
+  "deploymentEnvironmentId": "railway-production-01ab3d5a",
+  "release": "a49bec345f995ec71f25f9e569caa5fe20578235",
+  "candidateImageId": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+  "registryManifestDigest": null,
+  "operatingStartCommand": "setpriv --no-new-privs node deploy/launch-bundle.mjs",
+  "expectedReadinessFingerprint": "f8b27a3b7d531a418c9df09c8a163b7903ff3dba0e11d8a53fc9bfd5a34f95e6",
+  "migrationExecutionPrincipalAndRunner": "postgres / existing Management database/query / exact 15 per-file transactions and new ledger rows",
+  "runtimeGrantSqlSha256": "64028eed0840228315b710106c5bf92696e9634aa6894f9828fb591a8a7ea1cd",
+  "maintenanceStartKst": "2026-10-25T02:00:00+09:00",
+  "approvedOutageHardLimitMinutes": 60,
+  "productionConnectionIds": {
+    "GOOGLE": null,
+    "META": null,
+    "CAFE24": null
+  },
+  "approvedCutoffLocalDay": {
+    "GOOGLE": "2026-10-24",
+    "META": null,
+    "CAFE24": "2026-10-24"
+  },
+  "approvedManualVerificationDay": {
+    "GOOGLE": "2026-10-24",
+    "META": null,
+    "CAFE24": "2026-10-24"
+  },
+  "weeklyAnchorAt": {
+    "GOOGLE": "2026-11-01T03:05:00+09:00",
+    "META": null
+  },
+  "productionCredentialRefs": {
+    "GOOGLE": null,
+    "META": null,
+    "CAFE24": null
+  },
+  "beforeImageProtectedRef": null,
+  "storageDriftResolutionRef": null,
+  "scheduleInstallSqlSha256": null,
+  "scheduleReviewTemplateSha256": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
+  "proposedJobCount": 77,
+  "datePolicyApproved": false,
+  "kind": "PHASE11_PORTABLE_PLANNING_HANDOFF_NO_EXECUTION",
+  "preparedAt": "2026-10-23T13:09:32.770380+09:00",
+  "railwayProjectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
+  "railwayEnvironmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+  "storageDiagnosisRef": "storage-cause-assessment.json",
+  "runtimeAccessRef": "runtime-access-plan.json",
+  "migrationRunnerRef": "migration-runner-plan.json",
+  "scheduleProposalRef": "production-schedule-proposal.json",
+  "scheduleProposalSha256": "a487d8988a012e25fb95733bb3fe1577a27c1c419c694d2dbaa6eeb906d003c8",
+  "expectedFingerprintRef": "derived-readiness-fingerprints.json",
+  "executionGeneratedFields": [
+    "production connection IDs",
+    "protected credential envelopes/refs",
+    "registry manifest digest after exact image transport",
+    "after-drain before-images",
+    "actual runtime readiness result",
+    "bound final SQL hash and exact anchor dates"
+  ],
+  "readLimitsRef": "image-callback-read-limits.json",
+  "userDecisionsOnly": [
+    "Meta cutoff/manual verification day; do not infer from Cafe24/Google",
+    "separate final execution authority remains absent; do not treat chosen plan as execution consent"
+  ],
+  "maintenanceLocalTimeKst": "02:00:00",
+  "maintenanceLocalDateKst": "2026-10-25",
+  "selectedCutoffBoundaryKst": {
+    "GOOGLE": "2026-10-24T00:00:00+09:00",
+    "CAFE24": "2026-10-24T00:00:00+09:00"
+  },
+  "userDecisionRef": "handoff-index.json",
+  "scheduleDateUpdateRef": "handoff-index.json",
+  "priorManifestRef": "C:\\Users\\seong\\AppData\\Local\\MetaAdsPhase10Evaluation\\continuation-20261022\\operating-outage-comparison-20261023-v1\\transition-manifest.json",
+  "targetOutageMinutes": 10,
+  "plannedRollbackStartByElapsedMinutes": 45,
+  "plannedRecoveryReserveMinutes": 15,
+  "requestedAutomaticModeDateKst": "2026-10-25",
+  "requestedAutomaticModeDateIsFinalExecutionApproval": false,
+  "reusedEvidenceRoot": ".",
+  "plannedComparisonStartKst": "2026-10-25T02:00:00+09:00",
+  "plannedAutomaticModeDateKst": "2026-10-25",
+  "plannedFirstDailyOccurrenceKst": "2026-10-26T02:00:00+09:00",
+  "datePolicyApprovedByProvider": {
+    "CAFE24": true,
+    "GOOGLE": true,
+    "META": false
+  },
+  "gitPublicationApproved": true,
+  "gitPublicationRef": "git-publication.json"
+}

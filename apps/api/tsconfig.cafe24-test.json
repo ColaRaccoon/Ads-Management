@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": false,
+    "sourceMap": false,
+    "incremental": false,
+    "rootDir": "src",
+    "outDir": "dist-cafe24"
+  },
+  "files": ["src/daily-sync/cafe24-railway-test.ts", "src/daily-sync/cafe24-live-canonical.cli.ts"],
+  "include": [],
+  "exclude": ["src/**/*.spec.ts", "node_modules", "dist", "dist-cafe24"]
+}

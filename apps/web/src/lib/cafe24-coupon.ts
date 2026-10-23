@@ -1,8 +1,8 @@
 export type Cafe24CouponScope = "GLOBAL" | "PRODUCT";
-export type CouponMatchStatus = "NO_COUPON" | "APPLIED" | "UNMATCHED";
+export type CouponMatchStatus = "NO_COUPON" | "APPLIED" | "UNMATCHED" | "UNKNOWN";
 export type CouponMatchConfidence = "NONE" | "EXACT" | "ESTIMATED";
-export type CouponAggregateStatus = "NO_COUPON" | "EXACT" | "ESTIMATED" | "UNMATCHED" | "MIXED";
-export type CouponAuditCategory = "EXACT" | "ESTIMATED" | "UNMATCHED";
+export type CouponAggregateStatus = "NO_COUPON" | "EXACT" | "ESTIMATED" | "UNMATCHED" | "UNKNOWN" | "MIXED";
+export type CouponAuditCategory = "EXACT" | "ESTIMATED" | "UNMATCHED" | "UNKNOWN";
 
 export const CAFE24_COUPON_DEPENDENT_QUERY_KEYS = [
   ["cafe24-coupon-rules"],
@@ -52,7 +52,9 @@ export type Cafe24CouponAuditRow = {
   selectedRuleId?: string | null;
   selectedRuleName: string | null;
   selectedScope: Cafe24CouponScope | null;
-  couponDeductionKrw: number;
+  couponDeductionKrw: number | null;
+  couponUseSignal?: boolean | null;
+  totalOrderInputSource?: "CSV_TOTAL_ORDER" | "API_ACTUAL_PRODUCT_PLUS_SHIPPING" | "UNKNOWN";
   ignoredResidualKrw: number;
   status: CouponMatchStatus;
   confidence: CouponMatchConfidence;
@@ -65,6 +67,7 @@ export type Cafe24CouponAuditResponse = {
 };
 
 export function couponAuditCategory(row: Pick<Cafe24CouponAuditRow, "confidence" | "status">): CouponAuditCategory {
+  if (row.status === "UNKNOWN") return "UNKNOWN";
   if (row.status === "UNMATCHED") {
     return "UNMATCHED";
   }
@@ -74,22 +77,26 @@ export function couponAuditCategory(row: Pick<Cafe24CouponAuditRow, "confidence"
 export function couponAuditLabel(row: Pick<Cafe24CouponAuditRow, "confidence" | "status">) {
   switch (couponAuditCategory(row)) {
     case "EXACT":
-      return "정확";
+      return "내부 규칙 금액 일치";
     case "ESTIMATED":
       return "추정";
     case "UNMATCHED":
       return "미적용";
+    case "UNKNOWN":
+      return "쿠폰 표시 미확정";
   }
 }
 
 export function couponAggregateLabel(status: CouponAggregateStatus | null | undefined) {
   switch (status) {
     case "EXACT":
-      return "정확";
+      return "내부 규칙 금액 일치";
     case "ESTIMATED":
       return "추정";
     case "UNMATCHED":
       return "미적용";
+    case "UNKNOWN":
+      return "쿠폰 표시 미확정";
     case "MIXED":
       return "혼합";
     case "NO_COUPON":

@@ -9,7 +9,7 @@ import {
   UploadBatch,
   UploadStatus
 } from "@prisma/client";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { normalizeUploadedFilename } from "../common/encoding";
 import { PrismaService } from "../common/prisma.service";
@@ -36,8 +36,10 @@ import {
   minDate,
   snapshotAdMetricKey
 } from "./upload-keys";
+import { scopedCsvFileHash } from "./upload-keys";
 import { UploadStorageService } from "./upload-storage.service";
 import { UploadExchangeRateService } from "./upload-exchange-rate.service";
+import { linkBoundCsvVersion, resolveCsvWritePolicy } from "../daily-sync/canonical-write-policy";
 import {
   acquireMetaUploadMutationFence,
   isRetryableMetaOriginalStoragePending,
@@ -62,14 +64,23 @@ export class MetaAdDailyImportService {
     private readonly uploadExchangeRateService: UploadExchangeRateService
   ) {}
 
-  async importMetaAdDailyCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string) {
+  async importMetaAdDailyCsv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string, sourceConnectionId?: string) {
     if (!file?.buffer) {
       throw new BadRequestException({ code: "FILE_REQUIRED", message: "CSV 파일이 필요합니다." });
     }
     if (!(conflictPolicy in ConflictPolicy)) {
       throw new BadRequestException({ code: "INVALID_CONFLICT_POLICY", message: "중복 정책이 올바르지 않습니다." });
     }
-    const fileHashSha256 = createHash("sha256").update(file.buffer).digest("hex");
+    if (sourceConnectionId || process.env.DAILY_SYNC_FEATURE_ENABLED === "true") {
+      const preflightRows = this.csvParser.parseBuffer(file.buffer).rows;
+      const dates = preflightRows.map((row) => this.csvParser.parseRow(row).parsedRow?.metricDate)
+        .filter((date): date is Date => Boolean(date));
+      await this.prisma.$transaction(async (tx) => {
+        await resolveCsvWritePolicy(tx, { provider: "META", dataKind: "META_AD", sourceConnectionId, dates });
+        await resolveCsvWritePolicy(tx, { provider: "META", dataKind: "META_ADSET", sourceConnectionId, dates });
+      });
+    }
+    const { rawHash, dedupeHash: fileHashSha256 } = scopedCsvFileHash(file.buffer, sourceConnectionId);
     const duplicated = await this.prisma.uploadBatch.findUnique({ where: { fileHashSha256 } });
     const originalFilename = normalizeUploadedFilename(file.originalname);
     const { headers, rows } = this.csvParser.parseBuffer(file.buffer);
@@ -91,7 +102,7 @@ export class MetaAdDailyImportService {
         mappings: META_AD_DAILY_CSV_COLUMN_MAPPINGS,
         count: headers.length,
         previewSummary,
-        originalFileHashSha256: fileHashSha256
+        originalFileHashSha256: rawHash
       }, STORAGE_DOMAIN);
       try { reservedBatch = await this.prisma.uploadBatch.create({
         data: {
@@ -123,6 +134,14 @@ export class MetaAdDailyImportService {
 
     const outcome = await this.prisma.$transaction(async (tx) => {
       await acquireMetaUploadMutationFence(tx, batch.id);
+      const sourceDecision = await resolveCsvWritePolicy(tx, {
+        provider: "META", dataKind: "META_AD", sourceConnectionId,
+        dates: parsedRows.map(({ parsed }) => parsed.parsedRow?.metricDate).filter((date): date is Date => Boolean(date))
+      });
+      const adsetSourceDecision = await resolveCsvWritePolicy(tx, {
+        provider: "META", dataKind: "META_ADSET", sourceConnectionId,
+        dates: parsedRows.map(({ parsed }) => parsed.parsedRow?.metricDate).filter((date): date is Date => Boolean(date))
+      });
       const current = await tx.uploadBatch.findUnique({ where: { id: batch.id } });
       if (!current || !sameStorageOwnership(current, batch)) return { kind: "lost" as const };
       batch = current;
@@ -175,16 +194,18 @@ export class MetaAdDailyImportService {
       if (parsedRow) {
         reportStart = minDate(reportStart, parsedRow.dateStart);
         reportEnd = maxDate(reportEnd, parsedRow.dateEnd);
-        const campaign = await this.entityWriterService.upsertCampaign(parsedRow, tx);
-        const metaAdset = await this.entityWriterService.upsertAdsetFromAdDaily(parsedRow, campaign.id, tx);
+        const campaign = await this.entityWriterService.upsertCampaign(parsedRow, tx, sourceDecision.connectionId);
+        const metaAdset = await this.entityWriterService.upsertAdsetFromAdDaily(
+          parsedRow, campaign.id, tx, sourceDecision.connectionId);
         const creativeResult = await this.entityWriterService.upsertCreativeFromAdDaily(parsedRow, tx);
         const metaAd = await this.entityWriterService.upsertAd(
-          parsedRow, campaign.id, metaAdset.id, creativeResult.creative.id, tx
+          parsedRow, campaign.id, metaAdset.id, creativeResult.creative.id, tx, sourceDecision.connectionId
         );
         await this.entityWriterService.upsertCreativeAlias(
           creativeResult.creative.id, creativeResult.parsedName, parsedRow.metricDate, tx
         );
         await this.entityWriterService.upsertCreativePlacement({
+          connectionId: sourceDecision.connectionId,
           creativeId: creativeResult.creative.id,
           parsedRow,
           parsedName: creativeResult.parsedName,
@@ -219,8 +240,10 @@ export class MetaAdDailyImportService {
         await tx.metaAdset.update({
           where: { id: metaAdset.id },
           data: {
-            currentProductId: productId,
-            currentStage: stage,
+            ...(sourceDecision.primaryDates.has(formatDateOnly(parsedRow.metricDate)) &&
+              adsetSourceDecision.primaryDates.has(formatDateOnly(parsedRow.metricDate))
+              ? { currentProductId: productId, currentStage: stage }
+              : {}),
             firstSeenOn: metaAdset.firstSeenOn ?? parsedRow.metricDate,
             lastSeenOn: parsedRow.metricDate
           }
@@ -295,10 +318,22 @@ export class MetaAdDailyImportService {
           productMatchRuleId,
           stage,
           stageMatchSource,
-          conflictPolicy
+          conflictPolicy,
+          connectionId: sourceDecision.connectionId,
+          publishCurrent: true
         }, tx);
         importedAdMetricCount += result.imported ? 1 : 0;
         skippedDuplicateCount += result.skipped ? 1 : 0;
+        if (result.imported && result.metricId && result.version !== null) {
+          await linkBoundCsvVersion(tx, {
+            connectionId: sourceDecision.connectionId, dataKind: "META_AD",
+            keyParts: [sourceDecision.connectionId ?? "", formatDateOnly(parsedRow.metricDate),
+              parsedRow.metaCampaignId, parsedRow.metaAdsetExternalId, parsedRow.adIdentityKey],
+            recordTable: "meta_ad_daily_metrics", recordId: result.metricId,
+            version: result.version, legacyNameKey: !parsedRow.metaAdId,
+            isCurrent: true
+          });
+        }
         if (result.imported || result.skipped) {
           snapshotDatesByKey.set(formatDateOnly(parsedRow.metricDate), parsedRow.metricDate);
           includedAdKeys.add(
@@ -317,7 +352,8 @@ export class MetaAdDailyImportService {
       errorCount === 0 && includedAdKeys.size > 0
         ? await this.metricVersionService.deactivateMissingAdSnapshotMetrics({
             snapshotDates: Array.from(snapshotDatesByKey.values()),
-            includedKeys: includedAdKeys
+            includedKeys: includedAdKeys,
+            connectionId: sourceDecision.connectionId
           }, tx)
         : 0;
 
@@ -326,7 +362,8 @@ export class MetaAdDailyImportService {
         ? await this.adsetAggregateService.refreshAdsetAggregatesFromAdMetrics(
             batch.id,
             Array.from(snapshotDatesByKey.values()),
-            tx
+            tx,
+            sourceDecision.connectionId
           )
         : 0;
 

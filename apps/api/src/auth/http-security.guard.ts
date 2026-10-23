@@ -1,6 +1,7 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { Request } from "express";
 import { AuthRequestSecurityService } from "./request-security.service";
+import { isMachineSyncPost } from "../common/api-routing";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_SECURITY_ROUTES = new Set([
@@ -22,6 +23,17 @@ export class HttpSecurityGuard implements CanActivate {
 
     if (path === "/api/health/live" || path === "/api/health/ready") return true;
     await this.security.assertTrustedTransport(request);
+    if (method === "GET" && path === "/integrations/cafe24/oauth/callback") {
+      if (String(request.originalUrl ?? request.url ?? "").length > 2_048)
+        throw new HttpException({ code: "RUN_LIMIT_EXCEEDED",
+          message: "The sync request cannot be completed." }, HttpStatus.URI_TOO_LONG);
+      await this.security.assertCafe24Callback();
+      return true;
+    }
+    if (isMachineSyncPost(method, path)) {
+      await this.security.assertGeneralRead(request);
+      return true;
+    }
     if (SAFE_METHODS.has(method)) {
       await this.security.assertGeneralRead(request);
       return true;

@@ -1,0 +1,26 @@
+import {assembleFullApp} from './assemble-full-app.mjs';
+import {readFile,writeFile} from 'node:fs/promises';
+import {join} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+const E='C:/Users/seong/AppData/Local/MetaAdsPhase10Evaluation',repo=process.cwd(),prior=E+'/candidate-20261020-v6',output=E+'/candidate-20261020-v7';
+const sha=v=>createHash('sha256').update(v).digest('hex');
+const git=(cwd,args)=>execFileSync('git',args,{cwd,encoding:'utf8',windowsHide:true,stdio:['ignore','pipe','pipe']}).trim();
+function checkout(){assert.equal(git(repo,['rev-parse','HEAD']),'9e9a1f82bb02346575565b031a43e17e13758dc8');assert.equal(git(repo,['branch','--show-current']),'codex/daily-data-automation-01');assert.equal(git(repo,['diff','--cached','--name-only']),'');assert.equal(git(repo,['diff','--name-only','--diff-filter=D','-z']).split('\0').filter(Boolean).length,240);}
+checkout();const old=JSON.parse(await readFile(prior+'/source-content-manifest.json','utf8'));assert.equal(old.files.length,495);assert.equal(old.sourceContentSha256,'d1ad9a09da4a07cb7d8dd7c86fa194297b286e957e38d53188cbe08e6539ff14');assert.equal(sha(JSON.stringify(old.files)),old.sourceContentSha256);
+const schema='apps/api/prisma/schema.prisma',original=await readFile(prior+'/'+schema,'utf8');
+const before='checkpoint Cafe24ObservedEpochDayCheckpoint @relation(fields: [connectionId, keyVersion, orderDate], references: [connectionId, keyVersion, orderDate], onDelete: Restrict)';
+const after='checkpoint Cafe24ObservedEpochDayCheckpoint @relation(fields: [connectionId, keyVersion, orderDate], references: [connectionId, keyVersion, orderDate], onDelete: Restrict, map: "cafe24_epoch_revisions_checkpoint_fkey")';
+assert.equal(original.split(before).length,2);assert.equal(await readFile(repo+'/'+schema,'utf8'),original.replace(before,after));
+for(const f of old.files)if(f.name!==schema)assert.equal(sha(await readFile(join(repo,f.name))),f.sha256,'NON_METADATA_SOURCE_DRIFT');
+const result=await assembleFullApp(output,repo),manifest=JSON.parse(await readFile(output+'/source-content-manifest.json','utf8')),oldMap=new Map(old.files.map(f=>[f.name,f]));
+assert.equal(manifest.files.length,495);assert.deepEqual(manifest.files.filter(f=>oldMap.get(f.name)?.sha256!==f.sha256).map(f=>f.name),[schema]);
+for(const f of manifest.files)assert.equal(sha(await readFile(output+'/'+f.name)),f.sha256);
+const dockerfile=await readFile(repo+'/deploy/Dockerfile');assert(dockerfile.equals(await readFile(prior+'/deploy/Dockerfile')));await writeFile(output+'/deploy/Dockerfile',dockerfile,{flag:'wx'});
+const migrations=manifest.files.filter(f=>/^apps\/api\/prisma\/migrations\/[^/]+\/migration\.sql$/.test(f.name));assert.equal(migrations.length,52);assert.equal(sha(JSON.stringify(migrations)),'721f277a61d65a933abef4033dda606b2a1f16b1b11b3ecd89be18a19e98b3f7');
+const selection={kind:'PHASE10_EXACT_FK_MAP_METADATA_CORRECTION',base:'9e9a1f82bb02346575565b031a43e17e13758dc8',sourceContentSha256:result.sourceContentSha256,previousSource:old.sourceContentSha256,files:manifest.files,changedSinceV6:[schema],exactReplacement:{before,after},migrationCount:52,migrationDigest:sha(JSON.stringify(migrations)),remoteMigrationApplied:false,remoteActivation:false};
+await writeFile(output+'/phase10-selection.json',JSON.stringify(selection,null,2)+'\n',{flag:'wx'});
+git(output,['init','-b','codex/daily-data-automation-10-candidate']);git(output,['-c','core.autocrlf=false','add','--all']);git(output,['-c','user.name=Codex','-c','user.email=codex@local.invalid','commit','-m','Align additive epoch foreign key metadata']);checkout();
+const ev={...result,commit:git(output,['rev-parse','HEAD']),base:selection.base,recordedAt:new Date().toISOString(),migrationCount:52,migrationDigest:selection.migrationDigest,changedSinceV6:[schema],previousSource:old.sourceContentSha256,extraProductionDockerfileSha256:sha(dockerfile),originalCheckoutMutation:false,originalHeadUnchanged:true,originalBranchUnchanged:true,originalStagedEmpty:true,originalDeleted:240,remoteMigrationApplied:false,remoteActivation:false,sharedCredentialChanges:0,stages11And12Started:false};
+await writeFile(E+'/evidence/candidate-20261020-v7.json',JSON.stringify(ev,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify(ev));

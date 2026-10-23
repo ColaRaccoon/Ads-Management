@@ -1,10 +1,13 @@
 "use client";
 
+import { formatMetaMetricReasons } from "@/lib/meta-conditional-display";
+import { formatMetaCurrentMetadata,formatMetaProviderPurchases } from "@/lib/meta-current-metadata-display";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
 import { money, numberFmt } from "@/lib/date-range";
 import { useRange } from "@/lib/use-range";
+import { MetaCollectionStatus } from "@/components/meta-collection-status";
 import { DataTable } from "@/components/data-table";
 import { DecisionBadge } from "@/components/decision-badge";
 
@@ -17,6 +20,7 @@ export default function AdsetsPage() {
   });
   return (
     <section className="page">
+      <MetaCollectionStatus range={range} />
       <div className="page-title">
         <div>
           <h1>Adsets</h1>
@@ -42,16 +46,19 @@ export default function AdsetsPage() {
       <DataTable
         rows={adsets.data ?? []}
         columns={[
+          { key: "unavailable", header: "미확정 지표", render: (row) => formatMetaMetricReasons(row.totals?.metricUnavailableReasons) || "-" },
           { key: "adset", header: "광고세트", render: (row) => row.adsetName },
           { key: "product", header: "제품", render: (row) => row.product?.displayName ?? "미매칭" },
           { key: "stage", header: "단계", render: (row) => row.stage },
           { key: "spend", header: "광고비", render: (row) => money(row.totals?.spendKrw) },
           { key: "purchase", header: "구매수", render: (row) => numberFmt(row.totals?.purchaseCount) },
-          { key: "cpa", header: "CPA", render: (row) => money(row.totals?.cpaKrw) },
+          { key:"providerPurchase",header:"Meta 구매금액 / 계산 ROAS",render:row=>formatMetaProviderPurchases(row.totals) },
+          { key: "cpa", header: "CPA", render: (row) => row.totals?.cpaKrw==null?money(row.totals?.cpaUsd,"USD"):money(row.totals.cpaKrw) },
           { key: "ctr", header: "CTR Link", render: (row) => `${numberFmt(row.totals?.ctrLinkPct, 2)}%` },
           { key: "cpc", header: "CPC Link", render: (row) => money(row.totals?.cpcLinkUsd, "USD") },
           { key: "lpv", header: "LPV", render: (row) => numberFmt(row.totals?.landingPageViews) },
           { key: "delivery", header: "Delivery", render: (row) => row.deliveryStatus ?? "-" },
+          { key: "currentMetadata", header: "현재 자산 관찰", render: (row) => formatMetaCurrentMetadata(row.currentMetadata, row.metadataObservedAt) || "-" },
           { key: "margin", header: "마진", render: (row) => money(row.totals?.marginKrw) },
           { key: "status", header: "기준", render: (row) => row.ruleStatus },
           { key: "decision", header: "판정", render: () => <DecisionBadge decision={null} /> }

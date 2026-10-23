@@ -1,0 +1,163 @@
+{
+  "kind": "PORTABLE_NON_SECRET_PLANNING_HANDOFF",
+  "createdAt": "2026-10-23T13:09:32.770380+09:00",
+  "execute": false,
+  "executionApproval": false,
+  "state": {
+    "phase10ApprovedScope": "DONE",
+    "operations": "NO-GO",
+    "phase11": "NOT_STARTED",
+    "phase12": "NOT_STARTED",
+    "railway06Automation": "PAUSED"
+  },
+  "sourceCheckout": {
+    "branch": "codex/daily-data-automation-01",
+    "baseHead": "9e9a1f82bb02346575565b031a43e17e13758dc8",
+    "deliveryCommit": "containing Git commit; use git rev-parse HEAD"
+  },
+  "agreedPlan": {
+    "windowStartKst": "2026-10-25T02:00:00+09:00",
+    "verificationBusinessDay": {
+      "CAFE24": "2026-10-24",
+      "GOOGLE": "2026-10-24"
+    },
+    "cutoff": {
+      "CAFE24": "2026-10-24",
+      "GOOGLE": "2026-10-24"
+    },
+    "outageLimitIncludingRecoveryMinutes": 60,
+    "automaticModeOnlyAfterSuccessfulComparison": true,
+    "notAScheduledAutomation": true
+  },
+  "candidate": {
+    "release": "a49bec345f995ec71f25f9e569caa5fe20578235",
+    "sourceSha256": "70a7c8cd00c2dd592f632dd35312e283011ef648c5926b5aac4273edb8cea6f2",
+    "runtimeFiles": 495,
+    "migrationFiles": 52,
+    "imageId": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+    "registryManifestDigest": null,
+    "imageBytesTransferred": false,
+    "currentGitCheckoutIsNotProvenIdenticalToCandidate": true
+  },
+  "currentPlanAuthority": "transition-manifest.json plus parent preparation document; copied historical date text does not override current manifest",
+  "copiedPlanEvidence": [
+    {
+      "name": "runtime-access-plan.json",
+      "bytes": 1046,
+      "sha256": "70b05fa41e6d74d9ded855b6c3bf3a4fd8856f8e10666caa4cd64e244e96aefb",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/runtime-access-plan.json",
+      "role": "immutable prior planning evidence; not current execution authority"
+    },
+    {
+      "name": "epoch-runtime-access.review.sql",
+      "bytes": 1246,
+      "sha256": "88beb3a606f369823e43530f41884cc255875a35c1cbc1da75e7670398aebbe2",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/epoch-runtime-access.review.sql",
+      "role": "immutable prior planning evidence; not current execution authority"
+    },
+    {
+      "name": "migration-runner-plan.json",
+      "bytes": 5375,
+      "sha256": "1ff2b8b4c1c645c5e9ab7866018878ac176e10c737137f98cf08f061ea83ad3d",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/migration-runner-plan.json",
+      "role": "immutable prior planning evidence; not current execution authority"
+    },
+    {
+      "name": "derived-readiness-fingerprints.json",
+      "bytes": 3395,
+      "sha256": "fc64ff81a606016514a1906be29df8ba2181108214722271a03f28e3518e19eb",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/derived-readiness-fingerprints.json",
+      "role": "immutable prior planning evidence; not current execution authority"
+    },
+    {
+      "name": "production-scheduler-install.review.sql",
+      "bytes": 13890,
+      "sha256": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/production-scheduler-install.review.sql",
+      "role": "immutable prior planning evidence; not current execution authority"
+    },
+    {
+      "name": "production-schedule-proposal.json",
+      "bytes": 21208,
+      "sha256": "a487d8988a012e25fb95733bb3fe1577a27c1c419c694d2dbaa6eeb906d003c8",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/production-schedule-proposal.json",
+      "role": "immutable prior planning evidence; not current execution authority"
+    },
+    {
+      "name": "storage-cause-assessment.json",
+      "bytes": 2351,
+      "sha256": "c52744a654377eb7535d4abd0abb2d15ec86728c0f8187884a875ad0ea513ca4",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/storage-cause-assessment.json",
+      "role": "immutable prior planning evidence; not current execution authority"
+    },
+    {
+      "name": "image-callback-read-limits.json",
+      "bytes": 965,
+      "sha256": "66add749276991bb6b1fc5533ee09db353f04c7067af46b8a7a6ec487122b744",
+      "sourceEvidence": "operating-readonly-resolution-20261023-v1/image-callback-read-limits.json",
+      "role": "immutable prior planning evidence; not current execution authority"
+    }
+  ],
+  "historicalScheduleOverrides": {
+    "oldManualDaysAndT0RelativeCutoffs": "superseded for Cafe24/Google by fixed 2026-10-24",
+    "firstCafe24DailyKst": "2026-10-26T02:00:00+09:00",
+    "firstGoogleWeeklyKst": "2026-11-01T03:05:00+09:00",
+    "firstGoogleDays": [
+      "2026-10-25",
+      "2026-10-31"
+    ],
+    "metaDatesStillUnselected": true,
+    "sqlTemplatesMustNotBeExecuted": true
+  },
+  "excludedFromGitHandoff": [
+    "credential/token/key files and entire environment files",
+    "browser/CLI sessions and DPAPI material",
+    "original customer CSV and reports or local DBs",
+    "raw operational logs and entire local evidence tree",
+    "image bytes and non-exported protected before-images"
+  ],
+  "separateProtectedTransferNotYetPerformed": [
+    "necessary source evidence by allowlist/hash where the new environment needs it",
+    "exact preserved C7 candidate bytes and image via approved artifact channel",
+    "current valid credential access through a protected supported handoff; never copy sessions or restore old credentials"
+  ],
+  "restartSteps": [
+    "Read parent preparation section 11 and this index; verify branch/HEAD/status without reset/stash/clean",
+    "Use portable manifest and exact exported leaf evidence; do not recursively load historical documents",
+    "Map missing protected refs to available legitimate access; expired credentials mean stop, never CLI automatic refresh or consumed helper reuse",
+    "Resolve only remaining Storage/image/callback facts and Meta date decision; reuse completed tests and cost/CDN evidence",
+    "Obtain separate final operational execution approval before any deploy/migration/write/collection/schedule changes"
+  ],
+  "notDone": [
+    "operational or credential changes",
+    "new product tests/builds",
+    "separate protected credential/image transfer"
+  ],
+  "preparationDocument": {
+    "relativePath": "../11_운영전환_복구_준비서_20261023.md",
+    "sha256": "8c21567f71d1a79ba6e9faf0ee242bd21501af9f61017b71d2b821e99f65b551"
+  },
+  "localPlanningFiles": [
+    {
+      "name": "transition-manifest.json",
+      "sha256": "515ede1e0ab82e7e2755912d02944acdd0f9bed977a42e2ae24e084a9701bf72"
+    },
+    {
+      "name": "repository-inventory.json",
+      "sha256": "b736f74fb64fb1971ad2c8274b09f4603008a8cf0390853d733bff048a9092d8"
+    },
+    {
+      "name": "git-publication.json",
+      "sha256": "3ee8f7b604e8d5b31c184e999fe37576e1368dbe802093de42d8e429609d6ab6"
+    }
+  ],
+  "publication": {
+    "authorized": true,
+    "remote": "https://github.com/ColaRaccoon/Ads-Management.git",
+    "branch": "codex/daily-data-automation-01",
+    "commitIdentity": "containing Git commit; use git rev-parse HEAD",
+    "verification": "origin branch tip equals local HEAD after push",
+    "scope": "Git handoff only; no deployment or credential changes",
+    "detailRef": "git-publication.json"
+  }
+}

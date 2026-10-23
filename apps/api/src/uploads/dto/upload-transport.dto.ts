@@ -6,6 +6,10 @@ export class UploadFormDto {
   @IsOptionalUndefined()
   @IsEnum(ConflictPolicy)
   conflictPolicy?: ConflictPolicy;
+
+  @IsOptionalUndefined()
+  @IsUuidV4()
+  sourceConnectionId?: string;
 }
 
 export class UploadListQueryDto extends TakeQueryDto {}

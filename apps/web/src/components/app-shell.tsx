@@ -33,11 +33,12 @@ type NavItem = {
 
 const navGroups: Array<{ label: string; items: NavItem[] }> = [
   {
-    label: "Meta",
+    label: "자사몰",
     items: [
+      { href: "/storefront", label: "자사몰 통합", icon: Home, requiredPermission: "data.read" },
       { href: "/dashboard", label: "Meta Dashboard", icon: Home, requiredPermission: "data.read" },
-      { href: "/uploads", label: "Meta Uploads", icon: Upload, requiredPermission: "data.read" },
-      { href: "/sales", label: "Meta/Cafe24 Sales", icon: ShoppingCart, requiredPermission: "data.read" },
+      { href: "/uploads", label: "자사몰 데이터 업로드", icon: Upload, requiredPermission: "data.read" },
+      { href: "/sales", label: "Cafe24 판매 / 상품 마진", icon: ShoppingCart, requiredPermission: "data.read" },
       { href: "/campaigns", label: "Meta Campaigns", icon: BarChart3, requiredPermission: "data.read" },
       { href: "/adsets", label: "Meta Adsets", icon: TableProperties, requiredPermission: "data.read" },
       { href: "/ads", label: "Meta Ads", icon: Package, requiredPermission: "data.read" },

@@ -23,6 +23,7 @@ import { HeavyOperationGate, HeavyOperationLease } from "../common/heavy-operati
 import { parseDateRange } from "../common/date-range";
 import { safeExportCellValue } from "../common/safe-export-cell";
 import { MetricsService } from "../metrics/metrics.service";
+import { metaCollectionNote } from "../common/meta-collection-summary";
 import {
   ReportReconciliationResult,
   ReportReconciliationStateService
@@ -395,8 +396,12 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
       this.assertReportResultRows(products, adsets, unmatched, decisions);
       return [summary, products, adsets, unmatched, decisions] as const;
     });
-    const bestProduct = products.sort((a, b) => (b.totals.marginKrw ?? -Infinity) - (a.totals.marginKrw ?? -Infinity))[0];
-    const worstProduct = products.sort((a, b) => (a.totals.marginKrw ?? Infinity) - (b.totals.marginKrw ?? Infinity))[0];
+    const knownMargins = products.filter((product) => typeof product.totals.marginKrw === "number" && Number.isFinite(product.totals.marginKrw));
+    const bestProduct = [...knownMargins].sort((a, b) => b.totals.marginKrw! - a.totals.marginKrw!)[0];
+    const worstProduct = [...knownMargins].sort((a, b) => a.totals.marginKrw! - b.totals.marginKrw!)[0];
+    const comparison = bestProduct && worstProduct
+      ? `마진을 계산할 수 있는 제품 중 ${escapeHtml(String(bestProduct.product?.displayName ?? "-"))}가 가장 높은 마진을 보였고, ${escapeHtml(String(worstProduct.product?.displayName ?? "-"))}는 점검 후보입니다.`
+      : "제품 마진 값이 미확정이므로 가장 높은 마진과 점검 후보의 비교를 보류합니다.";
     return `<!doctype html>
 <html lang="ko">
 <head>
@@ -413,13 +418,15 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
 </head>
 <body>
   <h1>Meta Ads Performance Hub Report</h1>
-  <p>선택 기간 기준 총 광고비는 ${fmt(summary.totals.spendKrw)}원, 구매수는 ${summary.totals.purchaseCount}건, 누적 CPA는 ${fmt(summary.totals.cpaKrw)}원입니다.</p>
-  <p>제품별로는 ${escapeHtml(String(bestProduct?.product?.displayName ?? "-"))}가 가장 높은 마진을 보였고, ${escapeHtml(String(worstProduct?.product?.displayName ?? "-"))}는 점검 후보입니다.</p>
+  <p>선택 기간 기준 총 광고비는 ${fmt(summary.totals.spendKrw)}원, 구매수는 ${fmt(summary.totals.purchaseCount)}건, 누적 CPA는 ${fmt(summary.totals.cpaKrw)}원입니다.</p>
+  <p>${comparison}</p>
   <p class="warn">미매칭 ${summary.health.unmatchedCount}건, 원가 기준 미설정 ${summary.health.missingCostRuleCount}개, CPA 기준 미설정 ${summary.health.missingCpaRuleCount}개</p>
+  <p class="warn">${escapeHtml(metaUnavailableNote(summary.totals.metricUnavailableReasons))}</p>
+  <p class="warn">${escapeHtml(metaCollectionNote(summary.metaCollection))}</p>
   <h2>KPI</h2>
   <table><tbody>
-    <tr><th>Spend USD</th><td>${summary.totals.spendUsd.toFixed(2)}</td><th>Spend KRW</th><td>${fmt(summary.totals.spendKrw)}</td></tr>
-    <tr><th>Purchases</th><td>${summary.totals.purchaseCount}</td><th>CPA KRW</th><td>${fmt(summary.totals.cpaKrw)}</td></tr>
+    <tr><th>Spend USD</th><td>${fmt(summary.totals.spendUsd)}</td><th>Spend KRW</th><td>${fmt(summary.totals.spendKrw)}</td></tr>
+    <tr><th>Purchases</th><td>${fmt(summary.totals.purchaseCount)}</td><th>CPA KRW</th><td>${fmt(summary.totals.cpaKrw)}</td></tr>
     <tr><th>Revenue KRW</th><td>${fmt(summary.totals.revenueKrw)}</td><th>Margin KRW</th><td>${fmt(summary.totals.marginKrw)}</td></tr>
   </tbody></table>
   <h2>Product Performance</h2>
@@ -455,9 +462,10 @@ export class ReportsService implements OnApplicationBootstrap, OnModuleDestroy {
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "Meta Ads Performance Hub";
-    addRows(workbook.addWorksheet("Summary"), [
+    addDashboardSummaryRows(workbook.addWorksheet("Summary"), [
       ["Period", `${from} ~ ${to}`],
       ["Report Type", reportType],
+      ["Meta Collection", metaCollectionNote(summary.metaCollection)],
       ["Spend USD", summary.totals.spendUsd],
       ["Spend KRW", summary.totals.spendKrw],
       ["Purchases", summary.totals.purchaseCount],
@@ -943,8 +951,14 @@ function parseReportType(value?: string): ReportType {
   throw new BadRequestException({ code: "INVALID_REPORT_TYPE", message: "보고서 타입이 올바르지 않습니다." });
 }
 
-function fmt(value: number | null | undefined) {
-  return value === null || value === undefined ? "-" : Math.round(value).toLocaleString("ko-KR");
+function fmt(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  // Dashboard money is already canonical decimal text; never round-trip it through Number.
+  if (typeof value === "string") {
+    const [integer, fraction] = value.split(".");
+    return `${integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${fraction === undefined ? "" : `.${fraction}`}`;
+  }
+  return Math.round(value).toLocaleString("ko-KR");
 }
 
 function valueAt(row: unknown, pathKey: string) {
@@ -970,6 +984,12 @@ function escapeHtml(value: string) {
 
 export function addRows(sheet: ExcelJS.Worksheet, rows: unknown[][]) {
   rows.forEach((row) => sheet.addRow(row.map(safeExportCellValue)));
+}
+
+function addDashboardSummaryRows(sheet: ExcelJS.Worksheet, rows: unknown[][]) {
+  // ExcelJS writes string values as text cells, never formulas. Canonical money
+  // stays text (including a minus sign) instead of losing precision as Excel numbers.
+  rows.forEach(row => sheet.addRow(row.map(value => typeof value === "string" && /^-?\d+(?:\.\d+)?$/.test(value) ? value : safeExportCellValue(value))));
 }
 
 export function addObjectRows(sheet: ExcelJS.Worksheet, rows: unknown[]) {
@@ -1000,10 +1020,22 @@ function flatten(value: unknown, prefix = ""): Record<string, string | number | 
     } else if (Array.isArray(child)) {
       acc[childKey] = JSON.stringify(child);
     } else if (child instanceof Date) {
-      acc[childKey] = child.toISOString().slice(0, 10);
+      acc[childKey] = key === "metadataObservedAt" ? child.toISOString() : child.toISOString().slice(0, 10);
     } else {
       acc[childKey] = child as string | number | boolean | null;
     }
     return acc;
   }, {});
+}
+
+function metaUnavailableNote(reasons: Record<string, string> | undefined) {
+  const labels: Record<string, string> = {
+    UNSUPPORTED_FIELD: "제공되지 않은 지표", RESULT_MAPPING_UNVERIFIED: "결과 의미 미확정",
+    ATTRIBUTION_UNVERIFIED: "기여 설정 미확정", ATTRIBUTION_MISMATCH: "기여 설정 불일치",
+    MIXED_ATTRIBUTION: "기여 설정 혼합", MIXED_RESULT: "결과 유형 혼합",
+    AMBIGUOUS_ACTION: "액션 의미 미확정", NOT_APPLICABLE: "해당 결과 없음", PARTIAL_METRIC: "일부 값 미확정"
+  };
+  const descriptions = [...new Set(Object.entries(reasons ?? {}).filter(([field]) => field !== "shopClicks")
+    .map(([, reason]) => labels[reason]).filter(Boolean))];
+  return descriptions.length ? `미확정 지표는 -로 표시합니다: ${descriptions.join(" · ")}` : "";
 }

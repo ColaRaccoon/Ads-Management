@@ -8,6 +8,7 @@ export type MetaAdsSortKey =
   | "dataDays"
   | "spend"
   | "purchase"
+  | "providerPurchase"
   | "profit"
   | "cpa"
   | "ctr"
@@ -24,6 +25,7 @@ export const META_ADS_SORT_KEYS: readonly MetaAdsSortKey[] = [
   "dataDays",
   "spend",
   "purchase",
+  "providerPurchase",
   "profit",
   "cpa",
   "ctr",
@@ -58,6 +60,8 @@ function sortValue(row: MetaCreativePerformanceRow, key: MetaAdsSortKey) {
       return row.totals.spendUsd;
     case "purchase":
       return row.totals.purchaseCount;
+    case "providerPurchase":
+      return row.totals.providerPurchaseValueUsd;
     case "profit":
       return row.totals.marginKrw;
     case "cpa":

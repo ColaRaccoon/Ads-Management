@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Prisma, RowValidationStatus, UploadStatus } from "@prisma/client";
+import { Prisma, RowValidationStatus, SourceDataKind, SourceKind, UploadStatus } from "@prisma/client";
 import { numberFrom, parseDateRange } from "../common/date-range";
 import {
   allocateNonNegativeByWeight,
@@ -11,11 +11,13 @@ import { Cafe24SalesCalculator } from "../domain/cafe24-sales-calculator";
 import { formatDateOnly, safeDivide, toDateOnly } from "../domain/date-number";
 import { findEffectiveRuleForDate } from "../domain/effective-rule";
 import { PrismaService } from "../common/prisma.service";
+import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { isCompleteCafe24UploadBatch } from "./cafe24-uploads.service";
 
 type Cafe24Line = Prisma.Cafe24OrderLineGetPayload<{
   include: { product: true; matchRule: true };
 }>;
+type UnmatchedCafe24Line = Prisma.Cafe24OrderLineGetPayload<{ include: { batch: true } }>;
 type AdMetric = Prisma.MetaAdsetDailyMetricGetPayload<{
   include: { product: true };
 }>;
@@ -38,8 +40,8 @@ type RuleStatus =
   | "MISSING_RULES"
   | "PRICE_MISMATCH";
 
-type CouponAggregateStatus = "NO_COUPON" | "EXACT" | "ESTIMATED" | "UNMATCHED" | "MIXED";
-type CouponMatchFilter = "EXACT" | "ESTIMATED" | "UNMATCHED";
+type CouponAggregateStatus = "NO_COUPON" | "EXACT" | "ESTIMATED" | "UNMATCHED" | "UNKNOWN" | "MIXED";
+type CouponMatchFilter = "EXACT" | "ESTIMATED" | "UNMATCHED" | "UNKNOWN";
 
 @Injectable()
 export class SalesMetricsService {
@@ -47,10 +49,116 @@ export class SalesMetricsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Phase 06 read-only check through the same sales, cost, and coupon path as
+   * the product view. Advertising cost is intentionally outside this probe. */
+  async diagnoseCafe24OnlyDay(day: string, scope: {
+    expectedSelectedLineCount: number;
+    projectionScope: "COMPLETE_API_DAY" | "DATED_CSV_ROWS";
+  }) {
+    const range = parseDateRange(day, day);
+    if (!Number.isSafeInteger(scope.expectedSelectedLineCount) ||
+        scope.expectedSelectedLineCount < 1 || scope.expectedSelectedLineCount > 10_000 ||
+        !["COMPLETE_API_DAY", "DATED_CSV_ROWS"].includes(scope.projectionScope))
+      throw new BadRequestException("Cafe24 diagnostic scope is invalid.");
+    const salesData = await this.cafe24SalesLines(range);
+    const sourceIsApi = salesData.salesLines.every((row) => row.source === SourceKind.API);
+    const sourceIsCsv = salesData.salesLines.every((row) => row.source === SourceKind.CSV);
+    const matchedLines = salesData.salesLines.filter(activeLineProductId);
+    const matchedOrderCount = new Set(matchedLines.map((row) => row.orderNo)).size;
+    const selectedScopeValid = salesData.salesLines.length === scope.expectedSelectedLineCount &&
+      (scope.projectionScope === "COMPLETE_API_DAY" ? sourceIsApi : sourceIsCsv);
+    const unavailable = {
+      day: range.from, projectionScope: scope.projectionScope,
+      completeProjection: false, sourceLineCounts: { csv: null, api: null },
+      matchedLineCount: null, unmatchedLineCount: null,
+      missingCostProductCount: null, couponRuleFitOrderCount: null,
+      couponEstimatedOrderCount: null, couponUnmatchedOrderCount: null,
+      couponUnknownOrderCount: null, paymentComponentMismatchOrders: null,
+      paymentComponentUnavailableOrders: null,
+      revenueKrw: null, grossCostKrw: null, couponDeductionKrw: null,
+      marginBeforeAdSpendKrw: null, adSpendKrw: null, fullMarginKrw: null,
+      warningCodes: ["CAFE24_DIAGNOSTIC_SCOPE_UNVERIFIED"]
+    };
+    if (!selectedScopeValid || matchedOrderCount < 10) return unavailable;
+    const productIds = uniqueNonEmpty(salesData.salesLines.map(activeLineProductId));
+    const [costRules, couponRules] = await Promise.all([
+      productIds.length ? this.prisma.productCostRule.findMany({
+        where: { productId: { in: productIds } },
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
+      }) : Promise.resolve([] as CostRule[]),
+      this.findCouponRules(range, productIds)
+    ]);
+    const coupon = this.resolveCouponOrders(salesData.couponLines,
+      couponRules, salesData.couponInputSources);
+    const costsByProduct = groupBy(costRules, (rule) => rule.productId);
+    const grouped = this.aggregateSales(salesData.salesLines,
+      costsByProduct, range.fromDate, coupon.byProductId);
+    const sums = [...grouped.values()];
+    const missingCostProductCount = sums.filter((row) => row.missingCostRule).length;
+    const unknownCouponProductCount = sums.filter((row) => row.couponUnknownOrderCount > 0).length;
+    const costContributorOrders = new Set(matchedLines.filter((line) => {
+      const productId = activeLineProductId(line);
+      return productId && findRuleForDate(costsByProduct.get(productId) ?? [],
+        line.orderDate ?? range.fromDate);
+    }).map((line) => line.orderNo)).size;
+    const revenueKrw = sums.reduce((sum, row) => sum + row.revenueKrw, 0);
+    const grossCostKrw = missingCostProductCount || costContributorOrders < 10 ? null :
+      sums.reduce((sum, row) => sum + row.grossCostKrw, 0);
+    const privacyCount = (value: number) => value > 0 && value < 10 ? null : value;
+    const statuses = summarizeCouponResolutions(coupon.resolutions);
+    const couponCounts = [statuses.couponExactOrderCount, statuses.couponEstimatedOrderCount,
+      statuses.couponUnmatchedOrderCount, statuses.couponUnknownOrderCount];
+    const suppressCouponCounts = couponCounts.some((value) => value > 0 && value < 10);
+    const couponDeductionKrw = unknownCouponProductCount ||
+      (statuses.couponAppliedOrderCount > 0 && statuses.couponAppliedOrderCount < 10)
+      ? null : sums.reduce((sum, row) => sum + row.couponDeductionKrw, 0);
+    const unmatchedLineCount = salesData.salesLines.length - matchedLines.length;
+    const suppressLineCounts = unmatchedLineCount > 0 && unmatchedLineCount < 10;
+    const paymentByOrder = new Map<string, { mismatch: boolean; unavailable: boolean }>();
+    if (sourceIsApi) for (const line of salesData.salesLines) {
+      const prior = paymentByOrder.get(line.orderNo) ?? { mismatch: false, unavailable: false };
+      prior.unavailable ||= line.actualPaymentKrw == null;
+      prior.mismatch ||= line.actualPaymentKrw != null &&
+        !line.actualPaymentKrw.equals(line.totalPaidKrw);
+      paymentByOrder.set(line.orderNo, prior);
+    }
+    const paymentMismatch = [...paymentByOrder.values()].filter((row) => row.mismatch).length;
+    const paymentUnavailable = [...paymentByOrder.values()].filter((row) => row.unavailable).length;
+    return {
+      day: range.from, projectionScope: scope.projectionScope, completeProjection: true,
+      sourceLineCounts: {
+        csv: suppressLineCounts ? null : salesData.salesLines.filter((row) => row.source === SourceKind.CSV).length,
+        api: suppressLineCounts ? null : salesData.salesLines.filter((row) => row.source === SourceKind.API).length
+      },
+      matchedLineCount: suppressLineCounts ? null : matchedLines.length,
+      unmatchedLineCount: suppressLineCounts ? null : unmatchedLineCount,
+      missingCostProductCount: privacyCount(missingCostProductCount),
+      couponRuleFitOrderCount: suppressCouponCounts ? null : statuses.couponExactOrderCount,
+      couponEstimatedOrderCount: suppressCouponCounts ? null : statuses.couponEstimatedOrderCount,
+      couponUnmatchedOrderCount: suppressCouponCounts ? null : statuses.couponUnmatchedOrderCount,
+      couponUnknownOrderCount: suppressCouponCounts ? null : statuses.couponUnknownOrderCount,
+      paymentComponentMismatchOrders: sourceIsApi ? privacyCount(paymentMismatch) : null,
+      paymentComponentUnavailableOrders: sourceIsApi ? privacyCount(paymentUnavailable) : null,
+      revenueKrw: suppressLineCounts ? null : revenueKrw,
+      grossCostKrw: suppressLineCounts ? null : grossCostKrw,
+      couponDeductionKrw: suppressLineCounts ? null : couponDeductionKrw,
+      marginBeforeAdSpendKrw: suppressLineCounts || grossCostKrw === null || couponDeductionKrw === null
+        ? null : revenueKrw - grossCostKrw - couponDeductionKrw,
+      adSpendKrw: null, fullMarginKrw: null,
+      warningCodes: [
+        ...(unmatchedLineCount > 0 ? ["CAFE24_MATCHED_ONLY_CALCULATION"] : []),
+        ...(suppressLineCounts ? ["CAFE24_DIAGNOSTIC_SMALL_UNMATCHED_COHORT"] : []),
+        ...(paymentMismatch > 0 ? ["CAFE24_PAYMENT_COMPONENTS_DIFFER"] : []),
+        ...(paymentUnavailable > 0 ? ["CAFE24_PAYMENT_COMPONENTS_UNAVAILABLE"] : []),
+        ...(unknownCouponProductCount > 0 ? ["CAFE24_COUPON_SIGNAL_UNKNOWN"] : [])
+      ]
+    };
+  }
+
   async productPerformance(query: { from?: string; to?: string; deliveryStatus?: string }) {
     const range = parseDateRange(query.from, query.to);
     const deliveryStatus = parseOptionalDeliveryStatusFilter(query.deliveryStatus);
-    const [salesData, adMetrics] = await Promise.all([
+    const [salesData, adCandidates] = await Promise.all([
       this.cafe24SalesLines(range),
       this.prisma.metaAdsetDailyMetric.findMany({
         where: {
@@ -62,6 +170,9 @@ export class SalesMetricsService {
         orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }, { id: "asc" }]
       })
     ]);
+    const adMetrics = await selectCurrentSourceRows(
+      this.prisma, SourceDataKind.META_ADSET, adCandidates, (row) => row.metricDate
+    );
     const salesLines = salesData.salesLines;
 
     const productIds = uniqueNonEmpty([
@@ -91,7 +202,8 @@ export class SalesMetricsService {
 
     const costRulesByProductId = groupBy(costRules, (rule) => rule.productId);
     const exchangeRateByDate = new Map(exchangeRates.map((rate) => [formatDateOnly(rate.rateDate), rate]));
-    const couponAggregation = this.resolveCouponOrders(salesData.couponLines, couponRules);
+    const couponAggregation = this.resolveCouponOrders(salesData.couponLines,
+      couponRules, salesData.couponInputSources);
     const salesByProductId = this.aggregateSales(
       salesLines,
       costRulesByProductId,
@@ -112,10 +224,11 @@ export class SalesMetricsService {
       const baseTotalCostKrw = adSpendKrw === null || grossCostKrw === null ? null : grossCostKrw + adSpendKrw;
       const marginBeforeCouponKrw =
         baseTotalCostKrw === null ? null : sales.revenueKrw - baseTotalCostKrw;
-      const totalCostKrw =
-        baseTotalCostKrw === null ? null : baseTotalCostKrw + sales.couponDeductionKrw;
-      const marginKrw =
-        marginBeforeCouponKrw === null ? null : marginBeforeCouponKrw - sales.couponDeductionKrw;
+      const couponDeductionKrw = sales.couponUnknownOrderCount > 0 ? null : sales.couponDeductionKrw;
+      const totalCostKrw = baseTotalCostKrw === null || couponDeductionKrw === null
+        ? null : baseTotalCostKrw + couponDeductionKrw;
+      const marginKrw = marginBeforeCouponKrw === null || couponDeductionKrw === null
+        ? null : marginBeforeCouponKrw - couponDeductionKrw;
       return {
         productId,
         product: productById.get(productId) ?? sales.product,
@@ -127,7 +240,8 @@ export class SalesMetricsService {
         grossCostKrw,
         totalCostKrw,
         marginBeforeCouponKrw,
-        couponDeductionKrw: sales.couponDeductionKrw,
+        couponDeductionKrw,
+        couponUnknownOrderCount: sales.couponUnknownOrderCount,
         couponOrderCount: sales.couponOrderCount,
         couponExactOrderCount: sales.couponExactOrderCount,
         couponEstimatedOrderCount: sales.couponEstimatedOrderCount,
@@ -167,15 +281,15 @@ export class SalesMetricsService {
     const salesLines = salesData.salesLines;
     const productIds = uniqueNonEmpty(salesLines.map(activeLineProductId));
     const couponRules = await this.findCouponRules(range, productIds);
-    const { resolutions } = this.resolveCouponOrders(salesData.couponLines, couponRules);
-    const linesByOrderNo = groupBy(salesData.couponLines, (line) => line.orderNo);
+    const { resolutionDetails } = this.resolveCouponOrders(salesData.couponLines,
+      couponRules, salesData.couponInputSources);
 
     return {
       period: { from: range.from, to: range.to },
-      rows: resolutions
-        .filter((resolution) => resolution.couponDetected && couponResolutionMatchesFilter(resolution, status))
-        .map((resolution) => {
-          const orderLines = linesByOrderNo.get(resolution.orderNo) ?? [];
+      rows: resolutionDetails
+        .filter(({ resolution }) => resolution.status !== "NO_COUPON" &&
+          couponResolutionMatchesFilter(resolution, status))
+        .map(({ resolution, orderLines }) => {
           const products = uniqueCouponAuditProducts(orderLines);
           const paymentMethod = uniqueNonEmpty(orderLines.map((line) => line.paymentMethod)).join(" / ") || null;
           return {
@@ -185,6 +299,8 @@ export class SalesMetricsService {
             productNames: products.map((product) => product.productName),
             products,
             paymentMethod,
+            couponUseSignal: resolution.couponUseSignal,
+            totalOrderInputSource: resolution.totalOrderInputSource,
             totalOrderKrw: resolution.totalOrderKrw,
             totalPaidKrw: resolution.totalPaidKrw,
             observedGapKrw: resolution.observedGapKrw,
@@ -206,45 +322,83 @@ export class SalesMetricsService {
     const range = parseDateRange(query.from, query.to);
     const take = Math.min(Math.max(Number(query.take ?? 100) || 100, 1), 500);
     const completeCafe24BatchIds = await this.completeCafe24BatchIds(range);
-    return completeCafe24BatchIds.length > 0
-      ? this.prisma.cafe24OrderLine.findMany({
-          where: {
-            isCurrent: true,
-            uploadBatchId: { in: completeCafe24BatchIds },
-            orderDate: { gte: range.fromDate, lte: range.toDate },
-            productId: null,
-            validationStatus: { not: RowValidationStatus.ERROR }
-          },
-          take,
-          orderBy: [{ orderDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
-          include: { batch: true }
-        })
-      : [];
+    const selected: UnmatchedCafe24Line[] = [];
+    let cursor: string | null = null;
+    while (selected.length < take) {
+      const candidates: UnmatchedCafe24Line[] = await this.prisma.cafe24OrderLine.findMany({
+        where: {
+          isCurrent: true,
+          OR: [
+            { uploadBatchId: { in: completeCafe24BatchIds }, source: SourceKind.CSV },
+            { uploadBatchId: null, source: SourceKind.API }
+          ],
+          orderDate: { gte: range.fromDate, lte: range.toDate },
+          productId: null,
+          validationStatus: { not: RowValidationStatus.ERROR }
+        },
+        take: 500,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+        orderBy: [{ orderDate: "desc" }, { rowNumber: "asc" }, { id: "asc" }],
+        include: { batch: true }
+      });
+      const visible = await selectCurrentSourceRows(
+        this.prisma, SourceDataKind.CAFE24_ORDER, candidates, (row) => row.orderDate
+      );
+      selected.push(...visible);
+      const last = candidates.at(-1)?.id;
+      if (candidates.length < 500 || !last || last === cursor) break;
+      cursor = last;
+    }
+    return selected.slice(0, take);
   }
 
   private async cafe24SalesLines(range: ReturnType<typeof parseDateRange>) {
     const completeCafe24BatchIds = await this.completeCafe24BatchIds(range);
-    if (completeCafe24BatchIds.length === 0) {
-      return { salesLines: [] as Cafe24Line[], couponLines: [] as Cafe24Line[] };
-    }
-    const salesLines = await this.prisma.cafe24OrderLine.findMany({
+    const candidates = await this.prisma.cafe24OrderLine.findMany({
       where: {
         isCurrent: true,
-        uploadBatchId: { in: completeCafe24BatchIds },
+        OR: [
+          { uploadBatchId: { in: completeCafe24BatchIds }, source: SourceKind.CSV },
+          { uploadBatchId: null, source: SourceKind.API }
+        ],
         orderDate: { gte: range.fromDate, lte: range.toDate },
         validationStatus: { not: RowValidationStatus.ERROR }
       },
       include: { product: true, matchRule: true },
       orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
     });
+    const salesLines = await selectCurrentSourceRows(
+      this.prisma, SourceDataKind.CAFE24_ORDER, candidates, (row) => row.orderDate
+    );
     if (salesLines.length === 0) {
-      return { salesLines, couponLines: salesLines };
+      return { salesLines, couponLines: salesLines, couponInputSources: new Map<string, string>() };
     }
 
-    const currentOrderBatchKeys = new Set(salesLines.map((line) => orderBatchKey(line.uploadBatchId, line.orderNo)));
-    const siblingCandidates = await this.prisma.cafe24OrderLine.findMany({
+    const apiConnectionIds = uniqueNonEmpty(salesLines.filter((line) =>
+      line.source === SourceKind.API).map((line) => line.connectionId));
+    const couponInputSources = new Map<string, string>();
+    if (apiConnectionIds.length > 0) {
+      const policies = await this.prisma.sourcePolicy.findMany({ where: {
+        connectionId: { in: apiConnectionIds }, dataKind: SourceDataKind.CAFE24_ORDER,
+        fromDate: { lte: range.toDate }, OR: [{ toDate: null }, { toDate: { gt: range.fromDate } }]
+      }, select: { connectionId: true, fromDate: true, toDate: true,
+        primarySource: true, couponInputSource: true } });
+      for (const line of salesLines.filter((row) => row.source === SourceKind.API)) {
+        const matches = policies.filter((policy) => policy.connectionId === line.connectionId &&
+          policy.primarySource === SourceKind.API && line.orderDate &&
+          policy.fromDate <= line.orderDate &&
+          (policy.toDate === null || line.orderDate < policy.toDate));
+        if (matches.length !== 1) throw new Error("Cafe24 API coupon input source policy is ambiguous.");
+        couponInputSources.set(`${line.connectionId}:${line.orderDate!.getTime()}`,
+          matches[0].couponInputSource ?? "UNKNOWN");
+      }
+    }
+
+    const currentOrderBatchKeys = new Set(salesLines.map(orderBatchKey));
+    const csvBatchIds = uniqueNonEmpty(salesLines.map((line) => line.uploadBatchId));
+    const siblingCandidates = csvBatchIds.length > 0 ? await this.prisma.cafe24OrderLine.findMany({
       where: {
-        uploadBatchId: { in: uniqueNonEmpty(salesLines.map((line) => line.uploadBatchId)) },
+        uploadBatchId: { in: csvBatchIds },
         OR: [
           { isCurrent: true },
           { validationStatus: RowValidationStatus.ERROR }
@@ -252,11 +406,12 @@ export class SalesMetricsService {
       },
       include: { product: true, matchRule: true },
       orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }]
-    });
-    const couponLines = siblingCandidates.filter((line) =>
-      currentOrderBatchKeys.has(orderBatchKey(line.uploadBatchId, line.orderNo))
-    );
-    return { salesLines, couponLines };
+    }) : [];
+    const couponLines = [
+      ...siblingCandidates.filter((line) => currentOrderBatchKeys.has(orderBatchKey(line))),
+      ...salesLines.filter((line) => line.source === SourceKind.API)
+    ];
+    return { salesLines, couponLines, couponInputSources };
   }
 
   private async findCouponRules(
@@ -283,18 +438,31 @@ export class SalesMetricsService {
     });
   }
 
-  private resolveCouponOrders(lines: Cafe24Line[], rules: CouponRule[]) {
+  private resolveCouponOrders(lines: Cafe24Line[], rules: CouponRule[],
+    couponInputSources: Map<string, string>) {
     const resolutions: Cafe24CouponResolution[] = [];
+    const resolutionDetails: { resolution: Cafe24CouponResolution; orderLines: Cafe24Line[] }[] = [];
     const byProductId = new Map<string, CouponProductAccumulator>();
     const ruleInputs = rules.map(couponRuleInput);
 
-    for (const [orderNo, orderLines] of groupBy(lines, (line) => line.orderNo)) {
+    for (const [groupKey, orderLines] of groupBy(lines, couponOrderGroupKey)) {
+      const orderNo = orderLines[0].orderNo;
       const resolution = resolveCafe24CouponOrder({
         orderNo,
         lines: orderLines.map((line) => ({
           orderDate: line.orderDate,
           paymentMethod: line.paymentMethod,
-          totalOrderKrw: nullableNumber(line.totalOrderKrw),
+          source: line.source,
+          providerCouponSignal: line.providerCouponSignal,
+          totalOrderInputSource: line.source !== SourceKind.API ? "CSV_TOTAL_ORDER" :
+            couponInputSources.get(`${line.connectionId}:${line.orderDate?.getTime()}`) ===
+              "API_ACTUAL_PRODUCT_PLUS_SHIPPING"
+              ? "API_ACTUAL_PRODUCT_PLUS_SHIPPING" : "UNKNOWN",
+          totalOrderKrw: line.source !== SourceKind.API ? nullableNumber(line.totalOrderKrw) :
+            couponInputSources.get(`${line.connectionId}:${line.orderDate?.getTime()}`) ===
+              "API_ACTUAL_PRODUCT_PLUS_SHIPPING" &&
+              line.actualOrderPriceKrw != null && line.actualShippingFeeKrw != null
+              ? line.actualOrderPriceKrw.plus(line.actualShippingFeeKrw).toNumber() : null,
           totalPaidKrw: nullableNumber(line.totalPaidKrw),
           productId: activeLineProductId(line),
           salePriceKrw: numberFrom(line.salePriceKrw),
@@ -304,6 +472,7 @@ export class SalesMetricsService {
         rules: ruleInputs
       });
       resolutions.push(resolution);
+      resolutionDetails.push({ resolution, orderLines });
 
       if (resolution.status === "APPLIED") {
         const residualAllocations =
@@ -312,11 +481,11 @@ export class SalesMetricsService {
         for (const [productId, deductionKrw] of resolution.allocationsByProductId) {
           const accumulator = byProductId.get(productId) ?? emptyCouponProductAccumulator();
           accumulator.couponDeductionKrw += deductionKrw;
-          accumulator.appliedOrderNos.add(orderNo);
+          accumulator.appliedOrderNos.add(groupKey);
           if (resolution.confidence === "EXACT") {
-            accumulator.exactOrderNos.add(orderNo);
+            accumulator.exactOrderNos.add(groupKey);
           } else if (resolution.confidence === "ESTIMATED") {
-            accumulator.estimatedOrderNos.add(orderNo);
+            accumulator.estimatedOrderNos.add(groupKey);
           }
           accumulator.couponIgnoredResidualKrw += residualAllocations.get(productId) ?? 0;
           byProductId.set(productId, accumulator);
@@ -324,13 +493,19 @@ export class SalesMetricsService {
       } else if (resolution.status === "UNMATCHED") {
         for (const productId of uniqueNonEmpty(orderLines.map(activeLineProductId))) {
           const accumulator = byProductId.get(productId) ?? emptyCouponProductAccumulator();
-          accumulator.unmatchedOrderNos.add(orderNo);
+          accumulator.unmatchedOrderNos.add(groupKey);
+          byProductId.set(productId, accumulator);
+        }
+      } else if (resolution.status === "UNKNOWN") {
+        for (const productId of uniqueNonEmpty(orderLines.map(activeLineProductId))) {
+          const accumulator = byProductId.get(productId) ?? emptyCouponProductAccumulator();
+          accumulator.unknownOrderNos.add(groupKey);
           byProductId.set(productId, accumulator);
         }
       }
     }
 
-    return { resolutions, byProductId };
+    return { resolutions, resolutionDetails, byProductId };
   }
 
   private async completeCafe24BatchIds(range: ReturnType<typeof parseDateRange>) {
@@ -424,6 +599,7 @@ export class SalesMetricsService {
       accumulator.couponExactOrderCount = coupon.exactOrderNos.size;
       accumulator.couponEstimatedOrderCount = coupon.estimatedOrderNos.size;
       accumulator.couponUnmatchedOrderCount = coupon.unmatchedOrderNos.size;
+      accumulator.couponUnknownOrderCount = coupon.unknownOrderNos.size;
       accumulator.couponIgnoredResidualKrw = coupon.couponIgnoredResidualKrw;
     }
     return groups;
@@ -480,6 +656,7 @@ type SalesAccumulator = {
   couponExactOrderCount: number;
   couponEstimatedOrderCount: number;
   couponUnmatchedOrderCount: number;
+  couponUnknownOrderCount: number;
   couponIgnoredResidualKrw: number;
 };
 
@@ -490,6 +667,7 @@ type CouponProductAccumulator = {
   exactOrderNos: Set<string>;
   estimatedOrderNos: Set<string>;
   unmatchedOrderNos: Set<string>;
+  unknownOrderNos: Set<string>;
 };
 
 type AdAccumulator = {
@@ -515,6 +693,7 @@ function emptySalesAccumulator(product: ProductSnapshot = null): SalesAccumulato
     couponExactOrderCount: 0,
     couponEstimatedOrderCount: 0,
     couponUnmatchedOrderCount: 0,
+    couponUnknownOrderCount: 0,
     couponIgnoredResidualKrw: 0
   };
 }
@@ -526,7 +705,8 @@ function emptyCouponProductAccumulator(): CouponProductAccumulator {
     appliedOrderNos: new Set(),
     exactOrderNos: new Set(),
     estimatedOrderNos: new Set(),
-    unmatchedOrderNos: new Set()
+    unmatchedOrderNos: new Set(),
+    unknownOrderNos: new Set()
   };
 }
 
@@ -560,7 +740,8 @@ function summarizeCouponStatus(sales: SalesAccumulator): CouponAggregateStatus {
   const statuses = [
     sales.couponExactOrderCount > 0 ? "EXACT" : null,
     sales.couponEstimatedOrderCount > 0 ? "ESTIMATED" : null,
-    sales.couponUnmatchedOrderCount > 0 ? "UNMATCHED" : null
+    sales.couponUnmatchedOrderCount > 0 ? "UNMATCHED" : null,
+    sales.couponUnknownOrderCount > 0 ? "UNKNOWN" : null
   ].filter((status): status is Exclude<CouponAggregateStatus, "NO_COUPON" | "MIXED"> => status !== null);
   if (statuses.length === 0) {
     return "NO_COUPON";
@@ -571,13 +752,16 @@ function summarizeCouponStatus(sales: SalesAccumulator): CouponAggregateStatus {
 function summarizeCouponResolutions(resolutions: Cafe24CouponResolution[]) {
   const detected = resolutions.filter((resolution) => resolution.couponDetected);
   const applied = detected.filter((resolution) => resolution.status === "APPLIED");
+  const unknown = resolutions.filter((resolution) => resolution.status === "UNKNOWN");
   return {
     couponDetectedOrderCount: detected.length,
     couponAppliedOrderCount: applied.length,
     couponExactOrderCount: applied.filter((resolution) => resolution.confidence === "EXACT").length,
     couponEstimatedOrderCount: applied.filter((resolution) => resolution.confidence === "ESTIMATED").length,
     couponUnmatchedOrderCount: detected.filter((resolution) => resolution.status === "UNMATCHED").length,
-    couponDeductionKrw: applied.reduce((total, resolution) => total + resolution.couponDeductionKrw, 0),
+    couponUnknownOrderCount: unknown.length,
+    couponDeductionKrw: unknown.length > 0 ? null :
+      applied.reduce((total, resolution) => total + (resolution.couponDeductionKrw ?? 0), 0),
     couponIgnoredResidualKrw: applied.reduce((total, resolution) => total + resolution.ignoredResidualKrw, 0),
     couponMissingTotalOrderCount: detected.filter((resolution) =>
       resolution.warningCodes.includes("MISSING_TOTAL_ORDER")
@@ -629,11 +813,22 @@ function couponResolutionMatchesFilter(
   if (filter === "UNMATCHED") {
     return resolution.status === "UNMATCHED";
   }
+  if (filter === "UNKNOWN") return resolution.status === "UNKNOWN";
   return resolution.status === "APPLIED" && resolution.confidence === filter;
 }
 
-function orderBatchKey(uploadBatchId: string, orderNo: string) {
-  return `${uploadBatchId}\u0000${orderNo}`;
+function orderBatchKey(line: Cafe24Line) {
+  return line.source === SourceKind.API
+    ? `API\u0000${line.connectionId}\u0000${line.orderNo}`
+    : `${line.uploadBatchId}\u0000${line.orderNo}`;
+}
+
+function couponOrderGroupKey(line: Cafe24Line) {
+  return line.source === SourceKind.API
+    ? `API\u0000${line.connectionId}\u0000${line.orderNo}`
+    : line.connectionId
+      ? `CSV\u0000${line.connectionId}\u0000${line.orderNo}`
+      : line.orderNo;
 }
 
 function groupBy<T>(items: T[], keyFn: (item: T) => string) {
@@ -743,12 +938,13 @@ function parseOptionalCouponMatchFilter(value?: string): CouponMatchFilter | nul
     return null;
   }
   const normalized = value.trim().toUpperCase();
-  if (normalized === "EXACT" || normalized === "ESTIMATED" || normalized === "UNMATCHED") {
+  if (normalized === "EXACT" || normalized === "ESTIMATED" || normalized === "UNMATCHED" ||
+      normalized === "UNKNOWN") {
     return normalized;
   }
   throw new BadRequestException({
     code: "INVALID_COUPON_MATCH_STATUS",
-    message: "status must be EXACT, ESTIMATED, or UNMATCHED."
+    message: "status must be EXACT, ESTIMATED, UNMATCHED, or UNKNOWN."
   });
 }
 

@@ -1,0 +1,10 @@
+{
+  "projectRef": "ehnfrrmbkvlsbpvqcvkr",
+  "database": "postgres",
+  "schema": "phase08_meta_ads",
+  "runtimeRole": "phase08_runtime",
+  "migrationRole": "phase08_migration",
+  "existingSchema": false,
+  "existingRoles": false,
+  "operatingTarget": false
+}

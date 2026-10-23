@@ -383,19 +383,21 @@ export const reportDownloadUrl = (id: string) => `${API_BASE}/reports/${id}/down
 export type DashboardSummary = {
   selectedPeriod: { from: string; to: string; selectedDays: number; dataDays: number };
   totals: {
-    spendUsd: number;
-    spendKrw: number;
-    purchaseCount: number;
-    revenueKrw: number;
-    marginKrw: number;
-    cpaKrw: number | null;
-    cpaUsd: number | null;
+    metricUnavailableReasons?: Record<string, string>;
+    impressions: string;
+    spendUsd: string;
+    spendKrw: string | null;
+    purchaseCount: number | null;
+    revenueKrw: string | null;
+    marginKrw: string | null;
+    cpaKrw: string | null;
+    cpaUsd: string | null;
     roas: number | null;
     ctrLinkPct: number | null;
-    cpcLinkUsd: number | null;
-    landingPageViews: number;
+    cpcLinkUsd: string | null;
+    landingPageViews: number | null;
   };
-  averages: { dailySpendKrw: number | null; dailyPurchaseCount: number | null; dailyMarginKrw: number | null };
+  averages: { dailySpendKrw: string | null; dailyPurchaseCount: number | null; dailyMarginKrw: string | null };
   comparisons: Record<string, unknown>;
   health: {
     unmatchedCount: number;

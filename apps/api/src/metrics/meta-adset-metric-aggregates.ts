@@ -1,17 +1,19 @@
+import { aggregateMetricReasons, hasMixedMetaAttribution, sumComplete } from "../domain/meta-conditional-metrics";
 import { numberFrom } from "../common/date-range";
-import { PeriodMetricCalculator, PeriodMetricResult, PeriodMetricRow } from "../domain/period-metric-calculator";
+import { PeriodMetricCalculator, PeriodMetricRow } from "../domain/period-metric-calculator";
 import { DecoratedMetric } from "./metric-types";
+import {aggregateMetaProviderPurchases} from "./meta-provider-purchases";
 
 export function aggregateDecoratedMetrics(calculator: PeriodMetricCalculator, rows: DecoratedMetric[]) {
   const periodRows: PeriodMetricRow[] = rows.map((row) => ({
     metricDate: row.metricDate,
     spendUsd: row.spendUsd,
     spendKrw: row.spendKrw,
-    resultCount: row.purchaseCount,
+    resultCount: row.purchaseCount ?? 0,
     impressions: numberFrom(row.metric.impressions),
     linkClicks: row.metric.linkClicks,
     clicksAll: row.metric.clicksAll,
-    landingPageViews: row.metric.landingPageViews,
+    landingPageViews: row.metric.landingPageViews ?? 0,
     revenueKrw: row.revenueKrw,
     marginKrw: row.marginKrw
   }));
@@ -20,10 +22,25 @@ export function aggregateDecoratedMetrics(calculator: PeriodMetricCalculator, ro
   const missingCostRule = matchedRows.some((row) => !row.costRule);
   const missingCpaRule = matchedRows.some((row) => !row.cpaRule);
   const missingExchangeRate = matchedRows.some((row) => row.ruleStatus === "MISSING_EXCHANGE_RATE");
-  const totals: PeriodMetricResult & { ruleStatus: string } = {
+  const mixed = hasMixedMetaAttribution(rows.map((row) => row.metric));
+  const unknownPurchase = mixed || rows.some((row) => row.purchaseCount === null);
+  const metricUnavailableReasons = aggregateMetricReasons(rows.map((row) => row.metric));
+  if (unknownPurchase) metricUnavailableReasons.purchaseCount ??= "PARTIAL_METRIC";
+  if (mixed) { metricUnavailableReasons.purchaseCount = "MIXED_ATTRIBUTION"; metricUnavailableReasons.landingPageViews = "MIXED_ATTRIBUTION"; }
+  const totals = {
     ...calculated,
+    ...aggregateMetaProviderPurchases(rows.map(r=>r.metric)),
+    purchaseCount: unknownPurchase ? null : sumComplete(rows.map((row) => row.purchaseCount)),
+    landingPageViews: mixed ? null : sumComplete(rows.map((row) => row.metric.landingPageViews)),
+    shopClicks: sumComplete(rows.map((row) => row.metric.shopClicks)),
+    metricUnavailableReasons,
+    hasApiMetrics: rows.some((row) => row.metric.source === "API"),
+    attributionContexts: [...new Set(rows.map((row) => JSON.stringify([row.metric.attributionSetting, row.metric.actionReportTime, [...(row.metric.attributionWindows ?? [])].sort()])))],
+    cpaUsd: unknownPurchase ? null : calculated.cpaUsd, cpaKrw: unknownPurchase ? null : calculated.cpaKrw,
+    revenueKrw: unknownPurchase ? null : calculated.revenueKrw,
+    roas: unknownPurchase ? null : calculated.roas,
     spendKrw: missingCostRule && calculated.spendKrw === 0 ? 0 : calculated.spendKrw,
-    marginKrw: missingCostRule ? calculated.marginKrw : calculated.marginKrw,
+    marginKrw: unknownPurchase ? null : calculated.marginKrw,
     ruleStatus: missingCostRule || missingCpaRule || missingExchangeRate ? "CRITERIA_MISSING" : "OK"
   };
   return { totals, dataDays: calculated.dataDays };

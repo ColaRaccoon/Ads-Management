@@ -1,0 +1,13 @@
+Set-StrictMode -Version Latest;$ErrorActionPreference='Stop'
+. "$PSScriptRoot/probe-afternoon-loaded-definition.ps1"
+$sql=Get-Phase08LoadedDefinitionProbeSql
+$baselineSql=Get-Phase08LoadedDefinitionBaselineSql
+if($baselineSql -notmatch "tablename NOT IN\('security_rate_limit_buckets','local_edge_request_nonces'\)" -or $baselineSql -notmatch 'relforcerowsecurity\)=68'){throw 'security-state-separation'}
+if(-not $sql.StartsWith('BEGIN READ ONLY;') -or -not $sql.TrimEnd().EndsWith('ROLLBACK;') -or ($sql.Split('SELECT * INTO STRICT res FROM extensions.http(').Count-1) -ne 1 -or $sql -notmatch 'EXCEPTION WHEN query_canceled THEN' -or $sql -notmatch 'CURLOPT_TIMEOUT_MS' -or $sql -notmatch '45000' -or $sql -notmatch '50000' -or $sql -notmatch 'oldDefinitionStillLoaded.*boolean AS "oldDefinitionStillLoaded"' -or $sql -notmatch '2026-10-15T06:00:00.000Z' -or $sql -notmatch "'mode','status'" -or $sql -notmatch '2026-10-15T07:00:00Z'){throw 'sql'}
+$loaded=@{httpStatus=[long]400;newDefinitionLoaded=$true;oldDefinitionStillLoaded=$false;noStore=$true;code='LOADED_COLLECTION'};$out=ConvertTo-Phase08LoadedDefinitionResult @([pscustomobject]$loaded);if(-not $out.newDefinitionLoaded -or $out.Count -ne 5){throw 'loaded'}
+$old=@{httpStatus=200;newDefinitionLoaded=$false;oldDefinitionStillLoaded=$true;noStore=$true;code='STALE_OUTAGE'};$out=ConvertTo-Phase08LoadedDefinitionResult @($old);if($out.newDefinitionLoaded -or -not $out.oldDefinitionStillLoaded){throw 'stale'}
+foreach($code in @('PROBE_FAILED','QUERY_CANCELED')){$out=ConvertTo-Phase08LoadedDefinitionResult @(@{httpStatus=$null;newDefinitionLoaded=$false;oldDefinitionStillLoaded=$false;noStore=$false;code=$code});if($out.newDefinitionLoaded){throw 'failure'}}
+foreach($mode in @('raw','status-string','bool-string','bad-code','no-store','both-true')){$bad=$loaded.Clone();switch($mode){raw{$bad['raw']='SYNTHETIC_PRIVATE'};status-string{$bad.httpStatus='400'};bool-string{$bad.newDefinitionLoaded='true'};bad-code{$bad.code='SYNTHETIC_PRIVATE'};no-store{$bad.noStore=$false};both-true{$bad.oldDefinitionStillLoaded=$true}};$failed=$false;try{$null=ConvertTo-Phase08LoadedDefinitionResult @([pscustomobject]$bad)}catch{$failed=$true};if(-not $failed){throw 'negative'}}
+$baseline=@{identityVerified=$true;stopped=$true;collectionProfileVerified=$true;liveLeases=[long]0;digest=('a'*32)};if((ConvertTo-Phase08LoadedDefinitionBaseline @([pscustomobject]$baseline)) -cne ('a'*32)){throw 'baseline'}
+$baseline.liveLeases='0';$failed=$false;try{$null=ConvertTo-Phase08LoadedDefinitionBaseline @($baseline)}catch{$failed=$true};if(-not $failed){throw 'bad-baseline'}
+@{state='COLLECTION_LOADED_DEFINITION_TESTS_PASSED';cases=13;remoteCalls=0}|ConvertTo-Json -Compress

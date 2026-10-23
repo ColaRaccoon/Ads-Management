@@ -1,0 +1,38 @@
+Set-StrictMode -Version Latest
+$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue'
+$token=$null;$headers=$null;$reply=$null;$body=$null;$stage='PUBLIC_SCHEMA';$readCount=0
+$outRoot='C:/Users/seong/AppData/Local/MetaAdsPhase10Evaluation/continuation-20261021/supabase-quota-read-v1'
+function Write-QuotaNew($Value,[string]$Path){$bytes=[Text.UTF8Encoding]::new($false).GetBytes(($Value|ConvertTo-Json -Depth 20));$f=[IO.File]::Open($Path,[IO.FileMode]::CreateNew);try{$f.Write($bytes,0,$bytes.Length);$f.Flush($true)}finally{$f.Dispose()}}
+function Read-QuotaGet([string]$Url,[hashtable]$Auth){
+ $u=[Uri]$Url
+ if($u.Scheme -cne 'https' -or $u.Host -cne 'api.supabase.com' -or $u.Query -or $u.Fragment -or $u.UserInfo -or $u.AbsolutePath -cnotmatch '^/(api/v1-json|v1/projects/ehnfrrmbkvlsbpvqcvkr|v1/organizations|v1/organizations/[a-z0-9-]{1,64}(/entitlements)?|platform/organizations/[a-z0-9-]{1,64}/(usage|billing/subscription))$'){throw 'GET_SCOPE'}
+ $r=Invoke-WebRequest -Uri $Url -Method Get -Headers $Auth -MaximumRedirection 0 -TimeoutSec 25 -SkipHttpErrorCheck
+ $script:readCount++;if([Text.Encoding]::UTF8.GetByteCount($r.Content) -gt 2097152){throw 'REPLY_BOUND'}
+ return @{status=[int]$r.StatusCode;body=$(if([int]$r.StatusCode -eq 200){$r.Content|ConvertFrom-Json -AsHashtable -Depth 60 -DateKind String}else{$null})}
+}
+try{
+ [void][IO.Directory]::CreateDirectory($outRoot)
+ $schemaReply=Read-QuotaGet 'https://api.supabase.com/api/v1-json' @{};if($schemaReply.status -ne 200){throw 'PUBLIC_SCHEMA'};$schema=$schemaReply.body
+ $schemaFacts=@{url='https://api.supabase.com/api/v1-json';pathCount=$schema.paths.Count;organizationConsumptionRoutes=@($schema.paths.Keys|Where-Object {$_ -match '/organizations/' -and $_ -match '/(usage|billing|subscription)' });relatedReadRoutes=@($schema.paths.Keys|Where-Object {$_ -match 'usage|billing|entitlement' -and $schema.paths[$_].ContainsKey('get')})}
+ . "$PSScriptRoot/protected-context.ps1"
+ $token=Get-Phase08SupabaseCredential;$headers=@{Authorization=('Bearer '+$token)}
+ $stage='PROJECT_IDENTITY';$project=Read-QuotaGet 'https://api.supabase.com/v1/projects/ehnfrrmbkvlsbpvqcvkr' $headers
+ if($project.status -ne 200 -or $project.body.id -cne 'ehnfrrmbkvlsbpvqcvkr'){throw 'PROJECT_BINDING'}
+ $stage='ORGANIZATION_IDENTITY';$orgs=Read-QuotaGet 'https://api.supabase.com/v1/organizations' $headers;if($orgs.status -ne 200){throw 'ORGANIZATION_LIST'}
+ $matches=@($orgs.body|Where-Object {$_.id -ceq $project.body.organization_id});if($matches.Count -ne 1){throw 'ORGANIZATION_BINDING'};$slug=[string]$matches[0].slug;if($slug -cnotmatch '^[a-z0-9-]{1,64}$'){throw 'SLUG_SCOPE'}
+ $base='https://api.supabase.com/v1/organizations/'+$slug
+ $stage='ORGANIZATION_PLAN';$organization=Read-QuotaGet $base $headers;if($organization.status -ne 200 -or $organization.body.id -cne $project.body.organization_id -or $organization.body.plan -cnotin @('free','pro','team','enterprise','platform')){throw 'PLAN_IDENTITY'}
+ $stage='ENTITLEMENTS';$ent=Read-QuotaGet ($base+'/entitlements') $headers;if($ent.status -ne 200){throw 'ENTITLEMENTS'}
+ $allowedKeys=$schema.components.schemas.V1ListEntitlementsResponse_Output.properties.entitlements.items.properties.feature.properties.key.enum
+ $projected=@();foreach($item in $ent.body.entitlements){if($item.feature.key -cnotin $allowedKeys -or $item.type -cnotin @('boolean','numeric','set') -or $item.hasAccess -isnot [bool]){throw 'ENTITLEMENT_SCHEMA'};$row=@{metric=$item.feature.key;type=$item.type;hasAccess=$item.hasAccess;enabled=$item.config.enabled};if($item.type -ceq 'numeric'){if($null -eq $item.config.value -or -not [double]::IsFinite([double]$item.config.value) -or $item.config.unit -cnotmatch '^[A-Za-z0-9 /_-]{0,40}$'){throw 'NUMERIC_ENTITLEMENT'};$row.value=$item.config.value;$row.unit=$item.config.unit;$row.unlimited=$item.config.unlimited};if($item.type -ceq 'set'){$row.setValueCount=@($item.config.set).Count};$projected+=$row}
+ $stage='STUDIO_OFFICIAL_USAGE_ROUTE';$usage=Read-QuotaGet ('https://api.supabase.com/platform/organizations/'+$slug+'/usage') $headers
+ $stage='STUDIO_OFFICIAL_SUBSCRIPTION_ROUTE';$subscription=Read-QuotaGet ('https://api.supabase.com/platform/organizations/'+$slug+'/billing/subscription') $headers
+ # Platform response raw bodies are deliberately never saved, including any 200.
+ $usageAvailable=$usage.status -eq 200;$subscriptionAvailable=$subscription.status -eq 200
+ $plan=$organization.body.plan;$standard=@()
+ if($plan -ceq 'free'){$standard=@(@{metric='egress';included=5;unit='GB';scope='ORGANIZATION_BILLING_CYCLE'},@{metric='monthly_active_users';included=50000;unit='users';scope='ORGANIZATION_BILLING_CYCLE'},@{metric='monthly_active_third_party_users';included=50000;unit='users';scope='ORGANIZATION_BILLING_CYCLE'},@{metric='edge_function_invocations';included=500000;unit='invocations';scope='ORGANIZATION_BILLING_CYCLE'},@{metric='realtime_message_count';included=2000000;unit='messages';scope='ORGANIZATION_BILLING_CYCLE'})}
+ $out=@{kind='PHASE10_SUPABASE_CURRENT_ORGANIZATION_QUOTA_ACCESS';at=[DateTimeOffset]::UtcNow.ToString('o');status=$(if($usageAvailable){'USAGE_RESPONSE_REQUIRES_SEPARATE_SAFE_PROJECTION'}else{'PARTIAL_PLAN_CONFIRMED_MONTHLY_USAGE_UNAVAILABLE'});projectIdentityExact200=$true;accessibleOrganizationCount=@($orgs.body).Count;selectedOrganizationExactMatched=$true;selectedOrganizationIdSha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes([string]$project.body.organization_id))).ToLowerInvariant();currentPlan=$plan;planFromCurrentManagementGet=$true;schema=$schemaFacts;entitlementsStatus=$ent.status;entitlementCount=$projected.Count;entitlements=$projected;entitlementsAreActualUsage=$false;entitlementsAreBillingIncludedQuota=$false;standardPublishedMonthlyAllowance=$standard;standardAllowanceSource='https://supabase.com/docs/guides/platform/billing-on-supabase';standardAllowanceIsActualMeasuredUsage=$false;customSubscriptionOverridesVerified=$false;studioUsageStatus=$usage.status;studioSubscriptionStatus=$subscription.status;studioUsageRouteSource='https://github.com/supabase/supabase/blob/master/apps/studio/data/usage/org-usage-query.ts';studioSubscriptionRouteSource='https://github.com/supabase/supabase/blob/master/apps/studio/data/subscriptions/org-subscription-query.ts';actualMonthlyUsage=$null;actualBillingPeriod=$null;actualRemainingQuota=$null;actualUsageVerified=$false;remainingQuotaVerified=$false;missingCapability='CURRENT_PAT_ACCEPTED_FOR_MANAGEMENT_GET_BUT_STUDIO_PLATFORM_USAGE_AUTH_CLASS_NOT_ACCEPTED_AND_NO_CONTROLLABLE_BROWSER';authenticatedGetRequests=$readCount-1;publicGetRequests=1;settingsChanges=0;credentialChanges=0;newLogin=0;tokenRefresh=0;appHttp=0;databaseRequests=0;rawReturned=0}
+ Write-QuotaNew $out ($outRoot+'/result.json');@{kind=$out.kind;status=$out.status;currentPlan=$plan;entitlementCount=$projected.Count;usageStatus=$usage.status;subscriptionStatus=$subscription.status;actualUsageVerified=$false;rawReturned=0}|ConvertTo-Json -Compress
+}catch{
+ $safe=@{kind='PHASE10_SUPABASE_QUOTA_SAFE_REJECTION';status='FAIL';stage=$stage;errorType=$_.Exception.GetType().Name;line=$_.InvocationInfo.ScriptLineNumber;rawErrorSuppressed=$true;getCount=$readCount;mutations=0;rawReturned=0};[void][IO.Directory]::CreateDirectory($outRoot);Write-QuotaNew $safe ($outRoot+'/failure-'+[Guid]::NewGuid().ToString()+'.json');$safe|ConvertTo-Json -Compress;exit 1
+}finally{$token=$null;$headers=$null;$reply=$null;$body=$null;$project=$null;$orgs=$null;$matches=$null;$slug=$null;$organization=$null;$ent=$null;$usage=$null;$subscription=$null}

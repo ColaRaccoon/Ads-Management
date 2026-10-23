@@ -1,0 +1,5 @@
+import {pathToFileURL} from 'node:url';
+import {OCTOBER16_META_FIRST_UNIT_SQL,projectFirstUnitFingerprint} from './october16-proof.mjs';
+export const V20_DAY10_SQL=OCTOBER16_META_FIRST_UNIT_SQL.replaceAll("'2026-10-09'","'2026-10-10'").replaceAll(':2026-10-09',':2026-10-10').replace("from_date='2026-10-10'","from_date='2026-10-09'");
+export function v20RestartProof(x){if(x.action==='sql'&&['2026-10-09','2026-10-10'].includes(x.day))return {state:'META_FIRST_UNIT_SQL_PREPARED',sql:x.day==='2026-10-09'?OCTOBER16_META_FIRST_UNIT_SQL:V20_DAY10_SQL};if(x.action==='project')return projectFirstUnitFingerprint(x.rows);throw Error('RESTART_PROOF_SCOPE');}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){let raw='';try{for await(const p of process.stdin){raw+=p;if(raw.length>1048576)throw Error('BOUND');}process.stdout.write(JSON.stringify(v20RestartProof(JSON.parse(raw))));}catch{process.stdout.write(JSON.stringify({state:'PHASE08_V20_RESTART_PROOF_REJECTED',rawErrorSuppressed:true}));process.exitCode=1;}finally{raw='';}}

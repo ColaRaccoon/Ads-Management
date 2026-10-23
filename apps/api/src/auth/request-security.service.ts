@@ -101,6 +101,12 @@ export class AuthRequestSecurityService {
     await this.consumeKey(`http:read:${clientAddress(request, this.http)}`, 600, 60_000);
   }
 
+  async assertCafe24Callback() {
+    // A single shared test app needs only a few callbacks. This global bucket
+    // cannot be evaded with a forged forwarded client address.
+    await this.consumeKey("cafe24:oauth:callback", 30, 60_000);
+  }
+
   async assertGeneralMutationTransport(request: Request, expensive: boolean) {
     this.assertMutationOrigin(request);
     const scope = expensive ? "expensive-abuse" : "mutation-abuse";

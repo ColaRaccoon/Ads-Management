@@ -1,6 +1,8 @@
+import { sumComplete } from "../domain/meta-conditional-metrics";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { AdStage, CreativeLogActionType, Prisma } from "@prisma/client";
+import { AdStage, CreativeLogActionType, Prisma, SourceDataKind } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
+import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { asDateOnly, numberFrom, parseDateRange } from "../common/date-range";
 import { formatDateOnly } from "../domain/date-number";
 
@@ -80,7 +82,7 @@ export class ChangeLogsService {
       orderBy: [{ lastSeenOn: "desc" }, { displayName: "asc" }]
     });
     const creativeIds = creatives.map((creative) => creative.id);
-    const metrics =
+    const metricCandidates =
       creativeIds.length > 0
         ? await this.prisma.metaAdDailyMetric.findMany({
             where: {
@@ -91,6 +93,8 @@ export class ChangeLogsService {
             orderBy: [{ metricDate: "desc" }, { campaignNameSnapshot: "asc" }, { adsetNameSnapshot: "asc" }]
           })
         : [];
+    const metrics = await selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD,
+      metricCandidates, (metric) => metric.metricDate);
     const metricsByCreative = groupBy(metrics, (metric) => metric.creativeId ?? "");
 
     return creatives.map((creative) => {
@@ -143,7 +147,7 @@ export class ChangeLogsService {
     if (!creative) {
       throw new NotFoundException({ code: "CREATIVE_NOT_FOUND", message: "creativeId에 해당하는 광고소재를 찾을 수 없습니다." });
     }
-    const metrics = await this.prisma.metaAdDailyMetric.findMany({
+    const metricCandidates = await this.prisma.metaAdDailyMetric.findMany({
       where: {
         creativeId,
         isCurrent: true,
@@ -151,6 +155,8 @@ export class ChangeLogsService {
       },
       orderBy: [{ metricDate: "asc" }, { campaignNameSnapshot: "asc" }, { adsetNameSnapshot: "asc" }]
     });
+    const metrics = await selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD,
+      metricCandidates, (metric) => metric.metricDate);
 
     return {
       creative: {
@@ -215,24 +221,31 @@ export class ChangeLogsService {
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
     });
     const productIds = products.map((product) => product.id);
-    const grouped =
+    const candidates =
       productIds.length > 0
-        ? await this.prisma.metaAdDailyMetric.groupBy({
-            by: ["productId"],
+        ? await this.prisma.metaAdDailyMetric.findMany({
             where: {
               productId: { in: productIds },
               metricDate,
               isCurrent: true
             },
-            _sum: { spendUsd: true }
+            select: { productId: true, spendUsd: true, metricDate: true,
+              source: true, connectionId: true }
           })
         : [];
-    const spendByProductId = new Map(grouped.map((row) => [row.productId, round2(numberFrom(row._sum.spendUsd))]));
+    const selected = await selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD,
+      candidates, (metric) => metric.metricDate);
+    const spendByProductId = new Map<string, Prisma.Decimal>();
+    for (const row of selected) {
+      if (!row.productId) continue;
+      spendByProductId.set(row.productId,
+        (spendByProductId.get(row.productId) ?? new Prisma.Decimal(0)).plus(row.spendUsd));
+    }
 
     return products.map((product) => ({
       id: product.id,
       productName: displayProductName(product),
-      spendUsd: spendByProductId.get(product.id) ?? 0
+      spendUsd: round2(numberFrom(spendByProductId.get(product.id)))
     }));
   }
 
@@ -246,7 +259,7 @@ export class ChangeLogsService {
       throw new NotFoundException({ code: "PRODUCT_NOT_FOUND", message: "productId에 해당하는 제품을 찾을 수 없습니다." });
     }
 
-    const [selectedMetrics, logs] = await Promise.all([
+    const [selectedCandidates, logs] = await Promise.all([
       this.prisma.metaAdDailyMetric.findMany({
         where: {
           productId,
@@ -261,9 +274,11 @@ export class ChangeLogsService {
         orderBy: [{ actionDate: "desc" }, { createdAt: "desc" }]
       })
     ]);
+    const selectedMetrics = await selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD,
+      selectedCandidates, (metric) => metric.metricDate);
     const adsDate =
       selectedMetrics.length > 0 ? metricDate : await this.findPreviousProductMetricDate(productId, metricDate);
-    const adsMetrics =
+    const fallbackCandidates =
       selectedMetrics.length > 0 || !adsDate
         ? selectedMetrics
         : await this.prisma.metaAdDailyMetric.findMany({
@@ -275,6 +290,8 @@ export class ChangeLogsService {
             include: { creative: { select: { displayName: true } } },
             orderBy: [{ spendUsd: "desc" }, { adNameSnapshot: "asc" }]
           });
+    const adsMetrics = await selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD,
+      fallbackCandidates, (metric) => metric.metricDate);
     const ads = groupProductAds(adsMetrics);
 
     return {
@@ -317,16 +334,23 @@ export class ChangeLogsService {
   }
 
   private async findPreviousProductMetricDate(productId: string, metricDate: Date) {
-    const previousMetric = await this.prisma.metaAdDailyMetric.findFirst({
-      where: {
-        productId,
-        metricDate: { lt: metricDate },
-        isCurrent: true
-      },
-      select: { metricDate: true },
-      orderBy: [{ metricDate: "desc" }]
-    });
-    return previousMetric?.metricDate ?? null;
+    let before = metricDate;
+    for (;;) {
+      const previous = await this.prisma.metaAdDailyMetric.findFirst({
+        where: { productId, metricDate: { lt: before }, isCurrent: true },
+        select: { metricDate: true },
+        orderBy: [{ metricDate: "desc" }]
+      });
+      if (!previous) return null;
+      const candidates = await this.prisma.metaAdDailyMetric.findMany({
+        where: { productId, metricDate: previous.metricDate, isCurrent: true },
+        select: { metricDate: true, source: true, connectionId: true }
+      });
+      const selected = await selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD,
+        candidates, (metric) => metric.metricDate);
+      if (selected.length > 0) return previous.metricDate;
+      before = previous.metricDate;
+    }
   }
 }
 
@@ -545,10 +569,10 @@ function groupedDailyMetrics(metrics: MetricRow[]) {
     .map(([metricDate, rows]) => ({
       metricDate,
       spendUsd: round2(sum(rows, (row) => numberFrom(row.spendUsd))),
-      purchaseCount: sum(rows, (row) => row.purchaseCount),
+      purchaseCount: sumComplete(rows.map((row) => row.purchaseCount)),
       impressions: sum(rows, (row) => numberFrom(row.impressions)),
       linkClicks: sum(rows, (row) => row.linkClicks),
-      landingPageViews: sum(rows, (row) => row.landingPageViews),
+      landingPageViews: sumComplete(rows.map((row) => row.landingPageViews)),
       statuses: uniqueStrings(rows.map((row) => row.adDeliveryStatus))
     }))
     .sort((a, b) => b.metricDate.localeCompare(a.metricDate));
@@ -560,10 +584,10 @@ function aggregateLatestMetrics(metrics: MetricRow[]) {
   return {
     metricDate: dateOrNull(latestDate),
     spendUsd: round2(sum(rows, (row) => numberFrom(row.spendUsd))),
-    purchaseCount: sum(rows, (row) => row.purchaseCount),
+    purchaseCount: sumComplete(rows.map((row) => row.purchaseCount)),
     impressions: sum(rows, (row) => numberFrom(row.impressions)),
     linkClicks: sum(rows, (row) => row.linkClicks),
-    landingPageViews: sum(rows, (row) => row.landingPageViews),
+    landingPageViews: sumComplete(rows.map((row) => row.landingPageViews)),
     statuses: uniqueStrings(rows.map((row) => row.adDeliveryStatus))
   };
 }

@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { AuthenticatedRequest } from "./auth.types";
 import { AuthRequestSecurityService } from "./request-security.service";
 import { isExpensiveMutation, requestPath } from "./http-security.guard";
+import { isMachineSyncPost } from "../common/api-routing";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_SECURITY_ROUTES = new Set([
@@ -22,7 +23,8 @@ export class AuthenticatedMutationRateGuard implements CanActivate {
     const path = requestPath(request);
     if (
       SAFE_METHODS.has(method) || path === "/api/health/live" || path === "/api/health/ready" ||
-      AUTH_SECURITY_ROUTES.has(`${method} ${path}`) || path.startsWith("/api/users")
+      AUTH_SECURITY_ROUTES.has(`${method} ${path}`) || path.startsWith("/api/users") ||
+      isMachineSyncPost(method, path)
     ) return true;
     await this.security.assertAuthenticatedMutationRate(request, isExpensiveMutation(path));
     return true;

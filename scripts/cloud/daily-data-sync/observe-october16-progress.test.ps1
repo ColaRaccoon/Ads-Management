@@ -1,0 +1,14 @@
+Set-StrictMode -Version Latest;$ErrorActionPreference='Stop'
+$t=$null;$e=$null;$ast=[Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'observe-october16-progress.ps1'),[ref]$t,[ref]$e);if($e.Count){throw 'parse'};foreach($f in $ast.FindAll({param($n)$n -is [Management.Automation.Language.FunctionDefinitionAst]},$true)){Invoke-Expression $f.Extent.Text}
+$meta=@{status='PARTIAL';attempts=1;published=68;code='SYNTHETIC_PRIVATE';units=@()};foreach($d in @('09','10','11','12','13','14','15')){$meta.units+=@{day='2026-10-'+$d;status=if($d -ceq '09'){'SUCCEEDED'}else{'QUEUED'};attempts=if($d -ceq '09'){1}else{0};published=if($d -ceq '09'){68}else{0}}}
+$r=@{identity=$true;tables=68;cafe=$null;meta=$meta;cafe_checkpoints=0;cafe_expired_checkpoints=0;meta_checkpoints=0;meta_expired_checkpoints=0;active_leases=0;runtime_active=0;runtime_idle=0;runtime_total=0}
+foreach($x in @($r,([pscustomobject]($r|ConvertTo-Json -Depth 12|ConvertFrom-Json -DateKind String)))){$o=ConvertTo-Phase08October16Progress @($x) 'SLEEPING';if($o.meta.code -cne 'UNCLASSIFIED' -or $o.meta.units.Count -ne 7 -or ($o|ConvertTo-Json -Depth 12).Contains('SYNTHETIC_PRIVATE')){throw 'positive'}}
+# Actual Cafe chunk protocol resets unit attempts0 on saved checkpoint; run attempts accumulate.
+foreach($status in @('PARTIAL','RUNNING','SUCCEEDED')){
+ $b=$r|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable -DateKind String
+ $b.cafe=@{status=$status;attempts=[long]31;published=if($status -ceq 'SUCCEEDED'){314}else{0};code=$null;units=@(@{day='2026-10-15';status=if($status -ceq 'PARTIAL'){'QUEUED'}else{$status};attempts=if($status -ceq 'PARTIAL'){0}else{1};published=if($status -ceq 'SUCCEEDED'){314}else{0}})}
+ foreach($inputRow in @($b,($b|ConvertTo-Json -Depth 12|ConvertFrom-Json -DateKind String))){$o=ConvertTo-Phase08October16Progress @($inputRow) 'SUCCESS';if($o.cafe.units.Count -ne 1 -or $o.cafe.units[0].day -cne '2026-10-15' -or $o.cafe.attempts -ne 31){throw 'cafe-positive'}}
+}
+foreach($case in @('extra','bool','run-extra','day','attempt','count','deployment')){$b=$r|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable -DateKind String;$dep='SUCCESS';switch($case){extra{$b['raw']='SYNTHETIC_PRIVATE'};bool{$b.identity='true'};run-extra{$b.meta['raw']='SYNTHETIC_PRIVATE'};day{$b.meta.units[0].day='2026-10-08'};attempt{$b.meta.units[0].attempts=4};count{$b.active_leases='0'};deployment{$dep='foreign'}};$failed=$false;try{$null=ConvertTo-Phase08October16Progress @($b) $dep}catch{$failed=$true};if(-not $failed){throw 'negative'}}
+$sql=Get-Phase08October16ProgressSql;if(-not $sql.StartsWith('BEGIN READ ONLY;') -or -not $sql.EndsWith('COMMIT;') -or $sql -match '\b(INSERT|UPDATE|DELETE|TRUNCATE)\b' -or $sql.Contains('152')){throw 'sql'}
+@{state='OCTOBER16_PROGRESS_BOUNDARIES_PASSED';cases=16;remoteCalls=0}|ConvertTo-Json -Compress

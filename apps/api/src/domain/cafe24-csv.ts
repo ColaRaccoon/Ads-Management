@@ -263,6 +263,9 @@ export class Cafe24CsvParser {
 
   private requiredDateTime(rawRow: Record<string, string>, key: Cafe24OrderColumnKey, issues: ParseIssue[]): Date | null {
     const rawValue = readColumn(rawRow, key);
+    // A source row may omit the clock while retaining valid identity and money.
+    // Preserve that absence; never infer its day from a sibling or the API.
+    if (typeof rawValue === "string" && rawValue.trim() === "") return null;
     const parsed = parseCafe24DateTime(rawValue);
     if (!parsed) {
       issues.push({

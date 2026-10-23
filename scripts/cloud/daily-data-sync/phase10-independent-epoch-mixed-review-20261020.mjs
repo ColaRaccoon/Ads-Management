@@ -1,0 +1,50 @@
+// Independent public-evidence audit only; no app, database, Docker or private input.
+import assert from 'node:assert/strict';
+import {readFileSync,writeFileSync,readdirSync,existsSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {createRequire} from 'node:module';
+const {resourceSnapshot,validateDbTelemetry}=createRequire(import.meta.url)('./phase10-resume-mixed-proof.cjs');
+const E='C:/Users/seong/AppData/Local/MetaAdsPhase10Evaluation';
+const root=E+'/mixed-20261020-v2/attempt-v1';
+const output=E+'/independent/resume-20261020/epoch-mixed-review-v1.json';
+assert(!existsSync(output));
+const sha=b=>createHash('sha256').update(b).digest('hex');
+const read=name=>JSON.parse(readFileSync(root+'/'+name,'utf8'));
+const e=read('result.json'),m=read('mixed-workload.json'),pre=read('pre-kill-progress.json');
+const tools=JSON.parse(readFileSync(E+'/mixed-20261020-v2/tools-v2.json'));
+const compiled=JSON.parse(readFileSync(E+'/portable-build-20261020-v2/compiled-proof.json'));
+assert.equal(e.status,'PASS');assert.equal(e.image,tools.image);assert.equal(e.revision,tools.release);
+assert.equal(e.migrations,52);assert.equal(e.localFixturePolicies,70);assert.equal(e.explicitlyForcedRlsTables,70);
+assert.deepEqual(e.candidateBefore,e.candidateAfter);assert.equal(e.candidateAfter.source,tools.source);
+assert.equal(e.candidateAfter.files,495);assert.equal(e.candidateAfter.migrations,52);
+assert.equal(e.remoteRequests,0);assert.equal(e.protectedReads,0);assert.equal(e.realCredentialsUsed,false);
+assert.equal(e.remoteMigrationApplied,false);assert.equal(e.epochActivation,false);assert.equal(e.actualEpochEntryExercisedByMixed,false);
+for(const p of tools.files)assert.equal(sha(readFileSync('scripts/cloud/daily-data-sync/'+p.name)),p.sha256);
+for(const [name,h]of Object.entries(e.harnessHashes))assert.equal(sha(readFileSync('scripts/cloud/daily-data-sync/'+name)),h);
+assert.equal(compiled.status,'PASS');assert.equal(compiled.source,tools.source);assert.equal(compiled.image,e.image);
+assert.equal(compiled.files.length,272);assert.equal(sha(JSON.stringify(compiled.files)),compiled.compiledTreeSha256);
+for(const f of compiled.files){const b=readFileSync(E+'/portable-build-20261020-v2/api-dist/'+f.name);assert.equal(b.length,f.bytes);assert.equal(sha(b),f.sha256);}
+for(const [name,h]of Object.entries(m.compiledHashes))assert.equal(compiled.files.find(f=>f.name===name+'.js')?.sha256,h);
+assert.equal(m.rows.length,40);assert.deepEqual(m.rows.map(r=>r.index).sort((a,b)=>a-b),Array.from({length:40},(_,i)=>i));
+assert(m.rows.every(r=>r.status===200&&Number.isFinite(r.ms)&&r.ms>0&&r.start<r.end&&Number.isInteger(r.bytes)&&r.bytes>0));
+const p95=m.rows.map(r=>r.ms).sort((a,b)=>a-b)[37];assert.equal(p95,m.p95);assert.equal(p95,e.summary.p95Ms);assert(p95<=5000);
+const rows=readdirSync(root).filter(n=>/^measurement-row-\d\d\.json$/.test(n));assert.equal(rows.length,40);
+for(const f of rows){const raw=read(f),final=m.rows.find(r=>r.index===raw.index);const {collectorOverlap,transactionOverlap,...original}=final;assert.deepEqual(raw,original);}
+const checkpoints=readdirSync(root).filter(n=>/^measurement-checkpoint-\d\d-reads-complete\.json$/.test(n));assert.equal(checkpoints.length,1);
+const checkpoint=read(checkpoints[0]);assert.equal(checkpoint.complete,true);assert.equal(checkpoint.rows.length,40);assert.equal(checkpoint.p95Ms,p95);
+assert.deepEqual(checkpoint.criteria,{requests:40,concurrency:4,p95Ms:5000,errors:0});
+const events=m.rows.flatMap(r=>[{at:r.start,n:1},{at:r.end,n:-1}]).sort((a,b)=>a.at-b.at||a.n-b.n);let active=0,maxActive=0;for(const ev of events){active+=ev.n;maxActive=Math.max(maxActive,active);}assert.equal(active,0);assert.equal(maxActive,4);
+const providers={};for(const [provider,count]of [['META',16],['CAFE24',12],['GOOGLE',12]]){const rows=m.rows.filter(r=>r.provider===provider);assert.equal(rows.length,count);const writes=m.txSpans.filter(t=>t.provider===provider&&t.canonicalWriter===true);const overlap=rows.filter(r=>writes.some(t=>r.start<t.end&&r.end>t.start));assert(overlap.length>0);providers[provider]={requests:count,canonicalWriteOverlap:overlap.length,p95Ms:rows.map(r=>r.ms).sort((a,b)=>a-b)[Math.ceil(count*.95)-1]};}
+assert.equal(m.samePrismaInstance,true);assert.equal(m.poolLimit,3);assert.equal(m.heavyLimit,1);assert.equal(m.authGuardBypassed,false);assert.equal(m.actualLocalSessionChecks,true);assert.equal(m.loggedOut,true);
+assert.equal(m.runsSucceeded,3);assert.equal(m.unitsSucceeded,15);assert.equal(m.coverageBound,22);assert.equal(m.publicationAudits,15);assert.equal(m.metaVersion2Rows,3661);assert.equal(m.metaCurrentSpendUsd,'7322');assert.equal(m.finalCounts.ads,3661);assert.equal(m.finalCounts.adsets,1400);assert.equal(m.finalCounts.cafe,379);assert.equal(m.finalCounts.google,9);assert.equal(m.finalCounts.checkpoints[0].n,0);assert.equal(Number(m.googlePositiveReadDay.slice(-2))%2,0);assert.equal(m.fixtureRequests.nonFixtureRequests,0);
+assert.equal(pre.activeRun,true);assert.equal(pre.liveLease,true);assert.equal(pre.insideFetchScheduledChunk,true);assert.equal(pre.firstCount,100);assert.equal(pre.checkpoint.revision,1);assert(pre.checkpoint.bytes>0);assert.deepEqual(m.preKill.checkpoint,pre.checkpoint);assert.equal(m.checkpointRecoveredAfterSigkill,true);assert.equal(e.sessions[0].code,137);assert.equal(e.sessions[1].code,0);
+assert.equal(m.malformedProvider.status,'ACTION_REQUIRED');assert.equal(m.malformedProvider.code,'FIELD_UNSUPPORTED');assert.equal(m.malformedProvider.publicationAudits,0);assert.equal(m.malformedProvider.canonicalPreserved,true);assert.equal(m.malformedProvider.lastSuccessPreserved,true);
+assert.equal(e.resources.memory,1000000000);assert.equal(e.resources.swap,1000000000);assert.equal(e.resources.nanoCpus,1000000000);assert.equal(e.resources.network,'none');
+const samples=[...pre.resources,...m.resources];assert(samples.length>0);for(const r of samples)resourceSnapshot({at:r.at,current:String(r.cgroupCurrent),peak:String(r.cgroupPeak),max:'999997440',events:Object.entries(r.events).map(([k,v])=>`${k} ${v}`).join('\n'),rss:r.rss,heap:r.heapUsed,heavy:r.heavy});assert(samples.some(r=>r.heavy===1));
+const finalEvents=Object.fromEntries(m.cgroup.memoryEvents.trim().split('\n').map(s=>{const[k,v]=s.trim().split(/\s+/);return[k,Number(v)];}));for(const k of ['max','oom','oom_kill','oom_group_kill'])assert.equal(finalEvents[k],0);assert.equal(Number(m.cgroup.memoryMax),999997440);const finalPeak=Number(m.cgroup.memoryPeak);assert(Number.isFinite(finalPeak)&&finalPeak>0&&finalPeak<=999997440);
+const cpu=m.cgroup.cpuMax.split(' ').map(Number);assert(cpu.length===2&&cpu.every(v=>Number.isFinite(v)&&v>0)&&cpu[0]===cpu[1]);
+const db=validateDbTelemetry(read('db-telemetry.json'),m.rows,e.dbObservationErrors);
+for(const k of ['cleanupStopExit','cleanupRemoveExit','postgresStopExit'])assert.equal(e[k],0);assert.equal(e.finalState.oomKilled,false);assert.equal(e.finalState.running,false);
+const waitStart=m.stageHistory.find(s=>s.stage==='RECOVERY_LEASE_WAIT'),waitEnd=m.stageHistory.find(s=>s.stage==='CAFE_CHECKPOINT_CONTINUATIONS');assert(waitStart&&waitEnd&&waitEnd.at>=waitStart.at);
+const proof={kind:'INDEPENDENT_C6_PUBLIC_MIXED_AUDIT',at:new Date().toISOString(),status:'PASS_SYNTHETIC_MIXED_ONLY',release:e.revision,source:tools.source,image:e.image,requests:40,concurrency:4,p95Ms:p95,errors:0,bytes:m.rows.reduce((s,r)=>s+r.bytes,0),providers,runsSucceeded:3,unitsSucceeded:15,coverageBound:22,publicationAudits:15,compiledFilesVerified:272,runtimeCompiledFilesCompared:Object.keys(m.compiledHashes).length,resourceSamples:samples.length,maxApiRssBytes:Math.max(...samples.map(r=>r.rss)),sampledMaxCgroupPeakBytes:Math.max(...samples.map(r=>r.cgroupPeak)),finalKernelMemoryPeakBytes:finalPeak,effectiveMemoryMaxBytes:999997440,requestedMemoryBytes:1000000000,finalKernelMemoryEvents:finalEvents,dbProjection:db,recovery:{activeWorkerSigkill:true,checkpointRowsBefore:100,completedCafeOrders:343,completedCafeLines:379,leaseWaitMs:waitEnd.at-waitStart.at,checkpointRowsAfter:0},migrations:52,explicitFixtureForceRlsTables:70,cleanup:{containerStop:0,containerRemove:0,postgresStop:0},remoteRequests:0,providerRequests:0,protectedReads:0,independentActualAppOrSqlRequests:0,actualEpochEntryExercisedByMixed:false,separateEpochNativeStatus:'PENDING_AFTER_ORIGINAL_CATALOG_TYPE_FAILURE',limits:['NODE_ENV=test and permissive local fixture RLS are not production auth/storage/RLS equivalence.','Provider transport is synthetic; host PostgreSQL is outside the 1GB cgroup.','Compiled epoch import/pure smoke and focused epoch-native storage evidence are separate.','C7 schema FK map metadata correction will need exact artifact-difference binding; this is C6 evidence.','Sampled max and final cumulative kernel peak are distinct.'],inputs:Object.fromEntries(['result.json','mixed-workload.json','pre-kill-progress.json','db-telemetry.json',checkpoints[0]].map(n=>[n,sha(readFileSync(root+'/'+n))]))};
+writeFileSync(output,JSON.stringify(proof,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify({path:output,sha256:sha(readFileSync(output)),status:proof.status,p95Ms:p95,resourceSamples:proof.resourceSamples,sampledPeak:proof.sampledMaxCgroupPeakBytes,finalPeak}));

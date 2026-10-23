@@ -10,6 +10,7 @@ import {
 import { configureHttpServer } from "./common/http-server";
 import { preloadApiEnvironment } from "./common/environment-preload";
 import { DangerousJsonKeysPipe } from "./validation/dangerous-json-keys.pipe";
+import { configureApiPrefix } from "./common/api-routing";
 
 async function bootstrap() {
   preloadApiEnvironment();
@@ -19,7 +20,7 @@ async function bootstrap() {
   const authConfig = app.get<AuthConfig>(AUTH_CONFIG);
   const httpSecurityConfig = app.get<HttpSecurityConfig>(HTTP_SECURITY_CONFIG);
   configureHttpServer(app, authConfig, httpSecurityConfig);
-  app.setGlobalPrefix("api");
+  configureApiPrefix(app);
   app.useGlobalFilters(new ApiExceptionFilter());
   app.useGlobalPipes(
     new DangerousJsonKeysPipe(),

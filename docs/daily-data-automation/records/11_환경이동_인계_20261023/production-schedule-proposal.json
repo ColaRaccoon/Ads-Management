@@ -1,0 +1,604 @@
+{
+  "at": "2026-10-23T11:00:10.189112+09:00",
+  "status": "PROPOSED_PROFILE_AWAITING_OWNER_DATE_POLICY_NOT_INSTALLED",
+  "operatorSelectedT0LocalDay": null,
+  "profiles": [
+    {
+      "key": "cafe24",
+      "provider": "CAFE24",
+      "localStart": "02:00",
+      "windowMinutes": 60,
+      "intervalMinutes": 1,
+      "cadenceDays": 1,
+      "firstAnchorDayOffset": 1,
+      "manualDayOffset": -1
+    },
+    {
+      "key": "google",
+      "provider": "GOOGLE",
+      "localStart": "03:05",
+      "windowMinutes": 35,
+      "intervalMinutes": 5,
+      "cadenceDays": 7,
+      "firstAnchorDayOffset": 7,
+      "manualDayOffset": -1
+    },
+    {
+      "key": "meta",
+      "provider": "META",
+      "localStart": "03:05",
+      "windowMinutes": 35,
+      "intervalMinutes": 5,
+      "cadenceDays": 7,
+      "firstAnchorDayOffset": 6,
+      "manualDayOffset": -2
+    }
+  ],
+  "jobs": [
+    {
+      "name": "daily-data-sync-prod-cafe24-0",
+      "cron": "0 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-1",
+      "cron": "1 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-2",
+      "cron": "2 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-3",
+      "cron": "3 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-4",
+      "cron": "4 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-5",
+      "cron": "5 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-6",
+      "cron": "6 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-7",
+      "cron": "7 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-8",
+      "cron": "8 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-9",
+      "cron": "9 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-10",
+      "cron": "10 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-11",
+      "cron": "11 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-12",
+      "cron": "12 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-13",
+      "cron": "13 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-14",
+      "cron": "14 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-15",
+      "cron": "15 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-16",
+      "cron": "16 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-17",
+      "cron": "17 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-18",
+      "cron": "18 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-19",
+      "cron": "19 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-20",
+      "cron": "20 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-21",
+      "cron": "21 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-22",
+      "cron": "22 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-23",
+      "cron": "23 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-24",
+      "cron": "24 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-25",
+      "cron": "25 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-26",
+      "cron": "26 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-27",
+      "cron": "27 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-28",
+      "cron": "28 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-29",
+      "cron": "29 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-30",
+      "cron": "30 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-31",
+      "cron": "31 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-32",
+      "cron": "32 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-33",
+      "cron": "33 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-34",
+      "cron": "34 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-35",
+      "cron": "35 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-36",
+      "cron": "36 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-37",
+      "cron": "37 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-38",
+      "cron": "38 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-39",
+      "cron": "39 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-40",
+      "cron": "40 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-41",
+      "cron": "41 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-42",
+      "cron": "42 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-43",
+      "cron": "43 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-44",
+      "cron": "44 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-45",
+      "cron": "45 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-46",
+      "cron": "46 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-47",
+      "cron": "47 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-48",
+      "cron": "48 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-49",
+      "cron": "49 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-50",
+      "cron": "50 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-51",
+      "cron": "51 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-52",
+      "cron": "52 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-53",
+      "cron": "53 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-54",
+      "cron": "54 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-55",
+      "cron": "55 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-56",
+      "cron": "56 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-57",
+      "cron": "57 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-58",
+      "cron": "58 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-59",
+      "cron": "59 17 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('cafe24')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-cafe24-audit",
+      "cron": "3 18 * * *",
+      "command": "SELECT daily_data_sync_ops.audit('cafe24')",
+      "kind": "missed-or-incomplete-check",
+      "provider": "CAFE24"
+    },
+    {
+      "name": "daily-data-sync-prod-google-0",
+      "cron": "5 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('google')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-google-1",
+      "cron": "10 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('google')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-google-2",
+      "cron": "15 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('google')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-google-3",
+      "cron": "20 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('google')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-google-4",
+      "cron": "25 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('google')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-google-5",
+      "cron": "30 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('google')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-google-6",
+      "cron": "35 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('google')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-google-audit",
+      "cron": "43 18 * * *",
+      "command": "SELECT daily_data_sync_ops.audit('google')",
+      "kind": "missed-or-incomplete-check",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-0",
+      "cron": "5 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('meta')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "META"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-1",
+      "cron": "10 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('meta')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "META"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-2",
+      "cron": "15 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('meta')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "META"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-3",
+      "cron": "20 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('meta')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "META"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-4",
+      "cron": "25 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('meta')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "META"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-5",
+      "cron": "30 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('meta')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "META"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-6",
+      "cron": "35 18 * * *",
+      "command": "SELECT daily_data_sync_ops.invoke('meta')",
+      "kind": "bounded-step-or-same-occurrence-retry",
+      "provider": "META"
+    },
+    {
+      "name": "daily-data-sync-prod-meta-audit",
+      "cron": "43 18 * * *",
+      "command": "SELECT daily_data_sync_ops.audit('meta')",
+      "kind": "missed-or-incomplete-check",
+      "provider": "META"
+    }
+  ],
+  "jobCount": 77,
+  "weeklyProviderDaySeparation": 1,
+  "weeklyCollectionDefinition": "Local anchor date minus 7 through minus 1, each date once; first range starts the day after the manual verification day.",
+  "manualDays": "Cafe24/Google=T0 local day -1; Meta=T0 local day -2; these are proposals, not selected dates.",
+  "caveat": "Choosing the same manual/cutoff day for all providers requires a different approved weekly timing profile. Do not silently reuse this staggered profile.",
+  "storageJobsPreserved": 3,
+  "largestAuditLocalTime": "03:43",
+  "maxNewProviderCallsWhenSlotNotDue": 0,
+  "sourceJobAlgorithm": "scripts/cloud/daily-data-sync/core.mjs jobPlan: Cafe24 1-minute steps, others 5-minute steps, one audit at window+3 minutes; weekly cadence checked in management slot.",
+  "existingIsolatedInstallerCompatible": false,
+  "productionAdapterRequired": [
+    "install guard binds iygjmosbelbosfxidqxv/meta_ads and preserves present storage_renewal_ops instead of rejecting it",
+    "target bundle-loopback-api; origin https://patimagroup-work.com",
+    "prefix daily-data-sync-prod-; production machine Vault reference",
+    "actual new production connection IDs and anchors; no phase08 IDs, FORCE RLS counts or service activation"
+  ],
+  "executionGeneratedFields": [
+    "production connection IDs",
+    "actual anchorAt dates",
+    "machine secret value/protected ref",
+    "before-image refs",
+    "fully bound SQL hash"
+  ],
+  "noUserSecretInputRequired": true,
+  "weeklyStartBuffer": "03:05 starts after Cafe24 window 03:00 plus 03:03 audit; no simultaneous weekly source day.",
+  "revisedAt": "2026-10-23T11:10:12.309440+09:00"
+}

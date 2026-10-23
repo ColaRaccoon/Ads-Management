@@ -35,7 +35,8 @@ type SalesProductPerformance = {
     couponExactOrderCount: number;
     couponEstimatedOrderCount: number;
     couponUnmatchedOrderCount: number;
-    couponDeductionKrw: number;
+    couponUnknownOrderCount: number;
+    couponDeductionKrw: number | null;
     couponIgnoredResidualKrw: number;
     couponMissingTotalOrderCount: number;
   };
@@ -52,7 +53,7 @@ type SalesProductRow = {
   grossCostKrw: number | null;
   totalCostKrw: number | null;
   marginBeforeCouponKrw: number | null;
-  couponDeductionKrw: number;
+  couponDeductionKrw: number | null;
   marginKrw: number | null;
   roas: number | null;
   cpaKrw: number | null;
@@ -60,6 +61,7 @@ type SalesProductRow = {
   couponExactOrderCount: number;
   couponEstimatedOrderCount: number;
   couponUnmatchedOrderCount: number;
+  couponUnknownOrderCount: number;
   couponIgnoredResidualKrw: number;
   couponStatus: CouponAggregateStatus;
 };
@@ -67,7 +69,7 @@ type SalesProductRow = {
 type SalesProductTotals = {
   quantity: number | null;
   revenueKrw: number | null;
-  couponDeductionKrw: number;
+  couponDeductionKrw: number | null;
   adSpendKrw: number | null;
   totalCostKrw: number | null;
   marginBeforeCouponKrw: number | null;
@@ -132,7 +134,7 @@ export default function SalesPage() {
       <div className="page-title">
         <div>
           <h1>판매</h1>
-          <p>카페24 실제 판매와 현재 Meta 광고비를 제품별로 확인합니다.</p>
+          <p>카페24 판매와 현재 Meta 광고비를 기존 계산으로 제품별 확인합니다. Google 비용은 자사몰 공통 미배분 비용이며 이 상품별 마진에 반복 배분하지 않습니다. 쿠폰은 내부 규칙에 따른 추정이며 환불 반영 순매출을 뜻하지 않습니다.</p>
         </div>
         <div className="toolbar">
           <button
@@ -160,10 +162,11 @@ export default function SalesPage() {
         <span>Meta 미매칭 광고비 {money(summary?.adUnmatchedSpendKrw)}</span>
         <span>쿠폰 감지 주문 {number(summary?.couponDetectedOrderCount ?? 0)}</span>
         <span>쿠폰 적용 주문 {number(summary?.couponAppliedOrderCount ?? 0)}</span>
-        <span>정확 일치 {number(summary?.couponExactOrderCount ?? 0)}</span>
+        <span>내부 규칙 금액 일치 {number(summary?.couponExactOrderCount ?? 0)}</span>
         <span style={hasCouponWarning ? undefined : successSummaryStyle}>추정 일치 {number(summary?.couponEstimatedOrderCount ?? 0)}</span>
         <span style={hasCouponWarning ? undefined : successSummaryStyle}>미적용 {number(summary?.couponUnmatchedOrderCount ?? 0)}</span>
-        <span>총 쿠폰 차감 {money(summary?.couponDeductionKrw ?? 0)}</span>
+        <span>쿠폰 표시 미확정 {number(summary?.couponUnknownOrderCount ?? 0)}</span>
+        <span>총 쿠폰 차감 {money(summary?.couponDeductionKrw)}</span>
         <span>무시 잔여 차이 {money(summary?.couponIgnoredResidualKrw ?? 0)}</span>
         {(summary?.couponMissingTotalOrderCount ?? 0) > 0 ? (
           <span>총 주문금액 누락 {number(summary?.couponMissingTotalOrderCount ?? 0)}건</span>
@@ -192,7 +195,8 @@ export default function SalesPage() {
                   {couponCountSummary({
                     couponExactOrderCount: summary?.couponExactOrderCount ?? 0,
                     couponEstimatedOrderCount: summary?.couponEstimatedOrderCount ?? 0,
-                    couponUnmatchedOrderCount: summary?.couponUnmatchedOrderCount ?? 0
+                    couponUnmatchedOrderCount: summary?.couponUnmatchedOrderCount ?? 0,
+                    couponUnknownOrderCount: summary?.couponUnknownOrderCount ?? 0
                   })}
                 </td>
               </tr>
@@ -243,7 +247,7 @@ export default function SalesPage() {
         <div className="toolbar" style={{ justifyContent: "space-between", marginBottom: 12 }}>
           <div>
             <h2 style={{ marginBottom: 4 }}>쿠폰 계산 점검</h2>
-            <p className="muted">기본으로 추정 및 미적용 주문을 표시합니다. 정확 일치도 필터에서 확인할 수 있습니다.</p>
+            <p className="muted">내부 규칙으로 쿠폰 차감을 유추합니다. 금액 일치는 실제 쿠폰 정답을 뜻하지 않습니다.</p>
           </div>
           <select
             aria-label="쿠폰 계산 점검 상태"
@@ -251,10 +255,11 @@ export default function SalesPage() {
             onChange={(event) => setCouponAuditFilter(event.target.value as CouponAuditFilter)}
             value={couponAuditFilter}
           >
-            <option value="ATTENTION">점검 필요 (추정 + 미적용)</option>
+            <option value="ATTENTION">점검 필요 (추정 + 미적용 + 미확정)</option>
             <option value="ESTIMATED">추정</option>
             <option value="UNMATCHED">미적용</option>
-            <option value="EXACT">정확</option>
+            <option value="UNKNOWN">표시 미확정</option>
+            <option value="EXACT">내부 규칙 금액 일치</option>
             <option value="ALL">전체</option>
           </select>
         </div>
@@ -302,7 +307,7 @@ function summarizeSalesRows(rows: SalesProductRow[]): SalesProductTotals {
   return {
     quantity,
     revenueKrw,
-    couponDeductionKrw: sumRows(rows, (row) => row.couponDeductionKrw),
+    couponDeductionKrw: nullableSumRows(rows, (row) => row.couponDeductionKrw),
     adSpendKrw,
     totalCostKrw,
     marginBeforeCouponKrw,
@@ -320,7 +325,8 @@ function hasSalesOrAdActivity(row: SalesProductRow) {
     hasNonZeroNumber(row.adSpendUsd) ||
     hasNonZeroNumber(row.adSpendKrw) ||
     hasNonZeroNumber(row.couponDeductionKrw) ||
-    hasNonZeroNumber(row.couponUnmatchedOrderCount)
+    hasNonZeroNumber(row.couponUnmatchedOrderCount) ||
+    hasNonZeroNumber(row.couponUnknownOrderCount)
   );
 }
 
@@ -331,7 +337,7 @@ function downloadSalesExcel(
   range: { from: string; to: string }
 ) {
   const datePart = range.from === range.to ? range.from : `${range.from}~${range.to}`;
-  const headerRowIndex = 9;
+  const headerRowIndex = 10;
   const dataRows = rows.map(
     (row): XlsxCell[] => [
       { value: productLabel(row), style: "Text" },
@@ -346,7 +352,8 @@ function downloadSalesExcel(
       { value: toFiniteNumber(row.cpaKrw), style: "Krw" },
       { value: toFiniteNumber(row.couponExactOrderCount), style: "Number" },
       { value: toFiniteNumber(row.couponEstimatedOrderCount), style: "Number" },
-      { value: toFiniteNumber(row.couponUnmatchedOrderCount), style: "Number" }
+      { value: toFiniteNumber(row.couponUnmatchedOrderCount), style: "Number" },
+      { value: toFiniteNumber(row.couponUnknownOrderCount), style: "Number" }
     ]
   );
   const totalRow: XlsxCell[] = [
@@ -362,7 +369,8 @@ function downloadSalesExcel(
     { value: totals.cpaKrw, style: "TotalKrw" },
     { value: summary?.couponExactOrderCount ?? 0, style: "TotalNumber" },
     { value: summary?.couponEstimatedOrderCount ?? 0, style: "TotalNumber" },
-    { value: summary?.couponUnmatchedOrderCount ?? 0, style: "TotalNumber" }
+    { value: summary?.couponUnmatchedOrderCount ?? 0, style: "TotalNumber" },
+    { value: summary?.couponUnknownOrderCount ?? 0, style: "TotalNumber" }
   ];
   const excelRows: XlsxCell[][] = [
     [
@@ -390,7 +398,7 @@ function downloadSalesExcel(
       { value: summary?.couponAppliedOrderCount ?? 0, style: "Number" }
     ],
     [
-      { value: "정확 일치", style: "Header" },
+      { value: "내부 규칙 금액 일치", style: "Header" },
       { value: summary?.couponExactOrderCount ?? 0, style: "Number" },
       { value: "추정 일치", style: "Header" },
       { value: summary?.couponEstimatedOrderCount ?? 0, style: "Number" }
@@ -398,14 +406,18 @@ function downloadSalesExcel(
     [
       { value: "미적용", style: "Header" },
       { value: summary?.couponUnmatchedOrderCount ?? 0, style: "Number" },
-      { value: "총 쿠폰 차감", style: "Header" },
-      { value: summary?.couponDeductionKrw ?? 0, style: "Krw" }
+      { value: "표시 미확정", style: "Header" },
+      { value: summary?.couponUnknownOrderCount ?? 0, style: "Number" }
     ],
     [
       { value: "무시 잔여 차이", style: "Header" },
       { value: summary?.couponIgnoredResidualKrw ?? 0, style: "Krw" },
       { value: "총 주문금액 누락", style: "Header" },
       { value: summary?.couponMissingTotalOrderCount ?? 0, style: "Number" }
+    ],
+    [
+      { value: "총 쿠폰 차감", style: "Header" },
+      { value: summary?.couponDeductionKrw ?? null, style: "Krw" }
     ],
     [],
     [
@@ -419,9 +431,10 @@ function downloadSalesExcel(
       { value: "최종 순마진", style: "Header" },
       { value: "광고수익률", style: "Header" },
       { value: "전환당 비용", style: "Header" },
-      { value: "정확 주문 수", style: "Header" },
+      { value: "규칙 일치 주문 수", style: "Header" },
       { value: "추정 주문 수", style: "Header" },
-      { value: "미적용 주문 수", style: "Header" }
+      { value: "미적용 주문 수", style: "Header" },
+      { value: "표시 미확정 주문 수", style: "Header" }
     ],
     ...dataRows,
     totalRow
@@ -441,7 +454,8 @@ function downloadSalesExcel(
       { width: 15 },
       { width: 13 },
       { width: 13 },
-      { width: 15 }
+      { width: 15 },
+      { width: 18 }
     ],
     rows: excelRows,
     freezeRow: headerRowIndex,
@@ -481,15 +495,16 @@ function couponCountSummary(row: {
   couponExactOrderCount: number;
   couponEstimatedOrderCount: number;
   couponUnmatchedOrderCount: number;
+  couponUnknownOrderCount: number;
 }) {
-  return `정확 ${number(row.couponExactOrderCount)} / 추정 ${number(row.couponEstimatedOrderCount)} / 미적용 ${number(row.couponUnmatchedOrderCount)}`;
+  return `규칙 일치 ${number(row.couponExactOrderCount)} / 추정 ${number(row.couponEstimatedOrderCount)} / 미적용 ${number(row.couponUnmatchedOrderCount)} / 표시 미확정 ${number(row.couponUnknownOrderCount)}`;
 }
 
 function CouponAggregateBadge({ status }: { status: CouponAggregateStatus }) {
   const className =
     status === "EXACT" ? "badge scale" :
       status === "ESTIMATED" || status === "MIXED" ? "badge watch" :
-        status === "UNMATCHED" ? "badge stop_candidate" :
+        status === "UNMATCHED" || status === "UNKNOWN" ? "badge stop_candidate" :
           "badge keep";
   return <span className={className}>{couponAggregateLabel(status)}</span>;
 }

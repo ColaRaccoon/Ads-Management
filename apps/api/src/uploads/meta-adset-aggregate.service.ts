@@ -5,6 +5,7 @@ import { formatDateOnly } from "../domain/date-number";
 import { aggregateAdRows } from "./meta-adset-aggregates";
 import { MetaMetricVersionService } from "./meta-metric-version.service";
 import { snapshotMetricKey } from "./upload-keys";
+import { linkBoundCsvVersion } from "../daily-sync/canonical-write-policy";
 
 @Injectable()
 export class MetaAdsetAggregateService {
@@ -16,7 +17,8 @@ export class MetaAdsetAggregateService {
   async refreshAdsetAggregatesFromAdMetrics(
     batchId: string,
     snapshotDates: Date[],
-    client: Prisma.TransactionClient | PrismaService = this.prisma
+    client: Prisma.TransactionClient | PrismaService = this.prisma,
+    connectionId: string | null = null
   ) {
     if (snapshotDates.length === 0) {
       return 0;
@@ -25,6 +27,8 @@ export class MetaAdsetAggregateService {
     const metrics = await client.metaAdDailyMetric.findMany({
       where: {
         isCurrent: true,
+        source: "CSV",
+        connectionId,
         metricDate: { in: snapshotDates }
       },
       orderBy: [{ metricDate: "asc" }, { adsetNameSnapshot: "asc" }, { adNameSnapshot: "asc" }]
@@ -43,9 +47,18 @@ export class MetaAdsetAggregateService {
         batchId,
         aggregate,
         ConflictPolicy.OVERWRITE,
-        client
+        client,
+        connectionId
       );
       if (result.imported) {
+        if (result.metricId && result.version !== null) {
+          await linkBoundCsvVersion(client as Prisma.TransactionClient, {
+            connectionId, dataKind: "META_ADSET",
+            keyParts: [connectionId ?? "", formatDateOnly(aggregate.metricDate), rows[0].metaAdsetId],
+            recordTable: "meta_adset_daily_metrics", recordId: result.metricId,
+            version: result.version
+          });
+        }
         includedAdsetKeys.add(snapshotMetricKey(aggregate.metricDate, aggregate.metaAdsetId));
         importedCount += 1;
       }
@@ -53,7 +66,7 @@ export class MetaAdsetAggregateService {
 
     if (includedAdsetKeys.size > 0) {
       await this.metricVersionService.deactivateMissingSnapshotMetrics(
-        { snapshotDates, includedKeys: includedAdsetKeys },
+        { snapshotDates, includedKeys: includedAdsetKeys, connectionId },
         client
       );
     }

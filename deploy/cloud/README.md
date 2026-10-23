@@ -79,26 +79,7 @@ no secret. Staging or production must not be promoted from a live-only result;
 the approved target needs a 200 ready response with the expected release and
 runtime fingerprint.
 
-`resource-probe.mjs` is a local-only harness and is not copied into the runtime
-image. Mount it and a scratch fixture volume into fresh `--memory=1g`
-containers to measure `text-max`, `xlsx-max`, `bundle-max`, `report-max`, and
-`concurrent-request`. The concurrent request scenario runs the production Nest
-heavy-operation gate over HTTP: one accepted request renders the maximum report
-while a second request must be rejected with `503 HEAVY_OPERATION_BUSY` before
-another memory-intensive workload can start.
-Each JSON result records process RSS/heap/external peaks, cgroup
-`memory.current`/`memory.peak`/`memory.events`, and `/tmp` peak bytes. Treat an
-OOM-killed container as failure. The harness itself returns non-zero and emits
-`FAIL` unless the cgroup limit is exactly 1GiB, `oom`/`oom_kill` deltas are zero,
-and peak cgroup memory stays at or below 700MiB for baseline or 850MiB for a
-workload. Never infer an application-target PASS from this parser/report
-resource harness.
-
-The scripts under `fixtures/` are also local-only. Mount them over the two
-runtime entry files to rehearse the production launcher, single public Web
-port, Web-to-loopback health path, and SIGTERM shutdown without connecting to
-Supabase. This proves container wiring only; it is not application readiness,
-storage, Auth, DB, or staging evidence.
+The local-only resource probe, synthetic fixtures, and automated test sources were removed on 2026-10-08 at the user's request. Earlier harness results remain historical evidence; the removed tools are unavailable in this checkout. The application launcher and runtime readiness checks remain available.
 
 The launcher passes only a non-secret allowlist to the Web child instead of
 inheriting API credentials. Both children still run as the same non-root UID in

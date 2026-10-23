@@ -34,7 +34,7 @@ export function groupRowsByProduct(rows: CreativePerformanceRow[]): ProductGroup
     .sort((a, b) => {
       const spendDiff = b.totals.spendUsd - a.totals.spendUsd;
       if (spendDiff !== 0) return spendDiff;
-      const purchaseDiff = b.totals.purchaseCount - a.totals.purchaseCount;
+      const purchaseDiff = (b.totals.purchaseCount ?? -1) - (a.totals.purchaseCount ?? -1);
       if (purchaseDiff !== 0) return purchaseDiff;
       return a.productName.localeCompare(b.productName, "ko-KR", { numeric: true, sensitivity: "base" });
     });
@@ -93,21 +93,27 @@ export function findSalesRowForGroup(group: ProductGroup, index: SalesProductInd
 
 export function aggregateProductRows(rows: CreativePerformanceRow[]): ProductTotals {
   const spendUsd = sum(rows.map((row) => row.totals.spendUsd));
-  const purchaseCount = sum(rows.map((row) => row.totals.purchaseCount));
+  const mixed = rows.some((row) => row.totals.hasApiMetrics) &&
+    new Set(rows.flatMap((row) => row.totals.attributionContexts ?? [])).size > 1;
+  const purchaseCount = mixed || rows.some((row) => row.totals.purchaseCount === null) ? null : sum(rows.map((row) => row.totals.purchaseCount));
   const hasUnknownSpendKrw = rows.some(
     (row) => row.totals.spendUsd > 0 && !isKnownNumber(row.totals.spendKrw)
   );
   const hasUnknownRevenueKrw = rows.some(
-    (row) => row.totals.purchaseCount > 0 && !isKnownNumber(row.totals.revenueKrw)
+    (row) => row.totals.purchaseCount === null || row.totals.purchaseCount > 0 && !isKnownNumber(row.totals.revenueKrw)
   );
   const spendKrw = hasUnknownSpendKrw ? null : sum(rows.map((row) => row.totals.spendKrw));
-  const revenueKrw = hasUnknownRevenueKrw ? null : sum(rows.map((row) => row.totals.revenueKrw));
+  const revenueKrw = mixed || hasUnknownRevenueKrw ? null : sum(rows.map((row) => row.totals.revenueKrw));
+  const providerComplete=rows.length>0&&rows.every(r=>r.totals.providerPurchaseContext==="MCP_PROVIDER_DEFAULT_UNVERIFIED"&&isKnownNumber(r.totals.providerPurchaseValueUsd));
+  const providerValue=providerComplete?sum(rows.map(r=>r.totals.providerPurchaseValueUsd)):null;
   return {
     spendUsd,
     spendKrw,
     purchaseCount,
-    cpaUsd: purchaseCount > 0 ? spendUsd / purchaseCount : null,
-    cpaKrw: spendKrw !== null && purchaseCount > 0 ? spendKrw / purchaseCount : null,
+    providerPurchaseValueUsd:providerValue,providerPurchaseRoas:providerValue!==null&&spendUsd>0?providerValue/spendUsd:null,providerPurchaseContext:providerComplete?"MCP_PROVIDER_DEFAULT_UNVERIFIED":null,
+    metricUnavailableReasons: Object.assign({}, ...rows.map((row) => row.totals.metricUnavailableReasons ?? {}), mixed ? { purchaseCount: "MIXED_ATTRIBUTION" } : {}),
+    cpaUsd: purchaseCount !== null && purchaseCount > 0 ? spendUsd / purchaseCount : null,
+    cpaKrw: spendKrw !== null && purchaseCount !== null && purchaseCount > 0 ? spendKrw / purchaseCount : null,
     revenueKrw,
     roas: spendKrw !== null && revenueKrw !== null && spendKrw > 0 ? revenueKrw / spendKrw : null
   };
@@ -225,7 +231,7 @@ function sortCreativeRows(rows: CreativePerformanceRow[]) {
     if (statusDiff !== 0) return statusDiff;
     const spendDiff = b.totals.spendUsd - a.totals.spendUsd;
     if (spendDiff !== 0) return spendDiff;
-    const purchaseDiff = b.totals.purchaseCount - a.totals.purchaseCount;
+    const purchaseDiff = (b.totals.purchaseCount ?? -1) - (a.totals.purchaseCount ?? -1);
     if (purchaseDiff !== 0) return purchaseDiff;
     return (a.materialNo ?? a.displayName).localeCompare(b.materialNo ?? b.displayName, "ko-KR", {
       numeric: true,

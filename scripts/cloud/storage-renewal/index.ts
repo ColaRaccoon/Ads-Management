@@ -1,6 +1,7 @@
 import { SignJWT, importJWK, createLocalJWKSet, jwtVerify, decodeJwt } from 'npm:jose@5.10.0';
 import { TARGET, renewStorage } from './core.mjs';
 import { INVOCATION_BUDGET_MS, requestTimeout, checkApplicationReadiness, assertAppliedDeployment } from './readiness.mjs';
+import { replaceTokenAndDeploy } from './railway-deployment.mjs';
 
 Deno.serve(async (request: Request) => {
   const deadlineMs = Date.now() + INVOCATION_BUDGET_MS;
@@ -33,12 +34,10 @@ Deno.serve(async (request: Request) => {
         await checkApplicationReadiness({token:variables.INTERNAL_PROBE_TOKEN,deadlineMs});
       },
       api: async (operation:string, token?:string)=>{
-        const query=operation==='read'
-          ? 'query($p:String!,$e:String!,$s:String!){variables(projectId:$p,environmentId:$e,serviceId:$s,unrendered:true)}'
-          : 'mutation($input:VariableCollectionUpsertInput!){variableCollectionUpsert(input:$input)}';
-        const variables=operation==='read'?{p:TARGET.projectId,e:TARGET.environmentId,s:TARGET.serviceId}:{input:{projectId:TARGET.projectId,environmentId:TARGET.environmentId,serviceId:TARGET.serviceId,replace:false,skipDeploys:false,variables:{SUPABASE_STORAGE_ACCESS_TOKEN:token}}};
-        const data=await railway(query,variables);
-        return operation==='read'?data.variables:data.variableCollectionUpsert;
+        if(operation==='replace-token-and-deploy') return replaceTokenAndDeploy(railway, token);
+        if(operation!=='read') throw Error('UNSUPPORTED_OPERATION');
+        const data=await railway('query($p:String!,$e:String!,$s:String!){variables(projectId:$p,environmentId:$e,serviceId:$s,unrendered:true)}',{p:TARGET.projectId,e:TARGET.environmentId,s:TARGET.serviceId});
+        return data.variables;
       },
       verify:async (token:string,subject:string,oldConfiguration=false)=>{
         const iat=decodeJwt(token).iat;

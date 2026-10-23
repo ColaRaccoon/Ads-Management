@@ -1,5 +1,7 @@
 "use client";
 
+import { dashboardMoney, collapseStageRows } from "@/lib/dashboard-money";
+import { formatMetaMetricReasons } from "@/lib/meta-conditional-display";
 import { AlertTriangle, PlayCircle } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -10,6 +12,7 @@ import { DataTable } from "@/components/data-table";
 import { DecisionBadge } from "@/components/decision-badge";
 import { ProductBarChart, StageBarChart, TrendChart } from "@/components/Charts";
 import { useCan } from "@/features/auth/use-auth";
+import { MetaCollectionStatus } from "@/components/meta-collection-status";
 
 export default function DashboardPage() {
   const canRunOperations = useCan("operations.run");
@@ -60,7 +63,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {summary.isError ? <div className="warning-strip"><span><AlertTriangle size={15} />API 연결 또는 DB 설정이 필요합니다.</span></div> : null}
+      {formatMetaMetricReasons(data?.totals.metricUnavailableReasons) ? <div className="warning-strip"><span>미확정 지표 · {formatMetaMetricReasons(data?.totals.metricUnavailableReasons)}</span></div> : null}
+      <MetaCollectionStatus range={range} />
+      {summary.isError ? <div className="warning-strip"><span><AlertTriangle size={15} />선택한 기간의 데이터를 확인할 수 없습니다.</span></div> : null}
 
       <div className="warning-strip">
         <span><AlertTriangle size={15} />미매칭 {data?.health.unmatchedCount ?? 0}</span>
@@ -103,7 +108,7 @@ export default function DashboardPage() {
             data={(products.data ?? []).map((row) => ({
               name: row.product?.displayName ?? "미매칭",
               spendKrw: row.totals?.spendKrw ?? 0,
-              marginKrw: row.totals?.marginKrw ?? 0
+              marginKrw: row.totals?.marginKrw ?? null
             }))}
           />
         </div>
@@ -116,34 +121,11 @@ export default function DashboardPage() {
   );
 }
 
-function collapseStageRows(rows: Array<Record<string, any>>) {
-  const map = new Map<string, { group: string; spendKrw: number; purchaseCount: number }>();
-  for (const row of rows) {
-    const group = String(row.group ?? "UNKNOWN");
-    const current = map.get(group) ?? { group, spendKrw: 0, purchaseCount: 0 };
-    current.spendKrw += Number(row.spendKrw ?? 0);
-    current.purchaseCount += Number(row.purchaseCount ?? 0);
-    map.set(group, current);
-  }
-  return Array.from(map.values());
-}
-
 function roundDown(value: number | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return null;
   }
   return Math.floor(value);
-}
-
-function dashboardMoney(value: number | null | undefined, currency = "KRW") {
-  const number = roundDown(value);
-  if (number === null) {
-    return "-";
-  }
-  if (currency === "USD") {
-    return `$${number.toLocaleString("en-US")}`;
-  }
-  return `${number.toLocaleString("ko-KR")}원`;
 }
 
 function dashboardNumber(value: number | null | undefined) {

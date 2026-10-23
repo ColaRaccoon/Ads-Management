@@ -1,9 +1,12 @@
 "use client";
 
+import { formatMetaMetricReasons } from "@/lib/meta-conditional-display";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet, rangeQuery } from "@/lib/api";
 import { money, numberFmt } from "@/lib/date-range";
 import { useRange } from "@/lib/use-range";
+import { formatMetaCurrentCampaign,formatMetaProviderPurchases } from "@/lib/meta-current-metadata-display";
+import { MetaCollectionStatus } from "@/components/meta-collection-status";
 import { DataTable } from "@/components/data-table";
 
 export default function CampaignsPage() {
@@ -15,20 +18,24 @@ export default function CampaignsPage() {
 
   return (
     <section className="page">
+      <MetaCollectionStatus range={range} />
       <div className="page-title">
         <div>
           <h1>Campaigns</h1>
-          <p>광고 단위 원천 데이터에서 캠페인별 성과와 예산 배분을 집계합니다.</p>
+          <p>광고 단위 일별 성과를 캠페인별로 집계하고 현재 자산의 상태·예산 관찰값을 표시합니다.</p>
         </div>
       </div>
       <DataTable
         rows={campaigns.data ?? []}
         columns={[
+          { key: "unavailable", header: "미확정 지표", render: (row) => formatMetaMetricReasons(row.totals?.metricUnavailableReasons) || "-" },
           { key: "campaign", header: "캠페인", render: (row) => row.campaignName },
+          { key: "currentMetadata", header: "현재 자산 관찰", render: (row) => formatMetaCurrentCampaign(row.currentMetadata, row.metadataObservedAt) || "-" },
           { key: "adsets", header: "광고세트", render: (row) => numberFmt(row.adsetCount) },
           { key: "ads", header: "광고", render: (row) => numberFmt(row.adCount) },
           { key: "spend", header: "광고비", render: (row) => money(row.totals?.spendUsd, "USD") },
           { key: "purchase", header: "구매", render: (row) => numberFmt(row.totals?.purchaseCount) },
+          { key:"providerPurchase",header:"Meta 구매금액 / 계산 ROAS",render:row=>formatMetaProviderPurchases(row.totals) },
           { key: "cpa", header: "CPA", render: (row) => money(row.totals?.cpaUsd, "USD") },
           { key: "ctr", header: "CTR Link", render: (row) => `${numberFmt(row.totals?.ctrLinkPct, 2)}%` },
           { key: "cpc", header: "CPC Link", render: (row) => money(row.totals?.cpcLinkUsd, "USD") },

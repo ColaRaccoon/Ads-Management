@@ -1,5 +1,6 @@
 "use client";
 
+import { dashboardChartRows, dashboardChartTooltip } from "@/lib/dashboard-money";
 import {
   Bar,
   BarChart,
@@ -17,11 +18,11 @@ export function TrendChart({ data }: { data: unknown[] }) {
   return (
     <div className="chart-box">
       <ResponsiveContainer>
-        <LineChart data={data}>
+        <LineChart data={dashboardChartRows(data)}>
           <CartesianGrid stroke="#e4e9ee" />
           <XAxis dataKey="date" />
           <YAxis tickFormatter={formatInteger} />
-          <Tooltip formatter={formatInteger} />
+          <Tooltip formatter={dashboardChartTooltip} />
           <Legend />
           <Line type="monotone" dataKey="spendKrw" name="광고비" stroke="#2764b7" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="purchaseCount" name="구매수" stroke="#137a45" strokeWidth={2} dot={false} />
@@ -37,11 +38,11 @@ export function ProductBarChart({ data }: { data: unknown[] }) {
   return (
     <div className="chart-box">
       <ResponsiveContainer>
-        <BarChart data={data}>
+        <BarChart data={dashboardChartRows(data)}>
           <CartesianGrid stroke="#e4e9ee" />
           <XAxis dataKey="name" />
           <YAxis tickFormatter={formatInteger} />
-          <Tooltip formatter={formatInteger} />
+          <Tooltip formatter={dashboardChartTooltip} />
           <Legend />
           <Bar dataKey="spendKrw" name="광고비" fill="#2764b7" />
           <Bar dataKey="marginKrw" name="마진" fill="#137a45" />
@@ -55,11 +56,11 @@ export function StageBarChart({ data }: { data: unknown[] }) {
   return (
     <div className="chart-box">
       <ResponsiveContainer>
-        <BarChart data={data}>
+        <BarChart data={dashboardChartRows(data)}>
           <CartesianGrid stroke="#e4e9ee" />
           <XAxis dataKey="group" />
           <YAxis tickFormatter={formatInteger} />
-          <Tooltip formatter={formatInteger} />
+          <Tooltip formatter={dashboardChartTooltip} />
           <Legend />
           <Bar dataKey="spendKrw" name="광고비" fill="#146c63" />
           <Bar dataKey="purchaseCount" name="구매수" fill="#a15c00" />
@@ -70,6 +71,7 @@ export function StageBarChart({ data }: { data: unknown[] }) {
 }
 
 function formatInteger(value: unknown) {
+  if (value === null || value === undefined) return "-";
   const number = Number(value);
   if (!Number.isFinite(number)) {
     return String(value ?? "-");

@@ -7,6 +7,7 @@ import { AuthenticatedRequest } from "./auth.types";
 import {
   AUTH_ROUTE_ACCESS,
   INTERNAL_PROBE_ROUTE,
+  MACHINE_SYNC_ROUTE,
   PUBLIC_ROUTE
 } from "./route-decorators";
 import { AUTH_CONFIG, AuthConfig } from "./auth.config";
@@ -25,7 +26,7 @@ export class AuthenticationGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext) {
     const access = this.reflector.get<string>(AUTH_ROUTE_ACCESS, context.getHandler());
-    if (access === PUBLIC_ROUTE || access === INTERNAL_PROBE_ROUTE) return true;
+    if (access === PUBLIC_ROUTE || access === INTERNAL_PROBE_ROUTE || access === MACHINE_SYNC_ROUTE) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     if (this.config?.provider === "local") {

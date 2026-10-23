@@ -14,6 +14,8 @@ export type MetricImportInput = {
   stage: AdStage;
   stageMatchSource: MatchSource;
   conflictPolicy: ConflictPolicy;
+  connectionId?: string | null;
+  publishCurrent?: boolean;
 };
 
 export type AdMetricImportInput = {
@@ -31,6 +33,8 @@ export type AdMetricImportInput = {
   stage: AdStage;
   stageMatchSource: MatchSource;
   conflictPolicy: ConflictPolicy;
+  connectionId?: string | null;
+  publishCurrent?: boolean;
 };
 
 export type AdsetAggregateInput = {
@@ -44,7 +48,7 @@ export type AdsetAggregateInput = {
   attributionSetting: string | null;
   resultIndicator: string | null;
   purchaseCount: number;
-  reach: number;
+  reach: number | null;
   frequency: number | null;
   costPerResultUsd: number | null;
   adsetBudgetLabel: string | null;
@@ -72,6 +76,7 @@ export type AdsetAggregateInput = {
 
 export type DeletedAdMetricKey = {
   id: string;
+  connectionId?: string | null;
   creativeId: string | null;
   metricDate: Date;
   metaCampaignId: string;
@@ -82,11 +87,13 @@ export type DeletedAdMetricKey = {
 
 export type DeletedAdsetMetricKey = {
   id: string;
+  connectionId?: string | null;
   metricDate: Date;
   metaAdsetId: string;
 };
 
 export type CreativePlacementCleanupKey = {
+  connectionId?: string | null;
   creativeId: string;
   metaCampaignId: string;
   metaAdsetId: string;

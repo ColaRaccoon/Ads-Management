@@ -1,5 +1,6 @@
 import { ConflictPolicy, Prisma } from "@prisma/client";
 import { createHash } from "node:crypto";
+export { scopedCsvFileHash } from "../common/scoped-csv-file-hash";
 import { ParsedMetaAdDailyRow } from "../domain/meta-ad-daily-csv";
 import { ParsedMetaAdsetRow } from "../domain/meta-csv";
 import { formatDateOnly } from "../domain/date-number";
@@ -46,11 +47,13 @@ export function creativeOriginalKey(originalName: string) {
 
 export function creativePlacementCleanupKey(metric: {
   creativeId: string | null;
+  connectionId?: string | null;
   metaCampaignId: string;
   metaAdsetId: string;
   adNameSnapshot: string;
 }): CreativePlacementCleanupKey {
   return {
+    connectionId: metric.connectionId ?? null,
     creativeId: metric.creativeId ?? "",
     metaCampaignId: metric.metaCampaignId,
     metaAdsetId: metric.metaAdsetId,
@@ -59,11 +62,13 @@ export function creativePlacementCleanupKey(metric: {
 }
 
 export function placementKeyToString(key: CreativePlacementCleanupKey) {
-  return `${key.creativeId}:${key.metaCampaignId}:${key.metaAdsetId}:${key.originalAdName}`;
+  return JSON.stringify([key.connectionId ?? null, key.creativeId,
+    key.metaCampaignId, key.metaAdsetId, key.originalAdName]);
 }
 
 export function creativePlacementWhere(key: CreativePlacementCleanupKey): Prisma.CreativePlacementWhereInput {
   return {
+    connectionId: key.connectionId ?? null,
     creativeId: key.creativeId,
     metaCampaignId: key.metaCampaignId,
     metaAdsetId: key.metaAdsetId,
@@ -122,7 +127,7 @@ export function duplicatedValues(values: string[]) {
 export function uniqueAdMetricKeys(metrics: DeletedAdMetricKey[]) {
   const unique = new Map<string, DeletedAdMetricKey>();
   for (const metric of metrics) {
-    unique.set(snapshotAdMetricKey(metric), metric);
+    unique.set(JSON.stringify([metric.connectionId ?? null, snapshotAdMetricKey(metric)]), metric);
   }
   return Array.from(unique.values());
 }
@@ -130,7 +135,8 @@ export function uniqueAdMetricKeys(metrics: DeletedAdMetricKey[]) {
 export function uniqueAdsetMetricKeys(metrics: DeletedAdsetMetricKey[]) {
   const unique = new Map<string, DeletedAdsetMetricKey>();
   for (const metric of metrics) {
-    unique.set(snapshotMetricKey(metric.metricDate, metric.metaAdsetId), metric);
+    unique.set(JSON.stringify([metric.connectionId ?? null,
+      snapshotMetricKey(metric.metricDate, metric.metaAdsetId)]), metric);
   }
   return Array.from(unique.values());
 }

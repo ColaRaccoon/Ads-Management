@@ -21,7 +21,7 @@ export class UploadsController {
     @Body() body: UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.uploadsService.importMetaAdDailyCsv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
+    return this.uploadsService.importMetaAdDailyCsv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id, body.sourceConnectionId);
   }
 
   @Post("meta-adset-csv")
@@ -33,7 +33,7 @@ export class UploadsController {
     @Body() body: UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.uploadsService.importMetaAdsetCsv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
+    return this.uploadsService.importMetaAdsetCsv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id, body.sourceConnectionId);
   }
 
   @Get()

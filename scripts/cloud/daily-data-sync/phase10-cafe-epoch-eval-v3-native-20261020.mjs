@@ -1,0 +1,68 @@
+// Fresh synthetic native database only. Never consumes incident/DPAPI/live input.
+import {createHash,randomBytes,randomUUID} from 'node:crypto';
+import {createRequire} from 'node:module';
+import {spawnSync} from 'node:child_process';
+import {existsSync,readFileSync,readdirSync,writeFileSync,unlinkSync} from 'node:fs';
+import net from 'node:net';import path from 'node:path';
+const require=createRequire(import.meta.url),E='C:/Users/seong/AppData/Local/MetaAdsPhase10Evaluation';
+export const digest=value=>createHash('sha256').update(value).digest('hex');
+const fail=()=>{throw Error('EPOCH_NATIVE_EVALUATION_REJECTED');};
+export function assertEpochCheckpointForeignKey(rows){
+ const fk=rows[0],columns=['connection_id','key_version','order_date'];
+ if(rows.length!==1||fk.conname!=='cafe24_epoch_revisions_checkpoint_fkey'||!fk.condeferrable||!fk.condeferred||fk.confdeltype!=='r'||fk.confupdtype!=='c'||fk.child!=='cafe24_observed_epoch_order_revisions'||fk.parent!=='cafe24_observed_epoch_day_checkpoints'||JSON.stringify(fk.child_columns)!==JSON.stringify(columns)||JSON.stringify(fk.parent_columns)!==JSON.stringify(columns))fail();
+ return {name:fk.conname,childTable:fk.child,parentTable:fk.parent,childColumns:fk.child_columns,parentColumns:fk.parent_columns,deferrable:fk.condeferrable,initiallyDeferred:fk.condeferred,onDelete:'RESTRICT',onUpdate:'CASCADE',catalogVerified:true};
+}
+export function sourcePins(repo=process.cwd()){
+ const names=[];const walk=dir=>{for(const e of readdirSync(dir,{withFileTypes:true})){const name=path.join(dir,e.name);if(e.isDirectory())walk(name);else if(e.name.endsWith('.ts'))names.push(path.relative(repo,name).replaceAll('\\','/'));}};walk(repo+'/apps/api/src');
+ names.push('apps/api/prisma/schema.prisma');for(const e of readdirSync(repo+'/apps/api/prisma/migrations',{withFileTypes:true}))if(e.isDirectory())names.push('apps/api/prisma/migrations/'+e.name+'/migration.sql');
+ const rows=names.sort().map(name=>{const b=readFileSync(repo+'/'+name);return{name,bytes:b.length,sha256:digest(b)};});return {sha256:digest(JSON.stringify(rows)),rows};
+}
+export function privatePasswordPath(root){if(!/^C:\/Users\/seong\/AppData\/Local\/MetaAdsPhase08Runtime\/cafe-epoch-local-[a-f0-9-]{36}$/.test(root))fail();const name=path.resolve(root,'epoch-owner-password.txt');if(path.dirname(name)!==path.resolve(root))fail();return name;}
+export function assertSocket(args){const v=Array.isArray(args[0])?args[0][0]:args[0],host=v&&typeof v==='object'?v.host:args[1],port=v&&typeof v==='object'?v.port:v;if(host!=='127.0.0.1'||Number(port)!==55436||v&&typeof v==='object'&&v.path)fail();}
+export async function withNativeDatabase({privateRoot,expectedApiSha256,expectedMigrationSha256},evaluate){
+ if(sourcePins().sha256!==expectedApiSha256||!existsSync(privateRoot))fail();const passwordPath=privatePasswordPath(privateRoot);
+ const native='C:/Users/seong/AppData/Local/MetaAdsCafe24Phase06Harness/node_modules/@embedded-postgres/windows-x64/native/bin',candidate=E+'/candidate-20261020-v5';
+ const {Client}=require('C:/Users/seong/AppData/Local/MetaAdsCafe24Phase06Harness/node_modules/pg');
+ const owner='cafe_epoch_owner',runtime='cafe_epoch_runtime',database='cafe_epoch_'+randomUUID().replaceAll('-',''),ownerPassword=randomBytes(32).toString('hex'),runtimePassword=randomBytes(32).toString('hex');
+ const data=privateRoot+'/pg-data',previousEnv={...process.env};let ownerDb,started=false,phase='SOURCE_AND_PORT';
+ const proof={kind:'CAFE08_EPOCH_FRESH_NATIVE_BOOTSTRAP',sourceSha256:expectedApiSha256,migrationsBefore:51,migrationsAfter:52,privateNativeRoot:privateRoot,localCredentialsBits:256,passwordOnArgvOrPublicOutput:false,temporaryPasswordFilesCreated:0,temporaryPasswordFileRemaining:null,defaultExternalNetwork:false,remoteRequests:0,providerRequests:0};
+ const connect=net.Socket.prototype.connect,fetch=globalThis.fetch;net.Socket.prototype.connect=function(...args){assertSocket(args);return connect.apply(this,args);};globalThis.fetch=()=>fail();
+ for(const k of Object.keys(process.env))if(!['SystemRoot','PATH','TEMP','TMP','TSX_TSCONFIG_PATH'].includes(k))delete process.env[k];
+ const command=(exe,args)=>{const r=spawnSync(exe,args,{encoding:'utf8',windowsHide:true,timeout:90000,maxBuffer:1048576});if(r.status!==0)fail();};
+ try{
+  await new Promise((resolve,reject)=>{const server=net.createServer();server.once('error',reject);server.listen(55436,'127.0.0.1',()=>server.close(resolve));});
+  phase='INITDB_SCRAM';const secret=Buffer.from(ownerPassword+'\n');try{writeFileSync(passwordPath,secret,{flag:'wx'});proof.temporaryPasswordFilesCreated=1;command(native+'/initdb.exe',['-D',data,'-U',owner,'--auth-local=scram-sha-256','--auth-host=scram-sha-256','--pwfile='+passwordPath,'--encoding=UTF8','--locale=C']);}finally{secret.fill(0);if(proof.temporaryPasswordFilesCreated===1){if(privatePasswordPath(privateRoot)!==passwordPath)fail();unlinkSync(passwordPath);}proof.temporaryPasswordFileRemaining=existsSync(passwordPath);}if(proof.temporaryPasswordFileRemaining)fail();
+  command(native+'/pg_ctl.exe',['-D',data,'-l',privateRoot+'/postgres.log','-o','-h 127.0.0.1 -p 55436 -c password_encryption=scram-sha-256 -c log_statement=none -c log_min_error_statement=panic -c log_parameter_max_length_on_error=0','-w','start']);started=true;
+  ownerDb=new Client({host:'127.0.0.1',port:55436,user:owner,password:ownerPassword,database:'postgres'});await ownerDb.connect();await ownerDb.query('CREATE DATABASE '+database);await ownerDb.end();ownerDb=new Client({host:'127.0.0.1',port:55436,user:owner,password:ownerPassword,database});await ownerDb.connect();await ownerDb.query('CREATE SCHEMA meta_ads;SET search_path=meta_ads,public');
+  phase='OLD51_MIGRATIONS';const oldNames=readdirSync(candidate+'/apps/api/prisma/migrations',{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort(),newNames=readdirSync('apps/api/prisma/migrations',{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort();if(oldNames.length!==51||newNames.length!==52)fail();
+  for(const name of oldNames){const original=readFileSync(`${candidate}/apps/api/prisma/migrations/${name}/migration.sql`),current=readFileSync(`apps/api/prisma/migrations/${name}/migration.sql`);if(!original.equals(current))fail();await ownerDb.query(original.toString('utf8'));}
+  const added=newNames.filter(name=>!oldNames.includes(name));if(added.length!==1)fail();const migration52=readFileSync(`apps/api/prisma/migrations/${added[0]}/migration.sql`);if(digest(migration52)!==expectedMigrationSha256)fail();proof.migration52Sha256=expectedMigrationSha256;
+  const oldTables=(await ownerDb.query("SELECT tablename FROM pg_tables WHERE schemaname='meta_ads' ORDER BY tablename")).rows.map(v=>v.tablename);if(oldTables.length!==68||oldTables.some(v=>!/^[a-z0-9_]+$/.test(v)))fail();
+  await ownerDb.query(`CREATE ROLE ${runtime} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS CONNECTION LIMIT 3 PASSWORD '${runtimePassword}';GRANT USAGE ON SCHEMA meta_ads TO ${runtime};GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA meta_ads TO ${runtime};GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA meta_ads TO ${runtime}`);
+  for(const name of oldTables)await ownerDb.query(`ALTER TABLE meta_ads."${name}" ENABLE ROW LEVEL SECURITY;ALTER TABLE meta_ads."${name}" FORCE ROW LEVEL SECURITY;CREATE POLICY epoch_fixture_old ON meta_ads."${name}" FOR ALL TO ${runtime} USING(true) WITH CHECK(true)`);
+  // Deliberately seed inherited defaults before the before-image. Migration52
+  // must revoke them on its new2 tables while preserving the defaults themselves.
+  await ownerDb.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA meta_ads GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO ${runtime};ALTER DEFAULT PRIVILEGES IN SCHEMA meta_ads GRANT SELECT ON TABLES TO PUBLIC`);proof.inheritedDefaultGrantsInjected=true;
+  let denied=0;for(const [user,password]of [[owner,'incorrect-synthetic-only'],[runtime,'incorrect-synthetic-only'],[runtime,undefined]]){const other=new Client({host:'127.0.0.1',port:55436,user,password,database,connectionTimeoutMillis:5000});try{await other.connect();}catch{denied++;}finally{await other.end().catch(()=>{});}}if(denied!==3)fail();proof.wrongOrMissingPasswordDenied=3;
+  const runtimeUrl=`postgresql://${runtime}:${runtimePassword}@127.0.0.1:55436/${database}?schema=meta_ads&connection_limit=3`;
+  const snapshotOld=async()=>{
+   const rows=[];for(const name of oldTables){const q=await ownerDb.query(`SELECT count(*)::int AS rows,md5(COALESCE(string_agg(rowhash,'' ORDER BY rowhash),'')) AS md5 FROM (SELECT md5(row_to_json(t)::text) AS rowhash FROM meta_ads."${name}" t) s`);rows.push({table:name,...q.rows[0]});}
+   const metadata=(await ownerDb.query("SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relacl::text,pg_get_userbyid(c.relowner) AS owner,(SELECT json_agg(z ORDER BY z.name) FROM(SELECT conname AS name,pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid=c.oid AND contype='p')z) AS pks FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='meta_ads' AND c.relname=ANY($1::text[]) ORDER BY c.relname",[oldTables])).rows;
+   const defaults=(await ownerDb.query("SELECT defaclrole,defaclnamespace,defaclobjtype,defaclacl::text FROM pg_default_acl WHERE defaclnamespace='meta_ads'::regnamespace ORDER BY defaclrole,defaclobjtype")).rows;
+   return {tableCount:rows.length,rowHash:digest(JSON.stringify(rows)),metadataHash:digest(JSON.stringify(metadata)),defaultAclHash:digest(JSON.stringify(defaults))};
+  };
+  let upgraded=false;
+  const upgrade=async()=>{if(upgraded)fail();proof.upgradeStage='APPLY_MIGRATION52';await ownerDb.query(migration52.toString('utf8'));upgraded=true;proof.upgradeLastCompleted='APPLY_MIGRATION52';proof.upgradeStage='ADDITIVE_TABLES_RLS';
+   const addedTables=(await ownerDb.query("SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relacl::text,pg_get_userbyid(c.relowner) AS owner FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='meta_ads' AND c.relkind='r' AND NOT(c.relname=ANY($1::text[])) ORDER BY c.relname",[oldTables])).rows;
+   if(addedTables.length!==2||addedTables.some(v=>!v.relrowsecurity||!v.relforcerowsecurity||v.owner!==owner))fail();
+   proof.upgradeLastCompleted='ADDITIVE_TABLES_RLS';proof.upgradeStage='CHECKPOINT_FK_CATALOG';
+   const checkpointFk=(await ownerDb.query("SELECT con.conname,con.condeferrable,con.condeferred,con.confdeltype,con.confupdtype,child.relname AS child,parent.relname AS parent,ARRAY(SELECT a.attname::text FROM unnest(con.conkey) WITH ORDINALITY k(num,ord) JOIN pg_attribute a ON a.attrelid=con.conrelid AND a.attnum=k.num ORDER BY k.ord) AS child_columns,ARRAY(SELECT a.attname::text FROM unnest(con.confkey) WITH ORDINALITY k(num,ord) JOIN pg_attribute a ON a.attrelid=con.confrelid AND a.attnum=k.num ORDER BY k.ord) AS parent_columns FROM pg_constraint con JOIN pg_class child ON child.oid=con.conrelid JOIN pg_class parent ON parent.oid=con.confrelid JOIN pg_namespace n ON n.oid=child.relnamespace WHERE n.nspname='meta_ads' AND con.contype='f' AND child.relname='cafe24_observed_epoch_order_revisions' AND parent.relname='cafe24_observed_epoch_day_checkpoints'")).rows;
+   proof.checkpointForeignKey=assertEpochCheckpointForeignKey(checkpointFk);proof.upgradeLastCompleted='CHECKPOINT_FK_CATALOG';proof.upgradeStage='DEFAULT_NONOWNER_GRANTS';
+   const grants=(await ownerDb.query("SELECT count(*)::int AS n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN LATERAL aclexplode(COALESCE(c.relacl,acldefault('r',c.relowner))) a WHERE n.nspname='meta_ads' AND c.relkind='r' AND NOT(c.relname=ANY($1::text[])) AND a.grantee<>c.relowner",[oldTables])).rows[0].n;if(grants!==0)fail();proof.newTablesDefaultNonownerGrants=0;proof.newTablesForcedRls=2;
+   proof.upgradeLastCompleted='DEFAULT_NONOWNER_GRANTS';proof.upgradeStage='EXPLICIT_FIXTURE_GRANTS';
+   for(const v of addedTables){if(!/^[a-z0-9_]+$/.test(v.relname))fail();await ownerDb.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON meta_ads."${v.relname}" TO ${runtime};CREATE POLICY epoch_fixture_v2 ON meta_ads."${v.relname}" FOR ALL TO ${runtime} USING(true) WITH CHECK(true)`);}proof.newRuntimeFixtureGrantsExplicit=true;proof.upgradeLastCompleted='EXPLICIT_FIXTURE_GRANTS';proof.upgradeStage='COMPLETE';
+  };
+  phase='EPOCH_CASES';const evaluation=await evaluate({runtimeUrl,ownerDb,upgrade,snapshotOld,proof});if(!upgraded)fail();return {...evaluation,native:proof};
+ }catch(error){throw Object.assign(Error('EPOCH_NATIVE_EVALUATION_REJECTED'),{safePhase:phase,safeCode:proof.upgradeStage&&proof.upgradeStage!=='COMPLETE'?'EPOCH_UPGRADE_'+proof.upgradeStage:'EPOCH_NATIVE_REJECTED',safeUpgradeStage:proof.upgradeStage??null,safeCase:typeof error.safeCase==='string'&&/^[A-Za-z0-9_]+$/.test(error.safeCase)?error.safeCase:null,completedCases:Number.isInteger(error.completedCases)?error.completedCases:null,native:proof});}
+ finally{await ownerDb?.end().catch(()=>{});if(started){proof.postgresStopExit=spawnSync(native+'/pg_ctl.exe',['-D',data,'-m','fast','-w','stop'],{stdio:'ignore',windowsHide:true,timeout:30000}).status;}else proof.postgresStarted=false;net.Socket.prototype.connect=connect;globalThis.fetch=fetch;for(const k of Object.keys(process.env))if(!(k in previousEnv))delete process.env[k];Object.assign(process.env,previousEnv);}
+}

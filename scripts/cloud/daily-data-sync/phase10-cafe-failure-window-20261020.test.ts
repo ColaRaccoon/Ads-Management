@@ -1,0 +1,30 @@
+// Synthetic only: exercise the real runner/load/chunk failure boundaries.
+import 'reflect-metadata';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createCipheriv,createHash,randomBytes} from 'node:crypto';
+import {Cafe24SyncRunnerService} from '../../../apps/api/src/daily-sync/cafe24-sync-runner.service';
+import {cafe24Chunk} from '../../../apps/api/src/daily-sync/cafe24-scheduled-chunk';
+import {credentialReadiness} from './phase10-cafe-resume-offline-20261020.mjs';
+const prior={...process.env};test.after(()=>{for(const name of Object.keys(process.env))if(!(name in prior))delete process.env[name];Object.assign(process.env,prior);});
+const conn='10000000-0000-4000-8000-000000000001',runId='10000000-0000-4000-8000-000000000002';
+const day='2026-10-20';
+const item=(i:number)=>({order_item_code:`SYNTHETIC_LINE_${i}`,product_no:'1',product_name:'Synthetic',option_value:'S',quantity:'1',product_price:'100',order_status:'N00'});
+for(let failureOffset=1;failureOffset<=20;failureOffset++)test(`failure at unsaved item ${failureOffset} retains the same cursor60 checkpoint`,async()=>{
+ const now=Date.now(),key=randomBytes(32);process.env.DAILY_SYNC_CHECKPOINT_KEY_B64=key.toString('base64');process.env.DAILY_SYNC_ALLOWED_ACCOUNTS='["CAFE24/didadi0729/shop1"]';process.env.DAILY_SYNC_CAFE24_VERIFIED_V1_STATUSES='["N00"]';delete process.env.DAILY_SYNC_CAFE24_PAYMENT_METHOD_CSV_MAP;delete process.env.DAILY_SYNC_CAFE24_PAYMENT_METHOD_MAP_VERIFIED_AT;
+ const state={version:1,connectionId:conn,day,startedAt:new Date(now).toISOString(),stage:'ITEMS_FIRST',count:269,pages:3,first:Array.from({length:269},(_,i)=>({order_id:`SYNTHETIC_ORDER_${i}`,shop_no:1,order_date:`${day}T01:00:00+09:00`,payment_amount:'100',payment_method:['card'],currency:'KRW'})),second:[],items:Array.from({length:60},(_,i)=>[item(i)]),cursor:60,verifiedItems:0};
+ const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key,iv);cipher.setAAD(Buffer.from(`${conn}:${runId}:${day}`));const row={ciphertext:Buffer.concat([cipher.update(JSON.stringify(state)),cipher.final()]),iv,auth_tag:cipher.getAuthTag(),revision:6,expires_at:new Date(now+120000)};
+ const digest=()=>createHash('sha256').update(row.ciphertext).digest('hex'),before=digest();let writes=0,publishes=0,reads=0,release=0,failures:any[]=[];
+ const prisma:any={syncRun:{findUnique:async()=>({status:'PARTIAL',fromDate:new Date(day),toDate:new Date(day),trigger:'SCHEDULED',connection:{provider:'CAFE24',externalAccountId:'didadi0729',shopKey:'shop1',currencyCode:'KRW',timeZone:'Asia/Seoul'},units:[{unitKey:day,status:'QUEUED',attempts:0}]}),findUniqueOrThrow:async()=>({id:runId,status:'ACTION_REQUIRED',rowsPublished:0})},sourcePolicy:{findFirst:async()=>({primarySource:'CSV',version:1})},$queryRaw:async()=>[row],$transaction:async()=>{writes++;throw Error('UNEXPECTED_SYNTHETIC_WRITE');},$executeRaw:async()=>{writes++;throw Error('UNEXPECTED_SYNTHETIC_WRITE');}};
+ const foundation:any={claimRun:async()=>({connectionId:conn,runId,generation:1n,release:()=>{release++;}}),beginScheduledUnit:async()=>{},failUnit:async(value:any)=>{failures.push(value);},finishRun:async()=>{}};
+ const client:any={fetchScheduledChunk:async(_conn:string,_day:string,deadlineAt:number,saved:any)=>cafe24Chunk({connectionId:conn,mallId:'didadi0729',shopKey:'shop1',day,deadlineAt,state:saved,now:()=>now,wait:async()=>{},count:async()=>269,listing:async()=>{throw Error('UNEXPECTED_SYNTHETIC_LIST');},items:async()=>{reads++;return [{...item(reads),...(reads===failureOffset?{option_value:null}:{})}];}})};
+ await new Cafe24SyncRunnerService(prisma,foundation,client,{publishCafe24Day:async()=>{publishes++;}} as any).execute(runId,{maxUnits:1,deadlineAt:now+60000});
+ assert.equal(reads,failureOffset);assert.equal(writes,0);assert.equal(publishes,0);assert.equal(digest(),before);assert.equal(state.cursor,60);assert.equal(release,1);assert.equal(failures.length,1);assert.equal(failures[0].code,'FIELD_UNSUPPORTED');assert.equal(failures[0].diagnosticCode,'CAFE24_FIELD_OPTION_VALUE');assert.equal(failures[0].actionRequired,true);key.fill(0);
+});
+const pair=(access:string,refresh:string)=>[{kind:'CAFE24_ACCESS',expiresAt:access},{kind:'CAFE24_REFRESH',expiresAt:refresh}];
+const fixed=Date.parse('2026-10-20T00:00:00Z');
+test('expired access with valid refresh requires refresh; it does not prove field failure',()=>{const r=credentialReadiness(pair('2026-10-19T00:00:00Z','2026-11-02T00:00:00Z'),fixed);assert.equal(r.accessMinimum120s,false);assert.equal(r.refreshNotExpired,true);assert.equal(r.refreshWouldBeRequiredForNewRead,true);assert.equal(r.externalRevocationIntrospected,false);assert.equal(r.snapshotIsLiveCurrentState,false);});
+test('exact120s access threshold is inclusive',()=>{assert.equal(credentialReadiness(pair('2026-10-20T00:02:00Z','2026-11-02T00:00:00Z'),fixed).accessOnlyReadCurrentlyUsable,true);});
+test('119999ms access fails minimum and expired refresh fails',()=>{const r=credentialReadiness(pair('2026-10-20T00:01:59.999Z','2026-10-20T00:00:00Z'),fixed);assert.equal(r.accessMinimum120s,false);assert.equal(r.refreshNotExpired,false);});
+for(const rows of [[],[...pair('invalid','2026-11-02T00:00:00Z')],pair('2026-10-20Z','invalid'),[{kind:'CAFE24_ACCESS',expiresAt:'2026-10-20Z'},{kind:'CAFE24_ACCESS',expiresAt:'2026-11-02Z'}],[{kind:'OTHER',expiresAt:'2026-10-20Z'},...pair('2026-10-20Z','2026-11-02Z')]])test('malformed credential metadata fails closed',()=>assert.throws(()=>credentialReadiness(rows,fixed)));
+test('non-string credential expiry and nonfinite clock fail closed',()=>{assert.throws(()=>credentialReadiness([{kind:'CAFE24_ACCESS',expiresAt:123},{kind:'CAFE24_REFRESH',expiresAt:'2026-11-02T00:00:00Z'}],fixed));assert.throws(()=>credentialReadiness(pair('2026-10-20T00:02:00Z','2026-11-02T00:00:00Z'),NaN));});

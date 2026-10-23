@@ -7,6 +7,8 @@ import {
   RowValidationStatus,
   SecurityAuditActorType,
   SecurityAuditResult,
+  SourceDataKind,
+  SourceKind,
   UploadStatus
 } from "@prisma/client";
 import { createHash, randomUUID } from "node:crypto";
@@ -22,10 +24,15 @@ import {
   ParsedCafe24OrderRow,
   readCafe24ColumnValue
 } from "../domain/cafe24-csv";
-import { Cafe24ProductMatcher, Cafe24RuleInput } from "../domain/cafe24-matcher";
+import { Cafe24ProductMatcher, normalizeProductNo } from "../domain/cafe24-matcher";
+import { loadCafe24MatcherRules } from "../daily-sync/cafe24-rule-loader";
 import { formatDateOnly, ParseIssue } from "../domain/date-number";
 import { ExchangeRatesService } from "../exchange-rates/exchange-rates.service";
 import { writeSecurityAudit } from "../security-audit/security-audit.types";
+import { canonicalBusinessKeyHash, linkBoundCsvVersion, resolveCsvWritePolicy } from "../daily-sync/canonical-write-policy";
+import { persistCafe24CanonicalLine } from "../daily-sync/cafe24-canonical-persistence";
+import { scopedCsvFileHash } from "../common/scoped-csv-file-hash";
+import { selectCurrentSourceRows } from "../common/source-read-policy";
 
 @Injectable()
 export class Cafe24UploadsService {
@@ -37,7 +44,7 @@ export class Cafe24UploadsService {
     private readonly exchangeRatesService: ExchangeRatesService
   ) {}
 
-  async importCafe24Csv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string) {
+  async importCafe24Csv(file: Express.Multer.File | undefined, conflictPolicy: ConflictPolicy, actorId: string, sourceConnectionId?: string) {
     if (!file?.buffer) {
       throw new BadRequestException({ code: "FILE_REQUIRED", message: "Cafe24 CSV file is required." });
     }
@@ -45,7 +52,16 @@ export class Cafe24UploadsService {
       throw new BadRequestException({ code: "INVALID_CONFLICT_POLICY", message: "Invalid conflict policy." });
     }
 
-    const fileHashSha256 = createHash("sha256").update(file.buffer).digest("hex");
+    if (sourceConnectionId || process.env.DAILY_SYNC_FEATURE_ENABLED === "true") {
+      const preflightRows = this.parser.parseBuffer(file.buffer).rows;
+      await this.prisma.$transaction((tx) => resolveCsvWritePolicy(tx, {
+        provider: "CAFE24", dataKind: "CAFE24_ORDER", sourceConnectionId,
+        dates: preflightRows.map((row) => this.parser.parseRow(row).parsedRow?.orderDate)
+          .filter((date): date is Date => Boolean(date))
+      }));
+    }
+
+    const { rawHash, dedupeHash: fileHashSha256 } = scopedCsvFileHash(file.buffer, sourceConnectionId);
     const reusableDuplicate =
       conflictPolicy === ConflictPolicy.SKIP ? await this.findReusableCafe24Duplicate(fileHashSha256) : null;
     if (reusableDuplicate) {
@@ -77,7 +93,7 @@ export class Cafe24UploadsService {
           columns: headers,
           count: headers.length,
           previewSummary,
-          originalFileHashSha256: fileHashSha256,
+          originalFileHashSha256: rawHash,
           rawRowPolicy: "PII_COLUMNS_REMOVED"
         },
         rowCount: rows.length,
@@ -157,16 +173,24 @@ export class Cafe24UploadsService {
 
     let updated: typeof batch;
     try {
-      const matcherRules = await this.matcherRules();
+      const matcherRules = await loadCafe24MatcherRules(this.prisma);
       updated = await this.prisma.$transaction(
         async (tx) => {
+          const sourceDecision = await resolveCsvWritePolicy(tx, {
+            provider: "CAFE24", dataKind: "CAFE24_ORDER", sourceConnectionId,
+            dates: parsedRows.map(({ parsed }) => parsed.parsedRow?.orderDate).filter((date): date is Date => Boolean(date))
+          });
           // New, distinct order keys can be inserted in batches. Keep the existing
           // version/conflict path whenever a key already exists or repeats.
           const keys = parsedRows.map(({ parsed, rawRow }) => effectiveCafe24OrderLineKey(parsed.parsedRow, rawRow));
           const newLines: Prisma.Cafe24OrderLineCreateManyInput[] | undefined = duplicateKeys.length === 0 &&
-            await tx.cafe24OrderLine.count({ where: { orderLineKey: { in: keys }, isCurrent: true } }) === 0
+            await tx.cafe24OrderLine.count({ where: {
+              orderLineKey: { in: keys }, source: "CSV", connectionId: sourceDecision.connectionId,
+              isCurrent: true
+            } }) === 0
             ? [] : undefined;
           const newErrors: Prisma.Cafe24UploadRowErrorCreateManyInput[] = [];
+          const newLinks: Prisma.SourceRecordLinkCreateManyInput[] = [];
           for (const { rowNumber, rawRow, sanitizedRawRow, sourceRowHash, parsed } of parsedRows) {
             failedRowNumber = rowNumber;
             const parsedRow = parsed.parsedRow;
@@ -250,13 +274,35 @@ export class Cafe24UploadsService {
                 cafe24ProductRuleId,
                 matchSource,
                 validationStatus,
-                validationErrors: [...issues, ...warnings]
+                validationErrors: [...issues, ...warnings],
+                connectionId: sourceDecision.connectionId,
+                publishCurrent: true
               },
               tx,
               newLines
             );
             warningCount += warnings.length + saved.policyWarnings.length;
             const line = saved.line;
+
+            if (sourceDecision.connectionId && parsedRow && validationStatus !== RowValidationStatus.ERROR) {
+              const keyParts = [sourceDecision.connectionId, parsedRow.orderNo, parsedRow.lineOrderNo,
+                normalizeProductNo(parsedRow.productNo), parsedRow.optionName];
+              if (newLines) {
+                newLinks.push({
+                  connectionId: sourceDecision.connectionId,
+                  dataKind: "CAFE24_ORDER", canonicalKeyHash: canonicalBusinessKeyHash(keyParts),
+                  source: "CSV", recordTable: "cafe24_order_lines", recordId: line.id,
+                  version: saved.importVersion, isCurrent: saved.isCurrent,
+                  bindingMethod: "EXACT_ID"
+                });
+              } else {
+                await linkBoundCsvVersion(tx, {
+                  connectionId: sourceDecision.connectionId, dataKind: "CAFE24_ORDER",
+                  keyParts, recordTable: "cafe24_order_lines", recordId: line.id,
+                  version: saved.importVersion, isCurrent: saved.isCurrent
+                });
+              }
+            }
 
             const rowErrors = [...issues, ...warnings, ...saved.policyWarnings];
             if (rowErrors.length > 0) {
@@ -278,6 +324,9 @@ export class Cafe24UploadsService {
           if (newLines) {
             for (let offset = 0; offset < newLines.length; offset += 100) {
               await tx.cafe24OrderLine.createMany({ data: newLines.slice(offset, offset + 100) });
+            }
+            for (let offset = 0; offset < newLinks.length; offset += 100) {
+              await tx.sourceRecordLink.createMany({ data: newLinks.slice(offset, offset + 100) });
             }
             for (let offset = 0; offset < newErrors.length; offset += 100) {
               await tx.cafe24UploadRowError.createMany({ data: newErrors.slice(offset, offset + 100) });
@@ -360,9 +409,13 @@ export class Cafe24UploadsService {
     return this.prisma.$transaction(async (tx) => {
       const deletingLines = await tx.cafe24OrderLine.findMany({
         where: { uploadBatchId: id },
-        select: { id: true, orderLineKey: true, isCurrent: true }
+        select: { id: true, orderLineKey: true, connectionId: true, isCurrent: true }
       });
-      const currentDeletedKeys = uniqueNonEmpty(deletingLines.filter((line) => line.isCurrent).map((line) => line.orderLineKey));
+      const currentDeletedKeys = scopedCafe24Keys(deletingLines.filter((line) => line.isCurrent));
+      const boundDeletedIds = deletingLines.filter((line) => line.connectionId).map((line) => line.id);
+      if (boundDeletedIds.length) await tx.sourceRecordLink.deleteMany({ where: {
+        source: "CSV", recordTable: "cafe24_order_lines", recordId: { in: boundDeletedIds }
+      } });
       await tx.cafe24UploadRowError.deleteMany({ where: { uploadBatchId: id } });
       await tx.cafe24OrderLine.deleteMany({ where: { uploadBatchId: id } });
       await this.restoreCurrentCafe24OrderLines(tx, currentDeletedKeys);
@@ -386,7 +439,7 @@ export class Cafe24UploadsService {
   async rematchCafe24Lines(query: { from?: string; to?: string; take?: string }, actorId?: string) {
     const range = parseDateRange(query.from, query.to);
     const take = Math.min(Math.max(Number(query.take ?? 1000) || 1000, 1), 5000);
-    const rules = await this.matcherRules();
+    const rules = await loadCafe24MatcherRules(this.prisma);
     const completeCafe24BatchIds = await this.completeCafe24BatchIds(range);
     let matchedCount = 0;
     let stillUnmatchedCount = 0;
@@ -394,6 +447,58 @@ export class Cafe24UploadsService {
     let scannedCount = 0;
     let cursor: { orderDate: Date; rowNumber: number; id: string } | null = null;
     const refreshedBatchIds = new Set<string>();
+    const rematchLine = async (line: Cafe24OrderLine) => {
+      const match = this.matcher.match({ productNo: line.productNo, productName: line.productName,
+        optionName: line.optionName, orderDate: line.orderDate }, rules);
+      const retainedIssues = nonMatchIssues(line.validationErrors);
+      const matchIssues: RowIssue[] = [];
+      let productId: string | null = null;
+      let cafe24ProductRuleId: string | null = null;
+      let matchSource: MatchSource = MatchSource.UNMATCHED;
+      let validationStatus: RowValidationStatus = retainedIssues.length > 0
+        ? RowValidationStatus.WARNING : RowValidationStatus.VALID;
+      if (match.reason === "MATCHED") {
+        productId = match.productId;
+        cafe24ProductRuleId = match.matchRuleId;
+        matchSource = MatchSource.RULE;
+        matchedCount += 1;
+      } else if (match.reason === "AMBIGUOUS_MATCH") {
+        matchIssues.push({ columnName: null, errorCode: "CAFE24_PRODUCT_AMBIGUOUS",
+          message: "Cafe24 order line matched more than one active rule.",
+          rawValue: match.candidates.join(", "), severity: "WARNING" });
+        validationStatus = RowValidationStatus.WARNING;
+        ambiguousCount += 1;
+      } else {
+        matchIssues.push({ columnName: null, errorCode: "CAFE24_PRODUCT_UNMATCHED",
+          message: "Cafe24 order line did not match any active product rule.", severity: "WARNING" });
+        validationStatus = RowValidationStatus.UNMATCHED;
+        stillUnmatchedCount += 1;
+      }
+      await this.prisma.$transaction(async (tx) => {
+        await tx.cafe24OrderLine.update({ where: { id: line.id }, data: {
+          productId, cafe24ProductRuleId, matchSource, validationStatus,
+          validationErrors: [...retainedIssues, ...matchIssues] as unknown as Prisma.InputJsonValue
+        } });
+        if (line.uploadBatchId) {
+          await tx.cafe24UploadRowError.deleteMany({ where: { orderLineId: line.id,
+            errorCode: { in: ["CAFE24_PRODUCT_UNMATCHED", "CAFE24_PRODUCT_AMBIGUOUS"] } } });
+          if (matchIssues.length > 0) {
+            await tx.cafe24UploadRowError.createMany({ data: matchIssues.map((issue) => ({
+              uploadBatchId: line.uploadBatchId!, orderLineId: line.id, rowNumber: line.rowNumber,
+              columnName: issue.columnName, severity: issue.severity, errorCode: issue.errorCode,
+              message: issue.message, rawValue: issue.rawValue
+            })) });
+          }
+        }
+        if (actorId) await writeSecurityAudit(tx, {
+          actorUserId: actorId, actorType: SecurityAuditActorType.USER,
+          action: "CAFE24_MAPPING_REMATCH", targetType: "CAFE24_ORDER_LINE", targetId: line.id,
+          result: SecurityAuditResult.SUCCESS,
+          beforeJson: { matched: Boolean(line.productId), validationStatus: line.validationStatus },
+          afterJson: { matched: Boolean(productId), validationStatus }
+        });
+      });
+    };
 
     while (completeCafe24BatchIds.length > 0) {
       const candidates: Cafe24OrderLine[] = await this.prisma.cafe24OrderLine.findMany({
@@ -415,100 +520,38 @@ export class Cafe24UploadsService {
       });
       const lines = candidates.slice(0, take);
       for (const line of lines) {
+        if (!line.uploadBatchId) continue;
         refreshedBatchIds.add(line.uploadBatchId);
-      const match = this.matcher.match(
-        {
-          productNo: line.productNo,
-          productName: line.productName,
-          optionName: line.optionName,
-          orderDate: line.orderDate
-        },
-        rules
-      );
-      const retainedIssues = nonMatchIssues(line.validationErrors);
-      const matchIssues: RowIssue[] = [];
-      let productId: string | null = null;
-      let cafe24ProductRuleId: string | null = null;
-      let matchSource: MatchSource = MatchSource.UNMATCHED;
-      let validationStatus: RowValidationStatus =
-        retainedIssues.length > 0 ? RowValidationStatus.WARNING : RowValidationStatus.VALID;
-
-      if (match.reason === "MATCHED") {
-        productId = match.productId;
-        cafe24ProductRuleId = match.matchRuleId;
-        matchSource = MatchSource.RULE;
-        matchedCount += 1;
-      } else if (match.reason === "AMBIGUOUS_MATCH") {
-        matchIssues.push({
-          columnName: null,
-          errorCode: "CAFE24_PRODUCT_AMBIGUOUS",
-          message: "Cafe24 order line matched more than one active rule.",
-          rawValue: match.candidates.join(", "),
-          severity: "WARNING"
-        });
-        validationStatus = RowValidationStatus.WARNING;
-        ambiguousCount += 1;
-      } else {
-        matchIssues.push({
-          columnName: null,
-          errorCode: "CAFE24_PRODUCT_UNMATCHED",
-          message: "Cafe24 order line did not match any active product rule.",
-          severity: "WARNING"
-        });
-        validationStatus = RowValidationStatus.UNMATCHED;
-        stillUnmatchedCount += 1;
-      }
-
-      await this.prisma.$transaction(async (tx) => {
-        await tx.cafe24OrderLine.update({
-          where: { id: line.id },
-          data: {
-            productId,
-            cafe24ProductRuleId,
-            matchSource,
-            validationStatus,
-            validationErrors: [...retainedIssues, ...matchIssues] as unknown as Prisma.InputJsonValue
-          }
-        });
-        await tx.cafe24UploadRowError.deleteMany({
-          where: {
-            orderLineId: line.id,
-            errorCode: { in: ["CAFE24_PRODUCT_UNMATCHED", "CAFE24_PRODUCT_AMBIGUOUS"] }
-          }
-        });
-        if (matchIssues.length > 0) {
-          await tx.cafe24UploadRowError.createMany({
-            data: matchIssues.map((issue) => ({
-              uploadBatchId: line.uploadBatchId,
-              orderLineId: line.id,
-              rowNumber: line.rowNumber,
-              columnName: issue.columnName,
-              severity: issue.severity,
-              errorCode: issue.errorCode,
-              message: issue.message,
-              rawValue: issue.rawValue
-            }))
-          });
-        }
-        if (actorId) {
-          await writeSecurityAudit(tx, {
-            actorUserId: actorId,
-            actorType: SecurityAuditActorType.USER,
-            action: "CAFE24_MAPPING_REMATCH",
-            targetType: "CAFE24_ORDER_LINE",
-            targetId: line.id,
-            result: SecurityAuditResult.SUCCESS,
-            beforeJson: { matched: Boolean(line.productId), validationStatus: line.validationStatus },
-            afterJson: { matched: Boolean(productId), validationStatus }
-          });
-        }
-      });
+        await rematchLine(line);
       }
       scannedCount += lines.length;
       if (candidates.length <= take) break;
       const last = lines.at(-1);
       if (!last) break;
-      cursor = { orderDate: last.orderDate!, rowNumber: last.rowNumber, id: last.id };
+      cursor = { orderDate: last.orderDate!, rowNumber: last.rowNumber!, id: last.id };
+    }
+
+    // API lines have no UploadBatch/UploadRow. Rematch only the source selected
+    // for their account and order date, and never manufacture CSV row errors.
+    let apiCursor: { orderDate: Date; id: string } | null = null;
+    while (true) {
+      const candidates: Cafe24OrderLine[] = await this.prisma.cafe24OrderLine.findMany({
+        where: { source: SourceKind.API, connectionId: { not: null }, isCurrent: true,
+          orderDate: { gte: range.fromDate, lte: range.toDate },
+          validationStatus: { not: RowValidationStatus.ERROR },
+          ...(apiCursor ? { OR: [{ orderDate: { gt: apiCursor.orderDate } },
+            { orderDate: apiCursor.orderDate, id: { gt: apiCursor.id } }] } : {}) },
+        take: take + 1, orderBy: [{ orderDate: "asc" }, { id: "asc" }]
+      });
+      const page = candidates.slice(0, take);
+      const visible = await selectCurrentSourceRows(this.prisma, SourceDataKind.CAFE24_ORDER,
+        page, (line) => line.orderDate);
+      for (const line of visible) await rematchLine(line);
+      scannedCount += visible.length;
+      if (candidates.length <= take) break;
+      const last = page.at(-1);
+      if (!last || !last.orderDate) break;
+      apiCursor = { orderDate: last.orderDate, id: last.id };
     }
 
     await this.refreshCafe24BatchIssueCounts([...refreshedBatchIds], actorId);
@@ -661,28 +704,6 @@ export class Cafe24UploadsService {
     });
   }
 
-  private async matcherRules(): Promise<Cafe24RuleInput[]> {
-    const rules = await this.prisma.cafe24ProductRule.findMany({
-      where: { isActive: true, product: { is: { isActive: true } } },
-      orderBy: [{ priority: "asc" }, { createdAt: "asc" }]
-    });
-    return rules.map((rule) => ({
-      id: rule.id,
-      productId: rule.productId,
-      displayName: rule.displayName,
-      productNumbers: jsonStringArray(rule.productNumbers),
-      productNameAliases: jsonStringArray(rule.productNameAliases),
-      optionIncludeKeywords: jsonStringArray(rule.optionIncludeKeywords),
-      optionExcludeKeywords: jsonStringArray(rule.optionExcludeKeywords),
-      priority: rule.priority,
-      validFrom: formatDateOnly(rule.validFrom),
-      validTo: rule.validTo ? formatDateOnly(rule.validTo) : null,
-      isActive: rule.isActive,
-      adCostSourceProductId: rule.adCostSourceProductId,
-      roasGroup: rule.roasGroup
-    }));
-  }
-
   private async duplicateUploadSummary(batchId: string) {
     const batch = await this.assertUpload(batchId);
     const columnSchema =
@@ -786,9 +807,11 @@ export class Cafe24UploadsService {
   private async saveCafe24OrderLine(input: SaveCafe24OrderLineInput, client?: Prisma.TransactionClient,
     newLines?: Prisma.Cafe24OrderLineCreateManyInput[]) {
     const policyWarnings: RowIssue[] = [];
+    let importVersion = 1;
+    let isCurrent = false;
     const save = async (tx: Prisma.TransactionClient) => {
       const existingCurrentLines = newLines ? [] : await tx.cafe24OrderLine.findMany({
-        where: { orderLineKey: input.orderLineKey, isCurrent: true },
+        where: { orderLineKey: input.orderLineKey, source: "CSV", connectionId: input.connectionId, isCurrent: true },
         orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }]
       });
       const existingCurrent = existingCurrentLines[0] ?? null;
@@ -800,6 +823,8 @@ export class Cafe24UploadsService {
         validationStatus: input.validationStatus,
         decision
       });
+      importVersion = storedState.importVersion;
+      isCurrent = input.publishCurrent !== false && storedState.isCurrent;
 
       if (decision.skippedDuplicate) {
         policyWarnings.push({
@@ -811,15 +836,10 @@ export class Cafe24UploadsService {
         });
       }
 
-      if (storedState.supersedeExisting && existingCurrentLines.length > 0) {
-        await tx.cafe24OrderLine.updateMany({
-          where: { id: { in: existingCurrentLines.map((line) => line.id) } },
-          data: { isCurrent: false }
-        });
-      }
-
       const data: Prisma.Cafe24OrderLineCreateManyInput = {
           uploadBatchId: input.batchId,
+          connectionId: input.connectionId,
+          source: "CSV",
           rowNumber: input.rowNumber,
           sourceRowHash: input.sourceRowHash,
           orderLineKey: input.orderLineKey,
@@ -848,7 +868,7 @@ export class Cafe24UploadsService {
             : input.validationStatus,
           validationErrors: [...input.validationErrors, ...policyWarnings] as unknown as Prisma.InputJsonValue,
           importVersion: storedState.importVersion,
-          isCurrent: storedState.isCurrent,
+          isCurrent,
           rawRow: Prisma.DbNull
         };
       if (newLines) {
@@ -856,20 +876,17 @@ export class Cafe24UploadsService {
         newLines.push({ ...data, id });
         return { id };
       }
-      const created = await tx.cafe24OrderLine.create({ data });
-
-      if (storedState.supersedeExisting && existingCurrentLines.length > 0) {
-        await tx.cafe24OrderLine.updateMany({
-          where: { id: { in: existingCurrentLines.map((line) => line.id) } },
-          data: { supersededByOrderLineId: created.id }
-        });
-      }
-
-      return created;
+      return persistCafe24CanonicalLine(tx, {
+        source: "CSV", connectionId: input.connectionId ?? null,
+        orderLineKey: input.orderLineKey,
+        previousCurrentIds: storedState.supersedeExisting
+          ? existingCurrentLines.map((line) => line.id) : [],
+        data
+      });
     };
     const line = client ? await save(client) : await this.prisma.$transaction(save);
 
-    return { line, policyWarnings };
+    return { line, policyWarnings, importVersion, isCurrent };
   }
 
   private async markCafe24ImportFailed(batchId: string, rowNumber: number | null, error: unknown) {
@@ -973,28 +990,48 @@ export class Cafe24UploadsService {
   private async demoteIncompleteCafe24CurrentLines(tx: Prisma.TransactionClient, batchId: string) {
     const currentLines = await tx.cafe24OrderLine.findMany({
       where: { uploadBatchId: batchId, isCurrent: true },
-      select: { orderLineKey: true }
+      select: { orderLineKey: true, connectionId: true }
     });
-    const currentKeys = uniqueNonEmpty(currentLines.map((line) => line.orderLineKey));
+    const currentKeys = scopedCafe24Keys(currentLines);
     if (currentKeys.length === 0) {
       return;
     }
     await this.restoreCurrentCafe24OrderLines(tx, currentKeys);
   }
 
-  private async restoreCurrentCafe24OrderLines(tx: Prisma.TransactionClient, orderLineKeys: string[]) {
+  private async restoreCurrentCafe24OrderLines(tx: Prisma.TransactionClient,
+    orderLineKeys: Array<{ orderLineKey: string; connectionId: string | null }>) {
     // Bound database round trips by chunks, not by individual orders. A daily
     // upload can contain hundreds of keys with no prior version to restore.
-    const keys = uniqueNonEmpty(orderLineKeys);
+    const groups = new Map<string | null, string[]>();
+    for (const { orderLineKey, connectionId } of orderLineKeys) {
+      if (!orderLineKey) continue;
+      const keys = groups.get(connectionId) ?? [];
+      keys.push(orderLineKey);
+      groups.set(connectionId, keys);
+    }
+
     const chunkSize = 500;
-    for (let offset = 0; offset < keys.length; offset += chunkSize) {
+    for (const [connectionId, scopedKeys] of groups) {
+      const keys = uniqueNonEmpty(scopedKeys);
+      for (let offset = 0; offset < keys.length; offset += chunkSize) {
       const keyChunk = keys.slice(offset, offset + chunkSize);
+      if (connectionId) {
+        const currentRows = await tx.cafe24OrderLine.findMany({ where: {
+          orderLineKey: { in: keyChunk }, source: "CSV", connectionId, isCurrent: true
+        }, select: { id: true } });
+        if (currentRows.length) await tx.sourceRecordLink.updateMany({ where: {
+          connectionId, source: "CSV", recordTable: "cafe24_order_lines",
+          recordId: { in: currentRows.map((row) => row.id) }, isCurrent: true
+        }, data: { isCurrent: false } });
+      }
       await tx.cafe24OrderLine.updateMany({
-        where: { orderLineKey: { in: keyChunk } },
+        where: { orderLineKey: { in: keyChunk }, source: "CSV", connectionId },
         data: { isCurrent: false }
       });
       const candidates = await tx.cafe24OrderLine.findMany({
-        where: { orderLineKey: { in: keyChunk }, validationStatus: { not: RowValidationStatus.ERROR } },
+        where: { orderLineKey: { in: keyChunk }, source: "CSV", connectionId,
+          validationStatus: { not: RowValidationStatus.ERROR } },
         orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         select: {
           id: true,
@@ -1006,13 +1043,14 @@ export class Cafe24UploadsService {
       if (candidates.length === 0) continue;
       const batchCounts = await tx.cafe24OrderLine.groupBy({
         by: ["uploadBatchId"],
-        where: { uploadBatchId: { in: uniqueNonEmpty(candidates.map((candidate) => candidate.uploadBatchId)) } },
+        where: { uploadBatchId: { in: uniqueNonEmpty(candidates.map((candidate) => candidate.uploadBatchId).filter((id): id is string => Boolean(id))) } },
         _count: { _all: true }
       });
       const storedRows = new Map(batchCounts.map((batch) => [batch.uploadBatchId, batch._count._all]));
       const latestByKey = new Map<string, string>();
       for (const candidate of candidates) {
         if (latestByKey.has(candidate.orderLineKey)) continue;
+        if (!candidate.uploadBatchId || !candidate.batch) continue;
         const storedRowCount = storedRows.get(candidate.uploadBatchId) ?? 0;
         if (isUsableCafe24UploadBatch({ status: candidate.batch.status, rowCount: candidate.batch.rowCount, storedRowCount })) {
           latestByKey.set(candidate.orderLineKey, candidate.id);
@@ -1023,9 +1061,26 @@ export class Cafe24UploadsService {
           where: { id: { in: [...latestByKey.values()] } },
           data: { isCurrent: true, supersededByOrderLineId: null }
         });
+        if (connectionId) await tx.sourceRecordLink.updateMany({ where: {
+          connectionId, source: "CSV", recordTable: "cafe24_order_lines",
+          recordId: { in: [...latestByKey.values()] }
+        }, data: { isCurrent: true } });
+      }
       }
     }
   }
+}
+
+function scopedCafe24Keys(lines: Array<{ orderLineKey: string; connectionId?: string | null }>) {
+  const seen = new Set<string>();
+  return lines.flatMap((line) => {
+    if (!line.orderLineKey) return [];
+    const connectionId = line.connectionId ?? null;
+    const identity = JSON.stringify([connectionId, line.orderLineKey]);
+    if (seen.has(identity)) return [];
+    seen.add(identity);
+    return [{ orderLineKey: line.orderLineKey, connectionId }];
+  });
 }
 
 type RowIssue = Omit<ParseIssue, "columnName"> & {
@@ -1061,6 +1116,8 @@ type SaveCafe24OrderLineInput = {
   matchSource: MatchSource;
   validationStatus: RowValidationStatus;
   validationErrors: RowIssue[];
+  connectionId?: string | null;
+  publishCurrent?: boolean;
 };
 
 type ExistingCurrentCafe24Line = {
@@ -1237,13 +1294,6 @@ function stringArray(value: unknown): string[] | undefined {
     return uniqueNonEmpty(value.split(","));
   }
   throw new BadRequestException({ code: "INVALID_ARRAY", message: "Expected an array of strings or a comma-separated string." });
-}
-
-function jsonStringArray(value: Prisma.JsonValue): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return uniqueNonEmpty(value.map((item) => String(item)));
 }
 
 function uniqueNonEmpty(values: string[]) {

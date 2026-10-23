@@ -29,7 +29,7 @@ export class Cafe24UploadsController {
     @Body() body: Cafe24UploadFormDto,
     @CurrentUser() actor: AuthenticatedUser
   ) {
-    return this.cafe24UploadsService.importCafe24Csv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id);
+    return this.cafe24UploadsService.importCafe24Csv(file, body.conflictPolicy ?? ConflictPolicy.SKIP, actor.id, body.sourceConnectionId);
   }
 
   @Get("uploads")

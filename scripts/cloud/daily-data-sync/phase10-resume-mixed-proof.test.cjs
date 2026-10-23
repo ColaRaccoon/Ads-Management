@@ -1,0 +1,13 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const {resourceSnapshot,validateDbTelemetry}=require('./phase10-resume-mixed-proof.cjs');
+const sample=()=>({at:1,current:'1000',peak:'2000',max:'999997440',events:'low 0\noom 0\noom_kill 0',rss:3000,heap:2000,heavy:1});
+test('realistic cgroup sample preserves positive values and explicitzero OOM',()=>{assert.equal(resourceSnapshot(sample()).cgroupPeak,2000);});
+test('null/empty/unbounded cgroup values fail closed instead of becomingzero',()=>{for(const k of ['current','peak','max'])for(const v of [null,'','max','0'])assert.throws(()=>resourceSnapshot({...sample(),[k]:v}));});
+test('missing and nonzero OOM counters reject',()=>{for(const events of [null,'','low 0','oom 1\noom_kill 0','oom 0\noom_kill 1'])assert.throws(()=>resourceSnapshot({...sample(),events}));});
+test('peak above1GB, invalidRSS, and heavy2 reject',()=>{for(const changed of [{peak:'1000000001'},{rss:0},{heavy:2}])assert.throws(()=>resourceSnapshot({...sample(),...changed}));});
+const reads=Array.from({length:40},()=>({start:100,end:200}));const row={at:150,stage:'MIXED_META',backends:3,active:1,idle_tx:1,locks:0};
+test('mixedDB sampling must exist during actualread and taggedmixedstage',()=>{assert.equal(validateDbTelemetry([row],reads).mixedSamples,1);});
+test('empty/outsidewindow/wrongstage/zero backend telemetry rejects',()=>{for(const rows of [[],[{...row,at:1}],[{...row,stage:'SEED_ACTUAL_RUNNERS'}],[{...row,backends:0,active:0,idle_tx:0}]])assert.throws(()=>validateDbTelemetry(rows,reads));});
+test('pool4, nan sample, negative wait and missingfield telemetry reject',()=>{for(const changed of [{backends:4},{active:NaN},{locks:-1},{idle_tx:undefined}])assert.throws(()=>validateDbTelemetry([{...row,...changed}],reads));});
+test('failed DB observations cannot silently becomezero errors',()=>{assert.throws(()=>validateDbTelemetry([row],reads,[{at:150,stage:'MIXED_META'}]));});
