@@ -1,8 +1,8 @@
 {
   "at": "2026-10-23T14:08:40.490556+09:00",
-  "status": "LOCAL_DIAGNOSTIC_CHANGE_READY_NOT_DEPLOYED",
-  "deployedVersion": 4,
-  "deployedBodySha256": "3666e566c74bce7e950254a60d37bb1945f77eb0e2b0b52e29f983c8d1fb2408",
+  "status": "DIAGNOSTICS_ONLY_DEPLOYED_V5_PENDING_EXISTING_SCHEDULED_RESULT",
+  "deployedVersion": 5,
+  "deployedBodySha256": "8c5ab22747280acadca81b2adb3337024c9e20a50a64108200b150950d9d40aa",
   "exactPastRootCauseRecovered": false,
   "reason": "Existing catch discarded the exception and provider response; immutable past logs cannot recover it.",
   "change": "Keep same bearer guard and public 403/400/503 behavior. Add fixed stage labels, Railway operation, numeric HTTP status, whitelisted GraphQL codes and fixed reason codes to the existing failure marker. Never log exceptions, body, query, variables, headers or tokens.",
@@ -50,7 +50,7 @@
     "bytes": 7346,
     "sha256": "24f084095f3661a57a4c7f08d6e8635f31d8e82e66355da29fbe4ce976095756"
   },
-  "futureAuthorizedStep": "deploy this exact diagnostics-only source to the existing storage-renewal function while preserving verify_jwt=false plus its existing bearer check; preserve all existing Edge secrets, jobs and invocation modes. Read the next existing scheduled failure log. Do not manually invoke renew/check, refresh, rotate or redeploy the product.",
+  "futureAuthorizedStep": "Read next existing scheduled result without manual invocation or configuration/credential changes. This exact source deployment is already consumed; do not replay it.",
   "failureDecisionMap": {
     "RAILWAY_FETCH with null status": "transport/timeout path; inspect provider availability before touching tokens",
     "RAILWAY_RESPONSE_PARSE with HTTP401/403 or whitelisted UNAUTHENTICATED/FORBIDDEN": "current project token access path; confirm exact revoked/expired/scope fact before proposing replacement",
@@ -58,10 +58,22 @@
     "VARIABLES_VALIDATE or TOKEN_VERIFY": "exact target or stored-token verification mismatch; preserve current references and inspect narrow fields",
     "STORAGE_PROBE or APPLICATION_READINESS": "use corresponding provider status/readiness result; do not restore exposed credentials"
   },
-  "operationalDeploymentApproved": false,
+  "operationalDeploymentApproved": true,
   "hashVerification": {
     "sha256": "exact source archive member bytes at preparation; preserve this original evidence hash",
     "sha256LfNormalized": "Git checkout verification: replace CRLF byte pairs with LF, then SHA256; do not trim or otherwise modify bytes",
     "sourceArchive": "local reviewed ZIP remains exact-byte evidence; recreate from Git only after LF-normalized source hashes match, never claim its archive bytes equal the local ZIP"
-  }
+  },
+  "beforeVersion": 4,
+  "beforeBodySha256": "3666e566c74bce7e950254a60d37bb1945f77eb0e2b0b52e29f983c8d1fb2408",
+  "deployedAtUtc": "2026-10-23T05:42:01.2216150+00:00",
+  "deploymentHttpStatus": 201,
+  "sameFunctionId": "6811fd3f-598e-45be-bac0-7a04a5f85261",
+  "verifyJwtPreserved": true,
+  "separateBearerGuardSourcePreserved": true,
+  "requiredSecretDigestsUnchanged": true,
+  "existingThreeJobsUnchanged": true,
+  "approvedScope": "diagnostics-only existing Edge Function source, not product deployment or credentials",
+  "deploymentReceiptRef": "approved-preparation-changes.json",
+  "nextReadOnlyObservationRef": "storage-next-observation.review.json"
 }

@@ -12,7 +12,7 @@
   },
   "sourceCheckout": {
     "branch": "codex/daily-data-automation-01",
-    "baseHead": "7abd371fbb57e16bb1599c7b9300b47950f932e5",
+    "baseHead": "c4e98b98e45c2b0aafb31e7b4e876afd7ce974c9",
     "deliveryCommit": "containing Git commit; use git rev-parse HEAD"
   },
   "agreedPlan": {
@@ -46,7 +46,7 @@
     "candidateSetprivFilesystemVerified": true,
     "artifactRef": "image-artifact.json"
   },
-  "currentPlanAuthority": "transition-manifest.json, production-schedule-plan-v2.json and parent preparation document; historical copied evidence does not override current dates or resolved facts",
+  "currentPlanAuthority": "transition-manifest.json, approved-preparation-changes.json, storage-next-observation.review.json, production-schedule-plan-v2.json and parent preparation document; historical evidence does not override applied facts",
   "copiedPlanEvidence": [
     {
       "name": "runtime-access-plan.json",
@@ -149,29 +149,28 @@
     "final registry target/publication is an authorized execution output; exact image bytes are already available as unpublished GitHub draft asset"
   ],
   "restartSteps": [
-    "Read parent preparation sections 10-12, current manifest, remaining-resolution.json and image-artifact.json; verify containing branch tip without reset/stash/clean",
-    "Download the exact draft image asset using existing authorized GitHub access and verify the pinned archive/OCI hashes; do not print signed URLs or start an engine",
-    "Do not re-open resolved Meta dates, image availability or Cafe24 registration facts; protect current credentials and never auto-refresh expired CLI sessions",
-    "Only after explicit narrow operational approval: add the exact third callback URI and deploy diagnostics-only Storage function source; preserve secrets, jobs and public auth/response behavior",
-    "Read the next existing scheduled Storage outcome. Propose only a proven repair. Product deployment/migrations/collection/automation still require separate final operational approval"
+    "Read parent preparation sections 10-12, current manifest, approved-preparation-changes.json and storage-next-observation.review.json; verify containing branch tip without reset/stash/clean",
+    "Do not replay completed Cafe24 callback save or Storage diagnostics-only deployment: exactly those two actions were approved and applied; product/credential changes remain unapproved",
+    "On Oct24 after 04:20 KST read the existing 04:00/04:15/04:20 jobs and matching version5 Edge diagnostics in the other environment; no manual function invocation, schedule changes, credential refresh or new local automation",
+    "Report fixed failure stage/status/code/reason or observed recovery. Ask only for any proven repair that needs a separate change; no need to ask for the two consumed approvals again",
+    "Download the exact unpublished draft image asset only when needed with existing authorized GitHub access; verify archive/OCI hashes without engine/registry actions"
   ],
   "notDone": [
-    "operational callback registration change",
-    "Storage diagnostics-only function deployment",
-    "provider credential issue/refresh/revoke",
+    "exact Storage failure cause/observed recovery: waiting for next existing scheduled run",
+    "any credential/IAM/variable repair (not authorized)",
     "new product build/full regression/provider collection",
-    "registry publication and production deployment"
+    "registry publication, product deployment, migration and automatic transition (not authorized)"
   ],
   "preparationDocument": {
     "relativePath": "../11_운영전환_복구_준비서_20261023.md",
-    "sha256": "4e3a75a0f4e5138af260a0cc80917f5d13f61aff9be98664c7e59f5a2174fa3a",
-    "sha256LfNormalized": "4e3a75a0f4e5138af260a0cc80917f5d13f61aff9be98664c7e59f5a2174fa3a"
+    "sha256": "e0eeb9b70ddbc5c09f0cd944263c85b296abf74fd346818d03a81a6900ef8718",
+    "sha256LfNormalized": "e0eeb9b70ddbc5c09f0cd944263c85b296abf74fd346818d03a81a6900ef8718"
   },
   "localPlanningFiles": [
     {
       "name": "transition-manifest.json",
-      "sha256": "bf35412b2e72886cc17f1c2ff5896eb7d21eac7bf4118b35ca5977e9b143b81e",
-      "sha256LfNormalized": "bf35412b2e72886cc17f1c2ff5896eb7d21eac7bf4118b35ca5977e9b143b81e"
+      "sha256": "210be9495027de252b4b765295e9f40d4628450353b0264d1a8d320b6b45218f",
+      "sha256LfNormalized": "210be9495027de252b4b765295e9f40d4628450353b0264d1a8d320b6b45218f"
     },
     {
       "name": "repository-inventory.json",
@@ -185,8 +184,8 @@
     },
     {
       "name": "remaining-resolution.json",
-      "sha256": "842d8332a18703053e6034678f95d190358c56eecdb1cf5a695db1a4e9c869a5",
-      "sha256LfNormalized": "842d8332a18703053e6034678f95d190358c56eecdb1cf5a695db1a4e9c869a5"
+      "sha256": "946603d635e46fdf4692be6945a32c2f2faddbb274c5e192db858160a074cd3b",
+      "sha256LfNormalized": "946603d635e46fdf4692be6945a32c2f2faddbb274c5e192db858160a074cd3b"
     },
     {
       "name": "image-artifact.json",
@@ -195,18 +194,28 @@
     },
     {
       "name": "cafe24-callback-change.review.json",
-      "sha256": "d622b937dc665a7c148e261f001bd677af23dc81952056b6ecdfbf2cc856922d",
-      "sha256LfNormalized": "d622b937dc665a7c148e261f001bd677af23dc81952056b6ecdfbf2cc856922d"
+      "sha256": "4f3a70ca04b1b7db7f9d69f7102c9633cca892aebe00d3cf078cb1e7c6b4b143",
+      "sha256LfNormalized": "4f3a70ca04b1b7db7f9d69f7102c9633cca892aebe00d3cf078cb1e7c6b4b143"
     },
     {
       "name": "storage-diagnostics-change.review.json",
-      "sha256": "5dce2983f427901f1081c6606c831d32238cd0e02198e2413b72a27d19da78de",
-      "sha256LfNormalized": "5dce2983f427901f1081c6606c831d32238cd0e02198e2413b72a27d19da78de"
+      "sha256": "72bc4068a2e228f9a9e67794d71d1e9d763b746f99c87c70632a69ee027e1e54",
+      "sha256LfNormalized": "72bc4068a2e228f9a9e67794d71d1e9d763b746f99c87c70632a69ee027e1e54"
     },
     {
       "name": "production-schedule-plan-v2.json",
       "sha256": "11f74a080e59c1a0334fab68d1e94df24b4c6fcac3d879eb068a43409467d4cd",
       "sha256LfNormalized": "11f74a080e59c1a0334fab68d1e94df24b4c6fcac3d879eb068a43409467d4cd"
+    },
+    {
+      "name": "approved-preparation-changes.json",
+      "sha256": "ab3d31e6c06cb25faf45e28955d76a88b2238719245f8ba9463f9b92736941ba",
+      "sha256LfNormalized": "ab3d31e6c06cb25faf45e28955d76a88b2238719245f8ba9463f9b92736941ba"
+    },
+    {
+      "name": "storage-next-observation.review.json",
+      "sha256": "0dc4371111ea7dcaafa5664d206e576adbbbd7e27370a30d190172e6d718f506",
+      "sha256LfNormalized": "0dc4371111ea7dcaafa5664d206e576adbbbd7e27370a30d190172e6d718f506"
     }
   ],
   "publication": {
@@ -225,5 +234,17 @@
     "sha256LfNormalized": "portable Git verification: replace CRLF byte pairs with LF before SHA256, no other transformations",
     "preparationDocumentAndLocalPlanningFiles": "sha256 records current exact local bytes; sha256LfNormalized is the cross-platform checkout comparison",
     "storageDiagnosticSource": "see storage-diagnostics-change.review.json: preserve exact source ZIP binding and separately verify normalized Git source hashes"
-  }
+  },
+  "updatedAt": "2026-10-23T14:50:18.304521+09:00",
+  "completedApprovedPreparationChangesRef": "approved-preparation-changes.json",
+  "pendingStorageReadOnlyObservationRef": "storage-next-observation.review.json",
+  "attachments": [
+    {
+      "name": "cafe24-callback-saved.jpg",
+      "bytes": 56178,
+      "sha256": "9273c2e31b0d44e506d0c2a099260f0d134257e7e92f6acea66940c2fe844436",
+      "verification": "exact binary bytes; never normalize line endings",
+      "scope": "cropped public callback configuration only; no secret/account/member information"
+    }
+  ]
 }

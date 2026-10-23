@@ -45,8 +45,8 @@
   "scheduleReviewTemplateSha256": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
   "proposedJobCount": 77,
   "datePolicyApproved": true,
-  "kind": "PHASE11_CURRENT_PREPARATION_AFTER_META_AND_REMAINING_READS",
-  "preparedAt": "2026-10-23T14:16:11.925638+09:00",
+  "kind": "PHASE11_PRODUCT_PLAN_AFTER_TWO_APPROVED_PREPARATION_CHANGES",
+  "preparedAt": "2026-10-23T14:46:40.274203+09:00",
   "railwayProjectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
   "railwayEnvironmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
   "storageDiagnosisRef": "storage-diagnostics-change.review.json",
@@ -96,17 +96,9 @@
   "imageArtifactRef": "image-artifact.json",
   "candidateSetprivFilesystemVerified": true,
   "callbackChangeRef": "cafe24-callback-change.review.json",
-  "narrowOperationalApprovalsMissing": [
-    {
-      "system": "Cafe24 developer app 일일 데이터 자동화",
-      "action": "add only the production callback URI, preserve the existing two URIs and all scopes/credentials",
-      "executed": false
-    },
-    {
-      "system": "Supabase iygjmosbelbosfxidqxv/storage-renewal/6811fd3f-598e-45be-bac0-7a04a5f85261",
-      "action": "deploy diagnostics-only exact reviewed source; preserve existing secrets/jobs/auth behavior, do not manually invoke renew/check",
-      "executed": false
-    }
-  ],
-  "metaCutoffProvenance": "planning binding to minimum boundary of explicitly selected initial day; no earlier day, execution approval remains absent"
+  "narrowOperationalApprovalsMissing": [],
+  "metaCutoffProvenance": "planning binding to minimum boundary of explicitly selected initial day; no earlier day, execution approval remains absent",
+  "approvedPreparationChangesRef": "approved-preparation-changes.json",
+  "storageNextObservationRef": "storage-next-observation.review.json",
+  "storageRenewalResolutionPending": true
 }

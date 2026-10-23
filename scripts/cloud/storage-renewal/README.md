@@ -18,7 +18,7 @@
 
 ## 현재 실행
 
-- Supabase `iygjmosbelbosfxidqxv`, Edge Function `storage-renewal` 버전 4 / ACTIVE (2026-10-08).
+- Supabase `iygjmosbelbosfxidqxv`, Edge Function `storage-renewal` 버전 5 / ACTIVE (2026-10-23 진단 전용 소스 배포). 기존 갱신/자격/예약 동작은 유지했으며 정확 원인은 다음 기존 정시 결과 대기다.
 - 매일 한국시간 04:00: 남은 기간이 3일 이하일 때 같은 `storage_app` 역할의 6일 JWT를 발급한다.
 - 04:15: 서명·Storage sentinel·갱신 이후 Railway 성공 배포·보호된 앱 readiness를 검사한다.
 - 04:20: 앞선 두 실행의 존재·성공·만료 여유를 확인한다.
@@ -93,10 +93,10 @@ order by r.start_time desc limit 12;
 [Railway 변수 API](https://docs.railway.com/integrations/api/manage-variables).
 
 
-## 2026-10-23 진단 전용 변경안 — 로컬 준비, 운영 미배포
+## 2026-10-23 진단 전용 version5 배포 완료 — 원인 확인은 기존 정시 결과 대기
 
-운영 version4는 실패 예외를 폐기한다. `safe-diagnostics.mjs`와 `index.ts`의 로컬 변경은 고정 단계/Railway 작업/숫자HTTP status/허용 GraphQL code만 기존 실패 marker에 기록한다. 예외 원문·응답본문·query·variables·headers·token은 기록하지 않는다. 공개403/400/503·기존 인증/갱신 동작은 유지한다.
+사용자 명시 승인으로 10/23 14:42:01 KST 기존 함수 ID에 검토한 5개 소스를 한 번 배포했다. API201·version5 ACTIVE와 진단 본문을 GET으로 확인했고, 기존 secret 3개 digest·job 3개 id/시각/active/command MD5·verify_jwt=false·별도 Bearer를 보존했다. 제품 배포·migration·자동 전환·자격/변수/예약 변경·수동 함수 호출은 하지 않았다.
 
-검토 기준은 `docs/daily-data-automation/records/11_환경이동_인계_20261023/storage-diagnostics-change.review.json`과 준비서12절이다. 새 개인정보 보호 테스트5개와 구문 검사는 통과했지만 운영 함수는 아직 바꾸지 않았다. 별도 배포 승인 후에는 `index.ts`, `core.mjs`, `readiness.mjs`, `railway-deployment.mjs`, **`safe-diagnostics.mjs`까지5개**를 모두 포함해야 한다. 기존 secret/job/시각/verify_jwt와별도Bearer 검사도 보존한다.
+고정 단계/Railway 작업/숫자 HTTP status/허용 GraphQL code·reason만 기존 실패 marker에 기록한다. 예외 원문·응답 body·query·variables·headers·token은 기록하지 않는다. 기존 공개403/400/503·인증/갱신 동작은 유지한다. 소스는 `index.ts`, `core.mjs`, `readiness.mjs`, `railway-deployment.mjs`, `safe-diagnostics.mjs`다. 새 개인정보 보호 테스트 5개 PASS·구문 검사 결과를 재사용했으며 이번에 테스트/빌드를 반복하지 않았다.
 
-지금 수동 renew/check·refresh/발급/폐기·과거 Deploy/Role/Refresh helper를 실행하지 않는다. 진단 배포가 승인되면 다음 기존 정시 실행 로그로 원인/회복을 확인하고 입증된 수리만 별도 제안한다. 제품 배포는 다른 승인 범위다.
+현재 인계는 `docs/daily-data-automation/records/11_환경이동_인계_20261023/approved-preparation-changes.json`과 `storage-next-observation.review.json`이다. 다음 기존 renew 10/24 04:00, verify 04:15, audit 04:20 KST 결과를 다른 환경에서 읽는다. 아직 진단 실행 결과나 수리 성공을 확인하지 않았다. 승인된 진단 배포는 소비됐으므로 재실행하지 않으며, 수동 renew/check·refresh/발급/폐기·과거 Deploy/Role/Refresh helper·새 예약을 실행하지 않는다. 필요한 실제 수리와 제품 배포는 별도 승인 범위다.
