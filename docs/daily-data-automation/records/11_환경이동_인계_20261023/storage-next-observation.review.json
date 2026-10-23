@@ -1,6 +1,6 @@
 {
   "at": "2026-10-23T14:46:40.274203+09:00",
-  "status": "WAITING_FOR_EXISTING_SCHEDULED_RESULT",
+  "status": "EXISTING_SCHEDULED_FOLLOWUP_AFTER_IMMEDIATE_DIAGNOSIS",
   "readOnly": true,
   "productPhase12Observation": false,
   "functionId": "6811fd3f-598e-45be-bac0-7a04a5f85261",
@@ -50,5 +50,8 @@
   "manualInvocationAllowed": false,
   "manualRenewCheckAllowed": false,
   "productDeploymentAllowed": false,
-  "credentialChangesAllowed": false
+  "credentialChangesAllowed": false,
+  "immediateCheckAlreadyPerformedRef": "storage-immediate-diagnosis.json",
+  "nextDayWaitRequiredForFirstDiagnosis": false,
+  "manualInvocationRestrictionScope": "No additional calls: a single direct read-only check was already used for the user request to identify failure immediately. Never use renew/renew-now or the DB invoke wrapper."
 }

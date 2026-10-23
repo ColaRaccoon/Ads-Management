@@ -100,3 +100,9 @@ order by r.start_time desc limit 12;
 고정 단계/Railway 작업/숫자 HTTP status/허용 GraphQL code·reason만 기존 실패 marker에 기록한다. 예외 원문·응답 body·query·variables·headers·token은 기록하지 않는다. 기존 공개403/400/503·인증/갱신 동작은 유지한다. 소스는 `index.ts`, `core.mjs`, `readiness.mjs`, `railway-deployment.mjs`, `safe-diagnostics.mjs`다. 새 개인정보 보호 테스트 5개 PASS·구문 검사 결과를 재사용했으며 이번에 테스트/빌드를 반복하지 않았다.
 
 현재 인계는 `docs/daily-data-automation/records/11_환경이동_인계_20261023/approved-preparation-changes.json`과 `storage-next-observation.review.json`이다. 다음 기존 renew 10/24 04:00, verify 04:15, audit 04:20 KST 결과를 다른 환경에서 읽는다. 아직 진단 실행 결과나 수리 성공을 확인하지 않았다. 승인된 진단 배포는 소비됐으므로 재실행하지 않으며, 수동 renew/check·refresh/발급/폐기·과거 Deploy/Role/Refresh helper·새 예약을 실행하지 않는다. 필요한 실제 수리와 제품 배포는 별도 승인 범위다.
+
+## 2026-10-23 즉시 읽기 진단 정정
+
+소스의 `checkOnly=true` 분기는 발급·변수 변경·재배포 전에 반환한다. 다음날까지 기다려야 한다는 앞선 안내를 정정하고, 직접 Edge `{"mode":"check"}` 한 번으로 현재 실패를 확인했다. DB invoke wrapper는 쓰지 않았다. version5 실행ID가 일치하는 로그에서 첫 Railway variables 조회의 HTTP200/GraphQL `INTERNAL_SERVER_ERROR`를 확인했으며 Storage/app 요청과토큰 발급 전에 중단했다.
+
+현재 판단은 `docs/daily-data-automation/records/11_환경이동_인계_20261023/storage-immediate-diagnosis.json`을 따른다. 공식 Railway 공지의 사고 이전 Project Token 무효화와9/14 이후 그대로인 Edge secret으로 구 토큰 무효화가 유력하다. 정확한 upstream 메시지는 기록하지 않았으므로 추론과확정된 실패 지점을 구분한다. check는 이미한번 수행했으므로 반복하지 않는다. 자격/제품/예약 변경이나추가 진단 배포는 하지 않았다. 기존 다음 정시 결과는 후속 관측이다.

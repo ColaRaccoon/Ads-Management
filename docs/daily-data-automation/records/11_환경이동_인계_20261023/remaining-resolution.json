@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-23T14:46:40.274203+09:00",
-  "status": "APPROVED_PREPARATION_CHANGES_APPLIED_WAITING_FOR_EXISTING_STORAGE_RUN",
+  "at": "2026-10-23T15:16:07.926364+09:00",
+  "status": "CURRENT_FAILURE_BOUNDARY_CONFIRMED_OLD_RAILWAY_PROJECT_TOKEN_INVALIDATION_HIGH_CONFIDENCE",
   "execute": false,
   "operationalExecutionApproved": false,
   "metaDay": "2026-10-24",
@@ -10,13 +10,13 @@
   "callbackRegistrationReadResolved": true,
   "callbackRequiredChangeRef": "cafe24-callback-change.review.json",
   "storageExactPastCauseRecoverable": false,
-  "storageReason": "Former version4 catch discarded the exact historical exception; diagnostics-only version5 is now applied and awaiting the next existing scheduled outcome.",
+  "storageReason": "A matched version5 check execution failed on the first Railway variables query with HTTP200/INTERNAL_SERVER_ERROR. Official token invalidation and unchanged Sep14 secret make old-token invalidation highly likely; literal upstream message and historical discarded exception remain unobserved.",
   "storagePreparedDiagnosticChangeRef": "storage-diagnostics-change.review.json",
   "deployedVersionStill": 5,
   "deployedBodySha256": "8c5ab22747280acadca81b2adb3337024c9e20a50a64108200b150950d9d40aa",
   "schedulePlanRef": "production-schedule-plan-v2.json",
   "remainingExactOperationalActions": [],
-  "afterNarrowApproval": "Approval consumed exactly once: callback addition saved and diagnostics-only Edge function version5 deployed. Next step is read-only observation of Oct24 04:00/04:15/04:20 KST existing jobs in the other environment. Product/credential changes remain unapproved.",
+  "afterNarrowApproval": "Both narrow changes are already applied. A single direct read-only check now identified the current failure boundary. Do not repeat the check or wait for next-day execution to obtain first diagnosis; existing scheduled logs are follow-up only. Credential repair/product changes still require separate approval.",
   "credentialIssueRefreshRevoke": false,
   "phase11": "NOT_STARTED",
   "phase12": "NOT_STARTED",
@@ -72,7 +72,9 @@
     "operations": "NO-GO"
   },
   "pendingReadOnlyObservationRef": "storage-next-observation.review.json",
-  "storageExactCauseStatus": "PENDING_NEXT_EXISTING_SCHEDULED_RESULT",
+  "storageExactCauseStatus": "CURRENT_VARIABLE_READ_FAILURE_CONFIRMED_OLD_PROJECT_TOKEN_INVALIDATION_HIGH_CONFIDENCE",
   "diagnosticOperationalChangeApprovedAndApplied": true,
-  "productOperationalExecutionApproved": false
+  "productOperationalExecutionApproved": false,
+  "currentDiagnosisRef": "storage-immediate-diagnosis.json",
+  "immediateReadOnlyCheckCount": 1
 }

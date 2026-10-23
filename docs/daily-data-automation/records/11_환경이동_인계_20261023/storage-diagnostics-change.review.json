@@ -8,7 +8,7 @@
   "change": "Keep same bearer guard and public 403/400/503 behavior. Add fixed stage labels, Railway operation, numeric HTTP status, whitelisted GraphQL codes and fixed reason codes to the existing failure marker. Never log exceptions, body, query, variables, headers or tokens.",
   "requestFlowsChanged": false,
   "credentialsOrSchedulesChanged": false,
-  "functionInvoked": false,
+  "functionInvoked": true,
   "proposedSourceFiles": [
     {
       "name": "index.ts",
@@ -50,7 +50,7 @@
     "bytes": 7346,
     "sha256": "24f084095f3661a57a4c7f08d6e8635f31d8e82e66355da29fbe4ce976095756"
   },
-  "futureAuthorizedStep": "Read next existing scheduled result without manual invocation or configuration/credential changes. This exact source deployment is already consumed; do not replay it.",
+  "futureAuthorizedStep": "The single immediate check is consumed. Read existing scheduled follow-up if needed; no repeated check/renew or replay of diagnostics deployment. Current failure boundary is proven; prepare any exact credential repair for separate approval.",
   "failureDecisionMap": {
     "RAILWAY_FETCH with null status": "transport/timeout path; inspect provider availability before touching tokens",
     "RAILWAY_RESPONSE_PARSE with HTTP401/403 or whitelisted UNAUTHENTICATED/FORBIDDEN": "current project token access path; confirm exact revoked/expired/scope fact before proposing replacement",
@@ -75,5 +75,8 @@
   "existingThreeJobsUnchanged": true,
   "approvedScope": "diagnostics-only existing Edge Function source, not product deployment or credentials",
   "deploymentReceiptRef": "approved-preparation-changes.json",
-  "nextReadOnlyObservationRef": "storage-next-observation.review.json"
+  "nextReadOnlyObservationRef": "storage-next-observation.review.json",
+  "functionInvokedDuringDeployment": false,
+  "manualReadOnlyChecksAfterDeployment": 1,
+  "currentDiagnosisRef": "storage-immediate-diagnosis.json"
 }
