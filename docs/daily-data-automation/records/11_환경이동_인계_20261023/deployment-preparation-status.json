@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-23T16:00:28.389552+09:00",
+  "status": "MAJOR_PREPARATION_COMPLETE_FINAL_EXECUTION_BINDINGS_AND_FUTURE_DAY_RESULTS_REMAIN",
+  "checkedAgainst": "existing current preparation/manifest and verified Storage check receipt, no new live probes or provider collection",
+  "baseHead": "10004435a76477af07aa156e5d03ea3a12b7aad6",
+  "completed": [
+    "phase10 approved scope DONE; existing verification evidence reused",
+    "fixed C7 image exact bytes recovered, hash verified, unpublished draft asset and Git handoff available",
+    "15 pending migrations / runtime permission delta / transaction plan and rollback with selected CAS + new-app CSV fallback prepared",
+    "all three initial business days/cutoffs Oct24; Oct25 02:00 KST work window; outage including recovery <=60 minutes decided",
+    "Cafe24 exact production callback URI added preserving existing settings",
+    "Storage project-token only repair and check HTTP200 HEALTHY/readinessVerified=true; latest check 2026-10-23T15:32:38.837051+09:00",
+    "current branch committed/pushed and clean at review start"
+  ],
+  "remainingReadOnlyOrLocalPreparation": [
+    {
+      "item": "Read existing scheduled Storage renewal outcome",
+      "whenKst": "2026-10-24 after 04:20",
+      "details": "Existing renew04:00/verify04:15/audit04:20: inspect successful JWT expiry extension and same-image deployment/readiness from existing results. Current JWT expires Oct25 04:00:01 KST. Check HEALTHY is already complete; no extra manual renew/check or regression required.",
+      "localAutomationCreated": false
+    },
+    {
+      "item": "Resume in the other environment",
+      "when": "before any approved business interruption",
+      "details": "Verify branch tip and exact draft image artifact using existing authorized GitHub access; bind supported protected provider access. Do not copy browser/CLI sessions, cookies/profiles or DPAPI files and do not auto-refresh expired CLI credentials."
+    },
+    {
+      "item": "Fix exact execution adapter before business interruption",
+      "when": "within separately authorized execution preparation, before pause",
+      "details": "Bind approved operating identity to final image/registry destination and digest, concrete ingress-stop/restart/recovery commands, and final 15-file migration transaction runner/SQL. Current document is a reviewed plan; do not call it a production-proven runner or invent a maintenance flag."
+    }
+  ],
+  "generatedOnlyDuringApprovedExecution": [
+    "production source connection IDs and supported protected credential envelopes/refs at the correct install/bind steps",
+    "latest before-images of user/CSV/policy/current/link/coverage after drain/fence, preserving audit and later writes",
+    "candidate runtime readiness/config fingerprint and final schedule SQL hash bound to actual connection IDs/UTC anchors"
+  ],
+  "futureDataAndActions": [
+    {
+      "businessDay": "2026-10-24",
+      "executionWindowKst": "2026-10-25T02:00:00+09:00",
+      "details": "Prepare completed-day comparison material, including Cafe24 manual CSV via normal path. Google has no CSV-upload contract: use approved account/date/page completeness and totals. Execute product deployment/migrations/limited API collection/comparison and source-policy selection only after separate final authorization; enable the agreed source schedules only if normal."
+    }
+  ],
+  "notRemainingRequirements": [
+    "new product build or full regression of the already fixed candidate",
+    "repeat completed credential/usage/CDN/isolation/phase10 checks",
+    "new exact sentinel CDN success gate",
+    "new date/outage-limit choice from the user"
+  ],
+  "decisionsAlreadyFixed": {
+    "businessDayAllThree": "2026-10-24",
+    "windowKst": "2026-10-25T02:00:00+09:00",
+    "outageIncludingRecoveryMinutes": 60
+  },
+  "requiredUserDecisionNow": null,
+  "productDeploymentApproved": false,
+  "migrationApproved": false,
+  "automaticTransitionApproved": false,
+  "phase11": "NOT_STARTED",
+  "phase12": "NOT_STARTED",
+  "newOperationalMutationsThisReview": 0,
+  "currentStorageRepairRef": "storage-token-repair.json",
+  "mainPreparationDocument": "../11_운영전환_복구_준비서_20261023.md"
+}

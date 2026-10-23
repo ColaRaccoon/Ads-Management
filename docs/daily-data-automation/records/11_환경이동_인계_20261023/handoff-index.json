@@ -12,7 +12,7 @@
   },
   "sourceCheckout": {
     "branch": "codex/daily-data-automation-01",
-    "baseHead": "cbb9a47e464198116d78c63ceefb157639603108",
+    "baseHead": "10004435a76477af07aa156e5d03ea3a12b7aad6",
     "deliveryCommit": "containing Git commit; use git rev-parse HEAD"
   },
   "agreedPlan": {
@@ -46,7 +46,7 @@
     "candidateSetprivFilesystemVerified": true,
     "artifactRef": "image-artifact.json"
   },
-  "currentPlanAuthority": "storage-token-repair.json and parent section14 for current Storage HEALTHY check after approved one-token/one-secret repair; transition-manifest.json for still-unapproved product plan. Earlier failed or waiting observations are historical.",
+  "currentPlanAuthority": "deployment-preparation-status.json and parent section15 for current remaining work; storage-token-repair.json/section14 for verified Storage HEALTHY; transition-manifest.json for unapproved product plan.",
   "copiedPlanEvidence": [
     {
       "name": "runtime-access-plan.json",
@@ -149,21 +149,22 @@
     "final registry target/publication is an authorized execution output; exact image bytes are already available as unpublished GitHub draft asset"
   ],
   "restartSteps": [
-    "Read parent section14 and storage-token-repair.json first: one authorized Storage Project Token / Edge secret repair completed and check HEALTHY, source body unchanged, function metadata version6",
+    "Read parent section15 and deployment-preparation-status.json for remaining work, then section14/storage-token-repair.json for the completed healthy Storage check. Product deployment/migration/automatic transition remain unapproved.",
     "Do not replay consumed callback save, diagnostic source deployment, token creation, Edge secret update, either separately scoped check or old helpers",
     "If needed, read existing next 04:00/04:15/04:20 KST scheduled results as follow-up for actual renewal. The existing renew path may redeploy the same active image; no manual renewal or schedule change was authorized here",
     "Product C7 deployment, migrations, source collection and automatic transition still require their separate final authorization; phase11/12 NOT_STARTED",
     "Verify containing branch tip without reset/stash/clean and use supported existing protected access; never transfer sessions, cookies, profiles or expired CLI state"
   ],
   "notDone": [
-    "actual next scheduled Storage JWT renewal / same-image deployment outcome after repair has not yet occurred or been observed",
-    "new product build/full regression/provider collection",
-    "registry publication/C7 product deployment/migration/automatic transition (not authorized)"
+    "existing next scheduled Storage renewal outcome after repair is a read-only follow-up, not a repeat check",
+    "other-environment handoff and final operating stop/recovery / image registry / exact migration-execution bindings",
+    "outputs generated during separately authorized execution: connections/credential refs, fresh before-image, candidate readiness and bound schedule SQL",
+    "Oct24 completed-day material and separately authorized Oct25 comparison/product/source transition"
   ],
   "preparationDocument": {
     "relativePath": "../11_운영전환_복구_준비서_20261023.md",
-    "sha256": "b7a99b53504c25016fc33371a95c7d18fbe9042a86b0c936d943c01b96ce10b9",
-    "sha256LfNormalized": "b7a99b53504c25016fc33371a95c7d18fbe9042a86b0c936d943c01b96ce10b9"
+    "sha256": "a42e99e98272b45d4b58c67201c067a97bf270d8a158253d880275dbe69ed562",
+    "sha256LfNormalized": "a42e99e98272b45d4b58c67201c067a97bf270d8a158253d880275dbe69ed562"
   },
   "localPlanningFiles": [
     {
@@ -225,6 +226,11 @@
       "name": "storage-token-repair.json",
       "sha256": "57421480014df9fc47b4b39d1900fa06903323e4f358b5bf9eae1eab759fc2a9",
       "sha256LfNormalized": "57421480014df9fc47b4b39d1900fa06903323e4f358b5bf9eae1eab759fc2a9"
+    },
+    {
+      "name": "deployment-preparation-status.json",
+      "sha256": "f27afd37d34d0f7151780f9e6827295223e7f6a6669cdc88eab7f8a42038445a",
+      "sha256LfNormalized": "f27afd37d34d0f7151780f9e6827295223e7f6a6669cdc88eab7f8a42038445a"
     }
   ],
   "publication": {
@@ -244,7 +250,7 @@
     "preparationDocumentAndLocalPlanningFiles": "sha256 records current exact local bytes; sha256LfNormalized is the cross-platform checkout comparison",
     "storageDiagnosticSource": "see storage-diagnostics-change.review.json: preserve exact source ZIP binding and separately verify normalized Git source hashes"
   },
-  "updatedAt": "2026-10-23T15:38:48.754416+09:00",
+  "updatedAt": "2026-10-23T16:00:28.389552+09:00",
   "completedApprovedPreparationChangesRef": "approved-preparation-changes.json",
   "pendingStorageReadOnlyObservationRef": "storage-next-observation.review.json",
   "attachments": [
@@ -264,5 +270,12 @@
     }
   ],
   "currentStorageDiagnosisRef": "storage-token-repair.json",
-  "currentStorageRepairRef": "storage-token-repair.json"
+  "currentStorageRepairRef": "storage-token-repair.json",
+  "currentPreparationStatusRef": "deployment-preparation-status.json",
+  "notRequiredToRepeat": [
+    "new product build or full regression of the already fixed candidate",
+    "repeat completed credential/usage/CDN/isolation/phase10 checks",
+    "new exact sentinel CDN success gate",
+    "new date/outage-limit choice from the user"
+  ]
 }
