@@ -6,7 +6,8 @@ on:
     paths: [.github/workflows/publish-fixed-c7.yml]
 
 permissions:
-  contents: read
+  # Draft release downloads require repository write access. No contents are changed.
+  contents: write
   packages: write
 
 concurrency:
@@ -41,7 +42,7 @@ jobs:
               response = urllib.request.build_opener(NoRedirect()).open(req, timeout=45)
           except urllib.error.HTTPError as error:
               if error.code != 302:
-                  raise RuntimeError('Draft artifact unavailable') from None
+                  raise RuntimeError('Draft artifact unavailable HTTP ' + str(error.code)) from None
               location = error.headers['Location']
               if not location.startswith('https://release-assets.githubusercontent.com/'):
                   raise RuntimeError('Unexpected asset redirect') from None
