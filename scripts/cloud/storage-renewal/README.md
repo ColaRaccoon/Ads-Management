@@ -106,3 +106,11 @@ order by r.start_time desc limit 12;
 소스의 `checkOnly=true` 분기는 발급·변수 변경·재배포 전에 반환한다. 다음날까지 기다려야 한다는 앞선 안내를 정정하고, 직접 Edge `{"mode":"check"}` 한 번으로 현재 실패를 확인했다. DB invoke wrapper는 쓰지 않았다. version5 실행ID가 일치하는 로그에서 첫 Railway variables 조회의 HTTP200/GraphQL `INTERNAL_SERVER_ERROR`를 확인했으며 Storage/app 요청과토큰 발급 전에 중단했다.
 
 현재 판단은 `docs/daily-data-automation/records/11_환경이동_인계_20261023/storage-immediate-diagnosis.json`을 따른다. 공식 Railway 공지의 사고 이전 Project Token 무효화와9/14 이후 그대로인 Edge secret으로 구 토큰 무효화가 유력하다. 정확한 upstream 메시지는 기록하지 않았으므로 추론과확정된 실패 지점을 구분한다. check는 이미한번 수행했으므로 반복하지 않는다. 자격/제품/예약 변경이나추가 진단 배포는 하지 않았다. 기존 다음 정시 결과는 후속 관측이다.
+
+## 2026-10-23 Storage용 Project Token 교체 후 check HEALTHY
+
+사용자 별도 승인으로 동일 운영 project/environment의 `storage-renewal-20261023` Project Token 한 개를 발급하고 `STORAGE_RENEWAL_RAILWAY_PROJECT_TOKEN` 하나만 교체했다. 기존 호출 비밀·서명키와 세 job은 유지했다. secret 반영으로 함수 metadata는 version6이 됐지만 version5 소스 본문 SHA는 정확히 동일하며, 소스 배포 endpoint는 호출하지 않았다.
+
+직접 `check` 한 번이 HTTP200 / HEALTHY / readinessVerified=true로 통과했고 version6 실행 로그와 일치한다. 기존 변수 조회 실패는 해소됐다. check 전후 제품 deployment ID는 같다. Storage JWT를 발급/refresh하거나 renew/renew-now·제품 배포·migration·자동 전환을 실행하지 않았다. 현재 JWT 만료는 10/25 04:00:01 KST로 그대로다. 실제 기존 정시 renew의 발급/동일 이미지 재배포 경로는 아직 수동 검증하지 않았다.
+
+현재 결과는 `docs/daily-data-automation/records/11_환경이동_인계_20261023/storage-token-repair.json`과 준비서14절을 따른다. 토큰 발급·secret 교체·이 check는 소비된 승인이므로 재실행하지 않는다. 다음 기존 04:00/04:15/04:20 KST 예약은 그대로이며 새 제품 전환 승인을 뜻하지 않는다. 비밀값은 출력/공개 저장하지 않았다.

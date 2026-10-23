@@ -40,16 +40,16 @@
     "CAFE24": null
   },
   "beforeImageProtectedRef": null,
-  "storageDriftResolutionRef": null,
+  "storageDriftResolutionRef": "storage-token-repair.json",
   "scheduleInstallSqlSha256": null,
   "scheduleReviewTemplateSha256": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
   "proposedJobCount": 77,
   "datePolicyApproved": true,
   "kind": "PHASE11_PRODUCT_PLAN_AFTER_TWO_APPROVED_PREPARATION_CHANGES",
-  "preparedAt": "2026-10-23T15:16:07.926364+09:00",
+  "preparedAt": "2026-10-23T15:38:48.754416+09:00",
   "railwayProjectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
   "railwayEnvironmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
-  "storageDiagnosisRef": "storage-immediate-diagnosis.json",
+  "storageDiagnosisRef": "storage-token-repair.json",
   "runtimeAccessRef": "runtime-access-plan.json",
   "migrationRunnerRef": "migration-runner-plan.json",
   "scheduleProposalRef": "production-schedule-plan-v2.json",
@@ -100,7 +100,10 @@
   "metaCutoffProvenance": "planning binding to minimum boundary of explicitly selected initial day; no earlier day, execution approval remains absent",
   "approvedPreparationChangesRef": "approved-preparation-changes.json",
   "storageNextObservationRef": "storage-next-observation.review.json",
-  "storageRenewalResolutionPending": true,
+  "storageRenewalResolutionPending": false,
   "storageFailureBoundaryConfirmed": true,
-  "storageOldProjectTokenInvalidationLikely": true
+  "storageOldProjectTokenInvalidationLikely": true,
+  "storageCredentialRepairApplied": true,
+  "storageReadinessCheckHealthy": true,
+  "actualScheduledRenewalObservedAfterRepair": false
 }

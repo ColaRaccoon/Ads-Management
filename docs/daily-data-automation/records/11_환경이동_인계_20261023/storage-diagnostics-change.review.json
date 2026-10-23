@@ -1,7 +1,7 @@
 {
   "at": "2026-10-23T14:08:40.490556+09:00",
-  "status": "DIAGNOSTICS_ONLY_DEPLOYED_V5_PENDING_EXISTING_SCHEDULED_RESULT",
-  "deployedVersion": 5,
+  "status": "SAME_DIAGNOSTIC_SOURCE_SECRET_UPDATED_VERSION6_CHECK_HEALTHY",
+  "deployedVersion": 6,
   "deployedBodySha256": "8c5ab22747280acadca81b2adb3337024c9e20a50a64108200b150950d9d40aa",
   "exactPastRootCauseRecovered": false,
   "reason": "Existing catch discarded the exception and provider response; immutable past logs cannot recover it.",
@@ -50,7 +50,7 @@
     "bytes": 7346,
     "sha256": "24f084095f3661a57a4c7f08d6e8635f31d8e82e66355da29fbe4ce976095756"
   },
-  "futureAuthorizedStep": "The single immediate check is consumed. Read existing scheduled follow-up if needed; no repeated check/renew or replay of diagnostics deployment. Current failure boundary is proven; prepare any exact credential repair for separate approval.",
+  "futureAuthorizedStep": "Approved source deployment, token creation, exact secret update and both separately scoped checks are consumed. Read existing scheduled follow-up only when needed; no manual renewal/redeploy or further credential changes without new authorization.",
   "failureDecisionMap": {
     "RAILWAY_FETCH with null status": "transport/timeout path; inspect provider availability before touching tokens",
     "RAILWAY_RESPONSE_PARSE with HTTP401/403 or whitelisted UNAUTHENTICATED/FORBIDDEN": "current project token access path; confirm exact revoked/expired/scope fact before proposing replacement",
@@ -71,12 +71,24 @@
   "sameFunctionId": "6811fd3f-598e-45be-bac0-7a04a5f85261",
   "verifyJwtPreserved": true,
   "separateBearerGuardSourcePreserved": true,
-  "requiredSecretDigestsUnchanged": true,
+  "requiredSecretDigestsUnchanged": false,
   "existingThreeJobsUnchanged": true,
   "approvedScope": "diagnostics-only existing Edge Function source, not product deployment or credentials",
   "deploymentReceiptRef": "approved-preparation-changes.json",
   "nextReadOnlyObservationRef": "storage-next-observation.review.json",
   "functionInvokedDuringDeployment": false,
-  "manualReadOnlyChecksAfterDeployment": 1,
-  "currentDiagnosisRef": "storage-immediate-diagnosis.json"
+  "manualReadOnlyChecksAfterDeployment": 2,
+  "currentDiagnosisRef": "storage-token-repair.json",
+  "sourceDeploymentVersion": 5,
+  "currentFunctionVersion": 6,
+  "bodyExactlyUnchangedFromVersion5": true,
+  "secretRepairRef": "storage-token-repair.json",
+  "authorizedChecksByScope": {
+    "initialImmediateDiagnosis": 1,
+    "afterAuthorizedTokenReplacement": 1
+  },
+  "requiredSecretDigestsUnchangedDuringDiagnosticsDeploy": true,
+  "authorizedSecretChangesSinceDiagnosticsDeploy": [
+    "STORAGE_RENEWAL_RAILWAY_PROJECT_TOKEN"
+  ]
 }

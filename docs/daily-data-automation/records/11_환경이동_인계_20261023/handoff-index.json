@@ -12,7 +12,7 @@
   },
   "sourceCheckout": {
     "branch": "codex/daily-data-automation-01",
-    "baseHead": "f9feb8a639aaafa000f8101f67fbe9d3edfc0b3b",
+    "baseHead": "cbb9a47e464198116d78c63ceefb157639603108",
     "deliveryCommit": "containing Git commit; use git rev-parse HEAD"
   },
   "agreedPlan": {
@@ -46,7 +46,7 @@
     "candidateSetprivFilesystemVerified": true,
     "artifactRef": "image-artifact.json"
   },
-  "currentPlanAuthority": "storage-immediate-diagnosis.json and parent section13 for current Storage failure; transition-manifest.json and other current planning files for product plan. Earlier wait-for-first-diagnosis statements are superseded.",
+  "currentPlanAuthority": "storage-token-repair.json and parent section14 for current Storage HEALTHY check after approved one-token/one-secret repair; transition-manifest.json for still-unapproved product plan. Earlier failed or waiting observations are historical.",
   "copiedPlanEvidence": [
     {
       "name": "runtime-access-plan.json",
@@ -149,28 +149,27 @@
     "final registry target/publication is an authorized execution output; exact image bytes are already available as unpublished GitHub draft asset"
   ],
   "restartSteps": [
-    "Read parent section13 and storage-immediate-diagnosis.json first: current Railway variables-read failure is proven; old project-token invalidation is highly likely, no need to wait for first diagnosis",
-    "Do not replay completed callback save, version5 diagnostic deployment, the single direct check, or consumed helpers. Product/credential changes remain unapproved",
-    "Read existing next scheduled results only as follow-up. Prepare any exact credential repair and resulting renewal redeployment impact for separate approval; no general rotation",
-    "Verify containing branch tip without reset/stash/clean; use existing protected access without CLI refresh or session/profile/cookie extraction",
-    "Use image-artifact.json when exact C7 transfer is needed; no image rebuild/engine/registry/product deployment"
+    "Read parent section14 and storage-token-repair.json first: one authorized Storage Project Token / Edge secret repair completed and check HEALTHY, source body unchanged, function metadata version6",
+    "Do not replay consumed callback save, diagnostic source deployment, token creation, Edge secret update, either separately scoped check or old helpers",
+    "If needed, read existing next 04:00/04:15/04:20 KST scheduled results as follow-up for actual renewal. The existing renew path may redeploy the same active image; no manual renewal or schedule change was authorized here",
+    "Product C7 deployment, migrations, source collection and automatic transition still require their separate final authorization; phase11/12 NOT_STARTED",
+    "Verify containing branch tip without reset/stash/clean and use supported existing protected access; never transfer sessions, cookies, profiles or expired CLI state"
   ],
   "notDone": [
-    "exact literal upstream error was intentionally not recorded; historical discarded exceptions cannot be recovered",
-    "credential repair and successful Storage renewal/readiness (not authorized)",
+    "actual next scheduled Storage JWT renewal / same-image deployment outcome after repair has not yet occurred or been observed",
     "new product build/full regression/provider collection",
-    "registry publication/product deployment/migration/automatic transition (not authorized)"
+    "registry publication/C7 product deployment/migration/automatic transition (not authorized)"
   ],
   "preparationDocument": {
     "relativePath": "../11_운영전환_복구_준비서_20261023.md",
-    "sha256": "ce95f614e3fb6cd8a2a546bd34da299d325fd4b267927aa301c30a0b4c559a0b",
-    "sha256LfNormalized": "ce95f614e3fb6cd8a2a546bd34da299d325fd4b267927aa301c30a0b4c559a0b"
+    "sha256": "b7a99b53504c25016fc33371a95c7d18fbe9042a86b0c936d943c01b96ce10b9",
+    "sha256LfNormalized": "b7a99b53504c25016fc33371a95c7d18fbe9042a86b0c936d943c01b96ce10b9"
   },
   "localPlanningFiles": [
     {
       "name": "transition-manifest.json",
-      "sha256": "1af27f4b536aee84617f86d9e9a08219bfce6a300bbf8e9f9554c733716f6a4b",
-      "sha256LfNormalized": "1af27f4b536aee84617f86d9e9a08219bfce6a300bbf8e9f9554c733716f6a4b"
+      "sha256": "90e4c26c852a7630af7ea1a54c745de8fd29f8a78c0a9b93160c7e1e4ab1ec35",
+      "sha256LfNormalized": "90e4c26c852a7630af7ea1a54c745de8fd29f8a78c0a9b93160c7e1e4ab1ec35"
     },
     {
       "name": "repository-inventory.json",
@@ -184,8 +183,8 @@
     },
     {
       "name": "remaining-resolution.json",
-      "sha256": "c9bdedd2a6924071e59b28fdd7039d81acbd02083c78c1f253a099de7286279e",
-      "sha256LfNormalized": "c9bdedd2a6924071e59b28fdd7039d81acbd02083c78c1f253a099de7286279e"
+      "sha256": "e30badb762fefa37a848b4a5dc8ca7e369e37d8f26449991f8bda7228c5c6d3e",
+      "sha256LfNormalized": "e30badb762fefa37a848b4a5dc8ca7e369e37d8f26449991f8bda7228c5c6d3e"
     },
     {
       "name": "image-artifact.json",
@@ -199,8 +198,8 @@
     },
     {
       "name": "storage-diagnostics-change.review.json",
-      "sha256": "f9e27002357001b57f30079c07334190cd997565b3fb84d71ff1d85999e7f27d",
-      "sha256LfNormalized": "f9e27002357001b57f30079c07334190cd997565b3fb84d71ff1d85999e7f27d"
+      "sha256": "8ea0b6778bd0f31c46b0db33cce619ca415ba59fc07ee9dac72d36256d0e7d5b",
+      "sha256LfNormalized": "8ea0b6778bd0f31c46b0db33cce619ca415ba59fc07ee9dac72d36256d0e7d5b"
     },
     {
       "name": "production-schedule-plan-v2.json",
@@ -214,13 +213,18 @@
     },
     {
       "name": "storage-next-observation.review.json",
-      "sha256": "1eede979fb4938ea204d2fd1f7967d40430d56e9ea710a99df43df4cdaac2ebb",
-      "sha256LfNormalized": "1eede979fb4938ea204d2fd1f7967d40430d56e9ea710a99df43df4cdaac2ebb"
+      "sha256": "6590ec85c17cd6714755dd912ea267ce6213377839b13fc8942a34d41b77dd98",
+      "sha256LfNormalized": "6590ec85c17cd6714755dd912ea267ce6213377839b13fc8942a34d41b77dd98"
     },
     {
       "name": "storage-immediate-diagnosis.json",
       "sha256": "53bf597a5c9df8b0bf08209d34b69f815bf8969f6d240756aabf7bb98e94fe59",
       "sha256LfNormalized": "53bf597a5c9df8b0bf08209d34b69f815bf8969f6d240756aabf7bb98e94fe59"
+    },
+    {
+      "name": "storage-token-repair.json",
+      "sha256": "57421480014df9fc47b4b39d1900fa06903323e4f358b5bf9eae1eab759fc2a9",
+      "sha256LfNormalized": "57421480014df9fc47b4b39d1900fa06903323e4f358b5bf9eae1eab759fc2a9"
     }
   ],
   "publication": {
@@ -240,7 +244,7 @@
     "preparationDocumentAndLocalPlanningFiles": "sha256 records current exact local bytes; sha256LfNormalized is the cross-platform checkout comparison",
     "storageDiagnosticSource": "see storage-diagnostics-change.review.json: preserve exact source ZIP binding and separately verify normalized Git source hashes"
   },
-  "updatedAt": "2026-10-23T15:16:07.926364+09:00",
+  "updatedAt": "2026-10-23T15:38:48.754416+09:00",
   "completedApprovedPreparationChangesRef": "approved-preparation-changes.json",
   "pendingStorageReadOnlyObservationRef": "storage-next-observation.review.json",
   "attachments": [
@@ -250,7 +254,15 @@
       "sha256": "9273c2e31b0d44e506d0c2a099260f0d134257e7e92f6acea66940c2fe844436",
       "verification": "exact binary bytes; never normalize line endings",
       "scope": "cropped public callback configuration only; no secret/account/member information"
+    },
+    {
+      "name": "railway-token-created-name-only.jpg",
+      "bytes": 17959,
+      "sha256": "15b24a8f0c3bcd1b5a7924a5d9a1c6c5c2f5146f433ae6fba53f104187419b93",
+      "verification": "exact binary bytes; never normalize line endings",
+      "scope": "Name column only, token value and member information excluded"
     }
   ],
-  "currentStorageDiagnosisRef": "storage-immediate-diagnosis.json"
+  "currentStorageDiagnosisRef": "storage-token-repair.json",
+  "currentStorageRepairRef": "storage-token-repair.json"
 }

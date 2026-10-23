@@ -1,11 +1,11 @@
 {
   "at": "2026-10-23T14:46:40.274203+09:00",
-  "status": "EXISTING_SCHEDULED_FOLLOWUP_AFTER_IMMEDIATE_DIAGNOSIS",
+  "status": "EXISTING_SCHEDULED_RENEWAL_FOLLOWUP_AFTER_TOKEN_REPAIR_AND_HEALTHY_CHECK",
   "readOnly": true,
   "productPhase12Observation": false,
   "functionId": "6811fd3f-598e-45be-bac0-7a04a5f85261",
   "projectRef": "iygjmosbelbosfxidqxv",
-  "expectedVersion": 5,
+  "expectedVersion": 6,
   "bodySha256": "8c5ab22747280acadca81b2adb3337024c9e20a50a64108200b150950d9d40aa",
   "alreadyAppliedDoNotReplay": [
     "Cafe24 callback addition",
@@ -53,5 +53,9 @@
   "credentialChangesAllowed": false,
   "immediateCheckAlreadyPerformedRef": "storage-immediate-diagnosis.json",
   "nextDayWaitRequiredForFirstDiagnosis": false,
-  "manualInvocationRestrictionScope": "No additional calls: a single direct read-only check was already used for the user request to identify failure immediately. Never use renew/renew-now or the DB invoke wrapper."
+  "manualInvocationRestrictionScope": "No additional calls: the initial diagnostic check and the separately authorized post-token-replacement check are completed. Do not use renew/renew-now or DB invoke wrapper.",
+  "currentRepairRef": "storage-token-repair.json",
+  "currentCheckHealthy": true,
+  "renewalMutationAlreadyVerifiedAfterRepair": false,
+  "existingScheduleNote": "Existing 04:00 renew / 04:15 verify / 04:20 audit KST remain active unchanged. The existing renew implementation can issue a Storage JWT and redeploy the same active product image when due. No manual renew/redeploy or schedule change was executed here; this is separate from any new C7/product migration/automatic-source transition approval."
 }
