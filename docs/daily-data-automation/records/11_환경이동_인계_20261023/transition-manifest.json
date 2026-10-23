@@ -22,17 +22,17 @@
   },
   "approvedCutoffLocalDay": {
     "GOOGLE": "2026-10-24",
-    "META": null,
+    "META": "2026-10-24",
     "CAFE24": "2026-10-24"
   },
   "approvedManualVerificationDay": {
     "GOOGLE": "2026-10-24",
-    "META": null,
+    "META": "2026-10-24",
     "CAFE24": "2026-10-24"
   },
   "weeklyAnchorAt": {
     "GOOGLE": "2026-11-01T03:05:00+09:00",
-    "META": null
+    "META": "2026-11-01T03:07:00+09:00"
   },
   "productionCredentialRefs": {
     "GOOGLE": null,
@@ -44,16 +44,16 @@
   "scheduleInstallSqlSha256": null,
   "scheduleReviewTemplateSha256": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
   "proposedJobCount": 77,
-  "datePolicyApproved": false,
-  "kind": "PHASE11_PORTABLE_PLANNING_HANDOFF_NO_EXECUTION",
-  "preparedAt": "2026-10-23T13:09:32.770380+09:00",
+  "datePolicyApproved": true,
+  "kind": "PHASE11_CURRENT_PREPARATION_AFTER_META_AND_REMAINING_READS",
+  "preparedAt": "2026-10-23T14:16:11.925638+09:00",
   "railwayProjectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
   "railwayEnvironmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
-  "storageDiagnosisRef": "storage-cause-assessment.json",
+  "storageDiagnosisRef": "storage-diagnostics-change.review.json",
   "runtimeAccessRef": "runtime-access-plan.json",
   "migrationRunnerRef": "migration-runner-plan.json",
-  "scheduleProposalRef": "production-schedule-proposal.json",
-  "scheduleProposalSha256": "a487d8988a012e25fb95733bb3fe1577a27c1c419c694d2dbaa6eeb906d003c8",
+  "scheduleProposalRef": "production-schedule-plan-v2.json",
+  "scheduleProposalSha256": "11f74a080e59c1a0334fab68d1e94df24b4c6fcac3d879eb068a43409467d4cd",
   "expectedFingerprintRef": "derived-readiness-fingerprints.json",
   "executionGeneratedFields": [
     "production connection IDs",
@@ -63,16 +63,14 @@
     "actual runtime readiness result",
     "bound final SQL hash and exact anchor dates"
   ],
-  "readLimitsRef": "image-callback-read-limits.json",
-  "userDecisionsOnly": [
-    "Meta cutoff/manual verification day; do not infer from Cafe24/Google",
-    "separate final execution authority remains absent; do not treat chosen plan as execution consent"
-  ],
+  "readLimitsRef": "remaining-resolution.json",
+  "userDecisionsOnly": [],
   "maintenanceLocalTimeKst": "02:00:00",
   "maintenanceLocalDateKst": "2026-10-25",
   "selectedCutoffBoundaryKst": {
     "GOOGLE": "2026-10-24T00:00:00+09:00",
-    "CAFE24": "2026-10-24T00:00:00+09:00"
+    "CAFE24": "2026-10-24T00:00:00+09:00",
+    "META": "2026-10-24T00:00:00+09:00"
   },
   "userDecisionRef": "handoff-index.json",
   "scheduleDateUpdateRef": "handoff-index.json",
@@ -87,10 +85,28 @@
   "plannedAutomaticModeDateKst": "2026-10-25",
   "plannedFirstDailyOccurrenceKst": "2026-10-26T02:00:00+09:00",
   "datePolicyApprovedByProvider": {
-    "CAFE24": true,
     "GOOGLE": true,
-    "META": false
+    "META": true,
+    "CAFE24": true
   },
   "gitPublicationApproved": true,
-  "gitPublicationRef": "git-publication.json"
+  "gitPublicationRef": "git-publication.json",
+  "ociIndexDigest": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+  "linuxAmd64ManifestDigest": "sha256:8bce91f47b9a4b93a5b335b108ae43b94199b4469acd02499ae4ac18ee672bd0",
+  "imageArtifactRef": "image-artifact.json",
+  "candidateSetprivFilesystemVerified": true,
+  "callbackChangeRef": "cafe24-callback-change.review.json",
+  "narrowOperationalApprovalsMissing": [
+    {
+      "system": "Cafe24 developer app 일일 데이터 자동화",
+      "action": "add only the production callback URI, preserve the existing two URIs and all scopes/credentials",
+      "executed": false
+    },
+    {
+      "system": "Supabase iygjmosbelbosfxidqxv/storage-renewal/6811fd3f-598e-45be-bac0-7a04a5f85261",
+      "action": "deploy diagnostics-only exact reviewed source; preserve existing secrets/jobs/auth behavior, do not manually invoke renew/check",
+      "executed": false
+    }
+  ],
+  "metaCutoffProvenance": "planning binding to minimum boundary of explicitly selected initial day; no earlier day, execution approval remains absent"
 }

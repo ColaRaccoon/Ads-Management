@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-23T14:16:11.925638+09:00",
+  "status": "READONLY_AND_LOCAL_PREPARATION_FINISHED_TWO_OPERATIONAL_CHANGES_REQUIRE_APPROVAL",
+  "execute": false,
+  "operationalExecutionApproved": false,
+  "metaDay": "2026-10-24",
+  "metaCutoffPlanningBinding": "2026-10-24, minimum boundary of the requested first API day; no earlier API range introduced",
+  "imageAvailabilityResolved": true,
+  "imageRef": "image-artifact.json",
+  "callbackRegistrationReadResolved": true,
+  "callbackRequiredChangeRef": "cafe24-callback-change.review.json",
+  "storageExactPastCauseRecoverable": false,
+  "storageReason": "unchanged deployed version4 catch discarded it; no further past-log read can recover that discarded exception",
+  "storagePreparedDiagnosticChangeRef": "storage-diagnostics-change.review.json",
+  "deployedVersionStill": 4,
+  "deployedBodySha256": "3666e566c74bce7e950254a60d37bb1945f77eb0e2b0b52e29f983c8d1fb2408",
+  "schedulePlanRef": "production-schedule-plan-v2.json",
+  "remainingExactOperationalActions": [
+    {
+      "system": "Cafe24 developer app 일일 데이터 자동화",
+      "action": "add only the production callback URI, preserve the existing two URIs and all scopes/credentials",
+      "executed": false
+    },
+    {
+      "system": "Supabase iygjmosbelbosfxidqxv/storage-renewal/6811fd3f-598e-45be-bac0-7a04a5f85261",
+      "action": "deploy diagnostics-only exact reviewed source; preserve existing secrets/jobs/auth behavior, do not manually invoke renew/check",
+      "executed": false
+    }
+  ],
+  "afterNarrowApproval": "Read the next existing scheduled Storage result to identify a fixed cause or observed recovery, then propose only a proven repair. Product deployment, migrations, provider data collection and daily automation remain separately unapproved.",
+  "credentialIssueRefreshRevoke": false,
+  "phase11": "NOT_STARTED",
+  "phase12": "NOT_STARTED",
+  "operations": "NO-GO"
+}

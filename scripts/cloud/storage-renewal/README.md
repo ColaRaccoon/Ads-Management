@@ -91,3 +91,12 @@ order by r.start_time desc limit 12;
 근거: [Supabase 예약 실행](https://supabase.com/docs/guides/functions/schedule-functions),
 [HTTP 확장](https://supabase.com/docs/guides/database/extensions/http),
 [Railway 변수 API](https://docs.railway.com/integrations/api/manage-variables).
+
+
+## 2026-10-23 진단 전용 변경안 — 로컬 준비, 운영 미배포
+
+운영 version4는 실패 예외를 폐기한다. `safe-diagnostics.mjs`와 `index.ts`의 로컬 변경은 고정 단계/Railway 작업/숫자HTTP status/허용 GraphQL code만 기존 실패 marker에 기록한다. 예외 원문·응답본문·query·variables·headers·token은 기록하지 않는다. 공개403/400/503·기존 인증/갱신 동작은 유지한다.
+
+검토 기준은 `docs/daily-data-automation/records/11_환경이동_인계_20261023/storage-diagnostics-change.review.json`과 준비서12절이다. 새 개인정보 보호 테스트5개와 구문 검사는 통과했지만 운영 함수는 아직 바꾸지 않았다. 별도 배포 승인 후에는 `index.ts`, `core.mjs`, `readiness.mjs`, `railway-deployment.mjs`, **`safe-diagnostics.mjs`까지5개**를 모두 포함해야 한다. 기존 secret/job/시각/verify_jwt와별도Bearer 검사도 보존한다.
+
+지금 수동 renew/check·refresh/발급/폐기·과거 Deploy/Role/Refresh helper를 실행하지 않는다. 진단 배포가 승인되면 다음 기존 정시 실행 로그로 원인/회복을 확인하고 입증된 수리만 별도 제안한다. 제품 배포는 다른 승인 범위다.

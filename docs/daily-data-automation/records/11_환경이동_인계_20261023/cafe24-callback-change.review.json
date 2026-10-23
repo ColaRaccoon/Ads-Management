@@ -1,0 +1,25 @@
+{
+  "observedAt": "2026-10-23T14:08:40.490556+09:00",
+  "status": "REGISTRATION_READ_ONLY_CONFIRMED_ADDITION_REQUIRED",
+  "account": "didadi0729",
+  "app": "일일 데이터 자동화",
+  "publicClientId": "tVV6DZtPOFRlpPk1ex7ISA",
+  "existingRedirectUris": [
+    "https://cafe24-callback-test-production.up.railway.app/backend-api/integrations/cafe24/oauth/callback",
+    "https://phase08-daily-data-sync-production.up.railway.app/backend-api/integrations/cafe24/oauth/callback"
+  ],
+  "addOnly": "https://grand-fascination-staging.up.railway.app/backend-api/integrations/cafe24/oauth/callback",
+  "preserveExisting": true,
+  "settingsSaved": false,
+  "userPerformedPasswordReconfirmation": true,
+  "memberInformationCopied": false,
+  "oauthConsent": false,
+  "credentialIssueRefreshRevoke": false,
+  "fixedC7ConfigurationRequired": {
+    "DAILY_SYNC_CAFE24_REDIRECT_URI": "https://grand-fascination-staging.up.railway.app/backend-api/integrations/cafe24/oauth/callback",
+    "DAILY_SYNC_CAFE24_ISOLATED_ORIGIN": "https://grand-fascination-staging.up.railway.app",
+    "DAILY_SYNC_CAFE24_RAILWAY_CALLBACK_ENABLED": "true"
+  },
+  "futureOperationScope": "add exact third URI only; leave other two URIs, app URL, scopes and credentials unchanged; no OAuth consent or token exchange until separate operational authorization",
+  "currentProductionVariablesChanged": false
+}

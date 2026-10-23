@@ -12,22 +12,25 @@
   },
   "sourceCheckout": {
     "branch": "codex/daily-data-automation-01",
-    "baseHead": "9e9a1f82bb02346575565b031a43e17e13758dc8",
+    "baseHead": "7abd371fbb57e16bb1599c7b9300b47950f932e5",
     "deliveryCommit": "containing Git commit; use git rev-parse HEAD"
   },
   "agreedPlan": {
     "windowStartKst": "2026-10-25T02:00:00+09:00",
     "verificationBusinessDay": {
       "CAFE24": "2026-10-24",
-      "GOOGLE": "2026-10-24"
+      "GOOGLE": "2026-10-24",
+      "META": "2026-10-24"
     },
     "cutoff": {
       "CAFE24": "2026-10-24",
-      "GOOGLE": "2026-10-24"
+      "GOOGLE": "2026-10-24",
+      "META": "2026-10-24"
     },
     "outageLimitIncludingRecoveryMinutes": 60,
     "automaticModeOnlyAfterSuccessfulComparison": true,
-    "notAScheduledAutomation": true
+    "notAScheduledAutomation": true,
+    "metaCutoffProvenance": "planning binding to minimum boundary of explicitly selected initial day; no earlier day, execution approval remains absent"
   },
   "candidate": {
     "release": "a49bec345f995ec71f25f9e569caa5fe20578235",
@@ -36,78 +39,102 @@
     "migrationFiles": 52,
     "imageId": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
     "registryManifestDigest": null,
-    "imageBytesTransferred": false,
-    "currentGitCheckoutIsNotProvenIdenticalToCandidate": true
+    "imageBytesTransferred": true,
+    "currentGitCheckoutIsNotProvenIdenticalToCandidate": true,
+    "ociIndexDigest": "sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+    "linuxAmd64ManifestDigest": "sha256:8bce91f47b9a4b93a5b335b108ae43b94199b4469acd02499ae4ac18ee672bd0",
+    "candidateSetprivFilesystemVerified": true,
+    "artifactRef": "image-artifact.json"
   },
-  "currentPlanAuthority": "transition-manifest.json plus parent preparation document; copied historical date text does not override current manifest",
+  "currentPlanAuthority": "transition-manifest.json, production-schedule-plan-v2.json and parent preparation document; historical copied evidence does not override current dates or resolved facts",
   "copiedPlanEvidence": [
     {
       "name": "runtime-access-plan.json",
       "bytes": 1046,
       "sha256": "70b05fa41e6d74d9ded855b6c3bf3a4fd8856f8e10666caa4cd64e244e96aefb",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/runtime-access-plan.json",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "70b05fa41e6d74d9ded855b6c3bf3a4fd8856f8e10666caa4cd64e244e96aefb",
+      "bytesLfNormalized": 1046
     },
     {
       "name": "epoch-runtime-access.review.sql",
       "bytes": 1246,
       "sha256": "88beb3a606f369823e43530f41884cc255875a35c1cbc1da75e7670398aebbe2",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/epoch-runtime-access.review.sql",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "88beb3a606f369823e43530f41884cc255875a35c1cbc1da75e7670398aebbe2",
+      "bytesLfNormalized": 1246
     },
     {
       "name": "migration-runner-plan.json",
       "bytes": 5375,
       "sha256": "1ff2b8b4c1c645c5e9ab7866018878ac176e10c737137f98cf08f061ea83ad3d",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/migration-runner-plan.json",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "1ff2b8b4c1c645c5e9ab7866018878ac176e10c737137f98cf08f061ea83ad3d",
+      "bytesLfNormalized": 5375
     },
     {
       "name": "derived-readiness-fingerprints.json",
       "bytes": 3395,
       "sha256": "fc64ff81a606016514a1906be29df8ba2181108214722271a03f28e3518e19eb",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/derived-readiness-fingerprints.json",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "fc64ff81a606016514a1906be29df8ba2181108214722271a03f28e3518e19eb",
+      "bytesLfNormalized": 3395
     },
     {
       "name": "production-scheduler-install.review.sql",
       "bytes": 13890,
       "sha256": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/production-scheduler-install.review.sql",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "acc51713d32fb5ef54360726430d048174be75bde199cee65e0f11ed4be580f3",
+      "bytesLfNormalized": 13890
     },
     {
       "name": "production-schedule-proposal.json",
       "bytes": 21208,
       "sha256": "a487d8988a012e25fb95733bb3fe1577a27c1c419c694d2dbaa6eeb906d003c8",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/production-schedule-proposal.json",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "884938a0fb4de9fbf69a64c5a9b8232a0aca9aef487d2c7cb1dd94b72daac3e9",
+      "bytesLfNormalized": 20604
     },
     {
       "name": "storage-cause-assessment.json",
       "bytes": 2351,
       "sha256": "c52744a654377eb7535d4abd0abb2d15ec86728c0f8187884a875ad0ea513ca4",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/storage-cause-assessment.json",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "c52744a654377eb7535d4abd0abb2d15ec86728c0f8187884a875ad0ea513ca4",
+      "bytesLfNormalized": 2351
     },
     {
       "name": "image-callback-read-limits.json",
       "bytes": 965,
       "sha256": "66add749276991bb6b1fc5533ee09db353f04c7067af46b8a7a6ec487122b744",
       "sourceEvidence": "operating-readonly-resolution-20261023-v1/image-callback-read-limits.json",
-      "role": "immutable prior planning evidence; not current execution authority"
+      "role": "immutable prior planning evidence; not current execution authority",
+      "sha256LfNormalized": "66add749276991bb6b1fc5533ee09db353f04c7067af46b8a7a6ec487122b744",
+      "bytesLfNormalized": 965
     }
   ],
   "historicalScheduleOverrides": {
-    "oldManualDaysAndT0RelativeCutoffs": "superseded for Cafe24/Google by fixed 2026-10-24",
+    "oldManualDaysAndT0RelativeCutoffs": "superseded for all three sources by fixed first business day 2026-10-24",
     "firstCafe24DailyKst": "2026-10-26T02:00:00+09:00",
     "firstGoogleWeeklyKst": "2026-11-01T03:05:00+09:00",
     "firstGoogleDays": [
       "2026-10-25",
       "2026-10-31"
     ],
-    "metaDatesStillUnselected": true,
-    "sqlTemplatesMustNotBeExecuted": true
+    "metaDatesStillUnselected": false,
+    "sqlTemplatesMustNotBeExecuted": true,
+    "firstMetaWeeklyKst": "2026-11-01T03:07:00+09:00",
+    "weeklyDaySeparation": 0,
+    "weeklyMinuteOffset": 2,
+    "currentPlanRef": "production-schedule-plan-v2.json"
   },
   "excludedFromGitHandoff": [
     "credential/token/key files and entire environment files",
@@ -117,38 +144,69 @@
     "image bytes and non-exported protected before-images"
   ],
   "separateProtectedTransferNotYetPerformed": [
-    "necessary source evidence by allowlist/hash where the new environment needs it",
-    "exact preserved C7 candidate bytes and image via approved artifact channel",
-    "current valid credential access through a protected supported handoff; never copy sessions or restore old credentials"
+    "necessary non-exported source evidence by narrow allowlist where the new environment needs it",
+    "current valid provider credential access through supported protected handoff; never copy sessions or restore old credentials",
+    "final registry target/publication is an authorized execution output; exact image bytes are already available as unpublished GitHub draft asset"
   ],
   "restartSteps": [
-    "Read parent preparation section 11 and this index; verify branch/HEAD/status without reset/stash/clean",
-    "Use portable manifest and exact exported leaf evidence; do not recursively load historical documents",
-    "Map missing protected refs to available legitimate access; expired credentials mean stop, never CLI automatic refresh or consumed helper reuse",
-    "Resolve only remaining Storage/image/callback facts and Meta date decision; reuse completed tests and cost/CDN evidence",
-    "Obtain separate final operational execution approval before any deploy/migration/write/collection/schedule changes"
+    "Read parent preparation sections 10-12, current manifest, remaining-resolution.json and image-artifact.json; verify containing branch tip without reset/stash/clean",
+    "Download the exact draft image asset using existing authorized GitHub access and verify the pinned archive/OCI hashes; do not print signed URLs or start an engine",
+    "Do not re-open resolved Meta dates, image availability or Cafe24 registration facts; protect current credentials and never auto-refresh expired CLI sessions",
+    "Only after explicit narrow operational approval: add the exact third callback URI and deploy diagnostics-only Storage function source; preserve secrets, jobs and public auth/response behavior",
+    "Read the next existing scheduled Storage outcome. Propose only a proven repair. Product deployment/migrations/collection/automation still require separate final operational approval"
   ],
   "notDone": [
-    "operational or credential changes",
-    "new product tests/builds",
-    "separate protected credential/image transfer"
+    "operational callback registration change",
+    "Storage diagnostics-only function deployment",
+    "provider credential issue/refresh/revoke",
+    "new product build/full regression/provider collection",
+    "registry publication and production deployment"
   ],
   "preparationDocument": {
     "relativePath": "../11_운영전환_복구_준비서_20261023.md",
-    "sha256": "8c21567f71d1a79ba6e9faf0ee242bd21501af9f61017b71d2b821e99f65b551"
+    "sha256": "4e3a75a0f4e5138af260a0cc80917f5d13f61aff9be98664c7e59f5a2174fa3a",
+    "sha256LfNormalized": "4e3a75a0f4e5138af260a0cc80917f5d13f61aff9be98664c7e59f5a2174fa3a"
   },
   "localPlanningFiles": [
     {
       "name": "transition-manifest.json",
-      "sha256": "515ede1e0ab82e7e2755912d02944acdd0f9bed977a42e2ae24e084a9701bf72"
+      "sha256": "bf35412b2e72886cc17f1c2ff5896eb7d21eac7bf4118b35ca5977e9b143b81e",
+      "sha256LfNormalized": "bf35412b2e72886cc17f1c2ff5896eb7d21eac7bf4118b35ca5977e9b143b81e"
     },
     {
       "name": "repository-inventory.json",
-      "sha256": "b736f74fb64fb1971ad2c8274b09f4603008a8cf0390853d733bff048a9092d8"
+      "sha256": "b736f74fb64fb1971ad2c8274b09f4603008a8cf0390853d733bff048a9092d8",
+      "sha256LfNormalized": "b736f74fb64fb1971ad2c8274b09f4603008a8cf0390853d733bff048a9092d8"
     },
     {
       "name": "git-publication.json",
-      "sha256": "3ee8f7b604e8d5b31c184e999fe37576e1368dbe802093de42d8e429609d6ab6"
+      "sha256": "3ee8f7b604e8d5b31c184e999fe37576e1368dbe802093de42d8e429609d6ab6",
+      "sha256LfNormalized": "3ee8f7b604e8d5b31c184e999fe37576e1368dbe802093de42d8e429609d6ab6"
+    },
+    {
+      "name": "remaining-resolution.json",
+      "sha256": "842d8332a18703053e6034678f95d190358c56eecdb1cf5a695db1a4e9c869a5",
+      "sha256LfNormalized": "842d8332a18703053e6034678f95d190358c56eecdb1cf5a695db1a4e9c869a5"
+    },
+    {
+      "name": "image-artifact.json",
+      "sha256": "462b71034708aa57461005dff0cc38d74364e204498583c96ef5ffda0354f116",
+      "sha256LfNormalized": "462b71034708aa57461005dff0cc38d74364e204498583c96ef5ffda0354f116"
+    },
+    {
+      "name": "cafe24-callback-change.review.json",
+      "sha256": "d622b937dc665a7c148e261f001bd677af23dc81952056b6ecdfbf2cc856922d",
+      "sha256LfNormalized": "d622b937dc665a7c148e261f001bd677af23dc81952056b6ecdfbf2cc856922d"
+    },
+    {
+      "name": "storage-diagnostics-change.review.json",
+      "sha256": "5dce2983f427901f1081c6606c831d32238cd0e02198e2413b72a27d19da78de",
+      "sha256LfNormalized": "5dce2983f427901f1081c6606c831d32238cd0e02198e2413b72a27d19da78de"
+    },
+    {
+      "name": "production-schedule-plan-v2.json",
+      "sha256": "11f74a080e59c1a0334fab68d1e94df24b4c6fcac3d879eb068a43409467d4cd",
+      "sha256LfNormalized": "11f74a080e59c1a0334fab68d1e94df24b4c6fcac3d879eb068a43409467d4cd"
     }
   ],
   "publication": {
@@ -158,6 +216,14 @@
     "commitIdentity": "containing Git commit; use git rev-parse HEAD",
     "verification": "origin branch tip equals local HEAD after push",
     "scope": "Git handoff only; no deployment or credential changes",
-    "detailRef": "git-publication.json"
+    "detailRef": "git-publication.json",
+    "followupRef": "remaining-resolution.json",
+    "imageDraftRef": "image-artifact.json"
+  },
+  "hashVerification": {
+    "copiedPlanEvidence.sha256": "immutable original evidence exact-byte SHA256; historical CRLF bytes can differ from Git transport",
+    "sha256LfNormalized": "portable Git verification: replace CRLF byte pairs with LF before SHA256, no other transformations",
+    "preparationDocumentAndLocalPlanningFiles": "sha256 records current exact local bytes; sha256LfNormalized is the cross-platform checkout comparison",
+    "storageDiagnosticSource": "see storage-diagnostics-change.review.json: preserve exact source ZIP binding and separately verify normalized Git source hashes"
   }
 }
