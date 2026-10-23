@@ -73,7 +73,7 @@ jobs:
           set -euo pipefail
           umask 077
           printf '%s' "$GH_TOKEN" | skopeo login --authfile /tmp/registry-auth.json --username "$GITHUB_ACTOR" --password-stdin ghcr.io
-          skopeo copy --all --preserve-digests --authfile /tmp/registry-auth.json oci-archive:/tmp/c7.oci.tar "docker://$IMAGE:$TAG"
+          sudo skopeo copy --all --preserve-digests --authfile /tmp/registry-auth.json oci-archive:/tmp/c7.oci.tar "docker://$IMAGE:$TAG"
           skopeo inspect --raw --authfile /tmp/registry-auth.json "docker://$IMAGE:$TAG" > /tmp/registry-index.json
           printf '%s  %s\n' e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964 /tmp/registry-index.json | sha256sum --check --status
           rm -f /tmp/registry-auth.json
