@@ -46,7 +46,10 @@ export async function computeCafe24ActivationEvidence(client: PrismaClient | Pri
   const observation=cafe24ObservationKey();
   try {
     return createHmac("sha256",observation.key).update("cafe24-06-activation-review-v1\0")
-      .update(JSON.stringify({connectionId,day,scope,keyVersion:observation.version,
+      // Preview receives a query DTO containing day as well. Bind only the
+      // declared scope fields so preview and locked activation are identical.
+      .update(JSON.stringify({connectionId,day,scope:{mode:scope.mode,
+        couponInputSource:scope.couponInputSource},keyVersion:observation.version,
         rows:reviewed,versions,links,coverage,run,policies})).digest("hex");
   } finally {observation.key.fill(0);}
 }

@@ -7,6 +7,7 @@ import { SourceConnectionsService } from "../../../apps/api/src/daily-sync/sourc
 import { SourceConnectionsController } from "../../../apps/api/src/daily-sync/daily-sync.controller";
 import { computeCafe24ActivationEvidence } from "../../../apps/api/src/daily-sync/cafe24-activation-evidence";
 import { cafe24ProductPrefixSpaceDifference } from "../../../apps/api/src/daily-sync/cafe24-reviewed-parity";
+import { cafe24ManualActivationPreview } from "../../../apps/api/src/daily-sync/cafe24-manual-preparation";
 
 const connectionId = "10000000-0000-4000-8000-000000000001";
 const runId = "10000000-0000-4000-8000-000000000002";
@@ -129,6 +130,17 @@ function fixture() {
     { mode: input.mode, couponInputSource: input.couponInputSource }); };
   return { state, db, input, review, service: new SourceConnectionsService(db) };
 }
+
+test("normal preview query produces the same protected scope as activation", async () => environment(async () => {
+  const f = fixture();
+  const query = { day, mode: f.input.mode, couponInputSource: f.input.couponInputSource };
+  const preview = await cafe24ManualActivationPreview(f.db, connectionId, query);
+  await f.review();
+  assert.equal(preview.snapshotDigest, f.input.expectedSnapshotDigest);
+  f.input.expectedSnapshotDigest = preview.snapshotDigest;
+  await f.service.activateCafe24Day(connectionId, f.input, actorId);
+  assert.equal(f.state.policies[0].primarySource, "API");
+}));
 
 test("space review preserves complete option suffixes and item identity", () => {
   const api = { orderNo: "O", lineOrderNo: "L", productNo: "69", productName: "상품 이름", optionName: "상품 이름(색상=검정 A)" };
