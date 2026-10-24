@@ -1,5 +1,5 @@
 {
-  "kind": "OCT23_IMMEDIATE_COLLECTION_PARTIAL",
+  "kind": "OCT23_SOURCE_COLLECTION_SUCCEEDED_RECONCILIATION_PENDING",
   "day": "2026-10-23",
   "timeZone": "Asia/Seoul",
   "humanAuthorization": {
@@ -11,7 +11,8 @@
     "exactTwoChangeUserDeployment": true,
     "officialUserLongTokenExchange": true,
     "runtime20SettingsAppliedByHuman": true,
-    "additionalMetaIndexCorrection": "PENDING_HUMAN_DECISION"
+    "additionalMetaIndexCorrection": "APPROVED_AND_APPLIED",
+    "transactionLocalOwnerActivation": "APPROVED_TEMPORARY_OWN_SET_GRANT_REMOVED_BEFORE_COMMIT"
   },
   "deployment": {
     "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
@@ -32,7 +33,7 @@
     "normalAuthenticatedSourceList": {
       "count": 3
     },
-    "migrationExecuted": false,
+    "migrationExecuted": true,
     "schedulesEnabled": false,
     "collectionFeatureEnabled": true,
     "actualImageAndReleaseRevision": "b2082f4aa2c089e4242a79a9738edd3fd5b33713",
@@ -65,7 +66,9 @@
         "status": "SUCCESS"
       }
     ],
-    "createdAt": "2026-10-24T01:37:55.023Z"
+    "createdAt": "2026-10-24T01:37:55.023Z",
+    "additionalMigrationCount": 1,
+    "noProductRedeploymentForIndexChange": true
   },
   "google": {
     "auth": "fresh authorized_user source with existing keyless service-account impersonation",
@@ -289,7 +292,7 @@
       "longTokenExchangeApprovedAndCompleted": true
     },
     "userOAuthReviewRef": "11_Meta_사용자OAuth_대안검토_20261024.md",
-    "productionPublished": false,
+    "productionPublished": true,
     "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
     "grantedScopes": [
       "ads_mcp_management",
@@ -303,11 +306,49 @@
     "localFetch": "SUCCEEDED",
     "adCount": 553,
     "adsetCount": 200,
-    "accountSpendUsd": "2772.15",
-    "accountPurchaseCount": 188,
-    "uiSpendUsd": "2772.15",
-    "privateCaptureSha256": "9ef136eec95dbf0c8488bb097dfcf124e43d5b2ced4bd1786397fa5d30edb06c",
+    "accountSpendUsd": "2772.4300",
+    "uiSpendUsd": "2772.43",
     "run": {
+      "id": "98dadd45-e937-44d1-8356-751d2bda3b40",
+      "status": "SUCCEEDED",
+      "toDate": "2026-10-23",
+      "fromDate": "2026-10-23",
+      "startedAt": "2026-10-24T02:20:42.043+00:00",
+      "finishedAt": "2026-10-24T02:21:07.161+00:00",
+      "requestKey": "storefront-20a4a5a1-a02a-4711-979f-d903e01b6f23",
+      "rowsFetched": 753,
+      "rowsPublished": 753,
+      "safeErrorCode": null
+    },
+    "coverage": [
+      {
+        "kind": "META_AD",
+        "state": "COMPLETE_NONZERO",
+        "rowCount": 553,
+        "warnings": [],
+        "lastSuccessRunId": "98dadd45-e937-44d1-8356-751d2bda3b40"
+      },
+      {
+        "kind": "META_ADSET",
+        "state": "COMPLETE_NONZERO",
+        "rowCount": 200,
+        "warnings": [],
+        "lastSuccessRunId": "98dadd45-e937-44d1-8356-751d2bda3b40"
+      }
+    ],
+    "diagnostic": null,
+    "indexReview": {
+      "legacyExternalAdsets": 263,
+      "actualAdsets": 200,
+      "collidingWithLegacy": 199,
+      "initialNewConnectionAdsets": 0,
+      "initialOct23ApiAds": 0,
+      "proposal": "Add connection_id IS NULL to existing global external-ID unique-index predicate; retain account unique index",
+      "localPostgresReview": "PASS",
+      "productionDdlExecuted": true,
+      "resolvedByMigration": "20261024021144_meta_adset_legacy_external_scope"
+    },
+    "initialFailedRun": {
       "id": "076eb973-0b02-4925-801f-84bd3fbd7711",
       "status": "FAILED",
       "fromDate": "2026-10-23T00:00:00.000Z",
@@ -324,7 +365,15 @@
         }
       ]
     },
-    "coverage": {
+    "retryOrigin": "standard storefront UI; fresh UUID requestKey; same 2026-10-23 only",
+    "initialLocalCaptureSha256": "9ef136eec95dbf0c8488bb097dfcf124e43d5b2ced4bd1786397fa5d30edb06c",
+    "initialLocalPurchaseCount": 188,
+    "initialVerificationSpendUsd": "2772.15",
+    "initialVerificationUiSpendUsd": "2772.15",
+    "uiAfterReloadMatchesPublished": true,
+    "changeSinceEarlierReadUsd": "0.28",
+    "initialPublishDiagnostic": "META_PUBLISH_PRISMA_P2002",
+    "initialFailureCoverage": {
       "items": [
         {
           "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
@@ -371,16 +420,55 @@
       ],
       "nextPage": null
     },
-    "diagnostic": "META_PUBLISH_PRISMA_P2002",
-    "indexReview": {
-      "legacyExternalAdsets": 263,
-      "actualAdsets": 200,
-      "collidingWithLegacy": 199,
-      "newConnectionAdsets": 0,
-      "oct23ApiAds": 0,
-      "proposal": "Add connection_id IS NULL to existing global external-ID unique-index predicate; retain account unique index",
-      "localPostgresReview": "PASS",
-      "productionDdlExecuted": false
+    "indexMigration": {
+      "adsetRows": 263,
+      "ledgerRows": 56,
+      "activeLeases": 0,
+      "newMigration": {
+        "id": "b77d7945-8998-4203-aec5-c03783b82d17",
+        "name": "20261024021144_meta_adset_legacy_external_scope",
+        "checksum": "8db94a055e76280bfb4f2b3a442551d88020d6fbca96b86a19054358d3c89f7b",
+        "finishedAt": "2026-10-24T02:18:59.687677+00:00"
+      },
+      "ownerSetAfter": false,
+      "indexPredicate": "((connection_id IS NULL) AND (external_adset_id IS NOT NULL))",
+      "businessRowsSha256": "1cb4bfb9621ab297789377420a6d64696454b02e3af346da924417923107f941",
+      "successfulMigrations": 53,
+      "migrationFileSha256": "8db94a055e76280bfb4f2b3a442551d88020d6fbca96b86a19054358d3c89f7b",
+      "sourceCommit": "11a99885dfaeaebb4be129ca3ac3ff1296362d4d",
+      "executionSqlSha256": "ead20b1834e1a866a2219ce4803ec6ac4618b308538c33bb092d160704ae38d3",
+      "firstAttempt": "ROLLED_BACK_BEFORE_DDL_ON_HISTORICAL_CHECKSUM_DIFFERENCES",
+      "historicalDifferences": [
+        {
+          "name": "20260529000000_init",
+          "repositorySha256": "e6f13370846c4c530c4a1452c73cd7757e94121ba4c3125fbc0ef2dc9d4ca7e8",
+          "existingDeployedSha256": "510fd80840a47b686bfd63cf9bc485574316ce3118229d589694afb48bd75955",
+          "reason": "Preexisting initial migration discrepancy; live target catalog checked; historical entry preserved"
+        },
+        {
+          "name": "20260710000000_add_coupang_manual_purchase_vat",
+          "repositorySha256": "5a687637f6250369010a5914c4f4cd99e044ca1c94dee9cd24f94e335a43721b",
+          "existingDeployedSha256": "5034e828dc6e47cbb8cbe9fcab95787bbd3e9591a6e051f16aaabe0c699efa95",
+          "reason": "Exact CRLF equivalent; documented pre-C7"
+        }
+      ],
+      "oldMigrationRowsRewritten": false,
+      "oldMigrationsReexecuted": false,
+      "transactionLimitMs": 5000,
+      "localFullSchemaMigrationTest": "PASS",
+      "localOwnerEnvelopeCommitAndRollbackTest": "PASS",
+      "postCollection": {
+        "metaAdRows": 553,
+        "metaAdSpend": "2772.4300",
+        "activeLeases": 0,
+        "metaAdsetRows": 200,
+        "ownerSetAfter": false,
+        "metaAdsetSpend": "2772.4300",
+        "legacyAdsetRows": 263,
+        "apiAdsetEntities": 200,
+        "oldFailedRunStatus": "FAILED",
+        "legacyAdsetRowsSha256": "1cb4bfb9621ab297789377420a6d64696454b02e3af346da924417923107f941"
+      }
     }
   },
   "preservation": {
@@ -395,11 +483,13 @@
     "syntheticPostgresContainerStopped": true,
     "previousFailedRunsPreserved": true,
     "c7MigrationRepeated": false,
-    "newProductionDdlExecuted": false,
+    "newProductionDdlExecuted": true,
     "automaticBackfillOrDateExpansion": false,
-    "legacyBusinessRowsDeleted": false
+    "legacyBusinessRowsDeleted": false,
+    "legacyMetaAdsetsBeforeAndAfterCollectionSha256Equal": true,
+    "temporaryOwnerSetRemoved": true
   },
-  "observedAt": "2026-10-24T01:45:20.005Z",
+  "observedAt": "2026-10-24T02:23:20.388Z",
   "phase11": "IN_PROGRESS",
   "phase12": "NOT_STARTED",
   "readObservation": {
@@ -417,7 +507,11 @@
     "url": "https://patimagroup-work.com/storefront?from=2026-10-23&to=2026-10-23",
     "googleFiveCampaignsVisible": true,
     "reservationOffVisible": true,
-    "allChannelsComplete": false
+    "allChannelsComplete": false,
+    "metaCollectedVisible": true,
+    "metaAmountUsd": "2772.43",
+    "exchangeRateNeedsReview": true,
+    "cafe24CsvComparisonAndSourceSelectionPending": true
   },
   "postCollectionReadOnlyCheck": {
     "observedAt": "2026-10-24T01:43:28.176581Z",
@@ -428,5 +522,24 @@
     "cafe24ValidMappedLines": 212,
     "cafe24UnmatchedLines": 17,
     "meta23ApiAds": 0
-  }
+  },
+  "postMetaCollectionReadOnlyCheck": {
+    "metaAdRows": 553,
+    "metaAdSpend": "2772.4300",
+    "activeLeases": 0,
+    "metaAdsetRows": 200,
+    "ownerSetAfter": false,
+    "metaAdsetSpend": "2772.4300",
+    "legacyAdsetRows": 263,
+    "apiAdsetEntities": 200,
+    "oldFailedRunStatus": "FAILED",
+    "legacyAdsetRowsSha256": "1cb4bfb9621ab297789377420a6d64696454b02e3af346da924417923107f941"
+  },
+  "remaining": [
+    "Cafe24 CSV comparison and source choice; API shadow 229 rows remains preserved",
+    "Cafe24 unmatched 17 lines require review",
+    "Common currency conversion remains unconfirmed; keep existing product-rate rules",
+    "Schedules remain OFF/[]; phase12 NOT_STARTED",
+    "Historical initial migration checksum differs from Git snapshot; preserve history and investigate separately, never reset/resolve/rewrite"
+  ]
 }

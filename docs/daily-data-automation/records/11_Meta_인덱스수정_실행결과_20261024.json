@@ -1,0 +1,88 @@
+{
+  "kind": "CONSUMED_META_INDEX_MIGRATION_AND_SINGLE_DAY_RUN_AUDIT_ONLY",
+  "notExecutionScript": true,
+  "day": "2026-10-23",
+  "timeZone": "Asia/Seoul",
+  "migration": {
+    "adsetRows": 263,
+    "ledgerRows": 56,
+    "activeLeases": 0,
+    "newMigration": {
+      "id": "b77d7945-8998-4203-aec5-c03783b82d17",
+      "name": "20261024021144_meta_adset_legacy_external_scope",
+      "checksum": "8db94a055e76280bfb4f2b3a442551d88020d6fbca96b86a19054358d3c89f7b",
+      "finishedAt": "2026-10-24T02:18:59.687677+00:00"
+    },
+    "ownerSetAfter": false,
+    "indexPredicate": "((connection_id IS NULL) AND (external_adset_id IS NOT NULL))",
+    "businessRowsSha256": "1cb4bfb9621ab297789377420a6d64696454b02e3af346da924417923107f941",
+    "successfulMigrations": 53,
+    "migrationFileSha256": "8db94a055e76280bfb4f2b3a442551d88020d6fbca96b86a19054358d3c89f7b",
+    "sourceCommit": "11a99885dfaeaebb4be129ca3ac3ff1296362d4d",
+    "executionSqlSha256": "ead20b1834e1a866a2219ce4803ec6ac4618b308538c33bb092d160704ae38d3",
+    "firstAttempt": "ROLLED_BACK_BEFORE_DDL_ON_HISTORICAL_CHECKSUM_DIFFERENCES",
+    "historicalDifferences": [
+      {
+        "name": "20260529000000_init",
+        "repositorySha256": "e6f13370846c4c530c4a1452c73cd7757e94121ba4c3125fbc0ef2dc9d4ca7e8",
+        "existingDeployedSha256": "510fd80840a47b686bfd63cf9bc485574316ce3118229d589694afb48bd75955",
+        "reason": "Preexisting initial migration discrepancy; live target catalog checked; historical entry preserved"
+      },
+      {
+        "name": "20260710000000_add_coupang_manual_purchase_vat",
+        "repositorySha256": "5a687637f6250369010a5914c4f4cd99e044ca1c94dee9cd24f94e335a43721b",
+        "existingDeployedSha256": "5034e828dc6e47cbb8cbe9fcab95787bbd3e9591a6e051f16aaabe0c699efa95",
+        "reason": "Exact CRLF equivalent; documented pre-C7"
+      }
+    ],
+    "oldMigrationRowsRewritten": false,
+    "oldMigrationsReexecuted": false,
+    "transactionLimitMs": 5000,
+    "localFullSchemaMigrationTest": "PASS",
+    "localOwnerEnvelopeCommitAndRollbackTest": "PASS",
+    "postCollection": {
+      "metaAdRows": 553,
+      "metaAdSpend": "2772.4300",
+      "activeLeases": 0,
+      "metaAdsetRows": 200,
+      "ownerSetAfter": false,
+      "metaAdsetSpend": "2772.4300",
+      "legacyAdsetRows": 263,
+      "apiAdsetEntities": 200,
+      "oldFailedRunStatus": "FAILED",
+      "legacyAdsetRowsSha256": "1cb4bfb9621ab297789377420a6d64696454b02e3af346da924417923107f941"
+    }
+  },
+  "run": {
+    "id": "98dadd45-e937-44d1-8356-751d2bda3b40",
+    "status": "SUCCEEDED",
+    "toDate": "2026-10-23",
+    "fromDate": "2026-10-23",
+    "startedAt": "2026-10-24T02:20:42.043+00:00",
+    "finishedAt": "2026-10-24T02:21:07.161+00:00",
+    "requestKey": "storefront-20a4a5a1-a02a-4711-979f-d903e01b6f23",
+    "rowsFetched": 753,
+    "rowsPublished": 753,
+    "safeErrorCode": null
+  },
+  "coverage": [
+    {
+      "kind": "META_AD",
+      "state": "COMPLETE_NONZERO",
+      "rowCount": 553,
+      "warnings": [],
+      "lastSuccessRunId": "98dadd45-e937-44d1-8356-751d2bda3b40"
+    },
+    {
+      "kind": "META_ADSET",
+      "state": "COMPLETE_NONZERO",
+      "rowCount": 200,
+      "warnings": [],
+      "lastSuccessRunId": "98dadd45-e937-44d1-8356-751d2bda3b40"
+    }
+  ],
+  "providerUiSpendUsd": "2772.43",
+  "productRedeployed": false,
+  "providerCredentialsIssuedOrRefreshed": false,
+  "schedulesEnabled": false
+}
