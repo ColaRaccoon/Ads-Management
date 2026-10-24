@@ -64,6 +64,28 @@
     "userOAuthImplementationApplied": false,
     "userOAuthCodeImplementedAndLocallyVerified": true,
     "userOAuthImplementationRef": "11_Meta_사용자OAuth_구현검증_20261024.md",
+    "userOAuthDeploymentPreparation": {
+      "commit": "d778860d851ffdc50924e78785e383a30b55837f",
+      "status": "STAGED_NOT_APPLIED",
+      "patchId": "3262e433-3816-4425-8092-233d477d39c0",
+      "changeCount": 2,
+      "fields": ["source.commitSha", "RELEASE_GIT_SHA"],
+      "credentialAndLifecycleTestsPassed": 13,
+      "launchTestsPassedPerPlatform": 3,
+      "launchTestPlatforms": ["Windows", "Linux non-root"],
+      "dockerBuildPassed": true,
+      "compiledFilesComparedToC7": 273,
+      "compiledApiChanges": 11,
+      "collectionAndSchedulesRemainOff": true
+    },
+    "userOAuthBrowser": {
+      "app": "Daily Data Automation",
+      "selectedPermissions": ["ads_read", "ads_mcp_management"],
+      "freshTokenIssued": false,
+      "automaticClickOpenedConsentPopup": false,
+      "directHumanInteractionRequested": true,
+      "previousDisplayedTokenClearedWithoutUse": true
+    },
     "userOAuthReviewRef": "11_Meta_사용자OAuth_대안검토_20261024.md",
     "productionPublished": false
   },
