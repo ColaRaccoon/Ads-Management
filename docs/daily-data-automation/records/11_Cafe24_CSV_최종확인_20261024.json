@@ -1,0 +1,41 @@
+{
+  "status": "VERIFIED",
+  "scopeDay": "2026-10-23",
+  "verifiedAt": "2026-10-24T03:33:09.528Z",
+  "codeCommit": "89eb0dfed8d7f40a65e69874d415503175cbd9f9",
+  "deploymentId": "10a2f647-18e0-4e94-b394-d506b7033e45",
+  "runtimeConfigFingerprint": "6176f879d658a5f2cd2b1b4d587040a754649f66aa0c58984168a11dbc5daee2",
+  "cafe24": {
+    "connectionId": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+    "existingSuccessRunId": "e05cd60c-38ca-4969-9839-b4cf4411da4d",
+    "uploadBatchId": "deac8586-cb83-41e9-bd6f-5bd218da17ca",
+    "originalFileSha256": "81fa190260260c739740f31eee8bc1b5f6cd6ed1ac46afe1bce375e0a2f44819",
+    "orders": 209,
+    "selectedApiLines": 229,
+    "matchedLines": 218,
+    "userExcludedLines": { "dietSocks": 8, "runningVest": 3 },
+    "policy": { "primarySource": "API", "version": 2, "fromInclusive": "2026-10-23", "toExclusive": "2026-10-24", "reviewMode": "CSV_REVIEWED", "couponInputSource": "API_ACTUAL_PRODUCT_PLUS_SHIPPING" },
+    "followingPolicy": { "primarySource": "CSV", "version": 3, "fromInclusive": "2026-10-24" },
+    "coverage": "CSV_API_INPUTS_REVIEWED",
+    "rematchedApiLines": 6,
+    "storedOptionPrefixWhitespaceExceptions": 0,
+    "undatedCsvBindings": 1,
+    "reviewedStoredInputDifferenceOrders": { "totalOrderOrders": 209, "paidOrders": 0, "paymentMethodOrders": 209, "couponSignalOrders": 0, "productNameOrders": 134 }
+  },
+  "marginKrw": {
+    "revenue": "8187700",
+    "grossCost": "2971570",
+    "couponDeduction": "20000",
+    "mappedMetaSpend": "3532999.612",
+    "productMargin": "1663130.388",
+    "displayedProductMargin": "1663130",
+    "unallocatedMetaSpend": "139361.166",
+    "unallocatedGoogleSpend": "227367.804328"
+  },
+  "exchangeRate": { "rate": "1324.6", "rateDate": "2026-10-23", "sourceDate": "2026-10-23", "provider": "KOREA_EXIM", "fallbackType": "EXACT", "fetchedAt": "2026-10-24T02:54:42.926Z" },
+  "preservation": { "originalFilesUnchanged": true, "csvLines": 229, "csvNullDateLines": 1, "apiBusinessRows": 229, "apiVersions": 229, "sourceLinks": 458, "beforeAfterDigestsEqual": true, "activeLeases": 0, "migrationLedgerTotal": 56, "successfulMigrations": 53, "historicalRolledBackMigrations": 3 },
+  "schedule": { "enabled": false, "entries": [] },
+  "thisFollowup": { "newProviderCollections": 0, "newDatabaseMigrations": 0, "providerCredentialIssuances": 0, "providerCredentialRefreshes": 0 },
+  "verification": { "focusedTestsPassed": 12, "dockerPatchFilesChecked": 274, "dockerPatchFilesChanged": 13, "storedDataPostgresRollbackProof": true, "productionApiVerified": true, "productionSalesUiVerified": true },
+  "limits": { "storefrontComplete": false, "missingSources": ["KAKAO"], "commonUnallocatedCostsSeparateFromProductMargin": true, "phase11": "IN_PROGRESS", "phase12": "NOT_STARTED" }
+}
