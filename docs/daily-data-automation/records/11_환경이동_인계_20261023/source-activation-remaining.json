@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-23T17:39:06.882972+09:00",
+  "at": "2026-10-24T09:07:57.128+09:00",
   "kind": "SOURCE_ACTIVATION_REMAINING_ACTUAL_VALUES",
   "actualConnections": {
     "GOOGLE": null,
@@ -13,7 +13,7 @@
   },
   "actualPolicies": 0,
   "actualSyncRuns": 0,
-  "leaseDrainState": "No source connection or run exists; no production source lease was created by this execution",
+  "leaseDrainState": "2026-10-24T09:03:02.658178+09:00 READ ONLY snapshot: connection/run/lease/active refresh owner all zero. This is not a transition before-image.",
   "featureEnabled": false,
   "scheduleEnabled": false,
   "schedules": [],
@@ -24,16 +24,22 @@
     "automaticBootstrap": false,
     "normalCsvPrimaryUntilReviewedSelection": true,
     "simultaneousWritersRequired": false,
-    "normalGoogleCsvUploadExists": false
+    "normalGoogleCsvUploadExists": false,
+    "originalWindowMissed": true,
+    "status": "NOT_EXECUTED_PENDING_CREDENTIAL_HANDOFF_AND_RECOGNIZED_CONFIGURATION",
+    "businessDayUnchanged": true,
+    "automaticCatchup": false
   },
   "technicalWorkBeforeAnyCollection": [
-    "Use supported protected access in the next environment; the current browser session and local DPAPI are not portable credentials.",
-    "Create disabled/PENDING production connections through the normal authenticated settings.manage API and record their real IDs. Do not seed READY or impersonate an authenticated actor through SQL.",
-    "Materialize only currently valid, approved credentials through supported production vault/resolver paths and bind normal metadata. The prior local Meta DPAPI is not an encrypted production envelope.",
-    "Cafe24 requires one current grant owner/pair revision and lease-safe handoff. Last completed receipt showed an access expiry already elapsed; no refresh/reissue or owner transfer was executed during this product deployment.",
-    "Cutoff Oct23 is now explicitly chosen. Use verificationDay=fromDate=2026-10-23 for initial Meta verification. The read-only conflict check currently found zero CSV/current or API history at/after cutoff; recheck after actual comparison inputs before activation. These verify-and-activate endpoints mutate policy/enabled state.",
-    "Take a fresh complete before-image of the selected account/date policy/current/link/coverage and user writes after pause/drain or fencing. The old seven-table fingerprints prove preservation, not a reusable source rollback snapshot.",
-    "Use normal completed-one-day paths at the manual window, compare page completeness/account totals/conditional fields and preserve CSV/API histories. Enable the standard schedules only after all three source checks and normal source selection pass."
+    "Read the Oct24 home continuation result and receipt first. Normal personal application, Supabase and Railway logins were completed; do not extract or copy sessions.",
+    "Resolve the C7 preparation conflict: normal source create/list require DAILY_SYNC_FEATURE_ENABLED=true, while collection remains OFF. Current service defines DAILY_SYNC_ENABLED=false instead; recognized feature/allowed-accounts and daily-sync provider binding settings are absent from its filtered list. Do not toggle or deploy as a check.",
+    "Materialize only currently valid approved credentials through existing supported production vault/resolver paths; do not copy DPAPI or ask for secrets or invented technical IDs in chat.",
+    "Establish the latest Cafe24 current pair/revision and single refresh owner via a supported protected handoff before opening any collection. Production credential rows are currently zero.",
+    "Before any Google verify/run, establish that the existing supported auth path complies with the refresh prohibition; GoogleAuth.getAccessToken may automatically refresh.",
+    "Prepare exact recognized configuration, allowlisted identities, resolver/binding and normal authenticated mutation transport for fixed C7, with expected readiness fingerprint and disabled/PENDING connections. Configuration can redeploy the same image; no configuration or deployment has been executed by this continuation.",
+    "Keep verificationDay=fromDate=2026-10-23 and the Oct23 cutoff. The missed Oct24 02:00 manual appointment was not a scheduled execution. Do not shift dates or add automatic catchup.",
+    "After pause/drain or fencing, take a fresh selected-scope before-image preserving subsequent writes and recheck Meta current conflicts before actual selection. Never delete conflicts or force READY with SQL.",
+    "Only then compare the same completed single day using normal source paths, preserve CSV/API histories, and review each source selection. Standard schedules remain uninstalled until all three sources pass."
   ],
   "normalAdministrativeSurface": {
     "api": "/backend-api/source-connections and existing normal bind/verify/run endpoints",
@@ -41,13 +47,22 @@
     "newSourceManagementWebFormFound": false,
     "noCookieTokenOrProfileExtraction": true,
     "phase08Cafe24ScheduledBootstrapIsNotProductionProvisioning": true,
-    "normalAuthenticatedApiTransportNotYetAvailableInThisSession": true
+    "normalAuthenticatedApiTransportNotYetAvailableInThisSession": false,
+    "normalAuthenticatedReadTransportAvailable": true,
+    "normalAuthenticatedMutationTransportEstablished": false,
+    "apiFeatureGateBlocksReadAndCreate": true,
+    "observedReadStatus": 503,
+    "observedReadCode": "PROVIDER_UNAVAILABLE"
   },
   "schedulePlanRef": "production-schedule-plan-v3.json",
   "existingStorageObservation": {
-    "whenKst": "2026-10-24 after 04:20",
-    "action": "Read the existing 04:00 renew /04:15 verify /04:20 audit results; do not invoke renew/check again. A successful existing renewal may redeploy the same currently pinned C7 image.",
-    "lastVerifiedJwtExpiryKst": "2026-10-25T04:00:01+09:00"
+    "status": "OBSERVED_EXISTING_THREE_JOBS_SUCCEEDED",
+    "ref": "../11_집환경_재개_20261024/home-resume-readonly.json",
+    "checkState": "HEALTHY",
+    "readinessVerified": true,
+    "verifiedExpiryKst": "2026-10-30T04:00:02+09:00",
+    "manualCalls": 0,
+    "doNotRepeatCompletedObservation": true
   },
   "notPermittedByDeploymentApproval": [
     "new provider credential issuance/refresh/revocation",
@@ -66,10 +81,23 @@
     "META": "2026-10-23"
   },
   "metaCurrentConflictReview": {
-    "ref": "meta-cutoff-conflict-readonly.json",
+    "ref": "../11_집환경_재개_20261024/home-resume-readonly.json",
+    "observedAtUtc": "2026-10-24T00:03:02.658178Z",
     "conflictPresent": false,
     "pointInTimeOnly": true,
     "mustRecheckBeforeActualActivation": true
   },
-  "manualMetaCsvHandling": "Keep the Oct23 Meta CSV/export as comparison material first. Uploading it into current before initial verification would create the existing C7 source conflict. If conflicting current rows appear, preserve them and stop for the supported reviewed source-selection path; do not bulk-delete or force READY/current with SQL."
+  "manualMetaCsvHandling": "Keep the Oct23 Meta CSV/export as comparison material first. Uploading it into current before initial verification would create the existing C7 source conflict. If conflicting current rows appear, preserve them and stop for the supported reviewed source-selection path; do not bulk-delete or force READY/current with SQL.",
+  "homeContinuationRef": "../11_집환경_재개_20261024/home-resume-readonly.json",
+  "actualSourceCredentialRows": 0,
+  "configurationReview": {
+    "ref": "../11_집환경_재개_20261024/home-resume-readonly.json",
+    "recognizedFeatureKey": "DAILY_SYNC_FEATURE_ENABLED",
+    "serviceFeatureKeyPresent": false,
+    "observedServiceKey": "DAILY_SYNC_ENABLED",
+    "recognizedAllowlistKey": "DAILY_SYNC_ALLOWED_ACCOUNTS",
+    "serviceAllowlistPresent": false,
+    "configurationChanged": false
+  },
+  "pendingHumanDecisionsMeaning": "No new cutoff or schedule choice requested. Supported protected current credential/owner handoff and a concrete compliant manual-preparation configuration/transport are technical prerequisites, not completed approvals."
 }

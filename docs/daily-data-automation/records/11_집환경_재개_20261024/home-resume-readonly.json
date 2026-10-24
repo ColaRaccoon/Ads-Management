@@ -1,0 +1,198 @@
+{
+  "kind": "HOME_CONTINUATION_READONLY_OBSERVATION",
+  "recordedAt": "2026-10-24T09:09:12.852+09:00",
+  "branch": "codex/daily-data-automation-01",
+  "startHead": "63d046d327a480026d106d8549630a598640469e",
+  "remoteHeadAtStart": "63d046d327a480026d106d8549630a598640469e",
+  "deliveryCommit": "containing Git commit; resolve with git rev-parse HEAD",
+  "phase11": "IN_PROGRESS",
+  "phase12": "NOT_STARTED",
+  "execute": false,
+  "preservation": {
+    "initialWorktreeClean": true,
+    "resetStashCleanExecutedInThisContinuation": false,
+    "existingStashObjects": [
+      "e881aeee89e1706b32209b3b55ccebbe025e6064",
+      "6c74a21432148fbce1d5a2f1af79dfe3ce85ac88"
+    ],
+    "normalizedCurrentHandoffFilesChecked": 27,
+    "normalizedHashMismatchesAtStart": 0,
+    "applicableAgentsFilesFound": 0
+  },
+  "access": {
+    "application": "normal existing administrator login completed personally by user",
+    "supabase": "normal dashboard login completed personally by user",
+    "railway": "normal GitHub sign-in using the already authenticated existing account",
+    "browserCookiesTokensProfilesExtractedOrCopied": false,
+    "dpapiTransferred": false,
+    "railwayCliInvocations": 0,
+    "supabaseCliInvocations": 0,
+    "providerCredentialIssueRefreshRevokeCalls": 0
+  },
+  "target": {
+    "origin": "https://patimagroup-work.com",
+    "projectRef": "iygjmosbelbosfxidqxv",
+    "database": "postgres",
+    "schema": "meta_ads",
+    "railwayProjectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
+    "railwayEnvironmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+    "railwayServiceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248"
+  },
+  "currentDeployment": {
+    "id": "f4585e3d-978a-42e5-bd9e-ed6f3d94cc66",
+    "statusShown": "ACTIVE / Deployment successful",
+    "createdAtShownKst": "2026-10-24T04:00:00+09:00",
+    "previousDeploymentId": "13f4e0f7-e184-4935-8cc1-8cfdbbbd338f",
+    "previousDeploymentStatusShown": "REMOVED",
+    "serviceSourceImage": "ghcr.io/colaraccoon/meta-ads-performance-c7@sha256:e3fb7eedf91ef64d6c26590856d2c979e5644b644109d4fb9549ad8ad66fa964",
+    "releaseGitShaFromCurrentStartupLog": "a49bec345f995ec71f25f9e569caa5fe20578235",
+    "runtimeConfigFingerprintFromCurrentStartupLog": "f8b27a3b7d531a418c9df09c8a163b7903ff3dba0e11d8a53fc9bfd5a34f95e6",
+    "startupLogDisplayedAtKst": "2026-10-24T08:59:34+09:00",
+    "attribution": "Existing scheduled Storage renew requested a deployment at 04:00; the current same-image deployment timestamp matches. No deployment was triggered by this continuation.",
+    "newProtectedReadinessRequest": false,
+    "newProductBuildDeployOrMigration": false
+  },
+  "storageExistingScheduledObservation": {
+    "queryFile": "storage-scheduled-results.readonly.sql",
+    "transport": "normal Supabase SQL Editor, READ ONLY transaction",
+    "statementTimeoutMs": 4000,
+    "lockTimeoutMs": 1000,
+    "resultRows": 5,
+    "cronResults": [
+      {
+        "jobId": 1,
+        "status": "succeeded",
+        "startUtc": "2026-10-23T19:00:00.204266Z",
+        "endUtc": "2026-10-23T19:00:07.109595Z"
+      },
+      {
+        "jobId": 2,
+        "status": "succeeded",
+        "startUtc": "2026-10-23T19:15:00.211356Z",
+        "endUtc": "2026-10-23T19:15:11.062328Z"
+      },
+      {
+        "jobId": 3,
+        "status": "succeeded",
+        "startUtc": "2026-10-23T19:20:00.185506Z",
+        "endUtc": "2026-10-23T19:20:00.258431Z"
+      }
+    ],
+    "committedResults": [
+      {
+        "mode": "renew",
+        "requestedAtUtc": "2026-10-23T19:00:00.204288Z",
+        "httpStatus": 200,
+        "state": "DEPLOYMENT_REQUESTED",
+        "expiresAt": 1793300402,
+        "readinessVerified": false
+      },
+      {
+        "mode": "check",
+        "requestedAtUtc": "2026-10-23T19:15:00.211398Z",
+        "httpStatus": 200,
+        "state": "HEALTHY",
+        "expiresAt": 1793300402,
+        "readinessVerified": true
+      }
+    ],
+    "verifiedExpiryKst": "2026-10-30T04:00:02+09:00",
+    "manualRenewCheckAuditInvocations": 0,
+    "productPhase12Observation": false,
+    "jobCommandDigestRechecked": false
+  },
+  "sourceState": {
+    "observedAtUtc": "2026-10-24T00:03:02.658178Z",
+    "queryFile": "source-state.readonly.sql",
+    "transaction": "REPEATABLE READ READ ONLY",
+    "statementTimeoutMs": 4000,
+    "lockTimeoutMs": 1000,
+    "resultRows": 10,
+    "connections": 0,
+    "enabledConnections": 0,
+    "policies": 0,
+    "runs": 0,
+    "leases": 0,
+    "activeLeases": 0,
+    "credentialRows": 0,
+    "activeRefreshOwners": 0,
+    "automaticSourceJobs": 0,
+    "activeAutomaticSourceJobs": 0,
+    "metaCutoffOrLaterCurrentCsv": {
+      "META_AD": 0,
+      "META_ADSET": 0
+    },
+    "metaCutoffDayCurrentCsv": {
+      "META_AD": 0,
+      "META_ADSET": 0
+    },
+    "metaCutoffOrLaterApiHistory": {
+      "META_AD": 0,
+      "META_ADSET": 0
+    },
+    "cutoffLocalDay": "2026-10-23",
+    "pointInTimeOnly": true,
+    "freshTransitionBeforeImageCreated": false,
+    "customerValuesExported": false
+  },
+  "administrativeApiObservation": {
+    "atKstFromCurrentDeploymentLog": "2026-10-24T09:01:03+09:00",
+    "method": "GET",
+    "path": "/backend-api/source-connections?limit=200&page=1",
+    "authenticatedNormally": true,
+    "status": 503,
+    "code": "PROVIDER_UNAVAILABLE",
+    "requestId": "576be19a-0f58-4cb5-bcfd-ce776f99b05d",
+    "durationMsFromCurrentDeploymentLog": 265,
+    "webmcpToolsAvailable": 0,
+    "postCreateOrBindAttempted": false
+  },
+  "runtimeConfigurationObservation": {
+    "surface": "exact production Railway service Variables UI filtered by DAILY_SYNC",
+    "valuesRevealedOnlyForTheseNonSecretSettings": {
+      "DAILY_SYNC_ENABLED": "false",
+      "DAILY_SYNC_SCHEDULE_ENABLED": "false",
+      "DAILY_SYNC_SCHEDULES": "[]"
+    },
+    "otherDailySyncServiceVariablesShown": 0,
+    "actualFeatureKeyReadByCode": "DAILY_SYNC_FEATURE_ENABLED",
+    "featureKeyPresentInServiceList": false,
+    "actualAccountAllowlistKey": "DAILY_SYNC_ALLOWED_ACCOUNTS",
+    "accountAllowlistKeyPresentInServiceList": false,
+    "dailySyncCredentialRefAndResolverSettingsPresentInServiceList": false,
+    "secretValuesReadCopiedOrWritten": false,
+    "configurationMutations": 0
+  },
+  "manualDay": {
+    "originalAppointmentKst": "2026-10-24T02:00:00+09:00",
+    "originalAppointmentMissed": true,
+    "businessDay": "2026-10-23",
+    "cutoff": "2026-10-23",
+    "collectionComparisonOrSourceSelectionExecuted": false,
+    "providerReads": 0,
+    "automaticBackfillOrDateChange": false,
+    "nextAction": "Resolve the supported current credential/owner handoff and recognized C7 configuration/admin transport before collecting the same single completed day."
+  },
+  "blockers": [
+    "Normal create/list APIs require assertEnabled; feature OFF cannot provision even disabled/PENDING connections.",
+    "The service currently defines DAILY_SYNC_ENABLED, whereas implementation uses DAILY_SYNC_FEATURE_ENABLED; account allowlist and daily-sync provider binding configuration are absent from the service list.",
+    "No production source credential rows or supported current credential refs exist; latest Cafe24 single owner/pair revision handoff remains unresolved.",
+    "Google verify uses GoogleAuth.getAccessToken and may refresh; no provider call may be made until it complies with the unchanged refresh prohibition."
+  ],
+  "forbiddenActionsExecuted": false,
+  "newCostOrPermissionChange": false,
+  "testPolicy": "Documentation and read-only observations only; no product changes, full regression, build or completed credential checks repeated.",
+  "validation": {
+    "changedFiles": 13,
+    "documentationScopeOnly": true,
+    "changedJsonValid": true,
+    "newDocumentLinksValid": true,
+    "secretPatternFindings": 0,
+    "readonlySqlChecksPassed": true,
+    "normalizedHashesChecked": 31,
+    "normalizedHashMismatches": 0,
+    "productTestsAddedOrRun": 0,
+    "productBuilds": 0,
+    "fullRegressionRepeated": false
+  }
+}
