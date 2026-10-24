@@ -7,6 +7,7 @@ const expected = new Set(['cafe24-manual-preparation', 'cafe24-oauth.service', '
   'cafe24-scheduled-review', 'cafe24-scheduled-activation', 'daily-sync.module',
   'scheduled-sync.service'].map(name => `daily-sync/${name}.js`));
 expected.add('exchange-rates/exchange-rate-provider.js');
+expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled] = process.argv.slice(2);
 if (!baseline || !compiled) throw Error('Two compiled directories required');
 let checked = 0, changed = 0;

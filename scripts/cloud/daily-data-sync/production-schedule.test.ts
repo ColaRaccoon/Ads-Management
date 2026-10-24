@@ -3,10 +3,24 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { reviewedCafe24ScheduledBaseline } from "../../../apps/api/src/daily-sync/cafe24-scheduled-review";
 import { ScheduledSyncService } from "../../../apps/api/src/daily-sync/scheduled-sync.service";
+import { MachineSyncGuard } from "../../../apps/api/src/auth/machine-sync.guard";
+import { MACHINE_SYNC_ROUTE } from "../../../apps/api/src/auth/route-decorators";
 
 const cafe = "be140e7e-3994-406e-94ff-b50dfc7ac7b2";
 const meta = "2155a401-bd86-4111-9280-3c95ed207546";
 const coupon = "API_ACTUAL_PRODUCT_PLUS_SHIPPING";
+test("redirect-safe bearer authenticates only the intended machine target and rejects ambiguous headers", async () => env(async () => {
+  const token = "Synthetic-Aa01Bb23Cc45Dd67Ee89Ff0Gg1Hh2Ii3Jj4Kk5Ll6Mm7Nn8";
+  process.env.DAILY_SYNC_MACHINE_TOKEN = token;
+  const guard = new MachineSyncGuard({ get: () => MACHINE_SYNC_ROUTE } as any);
+  const context = (headers: Record<string, string>) => ({ getHandler: () => () => {},
+    switchToHttp: () => ({ getRequest: () => ({ get: (key: string) => headers[key] }) }) } as any);
+  const headers = { authorization: `Bearer ${token}`, "x-daily-sync-target": "bundle-loopback-api" };
+  assert.equal(guard.canActivate(context(headers)), true);
+  for (const change of [{ "x-daily-sync-target": "another-target" }, { authorization: "Bearer wrong" },
+    { authorization: "Basic " + token }, { "x-daily-sync-token": token }])
+    assert.throws(() => guard.canActivate(context({ ...headers, ...change })));
+}));
 async function env(work: () => Promise<void>) {
   const before = { ...process.env };
   Object.assign(process.env, { DAILY_SYNC_FEATURE_ENABLED: "true", DAILY_SYNC_SCHEDULE_ENABLED: "true",

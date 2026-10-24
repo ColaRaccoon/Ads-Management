@@ -154,7 +154,9 @@ BEGIN
   IF budget<3000 THEN secret:=NULL; RETURN 'WINDOW_CLOSED'; END IF;
   request:=net.http_post(url:=cfg.origin||'/backend-api/internal/daily-sync',
     body:=jsonb_build_object('scheduleKey',candidate.key,'scheduledFor',to_char(candidate.due AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')),
-    headers:=jsonb_build_object('Content-Type','application/json','x-daily-sync-token',secret,'x-daily-sync-target',cfg.target_id),
+    -- libcurl drops Authorization across origins; never use the custom token
+    -- header with pg_net's automatically followed redirects.
+    headers:=jsonb_build_object('Content-Type','application/json','Authorization','Bearer '||secret,'x-daily-sync-target',cfg.target_id),
     timeout_milliseconds:=budget);
   secret:=NULL;
   INSERT INTO daily_data_sync_prod_ops.attempts(schedule_key,scheduled_for,request_id,inspection_only,status,safe_code)

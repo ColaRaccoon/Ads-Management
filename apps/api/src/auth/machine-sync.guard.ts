@@ -17,7 +17,12 @@ export class MachineSyncGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<MachineSyncRequest>();
     const secrets = machineSecrets(process.env);
     const target = process.env.RUNTIME_API_TARGET_ID;
-    const candidate = request.get("x-daily-sync-token");
+    const legacy = request.get("x-daily-sync-token");
+    const authorization = request.get("authorization");
+    // pg_net follows redirects. libcurl strips Authorization on a cross-origin
+    // redirect, unlike custom credential headers. Reject ambiguous dual input.
+    const candidate = legacy && authorization ? undefined :
+      authorization ? /^Bearer ([A-Za-z0-9+/=_-]{32,512})$/.exec(authorization)?.[1] : legacy;
     const currentMatches = secrets ? constantTimeToken(candidate, secrets.current) : false;
     const previousMatches = secrets ? constantTimeToken(candidate, secrets.previous ?? secrets.current) : false;
     const accepted = currentMatches || previousMatches;
