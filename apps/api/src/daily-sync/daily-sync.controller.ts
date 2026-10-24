@@ -5,7 +5,7 @@ import { CurrentUser, MachineSync, Public, RequirePermissions } from "../auth/ro
 import { AuthenticatedUser } from "../auth/auth.types";
 import { PrismaService } from "../common/prisma.service";
 import { HeavyOperation } from "../common/heavy-operation";
-import { ConnectionInput, ConnectionListQuery, CoverageQuery, GoogleVerificationInput, MetaVerificationInput, IdParam, MachineRunInput, PolicyInput, RunInput } from "./daily-sync.dto";
+import { ConnectionInput, ConnectionListQuery, CoverageQuery, GoogleVerificationInput, MetaVerificationInput, IdParam, MachineRunInput, PolicyInput, RunInput, Cafe24ManualPreparationInput, Cafe24ActivationReviewQuery, Cafe24DayActivationInput } from "./daily-sync.dto";
 import { SourceConnectionsService, accountAllowlist, accountKey } from "./source-connections.service";
 import { SyncFoundationService } from "./sync-foundation.service";
 import { assertEnabled, parseDateRange, syncError } from "./sync-contract";
@@ -20,6 +20,7 @@ import { Cafe24SyncRunnerService } from "./cafe24-sync-runner.service";
 import { ScheduledSyncService } from "./scheduled-sync.service";
 import {Cafe24ScheduledBootstrapInput} from "./daily-sync.dto";
 import {bootstrapCafe24Scheduled,cafe24ScheduledBootstrapPreview} from "./cafe24-scheduled-bootstrap";
+import { cafe24ManualActivationPreview, cafe24ManualPreparationPreview, prepareCafe24ManualConnection } from "./cafe24-manual-preparation";
 
 @Controller("source-connections")
 export class SourceConnectionsController {
@@ -28,6 +29,34 @@ export class SourceConnectionsController {
     private readonly metaCredential: MetaCredentialBindingService,
     private readonly metaVerifier: MetaConnectionVerifierService,
     private readonly prisma: PrismaService) {}
+
+  @Get(":id/cafe24-preparation")
+  @RequirePermissions("settings.manage")
+  cafe24PreparationPreview(@Param() params: IdParam) {
+    return cafe24ManualPreparationPreview(this.prisma, params.id);
+  }
+
+  @Post(":id/prepare-cafe24")
+  @RequirePermissions("settings.manage")
+  prepareCafe24(@Param() params: IdParam, @Body() body: Cafe24ManualPreparationInput,
+    @CurrentUser() actor: AuthenticatedUser) {
+    return prepareCafe24ManualConnection(this.prisma, params.id, body, actor.id);
+  }
+
+  @Get(":id/cafe24-activation-snapshot")
+  @RequirePermissions("settings.manage")
+  @HeavyOperation()
+  cafe24ActivationSnapshot(@Param() params: IdParam, @Query() query: Cafe24ActivationReviewQuery) {
+    return cafe24ManualActivationPreview(this.prisma, params.id, query);
+  }
+
+  @Post(":id/activate-cafe24-day")
+  @RequirePermissions("settings.manage")
+  @HeavyOperation()
+  activateCafe24Day(@Param() params: IdParam, @Body() body: Cafe24DayActivationInput,
+    @CurrentUser() actor: AuthenticatedUser) {
+    return this.sources.activateCafe24Day(params.id, body, actor.id);
+  }
 
   @Get(":id/cafe24-scheduled-bootstrap")
   @RequirePermissions("settings.manage")

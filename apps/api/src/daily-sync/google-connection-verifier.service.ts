@@ -5,7 +5,7 @@ import { writeSecurityAudit } from "../security-audit/security-audit.types";
 import { GoogleAdsClient } from "./google-ads.client";
 import { CredentialVault } from "./credential-vault";
 import { accountAllowlist, accountKey } from "./source-connections.service";
-import { assertEnabled, parseDateRange, parseIsoDate, syncError } from "./sync-contract";
+import { assertEnabled, assertSourceAdministrationEnabled, parseDateRange, parseIsoDate, syncError } from "./sync-contract";
 
 /** Explicit, audited gate for an initially disabled Google connection. */
 @Injectable()
@@ -14,7 +14,7 @@ export class GoogleConnectionVerifierService {
     private readonly client: GoogleAdsClient) {}
 
   async bindConfiguredAuth(connectionId: string, actorUserId: string | null) {
-    assertEnabled();
+    assertSourceAdministrationEnabled();
     const ref = process.env.DAILY_SYNC_GOOGLE_CREDENTIAL_REF;
     if (!ref || !/^vault:\/\/google\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(ref))
       syncError("PROVIDER_AUTH_REQUIRED");

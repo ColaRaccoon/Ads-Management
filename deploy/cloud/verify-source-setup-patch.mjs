@@ -1,0 +1,28 @@
+import { readdir, readFile } from 'node:fs/promises';
+import { join, relative } from 'node:path';
+const expected = new Set(['cafe24-manual-preparation', 'cafe24-oauth.service', 'cafe24-test-connection.service',
+  'daily-sync.controller', 'daily-sync.dto', 'google-connection-verifier.service', 'meta-credential-binding.service',
+  'source-connections.service', 'sync-contract'].map(name => `daily-sync/${name}.js`));
+const [baseline, compiled] = process.argv.slice(2);
+if (!baseline || !compiled) throw Error('Two compiled directories required');
+let checked = 0, changed = 0;
+async function visit(directory) {
+  for (const item of await readdir(directory, { withFileTypes: true })) {
+    const path = join(directory, item.name);
+    if (item.isDirectory()) { await visit(path); continue; }
+    if (!item.isFile() || !item.name.endsWith('.js')) continue;
+    const name = relative(compiled, path).replaceAll('\\', '/');
+    const next = await readFile(path, 'utf8');
+    let before;
+    try { before = await readFile(join(baseline, name), 'utf8'); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    checked++;
+    if (next.replaceAll('\r\n', '\n') !== before?.replaceAll('\r\n', '\n')) {
+      if (!expected.delete(name)) throw Error(`Unreviewed C7 API change: ${name}`);
+      changed++;
+    }
+  }
+}
+await visit(compiled);
+if (expected.size) throw Error('Expected patch changes missing');
+console.log(JSON.stringify({ event: 'c7-api-patch-verified', checked, changed }));

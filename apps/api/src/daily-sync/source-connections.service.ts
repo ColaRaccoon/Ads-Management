@@ -13,7 +13,7 @@ import { computeCafe24ActivationEvidence } from "./cafe24-activation-evidence";
 import { rejectCafe24Activation } from "./cafe24-activation-diagnostic";
 import { cafe24ObservationHmac, cafe24ObservationKey } from "./cafe24-observed-revision";
 import { ConnectionInput, PolicyInput } from "./daily-sync.dto";
-import { assertEnabled, enabledSync, parseIsoDate, syncError, validateAccountKey } from "./sync-contract";
+import { assertEnabled, assertSourceAdministrationEnabled, enabledSync, parseIsoDate, syncError, validateAccountKey } from "./sync-contract";
 
 const KINDS_BY_PROVIDER: Record<SourceProvider, readonly SourceDataKind[]> = {
   GOOGLE: [SourceDataKind.GOOGLE_CAMPAIGN],
@@ -108,7 +108,7 @@ export class SourceConnectionsService {
   }
 
   async create(input: ConnectionInput, actorUserId: string) {
-    assertEnabled();
+    assertSourceAdministrationEnabled();
     validateAccountKey(input.provider, input.externalAccountId, input.shopKey);
     if (!accountAllowlist().has(accountKey(input.provider, input.externalAccountId, input.shopKey))) {
       syncError("ACCOUNT_SCOPE_MISMATCH", 400);
@@ -139,7 +139,7 @@ export class SourceConnectionsService {
   }
 
   async list(limit = 50, page = 1) {
-    assertEnabled();
+    assertSourceAdministrationEnabled();
     const rows = await this.prisma.sourceConnection.findMany({
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       skip: (page - 1) * limit, take: limit + 1

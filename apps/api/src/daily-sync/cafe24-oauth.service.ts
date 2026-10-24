@@ -5,7 +5,7 @@ import { boundedProviderRequest, ProviderFailure } from "./bounded-request";
 import { cafe24RetryAfterMs } from "./cafe24-rate-limit";
 import { cafe24TestAllowed } from "./cafe24-test-connection.service";
 import { CredentialVault } from "./credential-vault";
-import { assertCafe24TestReadEnabled, syncError } from "./sync-contract";
+import { assertCafe24AuthorizationEnabled, syncError } from "./sync-contract";
 
 const SCOPE = "mall.read_order";
 const MAX_TOKEN_BYTES = 32_768;
@@ -74,7 +74,7 @@ export class Cafe24OauthService {
     private readonly request: typeof fetch = fetch) {}
 
   async begin(connectionId: string, actorUserId: string | null) {
-    assertCafe24TestReadEnabled();
+    assertCafe24AuthorizationEnabled();
     const config = settings();
     const connection = await this.prisma.sourceConnection.findUnique({ where: { id: connectionId } });
     if (!connection || connection.provider !== "CAFE24" ||
@@ -96,7 +96,7 @@ export class Cafe24OauthService {
   }
 
   async callback(input: { state?: string; code?: string; error?: string }) {
-    assertCafe24TestReadEnabled();
+    assertCafe24AuthorizationEnabled();
     const config = settings();
     if (!input.state || !/^[A-Za-z0-9_-]{43}$/.test(input.state))
       syncError("PROVIDER_AUTH_REQUIRED");

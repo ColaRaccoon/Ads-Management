@@ -3,7 +3,7 @@ import { PrismaService } from "../common/prisma.service";
 import { CredentialVault } from "./credential-vault";
 import { MetaCredentialResolver, resolveMetaCredential, configuredMetaTransport } from "./meta-credential-resolver";
 import { accountAllowlist, accountKey } from "./source-connections.service";
-import { assertEnabled, syncError } from "./sync-contract";
+import { assertSourceAdministrationEnabled, syncError } from "./sync-contract";
 
 /** Binds or rotates an opaque protected-store reference; never enables collection. */
 @Injectable()
@@ -12,7 +12,7 @@ export class MetaCredentialBindingService {
     private readonly resolver: MetaCredentialResolver) {}
 
   async bindConfiguredAuth(connectionId: string, actorUserId: string) {
-    assertEnabled();
+    assertSourceAdministrationEnabled();
     const transport = configuredMetaTransport();
     const ref = process.env.DAILY_SYNC_META_CREDENTIAL_REF;
     if (!ref || !/^vault:\/\/meta\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(ref) ||

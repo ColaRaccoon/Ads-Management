@@ -1,6 +1,6 @@
 import { SourceDataKind, SourceKind, SourceProvider } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from "class-validator";
+import { IsEnum, IsIn, IsInt, IsObject, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, ValidateNested } from "class-validator";
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const KEY = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/;
@@ -33,6 +33,41 @@ export class Cafe24ScheduledBootstrapInput {
   @IsString() @Matches(/^[a-f0-9]{64}$/) expectedConfigurationDigest!: string;
   @IsIn(["UNKNOWN","API_ACTUAL_PRODUCT_PLUS_SHIPPING"]) couponInputSource!: "UNKNOWN"|"API_ACTUAL_PRODUCT_PLUS_SHIPPING";
   @IsIn(["ENABLE_CAFE24_SCHEDULED_API_ONLY_WITHOUT_CSV"]) acknowledgement!: string;
+}
+
+export class Cafe24ManualPreparationInput {
+  @IsString() @Matches(DATE) fromDate!: string;
+  @IsString() @Matches(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/) expectedUpdatedAt!: string;
+  @IsInt() @Min(1) expectedAccessRevision!: number;
+  @IsInt() @Min(1) expectedRefreshRevision!: number;
+}
+
+export class Cafe24ActivationReviewQuery {
+  @IsString() @Matches(DATE) day!: string;
+  @IsIn(["CSV_REVIEWED", "API_ONLY"]) mode!: "CSV_REVIEWED" | "API_ONLY";
+  @IsIn(["UNKNOWN", "API_ACTUAL_PRODUCT_PLUS_SHIPPING"])
+  couponInputSource!: "UNKNOWN" | "API_ACTUAL_PRODUCT_PLUS_SHIPPING";
+}
+
+export class Cafe24ReviewedInputDifferences {
+  @IsInt() @Min(0) totalOrderOrders!: number;
+  @IsInt() @Min(0) paidOrders!: number;
+  @IsInt() @Min(0) paymentMethodOrders!: number;
+  @IsInt() @Min(0) couponSignalOrders!: number;
+  @IsOptional() @IsInt() @Min(0) productNameOrders?: number;
+}
+
+export class Cafe24DayActivationInput {
+  @IsString() @Matches(DATE) day!: string;
+  @IsInt() @Min(1) expectedPolicyVersion!: number;
+  @IsUUID("4") expectedSuccessRunId!: string;
+  @IsString() @Matches(/^[A-Z][A-Z0-9_]{2,63}$/) reason!: string;
+  @IsIn(["CSV_REVIEWED", "API_ONLY"]) mode!: "CSV_REVIEWED" | "API_ONLY";
+  @IsIn(["UNKNOWN", "API_ACTUAL_PRODUCT_PLUS_SHIPPING"])
+  couponInputSource!: "UNKNOWN" | "API_ACTUAL_PRODUCT_PLUS_SHIPPING";
+  @IsString() @Matches(/^[a-f0-9]{64}$/) expectedSnapshotDigest!: string;
+  @IsOptional() @IsObject() @ValidateNested() @Type(() => Cafe24ReviewedInputDifferences)
+  expectedInputDifferences?: Cafe24ReviewedInputDifferences;
 }
 export class MetaVerificationInput {
   @IsString() @Matches(DATE) verificationDay!: string;

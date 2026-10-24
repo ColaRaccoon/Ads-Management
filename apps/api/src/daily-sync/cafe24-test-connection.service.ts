@@ -18,7 +18,7 @@ export function cafe24TestAccount(env: NodeJS.ProcessEnv = process.env) {
 
 export function cafe24TestAllowed(mallId: string, shopKey: string,
   env: NodeJS.ProcessEnv = process.env) {
-  if (env.DAILY_SYNC_FEATURE_ENABLED === "true") {
+  if (env.DAILY_SYNC_FEATURE_ENABLED === "true" || env.DAILY_SYNC_SOURCE_ADMIN_ENABLED === "true") {
     let allowed: unknown;
     try { allowed = JSON.parse(env.DAILY_SYNC_ALLOWED_ACCOUNTS ?? "[]"); }
     catch { return false; }

@@ -128,10 +128,22 @@ export function assertEnabled(env: NodeJS.ProcessEnv = process.env) {
   if (!enabledSync(env)) syncError("PROVIDER_UNAVAILABLE", 503);
 }
 
+/** Prepare disabled connections without opening collection or source selection. */
+export function assertSourceAdministrationEnabled(env: NodeJS.ProcessEnv = process.env) {
+  if (!enabledSync(env) && env.DAILY_SYNC_SOURCE_ADMIN_ENABLED !== "true")
+    syncError("PROVIDER_UNAVAILABLE", 503);
+}
+
 /** One-account Cafe24 OAuth and read-only preflight without enabling canonical writes. */
 export function assertCafe24TestReadEnabled(env: NodeJS.ProcessEnv = process.env) {
   if (!enabledSync(env) && env.DAILY_SYNC_CAFE24_TEST_ENABLED !== "true")
     syncError("PROVIDER_UNAVAILABLE", 503);
+}
+
+/** Normal OAuth may precede enabling provider reads or collection. */
+export function assertCafe24AuthorizationEnabled(env: NodeJS.ProcessEnv = process.env) {
+  if (env.DAILY_SYNC_SOURCE_ADMIN_ENABLED === "true") return;
+  assertCafe24TestReadEnabled(env);
 }
 
 /** Headerless Order GET follows the app setting, which read_order cannot inspect. */
