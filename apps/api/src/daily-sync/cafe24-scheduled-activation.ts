@@ -1,6 +1,7 @@
 import {PrismaService} from "../common/prisma.service";
 import {SourceConnectionsService} from "./source-connections.service";
 import {Prisma} from "@prisma/client";
+import {reviewedCafe24ScheduledBaseline} from "./cafe24-scheduled-review";
 
 async function publishedPolicyVersion(db:PrismaService|Prisma.TransactionClient,runId:string,day:string) {
   const events=await db.securityAuditEvent.findMany({where:{action:"SYNC_UNIT_PUBLISHED",targetType:"RUN_UNIT",targetId:`${runId}:${day}`,result:"SUCCESS"},take:2});
@@ -67,7 +68,9 @@ export async function reconcileCafe24ScheduledDay(db:PrismaService,connectionId:
   const date=new Date(`${day}T00:00:00.000Z`);
   const policies=await db.sourcePolicy.findMany({where:{connectionId,dataKind:"CAFE24_ORDER",fromDate:{lte:date},OR:[{toDate:null},{toDate:{gt:date}}]}});
   const originalVersion=await publishedPolicyVersion(db,runId,day);
-  if(policies.length!==1 || policies[0].primarySource!=="CSV" || originalVersion===null || policies[0].version!==originalVersion || policies[0].couponInputSource!==coupon) return false;
+  if(policies.length!==1 || policies[0].primarySource!=="CSV" || originalVersion===null || policies[0].version!==originalVersion) return false;
+  if(policies[0].couponInputSource!==coupon &&
+    !await reviewedCafe24ScheduledBaseline(db,connectionId,day,policies[0],coupon)) return false;
   try {
     await new SourceConnectionsService(db).activateCafe24Day(connectionId,{day,expectedPolicyVersion:policies[0].version,
       expectedSuccessRunId:runId,reason:"CAFE24_SCHEDULED_API_ONLY",mode:"API_ONLY",couponInputSource:coupon},null);

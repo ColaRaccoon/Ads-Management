@@ -30,7 +30,7 @@ export class KoreaEximExchangeRateProvider implements ExchangeRateProvider {
 
     const searchDate = formatDateOnly(normalizeDateOnly(date)).replace(/-/g, "");
     const params = new URLSearchParams({ authkey: authKey, searchdate: searchDate, data: "AP01" });
-    const response = await fetch(`${this.endpoint}?${params.toString()}`);
+    const response = await fetch(`${this.endpoint}?${params.toString()}`, { signal: AbortSignal.timeout(15_000) });
 
     if (!response.ok) {
       throw new Error(`한국수출입은행 환율 API 요청 실패: HTTP ${response.status}`);

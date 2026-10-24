@@ -10,12 +10,13 @@ import { assertEnabled, syncError } from "./sync-contract";
 import { SyncFoundationService } from "./sync-foundation.service";
 import { cleanupScheduledCheckpoints } from "./scheduled-checkpoint";
 import { cafe24ScheduledDayActivated, reconcileCafe24ScheduledDay } from "./cafe24-scheduled-activation";
+import { ExchangeRatesService } from "../exchange-rates/exchange-rates.service";
 
 @Injectable()
 export class ScheduledSyncService {
   constructor(private readonly prisma: PrismaService, private readonly foundation: SyncFoundationService,
     private readonly google: GoogleSyncRunnerService, private readonly cafe24: Cafe24SyncRunnerService,
-    private readonly meta: MetaSyncRunnerService) {}
+    private readonly meta: MetaSyncRunnerService, private readonly exchangeRates: ExchangeRatesService) {}
 
   private async scope(input: { scheduleKey: string; scheduledFor: string }, executing = false) {
     assertEnabled();
@@ -51,6 +52,12 @@ export class ScheduledSyncService {
     if (!await this.foundation.prepareScheduledRetry(run.id, scope.deadlineAt)) return this.status(input);
     const options = { maxUnits: 1, deadlineAt: scheduledUnitDeadline(scope.connection.provider, scope.deadlineAt) };
     if (options.deadlineAt <= Date.now()) return this.status(input);
+    if (scope.connection.provider === "META") {
+      const unit = await this.prisma.runUnit.findFirst({ where: { runId: run.id, status: { not: "SUCCEEDED" } },
+        orderBy: { unitKey: "asc" }, select: { unitKey: true } });
+      if (unit) await this.exchangeRates.ensureUsdKrwRatesForDates([new Date(`${unit.unitKey}T00:00:00.000Z`)]);
+      if (options.deadlineAt <= Date.now()) return this.status(input);
+    }
     const runner = scope.connection.provider === "CAFE24" ? this.cafe24 : scope.connection.provider === "GOOGLE" ? this.google : this.meta;
     await runner.execute(run.id, options);
     if(scope.connection.provider==="CAFE24") {

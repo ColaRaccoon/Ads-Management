@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MappingsModule } from "../mappings/mappings.module";
+import { ExchangeRatesModule } from "../exchange-rates/exchange-rates.module";
 import { MetaEntityWriterService } from "../uploads/meta-entity-writer.service";
 import { MetaMetricVersionService } from "../uploads/meta-metric-version.service";
 import { CanonicalApiWriterService } from "./canonical-api-writer.service";
@@ -28,7 +29,7 @@ import { ScheduledSyncService } from "./scheduled-sync.service";
 import { syncError } from "./sync-contract";
 
 @Module({
-  imports: [MappingsModule],
+  imports: [MappingsModule, ExchangeRatesModule],
   controllers: [SourceConnectionsController, SyncRunsController, SourceCoverageController, DailySyncMachineController,
     Cafe24ConnectionController, Cafe24OauthCallbackController],
   providers: [SourceConnectionsService, SyncFoundationService, ScheduledSyncService, CredentialVault,
