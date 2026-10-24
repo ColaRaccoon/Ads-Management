@@ -1,0 +1,75 @@
+{
+  "kind": "OCT23_IMMEDIATE_COLLECTION_IN_PROGRESS",
+  "day": "2026-10-23",
+  "timeZone": "Asia/Seoul",
+  "humanAuthorization": {
+    "necessaryCredentialsAndImmediateCollection": true,
+    "minimumProductionPreparationCode": true,
+    "exact26ChangeDeployment": true,
+    "metaUserOAuthReviewOnly": true
+  },
+  "deployment": {
+    "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+    "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+    "sourceCommit": "ce5741211176ba3bc3c09a52da9ba942aee1a5df",
+    "id": "d22be3e2-60f3-4532-94b9-6778f7cbba3d",
+    "createdAt": "2026-10-24T00:54:59.973Z",
+    "status": "SUCCESS",
+    "initialConnectorApply": "CANCELLED_USER_DID_NOT_APPROVE",
+    "appliedByHumanInDashboard": true,
+    "patchFieldCount": 26,
+    "compiledFilesComparedToC7": 273,
+    "compiledApiChanges": 9,
+    "protectedReadyWaitObserved": true,
+    "bundleRunningAt": "2026-10-24T00:56:01.532240525Z",
+    "expectedRuntimeFingerprint": "8feaa48fa9d78bcd574b9eaa78059369414bbe39af75d21acc9f1acbad12b3d1",
+    "observedRuntimeFingerprintMatches": true,
+    "fingerprintProjectionChange": "releaseId only, recomputed from verified C7 projection",
+    "externalLiveHttp": 200,
+    "normalAuthenticatedSourceList": { "items": [], "nextPage": null },
+    "migrationExecuted": false,
+    "schedulesEnabled": false,
+    "collectionFeatureEnabled": false
+  },
+  "google": {
+    "auth": "fresh authorized_user source with existing keyless service-account impersonation",
+    "principal": "daily-data-automation-ads-read@meta-ads-daily-automation.iam.gserviceaccount.com",
+    "accountId": "1391592099",
+    "localFetch": "SUCCEEDED",
+    "rowCount": 5,
+    "pageCount": 1,
+    "currency": "KRW",
+    "timeZone": "Asia/Seoul",
+    "campaignSumMatchesAccountTotal": true,
+    "privateCaptureSha256": "3839b201126f53b5571b169061e46f1435a80251f55c40f7aa94883a7a896ee9",
+    "productionPublished": false,
+    "newIamRolesOrServiceAccountKeys": false
+  },
+  "cafe24": {
+    "existingClientSecretReissued": false,
+    "callbackRegistrationRepeated": false,
+    "protectedRuntimeSettingsApplied": true,
+    "oauthPairIssued": false,
+    "collectionExecuted": false,
+    "blockedBy": "normal operator API login not yet completed"
+  },
+  "meta": {
+    "accountIdentityConfirmed": "2138525300002203",
+    "newSystemUserToken": "OTHER_BUSINESS_ADMIN_APPROVAL_REQUIRED",
+    "otherAdminApprovalCurrentlyUnavailable": true,
+    "officePcCurrentlyUnavailable": true,
+    "remotePhase08ProtectedMetaRecordAndWrappingKeyNamesPresent": false,
+    "userOAuthOfficialSupportRead": true,
+    "userOAuthImplementationApplied": false,
+    "userOAuthReviewRef": "11_Meta_사용자OAuth_대안검토_20261024.md",
+    "productionPublished": false
+  },
+  "preservation": {
+    "originalStashes": ["e881aeee89e1706b32209b3b55ccebbe025e6064", "6c74a21432148fbce1d5a2f1af79dfe3ce85ac88"],
+    "phase06Restarted": false,
+    "phase08Restarted": false,
+    "storageRenewalOrMigrationRepeated": false,
+    "rawCredentialsOrBrowserSessionsInRepository": false,
+    "syntheticPostgresContainerStopped": true
+  }
+}
