@@ -2,7 +2,8 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 const expected = new Set(['cafe24-manual-preparation', 'cafe24-oauth.service', 'cafe24-test-connection.service',
   'daily-sync.controller', 'daily-sync.dto', 'google-connection-verifier.service', 'meta-credential-binding.service',
-  'source-connections.service', 'sync-contract'].map(name => `daily-sync/${name}.js`));
+  'source-connections.service', 'sync-contract', 'meta-credential-resolver',
+  'meta-protected-credential-resolver'].map(name => `daily-sync/${name}.js`));
 const [baseline, compiled] = process.argv.slice(2);
 if (!baseline || !compiled) throw Error('Two compiled directories required');
 let checked = 0, changed = 0;

@@ -68,7 +68,9 @@ export async function prepareProductionSources(source, parent = process.platform
           env.DAILY_SYNC_META_TRANSPORT !== 'MCP' || env.DAILY_SYNC_META_VAULT_DIRECTORY ||
           env.DAILY_SYNC_META_MCP_CATALOG_PATH || env.DAILY_SYNC_META_MCP_REPORTING_SCHEMA_PATH) reject();
       await save(uuid + '.json', env.DAILY_SYNC_META_RECORD_B64, value => {
-        if (value.version !== 1 || Object.keys(value).sort().join(',') !== 'authTag,ciphertext,iv,version' ||
+        const user = env.DAILY_SYNC_META_AUTH_CLASS === 'USER';
+        if (user && !/^\d{1,30}$/.test(env.DAILY_SYNC_META_USER_ID ?? '')) reject();
+        if (value.version !== (user ? 2 : 1) || Object.keys(value).sort().join(',') !== 'authTag,ciphertext,iv,version' ||
             !value.iv || !value.authTag || !value.ciphertext) reject();
       });
       env.DAILY_SYNC_META_VAULT_DIRECTORY = directory;

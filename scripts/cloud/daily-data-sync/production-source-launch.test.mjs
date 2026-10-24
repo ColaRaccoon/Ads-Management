@@ -41,3 +41,14 @@ test('wrong production target, substituted ADC principal and partial Meta bundle
     for (const key of Object.keys(source)) assert(!key.endsWith('_B64'));
   }
 });
+
+test('USER runtime accepts only v2 envelope with an explicit app-scoped person', async () => {
+  const bundle = { ...identity, DAILY_SYNC_META_TRANSPORT: 'MCP', DAILY_SYNC_META_AUTH_CLASS: 'USER', DAILY_SYNC_META_USER_ID: '123456789',
+    DAILY_SYNC_META_CREDENTIAL_REF: 'vault://meta/ab8c009e-082c-4b46-9adf-e026b839a394', DAILY_SYNC_META_VAULT_BACKEND: 'ENCRYPTED_FILE',
+    DAILY_SYNC_META_RECORD_B64: b64({ version: 2, iv: 'SYNTHETIC', authTag: 'SYNTHETIC', ciphertext: 'SYNTHETIC' }),
+    DAILY_SYNC_META_CATALOG_GZIP_B64: gzip({ synthetic: 'catalog' }), DAILY_SYNC_META_REPORT_SCHEMA_GZIP_B64: gzip({ synthetic: 'schema' }) };
+  const prepared = await prepareProductionSources({ ...bundle }); await prepared.cleanup();
+  for (const patch of [{ DAILY_SYNC_META_USER_ID: '' }, { DAILY_SYNC_META_AUTH_CLASS: 'SYSTEM_USER' },
+    { DAILY_SYNC_META_RECORD_B64: b64({ version: 1, iv: 'SYNTHETIC', authTag: 'SYNTHETIC', ciphertext: 'SYNTHETIC' }) }])
+    await assert.rejects(prepareProductionSources({ ...bundle, ...patch }), /PRODUCTION_SOURCE_PREPARATION_REJECTED/);
+});

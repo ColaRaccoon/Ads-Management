@@ -6,7 +6,8 @@
     "necessaryCredentialsAndImmediateCollection": true,
     "minimumProductionPreparationCode": true,
     "exact26ChangeDeployment": true,
-    "metaUserOAuthReviewOnly": true
+    "metaUserOAuthReviewOnly": false,
+    "minimumMetaUserSupportImplementation": true
   },
   "deployment": {
     "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
@@ -61,6 +62,8 @@
     "remotePhase08ProtectedMetaRecordAndWrappingKeyNamesPresent": false,
     "userOAuthOfficialSupportRead": true,
     "userOAuthImplementationApplied": false,
+    "userOAuthCodeImplementedAndLocallyVerified": true,
+    "userOAuthImplementationRef": "11_Meta_사용자OAuth_구현검증_20261024.md",
     "userOAuthReviewRef": "11_Meta_사용자OAuth_대안검토_20261024.md",
     "productionPublished": false
   },

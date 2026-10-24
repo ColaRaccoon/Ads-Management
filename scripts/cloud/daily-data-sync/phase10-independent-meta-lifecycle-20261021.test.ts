@@ -2,7 +2,7 @@
 import 'reflect-metadata';
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {mkdtemp, writeFile, unlink, rmdir} from 'node:fs/promises';
+import {mkdtemp, realpath, writeFile, unlink, rmdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
@@ -49,7 +49,7 @@ test('credential backend deadline aborts and fails closed without a provider req
 
 async function withProtectedFixture(run:(value:{resolver:ProtectedFileMetaCredentialResolver;
   file:string; calls:string[]; data:Record<string,unknown>; key:Buffer})=>Promise<void>){
-  const dir=await mkdtemp(join(tmpdir(),'phase10-meta-synthetic-'));
+  const dir=await realpath(await mkdtemp(join(tmpdir(),'phase10-meta-synthetic-')));
   const file=join(dir,'00000000-0000-4000-8000-000000000011.json'),key=randomBytes(32),calls:string[]=[];
   const seconds=Math.floor(Date.now()/1000);
   const data:Record<string,unknown>={app_id:'4474691502806219',type:'SYSTEM_USER',is_valid:true,

@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { syncError } from "./sync-contract";
 
+export type MetaAuthClass = "SYSTEM_USER" | "USER";
+
 /** The protected store must attest this metadata for the exact token it returns. */
 export type MetaResolvedCredential = {
   token: string;
@@ -8,7 +10,8 @@ export type MetaResolvedCredential = {
   connectionId: string;
   accountId: string;
   appId: string;
-  authClass: "SYSTEM_USER";
+  authClass: MetaAuthClass;
+  subjectId?: string;
   scopes: readonly string[];
   expiresAt: Date;
   transport?: "GRAPH" | "MCP";
@@ -21,6 +24,8 @@ export type MetaCredentialRequest = {
   connectionId: string;
   accountId: string;
   transport?: "GRAPH" | "MCP";
+  authClass?: MetaAuthClass;
+  expectedUserId?: string;
 };
 
 export abstract class MetaCredentialResolver {
@@ -64,14 +69,26 @@ export function configuredMetaTransport(env: NodeJS.ProcessEnv = process.env): "
   return syncError("PROVIDER_AUTH_REQUIRED");
 }
 
+/** USER is an explicit own-account MCP mode, bound to one app-scoped person. */
+export function configuredMetaAuthPolicy(transport: "GRAPH" | "MCP" | undefined,
+  env: NodeJS.ProcessEnv = process.env): { authClass: MetaAuthClass; expectedUserId?: string } {
+  const authClass = env.DAILY_SYNC_META_AUTH_CLASS ?? "SYSTEM_USER";
+  if (authClass === "SYSTEM_USER") return { authClass };
+  const expectedUserId = env.DAILY_SYNC_META_USER_ID;
+  if (authClass === "USER" && transport === "MCP" && expectedUserId && /^\d{1,30}$/.test(expectedUserId))
+    return { authClass, expectedUserId };
+  return syncError("PROVIDER_AUTH_REQUIRED");
+}
+
 /** Reject an unbound, overprivileged, expired or substituted token before any Graph call. */
 export async function resolveMetaCredential(
   resolver: MetaCredentialResolver, input: MetaCredentialRequest, now = new Date(),
   maxWaitMs = 20_000
 ): Promise<MetaResolvedCredential> {
   // Resolve against the caller's original binding, even if an injected backend mutates its argument.
+  const policy = configuredMetaAuthPolicy(input.transport);
   input = Object.freeze({ credentialRef: input.credentialRef, connectionId: input.connectionId,
-    accountId: input.accountId, transport: input.transport });
+    accountId: input.accountId, transport: input.transport, ...policy });
   if ((input.transport !== undefined && !["GRAPH", "MCP"].includes(input.transport)) ||
       !META_REF.test(input.credentialRef) || !/^\d{1,30}$/.test(input.accountId) ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(input.connectionId))
@@ -95,9 +112,12 @@ export async function resolveMetaCredential(
   } finally {
     if (timeout) clearTimeout(timeout);
   }
-  if (!credential || credential.credentialRef !== input.credentialRef ||
+  const currentPolicy = configuredMetaAuthPolicy(input.transport);
+  if (currentPolicy.authClass !== policy.authClass || currentPolicy.expectedUserId !== policy.expectedUserId ||
+      !credential || credential.credentialRef !== input.credentialRef ||
       credential.connectionId !== input.connectionId || credential.accountId !== input.accountId ||
-      credential.appId !== APP_ID || credential.authClass !== "SYSTEM_USER" ||
+      credential.appId !== APP_ID || credential.authClass !== policy.authClass ||
+      (policy.authClass === "USER" && credential.subjectId !== policy.expectedUserId) ||
       !allowedMetaScopesForTransport(credential.scopes, input.transport) ||
       (input.transport === "MCP" ? credential.transport !== "MCP" || credential.currencyCode !== "USD" ||
         credential.timeZone !== "Asia/Seoul" : credential.transport !== undefined && credential.transport !== "GRAPH") ||

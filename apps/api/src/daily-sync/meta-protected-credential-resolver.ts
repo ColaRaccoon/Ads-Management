@@ -12,15 +12,27 @@ const MAX_BYTES = 32_768;
 const REF = /^vault:\/\/meta\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 type Material = MetaCredentialRequest & { token: string; inspectorToken: string };
-type Envelope = { version: 1; iv: string; authTag: string; ciphertext: string };
+type Envelope = { version: 1 | 2; iv: string; authTag: string; ciphertext: string };
+
+function credentialIdentity(input: MetaCredentialRequest) {
+  const authClass = input.authClass ?? "SYSTEM_USER";
+  if (authClass === "SYSTEM_USER" && input.expectedUserId === undefined)
+    return { authClass, version: 1 as const };
+  if (authClass === "USER" && input.transport === "MCP" &&
+      typeof input.expectedUserId === "string" && /^\d{1,30}$/.test(input.expectedUserId))
+    return { authClass, version: 2 as const };
+  return syncError("PROVIDER_AUTH_REQUIRED");
+}
 
 function aad(input: MetaCredentialRequest) {
   if ((input.transport !== undefined && !["GRAPH", "MCP"].includes(input.transport)) ||
       !REF.test(input.credentialRef) || !UUID.test(input.connectionId) ||
       !/^\d{1,30}$/.test(input.accountId)) syncError("PROVIDER_AUTH_REQUIRED");
-  const binding = ["META_VAULT", 1, APP_ID, input.credentialRef, input.connectionId, input.accountId];
+  const identity = credentialIdentity(input);
+  const binding = ["META_VAULT", identity.version, APP_ID, input.credentialRef, input.connectionId, input.accountId];
   // Preserve existing Graph records; MCP ciphertext is separately bound to its transport.
   if (input.transport === "MCP") binding.push("MCP");
+  if (identity.authClass === "USER") binding.push("USER", input.expectedUserId!);
   return Buffer.from(JSON.stringify(binding));
 }
 function token(value: unknown) {
@@ -38,6 +50,8 @@ function material(value: unknown, input: MetaCredentialRequest): Material {
   const item = value as Material | null;
   if (!item || item.credentialRef !== input.credentialRef || item.connectionId !== input.connectionId ||
       item.accountId !== input.accountId || (item.transport ?? "GRAPH") !== (input.transport ?? "GRAPH") ||
+      (item.authClass ?? "SYSTEM_USER") !== (input.authClass ?? "SYSTEM_USER") ||
+      item.expectedUserId !== input.expectedUserId ||
       !token(item.token) || !token(item.inspectorToken))
     syncError("PROVIDER_AUTH_REQUIRED");
   return item;
@@ -53,7 +67,7 @@ export function sealMetaVaultRecord(input: Material, key: Uint8Array): string {
     const cipher = createCipheriv("aes-256-gcm", key, iv);
     cipher.setAAD(binding);
     const ciphertext = Buffer.concat([cipher.update(plain), cipher.final()]);
-    return JSON.stringify({ version: 1, iv: iv.toString("base64"),
+    return JSON.stringify({ version: credentialIdentity(input).version, iv: iv.toString("base64"),
       authTag: cipher.getAuthTag().toString("base64"), ciphertext: ciphertext.toString("base64") });
   } finally { plain.fill(0); }
 }
@@ -65,10 +79,12 @@ export class ProtectedFileMetaCredentialResolver extends MetaCredentialResolver 
 
   async resolve(input: MetaCredentialRequest, signal: AbortSignal): Promise<MetaResolvedCredential> {
     input = Object.freeze({ credentialRef: input.credentialRef, connectionId: input.connectionId,
-      accountId: input.accountId, transport: input.transport });
+      accountId: input.accountId, transport: input.transport, authClass: input.authClass,
+      expectedUserId: input.expectedUserId });
     let key: Buffer | undefined, plain: Buffer | undefined;
     try {
       const binding = aad(input);
+      const identity = credentialIdentity(input);
       if (signal.aborted || !isAbsolute(this.directory)) syncError("PROVIDER_AUTH_REQUIRED");
       key = decoded(this.encodedKey, 32);
       const directory = await realpath(this.directory);
@@ -93,7 +109,7 @@ export class ProtectedFileMetaCredentialResolver extends MetaCredentialResolver 
           envelope = JSON.parse(buffer.subarray(0, bytesRead).toString("utf8")) as Envelope;
         } finally { buffer.fill(0); }
       } finally { await file.close(); }
-      if (envelope?.version !== 1) syncError("PROVIDER_AUTH_REQUIRED");
+      if (envelope?.version !== identity.version) syncError("PROVIDER_AUTH_REQUIRED");
       const decipher = createDecipheriv("aes-256-gcm", key, decoded(envelope.iv, 12));
       decipher.setAAD(binding);
       decipher.setAuthTag(decoded(envelope.authTag, 16));
@@ -104,9 +120,10 @@ export class ProtectedFileMetaCredentialResolver extends MetaCredentialResolver 
         new URLSearchParams({ input_token: secret.token }), signal);
       const data = debug.data as Record<string, unknown> | null;
       const expiry = data?.expires_at;
-      if (!data || data.app_id !== APP_ID || data.type !== "SYSTEM_USER" || data.is_valid !== true ||
+      if (!data || data.app_id !== APP_ID || data.type !== identity.authClass || data.is_valid !== true ||
           !allowedMetaScopesForTransport(data.scopes, input.transport) ||
           typeof data.user_id !== "string" || !/^\d{1,30}$/.test(data.user_id) ||
+          (identity.authClass === "USER" && data.user_id !== input.expectedUserId) ||
           typeof expiry !== "number" || !Number.isSafeInteger(expiry) ||
           expiry <= Date.now() / 1000 + 7 * 86_400 || expiry > 253_402_300_799)
         syncError("PROVIDER_AUTH_REQUIRED");
@@ -125,7 +142,8 @@ export class ProtectedFileMetaCredentialResolver extends MetaCredentialResolver 
         syncError("PROVIDER_AUTH_REQUIRED");
       if (signal.aborted) syncError("PROVIDER_AUTH_REQUIRED");
       return { ...input, ...(input.transport === "MCP" ? { currencyCode: "USD", timeZone: "Asia/Seoul" } : {}),
-        token: secret.token, appId: APP_ID, authClass: "SYSTEM_USER", scopes: [...data.scopes],
+        token: secret.token, appId: APP_ID, authClass: identity.authClass,
+        ...(identity.authClass === "USER" ? { subjectId: data.user_id } : {}), scopes: [...data.scopes],
         expiresAt: new Date(Math.min(expiry, typeof dataExpiry === "number" && dataExpiry > 0
           ? dataExpiry : expiry) * 1000) };
     } catch { return syncError("PROVIDER_AUTH_REQUIRED"); }
