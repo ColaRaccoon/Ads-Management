@@ -10,6 +10,9 @@ import { writeSecurityAudit } from "../security-audit/security-audit.types";
 import { hasCafe24CouponPaymentToken } from "../domain/cafe24-coupon-matcher";
 import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { computeCafe24ActivationEvidence } from "./cafe24-activation-evidence";
+import { cafe24ProductPrefixSpaceDifference, cafe24StableItemKey } from "./cafe24-reviewed-parity";
+import { Cafe24ProductMatcher } from "../domain/cafe24-matcher";
+import { loadCafe24MatcherRules } from "./cafe24-rule-loader";
 import { rejectCafe24Activation } from "./cafe24-activation-diagnostic";
 import { cafe24ObservationHmac, cafe24ObservationKey } from "./cafe24-observed-revision";
 import { ConnectionInput, PolicyInput } from "./daily-sync.dto";
@@ -216,6 +219,8 @@ export class SourceConnectionsService {
     mode?: "CSV_REVIEWED" | "API_ONLY";
     couponInputSource?: "UNKNOWN" | "API_ACTUAL_PRODUCT_PLUS_SHIPPING";
     expectedSnapshotDigest?: string;
+    expectedOptionPrefixWhitespaceLines?: number;
+    expectedMappingChangeLines?: number;
     expectedInputDifferences?: { totalOrderOrders: number; paidOrders: number;
       paymentMethodOrders: number; couponSignalOrders: number;
       productNameOrders?: number };
@@ -248,6 +253,13 @@ export class SourceConnectionsService {
       syncError("SOURCE_SELECTION_REQUIRED");
     if (!scheduledActivation && (!/^[a-f0-9]{64}$/.test(input.expectedSnapshotDigest ?? "") ||
         (mode === "CSV_REVIEWED" && !input.expectedInputDifferences)))
+      syncError("SOURCE_SELECTION_REQUIRED", 400);
+    const expectedSpaces = input.expectedOptionPrefixWhitespaceLines ?? 0;
+    const expectedMappingChanges = input.expectedMappingChangeLines ?? 0;
+    if (![expectedSpaces, expectedMappingChanges].every((count) =>
+        Number.isSafeInteger(count) && count >= 0 && count <= 10_000) ||
+        ((expectedSpaces > 0 || expectedMappingChanges > 0) &&
+          (scheduledActivation || mode !== "CSV_REVIEWED")))
       syncError("SOURCE_SELECTION_REQUIRED", 400);
     const next = new Date(day); next.setUTCDate(next.getUTCDate() + 1);
     return this.prisma.$transaction(async (tx) => {
@@ -344,8 +356,9 @@ export class SourceConnectionsService {
       const apiHashSet = new Set(apiHashes);
       if (csvUndatedRows.length > 100)
         rejectCafe24Activation("CAFE24_ACTIVATION_ROW_CARDINALITY");
-      const currentUndated = csvUndatedRows.filter((row) => apiHashSet.has(semanticHash(row)));
-      const unresolvedUndated = csvUndatedRows.filter((row) => !apiHashSet.has(semanticHash(row)));
+      const currentUndated = csvUndatedRows.filter((row) => apiHashSet.has(semanticHash(row)) ||
+        (expectedSpaces > 0 && apiRows.some((api) => cafe24ProductPrefixSpaceDifference(api, row))));
+      const unresolvedUndated = csvUndatedRows.filter((row) => !currentUndated.includes(row));
       if (unresolvedUndated.length) {
         // A prior CSV_REVIEWED activation can bind a legacy blank-date CSV
         // line to a complete API day without changing that original CSV date.
@@ -365,7 +378,9 @@ export class SourceConnectionsService {
         }
         for (const csv of unresolvedUndated) {
           const hash = semanticHash(csv);
-          const candidates = historicByHash.get(hash) ?? [];
+          const exactCandidates = historicByHash.get(hash) ?? [];
+          const candidates = exactCandidates.length ? exactCandidates :
+            historic.filter((api) => cafe24ProductPrefixSpaceDifference(api, csv));
           if (candidates.length !== 1 || !candidates[0].orderDate)
             rejectCafe24Activation("CAFE24_ACTIVATION_UNDATED_CSV_UNREVIEWED");
           const historicDay = candidates[0].orderDate;
@@ -382,7 +397,7 @@ export class SourceConnectionsService {
             tx.sourceRecordLink.findFirst({ where: { connectionId,
               dataKind: SourceDataKind.CAFE24_ORDER, source: SourceKind.API,
               recordTable: "cafe24_order_lines", recordId: candidates[0].id,
-              canonicalKeyHash: hash, version: candidates[0].importVersion,
+              canonicalKeyHash: semanticHash(candidates[0]), version: candidates[0].importVersion,
               isCurrent: true } }),
             tx.securityAuditEvent.findFirst({ where: {
               action: "SOURCE_POLICY_CHANGED", targetType: "SOURCE_POLICY",
@@ -415,7 +430,17 @@ export class SourceConnectionsService {
               return false;
             }
           }) : null;
-          if (visible.length !== 1 || !historicCoverage || !csvLink || !apiLink ||
+          const prefixBindings = after?.optionPrefixWhitespaceBindings;
+          const approvedPrefix = semanticHash(candidates[0]) === hash ||
+            (cafe24ProductPrefixSpaceDifference(candidates[0], csv) &&
+              Array.isArray(prefixBindings) && prefixBindings.some((entry) => {
+                if (!entry || typeof entry !== "object" || Array.isArray(entry)) return false;
+                const binding = entry as Record<string, unknown>;
+                return binding.csvRecordId === csv.id && binding.csvLinkId === csvLink?.id &&
+                  binding.csvVersion === csv.importVersion &&
+                  binding.apiCanonicalKeyHash === semanticHash(candidates[0]);
+              }));
+          if (visible.length !== 1 || !historicCoverage || !csvLink || !apiLink || !approvedPrefix ||
               historicCoverage.reconciliationStatus !== "CSV_API_INPUTS_REVIEWED" &&
               historicCoverage.reconciliationStatus !== "CSV_API_PARITY_VERIFIED" ||
               after?.sourceChoice !== "CSV_REVIEWED" || !approvedBinding)
@@ -424,6 +449,18 @@ export class SourceConnectionsService {
       }
       const csvRows = [...csvDatedRows, ...currentUndated];
       const csvByHash = new Map(csvRows.map((row) => [semanticHash(row), row]));
+      const csvByStableKey = new Map(csvRows.map((row) => [cafe24StableItemKey(row), row]));
+      if (expectedSpaces > 0 && (csvByStableKey.size !== csvRows.length ||
+          new Set(apiRows.map(cafe24StableItemKey)).size !== apiRows.length))
+        rejectCafe24Activation("CAFE24_ACTIVATION_ROW_CARDINALITY");
+      const csvForApiHash = new Map(apiRows.flatMap((api) => {
+        const hash = semanticHash(api);
+        const exact = csvByHash.get(hash);
+        const candidate = csvByStableKey.get(cafe24StableItemKey(api));
+        const csv = exact ?? (expectedSpaces > 0 && candidate &&
+          cafe24ProductPrefixSpaceDifference(api, candidate) ? candidate : undefined);
+        return csv ? [[hash, csv] as const] : [];
+      }));
       const allHashes = [...new Set([...apiHashes, ...csvByHash.keys()])];
       const versionByHash = new Map(apiVersions.map((row) => [row.canonicalKeyHash, row]));
       const [apiLinks, csvLinks] = await Promise.all([SourceKind.API, SourceKind.CSV]
@@ -456,8 +493,11 @@ export class SourceConnectionsService {
           row.productId === null && row.cafe24ProductRuleId === null);
       const sameRawBusinessIdentity = (left: typeof apiRows[number], right: typeof csvRows[number]) =>
         left.orderNo === right.orderNo && left.lineOrderNo === right.lineOrderNo &&
-        left.productNo === right.productNo && left.optionName === right.optionName;
-      const sameMappingInput = (left: typeof apiRows[number], right: typeof csvRows[number]) =>
+        left.productNo === right.productNo && (left.optionName === right.optionName ||
+          expectedSpaces > 0 && cafe24ProductPrefixSpaceDifference(left, right));
+      const sameMappingInput = (left: Pick<typeof apiRows[number],
+        "productId" | "cafe24ProductRuleId" | "matchSource" | "validationStatus">,
+        right: Pick<typeof apiRows[number], "productId" | "cafe24ProductRuleId" | "matchSource" | "validationStatus">) =>
         left.productId === right.productId &&
         left.cafe24ProductRuleId === right.cafe24ProductRuleId &&
         left.matchSource === right.matchSource &&
@@ -465,12 +505,19 @@ export class SourceConnectionsService {
       const differences = { totalOrderOrders: new Set<string>(), paidOrders: new Set<string>(),
         paymentMethodOrders: new Set<string>(), couponSignalOrders: new Set<string>(),
         productNameOrders: new Set<string>() };
+      const matcherRules = expectedMappingChanges > 0 ? await loadCafe24MatcherRules(tx) : [];
+      const matcher = new Cafe24ProductMatcher();
+      type Mapping = Pick<typeof apiRows[number], "productId" | "cafe24ProductRuleId" |
+        "matchSource" | "validationStatus">;
+      const mappingChanges: Array<{ id: string; mapping: Mapping }> = [];
+      const optionPrefixWhitespaceBindings: Array<{ csvRecordId: string; csvLinkId: string;
+        csvVersion: number; apiCanonicalKeyHash: string }> = [];
       for (const row of apiRows) {
         if (!validMappingState(row) ||
             row.totalPaidInputSource !== "ORDERS_PAYMENT_AMOUNT")
           rejectCafe24Activation("CAFE24_ACTIVATION_API_MAPPING_STATE");
         const hash = semanticHash(row);
-        const csv = csvByHash.get(hash);
+        const csv = csvForApiHash.get(hash);
         const version = versionByHash.get(hash);
         const link = apiLinkByRecordId.get(row.id);
         const csvLink = csv && csvLinkByRecordId.get(csv.id);
@@ -484,15 +531,28 @@ export class SourceConnectionsService {
           rejectCafe24Activation("CAFE24_ACTIVATION_CSV_QUANTITY");
         if (mode === "CSV_REVIEWED" && csv && !row.salePriceKrw.equals(csv.salePriceKrw))
           rejectCafe24Activation("CAFE24_ACTIVATION_CSV_SALE_PRICE");
+        let reviewedMapping: Mapping = row;
+        if (expectedMappingChanges > 0) {
+          const match = matcher.match({ productNo: row.productNo, productName: row.productName,
+            optionName: row.optionName, orderDate: day }, matcherRules);
+          reviewedMapping = { productId: match.productId, cafe24ProductRuleId: match.matchRuleId,
+            matchSource: match.productId ? MatchSource.RULE : MatchSource.UNMATCHED,
+            validationStatus: match.productId ? RowValidationStatus.VALID : RowValidationStatus.UNMATCHED };
+          if (!sameMappingInput(reviewedMapping, row))
+            mappingChanges.push({ id: row.id, mapping: reviewedMapping });
+        }
         if (mode === "CSV_REVIEWED" && csv &&
-            (!validMappingState(csv) || !sameMappingInput(row, csv)))
+            (!validMappingState(csv) || !sameMappingInput(reviewedMapping, csv)))
           rejectCafe24Activation("CAFE24_ACTIVATION_CSV_MAPPING_STATE");
         if (mode === "CSV_REVIEWED" && csv &&
-            (!csvLink || csvLink.canonicalKeyHash !== hash ||
+            (!csvLink || csvLink.canonicalKeyHash !== semanticHash(csv) ||
               csvLink.version !== csv.importVersion ||
               csv.orderLineKey !== [csv.orderNo, csv.lineOrderNo,
                 csv.productNo, csv.optionName].map((part) => part.trim()).join(":")))
           rejectCafe24Activation("CAFE24_ACTIVATION_CSV_LINK");
+        if (csv && csvLink && cafe24ProductPrefixSpaceDifference(row, csv))
+          optionPrefixWhitespaceBindings.push({ csvRecordId: csv.id, csvLinkId: csvLink.id,
+            csvVersion: csv.importVersion, apiCanonicalKeyHash: hash });
         if (!version || !link ||
             row.orderLineKey !== JSON.stringify(keyParts(row)) ||
             link.canonicalKeyHash !== hash || link.version !== version.version ||
@@ -531,6 +591,9 @@ export class SourceConnectionsService {
             differences.couponSignalOrders.add(row.orderNo);
         }
       }
+      if (optionPrefixWhitespaceBindings.length !== expectedSpaces ||
+          mappingChanges.length !== expectedMappingChanges)
+        rejectCafe24Activation("CAFE24_ACTIVATION_INPUT_DIFFERENCE_REVIEW");
       const differenceCounts = Object.fromEntries(Object.entries(differences)
         .map(([kind, orders]) => [kind, orders.size]));
       const undatedCsvBindings = currentUndated.map((row) => {
@@ -544,6 +607,29 @@ export class SourceConnectionsService {
         rejectCafe24Activation("CAFE24_ACTIVATION_INPUT_DIFFERENCE_REVIEW");
       if (mode === "API_ONLY" && input.expectedInputDifferences)
         rejectCafe24Activation("CAFE24_ACTIVATION_INPUT_DIFFERENCE_REVIEW");
+      // Apply mapping metadata only after every raw input, version/link,
+      // protected snapshot and explicit review count has passed. Any failure
+      // rolls back both these updates and the one-day source-policy change.
+      const mappingGroups = new Map<string, { ids: string[]; mapping: Mapping }>();
+      for (const change of mappingChanges) {
+        const key = JSON.stringify(change.mapping);
+        const group = mappingGroups.get(key) ?? { ids: [], mapping: change.mapping };
+        group.ids.push(change.id); mappingGroups.set(key, group);
+      }
+      for (const group of mappingGroups.values()) {
+        const updated = await tx.cafe24OrderLine.updateMany({ where: {
+          id: { in: group.ids }, connectionId, source: SourceKind.API, isCurrent: true
+        }, data: group.mapping });
+        if (updated.count !== group.ids.length)
+          rejectCafe24Activation("CAFE24_ACTIVATION_SNAPSHOT_CHANGED");
+      }
+      if (mappingChanges.length) await writeSecurityAudit(tx, {
+        actorType: SecurityAuditActorType.USER, actorUserId,
+        action: "CAFE24_MAPPING_REMATCH", targetType: "SOURCE_CONNECTION", targetId: connectionId,
+        result: SecurityAuditResult.SUCCESS,
+        afterJson: { day: input.day, source: SourceKind.API,
+          rematchedLineCount: mappingChanges.length, reason: input.reason }
+      });
       const oldTo = current.toDate;
       const newVersion = current.version + 1;
       if (current.fromDate.getTime() < day.getTime()) {
@@ -584,6 +670,7 @@ export class SourceConnectionsService {
         afterJson: { version: newVersion, primarySource: SourceKind.API,
           connectionId, day: input.day, successRunId: input.expectedSuccessRunId,
           sourceChoice: mode, couponInputSource, undatedCsvBindings,
+          optionPrefixWhitespaceBindings, rematchedApiLines: mappingChanges.length,
           inputDifferenceOrders: differenceCounts,
           displayFieldDifferenceReview: mode === "CSV_REVIEWED" &&
             differences.productNameOrders.size > 0 ? "DISPLAY_FIELD_DIFFERENCE_REVIEWED" : null }

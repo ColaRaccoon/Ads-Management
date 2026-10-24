@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { cafe24ObservationKey } from "./cafe24-observed-revision";
+import { cafe24StableItemKey } from "./cafe24-reviewed-parity";
 
 /** A protected one-day review binding. The activation caller recomputes it
  * while holding the connection lock, before changing the selected source.
@@ -25,7 +26,11 @@ export async function computeCafe24ActivationEvidence(client: PrismaClient | Pri
     connectionId,row.orderNo,row.lineOrderNo,row.productNo,row.optionName
   ].map((part) => part.trim()))).digest("hex");
   const apiKeys=new Set(rows.filter((row) => row.source==="API").map(keyHash));
-  const reviewed=rows.filter((row) => row.orderDate!==null || apiKeys.has(keyHash(row)));
+  const apiStableKeys=new Set(rows.filter((row) => row.source==="API").map(cafe24StableItemKey));
+  // Include the original undated CSV candidate in the protected review even
+  // when a later explicit prefix-space review is needed. This grants no binding.
+  const reviewed=rows.filter((row) => row.orderDate!==null || apiKeys.has(keyHash(row)) ||
+    apiStableKeys.has(cafe24StableItemKey(row)));
   const hashes=[...new Set(reviewed.map(keyHash))];
   const [versions,links,coverage,policies]=await Promise.all([
     client.cafe24OrderApiVersion.findMany({where:{connectionId,orderDate:date,isCurrent:true},orderBy:{id:"asc"}}),

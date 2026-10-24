@@ -68,6 +68,10 @@ export class Cafe24DayActivationInput {
   @IsString() @Matches(/^[a-f0-9]{64}$/) expectedSnapshotDigest!: string;
   @IsOptional() @IsObject() @ValidateNested() @Type(() => Cafe24ReviewedInputDifferences)
   expectedInputDifferences?: Cafe24ReviewedInputDifferences;
+  @IsOptional() @IsInt() @Min(0) @Max(10_000)
+  expectedOptionPrefixWhitespaceLines?: number;
+  @IsOptional() @IsInt() @Min(0) @Max(10_000)
+  expectedMappingChangeLines?: number;
 }
 export class MetaVerificationInput {
   @IsString() @Matches(DATE) verificationDay!: string;

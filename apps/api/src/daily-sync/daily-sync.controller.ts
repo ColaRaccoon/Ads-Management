@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Res } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Res } from "@nestjs/common";
 import { Response } from "express";
 import { Prisma, SyncTrigger } from "@prisma/client";
 import { CurrentUser, MachineSync, Public, RequirePermissions } from "../auth/route-decorators";
@@ -55,6 +55,9 @@ export class SourceConnectionsController {
   @HeavyOperation()
   activateCafe24Day(@Param() params: IdParam, @Body() body: Cafe24DayActivationInput,
     @CurrentUser() actor: AuthenticatedUser) {
+    if ((body.expectedMappingChangeLines ?? 0) > 0 &&
+        !actor.permissions.includes("mappings.manage"))
+      throw new ForbiddenException({ code: "PERMISSION_DENIED" });
     return this.sources.activateCafe24Day(params.id, body, actor.id);
   }
 
