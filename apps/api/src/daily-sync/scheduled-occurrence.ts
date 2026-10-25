@@ -1,11 +1,12 @@
 import { createHash } from "node:crypto";
 import { SourceProvider } from "@prisma/client";
 import { parseIsoDate, syncError } from "./sync-contract";
+import { readScheduleDefinitions, definitionCadenceDays, ScheduleDefinition } from "./schedule-definition";
+export type { ScheduleDefinition } from "./schedule-definition";
 
 // Cafe24 publish has a 30s transaction bound; leave 5s for the HTTP envelope.
 export const SCHEDULE_UNIT_MS = 55_000;
 export const SCHEDULE_MAX_UNIT_ATTEMPTS = 3;
-export type ScheduleDefinition = { key: string; connectionId: string; anchorAt: string; windowMinutes: number };
 const INSTANT = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;
 // One explicitly approved isolated test occurrence; not a general scheduling override.
 const APPROVED_TEST_OCCURRENCES = [
@@ -41,25 +42,16 @@ export function instant(value: string) {
 }
 export function schedules(env: NodeJS.ProcessEnv = process.env): ScheduleDefinition[] {
   try {
-    const parsed: unknown = JSON.parse(env.DAILY_SYNC_SCHEDULES ?? "[]");
-    if (!Array.isArray(parsed) || parsed.length > 30) throw new Error();
-    const keys = new Set<string>(), connections = new Set<string>();
-    for (const item of parsed) {
-      if (!item || typeof item !== "object" || Object.keys(item).sort().join() !== "anchorAt,connectionId,key,windowMinutes" ||
-          !/^[a-z][a-z0-9-]{2,63}$/.test(item.key) ||
-          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(item.connectionId) ||
-          !Number.isInteger(item.windowMinutes) || item.windowMinutes < 5 || item.windowMinutes > 120 ||
-          keys.has(item.key) || connections.has(item.connectionId)) throw new Error();
-      instant(item.anchorAt);
-      keys.add(item.key); connections.add(item.connectionId);
-    }
+    const parsed = readScheduleDefinitions(env);
     return parsed;
   } catch { return syncError("ACCOUNT_SCOPE_MISMATCH"); }
 }
 export function occurrence(definition: ScheduleDefinition, provider: SourceProvider, timeZone: string,
   scheduledFor: string, now = new Date()) {
   const scheduled = instant(scheduledFor), anchor = instant(definition.anchorAt);
-  const interval = (provider === SourceProvider.CAFE24 ? 1 : 7) * 86_400_000;
+  let days: 1 | 7;
+  try { days = definitionCadenceDays(provider, definition); } catch { return syncError("ACCOUNT_SCOPE_MISMATCH"); }
+  const interval = days * 86_400_000;
   if (scheduled < anchor || (scheduled.getTime() - anchor.getTime()) % interval !== 0 || scheduled > now)
     syncError("RUN_LIMIT_EXCEEDED", 400);
   const kst = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(scheduled);
@@ -72,8 +64,7 @@ export function occurrence(definition: ScheduleDefinition, provider: SourceProvi
   const localDay = new Intl.DateTimeFormat("en-CA", { timeZone,
     year: "numeric", month: "2-digit", day: "2-digit" }).format(scheduled);
   const end = parseIsoDate(localDay).getTime() - 86_400_000;
-  const days = provider === SourceProvider.CAFE24 ? 1 : 7;
-  return { definition, scheduledFor, fromDate: new Date(end - (days - 1) * 86_400_000).toISOString().slice(0, 10),
+  return { definition, scheduledFor, totalUnits: days, fromDate: new Date(end - (days - 1) * 86_400_000).toISOString().slice(0, 10),
     toDate: new Date(end).toISOString().slice(0, 10),
     deadlineAt: new Date(scheduled.getTime() + definition.windowMinutes * 60_000),
     requestKey: `schedule:${definition.key}:${createHash("sha256").update(scheduledFor).digest("hex")}` };

@@ -1,12 +1,14 @@
 import { SyncTrigger } from "@prisma/client";
 import { syncError } from "./sync-contract";
+import { scheduledRunDayCount } from "./schedule-definition";
 
 type ProviderRunScope = {
+  connectionId?: string; requestKey?: string;
   trigger: SyncTrigger;
   fromDate: Date;
   toDate: Date;
   units: { unitKey: string }[];
-  connection: { timeZone: string };
+  connection: { timeZone: string; provider?: string };
 };
 
 function isoDay(date: Date) {
@@ -41,7 +43,8 @@ export function assertGoogleMetaRunScope(run: ProviderRunScope, now = new Date()
     // Freshness is checked when a new run is queued. An already queued run
     // must remain resumable after the account's local calendar day changes.
     if (to > lastCompletedDay) syncError("RUN_LIMIT_EXCEEDED");
-    expected = Array.from({ length: 7 }, (_, index) => shiftDay(from, index));
+    const days = scheduledRunDayCount({ ...run, provider: run.connection.provider });
+    expected = Array.from({ length: days }, (_, index) => shiftDay(from, index));
   } else if (run.trigger === SyncTrigger.MANUAL || run.trigger === SyncTrigger.BACKFILL) {
     if (from !== to || to > lastCompletedDay) syncError("RUN_LIMIT_EXCEEDED");
     expected = [from];

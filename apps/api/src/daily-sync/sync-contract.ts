@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, HttpException, HttpStatus, ServiceUnavailableException } from "@nestjs/common";
 import { SourceDataKind, SourceProvider, SyncRunStatus, SyncTrigger } from "@prisma/client";
+import { scheduledRunDayCount } from "./schedule-definition";
 
 export const MAX_RUN_DAYS = 31;
 export const MAX_RUN_MS = 10 * 60_000;
@@ -53,6 +54,7 @@ export function parseDateRange(fromDate: string, toDate: string, now = new Date(
 }
 
 type RunScope = {
+  connectionId?: string; requestKey?: string;
   provider: SourceProvider; timeZone: string; fromDate: string; toDate: string;
   trigger: SyncTrigger; actorUserId: string | null;
 };
@@ -69,7 +71,7 @@ export function assertSyncRunShape(input: RunScope, now = new Date()) {
   if (input.toDate >= accountToday(input.timeZone, now)) syncError("RUN_LIMIT_EXCEEDED", 400);
   if (input.trigger === SyncTrigger.SCHEDULED) {
     if (input.actorUserId !== null) syncError("RUN_LIMIT_EXCEEDED", 400);
-    if (days !== (input.provider === SourceProvider.CAFE24 ? 1 : 7))
+    if (days !== scheduledRunDayCount(input))
       syncError("RUN_LIMIT_EXCEEDED", 400);
   } else if ((input.trigger !== SyncTrigger.MANUAL && input.trigger !== SyncTrigger.BACKFILL) ||
       days !== 1) syncError("RUN_LIMIT_EXCEEDED", 400);
@@ -82,7 +84,7 @@ export function assertSyncRunScope(input: RunScope, now = new Date()) {
     const today = accountToday(input.timeZone, now);
     const yesterday = parseIsoDate(today).getTime() - 86_400_000;
     const toDate = new Date(yesterday).toISOString().slice(0, 10);
-    const days = input.provider === SourceProvider.CAFE24 ? 1 : 7;
+    const days = scheduledRunDayCount(input);
     const fromDate = new Date(yesterday - (days - 1) * 86_400_000)
       .toISOString().slice(0, 10);
     if (input.fromDate !== fromDate || input.toDate !== toDate)

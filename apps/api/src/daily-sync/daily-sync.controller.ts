@@ -21,6 +21,8 @@ import { ScheduledSyncService } from "./scheduled-sync.service";
 import {Cafe24ScheduledBootstrapInput, Cafe24ConnectionRecoveryInput} from "./daily-sync.dto";
 import {bootstrapCafe24Scheduled,cafe24ScheduledBootstrapPreview} from "./cafe24-scheduled-bootstrap";
 import { cafe24ManualActivationPreview, cafe24ManualPreparationPreview, prepareCafe24ManualConnection } from "./cafe24-manual-preparation";
+import { ExchangeRatesService } from "../exchange-rates/exchange-rates.service";
+import { assertGoogleMetaRunScope } from "./provider-run-scope";
 
 @Controller("source-connections")
 export class SourceConnectionsController {
@@ -120,7 +122,8 @@ export class SyncRunsController {
   constructor(private readonly sync: SyncFoundationService, private readonly prisma: PrismaService,
     private readonly google: GoogleSyncRunnerService,
     private readonly cafe24: Cafe24SyncRunnerService,
-    private readonly meta: MetaSyncRunnerService) {}
+    private readonly meta: MetaSyncRunnerService,
+    private readonly exchangeRates: ExchangeRatesService) {}
 
   @Post()
   @RequirePermissions("imports.manage")
@@ -161,7 +164,18 @@ export class SyncRunsController {
   @Post(":id/execute-meta")
   @RequirePermissions("imports.manage")
   @HttpCode(HttpStatus.OK)
-  executeMeta(@Param() params: IdParam) { return this.meta.execute(params.id); }
+  async executeMeta(@Param() params: IdParam) {
+    assertEnabled();
+    const run = await this.prisma.syncRun.findUnique({ where: { id: params.id }, include: {
+      connection: true, units: { orderBy: { unitKey: "asc" } } } });
+    if (!run || run.connection.provider !== "META" ||
+        !accountAllowlist().has(accountKey("META", run.connection.externalAccountId, run.connection.shopKey)))
+      syncError("ACCOUNT_SCOPE_MISMATCH");
+    assertGoogleMetaRunScope(run);
+    await this.exchangeRates.ensureUsdKrwRatesForDates(run.units.filter(u => u.status !== "SUCCEEDED")
+      .map(u => new Date(`${u.unitKey}T00:00:00.000Z`)));
+    return this.meta.execute(params.id);
+  }
 }
 
 @Controller("source-coverage")

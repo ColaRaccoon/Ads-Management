@@ -11,6 +11,7 @@ import { SyncFoundationService } from "./sync-foundation.service";
 import { cleanupScheduledCheckpoints } from "./scheduled-checkpoint";
 import { cafe24ScheduledDayActivated, reconcileCafe24ScheduledDay } from "./cafe24-scheduled-activation";
 import { ExchangeRatesService } from "../exchange-rates/exchange-rates.service";
+import { definitionCadenceDays } from "./schedule-definition";
 
 @Injectable()
 export class ScheduledSyncService {
@@ -77,7 +78,7 @@ export class ScheduledSyncService {
       fromDate: scope.fromDate, toDate: scope.toDate, id: run?.id ?? null,
       status: pendingActivation ? "ACTION_REQUIRED" : run?.status === "SUCCEEDED" || run?.status === "ACTION_REQUIRED" ? run.status : expired ? "EXPIRED" : run?.status ?? "NOT_STARTED",
       completedUnits: run?.units.filter((unit) => unit.status === "SUCCEEDED").length ?? 0,
-      totalUnits: scope.connection.provider === "CAFE24" ? 1 : 7,
+      totalUnits: scope.totalUnits,
       safeErrorCode: pendingActivation ? "SOURCE_SELECTION_REQUIRED" : run?.safeErrorCode ?? null,
       nextAttemptAt: run?.nextAttemptAt?.toISOString() ?? null,
       deadlineAt: scope.deadlineAt.toISOString() };
@@ -90,11 +91,13 @@ export class ScheduledSyncService {
     for (const definition of schedules()) {
       const connection = await this.prisma.sourceConnection.findUnique({ where: { id: definition.connectionId } });
       if (!connection || !accountAllowlist().has(accountKey(connection.provider, connection.externalAccountId, connection.shopKey))) continue;
-      const anchor = new Date(definition.anchorAt).getTime(), interval = (connection.provider === "CAFE24" ? 1 : 7) * 86_400_000;
+      const cadence = definitionCadenceDays(connection.provider, definition);
+      const dualMeta = connection.provider === "META" && schedules().some(d => d.connectionId === connection.id && d.kind === "META_DAILY");
+      const anchor = new Date(definition.anchorAt).getTime(), interval = cadence * 86_400_000;
       if (Date.now() < anchor) continue;
       const latest = Math.floor((Date.now() - anchor) / interval);
       // Historical warning reads do not queue or fetch missed dates.
-      const slots = Array.from({ length: Math.min(latest + 1, connection.provider === "CAFE24" ? 31 : 5) }, (_, offset) =>
+      const slots = Array.from({ length: Math.min(latest + 1, cadence === 1 ? 31 : 5) }, (_, offset) =>
         occurrence(definition, connection.provider, connection.timeZone, new Date(anchor + (latest - offset) * interval).toISOString()));
       history.push({ scheduleKey: definition.key, trackingFromDate: slots[slots.length - 1].fromDate,
         truncatedEarlierWindows: latest + 1 > slots.length,
@@ -113,12 +116,13 @@ export class ScheduledSyncService {
           !coverage.some(row=>row.metricDate.toISOString().slice(0,10)===slot.fromDate &&
             row.lastSuccessRunId===run.id && row.reconciliationStatus==="CAFE24_API_ONLY_VERIFIED" &&
             !row.warningCodes.some(code=>["CAFE24_SHADOW_NOT_PRIMARY","CAFE24_SOURCE_ACTIVATION_REQUIRED"].includes(code)))) succeeded.clear();
-        const totalUnits = connection.provider === "CAFE24" ? 1 : 7;
+        const totalUnits = cadence;
         const missingDates = Array.from({ length: totalUnits }, (_, offset) =>
           new Date(Date.parse(`${slot.fromDate}T00:00:00.000Z`) + offset * 86_400_000).toISOString().slice(0, 10))
           .filter((day) => !succeeded.has(day) && !kinds.every((kind) => coverage.some((row) =>
             row.source === "API" && row.dataKind === kind && row.metricDate.toISOString().slice(0, 10) === day && row.lastSuccessRunId &&
             row.lastSuccessAt && row.lastSuccessAt >= new Date(slot.scheduledFor) &&
+            (!dualMeta || row.lastSuccessRunId === run?.id) &&
             (connection.provider!=="CAFE24" || row.reconciliationStatus==="CAFE24_API_ONLY_VERIFIED" &&
               !row.warningCodes.some(code=>["CAFE24_SHADOW_NOT_PRIMARY","CAFE24_SOURCE_ACTIVATION_REQUIRED"].includes(code))) &&
             (row.state === "COMPLETE_ZERO" || row.state === "COMPLETE_NONZERO"))));

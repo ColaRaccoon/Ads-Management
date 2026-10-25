@@ -5,6 +5,7 @@ import { parseDateRange } from "../common/date-range";
 import { createSourceReadContext, selectCurrentSourceRows } from "../common/source-read-policy";
 import { findEffectiveRuleForDate } from "../domain/effective-rule";
 import { StorefrontChannel, StorefrontCoverage, StorefrontSummary } from "./storefront.types";
+import { readScheduleDefinitions } from "../daily-sync/schedule-definition";
 
 // Do not alter Prisma.Decimal's global configuration used by legacy screens.
 // 50 digits cover bounded 50k Decimal(18,4) rows, FX and bigint micros.
@@ -261,16 +262,18 @@ export class StorefrontReadService {
         amount: new D(r.costMicros.toString()).div(1_000_000).toString(), currency: connections.find(c => c.id === r.connectionId)?.currencyCode ?? "UNKNOWN",
         impressions: r.impressions.toString(), clicks: r.clicks.toString(), fetchedAt: r.fetchedAt.toISOString() })), coverage,
       connections: connections.map(c => {
+        const metaDaily = c.provider === "META" && readScheduleDefinitions().some(d => d.connectionId === c.id && d.kind === "META_DAILY");
         const scoped = coverage.filter(r => r.connectionId === c.id), last = iso(c.coverage[0]?.lastSuccessAt);
         const run = c.runs[0];
         return { id: c.id, provider: c.provider, displayName: c.displayName, externalAccountId: c.externalAccountId,
           currencyCode: c.currencyCode, timeZone: c.timeZone, accessState: c.accessState, enabled: c.enabled,
           updatedAt: c.updatedAt.toISOString(), credentialExpiresAt: iso(c.credentialExpiresAt),
           reconnectRequired: c.accessState !== "READY" || !c.credentialRef || !!c.credentialExpiresAt && c.credentialExpiresAt.getTime() <= Date.now(),
-          cadenceDays: c.provider === "CAFE24" ? 1 : 7, latestAttempt: run ? { id: run.id, status: run.status,
+          cadenceDays: c.provider === "CAFE24" || metaDaily ? 1 : 7,
+          ...(metaDaily ? { weeklyRecheckCadenceDays: 7 } : {}), latestAttempt: run ? { id: run.id, status: run.status,
             at: iso(run.startedAt), safeErrorCode: run.safeErrorCode } : null,
           lastSuccessAt: last, completedDates: scoped.filter(r => r.complete).map(r => r.date),
-          stale: last ? Date.now() - Date.parse(last) > (c.provider === "CAFE24" ? 2 : 8) * 86_400_000 : false };
+          stale: last ? Date.now() - Date.parse(last) > (c.provider === "CAFE24" || metaDaily ? 2 : 8) * 86_400_000 : false };
       }), exchangeRates: [...rates.map(r => ({ date: day(r.rateDate), rate: r.rate.toString(), sourceDate: day(r.sourceDate),
         provider: r.provider, fallbackType: r.fallbackType, fetchedAt: r.fetchedAt.toISOString() })), ...usedLegacyRates.values()], warningCodes: [...warningCodes] };
   }

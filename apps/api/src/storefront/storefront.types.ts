@@ -15,7 +15,8 @@ export type StorefrontConnection = {
   id: string; provider: string; displayName: string; externalAccountId: string;
   currencyCode: string; timeZone: string; accessState: string; enabled: boolean;
   updatedAt: string; credentialExpiresAt: string | null; reconnectRequired: boolean;
-  cadenceDays: number; latestAttempt: { id: string; status: string; at: string | null; safeErrorCode: string | null } | null;
+  cadenceDays: number; weeklyRecheckCadenceDays?: number;
+  latestAttempt: { id: string; status: string; at: string | null; safeErrorCode: string | null } | null;
   lastSuccessAt: string | null; completedDates: string[]; stale: boolean;
 };
 export type StorefrontSummary = {
