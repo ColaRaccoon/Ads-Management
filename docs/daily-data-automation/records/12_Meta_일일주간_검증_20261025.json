@@ -1,0 +1,355 @@
+{
+  "state": "DEPLOYED_SCHEDULES_ACTIVE_OCT24_RECOVERED_PENDING_SCHEDULED_OBSERVATION",
+  "verifiedAt": "2026-10-25T03:24:00.169Z",
+  "codeSha": "2db2aee0b12f793e0bfbd9c0554b8503dc4af7a8",
+  "deploymentId": "7527d517-4a9e-4197-bf19-7755d89ad45d",
+  "deploymentStatus": "SUCCESS",
+  "readyAt": "2026-10-25T03:13:00.081Z",
+  "runtimeConfigFingerprint": "01c46ccd311584ab893741c5d6d104f66821dd3ff1aea527b9633e6466f39c04",
+  "schedules": [
+    {
+      "key": "prod-cafe24",
+      "paused": false,
+      "provider": "CAFE24",
+      "anchor_at": "2026-10-24T17:00:00+00:00",
+      "cadence_days": 1,
+      "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "window_minutes": 110
+    },
+    {
+      "key": "prod-google",
+      "paused": false,
+      "provider": "GOOGLE",
+      "anchor_at": "2026-10-30T17:01:00+00:00",
+      "cadence_days": 7,
+      "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "window_minutes": 90
+    },
+    {
+      "key": "prod-meta",
+      "paused": false,
+      "provider": "META",
+      "anchor_at": "2026-10-30T17:02:00+00:00",
+      "cadence_days": 7,
+      "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+      "window_minutes": 90
+    },
+    {
+      "key": "prod-meta-daily",
+      "paused": false,
+      "provider": "META",
+      "anchor_at": "2026-10-25T17:03:00+00:00",
+      "cadence_days": 1,
+      "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+      "window_minutes": 100
+    }
+  ],
+  "previousThreeSchedulesUnchanged": true,
+  "cron": [
+    {
+      "id": 1,
+      "name": "storage-renewal-daily",
+      "schedule": "0 19 * * *",
+      "active": true,
+      "hash": "a59f9d9f0fe6172c1723aa13f67c2b86"
+    },
+    {
+      "id": 2,
+      "name": "storage-renewal-verify",
+      "schedule": "15 19 * * *",
+      "active": true,
+      "hash": "a23f2bbdcf306aa7519550c71d839bc4"
+    },
+    {
+      "id": 3,
+      "name": "storage-renewal-audit",
+      "schedule": "20 19 * * *",
+      "active": true,
+      "hash": "e2a81618a3474223afeb0aed9e977cdb"
+    },
+    {
+      "id": 4,
+      "name": "daily-data-sync-prod-tick",
+      "schedule": "* 17,18 * * *",
+      "active": true,
+      "hash": "a711e381a6efd843b527f56d5dc4e577"
+    }
+  ],
+  "privateSchedulerFunctions": {
+    "definers": 0,
+    "functions": 4
+  },
+  "dailyResponseScopeVerified": true,
+  "recovery": {
+    "fx": {
+      "rate": 1324.6,
+      "fallback": "PREVIOUS_AVAILABLE",
+      "provider": "KOREA_EXIM",
+      "rateDate": "2026-10-24",
+      "sourceDate": "2026-10-23",
+      "metaSpendKrw": 4309268.196
+    },
+    "ads": {
+      "usd": 3253.26,
+      "rows": 553,
+      "identities": 553
+    },
+    "run": {
+      "id": "92c7c78c-31ac-4244-969a-3ab2dca03560",
+      "to": "2026-10-24",
+      "from": "2026-10-24",
+      "error": null,
+      "status": "SUCCEEDED",
+      "fetched": 753,
+      "trigger": "MANUAL",
+      "attempts": 1,
+      "published": 753,
+      "startedAt": "2026-10-25T03:15:05.279+00:00",
+      "finishedAt": "2026-10-25T03:15:35.521+00:00"
+    },
+    "links": {
+      "rows": 753,
+      "versions": [
+        1
+      ],
+      "canonicalKeys": 753
+    },
+    "units": [
+      {
+        "key": "2026-10-24",
+        "status": "SUCCEEDED",
+        "fetched": 753,
+        "attempts": 1,
+        "published": 753
+      }
+    ],
+    "adsets": {
+      "usd": 3253.26,
+      "rows": 200,
+      "identities": 200,
+      "unmappedUsd": 0,
+      "unmappedRows": 2
+    },
+    "currentDuplicateGroups": 0,
+    "coverage": [
+      {
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "dataKind": "META_AD",
+        "metricDate": "2026-10-24T00:00:00.000Z",
+        "source": "API",
+        "state": "COMPLETE_NONZERO",
+        "lastAttemptRunId": "92c7c78c-31ac-4244-969a-3ab2dca03560",
+        "lastSuccessRunId": "92c7c78c-31ac-4244-969a-3ab2dca03560",
+        "lastSuccessAt": "2026-10-25T03:15:33.878Z",
+        "lastAttemptAt": "2026-10-25T03:15:33.878Z",
+        "rowCount": 553,
+        "reconciliationStatus": null,
+        "warningCodes": [],
+        "amount": {
+          "value": "3253.26",
+          "currency": "USD"
+        }
+      },
+      {
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "dataKind": "META_ADSET",
+        "metricDate": "2026-10-24T00:00:00.000Z",
+        "source": "API",
+        "state": "COMPLETE_NONZERO",
+        "lastAttemptRunId": "92c7c78c-31ac-4244-969a-3ab2dca03560",
+        "lastSuccessRunId": "92c7c78c-31ac-4244-969a-3ab2dca03560",
+        "lastSuccessAt": "2026-10-25T03:15:33.878Z",
+        "lastAttemptAt": "2026-10-25T03:15:33.878Z",
+        "rowCount": 200,
+        "reconciliationStatus": null,
+        "warningCodes": [],
+        "amount": {
+          "value": "3253.26",
+          "currency": "USD"
+        }
+      }
+    ]
+  },
+  "margin": {
+    "scope": "Existing product performance rules; matched Cafe24 rows and Meta adset expense only. Not all-channel final net profit.",
+    "summary": {
+      "salesLineCount": 279,
+      "salesUnmatchedCount": 2,
+      "adMetricCount": 200,
+      "adUnmatchedMetricCount": 2,
+      "adUnmatchedSpendUsd": 0,
+      "adUnmatchedSpendKrw": 0,
+      "missingExchangeRateDates": [],
+      "couponDetectedOrderCount": 9,
+      "couponAppliedOrderCount": 8,
+      "couponExactOrderCount": 6,
+      "couponEstimatedOrderCount": 2,
+      "couponUnmatchedOrderCount": 1,
+      "couponUnknownOrderCount": 0,
+      "couponDeductionKrw": 8000,
+      "couponIgnoredResidualKrw": 1000,
+      "couponMissingTotalOrderCount": 0
+    },
+    "productRows": 20,
+    "calculatedRows": 20,
+    "revenueKrw": "9996400",
+    "grossCostKrw": "3773140",
+    "adSpendUsd": "3253.26",
+    "adSpendKrw": "4309268.196",
+    "couponDeductionKrw": "8000",
+    "totalCostKrw": "8090408.196",
+    "marginKrw": "1905991.804",
+    "displayRoundedMarginKrw": "1905992",
+    "priceMismatchLines": 26,
+    "priceMismatchProducts": [
+      {
+        "name": "러닝조끼",
+        "quantity": 3,
+        "adSpendUsd": "42.86",
+        "adSpendKrw": "56772.356",
+        "marginKrw": "36857.644",
+        "ruleStatus": "PRICE_MISMATCH",
+        "priceMismatchCount": 3
+      },
+      {
+        "name": "퍼펙트슬라이드",
+        "quantity": 12,
+        "adSpendUsd": "150.6",
+        "adSpendKrw": "199484.76",
+        "marginKrw": "-15644.76",
+        "ruleStatus": "PRICE_MISMATCH",
+        "priceMismatchCount": 12
+      },
+      {
+        "name": "풀업밴드",
+        "quantity": 28,
+        "adSpendUsd": "0",
+        "adSpendKrw": "0",
+        "marginKrw": "437898",
+        "ruleStatus": "PRICE_MISMATCH",
+        "priceMismatchCount": 11
+      }
+    ],
+    "requestedProducts": [
+      {
+        "name": "다이어트양말",
+        "quantity": 24,
+        "adSpendUsd": "151.67",
+        "adSpendKrw": "200902.082",
+        "marginKrw": "290577.918",
+        "ruleStatus": "OK",
+        "priceMismatchCount": 0
+      },
+      {
+        "name": "러닝조끼",
+        "quantity": 3,
+        "adSpendUsd": "42.86",
+        "adSpendKrw": "56772.356",
+        "marginKrw": "36857.644",
+        "ruleStatus": "PRICE_MISMATCH",
+        "priceMismatchCount": 3
+      }
+    ],
+    "numberSerialization": "API uses JS numbers; sums normalized to 0.001 KRW after checking source Decimal values and identities within 0.000001. UI rounds to won."
+  },
+  "preservation": {
+    "cafe": {
+      "rows": 508,
+      "hash": "e7af008de011ad3854b7bf216b4a2e26"
+    },
+    "cafeCsv": {
+      "rows": 36544,
+      "quantity": 36553,
+      "paidInputSum": 1305528399
+    },
+    "metaAds23": {
+      "rows": 553,
+      "hash": "8668f141bf30515440e26097a28f986d"
+    },
+    "metaSets23": {
+      "rows": 200,
+      "hash": "75e22300895ad44ef1035eea339580f4"
+    },
+    "products": "b89e9840458c066ae4963e57bca3c57a",
+    "costs": "62d653087e412206e9eccaa1292ebc59",
+    "cafeRules": "20b22d90e40bc01b57f10c9048766234",
+    "coupons": "ba7fd1080a49fa88cb5e4f866c61471e",
+    "jobs": [
+      {
+        "id": 1,
+        "name": "storage-renewal-daily",
+        "schedule": "0 19 * * *",
+        "active": true,
+        "hash": "a59f9d9f0fe6172c1723aa13f67c2b86"
+      },
+      {
+        "id": 2,
+        "name": "storage-renewal-verify",
+        "schedule": "15 19 * * *",
+        "active": true,
+        "hash": "a23f2bbdcf306aa7519550c71d839bc4"
+      },
+      {
+        "id": 3,
+        "name": "storage-renewal-audit",
+        "schedule": "20 19 * * *",
+        "active": true,
+        "hash": "e2a81618a3474223afeb0aed9e977cdb"
+      },
+      {
+        "id": 4,
+        "name": "daily-data-sync-prod-tick",
+        "schedule": "* 17,18 * * *",
+        "active": true,
+        "hash": "a711e381a6efd843b527f56d5dc4e577"
+      }
+    ],
+    "activeLeases": 0,
+    "exactBaselineMatch": true
+  },
+  "remaining": {
+    "scheduledObservations": {
+      "cafe24Daily": "0/3; first next observation 2026-10-26 02:00 KST",
+      "metaDaily": "0/3; first 2026-10-26 02:03 KST",
+      "googleWeekly": "0/2; 2026-10-31 and 2026-11-07 02:01 KST",
+      "metaWeekly": "0/2; 2026-10-31 and 2026-11-07 02:02 KST"
+    },
+    "cafeUnmatchedRows": 2,
+    "cafeProductNo": "181",
+    "googleOct24": "NOT_COLLECTED",
+    "kakao": "NOT_CONNECTED",
+    "priceMismatchUsesExistingConfiguredSalePrices": true,
+    "couponEstimatedOrders": 2,
+    "couponUnmatchedOrders": 1
+  },
+  "changesExcluded": {
+    "newProviderCredentials": 0,
+    "newScopes": 0,
+    "providerRefreshes": 0,
+    "businessPrismaMigrations": 0,
+    "newCronJobs": 0,
+    "storageChanges": 0
+  },
+  "validation": {
+    "relevantNodeTests": 38,
+    "passed": 38,
+    "skipped": 0,
+    "apiTypecheck": true,
+    "apiBuild": true,
+    "productionDockerBuild": true,
+    "localPostgresDailyWeeklyReplayNoDoubleCount": true,
+    "localSchedulerUpgradePreservation": true
+  },
+  "followup": {
+    "automationId": "meta-ads",
+    "status": "ACTIVE",
+    "schedule": "Existing daily04:05 KST /14 occurrences preserved",
+    "updatedForLiveDailySchedule": true
+  },
+  "cleanup": {
+    "operatorBridgeClosed": true,
+    "operatorControlFileRemoved": true,
+    "operatorSessionMemoryDiscarded": true,
+    "syntheticPostgresContainerStoppedAndRemoved": true
+  }
+}
