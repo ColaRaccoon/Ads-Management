@@ -5,7 +5,9 @@ import { boundedProviderRequest, ProviderFailure } from "./bounded-request";
 import { cafe24RetryAfterMs } from "./cafe24-rate-limit";
 import { cafe24TestAllowed } from "./cafe24-test-connection.service";
 import { CredentialVault } from "./credential-vault";
-import { assertCafe24AuthorizationEnabled, syncError } from "./sync-contract";
+import { assertEnabled, assertCafe24AuthorizationEnabled, syncError } from "./sync-contract";
+import { assertScheduledCheckpointConfigured } from "./scheduled-checkpoint";
+import { accountAllowlist, accountKey } from "./source-connections.service";
 
 const SCOPE = "mall.read_order";
 const MAX_TOKEN_BYTES = 32_768;
@@ -141,12 +143,48 @@ export class Cafe24OauthService {
       }
       throw new ProviderFailure("PROVIDER_UNAVAILABLE", true);
     }
+    return this.refreshClaim(connectionId, mallId, shopKey, claim, null);
+  }
+
+  /** A guarded retry of an existing refresh credential, never a forced READY. */
+  async recoverConnection(connectionId: string, input: {
+    expectedUpdatedAt: string; expectedRefreshRevision: number;
+  }, actorUserId: string) {
+    assertEnabled();
+    assertScheduledCheckpointConfigured();
+    const connection = await this.prisma.sourceConnection.findUnique({ where: { id: connectionId } });
+    if (!connection || connection.provider !== "CAFE24" ||
+        !accountAllowlist().has(accountKey("CAFE24", connection.externalAccountId, connection.shopKey)))
+      syncError("ACCOUNT_SCOPE_MISMATCH");
+    const credential = await this.prisma.sourceCredential.findUnique({ where: {
+      connectionId_kind: { connectionId, kind: "CAFE24_REFRESH" }
+    }, select: { revision: true, expiresAt: true } });
+    const lease = await this.prisma.syncLease.findFirst({ where: { connectionId,
+      expiresAt: { gt: new Date() } }, select: { connectionId: true } });
+    if (connection.enabled || connection.accessState !== "REAUTH_REQUIRED" || lease ||
+        connection.updatedAt.toISOString() !== input.expectedUpdatedAt ||
+        connection.credentialRef !== `source_credentials:${connectionId}:CAFE24_REFRESH` ||
+        !credential?.expiresAt || credential.expiresAt <= new Date() ||
+        credential.revision !== input.expectedRefreshRevision)
+      syncError("PROVIDER_AUTH_REQUIRED");
+    const claim = await this.vault.claimCafe24Refresh(connectionId);
+    if (!claim) syncError("LEASE_LOST");
+    if (claim.revision !== input.expectedRefreshRevision) {
+      await this.vault.releaseRefreshClaim(connectionId, claim.owner);
+      syncError("LEASE_LOST");
+    }
+    await this.refreshClaim(connectionId, connection.externalAccountId, connection.shopKey, claim, actorUserId);
+    return { connectionId, accessState: "READY", enabled: false, refreshed: true };
+  }
+
+  private async refreshClaim(connectionId: string, mallId: string, shopKey: string,
+    claim: { token: string; owner: string; revision: number }, actorUserId: string | null) {
     try {
       const token = await this.exchange(mallId, shopKey,
         { grant_type: "refresh_token", refresh_token: claim.token });
       await this.vault.storeCafe24Pair({ connectionId, refresh: token.refresh, access: token.access,
         refreshExpiresAt: token.refreshExpiry, accessExpiresAt: token.accessExpiry,
-        expectedRefreshRevision: claim.revision, refreshOwner: claim.owner, actorUserId: null });
+        expectedRefreshRevision: claim.revision, refreshOwner: claim.owner, actorUserId });
       return token.access;
     } catch (error) {
       if (!(error instanceof ProviderFailure && error.safeCode === "PROVIDER_RATE_LIMITED")) {

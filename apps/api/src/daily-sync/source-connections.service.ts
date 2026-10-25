@@ -11,6 +11,7 @@ import { hasCafe24CouponPaymentToken } from "../domain/cafe24-coupon-matcher";
 import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { computeCafe24ActivationEvidence } from "./cafe24-activation-evidence";
 import { cafe24ProductPrefixSpaceDifference, cafe24StableItemKey } from "./cafe24-reviewed-parity";
+import { reviewedCafe24ScheduledBaseline } from "./cafe24-scheduled-review";
 import { Cafe24ProductMatcher } from "../domain/cafe24-matcher";
 import { loadCafe24MatcherRules } from "./cafe24-rule-loader";
 import { rejectCafe24Activation } from "./cafe24-activation-diagnostic";
@@ -283,6 +284,10 @@ export class SourceConnectionsService {
           policies[0].version !== input.expectedPolicyVersion)
         rejectCafe24Activation("CAFE24_ACTIVATION_POLICY_STATE");
       const current = policies[0];
+      // A manual recovery of the explicitly reviewed first scheduled day must
+      // preserve that approved coupon baseline for the next scheduled day.
+      const reviewedCouponHandoff = !scheduledActivation && mode === "API_ONLY" &&
+        await reviewedCafe24ScheduledBaseline(tx, connectionId, input.day, current, couponInputSource);
       const coverage = await tx.sourceCoverage.findUnique({ where: {
         connectionId_dataKind_metricDate: { connectionId,
           dataKind: SourceDataKind.CAFE24_ORDER, metricDate: day }
@@ -650,7 +655,7 @@ export class SourceConnectionsService {
         connectionId, dataKind: SourceDataKind.CAFE24_ORDER,
         fromDate: next, toDate: oldTo,
         primarySource: SourceKind.CSV, version: newVersion + 1,
-        couponInputSource: scheduledActivation ? couponInputSource : current.couponInputSource,
+        couponInputSource: scheduledActivation || reviewedCouponHandoff ? couponInputSource : current.couponInputSource,
         changedByUserId: actorUserId, reason: "CAFE24_CSV_REMAINS_PRIMARY"
       } });
       await tx.sourceCoverage.update({ where: { connectionId_dataKind_metricDate: {
@@ -669,7 +674,7 @@ export class SourceConnectionsService {
           day: input.day },
         afterJson: { version: newVersion, primarySource: SourceKind.API,
           connectionId, day: input.day, successRunId: input.expectedSuccessRunId,
-          sourceChoice: mode, couponInputSource, undatedCsvBindings,
+          sourceChoice: mode, couponInputSource, reviewedCouponHandoff, undatedCsvBindings,
           optionPrefixWhitespaceBindings, rematchedApiLines: mappingChanges.length,
           inputDifferenceOrders: differenceCounts,
           displayFieldDifferenceReview: mode === "CSV_REVIEWED" &&

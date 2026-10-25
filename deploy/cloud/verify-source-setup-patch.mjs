@@ -5,7 +5,7 @@ const expected = new Set(['cafe24-manual-preparation', 'cafe24-oauth.service', '
   'source-connections.service', 'sync-contract', 'meta-credential-resolver',
   'meta-protected-credential-resolver', 'cafe24-reviewed-parity', 'cafe24-activation-evidence',
   'cafe24-scheduled-review', 'cafe24-scheduled-activation', 'daily-sync.module',
-  'scheduled-sync.service'].map(name => `daily-sync/${name}.js`));
+  'scheduled-sync.service', 'scheduled-checkpoint', 'cafe24-sync-runner.service'].map(name => `daily-sync/${name}.js`));
 expected.add('exchange-rates/exchange-rate-provider.js');
 expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled] = process.argv.slice(2);

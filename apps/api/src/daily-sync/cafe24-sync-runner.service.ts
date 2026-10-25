@@ -1,4 +1,4 @@
-import { loadScheduledCheckpoint, saveScheduledCheckpoint, removeScheduledCheckpoint } from "./scheduled-checkpoint";
+import { assertScheduledCheckpointConfigured, loadScheduledCheckpoint, saveScheduledCheckpoint, removeScheduledCheckpoint } from "./scheduled-checkpoint";
 import { HttpException, Injectable } from "@nestjs/common";
 import { SourceDataKind, SourceKind, SyncRunStatus } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
@@ -54,6 +54,7 @@ export class Cafe24SyncRunnerService {
         const day = unit.unitKey;
         const metricDate = new Date(`${day}T00:00:00.000Z`);
         try {
+          if (options) assertScheduledCheckpointConfigured();
           if (!/^\d{4}-\d\d-\d\d$/.test(day) || !Number.isFinite(metricDate.getTime()) ||
               Date.now() >= deadlineAt) syncError("RUN_LIMIT_EXCEEDED");
           const policy = await this.prisma.sourcePolicy.findFirst({ where: {
@@ -95,7 +96,7 @@ export class Cafe24SyncRunnerService {
                 candidateDiagnostic === "CAFE24_EVIDENCE_APP_VERSION"))
             ? candidateDiagnostic : null;
           if (code === "LEASE_LOST") throw error;
-          const actionRequired = ["PROVIDER_AUTH_REQUIRED", "FIELD_UNSUPPORTED",
+          const actionRequired = ["CHECKPOINT_CONFIGURATION_REQUIRED", "PROVIDER_AUTH_REQUIRED", "FIELD_UNSUPPORTED",
             "ACCOUNT_SCOPE_MISMATCH", "CURRENCY_MISMATCH", "TIMEZONE_MISMATCH",
             "SOURCE_SELECTION_REQUIRED", "RECONCILIATION_FAILED", "PROVIDER_VERSION_UNVERIFIED"].includes(code);
           await this.foundation.failUnit({ runId, generation: claim.generation, unitKey: day,

@@ -18,7 +18,7 @@ import { Cafe24OauthService } from "./cafe24-oauth.service";
 import { Cafe24OrdersClient } from "./cafe24-orders.client";
 import { Cafe24SyncRunnerService } from "./cafe24-sync-runner.service";
 import { ScheduledSyncService } from "./scheduled-sync.service";
-import {Cafe24ScheduledBootstrapInput} from "./daily-sync.dto";
+import {Cafe24ScheduledBootstrapInput, Cafe24ConnectionRecoveryInput} from "./daily-sync.dto";
 import {bootstrapCafe24Scheduled,cafe24ScheduledBootstrapPreview} from "./cafe24-scheduled-bootstrap";
 import { cafe24ManualActivationPreview, cafe24ManualPreparationPreview, prepareCafe24ManualConnection } from "./cafe24-manual-preparation";
 
@@ -232,6 +232,14 @@ export class Cafe24ConnectionController {
   @RequirePermissions("settings.manage")
   begin(@Param() params: IdParam, @CurrentUser() actor: AuthenticatedUser) {
     return this.oauth.begin(params.id, actor.id);
+  }
+
+  @Post("connections/:id/recover")
+  @RequirePermissions("settings.manage")
+  @HeavyOperation()
+  recover(@Param() params: IdParam, @Body() body: Cafe24ConnectionRecoveryInput,
+    @CurrentUser() actor: AuthenticatedUser) {
+    return this.oauth.recoverConnection(params.id, body, actor.id);
   }
 
   @Get("connections/:id/orders/summary")

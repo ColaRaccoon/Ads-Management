@@ -13,9 +13,11 @@ function key() {
       Object.entries(process.env).filter(([name]) => /^DAILY_SYNC_CREDENTIAL_KEY_V\d+$/.test(name) ||
         /^(?:AUTH_.*SECRET|INTERNAL_PROBE_TOKEN|SUPABASE_.*KEY|SUPABASE_STORAGE_ACCESS_TOKEN|DAILY_SYNC_MACHINE_TOKEN(?:_PREVIOUS)?)$/.test(name))
         .some(([, entry]) => entry === value))
-    syncError("PROVIDER_AUTH_REQUIRED");
+    { buffer.fill(0); syncError("CHECKPOINT_CONFIGURATION_REQUIRED"); }
   return buffer;
 }
+/** Validate before any provider request, including the first chunk with no row. */
+export function assertScheduledCheckpointConfigured() { key().fill(0); }
 type Row = { ciphertext: Buffer; iv: Buffer; auth_tag: Buffer; revision: number; expires_at: Date };
 export async function loadScheduledCheckpoint(prisma: PrismaService, claim: ClaimedRun, unitKey: string) {
   const rows = await prisma.$queryRaw<Row[]>(Prisma.sql`

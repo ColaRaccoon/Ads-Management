@@ -42,6 +42,11 @@ export class Cafe24ManualPreparationInput {
   @IsInt() @Min(1) expectedRefreshRevision!: number;
 }
 
+export class Cafe24ConnectionRecoveryInput {
+  @IsString() @Matches(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/) expectedUpdatedAt!: string;
+  @IsInt() @Min(1) expectedRefreshRevision!: number;
+}
+
 export class Cafe24ActivationReviewQuery {
   @IsString() @Matches(DATE) day!: string;
   @IsIn(["CSV_REVIEWED", "API_ONLY"]) mode!: "CSV_REVIEWED" | "API_ONLY";

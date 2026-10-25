@@ -1,8 +1,9 @@
 import { PrismaService } from "../common/prisma.service";
+import { Prisma } from "@prisma/client";
 
 /** One explicit production handoff from a reviewed day to its following CSV
  * baseline. It grants no provider access and never changes a policy itself. */
-export async function reviewedCafe24ScheduledBaseline(db: PrismaService, connectionId: string,
+export async function reviewedCafe24ScheduledBaseline(db: PrismaService | Prisma.TransactionClient, connectionId: string,
   day: string, policy: { version: number; fromDate: Date; toDate: Date | null;
     primarySource: string; couponInputSource: string | null }, coupon: string) {
   const env = process.env;
