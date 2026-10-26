@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { googleCampaignColumns, googleMoney, googleProfitColumns, googleRatio, googleReasons, googleSaleUnit } from "./google-display";
+import { googleCampaignColumns, googleMoney, googleNumber, googleProfitColumns, googleRatio, googleReasons, googleSaleUnit } from "./google-display";
 import { blankGoogleMapping, editGoogleMapping, googleMappingInputError, googleSaleConfigurationText } from "./google-mapping-form";
 import { serializeCsv } from "./csv";
 import type { GoogleCampaignRow, GoogleMapping, GoogleProfitRow } from "../types/google";
@@ -13,14 +13,29 @@ export const profitFixture: GoogleProfitRow = {
   priceMismatchCount: 0, complete: true, warningCodes: []
 };
 
-test("Google UI preserves zero, unknown, micros and negative margins", () => {
+test("Google UI rounds integers without losing large decimal precision or displaying negative zero", () => {
   assert.equal(googleMoney(0), "0 원");
   assert.equal(googleMoney(null), "—");
-  assert.equal(googleMoney("9007199254740993.000001"), "9,007,199,254,740,993.000001 원");
+  assert.equal(googleMoney("9007199254740993.000001"), "9,007,199,254,740,993 원");
+  assert.equal(googleMoney("9007199254740993.5"), "9,007,199,254,740,994 원");
+  assert.equal(googleMoney("-9007199254740993.500000"), "-9,007,199,254,740,993 원");
+  assert.equal(googleMoney("-9007199254740993.500001"), "-9,007,199,254,740,994 원");
+  assert.equal(googleMoney("-0.5"), "0 원");
+  assert.equal(googleMoney(-0.5), "0 원");
+  assert.equal(googleMoney("-0.500001"), "-1 원");
+  assert.equal(googleMoney("invalid"), "—");
+  assert.equal(googleMoney(Infinity), "—");
   assert.equal(googleMoney(-20000), "-20,000 원");
+  assert.equal(googleNumber(1.5), "2");
+  assert.equal(googleNumber(-1.5), "-1");
+  assert.equal(googleNumber(-0), "0");
+  assert.equal(googleNumber(undefined), "—");
   assert.equal(googleRatio(null), "—");
-  assert.equal(googleRatio(0.35, true), "35.00%");
-  assert.equal(googleRatio(5), "5.00배");
+  assert.equal(googleRatio(0.35, true), "35%");
+  assert.equal(googleRatio(0.356, true), "36%");
+  assert.equal(googleRatio(-0.004, true), "0%");
+  assert.equal(googleRatio(5), "5배");
+  assert.equal(googleRatio(5.5), "6배");
 });
 
 test("profit export retains API totals, unresolved values, exact cost and warning reasons", () => {

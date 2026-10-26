@@ -31,8 +31,10 @@ function render(data: GoogleReportResponse) {
 }
 
 test("profit renders server totals, collection dates, exact export scope and cost meaning", () => {
-  const html = render(fixture);
-  for (const value of ["35,000 원", "35.00%", "5.00배", "상품A", "2026-10-25", "현재 페이지 CSV", "동일 기준 일별 전체 CSV", "수집가 금액", "Google 계정", "최근 성공"]) assert.ok(html.includes(value), value);
+  const html = render({ ...fixture, summary: { ...fixture.summary, adSpendKrwExact: "20000.5" } });
+  for (const value of ["35,000 원", "20,001 원", "35%", "5배", "상품A", "2026-10-25", "현재 페이지 CSV", "동일 기준 일별 전체 CSV", "수집가 금액", "Google 계정", "최근 성공"]) assert.ok(html.includes(value), value);
+  assert.ok(!html.includes("35.00%"));
+  assert.ok(!html.includes("20,000.5 원"));
 });
 
 test("incomplete collection does not display a zero or final profit", () => {

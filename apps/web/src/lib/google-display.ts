@@ -1,6 +1,5 @@
 import type { GoogleCampaignRow, GoogleProfitRow } from "../types/google";
 import type { CsvColumn } from "./csv";
-import { storefrontDecimal, storefrontMoney } from "./storefront-display";
 
 const WARNINGS: Record<string, string> = {
   GOOGLE_COLLECTION_INCOMPLETE: "Google 광고비 미수집 / 수집 미완료",
@@ -21,9 +20,32 @@ const WARNINGS: Record<string, string> = {
 };
 export const googleReason = (code: string) => WARNINGS[code] ?? `확인 필요 (${code})`;
 export const googleReasons = (codes: string[]) => codes.map(googleReason).join(" · ");
-export const googleMoney = (value: number | string | null | undefined) => storefrontMoney(value == null ? null : String(value));
-export const googleNumber = (value: number | null | undefined) => storefrontDecimal(value == null ? null : String(value));
-export const googleRatio = (value: number | null, percent = false) => value == null ? "—" : percent ? `${(value * 100).toFixed(2)}%` : `${value.toFixed(2)}배`;
+function roundedGoogleInteger(value: number | string | null | undefined): string {
+  if (value == null) return "—";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return "—";
+    const rounded = Math.round(value);
+    return (rounded === 0 ? 0 : rounded).toLocaleString("ko-KR", { maximumFractionDigits: 0 });
+  }
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value);
+  if (!match) return "—";
+  const [, sign, integer, fraction = ""] = match;
+  // Match Math.round's ties toward +Infinity without converting exact API decimals to Number.
+  const increment = sign
+    ? fraction[0] > "5" || (fraction[0] === "5" && /[1-9]/.test(fraction.slice(1)))
+    : fraction[0] >= "5";
+  const magnitude = BigInt(integer) + (increment ? 1n : 0n);
+  return `${sign && magnitude !== 0n ? "-" : ""}${magnitude.toLocaleString("ko-KR")}`;
+}
+export const googleMoney = (value: number | string | null | undefined) => {
+  const rounded = roundedGoogleInteger(value);
+  return rounded === "—" ? rounded : `${rounded} 원`;
+};
+export const googleNumber = (value: number | null | undefined) => roundedGoogleInteger(value);
+export const googleRatio = (value: number | null, percent = false) => {
+  const rounded = roundedGoogleInteger(value == null ? null : percent ? value * 100 : value);
+  return rounded === "—" ? rounded : `${rounded}${percent ? "%" : "배"}`;
+};
 export const googleSaleUnit = (row: Pick<GoogleProfitRow, "saleUnitLabel" | "saleUnitLabels">) => row.saleUnitLabel || (row.saleUnitLabels?.length ? `혼합 단위 (${row.saleUnitLabels.join(" / ")} · 기존 단위 포함 가능)` : "기존 판매단위");
 
 /** The screen and export both use server values. No channel calculation occurs here. */
