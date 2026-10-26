@@ -1,5 +1,3 @@
-import { formatMetaMetricReasons } from "./meta-conditional-display";
-import { formatMetaCurrentObservations } from "./meta-current-metadata-display";
 import {
   buildXlsxWorkbook,
   type XlsxBorderTone,
@@ -132,10 +130,6 @@ export function buildMetaDailyXlsxInput(report: MetaDailyXlsxReport): XlsxWorkbo
   report.groups.forEach((group, groupIndex) => {
     const fill = PRODUCT_BANDS[groupIndex % PRODUCT_BANDS.length];
     rows.push(productHeaderRow(group, fill, columnCount));
-    const unavailable = formatMetaMetricReasons(group.totals.metricUnavailableReasons);
-    if (unavailable) addMergedRow(rows, merges, `미확정 지표 · ${unavailable}`, columnCount, fill, "DEFAULT");
-    const currentMetadata = [...new Set(group.rows.map((row) => formatMetaCurrentObservations(row.currentMetadataObservations)).filter(Boolean))].join("\n");
-    if (currentMetadata) addMergedRow(rows, merges, currentMetadata, columnCount, fill, "DEFAULT");
 
     if (group.rows.length > 0) {
       rows.push(padRow(

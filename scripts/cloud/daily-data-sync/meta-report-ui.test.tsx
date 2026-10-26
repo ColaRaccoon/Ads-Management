@@ -67,6 +67,31 @@ test("Excel matches screen currency and provider ROAS for detail, product and su
   assert.equal(aggregateProductRows([row, { ...row, totals: { ...row.totals, providerPurchaseContext: null } }]).providerPurchaseRoas, null);
 });
 
+test("daily Excel excludes operational diagnostics without changing performance or layout", () => {
+  const asset = { status: "ACTIVE", effectiveStatus: "CAMPAIGN_PAUSED", dailyBudgetRaw: "1400",
+    lifetimeBudgetRaw: null, startTime: "2026-07-23T15:42:05+0900", endTime: null };
+  const observed: MetaCreativePerformanceRow = { ...row, currentMetadataObservations: [{
+    metadataObservedAt: "2026-10-26T00:54:17.325Z",
+    currentMetadata: { scope: "CURRENT_ACCESSIBLE_ASSETS", currencyCode: "USD", budgetUnit: "UNVERIFIED",
+      campaign: asset, adset: asset, ad: asset }
+  }] };
+  const cleanTotals = { ...totals, metricUnavailableReasons: undefined };
+  const clean = buildMetaDailyXlsxInput({ ...report, totals: cleanTotals,
+    groups: [{ ...group, totals: cleanTotals, rows: [{ ...row, totals: { ...row.totals, metricUnavailableReasons: undefined } }] }] });
+  const exported = buildMetaDailyXlsxInput({ ...report, groups: [{ ...group, rows: [observed] }] });
+  assert.deepEqual(exported, clean);
+  const cells = exported.rows.map(r => Array.isArray(r) ? r : r.cells);
+  assert.equal(cells[4][0].value, "소재");
+  const headers = cells[4].map(c => c.value);
+  const detail = cells[5];
+  assert.equal(detail[headers.indexOf("집계일수")].value, 55);
+  assert.equal(detail[headers.indexOf("CPA (원)")].value, 13000);
+  assert.equal(detail[headers.indexOf("Meta ROAS")].value, 2.5);
+  assert.equal(detail[headers.indexOf("3초 재생률")].value, null);
+  assert.equal(detail[headers.indexOf("25% 재생률")].value, 0.25);
+  assert.doesNotMatch(JSON.stringify(exported), /미확정 지표|CAMPAIGN_PAUSED|일 예산 원문|현재 접근 가능한 자산/);
+});
+
 const preview = <QueryClientProvider client={new QueryClient()}>
   <main style={{ padding: 24 }}>
     <p className="muted">화면 검증용 예시 데이터 · 운영 데이터가 아닙니다</p>
