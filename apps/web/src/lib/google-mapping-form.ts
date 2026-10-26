@@ -1,5 +1,13 @@
 import type { GoogleMapping, GoogleMappingDraft, GoogleSaleConfiguration } from "../types/google";
 import { googleMoney } from "./google-display";
+import { storefrontToday } from "./storefront-display";
+
+export function blankGoogleMapping(kind: GoogleMappingDraft["kind"] = "CAMPAIGN", startDate = storefrontToday("Asia/Seoul")!): GoogleMappingDraft {
+  return {
+    kind, connectionId: "", productId: null, startDate, endDate: null,
+    ...(kind === "CAMPAIGN" ? { campaignId: "" } : { productNo: "", optionName: "", optionScope: "EXACT" as const })
+  };
+}
 
 export const googleSaleAmountFields = [
   { key: "salePriceKrwOverride", label: "구성 판매가 (원)" },

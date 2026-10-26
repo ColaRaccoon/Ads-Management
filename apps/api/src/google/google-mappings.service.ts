@@ -104,8 +104,12 @@ export class GoogleMappingsService {
       ...(dates.endDate ? { startDate: { lte: dates.endDate } } : {}),
       OR: [{ endDate: null }, { endDate: { gte: dates.startDate } }]
     }, include: { product: { select: { displayName: true } } }, take: 101 });
-    const after = { kind: input.kind, connectionId: input.connectionId, identityKey, campaignId: input.campaignId ?? null,
-      productNo: input.productNo ?? null, optionName: input.optionName ?? "", productId: input.productId,
+    // Form drafts retain empty fields from the other mapping kind. Persist only
+    // this kind's identifiers so the canonical NULL/empty option DB checks hold.
+    const after = { kind: input.kind, connectionId: input.connectionId, identityKey,
+      campaignId: input.kind === "CAMPAIGN" ? input.campaignId! : null,
+      productNo: input.kind === "SALE" ? input.productNo! : null,
+      optionName: input.kind === "SALE" && configuration.optionScope === "EXACT" ? input.optionName ?? "" : "", productId: input.productId,
       ...configuration,
       startDate: input.startDate, endDate: input.endDate ?? null };
     const from = before && before.startDate < dates.startDate ? before.startDate : dates.startDate;

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { googleCampaignColumns, googleMoney, googleProfitColumns, googleRatio, googleReasons, googleSaleUnit } from "./google-display";
-import { editGoogleMapping, googleMappingInputError, googleSaleConfigurationText } from "./google-mapping-form";
+import { blankGoogleMapping, editGoogleMapping, googleMappingInputError, googleSaleConfigurationText } from "./google-mapping-form";
 import { serializeCsv } from "./csv";
 import type { GoogleCampaignRow, GoogleMapping, GoogleProfitRow } from "../types/google";
 
@@ -58,6 +58,22 @@ const saleMapping: GoogleMapping = {
   updatedAt: "2026-10-26T01:00:00.000Z", saleUnitLabel: "1+1 세트", salePriceKrwOverride: 21900,
   productCostKrwOverride: 8000, shippingKrwOverride: 3000, extraCostKrwOverride: 0
 };
+
+test("switching mapping kind creates a clean payload without the other kind's identity", () => {
+  const sale = blankGoogleMapping("SALE", "2026-10-24");
+  assert.equal(sale.kind, "SALE");
+  assert.equal(sale.optionScope, "EXACT");
+  assert.equal(sale.optionName, "");
+  assert.equal(Object.hasOwn(sale, "campaignId"), false);
+  const salePayload = JSON.parse(JSON.stringify({ ...sale, productNo: "product-number", optionScope: "PRODUCT", productId: "product-1" }));
+  assert.equal(Object.hasOwn(salePayload, "campaignId"), false);
+  assert.equal(salePayload.startDate, "2026-10-24");
+  const campaign = blankGoogleMapping("CAMPAIGN", "2026-10-23");
+  assert.equal(campaign.campaignId, "");
+  assert.equal(Object.hasOwn(campaign, "productNo"), false);
+  assert.equal(Object.hasOwn(campaign, "optionName"), false);
+  assert.equal(Object.hasOwn(campaign, "salePriceKrwOverride"), false);
+});
 
 test("editing a product-wide set mapping preserves exact unit amounts and optimistic version", () => {
   const draft = editGoogleMapping(saleMapping);

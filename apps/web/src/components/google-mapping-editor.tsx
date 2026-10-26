@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPatch, apiPost, apiErrorMessage } from "@/lib/api";
 import { useCan } from "@/features/auth/use-auth";
-import { storefrontTime, storefrontToday } from "@/lib/storefront-display";
-import { editGoogleMapping, googleMappingInputError, googleSaleAmountFields, googleSaleConfigurationText } from "@/lib/google-mapping-form";
+import { storefrontTime } from "@/lib/storefront-display";
+import { blankGoogleMapping, editGoogleMapping, googleMappingInputError, googleSaleAmountFields, googleSaleConfigurationText } from "@/lib/google-mapping-form";
 import type { GoogleMapping, GoogleMappingDraft, GoogleMappingPreview, GoogleMappings, GoogleOptions } from "@/types/google";
-
-const blank = (): GoogleMappingDraft => ({ kind: "CAMPAIGN", connectionId: "", campaignId: "", productId: null, startDate: storefrontToday("Asia/Seoul")!, endDate: null });
 
 export function GoogleMappingEditor({ options, query }: { options: GoogleOptions; query: string }) {
   const canManage = useCan("mappings.manage");
   const cache = useQueryClient();
-  const [draft, setDraft] = useState<GoogleMappingDraft>(blank);
+  const [draft, setDraft] = useState<GoogleMappingDraft>(() => blankGoogleMapping());
   const [preview, setPreview] = useState<GoogleMappingPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [page, setPage] = useState(1);
@@ -38,7 +36,7 @@ export function GoogleMappingEditor({ options, query }: { options: GoogleOptions
         if (draft.id) await apiPatch(`/google/mappings/${draft.id}`, draft);
         else await apiPost("/google/mappings", draft);
         await cache.invalidateQueries({ queryKey: ["google"] });
-        setDraft(blank()); setPreview(null); setMessage("Google 연결을 저장했습니다.");
+        setDraft(blankGoogleMapping()); setPreview(null); setMessage("Google 연결을 저장했습니다.");
       }
     } catch (error) { setMessage(apiErrorMessage(error, "연결을 처리하지 못했습니다. 현재 자료를 새로고침하고 다시 확인하세요.")); }
     finally { setBusy(false); }
@@ -49,7 +47,7 @@ export function GoogleMappingEditor({ options, query }: { options: GoogleOptions
       <p>캠페인 ID와 계정, 판매 상품번호와 옵션을 정확히 지정합니다. 여러 상품 캠페인은 미배분으로 저장하세요. 적용일 이전 판매·광고 원본은 바뀌지 않습니다.</p>
       {!canManage ? <p>연결 변경에는 mappings.manage 권한이 필요합니다. 저장된 연결을 조회할 수 있습니다.</p> : <form onSubmit={(event) => { event.preventDefault(); void run(false); }}>
         <div className="toolbar">
-          <label className="field">연결 종류<select className="select" disabled={Boolean(draft.id) || busy} value={draft.kind} onChange={(event) => { setDraft({ ...blank(), kind: event.target.value as GoogleMappingDraft["kind"] }); setPreview(null); }}><option value="CAMPAIGN">Google 캠페인</option><option value="SALE">유튜브 판매</option></select></label>
+          <label className="field">연결 종류<select className="select" disabled={Boolean(draft.id) || busy} value={draft.kind} onChange={(event) => { setDraft(blankGoogleMapping(event.target.value as GoogleMappingDraft["kind"])); setPreview(null); }}><option value="CAMPAIGN">Google 캠페인</option><option value="SALE">유튜브 판매</option></select></label>
           <label className="field">연결 계정<select className="select" required disabled={Boolean(draft.id) || busy} value={draft.connectionId} onChange={(event) => update({ connectionId: event.target.value })}><option value="">계정 선택</option>{options.connections.filter((item) => item.provider === (draft.kind === "CAMPAIGN" ? "GOOGLE" : "CAFE24")).map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.externalAccountId}</option>)}</select></label>
           {draft.kind === "CAMPAIGN" ? <label className="field">캠페인 ID<input className="input" required disabled={Boolean(draft.id) || busy} value={draft.campaignId ?? ""} onChange={(event) => update({ campaignId: event.target.value })} /></label> : <>
             <label className="field">카페24 상품번호<input className="input" required disabled={Boolean(draft.id) || busy} value={draft.productNo ?? ""} onChange={(event) => update({ productNo: event.target.value })} /></label>
@@ -63,7 +61,7 @@ export function GoogleMappingEditor({ options, query }: { options: GoogleOptions
         {draft.kind === "SALE" ? <GoogleSaleConfigurationFields draft={draft} update={update} busy={busy} /> : null}
         <div className="toolbar">
           <button className="button" disabled={busy} type="submit">변경 영향 미리보기</button>
-          <button className="button" disabled={busy} type="button" onClick={() => { setDraft(blank()); setPreview(null); }}>새 연결 / 취소</button>
+          <button className="button" disabled={busy} type="button" onClick={() => { setDraft(blankGoogleMapping()); setPreview(null); }}>새 연결 / 취소</button>
         </div>
         {preview ? <div className="warning-strip" role="status">
           <p>기존 상품: {preview.before ? productName(preview.before.productId) : "Google 전용 연결 없음"} → 변경 상품: {productName(preview.after.productId)}</p>

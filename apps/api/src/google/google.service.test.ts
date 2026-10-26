@@ -97,3 +97,49 @@ test("mapping preview rejects campaign/account substitution before exposing exis
       productId: null, startDate: "2026-10-01" }), /채널의 연결/);
   } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
 });
+
+test("UI empty identifiers normalize by mapping kind before preview, persistence and audit", async () => {
+  const old = process.env.GOOGLE_PERFORMANCE_ENABLED;
+  process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
+  const written: Record<string, unknown>[] = [], audits: Record<string, unknown>[] = [];
+  try {
+    const tx = {
+      $queryRaw: async () => [],
+      sourceConnection: { findUnique: async ({ where }: { where: { id: string } }) => ({ id: where.id, provider: where.id === "google" ? "GOOGLE" : "CAFE24" }) },
+      product: { findFirst: async () => ({ id: "product" }) },
+      cafe24OrderLine: { findFirst: async () => ({ id: "sale" }) },
+      googleCampaignDailyCost: { findFirst: async () => ({ id: "campaign" }) },
+      googlePerformanceMapping: {
+        findMany: async () => [],
+        create: async ({ data }: { data: Record<string, unknown> }) => {
+          // Mirror the database's existing identifier CHECK; do not relax it.
+          if (data.kind === "SALE") { assert.equal(data.campaignId, null); assert.equal(data.productNo, "181"); }
+          else { assert.equal(data.productNo, null); assert.equal(data.campaignId, "123"); assert.equal(data.optionName, ""); }
+          written.push(data);
+          return { ...data, id: `mapping-${written.length}`, createdAt: new Date("2026-10-26"), updatedAt: new Date("2026-10-26"),
+            ...Object.fromEntries(["salePriceKrwOverride", "productCostKrwOverride", "shippingKrwOverride", "extraCostKrwOverride"]
+              .map(key => [key, data[key] == null ? null : new Prisma.Decimal(data[key] as number)])) };
+        }
+      },
+      googleMappingAudit: { create: async ({ data }: { data: Record<string, unknown> }) => { audits.push(data); return data; } }
+    };
+    const db = { $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx) } as unknown as PrismaService;
+    const service = new GoogleMappingsService(db);
+    const sale: GoogleMappingInput = { kind: "SALE", connectionId: "cafe", campaignId: "", productNo: "181", optionName: "",
+      optionScope: "PRODUCT", productId: "product", startDate: "2026-10-23", endDate: null,
+      salePriceKrwOverride: 34900, productCostKrwOverride: 9000, shippingKrwOverride: 0, extraCostKrwOverride: 0, saleUnitLabel: "1+1 세트" };
+    const preview = await service.preview(sale);
+    assert.equal(preview.after.campaignId, null);
+    assert.equal(preview.after.optionName, "");
+    const result = await service.save(sale, "actor");
+    assert.equal(result.mapping.campaignId, null);
+    assert.equal(written[0].salePriceKrwOverride, 34900);
+    assert.equal((audits[0].after as Record<string, unknown>).campaignId, null);
+    assert.equal(sale.campaignId, "");
+    await service.save({ kind: "CAMPAIGN", connectionId: "google", campaignId: "123", productNo: "", optionName: "",
+      productId: "product", startDate: "2026-10-23" }, "actor");
+    assert.equal(written[1].productNo, null);
+    assert.equal((audits[1].after as Record<string, unknown>).productNo, null);
+    await assert.rejects(service.preview({ ...sale, campaignId: "unexpected" }), /상품번호/);
+  } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
+});
