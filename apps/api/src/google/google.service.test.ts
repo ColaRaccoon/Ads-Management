@@ -1,0 +1,99 @@
+import "reflect-metadata";
+import assert from "node:assert/strict";
+import test from "node:test";
+import { plainToInstance } from "class-transformer";
+import { validateSync } from "class-validator";
+import { REQUIRED_PERMISSIONS, AUTH_ROUTE_ACCESS, PERMISSION_ROUTE } from "../auth/route-decorators";
+import { GoogleController } from "./google.controller";
+import { GoogleMappingInput, GoogleQuery } from "./google.dto";
+import { GoogleMappingsService, mappingConfiguration, mappingIdentity } from "./google-mappings.service";
+import { GoogleReadService, googleRange } from "./google-read.service";
+import { PrismaService } from "../common/prisma.service";
+import { GooglePerformanceMapping, Prisma } from "@prisma/client";
+import { resolveGoogleSaleConfiguration } from "./google-sale-configuration";
+
+test("all Google routes require read or mapping permission; preview cannot bypass write permission", () => {
+  for (const name of ["options", "summary", "profit", "campaigns", "list", "preview", "create", "update"] as const) {
+    const handler = GoogleController.prototype[name];
+    assert.equal(Reflect.getMetadata(AUTH_ROUTE_ACCESS, handler), PERMISSION_ROUTE);
+    assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, handler),
+      [["preview", "create", "update"].includes(name) ? "mappings.manage" : "data.read"]);
+  }
+});
+
+test("sale configuration rejects incomplete, imprecise, invalid amounts and unit labels without a configuration", () => {
+  const base = { kind: "SALE", connectionId: "c", productId: "p", productNo: "181", startDate: "2026-10-26" } as GoogleMappingInput;
+  assert.throws(() => mappingConfiguration({ ...base, salePriceKrwOverride: 34900 }), /모두/);
+  assert.throws(() => mappingConfiguration({ ...base, saleUnitLabel: "1+1 세트" }), /4개/);
+  const complete = { ...base, salePriceKrwOverride: 34900, productCostKrwOverride: 9000, shippingKrwOverride: 0, extraCostKrwOverride: 0 };
+  for (const value of [-1, NaN, Infinity, 0.00001, 1.001, 1000000000000])
+    assert.throws(() => mappingConfiguration({ ...complete, salePriceKrwOverride: value }));
+  assert.throws(() => mappingConfiguration({ ...complete, kind: "CAMPAIGN" }), /캠페인/);
+  assert.throws(() => mappingConfiguration({ ...complete, optionScope: "PRODUCT", optionName: "블랙" }), /옵션명/);
+  assert.throws(() => mappingConfiguration({ ...complete, saleUnitLabel: "가".repeat(65) }), /64자/);
+  assert.equal(mappingConfiguration({ ...complete, optionScope: "PRODUCT", saleUnitLabel: "1+1 세트" }).saleUnitLabel, "1+1 세트");
+});
+
+test("product-wide mapping identity differs from every exact scope marker while legacy exact keys remain stable", () => {
+  assert.equal(mappingIdentity("SALE", null, "181", "블랙"), mappingIdentity("SALE", null, "181", "블랙", "EXACT"));
+  assert.notEqual(mappingIdentity("SALE", null, "181", "", "PRODUCT"), mappingIdentity("SALE", null, "181", "PRODUCT"));
+  assert.notEqual(mappingIdentity("SALE", null, "181", "", "PRODUCT"), mappingIdentity("SALE", null, "181", ""));
+});
+
+test("Google complete sale configuration uses three collected sets without legacy bundle doubling or shared cost fallback", () => {
+  const d = (v: number) => new Prisma.Decimal(v);
+  const mapping = { salePriceKrwOverride: d(34900), productCostKrwOverride: d(9000), shippingKrwOverride: d(0), extraCostKrwOverride: d(0),
+    saleUnitLabel: "1+1 세트" };
+  const match = { displayName: "1+1", optionIncludeKeywords: ["+"], productNameAliases: [],
+    salePriceKrwOverride: d(14900), productCostKrwOverride: d(4500), shippingKrwOverride: null, extraCostKrwOverride: null };
+  const before = JSON.stringify({ mapping, match });
+  const configured = resolveGoogleSaleConfiguration(3, mapping, null, match);
+  assert.equal(configured.quantity, 3);
+  assert.equal(configured.calculationQuantity, 3);
+  assert.equal(configured.saleUnitLabel, "1+1 세트");
+  assert.equal(configured.cost?.salePriceKrw, 34900);
+  assert.equal(configured.cost?.productCostKrw, 9000);
+  assert.equal(configured.cost?.vatKrw, 3490);
+  assert.equal(JSON.stringify({ mapping, match }), before);
+  const rule = { salePriceKrw: d(14900), vatKrw: d(1490), productCostKrw: d(4500), shippingKrw: d(0), extraCostKrw: d(0) };
+  const legacy = resolveGoogleSaleConfiguration(3, undefined, rule, match);
+  assert.equal(legacy.quantity, 6);
+  assert.equal(legacy.calculationQuantity, 3);
+  assert.equal(legacy.cost?.salePriceKrw, 14900);
+  assert.equal(legacy.saleUnitLabel, null);
+  assert.equal(resolveGoogleSaleConfiguration(3, { saleUnitLabel: "1+1 세트" } as GooglePerformanceMapping, rule, match).saleUnitLabel, null);
+});
+
+test("disabled feature never reaches DB for reads, mappings, or mutation", async () => {
+  const old = process.env.GOOGLE_PERFORMANCE_ENABLED;
+  process.env.GOOGLE_PERFORMANCE_ENABLED = "false";
+  try {
+    const db = new Proxy({}, { get() { throw Error("database must not be reached"); } }) as PrismaService;
+    const read = new GoogleReadService(db), mappings = new GoogleMappingsService(db);
+    assert.deepEqual(await read.options(), { enabled: false, connections: [], products: [] });
+    await assert.rejects(read.report({ from: "2026-10-01", to: "2026-10-01" }), /비활성화/);
+    await assert.rejects(mappings.list({}), /비활성화/);
+    await assert.rejects(mappings.save({} as GoogleMappingInput, "actor"), /비활성화/);
+  } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
+});
+
+test("query rejects partial/unbounded ranges and transport rejects arbitrary accounts and page sizes", () => {
+  assert.throws(() => googleRange({ from: "2026-10-01" }), /함께/);
+  assert.throws(() => googleRange({ from: "2026-01-01", to: "2026-10-01" }), /92일/);
+  assert.equal(googleRange({ from: "2026-10-01", to: "2026-10-01" }).from, "2026-10-01");
+  assert.equal(validateSync(plainToInstance(GoogleQuery, { page: "1", pageSize: "100" })).length, 0);
+  assert.ok(validateSync(plainToInstance(GoogleQuery, { connectionId: "another-account", pageSize: "101" })).length >= 2);
+});
+
+test("mapping preview rejects campaign/account substitution before exposing existing mapping", async () => {
+  const old = process.env.GOOGLE_PERFORMANCE_ENABLED;
+  process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
+  try {
+    const db = { $transaction: async (fn: (db: unknown) => unknown) => fn(db),
+      sourceConnection: { findUnique: async () => ({ id: "cafe", provider: "CAFE24" }) },
+      googlePerformanceMapping: { findUnique() { throw Error("must not reveal mapping"); } }
+    } as unknown as PrismaService;
+    await assert.rejects(new GoogleMappingsService(db).preview({ kind: "CAMPAIGN", connectionId: "cafe", campaignId: "123",
+      productId: null, startDate: "2026-10-01" }), /채널의 연결/);
+  } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
+});

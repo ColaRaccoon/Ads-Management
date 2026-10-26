@@ -17,6 +17,9 @@ export type BusinessMutationInventoryEntry = {
 const page = (path: string) => `app/${path}/page.tsx`;
 
 export const BUSINESS_MUTATION_INVENTORY: readonly BusinessMutationInventoryEntry[] = [
+  entry("google-mappings.preview", "components/google-mapping-editor.tsx", "Google mapping impact preview", "POST", "/google/mappings/preview", "mappings.manage", "Google 연결 및 변경 이력 조회", "apiPost<GoogleMappingPreview>(\"/google/mappings/preview\"", "useCan(\"mappings.manage\")"),
+  entry("google-mappings.create", "components/google-mapping-editor.tsx", "Google mapping save", "POST", "/google/mappings", "mappings.manage", "Google 연결 및 변경 이력 조회", "apiPost(\"/google/mappings\"", "useCan(\"mappings.manage\")"),
+  entry("google-mappings.update", "components/google-mapping-editor.tsx", "Google mapping update or unallocate", "PATCH", "/google/mappings/:id", "mappings.manage", "Google 연결 및 변경 이력 조회", "apiPatch(`/google/mappings/${draft.id}`", "useCan(\"mappings.manage\")"),
   entry("dashboard.run-decision", page("dashboard"), "runDecision button", "POST", "/decisions/run", "operations.run", "기존 판정 결과", "apiPost(\"/decisions/run\"", "useCan(\"operations.run\")"),
 
   entry("uploads.meta-upload", page("uploads"), "Meta upload form", "POST", "/uploads/meta-ad-daily-csv", "imports.manage", "Meta 배치 이력과 검증 정책", "uploadCsv(file", "useCan(\"imports.manage\")"),

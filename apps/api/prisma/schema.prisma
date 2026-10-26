@@ -310,6 +310,7 @@ model AppUser {
   invitedUsers         AppUser[]            @relation("AppUserInviter")
   securityAuditEvents  SecurityAuditEvent[] @relation("SecurityAuditActor")
   storageTombstones    StorageTombstone[]    @relation("StorageTombstoneActor")
+  googleMappingAudits GoogleMappingAudit[]
 
   @@index([invitedBy])
   @@index([inviteStatus, createdAt])
@@ -441,6 +442,7 @@ model Product {
   cafe24AdCostSourceRules Cafe24ProductRule[] @relation("Cafe24AdCostSourceProduct")
   cafe24CouponRules Cafe24CouponRule[]
   currentAdsets   MetaAdset[]               @relation("CurrentAdsetProduct")
+  googlePerformanceMappings GooglePerformanceMapping[]
 
   @@map("products")
 }
@@ -1696,6 +1698,7 @@ model SourceConnection {
   lease               SyncLease?
   coverage            SourceCoverage[]
   googleCosts         GoogleCampaignDailyCost[]
+  googlePerformanceMappings GooglePerformanceMapping[]
   recordLinks         SourceRecordLink[]
   creativePlacements  CreativePlacement[]
   cafe24Versions      Cafe24OrderApiVersion[]
@@ -1954,6 +1957,50 @@ model GoogleCampaignDailyCost {
   @@unique([connectionId, metricDate, campaignId, version])
   @@index([connectionId, metricDate])
   @@map("google_campaign_daily_costs")
+}
+
+// Google-only effective mappings. Source data and legacy mappings are never mutated.
+model GooglePerformanceMapping {
+  id String @id @default(uuid()) @db.Uuid
+  kind String @db.VarChar(16)
+  connectionId String @map("connection_id") @db.Uuid
+  identityKey String @map("identity_key") @db.VarChar(64)
+  campaignId String? @map("campaign_id") @db.VarChar(256)
+  productNo String? @map("product_no") @db.VarChar(256)
+  optionName String @default("") @map("option_name") @db.VarChar(1024)
+  optionScope String @default("EXACT") @map("option_scope") @db.VarChar(16)
+  salePriceKrwOverride Decimal? @map("sale_price_krw_override") @db.Decimal(14, 2)
+  productCostKrwOverride Decimal? @map("product_cost_krw_override") @db.Decimal(14, 2)
+  shippingKrwOverride Decimal? @map("shipping_krw_override") @db.Decimal(14, 2)
+  extraCostKrwOverride Decimal? @map("extra_cost_krw_override") @db.Decimal(14, 2)
+  saleUnitLabel String? @map("sale_unit_label") @db.VarChar(64)
+  productId String? @map("product_id") @db.Uuid
+  startDate DateTime @map("start_date") @db.Date
+  endDate DateTime? @map("end_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  connection SourceConnection @relation(fields:[connectionId], references:[id], onDelete:Restrict)
+  product Product? @relation(fields:[productId], references:[id], onDelete:Restrict)
+  audits GoogleMappingAudit[]
+
+  @@index([connectionId, kind, identityKey, startDate])
+  @@index([productId, startDate])
+  @@map("google_performance_mappings")
+}
+
+model GoogleMappingAudit {
+  id String @id @default(uuid()) @db.Uuid
+  mappingId String @map("mapping_id") @db.Uuid
+  actorUserId String @map("actor_user_id") @db.Uuid
+  before Json?
+  after Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  mapping GooglePerformanceMapping @relation(fields:[mappingId], references:[id], onDelete:Restrict)
+  actor AppUser @relation(fields:[actorUserId], references:[id], onDelete:Restrict)
+
+  @@index([mappingId, createdAt])
+  @@index([actorUserId])
+  @@map("google_mapping_audits")
 }
 
 model SourceRecordLink {

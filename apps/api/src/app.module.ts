@@ -17,6 +17,7 @@ import { validateRuntimeEnvironment } from "./common/http-security.config";
 import { HealthModule } from "./health/health.module";
 import { DailySyncModule } from "./daily-sync/daily-sync.module";
 import { StorefrontModule } from "./storefront/storefront.module";
+import { GoogleModule } from "./google/google.module";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { StorefrontModule } from "./storefront/storefront.module";
     HealthModule,
     DailySyncModule,
     StorefrontModule,
+    GoogleModule,
     UploadsModule,
     ProductsModule,
     MappingsModule,

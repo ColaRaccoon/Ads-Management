@@ -1,0 +1,70 @@
+{
+  "status": "APPROVED_PENDING_PRODUCTION_APPLY",
+  "reviewedOn": "2026-10-26",
+  "notes": [
+    "사용자 확인: 현재 자사몰 두줄무릎보호대는 1+1만 판매하며 주문수량 1은 1+1 한 세트다.",
+    "Google 전용 연결안. 기존 공용 상품 원가·카페24 매핑·Meta·쿠팡 데이터는 변경하지 않는다.",
+    "판매 적용 시작일은 실제 확인한 3행의 첫 날짜다. 과거 단품 판매 전체에 소급하지 않는다.",
+    "캠페인 5개는 이름·기존 상품 규칙을 대조한 연결안이며 사용자가 2026-10-26 운영 적용을 승인했다.",
+    "이 파일 자체는 데이터를 쓰지 않는다. 실제 적용 결과는 운영 조회와 감사 이력으로 확인한다."
+  ],
+  "salesMappings": [
+    {
+      "kind": "SALE",
+      "connectionId": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "productNo": "181",
+      "optionScope": "PRODUCT",
+      "optionName": "",
+      "productId": "f279ad95-d864-49af-a93d-f4ad50ed81a2",
+      "startDate": "2026-10-24",
+      "endDate": null,
+      "salePriceKrwOverride": 34900,
+      "productCostKrwOverride": 9000,
+      "shippingKrwOverride": 0,
+      "extraCostKrwOverride": 0,
+      "saleUnitLabel": "1+1 세트"
+    }
+  ],
+  "campaignMappings": [
+    {
+      "kind": "CAMPAIGN",
+      "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "campaignId": "24368890707",
+      "productId": "629e5f82-e2b5-4531-89cf-bc9fdabebf0b",
+      "startDate": "2026-10-23",
+      "endDate": null
+    },
+    {
+      "kind": "CAMPAIGN",
+      "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "campaignId": "24370144997",
+      "productId": "5d716ce2-2aa3-452e-8f32-3c30eac1d9f0",
+      "startDate": "2026-10-23",
+      "endDate": null
+    },
+    {
+      "kind": "CAMPAIGN",
+      "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "campaignId": "24376213102",
+      "productId": "051772e0-d4bc-414b-8817-5ee09d3e7db6",
+      "startDate": "2026-10-23",
+      "endDate": null
+    },
+    {
+      "kind": "CAMPAIGN",
+      "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "campaignId": "24384461212",
+      "productId": "f279ad95-d864-49af-a93d-f4ad50ed81a2",
+      "startDate": "2026-10-23",
+      "endDate": null
+    },
+    {
+      "kind": "CAMPAIGN",
+      "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "campaignId": "24392535061",
+      "productId": "cad62d19-f241-4f4e-b71d-f9e178065da3",
+      "startDate": "2026-10-23",
+      "endDate": null
+    }
+  ]
+}

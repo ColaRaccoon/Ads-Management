@@ -50,6 +50,15 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     ]
   },
   {
+    label: "Google",
+    items: [
+      { href: "/google/dashboard", label: "Google 요약", icon: Home, requiredPermission: "data.read" },
+      { href: "/google/campaigns", label: "Google 캠페인", icon: BarChart3, requiredPermission: "data.read" },
+      { href: "/google/mappings", label: "Google 상품 연결", icon: Shuffle, requiredPermission: "data.read" },
+      { href: "/google/profit", label: "Google 상품별 마진", icon: TableProperties, requiredPermission: "data.read" }
+    ]
+  },
+  {
     label: "쿠팡",
     items: [
       { href: "/coupang/dashboard", label: "Coupang Dashboard", icon: Home, requiredPermission: "data.read" },
@@ -105,9 +114,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Activity size={18} color="#146c63" />
             <strong>운영 대시보드</strong>
           </div>
-          <Suspense fallback={<div className="toolbar" />}>
+          {!pathname.startsWith("/google/") && <Suspense fallback={<div className="toolbar" />}>
             <DateRangePicker />
-          </Suspense>
+          </Suspense>}
           <div className="account-toolbar">
             <div className="account-summary">
               <strong>{user?.name ?? "사용자"}</strong>
