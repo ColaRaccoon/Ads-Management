@@ -27,6 +27,8 @@ export type GoogleMappingDraft = GoogleSaleConfiguration & {
 };
 export type GoogleMapping = Omit<GoogleMappingDraft, "campaignId" | "productNo"> & { id: string; updatedAt: string; campaignId: string | null; productNo: string | null; productName: string | null };
 export type GoogleMappings = {
+  campaignMappingMode?: "CAMPAIGN_NAME";
+  nameAutomaticProducts?: Array<{ id: string; displayName: string; name: string }>;
   campaignMappings: GoogleMapping[];
   salesMappings: GoogleMapping[];
   audit: Array<{ id: string; createdAt: string; actorUserId: string; before: unknown; after: unknown }>;
@@ -47,9 +49,13 @@ export type GoogleProfitRow = {
   grossCostKrw: number | null; couponDeductionKrw: number | null;
   adSpendKrw: number | null; adSpendKrwExact: string | null; knownAdSpendKrw: number;
   marginKrw: number | null; calculatedMarginKrw: number | null; marginRate: number | null; roas: number | null;
+  impressions?: number | null; clicks?: number | null; ctr?: number | null; cpcKrw?: number | null;
+  /** Cafe24 completed sale-unit quantity, not Google Ads attributed conversions. */
+  costPerSaleKrw?: number | null;
   priceMismatchCount: number; complete: boolean; warningCodes: string[];
 };
 export type GoogleCampaignRow = {
+  mappingMode?: "CAMPAIGN_NAME";
   connectionId: string; customerId: string; campaignId: string; campaignName: string;
   currencyCode: string; productIds: string[]; hasUnmapped: boolean; costMicros: string;
   adSpendKrw: number | null; adSpendKrwExact: string | null;

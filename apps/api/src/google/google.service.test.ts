@@ -85,20 +85,20 @@ test("query rejects partial/unbounded ranges and transport rejects arbitrary acc
   assert.ok(validateSync(plainToInstance(GoogleQuery, { connectionId: "another-account", pageSize: "101" })).length >= 2);
 });
 
-test("mapping preview rejects campaign/account substitution before exposing existing mapping", async () => {
+test("campaign ID preview and saves are rejected before any database access, including legacy edits", async () => {
   const old = process.env.GOOGLE_PERFORMANCE_ENABLED;
   process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
   try {
-    const db = { $transaction: async (fn: (db: unknown) => unknown) => fn(db),
-      sourceConnection: { findUnique: async () => ({ id: "cafe", provider: "CAFE24" }) },
-      googlePerformanceMapping: { findUnique() { throw Error("must not reveal mapping"); } }
-    } as unknown as PrismaService;
-    await assert.rejects(new GoogleMappingsService(db).preview({ kind: "CAMPAIGN", connectionId: "cafe", campaignId: "123",
-      productId: null, startDate: "2026-10-01" }), /채널의 연결/);
+    const db = new Proxy({}, { get() { throw Error("database must not be reached"); } }) as PrismaService;
+    const service = new GoogleMappingsService(db);
+    const campaign = { kind: "CAMPAIGN" as const, connectionId: "cafe", campaignId: "123", productId: null, startDate: "2026-10-01" };
+    await assert.rejects(service.preview(campaign), /캠페인명/);
+    await assert.rejects(service.save(campaign, "actor"), /캠페인명/);
+    await assert.rejects(service.save({ ...campaign, id: "old" }, "actor", "old"), /캠페인명/);
   } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
 });
 
-test("UI empty identifiers normalize by mapping kind before preview, persistence and audit", async () => {
+test("SALE empty identifiers still normalize before preview, persistence and audit after campaign writes are disabled", async () => {
   const old = process.env.GOOGLE_PERFORMANCE_ENABLED;
   process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
   const written: Record<string, unknown>[] = [], audits: Record<string, unknown>[] = [];
@@ -136,10 +136,86 @@ test("UI empty identifiers normalize by mapping kind before preview, persistence
     assert.equal(written[0].salePriceKrwOverride, 34900);
     assert.equal((audits[0].after as Record<string, unknown>).campaignId, null);
     assert.equal(sale.campaignId, "");
-    await service.save({ kind: "CAMPAIGN", connectionId: "google", campaignId: "123", productNo: "", optionName: "",
-      productId: "product", startDate: "2026-10-23" }, "actor");
-    assert.equal(written[1].productNo, null);
-    assert.equal((audits[1].after as Record<string, unknown>).productNo, null);
+    await assert.rejects(service.save({ kind: "CAMPAIGN", connectionId: "google", campaignId: "123", productNo: "", optionName: "",
+      productId: "product", startDate: "2026-10-23" }, "actor"), /캠페인명/);
+    assert.equal(written.length, 1);
+    assert.equal(audits.length, 1);
     await assert.rejects(service.preview({ ...sale, campaignId: "unexpected" }), /상품번호/);
   } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
+});
+
+test("mapping list exposes bounded active name candidates while preserving legacy campaign history", async () => {
+  const old = process.env.GOOGLE_PERFORMANCE_ENABLED;
+  process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
+  let products = [{ id: "p", name: "상품", displayName: "상품 표시명" }];
+  const legacy = { id: "legacy", kind: "CAMPAIGN", productId: "p", campaignId: "123", startDate: new Date("2026-10-23"),
+    endDate: null, createdAt: new Date("2026-10-26"), updatedAt: new Date("2026-10-26") };
+  const tx = {
+    googlePerformanceMapping: { findMany: async () => [legacy], count: async () => 1 },
+    googleMappingAudit: { findMany: async () => [{ mappingId: "legacy", actorUserId: "actor" }] },
+    product: { findMany: async ({ where, take }: { where: { isActive: boolean }; take: number }) => {
+      assert.equal(where.isActive, true); assert.equal(take, 10001); return products;
+    } }
+  };
+  const db = { $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx) } as unknown as PrismaService;
+  try {
+    const service = new GoogleMappingsService(db);
+    const result = await service.list({});
+    assert.equal(result.campaignMappingMode, "CAMPAIGN_NAME");
+    assert.deepEqual(result.nameAutomaticProducts, products);
+    assert.equal(result.campaignMappings[0].id, "legacy");
+    assert.equal(result.audit[0].mappingId, "legacy");
+    products = Array.from({ length: 10001 }, (_, index) => ({ id: String(index), name: "p", displayName: "p" }));
+    await assert.rejects(service.list({}));
+  } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
+});
+
+test("reader uses each dated campaign name and ignores conflicting legacy ID mappings without writes", async () => {
+  const previous = { google: process.env.GOOGLE_PERFORMANCE_ENABLED, daily: process.env.DAILY_SYNC_FEATURE_ENABLED };
+  process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
+  process.env.DAILY_SYNC_FEATURE_ENABLED = "true";
+  const dates = [new Date("2026-10-20"), new Date("2026-10-21"), new Date("2026-10-22")];
+  const names = ["풀 업 바 첫 광고", "자이로볼 이름 변경", "이름 없는 상품"];
+  const ads = dates.map((metricDate, i) => ({ id: `ad-${i}`, connectionId: "g", campaignId: "same-campaign-id",
+    campaignName: names[i], metricDate, source: "API", costMicros: 20000000000n, impressions: 1000n,
+    clicks: 10n, syncRunId: `run-${i}`, version: 1 }));
+  const tx = {
+    sourceConnection: { findMany: async () => [{ id: "g", provider: "GOOGLE", displayName: "Google", externalAccountId: "account", currencyCode: "KRW", timeZone: "Asia/Seoul" }] },
+    sourceCoverage: { findMany: async () => dates.map((metricDate, i) => ({ connectionId: "g", dataKind: "GOOGLE_CAMPAIGN", metricDate,
+      source: "API", rowCount: 1, totalAmount: new Prisma.Decimal(20000), state: "COMPLETE_NONZERO",
+      lastSuccessRunId: `run-${i}`, lastSuccessAt: metricDate, lastAttemptAt: metricDate, warningCodes: [] })) },
+    sourcePolicy: { findMany: async () => [{ connectionId: "g", dataKind: "GOOGLE_CAMPAIGN", primarySource: "API", fromDate: dates[0], toDate: null }] },
+    googleCampaignDailyCost: { findMany: async () => ads },
+    cafe24UploadBatch: { findMany: async () => [] }, exchangeRate: { findMany: async () => [] },
+    productCostRule: { findMany: async () => [] }, cafe24CouponRule: { findMany: async () => [] }, cafe24OrderLine: { findMany: async () => [] },
+    googlePerformanceMapping: { findMany: async ({ where }: { where: { kind: string } }) => {
+      assert.equal(where.kind, "SALE", "legacy campaign rows are not requested by the report reader");
+      // Even a stray legacy result must not override the name or provide a fallback.
+      return [{ kind: "CAMPAIGN", connectionId: "g", identityKey: mappingIdentity("CAMPAIGN", "same-campaign-id"),
+        productId: "p-wrong", startDate: dates[0], endDate: null }];
+    } },
+    product: { findMany: async () => [{ id: "p-bar", name: "풀업바", displayName: "풀업 바" },
+      { id: "p-ball", name: "자이로볼", displayName: "자이로볼" }, { id: "p-wrong", name: "옛 상품", displayName: "옛 상품" }] },
+    runUnit: { findMany: async () => dates.map((date, i) => ({ run: { connectionId: "g" }, runId: `run-${i}`,
+      unitKey: date.toISOString().slice(0, 10), publishedCount: 1 })) },
+    sourceRecordLink: { findMany: async () => ads.map(ad => ({ recordId: ad.id, connectionId: "g", version: 1, syncRunId: ad.syncRunId })) }
+  };
+  const snapshot = JSON.stringify(ads, (_, value) => typeof value === "bigint" ? value.toString() : value);
+  const db = { $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx) } as unknown as PrismaService;
+  try {
+    const result = await new GoogleReadService(db).report({ from: "2026-10-20", to: "2026-10-22" });
+    assert.deepEqual(result.products.map(row => row.productId), ["p-ball", "p-bar"]);
+    assert.equal(result.daily.find(row => row.date === "2026-10-20")!.productId, "p-bar");
+    assert.equal(result.daily.find(row => row.date === "2026-10-21")!.productId, "p-ball");
+    assert.equal(result.daily.find(row => row.date === "2026-10-22")!.productId, null);
+    assert.equal(result.summary.unallocatedAdSpendKrw, 20000);
+    assert.equal(result.summary.allocatedAdSpendKrw, 40000);
+    assert.equal(result.campaigns[0].mappingMode, "CAMPAIGN_NAME");
+    assert.deepEqual(result.campaigns[0].productIds, ["p-ball", "p-bar"]);
+    assert.ok(result.campaigns[0].warningCodes.includes("CAMPAIGN_PRODUCT_NOT_FOUND"));
+    assert.equal(JSON.stringify(ads, (_, value) => typeof value === "bigint" ? value.toString() : value), snapshot);
+  } finally {
+    if (previous.google === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = previous.google;
+    if (previous.daily === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = previous.daily;
+  }
 });

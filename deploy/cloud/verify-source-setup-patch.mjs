@@ -21,12 +21,12 @@ if (profile === 'reporting') {
   // Google is an additive, reviewed feature in the reporting image. Keep each
   // generated module explicit: a new google/*.js file still requires review.
   for (const name of ['app.module.js',
-    'google/google-access.js', 'google/google-mappings.service.js',
+    'google/google-access.js', 'google/google-mappings.service.js', 'google/google-campaign-matcher.js',
     'google/google-performance.js', 'google/google-read.service.js',
     'google/google-sale-configuration.js', 'google/google.controller.js',
     'google/google.dto.js', 'google/google.module.js',
     // The existing build excludes *.spec.ts, but emits these *.test.ts files.
-    'google/google-performance.test.js', 'google/google.service.test.js']) expected.add(name);
+    'google/google-performance.test.js', 'google/google.service.test.js', 'google/google-campaign-matcher.test.js']) expected.add(name);
 }
 if (!baseline || !compiled) throw Error('Two compiled directories required');
 let checked = 0, changed = 0;

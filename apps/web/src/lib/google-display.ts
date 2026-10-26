@@ -8,6 +8,8 @@ const WARNINGS: Record<string, string> = {
   COUPON_UNRESOLVED: "쿠폰 판정 또는 주문행 배분 미확정",
   COUPON_ESTIMATED: "추정 쿠폰 적용",
   UNALLOCATED_AD_SPEND: "미배분 Google 광고비 존재",
+  AMBIGUOUS_CAMPAIGN_PRODUCT: "캠페인명에 여러 상품이 포함되어 자동 연결 보류",
+  CAMPAIGN_PRODUCT_NOT_FOUND: "캠페인명에서 활성 상품명을 찾지 못함",
   UNMAPPED_SALES: "미연결 유튜브 판매 존재",
   MISSING_EXCHANGE_RATE: "원화 환산 환율 누락",
   TIME_ZONE_MISMATCH: "광고 계정과 카페24 영업일의 시간대 불일치",
@@ -68,7 +70,12 @@ export function googleProfitColumns(productName: (id: string | null) => string):
     { header: "페이지 기준 ROAS (배)", value: (row) => row.roas },
     { header: "판매가 차이 행 수", value: (row) => row.priceMismatchCount },
     { header: "완전성", value: (row) => row.complete ? "확정" : "미확정" },
-    { header: "확인 사유", value: (row) => googleReasons(row.warningCodes) }
+    { header: "확인 사유", value: (row) => googleReasons(row.warningCodes) },
+    { header: "노출수", value: (row) => row.impressions ?? null },
+    { header: "클릭수", value: (row) => row.clicks ?? null },
+    { header: "클릭률 (비율)", value: (row) => row.ctr ?? null },
+    { header: "클릭당 비용 (KRW)", value: (row) => row.cpcKrw ?? null },
+    { header: "판매 1개당 광고비 (카페24 판매수량 기준, KRW)", value: (row) => row.costPerSaleKrw ?? null }
   ];
 }
 

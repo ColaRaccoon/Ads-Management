@@ -3,6 +3,7 @@ import test from "node:test";
 import { Cafe24SalesCalculator } from "../domain/cafe24-sales-calculator";
 import { Cafe24CouponRuleInput } from "../domain/cafe24-coupon-matcher";
 import { calculateGooglePerformance, GoogleAdMetric, GooglePerformanceInput, GoogleSaleLine } from "./google-performance";
+import { createGoogleCampaignMatcher } from "./google-campaign-matcher";
 
 const day = "2026-10-20";
 function sale(overrides: Partial<GoogleSaleLine> = {}): GoogleSaleLine {
@@ -223,4 +224,150 @@ test("mixed units are not represented as a homogeneous set count", () => {
   const legacyMix = calculateGooglePerformance(input({ salesLines: [sale({ saleUnitLabel: "1+1 세트" }),
     sale({ id: "legacy", orderNo: "legacy" })] }));
   assert.equal(legacyMix.summary.saleUnitLabel, null);
+});
+
+test("product ad ratios use summed campaign counts and deduplicate source IDs without changing margin", () => {
+  const first = ad({ costMicros: "10000000000", impressions: 100, clicks: 10 });
+  const second = ad({ id: "second", campaignId: "second", costMicros: "10000000000", impressions: 900, clicks: 30 });
+  const result = calculateGooglePerformance(input({ adMetrics: [first, second, first] }));
+  for (const row of [result.summary, result.products[0], result.daily[0]]) {
+    assert.equal(row.impressions, 1000);
+    assert.equal(row.clicks, 40);
+    assert.equal(row.ctr, 0.04);
+    assert.equal(row.cpcKrw, 500);
+    assert.equal(row.costPerSaleKrw, 20000);
+    assert.equal(row.revenueKrw, 100000);
+    assert.equal(row.grossCostKrw, 40000);
+    assert.equal(row.marginKrw, 40000);
+  }
+});
+
+test("dated mapping changes split ad counts and a product filter excludes other and unallocated counts", () => {
+  const tomorrow = "2026-10-21";
+  const args = input({ salesLines: [], days: [{ date: day, googleComplete: true, cafe24Complete: true },
+    { date: tomorrow, googleComplete: true, cafe24Complete: true }], adMetrics: [ad(),
+    ad({ id: "new-date", date: tomorrow, productId: "product-2", impressions: 2000, clicks: 100 }),
+    ad({ id: "unallocated", productId: null, impressions: 500, clicks: 40 })] });
+  const all = calculateGooglePerformance(args);
+  assert.equal(all.summary.impressions, 3500);
+  assert.equal(all.summary.clicks, 150);
+  assert.equal(all.summary.ctr, 150 / 3500);
+  assert.equal(all.summary.cpcKrw, 400);
+  assert.equal(all.summary.costPerSaleKrw, null);
+  assert.equal(all.summary.marginKrw, null);
+  assert.deepEqual(all.products.map(row => [row.productId, row.impressions, row.clicks]), [
+    ["product-1", 1000, 10], ["product-2", 2000, 100]
+  ]);
+  assert.equal(all.daily.find(row => row.productId === "product-2")!.date, tomorrow);
+  const filtered = calculateGooglePerformance({ ...args, productId: "product-2" });
+  assert.equal(filtered.summary.impressions, 2000);
+  assert.equal(filtered.summary.clicks, 100);
+  assert.equal(filtered.summary.ctr, 0.05);
+  assert.equal(filtered.summary.cpcKrw, 200);
+  assert.equal(filtered.summary.marginKrw, -20000);
+});
+
+test("missing Google dates null period ad metrics while a fully collected day's metrics stay known", () => {
+  const result = calculateGooglePerformance(input({ days: [{ date: day, googleComplete: true, cafe24Complete: true },
+    { date: "2026-10-21", googleComplete: false, cafe24Complete: true }] }));
+  for (const row of [result.summary, result.products[0]]) {
+    for (const key of ["impressions", "clicks", "ctr", "cpcKrw", "costPerSaleKrw"] as const) assert.equal(row[key], null);
+  }
+  assert.equal(result.daily[0].impressions, 1000);
+  assert.equal(result.daily[0].cpcKrw, 2000);
+  assert.equal(result.daily[0].costPerSaleKrw, 20000);
+  const absent = calculateGooglePerformance(input({ adMetrics: [], days: [{ date: day, googleComplete: false, cafe24Complete: true }] }));
+  assert.equal(absent.summary.impressions, null);
+  assert.equal(absent.summary.clicks, null);
+});
+
+test("source and timezone incompatibility block confirmed ad metrics including zero-row scopes", () => {
+  for (const warning of ["SOURCE_SELECTION_REQUIRED", "TIME_ZONE_MISMATCH", "TIME_ZONE_UNKNOWN", "CAFE24_TIME_ZONE_MISMATCH"]) {
+    for (const adMetrics of [[], [ad()]]) {
+      const result = calculateGooglePerformance(input({ warnings: [warning], adMetrics }));
+      for (const row of [result.summary, ...result.products, ...result.daily]) {
+        for (const key of ["impressions", "clicks", "ctr", "cpcKrw", "costPerSaleKrw"] as const) assert.equal(row[key], null);
+      }
+    }
+  }
+  const badMetric = calculateGooglePerformance(input({ adMetrics: [ad({ timeZone: "America/Los_Angeles" })] }));
+  assert.equal(badMetric.summary.impressions, null);
+  assert.equal(badMetric.products[0].cpcKrw, null);
+});
+
+test("FX gaps only block currency-based ad metrics and valid FX yields the converted CPC", () => {
+  const args = input({ adMetrics: [ad({ currencyCode: "USD", costMicros: "1000001" })] });
+  const missing = calculateGooglePerformance(args);
+  assert.equal(missing.summary.impressions, 1000);
+  assert.equal(missing.summary.clicks, 10);
+  assert.equal(missing.summary.ctr, 0.01);
+  assert.equal(missing.summary.cpcKrw, null);
+  assert.equal(missing.summary.costPerSaleKrw, null);
+  const converted = calculateGooglePerformance({ ...args, adMetrics: [ad({ currencyCode: "USD", costMicros: "1000001", exchangeRateKrw: "1390.1234" })] });
+  assert.equal(converted.summary.cpcKrw, 139.01247901234);
+});
+
+test("confirmed zero counts, zero spend, zero clicks and sale units keep ratio denominators distinct", () => {
+  const empty = calculateGooglePerformance(input({ salesLines: [], adMetrics: [] }));
+  assert.equal(empty.summary.impressions, 0);
+  assert.equal(empty.summary.clicks, 0);
+  assert.equal(empty.summary.ctr, null);
+  assert.equal(empty.summary.cpcKrw, null);
+  assert.equal(empty.summary.costPerSaleKrw, null);
+  const noClicks = calculateGooglePerformance(input({ adMetrics: [ad({ clicks: 0 })] }));
+  assert.equal(noClicks.summary.ctr, 0);
+  assert.equal(noClicks.summary.cpcKrw, null);
+  const zeroSpend = calculateGooglePerformance(input({ adMetrics: [ad({ costMicros: "0" })] }));
+  assert.equal(zeroSpend.summary.cpcKrw, 0);
+  assert.equal(zeroSpend.summary.costPerSaleKrw, 0);
+  const sets = calculateGooglePerformance(input({ salesLines: [sale({ quantity: 3, calculationQuantity: 3, saleUnitLabel: "1+1 세트" })] }));
+  assert.equal(sets.summary.costPerSaleKrw, 20000 / 3);
+  assert.equal(sets.summary.quantity, 3);
+  assert.equal(sets.summary.marginKrw, 160000);
+});
+
+test("sales completeness blocks per-sale cost without hiding independently complete ad counts", () => {
+  for (const args of [input({ days: [{ date: day, googleComplete: true, cafe24Complete: false }] }),
+    input({ salesLines: [sale({ cost: null })] }), input({ salesLines: [withCoupon(sale())] }),
+    input({ adMetrics: [ad(), ad({ id: "unmapped", productId: null })] })]) {
+    const result = calculateGooglePerformance(args);
+    assert.equal(result.summary.costPerSaleKrw, null);
+    assert.equal(result.summary.marginKrw, null);
+    assert.notEqual(result.summary.impressions, null);
+    assert.notEqual(result.summary.ctr, null);
+    assert.notEqual(result.summary.cpcKrw, null);
+  }
+});
+
+test("new campaign IDs automatically add their name-matched spend without duplicating product sales", () => {
+  const match = createGoogleCampaignMatcher([{ id: "product-1", name: "풀업바", displayName: "풀 업 바" }]);
+  const adMetrics = ["신규 풀업바 캠페인", "풀 업 바 다른 캠페인"].map((campaignName, i) =>
+    ad({ id: `new-row-${i}`, campaignId: `brand-new-id-${i}`, campaignName, costMicros: "10000000000", ...match(campaignName) }));
+  const result = calculateGooglePerformance(input({ adMetrics }));
+  assert.equal(result.products.length, 1);
+  assert.equal(result.summary.quantity, 1);
+  assert.equal(result.summary.revenueKrw, 100000);
+  assert.equal(result.summary.adSpendKrw, 20000);
+  assert.equal(result.summary.marginKrw, 40000);
+  assert.equal(result.summary.clicks, 20);
+  assert.equal(result.campaigns.length, 2);
+  assert.ok(result.campaigns.every(row => row.mappingMode === "CAMPAIGN_NAME" && row.productIds[0] === "product-1"));
+});
+
+test("ambiguous and missing campaign names preserve spend as unallocated and expose their reasons", () => {
+  const match = createGoogleCampaignMatcher([{ id: "product-1", name: "풀업바", displayName: "풀업바" },
+    { id: "product-2", name: "자이로볼", displayName: "자이로볼" }]);
+  const result = calculateGooglePerformance(input({ adMetrics: ["풀업바+자이로볼", "미등록상품"].map((campaignName, i) =>
+    ad({ id: `unmapped-${i}`, campaignId: `unmapped-${i}`, campaignName, ...match(campaignName) })) }));
+  assert.equal(result.summary.adSpendKrw, 40000);
+  assert.equal(result.summary.unallocatedAdSpendKrw, 40000);
+  assert.equal(result.summary.allocatedAdSpendKrw, 0);
+  assert.equal(result.summary.marginKrw, null);
+  assert.equal(result.summary.clicks, 20);
+  assert.equal(result.reconciliation.balanced, true);
+  for (const reason of ["AMBIGUOUS_CAMPAIGN_PRODUCT", "CAMPAIGN_PRODUCT_NOT_FOUND"]) {
+    assert.ok(result.summary.warningCodes.includes(reason));
+    assert.ok(result.daily.some(row => row.warningCodes.includes(reason)));
+    assert.ok(result.campaigns.some(row => row.warningCodes.includes(reason)));
+  }
 });

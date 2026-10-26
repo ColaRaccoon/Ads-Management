@@ -20,6 +20,7 @@ export type GoogleAdMetric = {
   campaignId: string; campaignName: string; currencyCode: string;
   costMicros: string; impressions: number; clicks: number; productId: string | null;
   exchangeRateKrw?: string | null; timeZone?: string | null;
+  warningCodes?: string[];
 };
 export type GooglePerformanceInput = {
   salesLines: GoogleSaleLine[]; adMetrics: GoogleAdMetric[];
@@ -30,6 +31,7 @@ export type GooglePerformanceInput = {
 };
 type Bucket = {
   productId: string | null; date: string; quantity: number; lineCount: number;
+  impressions: number; clicks: number;
   revenue: Amount; collected: Amount; gross: Amount; coupon: Amount; spend: Amount;
   missingRevenue: boolean; missingCollected: boolean; missingGross: boolean;
   missingCoupon: boolean; missingSpend: boolean; priceMismatchCount: number;
@@ -37,7 +39,7 @@ type Bucket = {
   unitLabels: Set<string>; unlabeledSales: boolean;
 };
 function empty(productId: string | null, date: string): Bucket {
-  return { productId, date, quantity: 0, lineCount: 0,
+  return { productId, date, quantity: 0, lineCount: 0, impressions: 0, clicks: 0,
     revenue: new Money(0), collected: new Money(0), gross: new Money(0),
     coupon: new Money(0), spend: new Money(0), missingRevenue: false,
     missingCollected: false, missingGross: false, missingCoupon: false,
@@ -45,6 +47,7 @@ function empty(productId: string | null, date: string): Bucket {
 }
 function merge(target: Bucket, source: Bucket) {
   target.quantity += source.quantity; target.lineCount += source.lineCount;
+  target.impressions += source.impressions; target.clicks += source.clicks;
   target.priceMismatchCount += source.priceMismatchCount;
   for (const key of ["revenue", "collected", "gross", "coupon", "spend"] as const)
     target[key] = target[key].plus(source[key]);
@@ -62,6 +65,10 @@ function finish(bucket: Bucket) {
   const calculated = calculable ? bucket.revenue.minus(bucket.gross).minus(bucket.coupon).minus(bucket.spend) : null;
   const blocking = [...bucket.warnings].some((warning) => !["PRICE_MISMATCH", "COUPON_ESTIMATED"].includes(warning));
   const margin = blocking ? null : calculated;
+  // Sales cost/coupon or allocation gaps do not hide valid account-level ad counts.
+  // Calendar/source gaps do: a partial count is not the selected period's total.
+  const adCountsComplete = !["GOOGLE_COLLECTION_INCOMPLETE", "SOURCE_SELECTION_REQUIRED",
+    "TIME_ZONE_MISMATCH", "TIME_ZONE_UNKNOWN", "CAFE24_TIME_ZONE_MISMATCH"].some(warning => bucket.warnings.has(warning));
   return {
     productId: bucket.productId, date: bucket.date, quantity: bucket.quantity,
     saleUnitLabel: !bucket.unlabeledSales && bucket.unitLabels.size === 1 ? [...bucket.unitLabels][0] : null,
@@ -74,6 +81,12 @@ function finish(bucket: Bucket) {
     adSpendKrw: bucket.missingSpend ? null : bucket.spend.toNumber(),
     adSpendKrwExact: bucket.missingSpend ? null : bucket.spend.toFixed(),
     knownAdSpendKrw: bucket.spend.toNumber(),
+    impressions: adCountsComplete ? bucket.impressions : null,
+    clicks: adCountsComplete ? bucket.clicks : null,
+    ctr: adCountsComplete && bucket.impressions > 0 ? bucket.clicks / bucket.impressions : null,
+    cpcKrw: adCountsComplete && !bucket.missingSpend && bucket.clicks > 0 ? bucket.spend.dividedBy(bucket.clicks).toNumber() : null,
+    // Operational page-attributed sale units, not Google Ads conversions or CPA.
+    costPerSaleKrw: calculable && !blocking && bucket.quantity > 0 ? bucket.spend.dividedBy(bucket.quantity).toNumber() : null,
     marginKrw: margin?.toNumber() ?? null,
     calculatedMarginKrw: calculated?.toNumber() ?? null,
     marginRate: margin ? ratio(margin, bucket.revenue) : null,
@@ -184,6 +197,7 @@ export function calculateGooglePerformance(input: GooglePerformanceInput) {
     const rate = currency === "KRW" ? new Money(1) : metric.exchangeRateKrw == null ? null : new Money(metric.exchangeRateKrw);
     const spend = rate && rate.isFinite() && rate.greaterThan(0) ? micros.dividedBy(1_000_000).times(rate) : null;
     const bucket = bucketFor(metric.productId, metric.date);
+    bucket.impressions += metric.impressions; bucket.clicks += metric.clicks;
     const key = JSON.stringify([metric.connectionId, metric.customerId, metric.campaignId, currency]);
     let campaign = campaigns.get(key);
     if (!campaign) {
@@ -193,6 +207,7 @@ export function calculateGooglePerformance(input: GooglePerformanceInput) {
       campaigns.set(key, campaign);
     }
     campaign.campaignName = metric.campaignName;
+    for (const warning of metric.warningCodes ?? []) { bucket.warnings.add(warning); campaign.warnings.add(warning); }
     campaign.costMicros = campaign.costMicros.plus(micros);
     campaign.impressions += metric.impressions; campaign.clicks += metric.clicks;
     if (metric.productId) campaign.productIds.add(metric.productId);
@@ -241,6 +256,7 @@ export function calculateGooglePerformance(input: GooglePerformanceInput) {
   const daily = [...buckets.values()].sort((a, b) => a.date.localeCompare(b.date) || (a.productId ?? "").localeCompare(b.productId ?? "")).map(finish);
   const productRows = [...products.values()].sort((a, b) => a.productId!.localeCompare(b.productId!)).map(finish);
   const campaignRows = [...campaigns.values()].map((row) => ({
+    mappingMode: "CAMPAIGN_NAME" as const,
     connectionId: row.connectionId, customerId: row.customerId, campaignId: row.campaignId, campaignName: row.campaignName,
     currencyCode: row.currencyCode, productIds: [...row.productIds].sort(), hasUnmapped: row.hasUnmapped,
     costMicros: row.costMicros.toFixed(0), adSpendKrw: row.missingSpend ? null : row.spend.toNumber(),

@@ -9,6 +9,7 @@ import { GoogleQuery } from "./google.dto";
 import { calculateGooglePerformance, GoogleSaleLine } from "./google-performance";
 import { mappingIdentity } from "./google-mappings.service";
 import { resolveGoogleSaleConfiguration } from "./google-sale-configuration";
+import { createGoogleCampaignMatcher } from "./google-campaign-matcher";
 
 const day = (value: Date) => value.toISOString().slice(0, 10);
 const number = (value: Prisma.Decimal | null | undefined) => value == null ? null : value.toNumber();
@@ -81,9 +82,9 @@ export class GoogleReadService {
       tx.exchangeRate.findMany({ where: { rateDate: dateWhere, quoteCurrency: "KRW", provider: "KOREA_EXIM" }, take: MAX + 1 }),
       tx.productCostRule.findMany({ where: { effectiveFrom: { lte: range.toDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: range.fromDate } }] },
         orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }], take: 10_001 }),
-      tx.googlePerformanceMapping.findMany({ where: { connectionId: { in: ids }, startDate: { lte: range.toDate },
+      tx.googlePerformanceMapping.findMany({ where: { kind: "SALE", connectionId: { in: ids }, startDate: { lte: range.toDate },
         OR: [{ endDate: null }, { endDate: { gte: range.fromDate } }] }, take: 10_001 }),
-      tx.product.findMany({ where: { isActive: true }, select: { id: true, displayName: true }, take: 10_001 }),
+      tx.product.findMany({ where: { isActive: true }, select: { id: true, displayName: true, name: true }, take: 10_001 }),
       tx.cafe24CouponRule.findMany({ where: { isActive: true, validFrom: { lte: range.toDate }, OR: [{ validTo: null }, { validTo: { gte: range.fromDate } }] },
         orderBy: [{ priority: "asc" }, { validFrom: "desc" }, { createdAt: "desc" }], take: 10_001 })
     ]);
@@ -203,15 +204,16 @@ export class GoogleReadService {
             ? line.actualOrderPriceKrw.plus(line.actualShippingFeeKrw).toNumber() : null,
           totalPaidKrw: number(line.totalPaidKrw), productId, salePriceKrw: line.salePriceKrw.toNumber(), quantity: line.quantity.toNumber(), isValid: line.validationStatus !== "ERROR" } };
     });
+    const matchCampaign = createGoogleCampaignMatcher(products);
     const adMetrics = selectedAds.filter(a => activeDates.has(day(a.metricDate)) && validGoogleDays.has(`${a.connectionId}:${day(a.metricDate)}`)).map(a => {
       const connection = connectionsById.get(a.connectionId)!;
       const date = day(a.metricDate);
-      const mapping = effective("CAMPAIGN", a.connectionId, mappingIdentity("CAMPAIGN", a.campaignId), date);
+      const match = matchCampaign(a.campaignName);
       const rate = ratesByDay.get(`${date}:${connection.currencyCode}`);
       return { id: a.id, date, connectionId: a.connectionId, customerId: connection.externalAccountId,
         campaignId: a.campaignId, campaignName: a.campaignName, currencyCode: connection.currencyCode,
         timeZone: connection.timeZone, costMicros: a.costMicros.toString(), impressions: Number(a.impressions), clicks: Number(a.clicks),
-        productId: mapping?.productId && activeProducts.has(mapping.productId) ? mapping.productId : null,
+        productId: match.productId, warningCodes: match.warningCodes,
         exchangeRateKrw: rate?.rate.toString() ?? null };
     });
     const warnings: string[] = [];

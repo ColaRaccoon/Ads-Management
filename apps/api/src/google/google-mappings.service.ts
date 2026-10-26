@@ -3,7 +3,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { GooglePerformanceMapping, Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { asDateOnly } from "../common/date-range";
-import { assertGoogleEnabled, googleConnection } from "./google-access";
+import { assertGoogleEnabled, googleBound, googleConnection } from "./google-access";
 import { GoogleMappingInput, GoogleQuery } from "./google.dto";
 
 export const mappingIdentity = (kind: string, campaignId?: string | null, productNo?: string | null, optionName = "", optionScope = "EXACT") =>
@@ -57,20 +57,25 @@ export class GoogleMappingsService {
       ...(query.from ? { AND: [{ OR: [{ endDate: null }, { endDate: { gte: asDateOnly(query.from) } }] }] } : {})
     };
     return this.prisma.$transaction(async tx => {
-      const [rows, total] = await Promise.all([
+      const [rows, total, nameAutomaticProducts] = await Promise.all([
         tx.googlePerformanceMapping.findMany({ where, include: { product: { select: { displayName: true } } },
           orderBy: [{ startDate: "desc" }, { id: "asc" }], skip: (page - 1) * pageSize, take: pageSize }),
-        tx.googlePerformanceMapping.count({ where })
+        tx.googlePerformanceMapping.count({ where }),
+        tx.product.findMany({ where: { isActive: true }, select: { id: true, displayName: true, name: true },
+          orderBy: [{ sortOrder: "asc" }, { id: "asc" }], take: 10_001 })
       ]);
+      googleBound(nameAutomaticProducts, 10_000);
       const audit = await tx.googleMappingAudit.findMany({ where: { mappingId: { in: rows.map(r => r.id) } },
         orderBy: [{ createdAt: "desc" }, { id: "asc" }], take: 100 });
-      return { campaignMappings: rows.filter(r => r.kind === "CAMPAIGN").map(mappingJson),
+      return { campaignMappingMode: "CAMPAIGN_NAME" as const, nameAutomaticProducts,
+        campaignMappings: rows.filter(r => r.kind === "CAMPAIGN").map(mappingJson),
         salesMappings: rows.filter(r => r.kind === "SALE").map(mappingJson), audit, pagination: { page, pageSize, total } };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   }
 
   async preview(input: GoogleMappingInput) {
     assertGoogleEnabled();
+    this.assertSaleMapping(input);
     return this.prisma.$transaction(tx => this.prepare(tx, input), { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   }
 
@@ -121,6 +126,7 @@ export class GoogleMappingsService {
 
   async save(input: GoogleMappingInput, actorUserId: string, id?: string) {
     assertGoogleEnabled();
+    this.assertSaleMapping(input);
     if (input.id && input.id !== id) throw new BadRequestException("매핑 ID가 요청 경로와 일치하지 않습니다.");
     try {
       return await this.prisma.$transaction(async tx => {
@@ -144,5 +150,10 @@ export class GoogleMappingsService {
         throw new ConflictException({ code: "GOOGLE_MAPPING_CONFLICT", message: "동시 매핑 변경 또는 기간 중복입니다. 새로고침해 주세요." });
       throw error;
     }
+  }
+
+  private assertSaleMapping(input: GoogleMappingInput) {
+    if (input.kind === "CAMPAIGN") throw new BadRequestException({ code: "GOOGLE_CAMPAIGN_NAME_MAPPING_ONLY",
+      message: "Google 캠페인은 캠페인명에 포함된 상품명으로 자동 연결합니다. 캠페인 ID 연결은 조회 이력만 제공합니다." });
   }
 }

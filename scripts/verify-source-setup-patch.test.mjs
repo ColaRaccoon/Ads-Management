@@ -20,6 +20,7 @@ const reporting = ['daily-sync/canonical-api-writer.service.js', 'daily-sync/met
   'domain/meta-current-metadata.js', 'domain/meta-reporting-measurements.js',
   'metrics/meta-ad-metrics-read.service.js', 'metrics/meta-creative-lifetimes.js'];
 const google = ['app.module.js', 'google/google-access.js', 'google/google-mappings.service.js',
+  'google/google-campaign-matcher.js', 'google/google-campaign-matcher.test.js',
   'google/google-performance.js', 'google/google-read.service.js', 'google/google-sale-configuration.js',
   'google/google.controller.js', 'google/google.dto.js', 'google/google.module.js',
   'google/google-performance.test.js', 'google/google.service.test.js'];

@@ -53,6 +53,28 @@ test("profit export retains API totals, unresolved values, exact cost and warnin
   assert.match(serializeCsv(columns, [{ ...profitFixture, adSpendKrwExact: "20000.000001" }]), /20000\.000001/);
 });
 
+test("profit CSV appends advertising metrics without changing legacy columns or API precision", () => {
+  const columns = googleProfitColumns(() => "상품A");
+  assert.deepEqual(columns.slice(0, -5).map((column) => column.header), [
+    "일자", "상품 ID", "상품", "판매수량", "판매단위", "설정 판매가 기준 매출 (KRW)",
+    "계산 가능한 매출 부분합 (KRW)", "수집 판매가 기준 금액 (결제액 아님, KRW)", "판매비용 (KRW)",
+    "유튜브 판매행 쿠폰 차감 (KRW)", "배분 Google 광고비 (KRW)", "확정 마진 (KRW)",
+    "계산 가능한 잠정 마진 (KRW)", "마진율 (비율)", "페이지 기준 ROAS (배)", "판매가 차이 행 수", "완전성", "확인 사유"
+  ]);
+  const additional = columns.slice(-5);
+  assert.deepEqual(additional.map((column) => column.header), ["노출수", "클릭수", "클릭률 (비율)", "클릭당 비용 (KRW)", "판매 1개당 광고비 (카페24 판매수량 기준, KRW)"]);
+  const metrics = { impressions: 98765, clicks: 321, ctr: 0.0032501392193590857, cpcKrw: 674.318373, costPerSaleKrw: 54114.04942975 };
+  const complete = { ...profitFixture, ...metrics };
+  assert.deepEqual(additional.map((column) => column.value(complete)), Object.values(metrics));
+  const csv = serializeCsv(columns, [complete]);
+  for (const value of Object.values(metrics)) assert.ok(csv.includes(String(value)), `exact API value ${value}`);
+  assert.deepEqual(additional.map((column) => column.value(profitFixture)), [null, null, null, null, null]);
+  const unknown = { ...profitFixture, impressions: null, clicks: null, ctr: null, cpcKrw: null, costPerSaleKrw: null };
+  assert.deepEqual(additional.map((column) => column.value(unknown)), [null, null, null, null, null]);
+  const zero = { ...profitFixture, impressions: 0, clicks: 0, ctr: 0, cpcKrw: 0, costPerSaleKrw: 0 };
+  assert.deepEqual(additional.map((column) => column.value(zero)), [0, 0, 0, 0, 0]);
+});
+
 test("campaign export never duplicates product revenue, margin or ROAS and escapes formula names", () => {
   const row: GoogleCampaignRow = { connectionId: "google-1", customerId: "123", campaignId: "456", campaignName: "=1+1", currencyCode: "KRW", productIds: ["product-1"], hasUnmapped: false, costMicros: "20000000000", adSpendKrw: 20000, adSpendKrwExact: "20000", impressions: 1000, clicks: 10, ctr: 0.01, cpcKrw: 2000, warningCodes: [] };
   const columns = googleCampaignColumns(() => "상품A");
@@ -65,6 +87,16 @@ test("campaign export never duplicates product revenue, margin or ROAS and escap
 test("distinct incomplete causes remain distinguishable in screen and CSV", () => {
   const codes = ["MISSING_COST_RULE", "COUPON_UNRESOLVED", "UNALLOCATED_AD_SPEND", "UNMAPPED_SALES", "MISSING_EXCHANGE_RATE", "TIME_ZONE_MISMATCH", "GOOGLE_COLLECTION_INCOMPLETE", "CAFE24_COLLECTION_INCOMPLETE"];
   assert.equal(new Set(codes.map((code) => googleReasons([code]))).size, codes.length);
+});
+
+test("automatic campaign matching warnings retain distinct Korean reasons in campaign CSV", () => {
+  assert.equal(googleReasons(["CAMPAIGN_PRODUCT_NOT_FOUND"]), "캠페인명에서 활성 상품명을 찾지 못함");
+  assert.equal(googleReasons(["AMBIGUOUS_CAMPAIGN_PRODUCT"]), "캠페인명에 여러 상품이 포함되어 자동 연결 보류");
+  const campaign: GoogleCampaignRow = { connectionId: "google-1", customerId: "123", campaignId: "unresolved", campaignName: "상품A 상품B", currencyCode: "KRW", productIds: [], hasUnmapped: true, costMicros: "1000000", adSpendKrw: 1, adSpendKrwExact: "1", impressions: 5, clicks: 1, ctr: 0.2, cpcKrw: 1, warningCodes: ["AMBIGUOUS_CAMPAIGN_PRODUCT", "UNALLOCATED_AD_SPEND"] };
+  const csv = serializeCsv(googleCampaignColumns(() => "상품A"), [campaign]);
+  assert.match(csv, /캠페인명에 여러 상품이 포함되어 자동 연결 보류/);
+  assert.match(csv, /미배분 Google 광고비 존재/);
+  assert.doesNotMatch(csv, /확인 필요 \(/);
 });
 
 const saleMapping: GoogleMapping = {

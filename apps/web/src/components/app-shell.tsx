@@ -55,7 +55,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
       { href: "/google/dashboard", label: "Google 요약", icon: Home, requiredPermission: "data.read" },
       { href: "/google/campaigns", label: "Google 캠페인", icon: BarChart3, requiredPermission: "data.read" },
       { href: "/google/mappings", label: "Google 상품 연결", icon: Shuffle, requiredPermission: "data.read" },
-      { href: "/google/profit", label: "Google 상품별 마진", icon: TableProperties, requiredPermission: "data.read" }
+      { href: "/google/profit", label: "Google 마진", icon: TableProperties, requiredPermission: "data.read" }
     ]
   },
   {

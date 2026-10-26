@@ -12,7 +12,7 @@ import { GoogleMappingEditor } from "./google-mapping-editor";
 import { GoogleReport } from "./google-report";
 
 export type GoogleView = "dashboard" | "campaigns" | "mappings" | "profit";
-const titles = { dashboard: "Google 요약", campaigns: "Google 캠페인", mappings: "Google 상품 연결", profit: "Google 상품별 마진" };
+const titles = { dashboard: "Google 요약", campaigns: "Google 캠페인", mappings: "Google 상품 연결", profit: "Google 마진" };
 type Filters = GoogleDateFilters;
 
 export function GooglePerformancePage({ view }: { view: GoogleView }) {

@@ -19,27 +19,36 @@ function database() {
   return new PrismaClient({ datasources: { db: { url } } });
 }
 
-test("PostgreSQL mapping writes retain source facts/legacy margins, dates, account isolation and audit", { skip: !url }, async () => {
+test("PostgreSQL SALE mapping writes retain source facts/legacy margins, dates, account isolation and audit", { skip: !url }, async () => {
   const db = database(), previous = process.env.GOOGLE_PERFORMANCE_ENABLED;
   process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
   const service = new GoogleMappingsService(db as unknown as PrismaService);
   const day = new Date("2026-10-20T00:00:00Z"), token = randomUUID();
   try {
     const actor = await db.appUser.create({ data: { name: `Google fixture ${token}` } });
-    const first = await db.product.create({ data: { code: `ga-${token}`, name: "First", displayName: "First" } });
-    const second = await db.product.create({ data: { code: `gb-${token}`, name: "Second", displayName: "Second" } });
+    const firstName = randomUUID(), secondName = randomUUID();
+    const first = await db.product.create({ data: { code: `ga-${token}`, name: firstName, displayName: firstName } });
+    const second = await db.product.create({ data: { code: `gb-${token}`, name: secondName, displayName: secondName } });
     const connection = await db.sourceConnection.create({ data: { provider: "GOOGLE", externalAccountId: token,
       shopKey: "default", displayName: "Synthetic Google", currencyCode: "KRW", timeZone: "Asia/Seoul" } });
-    const other = await db.sourceConnection.create({ data: { provider: "GOOGLE", externalAccountId: `other-${token}`,
-      shopKey: "default", displayName: "Synthetic Other", currencyCode: "KRW", timeZone: "Asia/Seoul" } });
+    const shop = await db.sourceConnection.create({ data: { provider: "CAFE24", externalAccountId: `shop-${token}`,
+      shopKey: "shop1", displayName: "Synthetic Sale", currencyCode: "KRW", timeZone: "Asia/Seoul" } });
+    const other = await db.sourceConnection.create({ data: { provider: "CAFE24", externalAccountId: `other-${token}`,
+      shopKey: "shop1", displayName: "Synthetic Other", currencyCode: "KRW", timeZone: "Asia/Seoul" } });
     const run = await db.syncRun.create({ data: { connectionId: connection.id, trigger: "MANUAL", requestKey: token,
       fromDate: day, toDate: day, status: "SUCCEEDED" } });
     const source = await db.googleCampaignDailyCost.create({ data: { connectionId: connection.id, syncRunId: run.id,
       metricDate: day, campaignId: "same-id", campaignName: "Campaign", channelType: "VIDEO", costMicros: 20000000000n,
       impressions: 1000n, clicks: 50n, source: "API", fetchedAt: day, version: 1 } });
+    const saleSource = await db.cafe24OrderLine.create({ data: { connectionId: shop.id, source: "API",
+      orderLineKey: token, orderNo: token, lineOrderNo: token, productNo: "77", productName: "[유튜브] 테스트 판매",
+      optionName: "", quantity: 1, salePriceKrw: 100000, totalPaidKrw: 100000, orderDate: day } });
     const snapshot = legacyChannelSnapshot();
-    const input = { kind: "CAMPAIGN" as const, connectionId: connection.id, campaignId: "same-id", productId: first.id,
+    const input = { kind: "SALE" as const, connectionId: shop.id, productNo: "77", optionName: "", productId: first.id,
       startDate: "2026-10-20", endDate: "2026-10-21" };
+    const campaignInput = { kind: "CAMPAIGN" as const, connectionId: connection.id, campaignId: "same-id", productId: first.id, startDate: "2026-10-20" };
+    await assert.rejects(service.preview(campaignInput), /캠페인명/);
+    await assert.rejects(service.save(campaignInput, actor.id), /캠페인명/);
     const preview = await service.preview(input);
     assert.equal(preview.canSave, true);
     const saved = await service.save(input, actor.id);
@@ -47,8 +56,8 @@ test("PostgreSQL mapping writes retain source facts/legacy margins, dates, accou
     await assert.rejects(service.save({ ...input, startDate: "2026-10-21", endDate: "2026-10-22" }, actor.id));
     await service.save({ ...input, startDate: "2026-10-22", endDate: null, productId: second.id }, actor.id);
     // Database exclusion still protects writes bypassing API validation.
-    await assert.rejects(db.googlePerformanceMapping.create({ data: { kind: "CAMPAIGN", connectionId: connection.id,
-      campaignId: "same-id", identityKey: mappingIdentity("CAMPAIGN", "same-id"), productId: second.id, startDate: day } }));
+    await assert.rejects(db.googlePerformanceMapping.create({ data: { kind: "SALE", connectionId: shop.id,
+      productNo: "77", optionName: "", identityKey: mappingIdentity("SALE", null, "77", ""), productId: second.id, startDate: day } }));
     await assert.rejects(service.save({ ...input, connectionId: other.id }, actor.id));
     const changed = await service.save({ ...input, productId: null, expectedUpdatedAt: saved.mapping.updatedAt }, actor.id, saved.mapping.id);
     assert.equal(changed.mapping.productId, null);
@@ -59,12 +68,13 @@ test("PostgreSQL mapping writes retain source facts/legacy margins, dates, accou
     assert.equal((audits[1].after as any).productId, null);
     assert.equal(audits[1].actorUserId, actor.id);
     assert.deepEqual(await db.googleCampaignDailyCost.findUnique({ where: { id: source.id } }), source);
+    assert.deepEqual(await db.cafe24OrderLine.findUnique({ where: { id: saleSource.id } }), saleSource);
     assert.deepEqual(legacyChannelSnapshot(), snapshot);
     assert.equal(await db.googleCampaignDailyCost.count({ where: { connectionId: connection.id } }), 1);
-    // Same campaign id on another account has its own interval.
-    await db.googlePerformanceMapping.create({ data: { kind: "CAMPAIGN", connectionId: other.id,
-      campaignId: "same-id", identityKey: mappingIdentity("CAMPAIGN", "same-id"), productId: first.id, startDate: day } });
-    const plans = await db.$queryRawUnsafe<any[]>(`EXPLAIN SELECT * FROM google_performance_mappings WHERE connection_id='${connection.id}'::uuid AND kind='CAMPAIGN' AND identity_key='${mappingIdentity("CAMPAIGN", "same-id")}' AND start_date <= '2026-10-20'::date`);
+    // The same sale identifier on another shop has its own interval.
+    await db.googlePerformanceMapping.create({ data: { kind: "SALE", connectionId: other.id,
+      productNo: "77", optionName: "", identityKey: mappingIdentity("SALE", null, "77", ""), productId: first.id, startDate: day } });
+    const plans = await db.$queryRawUnsafe<any[]>(`EXPLAIN SELECT * FROM google_performance_mappings WHERE connection_id='${shop.id}'::uuid AND kind='SALE' AND identity_key='${mappingIdentity("SALE", null, "77", "")}' AND start_date <= '2026-10-20'::date`);
     assert.match(plans.map(row => row["QUERY PLAN"]).join("\n"), /Index|Bitmap/);
     process.env.GOOGLE_PERFORMANCE_ENABLED = "false";
     await assert.rejects(service.preview(input));
@@ -87,7 +97,8 @@ test("real reader joins selected current sales and campaign costs once; Google c
   try {
     const actor = await db.appUser.create({ data: { name: token } });
     const product = await db.product.create({ data: { code: token, name: token, displayName: token } });
-    const otherProduct = await db.product.create({ data: { code: `other-${token}`, name: token, displayName: token } });
+    const otherName = randomUUID();
+    const otherProduct = await db.product.create({ data: { code: `other-${token}`, name: otherName, displayName: otherName } });
     for (const productId of [product.id, otherProduct.id]) await db.productCostRule.create({ data: {
       productId, salePriceKrw: 100000, vatKrw: 10000, productCostKrw: 25000, shippingKrw: 4000,
       extraCostKrw: 1000, fxRateKrwPerUsd: 1400, effectiveFrom: date
@@ -117,7 +128,7 @@ test("real reader joins selected current sales and campaign costs once; Google c
       source: "API", state: "COMPLETE_NONZERO", rowCount: 2, totalAmount: 20000, lastSuccessRunId: run.id, lastSuccessAt: date } });
     for (const campaignId of ["one", "two"]) {
       const metric = await db.googleCampaignDailyCost.create({ data: {
-      connectionId: ads.id, metricDate: date, campaignId, campaignName: "Same display name", channelType: "VIDEO",
+      connectionId: ads.id, metricDate: date, campaignId, campaignName: `${product.name} ${campaignId}`, channelType: "VIDEO",
       costMicros: 10000000000n, impressions: 1000n, clicks: 10n, source: "API", syncRunId: run.id, fetchedAt: date, version: 2
       } });
       await db.sourceRecordLink.create({ data: { connectionId: ads.id, dataKind: "GOOGLE_CAMPAIGN", source: "API",
@@ -128,11 +139,13 @@ test("real reader joins selected current sales and campaign costs once; Google c
       channelType: "VIDEO", costMicros: 90000000000n, impressions: 1n, clicks: 1n, source: "API", syncRunId: run.id, fetchedAt: date, version: 1, isCurrent: false } });
     const query = { from: "2026-10-19", to: "2026-10-19", connectionId: ads.id, cafe24ConnectionId: shop.id };
     const baseline = await legacy.productPerformance(query);
-    const unmapped = await google.report(query);
-    assert.equal(unmapped.summary.marginKrw, null);
-    assert.equal(unmapped.summary.unallocatedAdSpendKrw, 20000);
-    for (const campaignId of ["one", "two"]) await mappings.save({ kind: "CAMPAIGN", connectionId: ads.id,
-      campaignId, productId: product.id, startDate: "2026-10-19", endDate: "2026-10-19" }, actor.id);
+    // Simulate persisted old ID mappings pointing at the wrong product. They are
+    // history only, and must neither override a name match nor rescue ambiguity.
+    for (const campaignId of ["one", "two"]) await db.googlePerformanceMapping.create({ data: { kind: "CAMPAIGN", connectionId: ads.id,
+      campaignId, identityKey: mappingIdentity("CAMPAIGN", campaignId), productId: otherProduct.id,
+      startDate: date, endDate: date } });
+    const adFactsBefore = await db.googleCampaignDailyCost.findMany({ where: { connectionId: ads.id }, orderBy: { id: "asc" } });
+    const idHistoryBefore = await db.googlePerformanceMapping.findMany({ where: { connectionId: ads.id }, orderBy: { id: "asc" } });
     const report = await google.report(query);
     assert.equal(report.summary.revenueKrw, 100000);
     assert.equal(report.summary.grossCostKrw, 40000);
@@ -144,7 +157,17 @@ test("real reader joins selected current sales and campaign costs once; Google c
     assert.equal(report.products.length, 1);
     assert.equal(report.campaigns.length, 2);
     assert.equal(report.summary.quantity, 1);
+    assert.equal(report.summary.unallocatedAdSpendKrw, 0);
+    assert.ok(report.campaigns.every(row => row.mappingMode === "CAMPAIGN_NAME" && row.productIds.length === 1 && row.productIds[0] === product.id));
     assert.equal(report.reconciliation.collectedAdSpendKrwExact, "20000");
+    assert.deepEqual(await google.report(query), report);
+    // Intentional duplicate names are the only name collision in this fixture.
+    const duplicate = await db.product.create({ data: { code: `duplicate-${token}`, name: product.name, displayName: product.displayName } });
+    const ambiguous = await google.report(query);
+    assert.equal(ambiguous.summary.unallocatedAdSpendKrw, 20000);
+    assert.equal(ambiguous.summary.marginKrw, null);
+    assert.ok(ambiguous.campaigns.every(row => row.productIds.length === 0 && row.warningCodes.includes("AMBIGUOUS_CAMPAIGN_PRODUCT")));
+    await db.product.update({ where: { id: duplicate.id }, data: { isActive: false } });
     assert.deepEqual(await google.report(query), report);
     // Successful same-data D-7 reread keeps original fact/link run IDs.
     const recheck = await db.syncRun.create({ data: { connectionId: ads.id, trigger: "MANUAL", requestKey: `recheck-${token}`,
@@ -163,6 +186,8 @@ test("real reader joins selected current sales and campaign costs once; Google c
     assert.equal(changed.products.find(p => p.productId === product.id)?.revenueKrw, 0);
     assert.equal(await db.googleCampaignDailyCost.count({ where: { connectionId: ads.id } }), 3);
     assert.equal(await db.cafe24OrderLine.count({ where: { connectionId: shop.id, productId: product.id } }), 2);
+    assert.deepEqual(await db.googleCampaignDailyCost.findMany({ where: { connectionId: ads.id }, orderBy: { id: "asc" } }), adFactsBefore);
+    assert.deepEqual(await db.googlePerformanceMapping.findMany({ where: { connectionId: ads.id }, orderBy: { id: "asc" } }), idHistoryBefore);
   } finally {
     for (const [key, value] of [["GOOGLE_PERFORMANCE_ENABLED", previous.google], ["DAILY_SYNC_FEATURE_ENABLED", previous.daily]]) {
       if (value === undefined) delete process.env[key!]; else process.env[key!] = value;
@@ -224,7 +249,7 @@ test("Google product-number scope prices all 181 options as sets without changin
   const token = randomUUID(), beforeDate = new Date("2026-10-23Z"), date = new Date("2026-10-24Z");
   try {
     const actor = await db.appUser.create({ data: { name: `Set fixture ${token}` } });
-    const product = await db.product.create({ data: { code: `sets-${token}`, name: "무릎보호대", displayName: "무릎보호대" } });
+    const product = await db.product.create({ data: { code: `sets-${token}`, name: token, displayName: token } });
     const sharedCost = await db.productCostRule.create({ data: { productId: product.id,
       salePriceKrw: 19800, vatKrw: 1980, productCostKrw: 3500, shippingKrw: 1100, extraCostKrw: 0,
       fxRateKrwPerUsd: 1400, effectiveFrom: beforeDate } });
@@ -265,13 +290,11 @@ test("Google product-number scope prices all 181 options as sets without changin
         totalAmount: isAfter ? 10000 : 0, lastSuccessRunId: run.id, lastSuccessAt: metricDate } });
       if (isAfter) for (const [index, campaignId] of ["set-campaign-a", "set-campaign-b"].entries()) {
         const fact = await db.googleCampaignDailyCost.create({ data: { connectionId: ads.id, metricDate,
-          campaignId, campaignName: "무릎보호대 캠페인", channelType: "VIDEO", costMicros: index ? 6000000000n : 4000000000n,
+          campaignId, campaignName: `${product.name} ${campaignId}`, channelType: "VIDEO", costMicros: index ? 6000000000n : 4000000000n,
           impressions: 1000n, clicks: 20n, source: "API", syncRunId: run.id, fetchedAt: metricDate, version: 1 } });
         await db.sourceRecordLink.create({ data: { connectionId: ads.id, dataKind: "GOOGLE_CAMPAIGN", source: "API",
           canonicalKeyHash: String(index + 5).repeat(64), recordTable: "google_campaign_daily_costs", recordId: fact.id,
           syncRunId: run.id, version: 1, bindingMethod: "EXACT_ID" } });
-        await mappings.save({ kind: "CAMPAIGN", connectionId: ads.id, campaignId, productId: product.id,
-          startDate: "2026-10-24", endDate: "2026-10-25" }, actor.id);
       }
     }
     const query = { from: "2026-10-24", to: "2026-10-24", connectionId: ads.id, cafe24ConnectionId: shop.id };
@@ -296,6 +319,7 @@ test("Google product-number scope prices all 181 options as sets without changin
     assert.equal(report.summary.adSpendKrw, 10000);
     assert.equal(report.summary.marginKrw, 57230);
     assert.equal(report.campaigns.length, 2);
+    assert.ok(report.campaigns.every(row => row.mappingMode === "CAMPAIGN_NAME" && row.productIds.length === 1 && row.productIds[0] === product.id));
     assert.equal(report.products.length, 1);
     assert.equal(report.products[0].saleUnitLabel, "1+1 세트");
     assert.equal(report.daily[0].quantity, 3);
