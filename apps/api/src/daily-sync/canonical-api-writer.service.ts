@@ -532,8 +532,16 @@ function metaMeasures(row: MetaApiAd | MetaApiAdset, isAd: boolean) {
   if (row.attributionSetting !== null && (typeof row.attributionSetting !== "string" ||
       !row.attributionSetting.trim() || row.attributionSetting.length > 128)) invalid("Invalid Meta attribution setting.");
   const mcpContext = row.actionReportTime === "MCP_PROVIDER_DEFAULT_UNVERIFIED";
+  // Optional actions carry their exact source scalars and remain provider-default,
+  // without claiming parity with a CSV attribution window.
+  const reporting = row.currentMetadata?.sourceContext?.reportingMeasurement;
+  const reportingFields = reporting ? Object.keys(reporting.values) : [];
+  if (reporting && (!mcpContext || !purchaseContext || reportingFields.some(field =>
+      (row as unknown as Record<string, unknown>)[field] !== reporting.values[field as keyof typeof reporting.values])))
+    invalid("Meta report measurements must match the captured source scalars.");
   if (mcpContext && (row.currentMetadata?.sourceContext?.transport !== "MCP" || row.attributionSetting !== null ||
       ["resultCount", "landingPageViews", ...(isAd ? [...(purchaseContext?[]:["purchaseCount"]), "addToCartCount", "videoPlay3sCount", "videoPlay25Count", "videoPlay50Count", "videoPlay75Count", "videoPlay100Count"] : [])]
+        .filter(field => !reportingFields.includes(field))
         .some(field => (row as unknown as Record<string, unknown>)[field] !== null)))
     invalid("MCP provider-default actions need explicit unavailable measurements and source context.");
   if (row.currentMetadata?.sourceContext?.transport === "MCP" && !mcpContext)
@@ -553,7 +561,7 @@ function metaMeasures(row: MetaApiAd | MetaApiAdset, isAd: boolean) {
   const actionFields = isAd ? ["resultCount", "landingPageViews", ...(mcpContext&&purchaseContext?[]:["purchaseCount"]), "addToCartCount",
     "videoPlay3sCount", "videoPlay25Count", "videoPlay50Count", "videoPlay75Count", "videoPlay100Count"]
     : ["resultCount", "landingPageViews"];
-  if (row.attributionSetting === null && actionFields.some((field) =>
+  if (row.attributionSetting === null && actionFields.filter(field => !reportingFields.includes(field)).some((field) =>
       (row as unknown as Record<string, unknown>)[field] !== null)) invalid("Known Meta actions require an attribution setting.");
   for (const [field, precision, scale] of [
     ["frequency", 12, 6], ["costPerResultUsd", 14, 4], ["cpmUsd", 14, 4],

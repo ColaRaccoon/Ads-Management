@@ -7,12 +7,12 @@ export const META_DAILY_COLUMNS = [
   { key: "spendUsd", label: "광고비 USD" },
   { key: "spendKrw", label: "광고비 KRW" },
   { key: "purchaseCount", label: "구매건수" },
-  { key: "cpa", label: "CPA" },
+  { key: "cpa", label: "CPA (원)" },
   { key: "ctr", label: "CTR" },
   { key: "cpm", label: "CPM" },
   { key: "reach", label: "도달" },
   ...META_VIDEO_RATE_COLUMNS,
-  { key: "roas", label: "ROAS" }
+  { key: "roas", label: "Meta ROAS" }
 ] as const;
 
 export type MetaDailyColumnKey = (typeof META_DAILY_COLUMNS)[number]["key"];

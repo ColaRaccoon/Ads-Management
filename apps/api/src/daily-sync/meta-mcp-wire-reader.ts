@@ -1,10 +1,12 @@
+import { META_REPORTING_FIELDS, metaReportingFields } from "../domain/meta-reporting-measurements";
 /** Raw MCP wire contract. This reader has no database, lifecycle or production activation path. */
+export type MetaMcpProfile = "PURCHASE_V1" | "REPORTING_V2";
 export type MetaMcpLevel = "ad" | "adset" | "campaign" | "ad_account";
 export type MetaMcpEnvelopeReader = (response: Response, maxBytes: number) => Promise<unknown>;
 type Json = Record<string, unknown>;
 export type MetaMcpMoney = { value: string; unit: string };
 export type MetaMcpWireSnapshot = {
-  profile?: "PURCHASE_V1";
+  profile?: MetaMcpProfile;
   version: 1; transport: "META_ADS_MCP"; accountId: string; day: string;
   observedAtUtc: string; clientConversationId: string; pageCount: number; byteCount: number;
   status: "COMPLETE_WIRE_ONLY" | "COMPLETE_WIRE_UNVERIFIED_IDENTITY"; levels: Record<MetaMcpLevel, Json[]>;
@@ -34,6 +36,14 @@ export const META_MCP_DAY_FIELDS: Readonly<Record<MetaMcpLevel, readonly string[
 for (const fields of Object.values(META_MCP_DAY_FIELDS)) Object.freeze(fields);
 export const META_MCP_PURCHASE_NAMES = Object.freeze(["omni_purchase","offsite_conversion_fb_pixel_purchase","omni_purchase_values","offsite_conversion_fb_pixel_purchase_values"]);
 export const META_MCP_PURCHASE_FIELDS = Object.freeze(Object.fromEntries(Object.entries(META_MCP_DAY_FIELDS).map(([level,fields])=>[level,Object.freeze([...fields,...META_MCP_PURCHASE_NAMES])])) as Record<MetaMcpLevel,readonly string[]>);
+export const META_MCP_REPORTING_FIELDS = Object.freeze(Object.fromEntries(
+  Object.entries(META_MCP_PURCHASE_FIELDS).map(([level, fields]) => [level, Object.freeze([
+    ...fields, ...(["ad", "adset"].includes(level) ? metaReportingFields(level === "ad").map(key => META_REPORTING_FIELDS[key]) : [])
+  ])])
+) as Record<MetaMcpLevel, readonly string[]>);
+export function metaMcpFields(profile?: MetaMcpProfile) {
+  return profile === "REPORTING_V2" ? META_MCP_REPORTING_FIELDS : profile === "PURCHASE_V1" ? META_MCP_PURCHASE_FIELDS : META_MCP_DAY_FIELDS;
+}
 const DROP = new Set(["next_actions", "_additional_context", "additional_info", "error", "errors", "token", "access_token", "authorization"]);
 const object = (v: unknown): v is Json => v !== null && typeof v === "object" && !Array.isArray(v);
 function fail(code: typeof META_MCP_WIRE_CODES[number]): never { throw new MetaMcpWireFailure(code); }
@@ -79,20 +89,22 @@ function rawMetadata(v: unknown, accountId: string, state: { nodes: number }, de
   }
   return out;
 }
-function row(raw: unknown, level: MetaMcpLevel, accountId: string, day: string, rowIndex = 0, profile?:"PURCHASE_V1"): Json {
+function row(raw: unknown, level: MetaMcpLevel, accountId: string, day: string, rowIndex = 0, profile?:MetaMcpProfile): Json {
   if (!object(raw) || Object.keys(raw).length > 256) fail("ROW_INVALID");
   if (raw.date_start !== day || raw.date_stop !== day) fail("DATE_MISMATCH");
   const out: Json = { date_start: day, date_stop: day };
   if (level === "ad_account") {
     if (raw.id !== accountId && raw.id !== `act_${accountId}`) fail("ACCOUNT_SCOPE_MISMATCH");
   } else if (raw.account_id !== accountId && raw.account_id !== `act_${accountId}`) fail("ACCOUNT_SCOPE_MISMATCH");
-  for (const field of (profile?META_MCP_PURCHASE_FIELDS:META_MCP_DAY_FIELDS)[level]) {
+  for (const field of metaMcpFields(profile)[level]) {
     try {
     if (CORE.includes(field) && !Object.hasOwn(raw, field)) fail(field === "amount_spent" ? "MONEY_INVALID" : "METRIC_INVALID");
     const value = raw[field];
     if (META_MCP_PURCHASE_NAMES.includes(field)) {
       if (!Object.hasOwn(raw,field)) fail("METRIC_INVALID");
       out[field]=value===null?null:field.endsWith("_values")?money(value):metric(value,true);
+    } else if (Object.values(META_REPORTING_FIELDS).includes(field as typeof META_REPORTING_FIELDS[keyof typeof META_REPORTING_FIELDS])) {
+      out[field] = value == null ? null : metric(value, true);
     } else if (field === "amount_spent") out[field] = money(value);
     // Wire-only scalars retain explicit null; missing fields still fail.
     // Canonical normalization independently requires verified numeric values.
@@ -122,7 +134,7 @@ function row(raw: unknown, level: MetaMcpLevel, accountId: string, day: string, 
   if (level === "ad_account" && out.timezone_name !== "Asia/Seoul") fail("ACCOUNT_SCOPE_MISMATCH");
   return out;
 }
-function page(value: unknown, level: MetaMcpLevel, accountId: string, day: string, clientId: string, profile?:"PURCHASE_V1") {
+function page(value: unknown, level: MetaMcpLevel, accountId: string, day: string, clientId: string, profile?:MetaMcpProfile) {
   if (!object(value) || typeof value.ad_entities !== "string" || Buffer.byteLength(value.ad_entities) > PAGE_BYTES || "ad_drafts" in value) fail("OUTPUT_INVALID");
   let entities: unknown; try { entities = JSON.parse(value.ad_entities); } catch { fail("OUTPUT_INVALID"); }
   if (!Array.isArray(entities) || entities.length > 1000) fail("OUTPUT_INVALID");
@@ -143,7 +155,7 @@ function page(value: unknown, level: MetaMcpLevel, accountId: string, day: strin
   if ("additional_info" in value && value.additional_info !== "") fail("OUTPUT_INVALID");
   return { rows: entities.map((raw,index) => row(raw, level, accountId, day,index,profile)), nextCursor, totalCount };
 }
-function toolOutput(result: unknown, level: MetaMcpLevel, accountId: string, day: string, clientId: string, profile?:"PURCHASE_V1") {
+function toolOutput(result: unknown, level: MetaMcpLevel, accountId: string, day: string, clientId: string, profile?:MetaMcpProfile) {
   if (!object(result) || ("isError" in result && result.isError !== false)) fail("TOOL_ERROR");
   let structured: ReturnType<typeof page> | null = null, textual: ReturnType<typeof page> | null = null;
   if ("structuredContent" in result) structured = page(result.structuredContent, level, accountId, day, clientId,profile);
@@ -162,12 +174,14 @@ function toolOutput(result: unknown, level: MetaMcpLevel, accountId: string, day
 }
 /** Shared strict projection for an explicitly bounded, single-page predicate proof. */
 export const validateMetaMcpToolOutput = toolOutput;
-function catalog(catalog: unknown, reporting: unknown, clientId: string, profile?:"PURCHASE_V1") {
+function catalog(catalog: unknown, reporting: unknown, clientId: string, profile?:MetaMcpProfile) {
   if (!object(catalog) || catalog.version !== 1 || catalog.server !== MCP || catalog.tool !== "ads_get_field_context" || catalog.client_conversation_id !== clientId || !Array.isArray(catalog.fields)) fail("CATALOG_INVALID");
   const fields = catalog.fields;
-  for (const level of LEVELS) for (const name of (profile?META_MCP_PURCHASE_FIELDS:META_MCP_DAY_FIELDS)[level]) {
+  for (const level of LEVELS) for (const name of metaMcpFields(profile)[level]) {
     const matches = fields.filter(f => object(f) && f.name === name);
     if (matches.length !== 1 || !object(matches[0]) || !Array.isArray(matches[0].levels) || !matches[0].levels.includes(level)) fail("CATALOG_INVALID");
+    if (profile === "REPORTING_V2" && Object.values(META_REPORTING_FIELDS).includes(name as typeof META_REPORTING_FIELDS[keyof typeof META_REPORTING_FIELDS]) &&
+        (matches[0].type !== "INTEGER" || matches[0].is_metric !== true)) fail("CATALOG_INVALID");
   }
   if (!object(reporting) || reporting.server !== MCP || !object(reporting.reportingTool)) fail("SCHEMA_INVALID");
   const tool = reporting.reportingTool;
@@ -182,18 +196,18 @@ export { row as validateMetaMcpWireRow, catalog as validateMetaMcpCatalog };
 export class MetaMcpWireReader {
   constructor(private readonly request: typeof fetch, private readonly readEnvelope: MetaMcpEnvelopeReader) {}
   async fetchDay(provided: { accountId: string; day: string; clientConversationId: string; accessToken: string;
-    catalog: unknown; reporting: unknown; deadlineAt: number; allowUnverifiedIdentityCapture?: boolean;profile?:"PURCHASE_V1" }): Promise<MetaMcpWireSnapshot> {
+    catalog: unknown; reporting: unknown; deadlineAt: number; allowUnverifiedIdentityCapture?: boolean;profile?:MetaMcpProfile }): Promise<MetaMcpWireSnapshot> {
     const input = Object.freeze({ ...provided });
     let requestCount = 0;
     try {
       const date = new Date(`${input.day}T00:00:00Z`);
       if (!/^\d{1,30}$(?![\s\S])/.test(input.accountId) || !/^\d{4}-\d{2}-\d{2}$(?![\s\S])/.test(input.day) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0,10) !== input.day || !/^[\x21-\x7e]{40,4096}$(?![\s\S])/.test(input.accessToken) || !Number.isFinite(input.deadlineAt) || input.deadlineAt <= Date.now() || input.deadlineAt > Date.now() + 600000) fail("INPUT_INVALID");
-      if(input.profile!==undefined&&input.profile!=="PURCHASE_V1")fail("INPUT_INVALID");
+      if(input.profile!==undefined&&input.profile!=="PURCHASE_V1"&&input.profile!=="REPORTING_V2")fail("INPUT_INVALID");
       const clientId = conversationId(input.clientConversationId); catalog(input.catalog, input.reporting, clientId,input.profile);
       if (input.allowUnverifiedIdentityCapture !== undefined && typeof input.allowUnverifiedIdentityCapture !== "boolean") fail("INPUT_INVALID");
       const levels = {} as Record<MetaMcpLevel, Json[]>, queries = {} as Record<MetaMcpLevel, Json>; let byteCount = 0, rowCount = 0;
       for (const level of LEVELS) {
-        const base: Json = { ad_account_id: input.accountId, fields: [...(input.profile?META_MCP_PURCHASE_FIELDS:META_MCP_DAY_FIELDS)[level]], level,
+        const base: Json = { ad_account_id: input.accountId, fields: [...metaMcpFields(input.profile)[level]], level,
           time_range: JSON.stringify({ since: input.day, until: input.day }), time_increment: "1",
           object_state: "live", include_additional_context: false, client_conversation_id: clientId, limit: 1000 };
         queries[level] = base; levels[level] = []; let cursor: string | null = null, expectedCount: number | null = null;

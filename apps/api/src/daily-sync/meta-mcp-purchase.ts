@@ -58,7 +58,7 @@ function deriveParentZeros(wire:MetaMcpWireSnapshot,selected:ReturnType<typeof s
  return {wire:effective,selected:{...selected,wire:effective,selectedAdsets:adsets},targets};
 }
 function derive(capture:unknown,catalog:unknown){
- let selected=selectMetaMcpDay(capture),wire=selected.wire;if(wire.profile!=="PURCHASE_V1")fail();
+ let selected=selectMetaMcpDay(capture),wire=selected.wire;if(wire.profile!=="PURCHASE_V1"&&wire.profile!=="REPORTING_V2")fail();
  const catalogSemanticFingerprint=catalogFingerprint(catalog,wire.clientConversationId),targets=wire.levels.ad.filter(r=>r[COUNT]===null);
  for(const rows of Object.values(wire.levels))for(const row of rows)for(const[count,value]of [[COUNT,VALUE],["offsite_conversion_fb_pixel_purchase","offsite_conversion_fb_pixel_purchase_values"]]){
   if((row[count]===null)!==(row[value]===null))fail();

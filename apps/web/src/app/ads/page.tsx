@@ -1,12 +1,11 @@
 "use client";
 
-import { formatMetaMetricReasons } from "@/lib/meta-conditional-display";
-import { formatMetaCurrentObservations,formatMetaProviderPurchases } from "@/lib/meta-current-metadata-display";
+import { META_ADS_COLUMNS as columns } from "@/features/meta-ads/columns";
+
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Download } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiGet, rangeQuery } from "@/lib/api";
-import { money, numberFmt } from "@/lib/date-range";
 import {
   isMetaAdsSortKey,
   sortMetaCreativeRows,
@@ -14,11 +13,6 @@ import {
   type MetaAdsSortKey
 } from "@/lib/meta-ads-sort";
 import { buildMetaAdsXlsxWorkbook } from "@/lib/meta-ads-xlsx";
-import {
-  formatMetaDeliveryStatus,
-  formatPercent,
-  META_VIDEO_RATE_COLUMNS
-} from "@/lib/meta-video-display";
 import { useRange } from "@/lib/use-range";
 import { MetaCollectionStatus } from "@/components/meta-collection-status";
 import { downloadXlsx } from "@/lib/xlsx";
@@ -33,31 +27,6 @@ type AdsSettings = {
   sort: { key: SortKey; direction: SortDirection };
 };
 
-type SortableColumn = {
-  key: SortKey;
-  header: string;
-  render: (row: MetaCreativePerformanceRow) => ReactNode;
-};
-
-const columns: SortableColumn[] = [
-  { key: "product", header: "제품", render: (row) => row.productName ?? "-" },
-  { key: "material", header: "소재", render: (row) => <span title={formatMetaMetricReasons(row.totals.metricUnavailableReasons)}>{row.materialNo ?? row.displayName}{formatMetaMetricReasons(row.totals.metricUnavailableReasons) ? " · 미확정 지표" : ""}</span> },
-  { key: "status", header: "활성상태", render: (row) => <span>{formatMetaDeliveryStatus(row.deliveryStatus)}{formatMetaCurrentObservations(row.currentMetadataObservations) && <small className="block text-muted">{formatMetaCurrentObservations(row.currentMetadataObservations)}</small>}</span> },
-  { key: "dataDays", header: "집계일수", render: (row) => numberFmt(row.dataDays) },
-  { key: "spend", header: "광고비", render: (row) => money(row.totals.spendUsd, "USD") },
-  { key: "purchase", header: "구매", render: (row) => numberFmt(row.totals.purchaseCount) },
-  { key:"providerPurchase",header:"Meta 구매금액 / 계산 ROAS",render:row=>formatMetaProviderPurchases(row.totals) },
-  { key: "profit", header: "순이익", render: (row) => money(row.totals.marginKrw, "KRW") },
-  { key: "cpa", header: "CPA", render: (row) => money(row.totals.cpaUsd, "USD") },
-  { key: "ctr", header: "CTR", render: (row) => formatPercent(row.totals.ctrLinkPct) },
-  { key: "cpm", header: "CPM", render: (row) => money(row.totals.cpmUsd, "USD") },
-  { key: "reach", header: "도달", render: (row) => numberFmt(row.totals.reach) },
-  ...META_VIDEO_RATE_COLUMNS.map((column): SortableColumn => ({
-    key: column.key,
-    header: column.label,
-    render: (row) => formatPercent(row.totals[column.key])
-  }))
-];
 
 const ADS_SETTINGS_KEY = "meta-ads-performance:ads-settings:v1";
 const DEFAULT_ADS_SETTINGS: AdsSettings = {
@@ -106,7 +75,7 @@ export default function AdsPage() {
       <div className="page-title">
         <div>
           <h1>광고 소재 성과</h1>
-          <p>날짜 · 제품 · 소재명 기준</p>
+          <p>CPA는 원화 · Meta ROAS는 구매전환금액 기준</p>
         </div>
         <div className="toolbar">
           <select

@@ -19,3 +19,5 @@ export function metaBatchSnapshot({ads=55,day='2026-10-08',positive=false}={}){
  if(positive){for(const row of [wire.levels.ad[0],wire.levels.adset[0],wire.levels.campaign[0],wire.levels.ad_account[0]]){row.omni_purchase='1';row.offsite_conversion_fb_pixel_purchase='1';row.omni_purchase_values.value='3.0000';row.offsite_conversion_fb_pixel_purchase_values.value='3.0000';}}
  return normalize(wire);
 }
+
+export { hierarchy as metaPurchaseWire, catalog as metaPurchaseCatalog };

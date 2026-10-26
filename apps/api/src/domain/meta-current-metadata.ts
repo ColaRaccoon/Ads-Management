@@ -1,3 +1,4 @@
+import { MetaReportingMeasurement, validMetaReportingMeasurement } from "./meta-reporting-measurements";
 export type MetaMcpNullBasicProjection={version:1;rule:"EXPLICIT_ZERO_CHILDREN_OF_NULL_BASIC_ADSETS";rawAdCount:number;selectedAdCount:number;excludedAdCount:number;excludedAdsetCount:number;excludedAdIdsFingerprint:string;excludedAdsetIdsFingerprint:string;proofFingerprint:string};
 export function validNullBasicProjection(v:unknown):v is MetaMcpNullBasicProjection {if(!record(v)||Object.keys(v).sort().join()!=="excludedAdCount,excludedAdIdsFingerprint,excludedAdsetCount,excludedAdsetIdsFingerprint,proofFingerprint,rawAdCount,rule,selectedAdCount,version"||v.version!==1||v.rule!=="EXPLICIT_ZERO_CHILDREN_OF_NULL_BASIC_ADSETS")return false;return ["rawAdCount","selectedAdCount","excludedAdCount","excludedAdsetCount"].every(k=>Number.isInteger(v[k])&&(v[k] as number)>=0&&(v[k] as number)<=50000)&&(v.excludedAdCount as number)>0&&(v.excludedAdsetCount as number)>0&&(v.selectedAdCount as number)+(v.excludedAdCount as number)===v.rawAdCount&&["excludedAdIdsFingerprint","excludedAdsetIdsFingerprint","proofFingerprint"].every(k=>typeof v[k]==="string"&&/^[a-f0-9]{64}$/.test(v[k] as string));}
 export type MetaMcpMeasurementEvidence = { policy:"REFERENCED_ADSETS_FROM_COMPLETE_WIRE";rawStatus:"COMPLETE_WIRE_UNVERIFIED_IDENTITY";rawIdentityVerified:false;
@@ -26,6 +27,7 @@ export type MetaCurrentMetadata = {
   sourceContext?: { transport: "MCP"; protocolVersion: "2025-06-18";
     actionReportTime: "MCP_PROVIDER_DEFAULT_UNVERIFIED"; budgetValueFormat: "PROVIDER_DECIMAL";measurementEvidence?:MetaMcpMeasurementEvidence;
     linkClickValueBasis?:"SOURCE_SCALAR"|"DERIVED_ZERO_RESIDUAL"|"DERIVED_ZERO_FILTER";rawLinkClickNull?:boolean;
+    reportingMeasurement?:MetaReportingMeasurement;
     purchaseMeasurement?:MetaMcpPurchaseMeasurement;purchaseCountValueBasis?:"SOURCE_SCALAR"|"DERIVED_PURCHASE_ZERO_RESIDUAL";
     purchaseValueBasis?:"SOURCE_MONEY"|"DERIVED_ZERO_EMPTY_PURCHASE_EVENTS";rawPurchaseNull?:boolean };
 };
@@ -43,10 +45,11 @@ export function validCurrentMetadata(value: unknown): value is MetaCurrentMetada
   const mcp = value.sourceContext !== undefined;
   if (Object.keys(value).sort().join() !== (mcp ? "ad,adset,budgetUnit,campaign,currencyCode,scope,sourceContext" : "ad,adset,budgetUnit,campaign,currencyCode,scope") ||
       value.scope !== "CURRENT_ACCESSIBLE_ASSETS" || value.currencyCode !== "USD" || value.budgetUnit !== "UNVERIFIED") return false;
-  if (mcp && (!record(value.sourceContext) || Object.keys(value.sourceContext).sort().join() !== ["actionReportTime","budgetValueFormat","protocolVersion","transport",...(value.sourceContext.measurementEvidence===undefined?[]:["linkClickValueBasis","measurementEvidence","rawLinkClickNull"]),...(value.sourceContext.purchaseMeasurement===undefined?[]:["purchaseMeasurement","purchaseCountValueBasis","purchaseValueBasis","rawPurchaseNull"])].sort().join() ||
+  if (mcp && (!record(value.sourceContext) || Object.keys(value.sourceContext).sort().join() !== ["actionReportTime","budgetValueFormat","protocolVersion","transport",...(value.sourceContext.reportingMeasurement===undefined?[]:["reportingMeasurement"]),...(value.sourceContext.measurementEvidence===undefined?[]:["linkClickValueBasis","measurementEvidence","rawLinkClickNull"]),...(value.sourceContext.purchaseMeasurement===undefined?[]:["purchaseMeasurement","purchaseCountValueBasis","purchaseValueBasis","rawPurchaseNull"])].sort().join() ||
       value.sourceContext.transport !== "MCP" || value.sourceContext.protocolVersion !== "2025-06-18" ||
       value.sourceContext.actionReportTime !== "MCP_PROVIDER_DEFAULT_UNVERIFIED" || value.sourceContext.budgetValueFormat !== "PROVIDER_DECIMAL" ||
       (value.sourceContext.measurementEvidence!==undefined&&(!validMcpEvidence(value.sourceContext.measurementEvidence)||!validRowBasis(value.sourceContext))) ||
+      (value.sourceContext.reportingMeasurement!==undefined&&(!validMetaReportingMeasurement(value.sourceContext.reportingMeasurement,value.ad!==null)||value.sourceContext.purchaseMeasurement===undefined)) ||
       (value.sourceContext.purchaseMeasurement!==undefined&&!validPurchaseContext(value.sourceContext,value.ad!==null)))) return false;
   if(mcp&&value.ad===null&&record(value.sourceContext)&&value.sourceContext.measurementEvidence!==undefined&&value.sourceContext.linkClickValueBasis!=="SOURCE_SCALAR"&&!(value.sourceContext.linkClickValueBasis==="DERIVED_ZERO_RESIDUAL"&&record(value.sourceContext.measurementEvidence)&&Number.isInteger(value.sourceContext.measurementEvidence.derivedZeroAdsetCount)&&(value.sourceContext.measurementEvidence.derivedZeroAdsetCount as number)>0))return false;
   return validAsset(value.campaign, mcp) && validAsset(value.adset, mcp) && (value.ad === null || validAsset(value.ad, mcp));

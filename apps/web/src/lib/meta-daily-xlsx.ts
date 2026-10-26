@@ -18,6 +18,7 @@ export type { MetaDailyColumnKey } from "./meta-daily-columns";
 export type MetaDailyCreativeRow = MetaCreativePerformanceRow;
 
 export type MetaDailyProductTotals = {
+  providerPurchaseRoas?: number | null;
   spendUsd: number;
   spendKrw: number | null;
   purchaseCount: number | null;
@@ -95,7 +96,7 @@ const SALES_HEADERS = [
   "마진율"
 ];
 
-const SUMMARY_HEADERS = ["제품수", "총 광고비 KRW", "총 구매건수", "전체 CPA", "전체 ROAS"];
+const SUMMARY_HEADERS = ["제품수", "총 광고비 KRW", "총 구매건수", "전체 CPA (원)", "Meta ROAS"];
 const SALES_SECTION_TITLE = "카페24 실매출 기반 마진";
 const META_DAILY_MIN_COLUMN_COUNT = 13;
 
@@ -246,7 +247,7 @@ function creativeColumnsFor(key: MetaDailyColumnKey): ExpandedCreativeColumn[] {
     case "purchaseCount":
       return [metricColumn("구매건수", 12, (row) => numberCell(row.totals.purchaseCount))];
     case "cpa":
-      return [metricColumn("CPA", 15, (row) => cpaCell(row.totals))];
+      return [metricColumn("CPA (원)", 15, (row) => cpaCell(row.totals))];
     case "ctr":
       return [metricColumn(
         "CTR",
@@ -271,7 +272,7 @@ function creativeColumnsFor(key: MetaDailyColumnKey): ExpandedCreativeColumn[] {
       )];
     }
     case "roas":
-      return [metricColumn("ROAS", 12, (row) => percentCell(row.totals.roas))];
+      return [metricColumn("Meta ROAS", 12, (row) => percentCell(row.totals.providerPurchaseRoas))];
   }
 }
 
@@ -299,7 +300,7 @@ function summaryValueRow(report: MetaDailyXlsxReport): XlsxCell[] {
     totalCell(report.totals.spendKrw, "TotalKrw"),
     totalCell(report.totals.purchaseCount, "TotalNumber"),
     totalCpaCell(report.totals),
-    totalCell(report.totals.roas, "TotalPercent")
+    totalCell(report.totals.providerPurchaseRoas, "TotalPercent")
   ];
 }
 
@@ -321,10 +322,10 @@ function productHeaderRow(group: MetaDailyExportGroup, fill: XlsxCellFill, colum
     bandCell(group.totals.spendKrw, "Krw", fill, true, "BLOCK_START"),
     bandCell("구매", "Text", fill, true, "BLOCK_START"),
     bandCell(group.totals.purchaseCount, "Number", fill, true, "BLOCK_START"),
-    bandCell("CPA", "Text", fill, true, "BLOCK_START"),
+    bandCell("CPA (원)", "Text", fill, true, "BLOCK_START"),
     { ...cpaCell(group.totals), fill, bold: true, borderTone: "BLOCK_START" },
-    bandCell("ROAS", "Text", fill, true, "BLOCK_START"),
-    bandCell(group.totals.roas, "Percent", fill, true, "BLOCK_START")
+    bandCell("Meta ROAS", "Text", fill, true, "BLOCK_START"),
+    bandCell(group.totals.providerPurchaseRoas, "Percent", fill, true, "BLOCK_START")
   ];
   return padRow(cells, columnCount, bandCell("", "Text", fill, true, "BLOCK_START"));
 }
@@ -429,15 +430,11 @@ function percentCell(value: number | null | undefined): XlsxCell {
 }
 
 function cpaCell(totals: { cpaKrw?: number | null; cpaUsd?: number | null }): XlsxCell {
-  return isKnownNumber(totals.cpaKrw)
-    ? moneyCell(totals.cpaKrw, "Krw")
-    : moneyCell(totals.cpaUsd, "Usd");
+  return moneyCell(totals.cpaKrw, "Krw");
 }
 
 function totalCpaCell(totals: MetaDailyProductTotals): XlsxCell {
-  return isKnownNumber(totals.cpaKrw)
-    ? totalCell(totals.cpaKrw, "TotalKrw")
-    : totalCell(totals.cpaUsd, "TotalUsd");
+  return totalCell(totals.cpaKrw, "TotalKrw");
 }
 
 function totalCell(value: XlsxCell["value"], style: XlsxCellStyle): XlsxCell {

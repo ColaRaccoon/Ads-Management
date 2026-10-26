@@ -62,7 +62,7 @@ export function renderColumnValue(
         previous ? formatPercent(previous.totals[column.key]) : "-"
       );
     case "roas":
-      return metric(formatRoas(row.totals.roas), previous ? formatRoas(previous.totals.roas) : "-");
+      return metric(formatRoas(row.totals.providerPurchaseRoas), previous ? formatRoas(previous.totals.providerPurchaseRoas) : "-");
   }
 }
 
@@ -72,10 +72,7 @@ export function formatMarginRate(value: number | null | undefined) {
 }
 
 export function formatCpa(totals: { cpaKrw?: number | null; cpaUsd?: number | null }) {
-  if (totals.cpaKrw !== null && totals.cpaKrw !== undefined) {
-    return money(totals.cpaKrw, "KRW");
-  }
-  return money(totals.cpaUsd, "USD");
+  return money(totals.cpaKrw, "KRW");
 }
 
 export function formatRoas(value: number | null | undefined) {
@@ -88,7 +85,6 @@ function CreativeNameCell({ row }: { row: CreativePerformanceRow }) {
     <div className="daily-creative-name" title={formatMetaMetricReasons(row.totals.metricUnavailableReasons)}>
       <strong>{row.materialNo ?? row.displayName}</strong>
       {row.materialNo ? <span>{row.displayName}</span> : null}
-      {formatMetaMetricReasons(row.totals.metricUnavailableReasons) ? <small>미확정 지표</small> : null}
     </div>
   );
 }

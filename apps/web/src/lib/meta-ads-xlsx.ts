@@ -12,16 +12,15 @@ type MetaAdsExportColumn = {
 };
 
 const META_ADS_EXPORT_COLUMNS: MetaAdsExportColumn[] = [
-  { header: "미확정 지표 사유", width: 48, style: "Text", value: (row) => formatMetaMetricReasons(row.totals.metricUnavailableReasons) },
-  { header: "현재 자산 관찰 (과거 실적 상태/예산 아님)", width: 60, style: "Text", value: (row) => formatMetaCurrentObservations(row.currentMetadataObservations) },
   { header: "제품", width: 18, style: "Text", value: (row) => row.productName ?? "-" },
   { header: "소재", width: 18, style: "Text", value: (row) => row.materialNo ?? row.displayName },
   { header: "활성상태", width: 12, style: "Text", value: (row) => formatMetaDeliveryStatus(row.deliveryStatus) },
   { header: "집계일수", width: 11, style: "Number", value: (row) => row.dataDays },
   { header: "광고비", width: 14, style: "Usd", value: (row) => row.totals.spendUsd },
   { header: "구매", width: 10, style: "Number", value: (row) => row.totals.purchaseCount },
+  { header: "Meta ROAS", width: 14, style: "Percent", value: (row) => row.totals.providerPurchaseRoas },
   { header: "순이익", width: 16, style: "Krw", value: (row) => row.totals.marginKrw },
-  { header: "CPA", width: 14, style: "Usd", value: (row) => row.totals.cpaUsd },
+  { header: "CPA (원)", width: 14, style: "Krw", value: (row) => row.totals.cpaKrw },
   { header: "CTR", width: 10, style: "Percent", value: (row) => percentToRatio(row.totals.ctrLinkPct) },
   { header: "CPM", width: 14, style: "Usd", value: (row) => row.totals.cpmUsd },
   { header: "도달", width: 12, style: "Number", value: (row) => row.totals.reach },
@@ -30,7 +29,9 @@ const META_ADS_EXPORT_COLUMNS: MetaAdsExportColumn[] = [
     width: column.key === "videoPlay100RatePct" ? 14 : 13,
     style: "Percent",
     value: (row) => percentToRatio(row.totals[column.key])
-  }))
+  })),
+  { header: "미확정 지표 사유", width: 48, style: "Text", value: (row) => formatMetaMetricReasons(row.totals.metricUnavailableReasons) },
+  { header: "현재 자산 관찰 (과거 실적 상태/예산 아님)", width: 60, style: "Text", value: (row) => formatMetaCurrentObservations(row.currentMetadataObservations) }
 ];
 
 export function buildMetaAdsXlsxInput(rows: MetaCreativePerformanceRow[]): XlsxWorkbookInput {

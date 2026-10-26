@@ -10,7 +10,14 @@ const expected = new Set(['cafe24-manual-preparation', 'cafe24-oauth.service', '
 expected.add('storefront/storefront-read.service.js');
 expected.add('exchange-rates/exchange-rate-provider.js');
 expected.add('auth/machine-sync.guard.js');
-const [baseline, compiled] = process.argv.slice(2);
+const [baseline, compiled, profile] = process.argv.slice(2);
+if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch profile');
+if (profile === 'reporting') {
+  for (const name of ['daily-sync/canonical-api-writer.service.js', 'daily-sync/meta-mcp-ads.client.js',
+    'daily-sync/meta-mcp-capture.js', 'daily-sync/meta-mcp-purchase.js', 'daily-sync/meta-mcp-wire-reader.js',
+    'domain/meta-current-metadata.js', 'domain/meta-reporting-measurements.js',
+    'metrics/meta-ad-metrics-read.service.js', 'metrics/meta-creative-lifetimes.js']) expected.add(name);
+}
 if (!baseline || !compiled) throw Error('Two compiled directories required');
 let checked = 0, changed = 0;
 async function visit(directory) {

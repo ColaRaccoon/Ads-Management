@@ -61,11 +61,11 @@ function sortValue(row: MetaCreativePerformanceRow, key: MetaAdsSortKey) {
     case "purchase":
       return row.totals.purchaseCount;
     case "providerPurchase":
-      return row.totals.providerPurchaseValueUsd;
+      return row.totals.providerPurchaseRoas;
     case "profit":
       return row.totals.marginKrw;
     case "cpa":
-      return row.totals.cpaUsd;
+      return row.totals.cpaKrw;
     case "ctr":
       return row.totals.ctrLinkPct;
     case "cpm":

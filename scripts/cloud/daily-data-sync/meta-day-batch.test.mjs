@@ -9,6 +9,7 @@ import {META_PRELOAD_HISTORY_MODEL,META_PRELOAD_POINTER_FIELDS} from '../../../a
 import {beginMetaDayBatch} from '../../../apps/api/src/daily-sync/meta-day-batch.ts';
 import {CreativeNameParser} from '../../../apps/api/src/domain/creative-name-parser.ts';
 import {metaBatchSnapshot} from './meta-day-batch.fixtures.mjs';
+import {metaReportingFields} from '../../../apps/api/src/domain/meta-reporting-measurements.ts';
 const connectionId='1277dc2a-ea20-41eb-8a1c-ab1bfcc564f6',runId='11111111-1111-4111-8111-111111111111',expires=new Date(Date.now()+20*86400000),ref='vault://meta/22222222-2222-4222-8222-222222222222';
 const scalar=v=>v instanceof Date?v.getTime():v;
 function match(row,where={}){return Object.entries(where).every(([k,v])=>{if(k==='OR')return v.some(x=>match(row,x));if(k==='AND')return v.every(x=>match(row,x));if(v&&typeof v==='object'&&!(v instanceof Date)){if(k==='product')return true;return Object.entries(v).every(([op,w])=>op==='in'?w.some(x=>scalar(x)===scalar(row[k])):op==='not'?scalar(row[k])!==scalar(w):op==='lte'?scalar(row[k])<=scalar(w):op==='gt'?scalar(row[k])>scalar(w):false);}return scalar(row[k])===scalar(v);});}
@@ -34,6 +35,24 @@ test('55 API ads use bounded batch I/O while preserving normalized purchases, me
  await service.publishMetaDay(input(snapshot));assert.equal(state.metaAdDailyMetric.length,55);assert.equal(state.sourceRecordLink.filter(r=>r.isCurrent).length,56);
  const changed=structuredClone(snapshot);for(const r of [...changed.ads,...changed.adsets])r.sourceRevision+='-revision2';await service.publishMetaDay(input(changed));assert.equal(state.metaAdDailyMetric.length,110);assert(state.metaAdDailyMetric.filter(r=>r.isCurrent).every(r=>r.importVersion===2));assert.equal(state.sourceRecordLink.filter(r=>r.isCurrent).length,56);assert(state.metaAdDailyMetric.filter(r=>!r.isCurrent).every(r=>r.supersededByMetricId));
  assert(state.metaAdDailyMetric.every(r=>r.source==='API'&&r.connectionId===connectionId&&r.rawRow===null));
+}));
+
+test('V2 optional counts survive batched canonical persistence and version replay with explicit nulls',()=>enabled(async()=>{
+ const {db,state}=memoryMetaDatabase(),service=writer(db),snapshot=metaBatchSnapshot({ads:2,positive:true});
+ for(const [isAd,rows] of [[true,snapshot.ads],[false,snapshot.adsets]])for(const row of rows){
+  const values=Object.fromEntries(metaReportingFields(isAd).map(field=>[field,field==='shopClicks'?null:7]));
+  Object.assign(row,values);
+  row.currentMetadata.sourceContext.reportingMeasurement={profile:'REPORTING_V2',rawRowFingerprint:'a'.repeat(64),values};
+  for(const [field,value]of Object.entries(values))if(value===null)row.metricUnavailableReasons[field]='PARTIAL_METRIC';else delete row.metricUnavailableReasons[field];
+  row.sourceRevision+='-reporting-v2';
+ }
+ await service.publishMetaDay(input(snapshot));
+ for(const row of state.metaAdDailyMetric){assert.equal(row.videoPlay25Count,7);assert.equal(row.addToCartCount,7);assert.equal(row.landingPageViews,7);assert.equal(row.shopClicks,null);assert.equal(row.currentMetadata.sourceContext.reportingMeasurement.values.videoPlay25Count,7);}
+ assert.equal(state.metaAdsetDailyMetric[0].landingPageViews,7);
+ await service.publishMetaDay(input(snapshot));assert.equal(state.metaAdDailyMetric.length,2);assert.equal(state.metaAdsetDailyMetric.length,1);
+ const changed=structuredClone(snapshot);changed.ads[0].videoPlay25Count=8;changed.ads[0].currentMetadata.sourceContext.reportingMeasurement.values.videoPlay25Count=8;changed.ads[0].sourceRevision+='-updated';
+ await service.publishMetaDay(input(changed));assert.equal(state.metaAdDailyMetric.filter(r=>r.isCurrent).length,2);assert.equal(state.metaAdDailyMetric.find(r=>r.isCurrent&&r.adIdentityKey===changed.ads[0].adId).videoPlay25Count,8);
+ assert.equal(state.metaAdDailyMetric.find(r=>!r.isCurrent).videoPlay25Count,7);
 }));
 test('original entity methods retain every shared-key alias/placement and last-seen semantics, with CSV entities untouched',async()=>{
  const {db,state}=memoryMetaDatabase(),parser=new CreativeNameParser(),parts=parser.parse('1015_PRODUCT_001_IG');

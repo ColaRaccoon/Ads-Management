@@ -1,12 +1,19 @@
 import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { stableMetadataJson, MetaMcpNullBasicProjection } from "../domain/meta-current-metadata";
+import { META_REPORTING_FIELDS, metaReportingFields } from "../domain/meta-reporting-measurements";
 import { ProviderFailure } from "./bounded-request";
 import { parseIsoDate } from "./sync-contract";
-import { META_MCP_DAY_FIELDS, META_MCP_PURCHASE_FIELDS, META_MCP_PURCHASE_NAMES, MetaMcpLevel, MetaMcpWireSnapshot, validateMetaMcpWireRow } from "./meta-mcp-wire-reader";
+import { metaMcpFields, MetaMcpProfile, META_MCP_PURCHASE_NAMES, MetaMcpLevel, MetaMcpWireSnapshot, validateMetaMcpWireRow } from "./meta-mcp-wire-reader";
 type Json=Record<string,unknown>;
 const LEVELS:MetaMcpLevel[]=["ad","adset","campaign","ad_account"];
 function reject():never{throw new ProviderFailure("RECONCILIATION_FAILED",false);}
+function hasReportingActivity(wire: MetaMcpWireSnapshot, row: Json, isAd: boolean) {
+ return wire.profile === "REPORTING_V2" && metaReportingFields(isAd).some(key => {
+  const value = row[META_REPORTING_FIELDS[key]];
+  return value != null && value !== "0";
+ });
+}
 const object=(v:unknown):v is Json=>!!v&&typeof v==="object"&&!Array.isArray(v);
 export const metaMcpFingerprint=(v:unknown)=>createHash("sha256").update(stableMetadataJson(v)).digest("hex");
 export type MetaMcpSelection={policy:"REFERENCED_ADSETS_FROM_COMPLETE_WIRE";rawCaptureFingerprint:string;rawStatus:"COMPLETE_WIRE_UNVERIFIED_IDENTITY";rawIdentityVerified:false;
@@ -21,8 +28,8 @@ export function validateMetaMcpCapture(value:unknown):MetaMcpWireSnapshot{
   !object(value.levels)||!object(value.queries)||!object(value.missingParentIds)||!Array.isArray(value.moneyUnits)||
   ["paginationComplete","datesVerified"].some(k=>value[k]!==true)||["currencyVerified","attributionVerified","metricsNormalized","productionReady"].some(k=>value[k]!==false))reject();
  parseIsoDate(value.day);
- if(value.profile!==undefined&&value.profile!=="PURCHASE_V1")reject();
- const fields=value.profile?META_MCP_PURCHASE_FIELDS:META_MCP_DAY_FIELDS;
+ if(value.profile!==undefined&&value.profile!=="PURCHASE_V1"&&value.profile!=="REPORTING_V2")reject();
+ const fields=metaMcpFields(value.profile as MetaMcpProfile | undefined);
  if(Object.keys(value.levels).sort().join()!==[...LEVELS].sort().join()||Object.keys(value.queries).sort().join()!==[...LEVELS].sort().join())reject();
  const levels={} as Record<MetaMcpLevel,Json[]>;let count=0;
  for(const level of LEVELS){const rows=value.levels[level];
@@ -30,7 +37,7 @@ export function validateMetaMcpCapture(value:unknown):MetaMcpWireSnapshot{
   if(stableMetadataJson(value.queries[level])!==stableMetadataJson(query)||!Array.isArray(rows)||rows.length>50000-count)reject();
   const seen=new Set<string>();levels[level]=rows.map((raw,index)=>{
    if(!object(raw)||Object.keys(raw).some(k=>![...fields[level],"date_start","date_stop"].includes(k)))reject();
-   const checked=validateMetaMcpWireRow(raw,level,value.accountId as string,value.day as string,index,value.profile as "PURCHASE_V1"|undefined);
+   const checked=validateMetaMcpWireRow(raw,level,value.accountId as string,value.day as string,index,value.profile as MetaMcpProfile|undefined);
    if(stableMetadataJson(checked)!==stableMetadataJson(raw)||seen.has(checked.id as string))reject();seen.add(checked.id as string);return checked;
   });count+=rows.length;
  }
@@ -49,8 +56,10 @@ function nullBasicParentProjection(wire:MetaMcpWireSnapshot){
  const nullFields=["impressions","clicks","reach","frequency","link_click",...pairs.flat()];
  const parents=wire.levels.adset.filter(r=>money(r).isZero()&&nullFields.every(k=>r[k]===null)&&wire.levels.ad.some(a=>a.adset_id===r.id));
  if(!parents.length)return undefined;
- if(wire.profile!=="PURCHASE_V1")reject();
+ if(wire.profile!=="PURCHASE_V1"&&wire.profile!=="REPORTING_V2")reject();
  const parentIds=new Set(parents.map(r=>r.id)),removed=wire.levels.ad.filter(r=>parentIds.has(r.adset_id));
+ // A zero-spend row can still have attributed actions. Never discard those observations.
+ if(parents.some(r=>hasReportingActivity(wire,r,false))||removed.some(r=>hasReportingActivity(wire,r,true)))reject();
  const metrics=["impressions","clicks","link_click",...pairs.map(p=>p[0])];
  const total=(rows:Json[],f:string)=>rows.reduce((n,r)=>n+(r[f]===null?0n:count(r[f])),0n);
  const sumMoney=(rows:Json[])=>rows.reduce((n,r)=>n.plus(money(r)),new Prisma.Decimal(0));
@@ -78,6 +87,7 @@ export function selectMetaMcpDay(capture:unknown){
  for(const row of original.levels.ad){const parent=setMap.get(row.adset_id),campaign=campaignMap.get(row.campaign_id);if(!parent||!campaign||parent.campaign_id!==row.campaign_id||parent.name!==row.adset_name||campaign.name!==row.campaign_name)reject();}
  const projected=nullBasicParentProjection(original),wire=projected?.wire??original,references=new Set(wire.levels.ad.map(r=>r.adset_id as string));
  const selected=wire.levels.adset.filter(r=>references.has(r.id as string)),excluded=wire.levels.adset.filter(r=>!references.has(r.id as string));if(selected.length!==references.size)reject();
+ if(excluded.some(r=>hasReportingActivity(wire,r,false)))reject();
  for(const row of excluded){if(!new Prisma.Decimal((row.amount_spent as Json).value as string).isZero()||["impressions","link_click","clicks","reach","frequency"].some(f=>row[f]!==null&&(typeof row[f]!=="string"||!new Prisma.Decimal(row[f] as string).isZero())))reject();if(wire.profile&&META_MCP_PURCHASE_NAMES.some(f=>row[f]!==null&&!new Prisma.Decimal(f.endsWith("_values")?(row[f] as Json).value as string:row[f] as string).isZero()))reject();}
  const selection:MetaMcpSelection={policy:"REFERENCED_ADSETS_FROM_COMPLETE_WIRE",rawCaptureFingerprint:metaMcpFingerprint(original),rawStatus:"COMPLETE_WIRE_UNVERIFIED_IDENTITY",rawIdentityVerified:false,rawAdsetCount:wire.levels.adset.length,selectedAdsetCount:selected.length,excludedAdsetCount:excluded.length,selectedAdsetFingerprint:metaMcpFingerprint([...references].sort()),excludedReason:"CURRENT_METADATA_ONLY_UNREFERENCED",...(projected?{nullBasicParentProjection:projected.projection}:{})};
  return {wire,...(projected?{rawWire:original}:{}),selectedAdsets:selected,excludedAdsets:excluded,selection};

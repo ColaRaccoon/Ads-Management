@@ -3721,3 +3721,8 @@ tr.clickable-row:focus-visible td {
     margin-left: 0;
   }
 }
+
+.meta-report-details { margin: 8px 0; font-size: 12px; }
+.meta-report-details summary { cursor: pointer; width: fit-content; }
+.meta-report-details p { overflow-wrap: anywhere; }
+@media print { .meta-report-details { display: none; } }

@@ -5,6 +5,7 @@ import { selectCurrentSourceRows } from "../common/source-read-policy";
 import { dateRangeDays, parseDateRange } from "../common/date-range";
 import { formatDateOnly, toDateOnly } from "../domain/date-number";
 import { CreativeNameParser } from "../domain/creative-name-parser";
+import { aggregateCreativeLifetimes, creativeLifetimeKey } from "./meta-creative-lifetimes";
 import { PeriodMetricCalculator } from "../domain/period-metric-calculator";
 import { adDeliveryStatusWhere, isUuid, parseDeliveryStatusFilter } from "./metric-filters";
 import {
@@ -100,7 +101,8 @@ export class MetaAdMetricsReadService {
       `${item.row.connectionId ?? "legacy"}:${item.parsedName.creativeKey}`
     );
     const lifetimesByCreativeKey = await this.creativeLifetimes(
-      uniqueNonEmpty(parsedMetrics.map((item) => item.parsedName.creativeKey))
+      uniqueNonEmpty(parsedMetrics.map((item) => item.parsedName.creativeKey)),
+      parseDateRange(query.from, query.to).toDate
     );
     const normalizedQuery = query.q?.trim().toLowerCase() ?? "";
 
@@ -115,7 +117,7 @@ export class MetaAdMetricsReadService {
         const dateCodes = uniqueNonEmpty(items.map((item) => item.parsedName.dateCode)).sort();
         const settings = uniqueNonEmpty(items.map((item) => item.parsedName.setting));
         const originalAdNames = uniqueNonEmpty(rows.map((row) => row.adNameSnapshot));
-        const lifetime = last.connectionId ? null : lifetimesByCreativeKey.get(creativeKey);
+        const lifetime = lifetimesByCreativeKey.get(creativeLifetimeKey(last.connectionId, creativeKey));
         const firstSeenOn = lifetime?.firstSeenOn ?? first.metricDate;
         const lastSeenOn = lifetime?.lastSeenOn ?? last.metricDate;
 
@@ -356,16 +358,17 @@ export class MetaAdMetricsReadService {
     return selectCurrentSourceRows(this.prisma, SourceDataKind.META_AD, candidates, (row) => row.metricDate);
   }
 
-  async creativeLifetimes(creativeKeys: string[]) {
+  async creativeLifetimes(creativeKeys: string[], through: Date) {
     if (creativeKeys.length === 0) {
       return new Map<string, { firstSeenOn: Date | null; lastSeenOn: Date | null }>();
     }
 
-    const creatives = await this.prisma.creative.findMany({
-      where: { platform: "META", creativeKey: { in: creativeKeys } },
-      select: { creativeKey: true, firstSeenOn: true, lastSeenOn: true }
+    const placements = await this.prisma.creativePlacement.findMany({
+      where: { creative: { platform: "META", creativeKey: { in: creativeKeys } } },
+      select: { connectionId: true, metaCampaignId: true, firstSeenOn: true, lastSeenOn: true,
+        creative: { select: { creativeKey: true } } }
     });
-    return new Map(creatives.map((creative) => [creative.creativeKey, creative]));
+    return aggregateCreativeLifetimes(placements, through);
   }
 
   async creativeFinancialContext(metrics: AdDailyMetricRow[]): Promise<CreativeFinancialContext> {

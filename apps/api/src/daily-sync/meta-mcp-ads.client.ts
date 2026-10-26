@@ -1,3 +1,4 @@
+import { META_REPORTING_FIELDS, metaReportingFields, MetaReportingMeasurement } from "../domain/meta-reporting-measurements";
 import { markMetaFailureStage } from "./meta-failure-diagnostic";
 import { createHash } from "node:crypto";
 import { readFileSync, lstatSync } from "node:fs";
@@ -168,13 +169,13 @@ export class MetaMcpAdsClient extends MetaDayReader {
     // Bind immutable public metadata before any request can observe external mutation.
     this.catalog=JSON.parse(JSON.stringify(catalog)) as Json;
     this.reporting=JSON.parse(JSON.stringify(reporting)) as unknown;
-    validateMetaMcpCatalog(this.catalog,this.reporting,this.catalog.client_conversation_id as string,"PURCHASE_V1");
+    validateMetaMcpCatalog(this.catalog,this.reporting,this.catalog.client_conversation_id as string,"REPORTING_V2");
   }
   async fetchDay(provided:MetaDayReadInput):Promise<MetaDaySnapshot> {
     const input=Object.freeze({...provided});assertMetaOperatingGate("MCP");
     if(input.settings.actionReportTime!==CONTEXT||input.settings.attributionWindows.length!==0||Object.keys(input.settings).some(k=>!["actionReportTime","attributionWindows"].includes(k)))fail("ATTRIBUTION_MISMATCH");
     const wire=await this.reader.fetchDay({accountId:input.accountId,day:input.day,accessToken:input.accessToken,deadlineAt:input.deadlineAt,
-      clientConversationId:this.catalog.client_conversation_id as string,catalog:this.catalog,reporting:this.reporting,allowUnverifiedIdentityCapture:true,profile:"PURCHASE_V1"});
+      clientConversationId:this.catalog.client_conversation_id as string,catalog:this.catalog,reporting:this.reporting,allowUnverifiedIdentityCapture:true,profile:"REPORTING_V2"});
     try {
     assertMetaOperatingGate("MCP");selectMetaMcpDay(wire);
     const needsProof=metaMcpNeedsLinkProof(wire);
@@ -191,7 +192,7 @@ export function normalizeMetaMcpPurchaseSnapshot(input:unknown,bundle:MetaMcpPur
  if(!object(bundle)||bundle.version!==1||bundle.transport!=="META_ADS_MCP"||Object.keys(bundle).some(k=>!["version","transport","linkProof","purchaseProof"].includes(k))||!Object.hasOwn(bundle,"purchaseProof"))fail("RECONCILIATION_FAILED");
  const capture=object(input)&&input.status==="COMPLETE_PURCHASE_OBSERVATION_UNVERIFIED"?convertMetaMcpPurchaseObservation(input):input;
  const selection=selectMetaMcpDay(capture),wire=selection.wire;
- if(wire.profile!=="PURCHASE_V1")fail("RECONCILIATION_FAILED");
+ if(wire.profile!=="PURCHASE_V1"&&wire.profile!=="REPORTING_V2")fail("RECONCILIATION_FAILED");
  const proof=validateMetaMcpPurchaseResidualProof(capture,catalog,bundle.purchaseProof);
  const normalized=normalizeMetaMcpSnapshot(capture,bundle.linkProof,catalog),derived=new Set(proof.targetIds);
  const derivedParents=proof.derivedParentTargets??[],derivedAdsets=new Set(derivedParents.filter(row=>row.level==="adset").map(row=>row.id));
@@ -206,11 +207,25 @@ export function normalizeMetaMcpPurchaseSnapshot(input:unknown,bundle:MetaMcpPur
   row.purchaseCount=isDerived?0:Number(integer(raw.omni_purchase));row.purchaseValueUsd=isDerived?"0.0000":metaMcpPurchaseValue(raw).toFixed(4);
   if(raw.omni_purchase===null&&!isDerived)fail("RECONCILIATION_FAILED");
   delete row.metricUnavailableReasons.purchaseCount;
-  if(isAd)for(const f of ["videoPlay3sCount","videoPlay25Count","videoPlay50Count","videoPlay75Count","videoPlay100Count"])row.metricUnavailableReasons[f]="NOT_APPLICABLE";
+  if(isAd)for(const f of ["videoPlay3sCount","videoPlay25Count","videoPlay50Count","videoPlay75Count","videoPlay100Count"])row.metricUnavailableReasons[f]=wire.profile==="REPORTING_V2"?(f==="videoPlay3sCount"?"UNSUPPORTED_FIELD":"PARTIAL_METRIC"):"NOT_APPLICABLE";
   const ctx=row.currentMetadata?.sourceContext;if(!ctx)fail("RECONCILIATION_FAILED");
   ctx.purchaseMeasurement=evidence;ctx.purchaseCountValueBasis=isDerived?"DERIVED_PURCHASE_ZERO_RESIDUAL":"SOURCE_SCALAR";ctx.purchaseValueBasis=isDerived?"DERIVED_ZERO_EMPTY_PURCHASE_EVENTS":"SOURCE_MONEY";ctx.rawPurchaseNull=isDerived;
+  if(wire.profile==="REPORTING_V2") {
+    const values: MetaReportingMeasurement["values"] = {};
+    for (const field of metaReportingFields(isAd)) {
+      const rawValue = raw[META_REPORTING_FIELDS[field]];
+      const value = rawValue == null ? null : Number(integer(rawValue));
+      values[field] = value;
+      (row as unknown as Json)[field] = value;
+      if (value === null) row.metricUnavailableReasons[field] = "PARTIAL_METRIC";
+      else delete row.metricUnavailableReasons[field];
+    }
+    ctx.reportingMeasurement = { profile: "REPORTING_V2", rawRowFingerprint: hash(raw), values };
+    row.costPerLandingPageViewUsd = row.landingPageViews != null && row.landingPageViews > 0
+      ? new Prisma.Decimal(row.spendUsd).div(row.landingPageViews).toFixed(4) : null;
+  }
   if(!validCurrentMetadata(row.currentMetadata))fail();
-  const {sourceRevision:_revision,metadataObservedAt:_time,...semantic}=row;row.sourceRevision=hash({accountId:wire.accountId,day:wire.day,transport:"MCP",profile:"PURCHASE_V1",row:semantic});
+  const {sourceRevision:_revision,metadataObservedAt:_time,...semantic}=row;row.sourceRevision=hash({accountId:wire.accountId,day:wire.day,transport:"MCP",profile:wire.profile,row:semantic});
  };
  normalized.ads.forEach((row,i)=>attach(row,wire.levels.ad[i],true));normalized.adsets.forEach((row,i)=>attach(row,selection.selectedAdsets[i],false));
  return {...normalized,accountPurchaseCount:evidence.accountPurchaseCount,accountPurchaseValueUsd:evidence.accountPurchaseValueUsd,...(selection.selection.nullBasicParentProjection?{nullBasicParentProjection:selection.selection.nullBasicParentProjection}:{})};
