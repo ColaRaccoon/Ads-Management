@@ -92,7 +92,7 @@ export class ScheduledSyncService {
       const connection = await this.prisma.sourceConnection.findUnique({ where: { id: definition.connectionId } });
       if (!connection || !accountAllowlist().has(accountKey(connection.provider, connection.externalAccountId, connection.shopKey))) continue;
       const cadence = definitionCadenceDays(connection.provider, definition);
-      const dualMeta = connection.provider === "META" && schedules().some(d => d.connectionId === connection.id && d.kind === "META_DAILY");
+      const distinctPurposes = schedules().filter(d => d.connectionId === connection.id).length > 1;
       const anchor = new Date(definition.anchorAt).getTime(), interval = cadence * 86_400_000;
       if (Date.now() < anchor) continue;
       const latest = Math.floor((Date.now() - anchor) / interval);
@@ -122,7 +122,7 @@ export class ScheduledSyncService {
           .filter((day) => !succeeded.has(day) && !kinds.every((kind) => coverage.some((row) =>
             row.source === "API" && row.dataKind === kind && row.metricDate.toISOString().slice(0, 10) === day && row.lastSuccessRunId &&
             row.lastSuccessAt && row.lastSuccessAt >= new Date(slot.scheduledFor) &&
-            (!dualMeta || row.lastSuccessRunId === run?.id) &&
+            (!distinctPurposes || row.lastSuccessRunId === run?.id) &&
             (connection.provider!=="CAFE24" || row.reconciliationStatus==="CAFE24_API_ONLY_VERIFIED" &&
               !row.warningCodes.some(code=>["CAFE24_SHADOW_NOT_PRIMARY","CAFE24_SOURCE_ACTIVATION_REQUIRED"].includes(code))) &&
             (row.state === "COMPLETE_ZERO" || row.state === "COMPLETE_NONZERO"))));

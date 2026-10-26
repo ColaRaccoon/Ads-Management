@@ -74,7 +74,7 @@ export function ConnectionOperations({ connection, canManageImports, canManageSe
   const validDay = today !== null && /^\d{4}-\d{2}-\d{2}$/.test(day) && day < today;
   return <article aria-label={`${storefrontLabel(connection.provider)} 연결`} style={{ borderTop: "1px solid #dce3e8", paddingTop: 16, marginTop: 16 }}>
     <h3>{storefrontLabel(connection.provider)} · {connection.displayName}</h3>
-    <p>{connection.currencyCode} · {connection.timeZone} · {connection.cadenceDays === 1 ? "매일 전일 1일" : "주간 직전 완료 7일"} · {connection.enabled ? "개별 연결: 수집 사용" : "개별 연결: 수집 중지"} · {storefrontLabel(connection.accessState)}{connection.reconnectRequired ? " · 재연결 필요" : ""}{connection.stale ? " · 오래된 데이터" : ""}</p>
+    <p>{connection.currencyCode} · {connection.timeZone} · {connection.dailyCollectionOffsets?.length ? `매일 ${connection.dailyCollectionOffsets.map(offset => offset === 1 ? "전일" : `${offset}일 전`).join(" + ")} 각 1일` : connection.cadenceDays === 1 ? "매일 전일 1일" : "주간 직전 완료 7일"} · {connection.enabled ? "개별 연결: 수집 사용" : "개별 연결: 수집 중지"} · {storefrontLabel(connection.accessState)}{connection.reconnectRequired ? " · 재연결 필요" : ""}{connection.stale ? " · 오래된 데이터" : ""}</p>
     <p>최근 시도: {storefrontTime(connection.latestAttempt?.at)} · {storefrontLabel(connection.latestAttempt?.status)}<br />최근 성공: {storefrontTime(connection.lastSuccessAt)}<br />연결 유효기간: {storefrontTime(connection.credentialExpiresAt)}</p>
     {connection.latestAttempt?.safeErrorCode ? <p role="status">{storefrontLabel(connection.latestAttempt.safeErrorCode)}</p> : null}
     <p>선택 기간 완료 날짜: {connection.completedDates.length > 0 ? connection.completedDates.join(", ") : "완료 기록 없음"}</p>

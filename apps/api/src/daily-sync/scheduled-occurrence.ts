@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { SourceProvider } from "@prisma/client";
 import { parseIsoDate, syncError } from "./sync-contract";
-import { readScheduleDefinitions, definitionCadenceDays, ScheduleDefinition } from "./schedule-definition";
+import { readScheduleDefinitions, definitionCadenceDays, definitionEndDayOffset, ScheduleDefinition } from "./schedule-definition";
 export type { ScheduleDefinition } from "./schedule-definition";
 
 // Cafe24 publish has a 30s transaction bound; leave 5s for the HTTP envelope.
@@ -63,7 +63,7 @@ export function occurrence(definition: ScheduleDefinition, provider: SourceProvi
     syncError("RUN_LIMIT_EXCEEDED", 400);
   const localDay = new Intl.DateTimeFormat("en-CA", { timeZone,
     year: "numeric", month: "2-digit", day: "2-digit" }).format(scheduled);
-  const end = parseIsoDate(localDay).getTime() - 86_400_000;
+  const end = parseIsoDate(localDay).getTime() - definitionEndDayOffset(definition) * 86_400_000;
   return { definition, scheduledFor, totalUnits: days, fromDate: new Date(end - (days - 1) * 86_400_000).toISOString().slice(0, 10),
     toDate: new Date(end).toISOString().slice(0, 10),
     deadlineAt: new Date(scheduled.getTime() + definition.windowMinutes * 60_000),

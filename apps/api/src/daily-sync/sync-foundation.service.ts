@@ -9,7 +9,7 @@ import { HeavyOperationGate, HeavyOperationLease } from "../common/heavy-operati
 import { PrismaService } from "../common/prisma.service";
 import { writeSecurityAudit } from "../security-audit/security-audit.types";
 import { accountAllowlist, accountKey } from "./source-connections.service";
-import { scheduledRunDayCount } from "./schedule-definition";
+import { scheduledRunPurpose } from "./schedule-definition";
 import { lockCanonicalConnection } from "./canonical-write-policy";
 import type { MetaFailureDiagnosticCode } from "./meta-failure-diagnostic";
 import type { Cafe24FailureDiagnosticCode } from "./cafe24-failure-diagnostic";
@@ -154,10 +154,10 @@ export class SyncFoundationService {
             fromDate: { lte: to }, toDate: { gte: from }
           }, select: { fromDate: true, toDate: true, status: true, requestKey: true }, take: 101 })
           : [];
-        // Daily and weekly Meta windows deliberately overlap. Within the same
+        // Meta daily/weekly and Google D-1/D-7 deliberately overlap. Within the same
         // purpose keep the original duplicate/retry checks and account lock.
-        const samePurpose = connection.provider === "META" ? overlapping.filter(row =>
-          scheduledRunDayCount({ ...scope, requestKey: row.requestKey }) === scheduledRunDayCount(scope)) : overlapping;
+        const samePurpose = connection.provider === "META" || connection.provider === "GOOGLE" ? overlapping.filter(row =>
+          scheduledRunPurpose({ ...scope, requestKey: row.requestKey }) === scheduledRunPurpose(scope)) : overlapping;
         const failedRetry = assertScheduledWindowCadence(input, samePurpose);
         if (!failedRetry) assertSyncRunScope(scope, now);
         const run = await tx.syncRun.create({ data: {

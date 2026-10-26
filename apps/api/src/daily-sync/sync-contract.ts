@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, HttpException, HttpStatus, ServiceUnavailableException } from "@nestjs/common";
 import { SourceDataKind, SourceProvider, SyncRunStatus, SyncTrigger } from "@prisma/client";
-import { scheduledRunDayCount } from "./schedule-definition";
+import { scheduledRunDayCount, scheduledRunEndDayOffset } from "./schedule-definition";
 
 export const MAX_RUN_DAYS = 31;
 export const MAX_RUN_MS = 10 * 60_000;
@@ -77,12 +77,12 @@ export function assertSyncRunShape(input: RunScope, now = new Date()) {
       days !== 1) syncError("RUN_LIMIT_EXCEEDED", 400);
 }
 
-/** New scheduled windows end on the most recently completed account-local day. */
+/** New windows use the purpose's exact account-local offset (D-1 or Google D-7). */
 export function assertSyncRunScope(input: RunScope, now = new Date()) {
   assertSyncRunShape(input, now);
   if (input.trigger === SyncTrigger.SCHEDULED) {
     const today = accountToday(input.timeZone, now);
-    const yesterday = parseIsoDate(today).getTime() - 86_400_000;
+    const yesterday = parseIsoDate(today).getTime() - scheduledRunEndDayOffset(input) * 86_400_000;
     const toDate = new Date(yesterday).toISOString().slice(0, 10);
     const days = scheduledRunDayCount(input);
     const fromDate = new Date(yesterday - (days - 1) * 86_400_000)

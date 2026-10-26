@@ -263,17 +263,21 @@ export class StorefrontReadService {
         impressions: r.impressions.toString(), clicks: r.clicks.toString(), fetchedAt: r.fetchedAt.toISOString() })), coverage,
       connections: connections.map(c => {
         const metaDaily = c.provider === "META" && readScheduleDefinitions().some(d => d.connectionId === c.id && d.kind === "META_DAILY");
+        const googleOffsets = c.provider === "GOOGLE" ? readScheduleDefinitions().filter(d => d.connectionId === c.id &&
+          (d.kind === "GOOGLE_DAILY" || d.kind === "GOOGLE_RECHECK_D7")).map(d => d.kind === "GOOGLE_RECHECK_D7" ? 7 : 1).sort((a,b) => a-b) : [];
+        const daily = c.provider === "CAFE24" || metaDaily || googleOffsets.length > 0;
         const scoped = coverage.filter(r => r.connectionId === c.id), last = iso(c.coverage[0]?.lastSuccessAt);
         const run = c.runs[0];
         return { id: c.id, provider: c.provider, displayName: c.displayName, externalAccountId: c.externalAccountId,
           currencyCode: c.currencyCode, timeZone: c.timeZone, accessState: c.accessState, enabled: c.enabled,
           updatedAt: c.updatedAt.toISOString(), credentialExpiresAt: iso(c.credentialExpiresAt),
           reconnectRequired: c.accessState !== "READY" || !c.credentialRef || !!c.credentialExpiresAt && c.credentialExpiresAt.getTime() <= Date.now(),
-          cadenceDays: c.provider === "CAFE24" || metaDaily ? 1 : 7,
+          cadenceDays: daily ? 1 : 7,
+          ...(googleOffsets.length ? { dailyCollectionOffsets: googleOffsets } : {}),
           ...(metaDaily ? { weeklyRecheckCadenceDays: 7 } : {}), latestAttempt: run ? { id: run.id, status: run.status,
             at: iso(run.startedAt), safeErrorCode: run.safeErrorCode } : null,
           lastSuccessAt: last, completedDates: scoped.filter(r => r.complete).map(r => r.date),
-          stale: last ? Date.now() - Date.parse(last) > (c.provider === "CAFE24" || metaDaily ? 2 : 8) * 86_400_000 : false };
+          stale: last ? Date.now() - Date.parse(last) > (daily ? 2 : 8) * 86_400_000 : false };
       }), exchangeRates: [...rates.map(r => ({ date: day(r.rateDate), rate: r.rate.toString(), sourceDate: day(r.sourceDate),
         provider: r.provider, fallbackType: r.fallbackType, fetchedAt: r.fetchedAt.toISOString() })), ...usedLegacyRates.values()], warningCodes: [...warningCodes] };
   }
