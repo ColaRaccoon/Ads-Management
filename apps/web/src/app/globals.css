@@ -706,6 +706,28 @@ tfoot td {
   font-weight: 700;
 }
 
+.google-profit-guidance { margin-bottom: 16px; color: #526474; font-size: 13px; }
+.google-profit-guidance summary, .google-profit-products ~ details > summary { cursor: pointer; font-weight: 600; }
+.google-profit-table table { min-width: 1020px; }
+.google-profit-table th, .google-profit-table td { padding: 14px 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.google-profit-table tr > :first-child { text-align: left; }
+.google-profit-table tbody th { position: static; background: #fff; color: #223340; }
+.google-profit-table tbody tr:hover > * { background: #f7faf9; }
+.google-profit-table small { display: block; margin-top: 5px; color: #657583; font-size: 11px; font-weight: 400; }
+.google-profit-table .google-profit-reason { max-width: 150px; white-space: normal; }
+.google-profit-table tfoot td { background: #eef6f3; border-top: 2px solid #a9cfc0; }
+.google-margin-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.google-profit-margin .google-margin-value { font-size: 15px; }
+.google-margin-negative { color: #b42318; }
+.google-margin-positive { color: #13744a; }
+.google-margin-pending { color: #8a5b12; }
+.google-profit-total { margin-top: 16px; border-color: #a9cfc0; background: #f4f9f7; }
+.google-profit-total-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.google-profit-total-amount { display: flex; align-items: baseline; flex-wrap: wrap; gap: 14px; margin: 18px 0; }
+.google-profit-total-amount > strong { font-size: clamp(24px, 3vw, 34px); }
+.google-profit-total-amount > span { color: #526474; font-size: 14px; }
+.google-profit-total .metric-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
 tr.clickable-row {
   cursor: pointer;
 }

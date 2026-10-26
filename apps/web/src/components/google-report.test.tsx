@@ -23,10 +23,10 @@ const fixture: GoogleReportResponse = {
   reconciliation: { collectedAdSpendKrwExact: "20000", allocatedAdSpendKrwExact: "20000", unallocatedAdSpendKrwExact: "0", balanced: true, byCurrency: [] },
   pagination: { page: 1, pageSize: 50, total: 1 }, coverage: [{ connectionId: "google-1", provider: "GOOGLE", date: "2026-10-25", selectedSource: "API", complete: true, state: "COMPLETE_NONZERO", rowCount: 2, amount: "20000", lastSuccessAt: "2026-10-25T22:00:00Z", lastAttemptAt: "2026-10-25T22:00:00Z", warningCodes: [] }], notices: ["실제 결제액 또는 Google 클릭 전환 매출이 아닙니다."]
 };
-function render(data: GoogleReportResponse) {
+function render(data: GoogleReportResponse, query = "") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  client.setQueryData(["google", "profit", "", 1], data);
-  const html = renderToStaticMarkup(<QueryClientProvider client={client}><GoogleReport view="profit" query="" options={options} /></QueryClientProvider>);
+  client.setQueryData(["google", "profit", query, 1], data);
+  const html = renderToStaticMarkup(<QueryClientProvider client={client}><GoogleReport view="profit" query={query} options={options} /></QueryClientProvider>);
   client.clear(); return html;
 }
 
@@ -43,6 +43,54 @@ test("incomplete collection does not display a zero or final profit", () => {
   assert.ok(html.includes("잠정 / 미확정"));
   assert.ok(html.includes("광고비 미수집"));
   assert.match(html, /전체 확정 상품마진<\/span><strong>—<\/strong>/);
+});
+
+test("product footer uses the server total across all pages instead of visible product margins", () => {
+  const html = render({ ...fixture, summary: { ...fixture.summary, marginKrw: -123816.197719, adSpendKrwExact: "216456.197719" }, pagination: { page: 1, pageSize: 50, total: 51 } });
+  const footer = html.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1];
+  assert.ok(footer, "the product table has a total footer");
+  assert.match(footer, /Google 전체 합계/);
+  assert.match(footer, /모든 페이지 포함/);
+  assert.match(footer, /-123,816 원/);
+  assert.match(footer, /216,456 원/);
+  assert.doesNotMatch(footer, /35,000 원/);
+  assert.match(html, /1 \/ 2 페이지/);
+});
+
+test("unknown total margin stays pending in the footer and bottom summary despite calculable product profits", () => {
+  const html = render({ ...fixture, summary: { ...fixture.summary, marginKrw: null, calculatedMarginKrw: 35000, calculatedProductsMarginKrw: 35000, complete: false, warningCodes: ["UNALLOCATED_AD_SPEND"] } });
+  const footer = html.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1];
+  const bottom = html.slice(html.lastIndexOf('<section class="panel google-profit-total"'));
+  assert.ok(footer);
+  assert.match(footer, /google-margin-pending">미확정<\/strong>/);
+  assert.doesNotMatch(footer, /35,000 원/);
+  assert.match(bottom, /최종 마진<\/span><strong class="google-margin-value google-margin-pending">미확정<\/strong>/);
+  assert.match(bottom, /잠정 마진 합계: 35,000 원/);
+  assert.doesNotMatch(bottom, /google-margin-positive/);
+});
+
+test("product, Google account and storefront filters label totals as the selected scope", () => {
+  for (const filter of ["productId=product-1", "connectionId=google-1", "cafe24ConnectionId=cafe24-1"]) {
+    const html = render(fixture, `from=2026-10-25&to=2026-10-25&${filter}`);
+    assert.match(html, /<tfoot><tr><td>선택 범위 합계/);
+    assert.match(html, /<h2>Google 선택 범위 마진<\/h2>/);
+    assert.doesNotMatch(html, /<h2>Google 전체 마진<\/h2>/);
+  }
+  assert.match(render(fixture, "from=2026-10-25&to=2026-10-25"), /<h2>Google 전체 마진<\/h2>/);
+});
+
+test("individual product margins appear before diagnostics and the overall margin is the final section", () => {
+  const html = render(fixture);
+  const productTable = html.indexOf('aria-label="Google 상품별 마진"');
+  assert.ok(productTable >= 0);
+  assert.ok(productTable < html.indexOf("매출·비용 계산 기준 및 상세 합계"));
+  assert.ok(productTable < html.indexOf("수집 완료 및 누락"));
+  assert.ok(productTable < html.indexOf("광고비 배분 대사"));
+  const bottom = html.lastIndexOf('<section class="panel google-profit-total"');
+  assert.ok(bottom > html.indexOf("미연결 유튜브 판매"));
+  assert.match(html.slice(bottom), /<h2>Google 전체 마진<\/h2>/);
+  assert.match(html.slice(bottom), /최종 마진<\/span><strong class="google-margin-value google-margin-positive">35,000 원<\/strong>/);
+  assert.ok(html.endsWith("</section>"));
 });
 
 test("mapping editor renders mutations only with mappings.manage and preserves read-only list", () => {
