@@ -1,0 +1,699 @@
+{
+  "verifiedAt": "2026-10-26T09:23:32.325Z",
+  "dataDate": "2026-10-25",
+  "observationDateKst": "2026-10-26",
+  "state": "FIRST_SCHEDULED_DAILY_SUCCESSES_VERIFIED",
+  "consecutiveScheduledSuccess": {
+    "cafe24Daily": 1,
+    "cafe24DailyRequired": 3,
+    "metaDaily": 1,
+    "metaDailyRequired": 3,
+    "metaWeekly": 0,
+    "metaWeeklyRequired": 2
+  },
+  "scheduledRuns": [
+    {
+      "id": "a0b6a5eb-7c5c-47e0-a885-e10166d4407a",
+      "status": "SUCCEEDED",
+      "to_date": "2026-10-25",
+      "trigger": "SCHEDULED",
+      "from_date": "2026-10-25",
+      "started_at": "2026-10-25T17:00:09.545+00:00",
+      "finished_at": "2026-10-25T17:44:18.711+00:00",
+      "request_key": "schedule:prod-cafe24:4e0295655e7c3680f470a124abe922cc7da88738e846ed9f7b98c95a4c77b7b6",
+      "rows_fetched": 395,
+      "attempt_count": 44,
+      "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "rows_published": 395,
+      "safe_error_code": null
+    },
+    {
+      "id": "47cba532-4ef5-4795-a589-46c4c63bdb79",
+      "status": "SUCCEEDED",
+      "to_date": "2026-10-25",
+      "trigger": "SCHEDULED",
+      "from_date": "2026-10-25",
+      "started_at": "2026-10-25T17:03:05.571+00:00",
+      "finished_at": "2026-10-25T17:03:36.246+00:00",
+      "request_key": "schedule:prod-meta-daily:3c4d8586cfe3ca70a0b6acf90b9e4a8c3161a8ca66a2168ee5390882b658b611",
+      "rows_fetched": 753,
+      "attempt_count": 1,
+      "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+      "rows_published": 753,
+      "safe_error_code": null
+    }
+  ],
+  "units": [
+    {
+      "key": "2026-10-25",
+      "runId": "a0b6a5eb-7c5c-47e0-a885-e10166d4407a",
+      "status": "SUCCEEDED",
+      "fetched": 395,
+      "attempts": 1,
+      "published": 395,
+      "completedAt": "2026-10-25T17:44:16.674+00:00"
+    },
+    {
+      "key": "2026-10-25",
+      "runId": "47cba532-4ef5-4795-a589-46c4c63bdb79",
+      "status": "SUCCEEDED",
+      "fetched": 753,
+      "attempts": 1,
+      "published": 753,
+      "completedAt": "2026-10-25T17:03:34.825+00:00"
+    }
+  ],
+  "attempts": [
+    {
+      "status": "PARTIAL",
+      "requests": 43,
+      "safe_code": "APP_INCOMPLETE",
+      "http_status": 200,
+      "total_units": 1,
+      "completed_at": "2026-10-25T17:44:00.260688+00:00",
+      "last_attempt": "2026-10-25T17:43:00.098838+00:00",
+      "schedule_key": "prod-cafe24",
+      "first_attempt": "2026-10-25T17:00:00.452664+00:00",
+      "scheduled_for": "2026-10-25T17:00:00+00:00",
+      "completed_units": 0
+    },
+    {
+      "status": "SUCCEEDED",
+      "requests": 1,
+      "safe_code": "COMPLETE",
+      "http_status": 200,
+      "total_units": 1,
+      "completed_at": "2026-10-25T17:45:00.068835+00:00",
+      "last_attempt": "2026-10-25T17:44:00.322766+00:00",
+      "schedule_key": "prod-cafe24",
+      "first_attempt": "2026-10-25T17:44:00.322766+00:00",
+      "scheduled_for": "2026-10-25T17:00:00+00:00",
+      "completed_units": 1
+    },
+    {
+      "status": "SUCCEEDED",
+      "requests": 1,
+      "safe_code": "COMPLETE",
+      "http_status": 200,
+      "total_units": 1,
+      "completed_at": "2026-10-25T17:04:00.287502+00:00",
+      "last_attempt": "2026-10-25T17:03:00.093716+00:00",
+      "schedule_key": "prod-meta-daily",
+      "first_attempt": "2026-10-25T17:03:00.093716+00:00",
+      "scheduled_for": "2026-10-25T17:03:00+00:00",
+      "completed_units": 1
+    }
+  ],
+  "cronFires": [
+    {
+      "fires": 1,
+      "jobid": 1,
+      "active": true,
+      "status": "succeeded",
+      "jobname": "storage-renewal-daily",
+      "schedule": "0 19 * * *",
+      "last_fire": "2026-10-25T19:00:00.08066+00:00",
+      "first_fire": "2026-10-25T19:00:00.08066+00:00"
+    },
+    {
+      "fires": 1,
+      "jobid": 2,
+      "active": true,
+      "status": "succeeded",
+      "jobname": "storage-renewal-verify",
+      "schedule": "15 19 * * *",
+      "last_fire": "2026-10-25T19:15:00.227888+00:00",
+      "first_fire": "2026-10-25T19:15:00.227888+00:00"
+    },
+    {
+      "fires": 1,
+      "jobid": 3,
+      "active": true,
+      "status": "succeeded",
+      "jobname": "storage-renewal-audit",
+      "schedule": "20 19 * * *",
+      "last_fire": "2026-10-25T19:20:00.194794+00:00",
+      "first_fire": "2026-10-25T19:20:00.194794+00:00"
+    },
+    {
+      "fires": 120,
+      "jobid": 4,
+      "active": true,
+      "status": "succeeded",
+      "jobname": "daily-data-sync-prod-tick",
+      "schedule": "* 17,18 * * *",
+      "last_fire": "2026-10-25T18:59:00.060008+00:00",
+      "first_fire": "2026-10-25T17:00:00.234707+00:00"
+    }
+  ],
+  "coverageNow": [
+    {
+      "run": "8ea43e8f-c6c2-4579-ae1f-71a37d363909",
+      "date": "2026-10-25",
+      "kind": "META_AD",
+      "rows": 556,
+      "state": "COMPLETE_NONZERO",
+      "amount": 3929.48,
+      "source": "API",
+      "warnings": [],
+      "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+      "lastSuccessAt": "2026-10-26T00:54:51.18+00:00"
+    },
+    {
+      "run": "8ea43e8f-c6c2-4579-ae1f-71a37d363909",
+      "date": "2026-10-25",
+      "kind": "META_ADSET",
+      "rows": 200,
+      "state": "COMPLETE_NONZERO",
+      "amount": 3929.48,
+      "source": "API",
+      "warnings": [],
+      "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+      "lastSuccessAt": "2026-10-26T00:54:51.18+00:00"
+    },
+    {
+      "run": "a0b6a5eb-7c5c-47e0-a885-e10166d4407a",
+      "date": "2026-10-25",
+      "kind": "CAFE24_ORDER",
+      "rows": 395,
+      "state": "COMPLETE_NONZERO",
+      "amount": 10642816,
+      "source": "API",
+      "warnings": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+      ],
+      "connectionId": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "lastSuccessAt": "2026-10-25T17:44:16.674+00:00"
+    },
+    {
+      "run": "fc08b577-670d-4a5b-9f95-9abd19b6ffc3",
+      "date": "2026-10-25",
+      "kind": "GOOGLE_CAMPAIGN",
+      "rows": 5,
+      "state": "COMPLETE_NONZERO",
+      "amount": 216456.197719,
+      "source": "API",
+      "warnings": [],
+      "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "lastSuccessAt": "2026-10-26T07:10:24.341+00:00"
+    }
+  ],
+  "sourceConnections": [
+    {
+      "id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "state": "READY",
+      "enabled": true,
+      "provider": "GOOGLE"
+    },
+    {
+      "id": "2155a401-bd86-4111-9280-3c95ed207546",
+      "state": "READY",
+      "enabled": true,
+      "provider": "META"
+    },
+    {
+      "id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "state": "READY",
+      "enabled": true,
+      "provider": "CAFE24"
+    }
+  ],
+  "activeSourcePoliciesForDataDate": [
+    {
+      "to": null,
+      "from": "2026-10-23",
+      "kind": "GOOGLE_CAMPAIGN",
+      "primary": "API",
+      "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+    },
+    {
+      "to": null,
+      "from": "2026-10-23",
+      "kind": "META_AD",
+      "primary": "API",
+      "connectionId": "2155a401-bd86-4111-9280-3c95ed207546"
+    },
+    {
+      "to": null,
+      "from": "2026-10-23",
+      "kind": "META_ADSET",
+      "primary": "API",
+      "connectionId": "2155a401-bd86-4111-9280-3c95ed207546"
+    },
+    {
+      "to": "2026-10-26",
+      "from": "2026-10-25",
+      "kind": "CAFE24_ORDER",
+      "primary": "API",
+      "connectionId": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+    }
+  ],
+  "current": {
+    "fx": [
+      {
+        "date": "2026-10-25",
+        "rate": 1324.6,
+        "fallback": "PREVIOUS_AVAILABLE",
+        "sourceDate": "2026-10-23"
+      }
+    ],
+    "metaByRun": [
+      {
+        "usd": 3928.17,
+        "kind": "ADSET",
+        "rows": 200,
+        "sync_run_id": "47cba532-4ef5-4795-a589-46c4c63bdb79",
+        "current_rows": 0
+      },
+      {
+        "usd": 3929.48,
+        "kind": "ADSET",
+        "rows": 200,
+        "sync_run_id": "8ea43e8f-c6c2-4579-ae1f-71a37d363909",
+        "current_rows": 200
+      },
+      {
+        "usd": 3928.17,
+        "kind": "AD",
+        "rows": 553,
+        "sync_run_id": "47cba532-4ef5-4795-a589-46c4c63bdb79",
+        "current_rows": 0
+      },
+      {
+        "usd": 3929.48,
+        "kind": "AD",
+        "rows": 556,
+        "sync_run_id": "8ea43e8f-c6c2-4579-ae1f-71a37d363909",
+        "current_rows": 556
+      }
+    ],
+    "cafeCurrent": {
+      "keys": 395,
+      "rows": 395,
+      "mapped": 389,
+      "orders": 345,
+      "unmapped": 6
+    },
+    "metaCurrent": {
+      "usd": 3929.48,
+      "adsets": 200,
+      "unmappedUsd": 0,
+      "unmappedRows": 2
+    },
+    "duplicateGroups": 0,
+    "storageVerified": [
+      {
+        "http": 200,
+        "mode": "renew",
+        "state": "HEALTHY",
+        "readinessVerified": "true"
+      },
+      {
+        "http": 200,
+        "mode": "check",
+        "state": "HEALTHY",
+        "readinessVerified": "true"
+      }
+    ],
+    "activeCafePolicy": [
+      {
+        "to": "2026-10-26",
+        "from": "2026-10-25",
+        "primary": "API",
+        "version": 6
+      }
+    ]
+  },
+  "runtimeProof": {
+    "window": {
+      "from": "2026-10-25T17:00:00Z",
+      "to": "2026-10-25T17:46:00Z"
+    },
+    "deploymentLogRows": 271,
+    "errorCount": 0,
+    "ready": [
+      {
+        "time": "2026-10-25T17:00:10.474554354Z",
+        "attributes": [
+          {
+            "key": "event",
+            "value": "\"api.ready\""
+          },
+          {
+            "key": "runtimeConfigFingerprint",
+            "value": "\"01c46ccd311584ab893741c5d6d104f66821dd3ff1aea527b9633e6466f39c04\""
+          }
+        ]
+      },
+      {
+        "time": "2026-10-25T17:00:10.474561694Z",
+        "attributes": [
+          {
+            "key": "event",
+            "value": "\"bundle-state\""
+          },
+          {
+            "key": "code",
+            "value": "\"BUNDLE_READY\""
+          },
+          {
+            "key": "releaseGitSha",
+            "value": "\"2db2aee0b12f793e0bfbd9c0554b8503dc4af7a8\""
+          }
+        ]
+      }
+    ],
+    "scheduledHttp": [
+      {
+        "time": "2026-10-25T17:00:18.595573483Z",
+        "status": 200,
+        "durationMs": 17520
+      },
+      {
+        "time": "2026-10-25T17:01:06.366272665Z",
+        "status": 200,
+        "durationMs": 6196
+      },
+      {
+        "time": "2026-10-25T17:02:06.864060080Z",
+        "status": 200,
+        "durationMs": 6433
+      },
+      {
+        "time": "2026-10-25T17:03:37.210810141Z",
+        "status": 200,
+        "durationMs": 37069
+      },
+      {
+        "time": "2026-10-25T17:04:06.511492763Z",
+        "status": 200,
+        "durationMs": 6124
+      },
+      {
+        "time": "2026-10-25T17:05:22.839430979Z",
+        "status": 200,
+        "durationMs": 22504
+      },
+      {
+        "time": "2026-10-25T17:06:22.055181494Z",
+        "status": 200,
+        "durationMs": 21887
+      },
+      {
+        "time": "2026-10-25T17:07:20.807194593Z",
+        "status": 200,
+        "durationMs": 20663
+      },
+      {
+        "time": "2026-10-25T17:08:21.039090717Z",
+        "status": 200,
+        "durationMs": 20888
+      },
+      {
+        "time": "2026-10-25T17:09:20.808611651Z",
+        "status": 200,
+        "durationMs": 20685
+      },
+      {
+        "time": "2026-10-25T17:10:23.882810120Z",
+        "status": 200,
+        "durationMs": 23669
+      },
+      {
+        "time": "2026-10-25T17:11:22.948394396Z",
+        "status": 200,
+        "durationMs": 22803
+      },
+      {
+        "time": "2026-10-25T17:12:22.144951294Z",
+        "status": 200,
+        "durationMs": 21833
+      },
+      {
+        "time": "2026-10-25T17:13:21.135265546Z",
+        "status": 200,
+        "durationMs": 20989
+      },
+      {
+        "time": "2026-10-25T17:14:21.422512736Z",
+        "status": 200,
+        "durationMs": 21291
+      },
+      {
+        "time": "2026-10-25T17:15:22.280617344Z",
+        "status": 200,
+        "durationMs": 22085
+      },
+      {
+        "time": "2026-10-25T17:16:23.778303160Z",
+        "status": 200,
+        "durationMs": 23647
+      },
+      {
+        "time": "2026-10-25T17:17:21.384714519Z",
+        "status": 200,
+        "durationMs": 21239
+      },
+      {
+        "time": "2026-10-25T17:18:21.427245949Z",
+        "status": 200,
+        "durationMs": 21232
+      },
+      {
+        "time": "2026-10-25T17:19:21.336788571Z",
+        "status": 200,
+        "durationMs": 21190
+      },
+      {
+        "time": "2026-10-25T17:20:21.477037821Z",
+        "status": 200,
+        "durationMs": 21320
+      },
+      {
+        "time": "2026-10-25T17:21:24.856439933Z",
+        "status": 200,
+        "durationMs": 24029
+      },
+      {
+        "time": "2026-10-25T17:22:09.533703318Z",
+        "status": 200,
+        "durationMs": 9132
+      },
+      {
+        "time": "2026-10-25T17:23:06.759993944Z",
+        "status": 200,
+        "durationMs": 6619
+      },
+      {
+        "time": "2026-10-25T17:24:06.949842815Z",
+        "status": 200,
+        "durationMs": 6809
+      },
+      {
+        "time": "2026-10-25T17:25:06.820482593Z",
+        "status": 200,
+        "durationMs": 6686
+      },
+      {
+        "time": "2026-10-25T17:26:09.083738607Z",
+        "status": 200,
+        "durationMs": 8941
+      },
+      {
+        "time": "2026-10-25T17:27:20.197361708Z",
+        "status": 200,
+        "durationMs": 20043
+      },
+      {
+        "time": "2026-10-25T17:28:19.305371791Z",
+        "status": 200,
+        "durationMs": 19167
+      },
+      {
+        "time": "2026-10-25T17:29:19.144752500Z",
+        "status": 200,
+        "durationMs": 18914
+      },
+      {
+        "time": "2026-10-25T17:30:39.635917026Z",
+        "status": 200,
+        "durationMs": 39496
+      },
+      {
+        "time": "2026-10-25T17:31:30.307774038Z",
+        "status": 200,
+        "durationMs": 30156
+      },
+      {
+        "time": "2026-10-25T17:32:20.818485345Z",
+        "status": 200,
+        "durationMs": 20676
+      },
+      {
+        "time": "2026-10-25T17:33:19.651150782Z",
+        "status": 200,
+        "durationMs": 19499
+      },
+      {
+        "time": "2026-10-25T17:34:19.668263084Z",
+        "status": 200,
+        "durationMs": 19539
+      },
+      {
+        "time": "2026-10-25T17:35:20.046281145Z",
+        "status": 200,
+        "durationMs": 19610
+      },
+      {
+        "time": "2026-10-25T17:36:21.967317106Z",
+        "status": 200,
+        "durationMs": 21841
+      },
+      {
+        "time": "2026-10-25T17:37:21.004037094Z",
+        "status": 200,
+        "durationMs": 20864
+      },
+      {
+        "time": "2026-10-25T17:38:19.857538052Z",
+        "status": 200,
+        "durationMs": 19717
+      },
+      {
+        "time": "2026-10-25T17:39:20.376943719Z",
+        "status": 200,
+        "durationMs": 20159
+      },
+      {
+        "time": "2026-10-25T17:40:20.692024715Z",
+        "status": 200,
+        "durationMs": 20532
+      },
+      {
+        "time": "2026-10-25T17:41:21.769074933Z",
+        "status": 200,
+        "durationMs": 21626
+      },
+      {
+        "time": "2026-10-25T17:42:21.623461562Z",
+        "status": 200,
+        "durationMs": 21496
+      },
+      {
+        "time": "2026-10-25T17:43:19.535189330Z",
+        "status": 200,
+        "durationMs": 19393
+      },
+      {
+        "time": "2026-10-25T17:44:26.077378517Z",
+        "status": 200,
+        "durationMs": 25582
+      }
+    ],
+    "latestDeployment": {
+      "id": "1cc26b1b-3f87-477d-99fb-5502a40a90ab",
+      "status": "SLEEPING",
+      "createdAt": "2026-10-26T07:59:46.007Z",
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "feat: highlight Google product margins and bottom totals",
+        "commitHash": "0127e944d4346813758206ebb266dc73fd2e5ddd",
+        "branch": "codex/google-daily-d1-d7"
+      }
+    }
+  },
+  "observedSchedules": [
+    {
+      "key": "prod-cafe24",
+      "anchor": "2026-10-24T17:00:00+00:00",
+      "paused": false,
+      "cadence": 1,
+      "dayOffset": 1
+    },
+    {
+      "key": "prod-google",
+      "anchor": "2026-10-30T17:01:00+00:00",
+      "paused": true,
+      "cadence": 7,
+      "dayOffset": 1
+    },
+    {
+      "key": "prod-google-daily",
+      "anchor": "2026-10-26T17:01:00+00:00",
+      "paused": false,
+      "cadence": 1,
+      "dayOffset": 1
+    },
+    {
+      "key": "prod-google-recheck-d7",
+      "anchor": "2026-10-26T17:04:00+00:00",
+      "paused": false,
+      "cadence": 1,
+      "dayOffset": 7
+    },
+    {
+      "key": "prod-meta",
+      "anchor": "2026-10-30T17:02:00+00:00",
+      "paused": false,
+      "cadence": 7,
+      "dayOffset": 1
+    },
+    {
+      "key": "prod-meta-daily",
+      "anchor": "2026-10-25T17:03:00+00:00",
+      "paused": false,
+      "cadence": 1,
+      "dayOffset": 1
+    }
+  ],
+  "laterManualMetaRun": {
+    "id": "8ea43e8f-c6c2-4579-ae1f-71a37d363909",
+    "status": "SUCCEEDED",
+    "to_date": "2026-10-25",
+    "trigger": "MANUAL",
+    "from_date": "2026-10-25",
+    "started_at": "2026-10-26T00:54:05.788+00:00",
+    "finished_at": "2026-10-26T00:54:52.657+00:00",
+    "request_key": "storefront-d4f8526f-1415-4fba-827f-8f861106fdb3",
+    "rows_fetched": 756,
+    "attempt_count": 1,
+    "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+    "rows_published": 756,
+    "safe_error_code": null
+  },
+  "interpretation": {
+    "cafeStepCount": "44 resumable chunks; 43 partial progress responses and one final completion, not 44 failed retries",
+    "metaScheduledUsd": "3928.17",
+    "metaCurrentUsd": "3929.48",
+    "currentCoverageChangedByLaterManualRun": true,
+    "manualRunsCountedAsScheduled": false,
+    "googleOldWeeklyPausedNotFailure": true,
+    "googleNewKinds": "Daily D-1 and daily recheck of D-7 one day, each one unit, first2026-10-27",
+    "googleFinalAcceptanceCriteria": "Refer to latest approved Google change records; obsolete weekly-two-success criterion not applied",
+    "existingCafeMappingWarnings": "6 unmatched rows, collection succeeded; costs/mappings untouched"
+  },
+  "changesThisHeartbeat": {
+    "productionWrites": 0,
+    "providerRequests": 0,
+    "credentialOperations": 0,
+    "deployments": 0,
+    "scheduleWrites": 0,
+    "readOnlySql": true,
+    "existingFollowupPromptUpdated": true
+  },
+  "nextExpected": {
+    "cafe24": "2026-10-27 02:00 KST /2026-10-26",
+    "googleDaily": "2026-10-27 02:01 KST /2026-10-26",
+    "metaDaily": "2026-10-27 02:03 KST /2026-10-26",
+    "googleD7": "2026-10-27 02:04 KST /2026-10-20",
+    "metaWeekly": "2026-10-31 02:02 KST /2026-10-24 through2026-10-30"
+  },
+  "limits": [
+    "Product margin and price/coupon rules were not recalculated in this observation",
+    "Current Meta coverage now points to later manual run; original scheduled metrics and successful units retained",
+    "No new final all-channel completion claim",
+    "Google changes were observed, not applied or reverted by this monitor"
+  ]
+}
