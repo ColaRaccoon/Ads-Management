@@ -1,12 +1,12 @@
 {
-  "status": "APPROVED_PENDING_PRODUCTION_APPLY",
+  "status": "APPLIED_PRODUCTION_VERIFIED",
   "reviewedOn": "2026-10-26",
   "notes": [
     "사용자 확인: 현재 자사몰 두줄무릎보호대는 1+1만 판매하며 주문수량 1은 1+1 한 세트다.",
-    "Google 전용 연결안. 기존 공용 상품 원가·카페24 매핑·Meta·쿠팡 데이터는 변경하지 않는다.",
+    "사용자 승인 후 운영 적용한 Google 전용 연결. 기존 공용 상품 원가·카페24 매핑·Meta·쿠팡 데이터는 보존했다.",
     "판매 적용 시작일은 실제 확인한 3행의 첫 날짜다. 과거 단품 판매 전체에 소급하지 않는다.",
-    "캠페인 5개는 이름·기존 상품 규칙을 대조한 연결안이며 사용자가 2026-10-26 운영 적용을 승인했다.",
-    "이 파일 자체는 데이터를 쓰지 않는다. 실제 적용 결과는 운영 조회와 감사 이력으로 확인한다."
+    "캠페인 5개는 이름·기존 상품 규칙을 대조해 사용자가 2026-10-26 승인한 연결로, 시작일 2026-10-23부터 운영 적용했다.",
+    "이 파일 자체는 데이터를 쓰지 않는다. 운영 조회에서 6개 매핑의 승인 필드 일치와 생성 감사 6개·변경자를 확인했다."
   ],
   "salesMappings": [
     {
@@ -66,5 +66,17 @@
       "startDate": "2026-10-23",
       "endDate": null
     }
-  ]
+  ],
+  "productionVerification": {
+    "verifiedOn": "2026-10-26",
+    "releaseSha": "4f6787c8aae0d56e38ce392ec486041a79d53ce5",
+    "deploymentId": "f22b5103-5906-4264-916c-784afddc71cc",
+    "deployedAt": "2026-10-26 15:53 KST",
+    "saleSavedAt": "2026-10-26 15:57 KST",
+    "successfulMigrationCount": 55,
+    "mappingCount": 6,
+    "creationAuditCount": 6,
+    "approvedFieldsMatch": true,
+    "legacyUiRegression": "PASS"
+  }
 }
