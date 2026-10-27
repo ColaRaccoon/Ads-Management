@@ -281,7 +281,8 @@ test("mapping diagnostics retain aliases, legacy IDs and audits with read permis
 test("Google navigation respects data.read while keeping legacy Meta and Coupang entries", () => {
   assert.equal(visibleNavGroups(() => false).length, 0);
   const groups = visibleNavGroups((permission) => permission === "data.read");
-  assert.equal(groups.find((group) => group.label === "Google")?.items.length, 5);
+  assert.equal(groups.find((group) => group.label === "Google")?.items.length, 6);
+  assert.ok(groups.find((group) => group.label === "Google")?.items.some((item) => item.href === "/google/daily-report" && item.requiredPermission === "data.read"));
   assert.equal(groups.find((group) => group.label === "Google")?.items.find((item) => item.href === "/google/profit")?.label, "Google 마진");
   assert.ok(groups.find((group) => group.label === "Google")?.items.some((item) => item.href === "/google/diagnostics" && item.requiredPermission === "data.read"));
   assert.ok(groups.some((group) => group.items.some((item) => item.href === "/dashboard")));
