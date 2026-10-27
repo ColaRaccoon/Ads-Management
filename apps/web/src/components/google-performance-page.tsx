@@ -44,7 +44,6 @@ export function GooglePerformancePage({ view }: { view: GoogleView }) {
   };
   return <section className="page">
     <div className="page-title"><div><h1>{titles[view]}</h1><p>{view === "diagnostics" ? "계산 기준, 수집 상태와 연결 이력을 확인합니다." : "[유튜브] 판매 기준의 Google 성과"}</p></div></div>
-    <nav className="toolbar" aria-label="Google 메뉴" style={{ marginBottom: 16 }}>{(Object.keys(titles) as GoogleView[]).map((key) => <Link className="button" aria-current={key === view ? "page" : undefined} key={key} href={`/google/${key}${query ? `?${query}` : ""}`}>{titles[key]}</Link>)}</nav>
     {view === "diagnostics" ? <details className="google-profit-guidance" open><summary>Google 매출·마진 집계 기준</summary><div className="warning-strip">
       <p>이 화면은 판매 페이지 이름에 따른 운영상 귀속 기준이며 Google Ads 클릭·전환 실적이 아닙니다. 매출은 적용일의 설정 판매가 × 수량입니다. Google 전용 판매 구성을 지정한 경우 그 구성의 판매가·비용을 적용하며, 그 외에는 기존 비용·쿠폰 규칙을 따릅니다.</p>
       <p>기존 Meta 집계에도 같은 판매가 포함될 수 있습니다. Meta와 Google 매출·마진을 더하면 중복될 수 있으며, 자사몰 통합 이익은 <Link href="/storefront">자사몰 통합</Link>에서 확인하세요.</p>
