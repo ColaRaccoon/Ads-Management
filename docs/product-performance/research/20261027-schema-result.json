@@ -1,0 +1,87 @@
+[
+  {
+    "table_schema": "meta_ads",
+    "table_name": "cafe24_order_lines",
+    "columns": "id:uuid, upload_batch_id:uuid, row_number:integer, source_row_hash:character, order_line_key:text, order_no:text, line_order_no:text, product_no:text, product_name:text, option_name:text, quantity:numeric, sale_price_krw:numeric, total_paid_krw:numeric, payment_method:text, ordered_at:timestamp without time zone, order_date:date, product_id:uuid, cafe24_product_rule_id:uuid, match_source:USER-DEFINED, validation_status:USER-DEFINED, validation_errors:jsonb, import_version:integer, is_current:boolean, superseded_by_order_line_id:uuid, raw_row:jsonb, created_at:timestamp without time zone, total_order_krw:numeric, connection_id:uuid, sync_run_id:uuid, source:USER-DEFINED, provider_updated_at:timestamp with time zone, total_paid_input_source:character varying, provider_payment_codes:jsonb, provider_coupon_signal:boolean, actual_order_price_krw:numeric, actual_payment_krw:numeric, actual_shipping_fee_krw:numeric, initial_order_price_krw:numeric, initial_payment_krw:numeric, initial_shipping_fee_krw:numeric"
+  },
+  {
+    "table_schema": "meta_ads",
+    "table_name": "coupang_ad_metrics",
+    "columns": "id:uuid, upload_batch_id:uuid, row_number:integer, source_row_hash:character, ad_metric_key:text, metric_date:date, campaign_name:text, ad_group_name:text, ad_execution_option_id:text, ad_execution_product_name:text, conversion_option_id:text, conversion_product_name:text, impressions:bigint, clicks:integer, ad_spend_krw:numeric, total_orders_1d:integer, direct_orders_1d:integer, indirect_orders_1d:integer, total_conversion_sales_1d_krw:numeric, direct_conversion_sales_1d_krw:numeric, indirect_conversion_sales_1d_krw:numeric, total_sales_quantity_1d:numeric, direct_sales_quantity_1d:numeric, indirect_sales_quantity_1d:numeric, spend_product_id:uuid, spend_product_rule_id:uuid, conversion_product_id:uuid, conversion_product_rule_id:uuid, spend_match_source:USER-DEFINED, conversion_match_source:USER-DEFINED, validation_status:USER-DEFINED, validation_errors:jsonb, import_version:integer, is_current:boolean, raw_row:jsonb, created_at:timestamp without time zone, ad_name:text"
+  },
+  {
+    "table_schema": "meta_ads",
+    "table_name": "coupang_products",
+    "columns": "id:uuid, standard_name:text, display_name:text, sort_order:integer, is_active:boolean, created_at:timestamp without time zone, updated_at:timestamp without time zone, group_id:uuid"
+  },
+  {
+    "table_schema": "meta_ads",
+    "table_name": "coupang_sale_lines",
+    "columns": "id:uuid, upload_batch_id:uuid, row_number:integer, source_row_hash:character, sale_line_key:text, sale_date:date, option_id:text, option_name:text, product_name:text, registered_product_id:text, category:text, sale_method:text, sales_krw:numeric, order_count:integer, sales_quantity:numeric, total_sales_krw:numeric, total_sales_quantity:numeric, cancel_amount_krw:numeric, cancel_quantity:numeric, instant_cancel_quantity:numeric, net_sales_krw:numeric, coupang_product_id:uuid, coupang_product_rule_id:uuid, match_source:USER-DEFINED, validation_status:USER-DEFINED, validation_errors:jsonb, import_version:integer, is_current:boolean, raw_row:jsonb, created_at:timestamp without time zone"
+  },
+  {
+    "table_schema": "meta_ads",
+    "table_name": "google_campaign_daily_costs",
+    "columns": "id:uuid, connection_id:uuid, metric_date:date, campaign_id:character varying, campaign_name:character varying, channel_type:character varying, cost_micros:bigint, impressions:bigint, clicks:bigint, conversion_count:numeric, conversion_value:numeric, source:USER-DEFINED, sync_run_id:uuid, fetched_at:timestamp with time zone, version:integer, is_current:boolean"
+  },
+  {
+    "table_schema": "meta_ads",
+    "table_name": "google_performance_mappings",
+    "columns": "id:uuid, kind:character varying, connection_id:uuid, identity_key:character varying, campaign_id:character varying, product_no:character varying, option_name:character varying, product_id:uuid, start_date:date, end_date:date, created_at:timestamp with time zone, updated_at:timestamp with time zone, option_scope:character varying, sale_price_krw_override:numeric, product_cost_krw_override:numeric, shipping_krw_override:numeric, extra_cost_krw_override:numeric, sale_unit_label:character varying"
+  },
+  {
+    "table_schema": "meta_ads",
+    "table_name": "meta_adset_daily_metrics",
+    "columns": "id:uuid, upload_batch_id:uuid, upload_row_id:uuid, meta_adset_id:uuid, metric_date:date, date_start:date, date_end:date, adset_name:text, adset_name_key:text, delivery_status:text, attribution_setting:text, result_count:integer, result_indicator:text, reach:integer, frequency:numeric, cost_per_result_usd:numeric, adset_budget_label:text, adset_budget_type:text, spend_usd:numeric, end_status:text, start_date:date, impressions:bigint, cpm_usd:numeric, link_clicks:integer, shop_clicks:integer, cpc_link_usd:numeric, ctr_link_pct:numeric, clicks_all:integer, ctr_all_pct:numeric, cpc_all_usd:numeric, landing_page_views:integer, cost_per_landing_page_view_usd:numeric, product_id:uuid, stage:USER-DEFINED, product_match_source:USER-DEFINED, stage_match_source:USER-DEFINED, product_match_rule_id:uuid, import_version:integer, is_current:boolean, superseded_by_metric_id:uuid, raw_row:jsonb, created_at:timestamp without time zone, updated_at:timestamp without time zone, connection_id:uuid, sync_run_id:uuid, source:USER-DEFINED, source_revision:character varying, action_report_time:character varying, attribution_windows:ARRAY, metric_unavailable_reasons:jsonb, current_metadata:jsonb, metadata_observed_at:timestamp with time zone, purchase_count:integer, purchase_value_usd:numeric"
+  },
+  {
+    "table_schema": "meta_ads",
+    "table_name": "products",
+    "columns": "id:uuid, code:text, name:text, display_name:text, sku:text, sort_order:integer, is_active:boolean, created_at:timestamp without time zone, updated_at:timestamp without time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_campaign_daily_costs",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_excel_uploads",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "canonical_sales_units",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "daily_fake_purchases",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "daily_sales_unit_profits",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "daily_store_summaries",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "order_items",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "order_sync_states",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "products",
+    "columns": "id:text, payload:jsonb, payload_hash:text, updated_at:timestamp with time zone"
+  }
+]

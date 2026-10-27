@@ -1,5 +1,5 @@
 -- Apply after the Google D-1/D-7 API release and five active definitions are ready.
--- Private scheduler metadata only, plus an additive Google source-policy window.
+-- Private scheduler metadata only. Apply production-google-initial-policy.sql first.
 -- No credentials, existing policies, collected rows, other schedules or cron jobs change.
 BEGIN;
 SET LOCAL lock_timeout='1s';
@@ -19,8 +19,9 @@ DO $guard$ BEGIN
       AND NOT prosecdef AND proconfig=ARRAY['search_path=""']
       AND md5(regexp_replace(prosrc,'[[:space:]]','','g'))='d28b83475ad2cf23610603107d143acd')
    OR (SELECT count(*) FROM pg_constraint WHERE conrelid='daily_data_sync_prod_ops.schedules'::regclass AND conname IN ('schedules_account_cadence','schedules_provider_cadence','schedules_scope_v2','schedules_pkey'))<>4
-   OR (SELECT count(*) FROM meta_ads.source_policies WHERE connection_id='21b811a6-b9d7-44f5-8167-ce40198947b5')<>1
+   OR (SELECT count(*) FROM meta_ads.source_policies WHERE connection_id='21b811a6-b9d7-44f5-8167-ce40198947b5')<>2
    OR NOT EXISTS(SELECT 1 FROM meta_ads.source_policies WHERE connection_id='21b811a6-b9d7-44f5-8167-ce40198947b5' AND data_kind='GOOGLE_CAMPAIGN' AND primary_source='API' AND from_date='2026-10-23' AND to_date IS NULL AND version=1)
+   OR NOT EXISTS(SELECT 1 FROM meta_ads.source_policies WHERE connection_id='21b811a6-b9d7-44f5-8167-ce40198947b5' AND data_kind='GOOGLE_CAMPAIGN' AND primary_source='API' AND from_date='2026-10-20' AND to_date='2026-10-23' AND version=2)
  THEN RAISE EXCEPTION 'GOOGLE_DAILY_UPGRADE_GUARD'; END IF;
 END $guard$;
 CREATE TEMP TABLE google_daily_preserve ON COMMIT DROP AS SELECT
@@ -45,17 +46,6 @@ ALTER TABLE daily_data_sync_prod_ops.schedules ADD CONSTRAINT schedules_account_
 INSERT INTO daily_data_sync_prod_ops.schedules(key,connection_id,provider,anchor_at,cadence_days,window_minutes,paused,day_offset) VALUES
  ('prod-google-daily','21b811a6-b9d7-44f5-8167-ce40198947b5','GOOGLE','2026-10-26T17:01:00Z',1,90,false,1),
  ('prod-google-recheck-d7','21b811a6-b9d7-44f5-8167-ce40198947b5','GOOGLE','2026-10-26T17:04:00Z',1,90,false,7);
--- The first three D-7 days precede the old API source boundary. Add only the
--- missing closed interval; preserve the original 10/23-onward policy/version.
-SELECT id FROM meta_ads.source_connections WHERE id='21b811a6-b9d7-44f5-8167-ce40198947b5' FOR UPDATE;
-WITH added AS (
- INSERT INTO meta_ads.source_policies(id,connection_id,data_kind,from_date,to_date,primary_source,version,reason)
- VALUES(gen_random_uuid(),'21b811a6-b9d7-44f5-8167-ce40198947b5','GOOGLE_CAMPAIGN','2026-10-20','2026-10-23','API',2,'GOOGLE_DAILY_D7_INITIAL_WINDOW') RETURNING id
-)
-INSERT INTO meta_ads.security_audit_events(id,actor_type,action,target_type,target_id,result,after_json)
-SELECT gen_random_uuid(),'SYSTEM','SOURCE_POLICY_CHANGED','SOURCE_POLICY',id::text,'SUCCESS',
- jsonb_build_object('connectionId','21b811a6-b9d7-44f5-8167-ce40198947b5','fromDate','2026-10-20','toDateExclusive','2026-10-23','version',2,'reason','USER_REQUEST_GOOGLE_DAILY_D1_D7_20261026') FROM added;
-
 CREATE OR REPLACE FUNCTION daily_data_sync_prod_ops.reap() RETURNS void
 LANGUAGE plpgsql SECURITY INVOKER SET search_path='' AS $fn$
 DECLARE a daily_data_sync_prod_ops.attempts; r record; b jsonb; result_state text; code text;
@@ -105,7 +95,7 @@ DO $verify$ BEGIN
     (SELECT jsonb_agg((to_jsonb(s)-'day_offset') || CASE WHEN key='prod-google' THEN '{"paused":false}'::jsonb ELSE '{}'::jsonb END ORDER BY key)
       FROM daily_data_sync_prod_ops.schedules s WHERE key NOT IN ('prod-google-daily','prod-google-recheck-d7'))
  OR (SELECT policies FROM google_daily_preserve) IS DISTINCT FROM
-    (SELECT jsonb_agg(to_jsonb(p) ORDER BY id) FROM meta_ads.source_policies p WHERE reason<>'GOOGLE_DAILY_D7_INITIAL_WINDOW')
+    (SELECT jsonb_agg(to_jsonb(p) ORDER BY id) FROM meta_ads.source_policies p)
  OR (SELECT google_rows FROM google_daily_preserve) IS DISTINCT FROM
     (SELECT jsonb_agg(to_jsonb(g) ORDER BY id) FROM meta_ads.google_campaign_daily_costs g)
  OR (SELECT jobs FROM google_daily_preserve) IS DISTINCT FROM

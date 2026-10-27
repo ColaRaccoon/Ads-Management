@@ -1,0 +1,8 @@
+{
+  "status": "NOT_MEASURED",
+  "reason": "Read-only aggregate query canceled by configured 20s statement_timeout",
+  "sqlState": "57014",
+  "httpStatus": 400,
+  "rowsChanged": 0,
+  "coverageDatesAndExactCountsVerified": false
+}

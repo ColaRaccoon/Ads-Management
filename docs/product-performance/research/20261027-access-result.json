@@ -1,0 +1,137 @@
+[
+  {
+    "schema": "meta_ads",
+    "relation": "cafe24_order_lines",
+    "estimated_rows": 38109,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": true,
+    "runtime_any_column_select": true
+  },
+  {
+    "schema": "meta_ads",
+    "relation": "coupang_ad_metrics",
+    "estimated_rows": 45398,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": true,
+    "runtime_any_column_select": true
+  },
+  {
+    "schema": "meta_ads",
+    "relation": "coupang_products",
+    "estimated_rows": 118,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": true,
+    "runtime_any_column_select": true
+  },
+  {
+    "schema": "meta_ads",
+    "relation": "coupang_sale_lines",
+    "estimated_rows": 37886,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": true,
+    "runtime_any_column_select": true
+  },
+  {
+    "schema": "meta_ads",
+    "relation": "google_campaign_daily_costs",
+    "estimated_rows": -1,
+    "rls_enabled": true,
+    "runtime_schema_usage": true,
+    "runtime_table_select": true,
+    "runtime_any_column_select": true
+  },
+  {
+    "schema": "meta_ads",
+    "relation": "meta_adset_daily_metrics",
+    "estimated_rows": 5337,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": true,
+    "runtime_any_column_select": true
+  },
+  {
+    "schema": "meta_ads",
+    "relation": "products",
+    "estimated_rows": -1,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": true,
+    "runtime_any_column_select": true
+  },
+  {
+    "schema": "public",
+    "relation": "ad_campaign_daily_costs",
+    "estimated_rows": 19921,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  },
+  {
+    "schema": "public",
+    "relation": "ad_excel_uploads",
+    "estimated_rows": 1019,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  },
+  {
+    "schema": "public",
+    "relation": "canonical_sales_units",
+    "estimated_rows": 99,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  },
+  {
+    "schema": "public",
+    "relation": "daily_fake_purchases",
+    "estimated_rows": 48,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  },
+  {
+    "schema": "public",
+    "relation": "daily_sales_unit_profits",
+    "estimated_rows": 4399,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  },
+  {
+    "schema": "public",
+    "relation": "daily_store_summaries",
+    "estimated_rows": 299,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  },
+  {
+    "schema": "public",
+    "relation": "order_items",
+    "estimated_rows": 115298,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  },
+  {
+    "schema": "public",
+    "relation": "order_sync_states",
+    "estimated_rows": -1,
+    "rls_enabled": false,
+    "runtime_schema_usage": true,
+    "runtime_table_select": false,
+    "runtime_any_column_select": false
+  }
+]

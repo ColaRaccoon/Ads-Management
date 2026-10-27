@@ -41,6 +41,13 @@ test("real PostgreSQL upgrade preserves old jobs/policies and validates D-1/D-7 
  VALUES('21b811a6-b9d7-44f5-8167-ce40198947b5','GOOGLE','1391592099','default','Synthetic Google','KRW','Asia/Seoul','READY',true,now());
  INSERT INTO meta_ads.source_policies(id,connection_id,data_kind,from_date,primary_source,version,reason)
  VALUES(gen_random_uuid(),'21b811a6-b9d7-44f5-8167-ce40198947b5','GOOGLE_CAMPAIGN','2026-10-23','API',1,'SYNTHETIC_BASELINE');`);
+ // Reproduce the existing production runtime role and its RLS policies locally.
+ sql(`DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='meta_ads_prod_runtime') THEN CREATE ROLE meta_ads_prod_runtime NOLOGIN; END IF; END $$;
+ GRANT USAGE ON SCHEMA meta_ads TO meta_ads_prod_runtime;
+ GRANT SELECT,INSERT,UPDATE ON ALL TABLES IN SCHEMA meta_ads TO meta_ads_prod_runtime;
+ CREATE POLICY source_connections_meta_ads_prod_runtime ON meta_ads.source_connections FOR ALL TO meta_ads_prod_runtime USING(true) WITH CHECK(true);
+ CREATE POLICY source_policies_meta_ads_prod_runtime ON meta_ads.source_policies FOR ALL TO meta_ads_prod_runtime USING(true) WITH CHECK(true);`);
+ sql(`SET ROLE meta_ads_prod_runtime;\n${read("production-google-initial-policy.sql")}`);
  // Exact reviewed production SQL, including preflight and preservation guards.
  sql(read("production-google-daily-offsets.sql"));
  sql(`DO $$ BEGIN

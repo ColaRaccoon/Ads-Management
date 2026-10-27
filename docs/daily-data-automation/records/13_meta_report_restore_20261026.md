@@ -39,6 +39,15 @@ LPV당 비용은 동일 행의 광고비 / LPV로 계산한다. 영상 재생률
 
 기존 `production-source-setup.Dockerfile`은 API만 교체한다. 신규 `deploy/cloud/production-reporting.Dockerfile`은 동일 C7 OS 기준 이미지에서 API와 Next.js 16.3.8을 함께 빌드한다. 기존 소스 준비 런처, 비루트 실행, 런타임 폐쇄 검사, 컴파일 결과 변경 허용목록을 유지한다. 허용목록의 `reporting` 프로필에는 이번 API 변경 9개 파일만 추가한다.
 
-운영 반영 전 Railway 배포 확인이 필요하다. 승인 후 고정 커밋과 신규 Dockerfile을 배포하고, 2026-10-25 Meta 연결을 정상 수집 경로로 재수집한 뒤 두 화면과 운영 수집 결과를 확인한다. 이전 날짜의 누락 값은 재수집 전까지 비어 있다. 테스트/읽기 전용 검증은 운영 반영이나 이력 재수집 완료를 의미하지 않는다.
+사용자가 Railway에서 배포를 적용한 뒤 운영 반영과 2026-10-25 재수집을 완료했다. 이전 날짜의 누락 값은 해당 날짜를 재수집하기 전까지 비어 있다.
+
+- 운영 코드: `fc9b89cc084e4e3e519cce5916366aaa2a8b4a65`.
+- Railway 배포: `5aa90de5-d42e-49ff-aed2-79f92ebe096a`, 상태 `SUCCESS`. 신규 Dockerfile 적용과 운영 `/backend-api/health/live`의 `live` 응답을 확인했다.
+- 운영 화면의 정상 수동 수집 경로로 2026-10-25 하루를 재수집했다. 완료 시각은 2026-10-26 09:54:51 KST이며 광고/광고세트 모두 1/1일 성공, 미수집·실패·진행 0일이다.
+- Daily Report와 Meta Ads를 새로 열어 활성 소재 58개, 공통 15개 표시 항목을 대조했다. 불일치 0개. CPA에 달러 표시가 없고 집계일수, API ROAS, 영상 25/50/75/100% 재생률 표시를 확인했다.
+- 대표 소재 풀업바 `경빈0001`: 집계일수 55일, 광고비 $645.18, 구매 58건, CPA 14,735원, ROAS 291.44%. 양쪽 값이 일치한다.
+- 광고세트 화면의 활성 12행 모두 LPV가 표시된다. 예: `260723_풀업바` 3,644회.
+- API에서 지원하지 않는 광고별 3초 재생률은 `-`를 유지한다. 10월 24일 비교 데이터의 신규 영상 지표는 이번 재수집 범위 밖이므로 비어 있다.
+- 실제 화면 증빙과 대조 결과는 git에서 제외된 `reports/2026-10-26-meta-api-restore/production-*.png`, `production-verification.json`, `production-lpv-verification.json`에 저장했다.
 
 운영 배포 전 기준: `2db2aee0b12f793e0bfbd9c0554b8503dc4af7a8`, Dockerfile `deploy/cloud/production-source-setup.Dockerfile`. 이번 작업에서는 데이터 삭제·마이그레이션·스케줄 변경을 하지 않는다.
