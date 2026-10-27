@@ -9,10 +9,11 @@ import { apiGet, apiErrorMessage } from "@/lib/api";
 import { emptyGoogleDateFilters, googleDateFilterError, googleFilterQuery, googleYesterdayFilters, readGoogleDateFilters, type GoogleDateFilters } from "@/lib/google-date-filters";
 import type { GoogleOptions } from "@/types/google";
 import { GoogleMappingEditor } from "./google-mapping-editor";
+import { GoogleMappingDiagnostics } from "./google-mapping-diagnostics";
 import { GoogleReport } from "./google-report";
 
-export type GoogleView = "dashboard" | "campaigns" | "mappings" | "profit";
-const titles = { dashboard: "Google 요약", campaigns: "Google 캠페인", mappings: "Google 상품 연결", profit: "Google 마진" };
+export type GoogleView = "dashboard" | "campaigns" | "mappings" | "profit" | "diagnostics";
+const titles = { dashboard: "Google 요약", campaigns: "Google 캠페인", mappings: "Google 상품 연결", profit: "Google 마진", diagnostics: "Google 데이터 점검" };
 type Filters = GoogleDateFilters;
 
 export function GooglePerformancePage({ view }: { view: GoogleView }) {
@@ -41,16 +42,16 @@ export function GooglePerformancePage({ view }: { view: GoogleView }) {
     window.history.replaceState(null, "", `${window.location.pathname}?${nextSearch}${window.location.hash}`);
   };
   return <section className="page">
-    <div className="page-title"><div><h1>{titles[view]}</h1><p>판매 당시 상품명에 [유튜브]가 포함된 카페24 주문행을 Google 독립 성과로 분류합니다.</p></div></div>
+    <div className="page-title"><div><h1>{titles[view]}</h1><p>{view === "diagnostics" ? "계산 기준, 수집 상태와 연결 이력을 확인합니다." : "[유튜브] 판매 기준의 Google 성과"}</p></div></div>
     <nav className="toolbar" aria-label="Google 메뉴" style={{ marginBottom: 16 }}>{(Object.keys(titles) as GoogleView[]).map((key) => <Link className="button" aria-current={key === view ? "page" : undefined} key={key} href={`/google/${key}${query ? `?${query}` : ""}`}>{titles[key]}</Link>)}</nav>
-    <details className="google-profit-guidance" open={view !== "profit"}><summary>Google 매출·마진 집계 기준</summary><div className="warning-strip">
+    {view === "diagnostics" ? <details className="google-profit-guidance" open><summary>Google 매출·마진 집계 기준</summary><div className="warning-strip">
       <p>이 화면은 판매 페이지 이름에 따른 운영상 귀속 기준이며 Google Ads 클릭·전환 실적이 아닙니다. 매출은 적용일의 설정 판매가 × 수량입니다. Google 전용 판매 구성을 지정한 경우 그 구성의 판매가·비용을 적용하며, 그 외에는 기존 비용·쿠폰 규칙을 따릅니다.</p>
       <p>기존 Meta 집계에도 같은 판매가 포함될 수 있습니다. Meta와 Google 매출·마진을 더하면 중복될 수 있으며, 자사몰 통합 이익은 <Link href="/storefront">자사몰 통합</Link>에서 확인하세요.</p>
-    </div></details>
+    </div></details> : null}
     {!canRead ? <p className="panel" role="alert">데이터 조회 권한이 없습니다.</p> : null}
     {options.isLoading ? <p className="panel" role="status">Google 조회 설정을 읽고 있습니다.</p> : null}
     {options.isError ? <p className="warning-strip" role="alert">{apiErrorMessage(options.error, "Google 조회 설정을 읽지 못했습니다.")}</p> : null}
-    {canRead && options.data?.enabled === false ? <p className="panel" role="status">Google 독립 성과 기능이 비활성화되어 있습니다. 운영 적용 승인 후 기능을 활성화할 수 있습니다.</p> : null}
+    {canRead && options.data?.enabled === false ? <p className="panel" role="status">Google 성과 기능을 사용할 수 없습니다.</p> : null}
     {canRead && options.data?.enabled && ready ? <>
       <form className="panel" onSubmit={(event) => { event.preventDefault(); apply(filters); }}>
         <div className="toolbar">
@@ -62,10 +63,10 @@ export function GooglePerformancePage({ view }: { view: GoogleView }) {
           <button type="submit" className="button primary">조회</button>
           <button type="button" className="button" onClick={() => apply(googleYesterdayFilters(filters))}>어제</button>
         </div>
-        <p className="field-help">처음 접속하면 한국시간 기준 어제를 자동 조회합니다. URL에 지정한 날짜는 유지합니다. 어제 버튼은 현재 계정·상품 필터를 유지하며 날짜를 한국시간 어제로 바꿉니다. 직접 선택은 최대 92일이며 미수집 일자의 광고비·마진은 미확정입니다. 광고 계정 필터는 광고비 범위를 선택하며 상품 매출의 캠페인별 기여도를 뜻하지 않습니다.</p>
+        {view === "diagnostics" ? <p className="field-help">기본 조회는 한국시간 기준 어제이며 URL의 날짜·필터는 유지합니다. 최대 92일까지 조회할 수 있습니다. 광고 계정 필터는 광고비 범위이며 캠페인별 판매 기여도를 뜻하지 않습니다. 새로고침은 저장된 자료를 다시 읽으며 새 수집을 시작하지 않습니다.</p> : null}
         {dateError ? <p className="field-help" role="alert">{dateError}</p> : null}
       </form>
-      {!appliedDateError ? (view === "mappings" ? <GoogleMappingEditor key={query} options={options.data} query={query} /> : <GoogleReport key={`${view}:${query}`} view={view} query={query} options={options.data} />) : null}
+      {!appliedDateError ? (view === "mappings" ? <GoogleMappingEditor key={query} options={options.data} query={query} /> : <><GoogleReport key={`${view}:${query}`} view={view} query={query} options={options.data} />{view === "diagnostics" ? <GoogleMappingDiagnostics key={`mappings:${query}`} options={options.data} query={query} /> : null}</>) : null}
     </> : null}
   </section>;
 }
