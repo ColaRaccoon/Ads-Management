@@ -23,6 +23,7 @@ import {
 import { Permission, roleLabel } from "@/features/auth/auth-types";
 import { useAuth } from "@/features/auth/use-auth";
 import { DateRangePicker } from "./date-range-picker";
+import { GoogleDateRangePicker } from "./google-date-range-picker";
 
 type NavItem = {
   href: string;
@@ -115,9 +116,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Activity size={18} color="#146c63" />
             <strong>운영 대시보드</strong>
           </div>
-          {!pathname.startsWith("/google/") && <Suspense fallback={<div className="toolbar" />}>
-            <DateRangePicker />
-          </Suspense>}
+          <Suspense fallback={<div className="toolbar" />}>
+            {pathname.startsWith("/google/") ? <GoogleDateRangePicker /> : <DateRangePicker />}
+          </Suspense>
           <div className="account-toolbar">
             <div className="account-summary">
               <strong>{user?.name ?? "사용자"}</strong>
