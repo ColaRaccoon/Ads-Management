@@ -34,6 +34,27 @@ function render(data: GoogleReportResponse, query = "", view: Exclude<GoogleView
   client.clear(); return html;
 }
 
+function productTable(html: string) {
+  const table = html.match(/<table(?:\s[^>]*)?>(.*?)<\/table>/s)?.[1];
+  assert.ok(table, "product performance table is present");
+  return table;
+}
+
+function tableRowValues(html: string, part: "tbody" | "tfoot") {
+  const table = productTable(html);
+  const headers = [...(table.match(/<thead>(.*?)<\/thead>/s)?.[1] ?? "").matchAll(/<th[^>]*>(.*?)<\/th>/gs)].map((cell) => cell[1].replace(/<[^>]*>/g, ""));
+  const section = table.match(new RegExp(`<${part}>(.*?)<\\/${part}>`, "s"))?.[1];
+  assert.ok(section, `${part} exists`);
+  const cells = [...section.matchAll(/<td[^>]*>(.*?)<\/td>/gs)].map((cell) => cell[1].replace(/<[^>]*>/g, ""));
+  return Object.fromEntries(headers.map((header, index) => [header, cells[index]]));
+}
+
+function bottomSummary(html: string) {
+  const index = html.lastIndexOf('aria-label="Google 전체 마진 요약"');
+  assert.ok(index >= 0, "bottom Google margin summary is present");
+  return html.slice(index);
+}
+
 function renderMapping(manage: boolean, mappings: GoogleMappings = { campaignMappings: [], salesMappings: [], audit: [], pagination: { page: 1, pageSize: 50, total: 0 } }, campaignReport?: GoogleReportResponse, settings: { diagnostics?: boolean; canRead?: boolean; query?: string } = {}) {
   const client = new QueryClient();
   const query = settings.query ?? "", canRead = settings.canRead !== false;
@@ -47,7 +68,8 @@ function renderMapping(manage: boolean, mappings: GoogleMappings = { campaignMap
 
 test("profit retains integer server totals and exports while technical details move to diagnostics", () => {
   const html = render({ ...fixture, summary: { ...fixture.summary, adSpendKrwExact: "20000.5" } });
-  for (const value of ["35,000 원", "20,001 원", "35%", "5배", "상품A", "2026-10-25", "현재 페이지 CSV"]) assert.ok(html.includes(value), value);
+  for (const value of ["35,000 원", "20,001 원", "35%", "5배", "상품A", "2026-10-25", "엑셀 출력"]) assert.ok(html.includes(value), value);
+  assert.doesNotMatch(html, /현재 페이지 CSV/);
   assert.ok(!html.includes("35.00%"));
   assert.ok(!html.includes("20,000.5 원"));
   const diagnostics = render(fixture, "", "diagnostics");
@@ -71,7 +93,7 @@ test("incomplete collection does not display a zero or final profit", () => {
     assert.match(html, /마진이 미확정/);
     assert.doesNotMatch(html, /광고비 미수집/);
     assert.ok(html.includes(`href="/google/diagnostics?${query.replaceAll("&", "&amp;")}"`));
-    if (view !== "campaigns") assert.match(html, /google-margin-pending">미확정<\/strong>/);
+    if (view !== "campaigns") assert.match(bottomSummary(html), /미확정/);
   }
   const diagnostics = render(data, query, "diagnostics");
   assert.ok(diagnostics.includes("잠정 / 미확정"));
@@ -107,8 +129,7 @@ test("product footer uses the server total across all pages instead of visible p
   const html = render({ ...fixture, summary: { ...fixture.summary, marginKrw: -123816.197719, adSpendKrwExact: "216456.197719" }, pagination: { page: 1, pageSize: 50, total: 51 } });
   const footer = html.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1];
   assert.ok(footer, "the product table has a total footer");
-  assert.match(footer, /Google 전체 합계/);
-  assert.match(footer, /모든 페이지 포함/);
+  assert.match(footer, /합계/);
   assert.match(footer, /-123,816 원/);
   assert.match(footer, /216,456 원/);
   assert.doesNotMatch(footer, /35,000 원/);
@@ -118,11 +139,11 @@ test("product footer uses the server total across all pages instead of visible p
 test("unknown total margin stays pending in the footer and bottom summary despite calculable product profits", () => {
   const html = render({ ...fixture, summary: { ...fixture.summary, marginKrw: null, calculatedMarginKrw: 35000, calculatedProductsMarginKrw: 35000, complete: false, warningCodes: ["UNALLOCATED_AD_SPEND"] } });
   const footer = html.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1];
-  const bottom = html.slice(html.lastIndexOf('<section class="panel google-profit-total"'));
+  const bottom = bottomSummary(html);
   assert.ok(footer);
-  assert.match(footer, /google-margin-pending">미확정<\/strong>/);
+  assert.equal(tableRowValues(html, "tfoot")["최종 순마진"], "미확정");
   assert.doesNotMatch(footer, /35,000 원/);
-  assert.match(bottom, /최종 마진<\/span><strong class="google-margin-value google-margin-pending">미확정<\/strong>/);
+  assert.match(bottom, /최종 순마진<\/span><strong>미확정<\/strong>/);
   assert.doesNotMatch(bottom, /잠정 마진 합계/);
   assert.match(render({ ...fixture, summary: { ...fixture.summary, marginKrw: null } }, "", "diagnostics"), /잠정 마진 합계: 35,000 원/);
   assert.doesNotMatch(bottom, /google-margin-positive/);
@@ -131,7 +152,7 @@ test("unknown total margin stays pending in the footer and bottom summary despit
 test("product, Google account and storefront filters label totals as the selected scope", () => {
   for (const filter of ["productId=product-1", "connectionId=google-1", "cafe24ConnectionId=cafe24-1"]) {
     const html = render(fixture, `from=2026-10-25&to=2026-10-25&${filter}`);
-    assert.match(html, /<tfoot><tr><td>선택 범위 합계/);
+    assert.equal(tableRowValues(html, "tfoot")["제품"], "선택 범위 합계모든 페이지 포함");
     assert.match(html, /<h2>Google 선택 범위 마진<\/h2>/);
     assert.doesNotMatch(html, /<h2>Google 전체 마진<\/h2>/);
   }
@@ -140,13 +161,44 @@ test("product, Google account and storefront filters label totals as the selecte
 
 test("individual product margins precede the final overall margin without embedded diagnostics", () => {
   const html = render(fixture);
-  const productTable = html.indexOf('aria-label="Google 마진"');
-  assert.ok(productTable >= 0);
-  const bottom = html.lastIndexOf('<section class="panel google-profit-total"');
-  assert.ok(bottom > productTable);
+  const tableIndex = html.indexOf('<table');
+  assert.ok(tableIndex >= 0);
+  const bottom = html.lastIndexOf('aria-label="Google 전체 마진 요약"');
+  assert.ok(bottom > tableIndex);
   assert.match(html.slice(bottom), /<h2>Google 전체 마진<\/h2>/);
-  assert.match(html.slice(bottom), /최종 마진<\/span><strong class="google-margin-value google-margin-positive">35,000 원<\/strong>/);
+  assert.match(html.slice(bottom), /최종 순마진<\/span><strong>35,000 원<\/strong>/);
   assert.ok(html.endsWith("</section>"));
+});
+
+test("Google profit follows Meta's product column order and cost definitions while keeping Google metrics", () => {
+  const html = render(fixture);
+  const cells = tableRowValues(html, "tbody");
+  assert.deepEqual(Object.keys(cells), ["제품", "수량", "매출", "쿠폰 차감", "광고비", "총비용", "쿠폰 적용 전 마진", "최종 순마진", "광고수익률", "판매 1개당 광고비", "마진율", "노출수", "클릭수", "클릭률", "클릭당 비용", "상태"]);
+  assert.equal(cells["총비용"], "65,000 원", "total cost includes sales cost, ad spend and coupon");
+  assert.equal(cells["쿠폰 적용 전 마진"], "40,000 원");
+  assert.equal(cells["최종 순마진"], "35,000 원");
+  assert.doesNotMatch(html, /google-profit-table|google-margin-value|google-profit-total-amount/);
+});
+
+test("zero and negative product profits remain numeric while missing costs keep derived amounts unknown", () => {
+  const cases = [
+    { overrides: { revenueKrw: 0, grossCostKrw: 0, couponDeductionKrw: 0, adSpendKrw: 0, adSpendKrwExact: "0", marginKrw: 0 }, cost: "0 원", before: "0 원", final: "0 원" },
+    { overrides: { revenueKrw: 10000, grossCostKrw: 40000, couponDeductionKrw: 5000, adSpendKrw: 20000, adSpendKrwExact: "20000", marginKrw: -55000 }, cost: "65,000 원", before: "-50,000 원", final: "-55,000 원" },
+    { overrides: { grossCostKrw: null, marginKrw: null, complete: false }, cost: "—", before: "미확정", final: "미확정" },
+    { overrides: { adSpendKrw: null, adSpendKrwExact: null, marginKrw: null, complete: false }, cost: "—", before: "미확정", final: "미확정" },
+    { overrides: { couponDeductionKrw: null, marginKrw: null, complete: false }, cost: "—", before: "40,000 원", final: "미확정" }
+  ];
+  for (const item of cases) {
+    const sample = { ...row, ...item.overrides };
+    const html = render({ ...fixture, products: [sample], summary: { ...fixture.summary, ...item.overrides } });
+    for (const part of ["tbody", "tfoot"] as const) {
+      const cells = tableRowValues(html, part);
+      assert.equal(cells["총비용"], item.cost, `${part} cost`);
+      assert.equal(cells["쿠폰 적용 전 마진"], item.before, `${part} before coupon`);
+      assert.equal(cells["최종 순마진"], item.final, `${part} final`);
+    }
+    assert.ok(bottomSummary(html).includes(`최종 순마진</span><strong>${item.final}</strong>`));
+  }
 });
 
 test("mapping editor renders mutations only with mappings.manage and preserves read-only list", () => {
@@ -228,22 +280,19 @@ test("profit table displays one complete set with the unchanged server revenue",
   const html = render({ ...fixture, products: [setRow], daily: [setRow] });
   assert.ok(html.includes("1+1 세트"));
   assert.ok(html.includes("21,900 원"));
-  assert.match(html, /<td>1<small>1\+1 세트<\/small><\/td>/);
+  assert.equal(tableRowValues(html, "tbody")["수량"], "1");
+  assert.match(html, /title="1\+1 세트"/);
 });
 
 test("Google margin displays server aggregate advertising ratios rather than averaging visible products", () => {
   const product = { ...row, impressions: 1000, clicks: 10, ctr: 0.01, cpcKrw: 2000, costPerSaleKrw: 10000 };
   const summary = { ...fixture.summary, impressions: 9000, clicks: 333, ctr: 0.037, cpcKrw: 123.456789, costPerSaleKrw: 4567.891234 };
   const html = render({ ...fixture, products: [product], summary });
-  const table = html.match(/<table aria-label="Google 마진">(.*?)<\/table>/s)?.[1];
-  assert.ok(table);
-  const body = table.match(/<tbody>(.*?)<\/tbody>/s)?.[1];
-  const footer = table.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1];
-  assert.ok(body);
-  assert.ok(footer);
-  assert.match(body, /<td>1,000<\/td><td>10<\/td><td>1%<\/td><td>2,000 원<\/td><td>10,000 원<\/td>/);
-  assert.match(footer, /<td>9,000<\/td><td>333<\/td><td>4%<\/td><td>123 원<\/td><td>4,568 원<\/td>/);
-  const bottom = html.slice(html.lastIndexOf('<section class="panel google-profit-total"'));
+  const body = tableRowValues(html, "tbody");
+  const footer = tableRowValues(html, "tfoot");
+  for (const [header, value] of Object.entries({ "노출수": "1,000", "클릭수": "10", "클릭률": "1%", "클릭당 비용": "2,000 원", "판매 1개당 광고비": "10,000 원" })) assert.equal(body[header], value, header);
+  for (const [header, value] of Object.entries({ "노출수": "9,000", "클릭수": "333", "클릭률": "4%", "클릭당 비용": "123 원", "판매 1개당 광고비": "4,568 원" })) assert.equal(footer[header], value, header);
+  const bottom = bottomSummary(html);
   assert.match(bottom, /노출수 \/ 클릭수<\/span><strong>9,000 \/ 333<\/strong>/);
   assert.match(bottom, /클릭률<\/span><strong>4%<\/strong>/);
   assert.match(bottom, /클릭당 비용<\/span><strong>123 원<\/strong>/);
@@ -253,13 +302,13 @@ test("Google margin displays server aggregate advertising ratios rather than ave
 test("absent legacy or null advertising metrics remain unknown instead of becoming zero", () => {
   for (const metrics of [{}, { impressions: null, clicks: null, ctr: null, cpcKrw: null, costPerSaleKrw: null }]) {
     const html = render({ ...fixture, products: [{ ...row, ...metrics }], summary: { ...fixture.summary, ...metrics } });
-    const table = html.match(/<table aria-label="Google 마진">(.*?)<\/table>/s)?.[1];
-    assert.ok(table);
-    for (const section of [table.match(/<tbody>(.*?)<\/tbody>/s)?.[1], table.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1]]) {
-      assert.ok(section);
-      assert.match(section, /<td>20,000 원<\/td>(?:<td>—<\/td>){5}<td>5배<\/td>/);
+    for (const part of ["tbody", "tfoot"] as const) {
+      const cells = tableRowValues(html, part);
+      for (const header of ["노출수", "클릭수", "클릭률", "클릭당 비용", "판매 1개당 광고비"]) assert.equal(cells[header], "—", `${part} ${header}`);
+      assert.equal(cells["광고비"], "20,000 원");
+      assert.equal(cells["광고수익률"], "5배");
     }
-    const bottom = html.slice(html.lastIndexOf('<section class="panel google-profit-total"'));
+    const bottom = bottomSummary(html);
     assert.match(bottom, /노출수 \/ 클릭수<\/span><strong>— \/ —<\/strong>/);
     for (const label of ["클릭률", "클릭당 비용", "판매 1개당 광고비"]) {
       assert.ok(bottom.includes(`${label}</span><strong>—</strong>`), label);
@@ -276,7 +325,7 @@ test("Google Ads conversion metrics are disclosed as uncollected and sale cost u
   assert.match(html, /Google Ads의 전환당 비용\(CPA\)과 다릅니다/);
   const operational = render(fixture);
   assert.doesNotMatch(operational, /Google Ads 전환수|Google Ads의 전환당 비용/);
-  const headers = operational.match(/<table aria-label="Google 마진"><thead>(.*?)<\/thead>/s)?.[1];
+  const headers = productTable(operational).match(/<thead>(.*?)<\/thead>/s)?.[1];
   assert.ok(headers);
   assert.match(headers, /판매 1개당 광고비/);
   assert.doesNotMatch(headers, /전환가치|전환수|CPA/);

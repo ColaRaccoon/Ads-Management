@@ -14,6 +14,8 @@ export type XlsxCellStyle =
   | "TotalUsd"
   | "TotalPercent"
   | "TotalRatio"
+  | "Percent0"
+  | "TotalPercent0"
   | "Percent1";
 
 export type XlsxCellFill =
@@ -446,6 +448,9 @@ function numberFormatId(style: XlsxCellStyle) {
       return 166;
     case "Percent1":
       return 167;
+    case "Percent0":
+    case "TotalPercent0":
+      return 9;
     case "Text":
     case "TotalText":
       return 49;
