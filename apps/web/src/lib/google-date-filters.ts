@@ -32,7 +32,7 @@ export function readGoogleDateFilters(search: string, now = new Date()): GoogleD
 }
 
 export function googleDateFilterError(values: GoogleDateFilters): string | null {
-  if (!values.from || !values.to) return "시작일과 종료일을 모두 선택하거나 어제 버튼을 눌러 주세요.";
+  if (!values.from || !values.to) return "달력에서 날짜를 선택해 주세요.";
   for (const value of [values.from, values.to]) {
     const date = new Date(`${value}T00:00:00.000Z`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) {

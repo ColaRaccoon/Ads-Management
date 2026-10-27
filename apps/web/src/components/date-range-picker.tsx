@@ -10,6 +10,7 @@ import {
   endOfWeek,
   format,
   isSameMonth,
+  isValid,
   parseISO,
   startOfMonth,
   startOfWeek,
@@ -33,8 +34,38 @@ export function DateRangePicker() {
   const from = params.get("from") ?? fallback.from;
   const to = params.get("to") ?? fallback.to;
   const hasQueryRange = Boolean(params.get("from") && params.get("to"));
+
+  useEffect(() => {
+    if (!hasQueryRange) {
+      const nextRange = defaultRangeForPath(pathname);
+      const next = new URLSearchParams(searchKey);
+      next.set("from", nextRange.from);
+      next.set("to", nextRange.to);
+      router.replace(`?${next.toString()}`);
+      return;
+    }
+    window.dispatchEvent(new Event("rangechange"));
+  }, [hasQueryRange, pathname, router, searchKey]);
+
+  return <DateRangeControl value={{ from, to }} onChange={(range) => {
+    const next = new URLSearchParams(params.toString());
+    next.set("from", range.from);
+    next.set("to", range.to);
+    router.push(`?${next.toString()}`);
+  }} onRefresh={() => router.refresh()} />;
+}
+
+type DateRangeControlProps = {
+  value: DateRange;
+  onChange: (range: DateRange) => void;
+  onRefresh?: () => void;
+};
+
+export function DateRangeControl({ value: { from, to }, onChange, onRefresh }: DateRangeControlProps) {
+  const validRange = isValid(parseISO(from)) && isValid(parseISO(to));
+  const calendarDate = validRange ? to : presetRange(1).to;
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [viewMonth, setViewMonth] = useState(() => startOfMonth(parseISO(to)));
+  const [viewMonth, setViewMonth] = useState(() => startOfMonth(parseISO(calendarDate)));
   const [dragAnchor, setDragAnchor] = useState<string | null>(null);
   const [hoverDate, setHoverDate] = useState<string | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
@@ -50,18 +81,6 @@ export function DateRangePicker() {
     const end = endOfWeek(endOfMonth(viewMonth), { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
   }, [viewMonth]);
-
-  useEffect(() => {
-    if (!hasQueryRange) {
-      const nextRange = defaultRangeForPath(pathname);
-      const next = new URLSearchParams(searchKey);
-      next.set("from", nextRange.from);
-      next.set("to", nextRange.to);
-      router.replace(`?${next.toString()}`);
-      return;
-    }
-    window.dispatchEvent(new Event("rangechange"));
-  }, [hasQueryRange, pathname, router, searchKey]);
 
   useEffect(() => {
     if (!calendarOpen) {
@@ -93,21 +112,13 @@ export function DateRangePicker() {
     };
   }, [calendarOpen]);
 
-  const setRange = (nextFrom: string, nextTo: string) => {
-    const nextRange = normalizeRange(nextFrom, nextTo);
-    const next = new URLSearchParams(params.toString());
-    next.set("from", nextRange.from);
-    next.set("to", nextRange.to);
-    router.push(`?${next.toString()}`);
-  };
-
   const openCalendar = () => {
-    setViewMonth(startOfMonth(parseISO(to)));
+    setViewMonth(startOfMonth(parseISO(calendarDate)));
     setCalendarOpen((isOpen) => !isOpen);
   };
 
   const applyRange = (range: DateRange) => {
-    setRange(range.from, range.to);
+    onChange(range);
     dragAnchorRef.current = null;
     setDragAnchor(null);
     setHoverDate(null);
@@ -150,7 +161,7 @@ export function DateRangePicker() {
           type="button"
           onClick={() => {
             const next = presetRange(preset.days);
-            setRange(next.from, next.to);
+            applyRange(next);
           }}
         >
           {preset.label}
@@ -165,7 +176,7 @@ export function DateRangePicker() {
           onClick={openCalendar}
         >
           <CalendarDays size={16} />
-          <span>{formatRangeLabel(currentRange)}</span>
+          <span>{validRange ? formatRangeLabel(currentRange) : "날짜 선택"}</span>
         </button>
         {calendarOpen ? (
           <div className="date-popover" role="dialog" aria-label="날짜 선택">
@@ -240,9 +251,9 @@ export function DateRangePicker() {
           </div>
         ) : null}
       </div>
-      <button className="icon-button" type="button" title="새로고침" onClick={() => router.refresh()}>
+      {onRefresh ? <button className="icon-button" type="button" title="새로고침" onClick={onRefresh}>
         <RefreshCw size={16} />
-      </button>
+      </button> : null}
     </div>
   );
 }

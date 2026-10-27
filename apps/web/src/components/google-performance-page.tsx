@@ -6,11 +6,12 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCan } from "@/features/auth/use-auth";
 import { apiGet, apiErrorMessage } from "@/lib/api";
-import { emptyGoogleDateFilters, googleDateFilterError, googleFilterQuery, googleYesterdayFilters, readGoogleDateFilters, type GoogleDateFilters } from "@/lib/google-date-filters";
+import { emptyGoogleDateFilters, googleDateFilterError, googleFilterQuery, readGoogleDateFilters, type GoogleDateFilters } from "@/lib/google-date-filters";
 import type { GoogleOptions } from "@/types/google";
 import { GoogleMappingEditor } from "./google-mapping-editor";
 import { GoogleMappingDiagnostics } from "./google-mapping-diagnostics";
 import { GoogleReport } from "./google-report";
+import { DateRangeControl } from "./date-range-picker";
 
 export type GoogleView = "dashboard" | "campaigns" | "mappings" | "profit" | "diagnostics";
 const titles = { dashboard: "Google 요약", campaigns: "Google 캠페인", mappings: "Google 상품 연결", profit: "Google 마진", diagnostics: "Google 데이터 점검" };
@@ -53,19 +54,13 @@ export function GooglePerformancePage({ view }: { view: GoogleView }) {
     {options.isError ? <p className="warning-strip" role="alert">{apiErrorMessage(options.error, "Google 조회 설정을 읽지 못했습니다.")}</p> : null}
     {canRead && options.data?.enabled === false ? <p className="panel" role="status">Google 성과 기능을 사용할 수 없습니다.</p> : null}
     {canRead && options.data?.enabled && ready ? <>
-      <form className="panel" onSubmit={(event) => { event.preventDefault(); apply(filters); }}>
+      <div className="panel">
         <div className="toolbar">
-          <label className="field">시작일<input className="input" type="date" required max={filters.to || undefined} value={filters.from} onChange={(event) => setFilters({ ...filters, from: event.target.value })} /></label>
-          <label className="field">종료일<input className="input" type="date" required min={filters.from || undefined} value={filters.to} onChange={(event) => setFilters({ ...filters, to: event.target.value })} /></label>
-          <label className="field">Google 광고 계정<select className="select" value={filters.connectionId} onChange={(event) => setFilters({ ...filters, connectionId: event.target.value })}><option value="">전체 광고 계정</option>{options.data.connections.filter((item) => item.provider === "GOOGLE").map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.externalAccountId}</option>)}</select></label>
-          <label className="field">카페24 쇼핑몰<select className="select" value={filters.cafe24ConnectionId} onChange={(event) => setFilters({ ...filters, cafe24ConnectionId: event.target.value })}><option value="">전체 쇼핑몰</option>{options.data.connections.filter((item) => item.provider === "CAFE24").map((item) => <option key={item.id} value={item.id}>{item.displayName}</option>)}</select></label>
-          <label className="field">상품<select className="select" value={filters.productId} onChange={(event) => setFilters({ ...filters, productId: event.target.value })}><option value="">전체 상품</option>{options.data.products.map((item) => <option key={item.id} value={item.id}>{item.displayName}</option>)}</select></label>
-          <button type="submit" className="button primary">조회</button>
-          <button type="button" className="button" onClick={() => apply(googleYesterdayFilters(filters))}>어제</button>
+          <DateRangeControl value={filters} onChange={(range) => apply({ ...filters, ...range })} />
         </div>
-        {view === "diagnostics" ? <p className="field-help">기본 조회는 한국시간 기준 어제이며 URL의 날짜·필터는 유지합니다. 최대 92일까지 조회할 수 있습니다. 광고 계정 필터는 광고비 범위이며 캠페인별 판매 기여도를 뜻하지 않습니다. 새로고침은 저장된 자료를 다시 읽으며 새 수집을 시작하지 않습니다.</p> : null}
+        {view === "diagnostics" ? <p className="field-help">기본 조회는 한국시간 기준 어제이며 URL의 날짜·필터는 유지합니다. 최대 92일까지 조회할 수 있습니다. 새로고침은 저장된 자료를 다시 읽으며 새 수집을 시작하지 않습니다.</p> : null}
         {dateError ? <p className="field-help" role="alert">{dateError}</p> : null}
-      </form>
+      </div>
       {!appliedDateError ? (view === "mappings" ? <GoogleMappingEditor key={query} options={options.data} query={query} /> : <><GoogleReport key={`${view}:${query}`} view={view} query={query} options={options.data} />{view === "diagnostics" ? <GoogleMappingDiagnostics key={`mappings:${query}`} options={options.data} query={query} /> : null}</>) : null}
     </> : null}
   </section>;
