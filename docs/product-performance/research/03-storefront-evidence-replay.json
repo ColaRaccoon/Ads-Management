@@ -1,0 +1,126 @@
+{
+  "status": "PASS_LIMITED_REPLAY",
+  "databaseAccess": false,
+  "networkAccess": false,
+  "operationalWrites": 0,
+  "sourceEvidenceSha256": "4ad641b60d52f9b74a4b187b9ad4a8c9ba131d948bcd64ffc97015b9e61de9a9",
+  "rulePreviewSha256": "820e94a11d25de31b8a1c335459601ffaa485eadcc9cb6bbd318bb0d88427f5b",
+  "comparisons": [
+    {
+      "from": "2026-10-26",
+      "to": "2026-10-26",
+      "expected": "243012.033468",
+      "rows": 5,
+      "normalized": "243012.033468",
+      "assigned": "192408.241915",
+      "unmatched": "50603.791553",
+      "difference": "0.000000"
+    },
+    {
+      "from": "2026-10-20",
+      "to": "2026-10-26",
+      "expected": "962763.487744",
+      "rows": 20,
+      "normalized": "962763.487744",
+      "assigned": "192408.241915",
+      "unmatched": "770355.245829",
+      "difference": "0.000000"
+    }
+  ],
+  "daily": [
+    {
+      "date": "2026-10-20",
+      "rows": 5,
+      "controls": [
+        {
+          "sourceSystem": "GOOGLE_CAMPAIGN",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-20",
+          "currency": "KRW",
+          "selectedRows": 5,
+          "selectedAmount": "275927.452229",
+          "assignedAmount": "0.000000",
+          "unmatchedAmount": "275927.452229",
+          "unallocatedAmount": "0.000000",
+          "excludedNonSaleAmount": "0.000000",
+          "excludedByPolicyRows": 0,
+          "roundingAdjustment": "0.000000",
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "rows": 5,
+      "controls": [
+        {
+          "sourceSystem": "GOOGLE_CAMPAIGN",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-23",
+          "currency": "KRW",
+          "selectedRows": 5,
+          "selectedAmount": "227367.804328",
+          "assignedAmount": "0.000000",
+          "unmatchedAmount": "227367.804328",
+          "unallocatedAmount": "0.000000",
+          "excludedNonSaleAmount": "0.000000",
+          "excludedByPolicyRows": 0,
+          "roundingAdjustment": "0.000000",
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "rows": 5,
+      "controls": [
+        {
+          "sourceSystem": "GOOGLE_CAMPAIGN",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-25",
+          "currency": "KRW",
+          "selectedRows": 5,
+          "selectedAmount": "216456.197719",
+          "assignedAmount": "0.000000",
+          "unmatchedAmount": "216456.197719",
+          "unallocatedAmount": "0.000000",
+          "excludedNonSaleAmount": "0.000000",
+          "excludedByPolicyRows": 0,
+          "roundingAdjustment": "0.000000",
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "rows": 5,
+      "controls": [
+        {
+          "sourceSystem": "GOOGLE_CAMPAIGN",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-26",
+          "currency": "KRW",
+          "selectedRows": 5,
+          "selectedAmount": "243012.033468",
+          "assignedAmount": "192408.241915",
+          "unmatchedAmount": "50603.791553",
+          "unallocatedAmount": "0.000000",
+          "excludedNonSaleAmount": "0.000000",
+          "excludedByPolicyRows": 0,
+          "roundingAdjustment": "0.000000",
+          "difference": "0.000000"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "01 captured Google names/micros only; no new source selection, runtime permission or lineage verification.",
+    "Rule migration preview remains unapplied; unresolved historical names preserve their spend.",
+    "10/21,22,24 have no captured Google rows and are not confirmed zero days.",
+    "Meta/Cafe24 row inputs and 30-day real-source replay are not supplied by this capture."
+  ]
+}
