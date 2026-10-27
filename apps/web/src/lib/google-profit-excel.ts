@@ -1,51 +1,12 @@
 import type { GoogleProfitRow, GoogleReportResponse } from "../types/google";
+import { loadGoogleProfitProducts } from "./google-profit-data";
 import { googleProfitView } from "./google-profit-view";
 import { buildXlsxWorkbook, type XlsxCell, type XlsxCellStyle, type XlsxRow } from "./xlsx";
 
-const EXPORT_PAGE_SIZE = 50;
 const EXPORT_CHANGED_MESSAGE = "조회 중 Google 데이터가 변경되었거나 일부 상품을 읽지 못했습니다. 다시 다운로드해 주세요.";
 
-/** Read every product page before creating a file; never export a partial report. */
-export async function loadGoogleProfitExport(
-  query: string,
-  fetchReport: (query: string) => Promise<GoogleReportResponse>
-): Promise<GoogleReportResponse> {
-  const params = new URLSearchParams(query);
-  params.set("pageSize", String(EXPORT_PAGE_SIZE));
-  let first: GoogleReportResponse | undefined;
-  const products: GoogleProfitRow[] = [];
-  const seen = new Set<string | null>();
-  for (let page = 1; ; page += 1) {
-    params.set("page", String(page));
-    const data = await fetchReport(params.toString());
-    const { pagination } = data;
-    const total = pagination.total;
-    if (!Number.isSafeInteger(total) || total < 0 || pagination.page !== page || pagination.pageSize !== EXPORT_PAGE_SIZE) {
-      throw new Error(EXPORT_CHANGED_MESSAGE);
-    }
-    const expectedCount = Math.min(EXPORT_PAGE_SIZE, Math.max(0, total - (page - 1) * EXPORT_PAGE_SIZE));
-    if (data.products.length !== expectedCount ||
-      (params.get("from") && data.range.from !== params.get("from")) ||
-      (params.get("to") && data.range.to !== params.get("to"))) {
-      throw new Error(EXPORT_CHANGED_MESSAGE);
-    }
-    if (first && (total !== first.pagination.total ||
-      JSON.stringify(data.range) !== JSON.stringify(first.range) ||
-      JSON.stringify(data.summary) !== JSON.stringify(first.summary) ||
-      JSON.stringify(data.completeness) !== JSON.stringify(first.completeness) ||
-      JSON.stringify(data.reconciliation) !== JSON.stringify(first.reconciliation))) {
-      throw new Error(EXPORT_CHANGED_MESSAGE);
-    }
-    first ??= data;
-    for (const row of data.products) {
-      if (seen.has(row.productId)) throw new Error(EXPORT_CHANGED_MESSAGE);
-      seen.add(row.productId);
-      products.push(row);
-    }
-    if (products.length === total) {
-      return { ...first, products, pagination: { page: 1, pageSize: Math.max(total, 1), total } };
-    }
-  }
+export function loadGoogleProfitExport(query: string, fetchReport: (query: string) => Promise<GoogleReportResponse>) {
+  return loadGoogleProfitProducts(query, fetchReport, EXPORT_CHANGED_MESSAGE);
 }
 
 function numberCell(value: number | null | undefined, style: XlsxCellStyle): XlsxCell {

@@ -8,6 +8,7 @@ import { apiGet, apiErrorMessage } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
 import { googleCampaignColumns, googleMoney, googleNumber, googleRatio } from "@/lib/google-display";
 import { buildGoogleProfitExcel, googleProfitExcelFileName, loadGoogleProfitExport } from "@/lib/google-profit-excel";
+import { loadGoogleProfitProducts } from "@/lib/google-profit-data";
 import { downloadXlsx } from "@/lib/xlsx";
 import { GoogleProfitOverview, GoogleProfitTotal } from "./google-profit-overview";
 import { GoogleCampaignTable } from "./google-campaign-table";
@@ -23,7 +24,15 @@ export function GoogleReport({ view, query, options }: { view: Exclude<GoogleVie
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const endpoint = view === "dashboard" ? "summary" : view === "diagnostics" ? "profit" : view;
-  const report = useQuery({ queryKey: ["google", endpoint, query, page], queryFn: () => apiGet<GoogleReportResponse>(`/google/${endpoint}?${query}&page=${page}&pageSize=50`), retry: false, refetchOnWindowFocus: false });
+  const allProducts = view === "profit" || view === "dashboard";
+  const report = useQuery({
+    queryKey: ["google", endpoint, query, allProducts ? "all-products" : page],
+    queryFn: () => allProducts
+      ? loadGoogleProfitProducts(query, (params) => apiGet<GoogleReportResponse>(`/google/${endpoint}?${params}`))
+      : apiGet<GoogleReportResponse>(`/google/${endpoint}?${query}&page=${page}&pageSize=50`),
+    retry: false,
+    refetchOnWindowFocus: false
+  });
   const productName = (id: string | null) => id ? options.products.find((item) => item.id === id)?.displayName ?? id : "미연결 / 미배분";
   const data = report.data;
   const filtered = ["productId", "connectionId", "cafe24ConnectionId"].some((key) => Boolean(new URLSearchParams(query).get(key)));
@@ -63,7 +72,7 @@ export function GoogleReport({ view, query, options }: { view: Exclude<GoogleVie
     {data ? <>
       {view !== "diagnostics" && needsReview ? <p className="warning-strip" role="status">{data.summary.marginKrw === null ? "마진이 미확정입니다." : "확인이 필요한 데이터가 있습니다."} <Link href={diagnosticsHref}>데이터 점검에서 확인</Link></p> : null}
       {view === "dashboard" ? <GoogleProfitTotal data={data} filtered={filtered} /> : null}
-      {view === "profit" || view === "dashboard" ? <section className="panel google-profit-products"><h2>제품별 성과</h2><GoogleProfitOverview data={data} productName={productName} filtered={filtered} />{pager}</section> : null}
+      {view === "profit" || view === "dashboard" ? <section className="panel google-profit-products"><h2>제품별 성과</h2><GoogleProfitOverview data={data} productName={productName} filtered={filtered} /></section> : null}
       {view === "campaigns" ? <section className="panel"><div className="page-title"><h2>캠페인별 광고 지표</h2><button className="button" onClick={() => downloadCsv(`google-campaigns-${data.range.from}-${data.range.to}-page${page}.csv`, googleCampaignColumns(productName), data.campaigns)}>현재 페이지 CSV</button></div><div className="metric-strip">
         <Metric label="광고비" value={googleMoney(data.summary.adSpendKrwExact)} />
         <Metric label="노출수" value={googleNumber(data.summary.impressions)} />

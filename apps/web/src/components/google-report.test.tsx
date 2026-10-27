@@ -28,7 +28,7 @@ const fixture: GoogleReportResponse = {
 function render(data: GoogleReportResponse, query = "", view: Exclude<GoogleView, "mappings"> = "profit") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const endpoint = view === "dashboard" ? "summary" : view === "campaigns" ? "campaigns" : "profit";
-  client.setQueryData(["google", endpoint, query, 1], data);
+  client.setQueryData(["google", endpoint, query, view === "profit" || view === "dashboard" ? "all-products" : 1], data);
   if (view === "diagnostics") client.setQueryData(["google", "campaigns", query, 1], data);
   const html = renderToStaticMarkup(<QueryClientProvider client={client}><GoogleReport view={view} query={query} options={options} /></QueryClientProvider>);
   client.clear(); return html;
@@ -125,15 +125,37 @@ test("diagnostics preserve incomplete daily rows, unmapped sales, collection fai
   assert.doesNotMatch(campaigns, /raw-account-123|raw-campaign-456|캠페인명에 여러 상품이 포함/);
 });
 
-test("product footer uses the server total across all pages instead of visible product margins", () => {
-  const html = render({ ...fixture, summary: { ...fixture.summary, marginKrw: -123816.197719, adSpendKrwExact: "216456.197719" }, pagination: { page: 1, pageSize: 50, total: 51 } });
-  const footer = html.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1];
-  assert.ok(footer, "the product table has a total footer");
-  assert.match(footer, /합계/);
-  assert.match(footer, /-123,816 원/);
-  assert.match(footer, /216,456 원/);
-  assert.doesNotMatch(footer, /35,000 원/);
-  assert.match(html, /1 \/ 2 페이지/);
+test("profit and dashboard render all 51 products in a scrollable table without paging and preserve server totals", () => {
+  const products = Array.from({ length: 51 }, (_, index) => ({ ...row, productId: `product-${index + 1}` }));
+  const data = { ...fixture, products, summary: { ...fixture.summary, marginKrw: -123816.197719, adSpendKrwExact: "216456.197719" }, pagination: { page: 1, pageSize: 50, total: 51 } };
+  for (const view of ["profit", "dashboard"] as const) {
+    const html = render(data, "from=2026-10-25&to=2026-10-25", view);
+    const table = productTable(html);
+    const body = table.match(/<tbody>(.*?)<\/tbody>/s)?.[1];
+    assert.ok(body);
+    assert.equal((body.match(/<tr(?:\s[^>]*)?>/g) ?? []).length, 51, `${view} retains every loaded product`);
+    assert.match(body, /product-51/);
+    assert.match(html, /class="table-wrap"/);
+    assert.doesNotMatch(html, /<button[^>]*>(?:이전|다음)<\/button>|\d+ \/ \d+ 페이지/);
+    const footer = table.match(/<tfoot>(.*?)<\/tfoot>/s)?.[1];
+    assert.ok(footer, "the product table has a total footer");
+    assert.match(footer, /합계/);
+    assert.match(footer, /-123,816 원/);
+    assert.match(footer, /216,456 원/);
+    assert.doesNotMatch(footer, /35,000 원/);
+    assert.match(bottomSummary(html), /최종 순마진<\/span><strong>-123,816 원<\/strong>/);
+    assert.match(html, /엑셀 출력/);
+  }
+});
+
+test("campaigns and diagnostics retain their existing paged tables", () => {
+  const data = { ...fixture, pagination: { page: 1, pageSize: 50, total: 51 } };
+  for (const view of ["campaigns", "diagnostics"] as const) {
+    const html = render(data, "from=2026-10-25&to=2026-10-25", view);
+    assert.match(html, /1 \/ 2 페이지 · 51건/);
+    assert.match(html, /<button[^>]*disabled=""[^>]*>이전<\/button>/);
+    assert.match(html, /<button[^>]*>다음<\/button>/);
+  }
 });
 
 test("unknown total margin stays pending in the footer and bottom summary despite calculable product profits", () => {
@@ -152,7 +174,7 @@ test("unknown total margin stays pending in the footer and bottom summary despit
 test("product, Google account and storefront filters label totals as the selected scope", () => {
   for (const filter of ["productId=product-1", "connectionId=google-1", "cafe24ConnectionId=cafe24-1"]) {
     const html = render(fixture, `from=2026-10-25&to=2026-10-25&${filter}`);
-    assert.equal(tableRowValues(html, "tfoot")["제품"], "선택 범위 합계모든 페이지 포함");
+    assert.equal(tableRowValues(html, "tfoot")["제품"], "선택 범위 합계전체 상품 포함");
     assert.match(html, /<h2>Google 선택 범위 마진<\/h2>/);
     assert.doesNotMatch(html, /<h2>Google 전체 마진<\/h2>/);
   }

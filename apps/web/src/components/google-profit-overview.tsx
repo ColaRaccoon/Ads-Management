@@ -42,7 +42,7 @@ export function GoogleProfitOverview({ data, productName, filtered }: {
       getRowKey={(row) => row.productId ?? "unmapped"}
       empty="선택한 조건의 상품 데이터가 없습니다."
       footer={<tr>
-        <td>{filtered ? "선택 범위 합계" : "Google 전체 합계"}<small style={{ display: "block" }}>모든 페이지 포함</small></td>
+        <td>{filtered ? "선택 범위 합계" : "Google 전체 합계"}<small style={{ display: "block" }}>전체 상품 포함</small></td>
         {columns.slice(1).map((column) => <td key={column.key}>{column.render(data.summary)}</td>)}
       </tr>}
     />
@@ -56,7 +56,7 @@ export function GoogleProfitTotal({ data, filtered }: { data: GoogleReportRespon
     <div className="toolbar" style={{ justifyContent: "space-between", marginBottom: 12 }}>
       <div>
         <h2>{filtered ? "Google 선택 범위 마진" : "Google 전체 마진"}</h2>
-        <p className="field-help">{data.range.from} ~ {data.range.to} · {filtered ? "선택한 계정·쇼핑몰·상품" : "전체 계정·쇼핑몰·상품"} · 모든 페이지 포함</p>
+        <p className="field-help">{data.range.from} ~ {data.range.to} · {filtered ? "선택한 계정·쇼핑몰·상품" : "전체 계정·쇼핑몰·상품"} · 전체 상품 포함</p>
       </div>
       <Status complete={total.complete} />
     </div>
