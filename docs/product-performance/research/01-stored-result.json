@@ -1,0 +1,323 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "rowsChanged": 0,
+  "queries": [
+    {
+      "name": "naver_stored_summary_corrected",
+      "observedAt": "2026-10-27T06:57:51.0024232+00:00",
+      "sqlSha256": "3383b923cc111cf1396eddcbc44dfdcee49ab64c7d2d900e04e4d88e35b022ea",
+      "elapsedMs": 913,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-20",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-21T00:38:12.537Z",
+          "total_revenue": "8846360",
+          "ad_cost": "3552230",
+          "estimated_profit": "1772465",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-7000",
+          "excluded_order_revenue": "382100",
+          "excluded_ad_cost": "0"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-21",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-22T01:05:03.030Z",
+          "total_revenue": "8983190",
+          "ad_cost": "3402620",
+          "estimated_profit": "1830289",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-109900",
+          "excluded_order_revenue": "183100",
+          "excluded_ad_cost": "0"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-22",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-23T00:41:54.993Z",
+          "total_revenue": "9385300",
+          "ad_cost": "3849714",
+          "estimated_profit": "1607095",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-124600",
+          "excluded_order_revenue": "620700",
+          "excluded_ad_cost": "0"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-23",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-24T05:45:07.698Z",
+          "total_revenue": "5403000",
+          "ad_cost": "2281794",
+          "estimated_profit": "978922",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "11900",
+          "excluded_order_revenue": "460600",
+          "excluded_ad_cost": "0"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-24",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-25T05:03:30.809Z",
+          "total_revenue": "7787540",
+          "ad_cost": "3994876",
+          "estimated_profit": "416632",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-159600",
+          "excluded_order_revenue": "467020",
+          "excluded_ad_cost": "0"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-25",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-26T01:05:56.513Z",
+          "total_revenue": "5656740",
+          "ad_cost": "2777156",
+          "estimated_profit": "474427",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-91700",
+          "excluded_order_revenue": "145800",
+          "excluded_ad_cost": "0"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-26",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T00:54:50.549Z",
+          "total_revenue": "6947990",
+          "ad_cost": "1790594",
+          "estimated_profit": "2272081",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "81200",
+          "excluded_order_revenue": "453710",
+          "excluded_ad_cost": "0"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-20",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-21T00:43:38.227Z",
+          "total_revenue": "7145550",
+          "ad_cost": "2245783",
+          "estimated_profit": "1523652",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-381500",
+          "excluded_order_revenue": "247800",
+          "excluded_ad_cost": "1685224"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-21",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-23T00:42:50.155Z",
+          "total_revenue": "6042160",
+          "ad_cost": "1912989",
+          "estimated_profit": "1242366",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-311500",
+          "excluded_order_revenue": "216750",
+          "excluded_ad_cost": "1436514"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-22",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-23T00:42:50.155Z",
+          "total_revenue": "4779750",
+          "ad_cost": "1750299",
+          "estimated_profit": "811923",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-220500",
+          "excluded_order_revenue": "219050",
+          "excluded_ad_cost": "1251498"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T01:20:42.566Z",
+          "total_revenue": "6258780",
+          "ad_cost": "1808467",
+          "estimated_profit": "1530574",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-259000",
+          "excluded_order_revenue": "122600",
+          "excluded_ad_cost": "687787"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-24",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T01:20:42.566Z",
+          "total_revenue": "4502980",
+          "ad_cost": "1901282",
+          "estimated_profit": "439318",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-238000",
+          "excluded_order_revenue": "159400",
+          "excluded_ad_cost": "960285"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-25",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-26T01:03:02.485Z",
+          "total_revenue": "4707860",
+          "ad_cost": "2062094",
+          "estimated_profit": "367324",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-301000",
+          "excluded_order_revenue": "437060",
+          "excluded_ad_cost": "1468122"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-26",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T00:36:02.430Z",
+          "total_revenue": "6629680",
+          "ad_cost": "1520397",
+          "estimated_profit": "1827576",
+          "profit_status": "COMPLETE",
+          "delivery_margin": "-336000",
+          "excluded_order_revenue": "298750",
+          "excluded_ad_cost": "756556"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_stored_profit_fingerprints",
+      "observedAt": "2026-10-27T06:57:52.0507531+00:00",
+      "sqlSha256": "c4825d016e97a5caf90ec01906fdfaded9d64dffcb9939c3ba880f820d994894",
+      "elapsedMs": 1009,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-20",
+          "calculation_version": "profit-v1",
+          "rows": 16,
+          "null_cost_snapshot": 16,
+          "null_mapping_hash": 16
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-21",
+          "calculation_version": "profit-v1",
+          "rows": 15,
+          "null_cost_snapshot": 15,
+          "null_mapping_hash": 15
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-22",
+          "calculation_version": "profit-v1",
+          "rows": 16,
+          "null_cost_snapshot": 16,
+          "null_mapping_hash": 16
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-23",
+          "calculation_version": "profit-v1",
+          "rows": 19,
+          "null_cost_snapshot": 19,
+          "null_mapping_hash": 19
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-24",
+          "calculation_version": "profit-v1",
+          "rows": 18,
+          "null_cost_snapshot": 18,
+          "null_mapping_hash": 18
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-25",
+          "calculation_version": "profit-v1",
+          "rows": 14,
+          "null_cost_snapshot": 14,
+          "null_mapping_hash": 14
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-26",
+          "calculation_version": "profit-v2",
+          "rows": 10,
+          "null_cost_snapshot": 10,
+          "null_mapping_hash": 10
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-20",
+          "calculation_version": "profit-v1",
+          "rows": 14,
+          "null_cost_snapshot": 14,
+          "null_mapping_hash": 14
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-21",
+          "calculation_version": "profit-v1",
+          "rows": 13,
+          "null_cost_snapshot": 13,
+          "null_mapping_hash": 13
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-22",
+          "calculation_version": "profit-v1",
+          "rows": 11,
+          "null_cost_snapshot": 11,
+          "null_mapping_hash": 11
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "calculation_version": "profit-v2",
+          "rows": 11,
+          "null_cost_snapshot": 11,
+          "null_mapping_hash": 11
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-24",
+          "calculation_version": "profit-v2",
+          "rows": 13,
+          "null_cost_snapshot": 13,
+          "null_mapping_hash": 13
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-25",
+          "calculation_version": "profit-v1",
+          "rows": 14,
+          "null_cost_snapshot": 14,
+          "null_mapping_hash": 14
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-26",
+          "calculation_version": "profit-v2",
+          "rows": 12,
+          "null_cost_snapshot": 12,
+          "null_mapping_hash": 12
+        }
+      ],
+      "reason": null
+    }
+  ]
+}

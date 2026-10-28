@@ -1,0 +1,110 @@
+[
+  {
+    "name": "naver_units_named",
+    "sql": "SELECT id,payload->>'storeId' AS store_id,payload->>'displayName' AS name,payload->>'isActive' AS active,payload->>'isGroup' AS is_group,payload->>'parentSalesUnitId' AS parent_id,payload->'matchAliases' AS aliases FROM public.canonical_sales_units ORDER BY payload->>'storeId',payload->>'displayName' LIMIT 150"
+  },
+  {
+    "name": "naver_stores",
+    "sql": "SELECT id,payload->>'name' AS name,payload->>'storeName' AS store_name,payload->>'displayName' AS display_name FROM public.stores ORDER BY id LIMIT 20"
+  },
+  {
+    "name": "naver_cost_keys",
+    "sql": "SELECT 'setting' AS kind,jsonb_object_keys(payload) AS key FROM (SELECT payload FROM public.sales_unit_cost_settings LIMIT 1) s UNION ALL SELECT 'snapshot',jsonb_object_keys(payload) FROM (SELECT payload FROM public.sales_unit_cost_snapshots LIMIT 1) s UNION ALL SELECT 'entry',jsonb_object_keys(payload) FROM (SELECT payload FROM public.sales_unit_cost_snapshot_entries LIMIT 1) s"
+  },
+  {
+    "name": "naver_settings",
+    "sql": "SELECT payload->>'storeId' AS store_id,payload->>'salesUnitId' AS unit_id,payload->>'canonicalSalesUnitId' AS canonical_id,payload->>'effectiveFrom' AS effective_from,payload->>'productCost' AS product_cost,payload->>'shippingCost' AS shipping_cost,payload->>'isActive' AS active FROM public.sales_unit_cost_settings LIMIT 150"
+  },
+  {
+    "name": "cafe24_rules",
+    "sql": "SELECT p.name,r.display_name,r.product_name_aliases,r.option_include_keywords,r.option_exclude_keywords,r.sale_price_krw_override::text,r.product_cost_krw_override::text,r.shipping_krw_override::text,r.extra_cost_krw_override::text,r.valid_from,r.valid_to FROM meta_ads.cafe24_product_rules r JOIN meta_ads.products p ON p.id=r.product_id WHERE r.is_active ORDER BY p.name,r.display_name LIMIT 100"
+  },
+  {
+    "name": "google_sale_units",
+    "sql": "SELECT p.name,m.option_name,m.option_scope,m.sale_unit_label,m.sale_price_krw_override::text,m.product_cost_krw_override::text,m.shipping_krw_override::text,m.extra_cost_krw_override::text,m.start_date,m.end_date FROM meta_ads.google_performance_mappings m JOIN meta_ads.products p ON p.id=m.product_id WHERE kind='SALE' ORDER BY p.name,m.start_date LIMIT 100"
+  },
+  {
+    "name": "meta_bounds",
+    "sql": "SELECT coalesce(connection_id::text,'LEGACY_UNBOUND') AS scope,min(metric_date)::text AS min_date,max(metric_date)::text AS max_date,count(*) AS current_rows FROM meta_ads.meta_adset_daily_metrics WHERE is_current GROUP BY 1 ORDER BY 1"
+  },
+  {
+    "name": "meta_recent_daily",
+    "sql": "SELECT coalesce(connection_id::text,'LEGACY_UNBOUND') AS scope,metric_date::text AS date,source::text AS source,count(*) AS rows,count(*) FILTER(WHERE product_id IS NULL) AS unmapped_rows,sum(spend_usd)::text AS raw_amount FROM meta_ads.meta_adset_daily_metrics WHERE is_current AND metric_date BETWEEN '2026-10-20' AND '2026-10-26' GROUP BY 1,2,3 ORDER BY 1,2,3"
+  },
+  {
+    "name": "google_bounds",
+    "sql": "SELECT coalesce(connection_id::text,'LEGACY_UNBOUND') AS scope,min(metric_date)::text AS min_date,max(metric_date)::text AS max_date,count(*) AS current_rows FROM meta_ads.google_campaign_daily_costs WHERE is_current GROUP BY 1 ORDER BY 1"
+  },
+  {
+    "name": "google_recent_daily",
+    "sql": "SELECT coalesce(connection_id::text,'LEGACY_UNBOUND') AS scope,metric_date::text AS date,source::text AS source,count(*) AS rows,NULL::bigint AS unmapped_rows,sum(cost_micros)::text AS raw_amount FROM meta_ads.google_campaign_daily_costs WHERE is_current AND metric_date BETWEEN '2026-10-20' AND '2026-10-26' GROUP BY 1,2,3 ORDER BY 1,2,3"
+  },
+  {
+    "name": "cafe24_bounds",
+    "sql": "SELECT coalesce(connection_id::text,'LEGACY_UNBOUND') AS scope,min(order_date)::text AS min_date,max(order_date)::text AS max_date,count(*) AS current_rows FROM meta_ads.cafe24_order_lines WHERE is_current GROUP BY 1 ORDER BY 1"
+  },
+  {
+    "name": "cafe24_recent_daily",
+    "sql": "SELECT coalesce(connection_id::text,'LEGACY_UNBOUND') AS scope,order_date::text AS date,source::text AS source,count(*) AS rows,count(*) FILTER(WHERE product_id IS NULL) AS unmapped_rows,sum(sale_price_krw)::text AS raw_amount FROM meta_ads.cafe24_order_lines WHERE is_current AND order_date BETWEEN '2026-10-20' AND '2026-10-26' GROUP BY 1,2,3 ORDER BY 1,2,3"
+  },
+  {
+    "name": "coupang_sales_bounds",
+    "sql": "SELECT 'UNIDENTIFIED_SCOPE' AS scope,min(sale_date)::text AS min_date,max(sale_date)::text AS max_date,count(*) AS current_rows FROM meta_ads.coupang_sale_lines WHERE is_current GROUP BY 1 ORDER BY 1"
+  },
+  {
+    "name": "coupang_sales_recent_daily",
+    "sql": "SELECT 'UNIDENTIFIED_SCOPE' AS scope,sale_date::text AS date,'CSV' AS source,count(*) AS rows,count(*) FILTER(WHERE coupang_product_id IS NULL) AS unmapped_rows,sum(net_sales_krw)::text AS raw_amount FROM meta_ads.coupang_sale_lines WHERE is_current AND sale_date BETWEEN '2026-10-20' AND '2026-10-26' GROUP BY 1,2,3 ORDER BY 1,2,3"
+  },
+  {
+    "name": "coupang_ads_bounds",
+    "sql": "SELECT 'UNIDENTIFIED_SCOPE' AS scope,min(metric_date)::text AS min_date,max(metric_date)::text AS max_date,count(*) AS current_rows FROM meta_ads.coupang_ad_metrics WHERE is_current GROUP BY 1 ORDER BY 1"
+  },
+  {
+    "name": "coupang_ads_recent_daily",
+    "sql": "SELECT 'UNIDENTIFIED_SCOPE' AS scope,metric_date::text AS date,'CSV' AS source,count(*) AS rows,count(*) FILTER(WHERE spend_product_id IS NULL) AS unmapped_rows,sum(ad_spend_krw)::text AS raw_amount FROM meta_ads.coupang_ad_metrics WHERE is_current AND metric_date BETWEEN '2026-10-20' AND '2026-10-26' GROUP BY 1,2,3 ORDER BY 1,2,3"
+  },
+  {
+    "name": "source_coverage_recent",
+    "sql": "SELECT connection_id,data_kind,metric_date::text,source,state,last_success_at,reconciliation_status,row_count,total_amount::text,warning_codes FROM meta_ads.source_coverage WHERE metric_date BETWEEN '2026-10-20' AND '2026-10-26' ORDER BY connection_id,data_kind,metric_date LIMIT 200"
+  },
+  {
+    "name": "naver_orders_bounds_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+    "sql": "SELECT '5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AS scope,min(payload->>'paymentDate') AS min_date,max(payload->>'paymentDate') AS max_date,count(*) AS rows FROM public.order_items WHERE payload->>'storeId'='5ba1d3cf-7aee-4cd1-aecd-d44352f665dd'"
+  },
+  {
+    "name": "naver_orders_daily_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+    "sql": "SELECT '5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AS scope,left(payload->>'paymentDate',10) AS date,payload->>'saleStatus' AS sale_status,count(*) AS rows,count(*) FILTER(WHERE nullif(payload->>'canonicalSalesUnitId','') IS NULL) AS unmapped_rows,sum((payload->>'productPaymentAmount')::numeric)::text AS raw_revenue FROM public.order_items WHERE payload->>'storeId'='5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AND payload->>'paymentDate'>='2026-10-20' AND payload->>'paymentDate'<'2026-10-27' GROUP BY 1,2,3 ORDER BY 2,3"
+  },
+  {
+    "name": "naver_ads_bounds_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+    "sql": "SELECT '5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AS scope,min(a.payload->>'reportDate') AS min_date,max(a.payload->>'reportDate') AS max_date,count(*) AS rows FROM public.ad_campaign_daily_costs a JOIN public.ad_excel_uploads u ON u.id=a.payload->>'sourceUploadId' WHERE a.payload->>'storeId'='5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AND u.payload->>'storeId'='5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AND u.payload->>'isActive'='true' AND u.payload->>'state'='CONFIRMED' AND u.payload->>'weekdayValidationStatus'='PASSED'"
+  },
+  {
+    "name": "naver_ads_daily_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+    "sql": "SELECT '5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AS scope,a.payload->>'reportDate' AS date,count(*) AS rows,count(*) FILTER(WHERE nullif(a.payload->>'canonicalSalesUnitId','') IS NULL) AS unmapped_rows,sum((a.payload->>'totalCost')::numeric)::text AS raw_spend FROM public.ad_campaign_daily_costs a JOIN public.ad_excel_uploads u ON u.id=a.payload->>'sourceUploadId' WHERE a.payload->>'storeId'='5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AND a.payload->>'reportDate'>='2026-10-20' AND a.payload->>'reportDate'<'2026-10-27' AND u.payload->>'storeId'='5ba1d3cf-7aee-4cd1-aecd-d44352f665dd' AND u.payload->>'isActive'='true' AND u.payload->>'state'='CONFIRMED' AND u.payload->>'weekdayValidationStatus'='PASSED' GROUP BY 1,2 ORDER BY 2"
+  },
+  {
+    "name": "naver_orders_bounds_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+    "sql": "SELECT '78f8cb08-ffe3-481a-94d7-be87ae93ed79' AS scope,min(payload->>'paymentDate') AS min_date,max(payload->>'paymentDate') AS max_date,count(*) AS rows FROM public.order_items WHERE payload->>'storeId'='78f8cb08-ffe3-481a-94d7-be87ae93ed79'"
+  },
+  {
+    "name": "naver_orders_daily_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+    "sql": "SELECT '78f8cb08-ffe3-481a-94d7-be87ae93ed79' AS scope,left(payload->>'paymentDate',10) AS date,payload->>'saleStatus' AS sale_status,count(*) AS rows,count(*) FILTER(WHERE nullif(payload->>'canonicalSalesUnitId','') IS NULL) AS unmapped_rows,sum((payload->>'productPaymentAmount')::numeric)::text AS raw_revenue FROM public.order_items WHERE payload->>'storeId'='78f8cb08-ffe3-481a-94d7-be87ae93ed79' AND payload->>'paymentDate'>='2026-10-20' AND payload->>'paymentDate'<'2026-10-27' GROUP BY 1,2,3 ORDER BY 2,3"
+  },
+  {
+    "name": "naver_ads_bounds_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+    "sql": "SELECT '78f8cb08-ffe3-481a-94d7-be87ae93ed79' AS scope,min(a.payload->>'reportDate') AS min_date,max(a.payload->>'reportDate') AS max_date,count(*) AS rows FROM public.ad_campaign_daily_costs a JOIN public.ad_excel_uploads u ON u.id=a.payload->>'sourceUploadId' WHERE a.payload->>'storeId'='78f8cb08-ffe3-481a-94d7-be87ae93ed79' AND u.payload->>'storeId'='78f8cb08-ffe3-481a-94d7-be87ae93ed79' AND u.payload->>'isActive'='true' AND u.payload->>'state'='CONFIRMED' AND u.payload->>'weekdayValidationStatus'='PASSED'"
+  },
+  {
+    "name": "naver_ads_daily_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+    "sql": "SELECT '78f8cb08-ffe3-481a-94d7-be87ae93ed79' AS scope,a.payload->>'reportDate' AS date,count(*) AS rows,count(*) FILTER(WHERE nullif(a.payload->>'canonicalSalesUnitId','') IS NULL) AS unmapped_rows,sum((a.payload->>'totalCost')::numeric)::text AS raw_spend FROM public.ad_campaign_daily_costs a JOIN public.ad_excel_uploads u ON u.id=a.payload->>'sourceUploadId' WHERE a.payload->>'storeId'='78f8cb08-ffe3-481a-94d7-be87ae93ed79' AND a.payload->>'reportDate'>='2026-10-20' AND a.payload->>'reportDate'<'2026-10-27' AND u.payload->>'storeId'='78f8cb08-ffe3-481a-94d7-be87ae93ed79' AND u.payload->>'isActive'='true' AND u.payload->>'state'='CONFIRMED' AND u.payload->>'weekdayValidationStatus'='PASSED' GROUP BY 1,2 ORDER BY 2"
+  },
+  {
+    "name": "naver_sync_count",
+    "sql": "SELECT count(*) AS rows FROM public.order_sync_states"
+  },
+  {
+    "name": "naver_cost_access",
+    "sql": "SELECT r.rolname,c.relname,c.relrowsecurity,has_table_privilege(r.oid,c.oid,'SELECT') AS table_select FROM pg_roles r CROSS JOIN pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE r.rolname IN ('meta_ads_app','meta_ads_prod_runtime') AND n.nspname='public' AND c.relname IN ('sales_unit_cost_settings','sales_unit_cost_snapshots','sales_unit_cost_snapshot_entries') ORDER BY 1,2"
+  }
+]

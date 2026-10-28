@@ -8,6 +8,158 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
+// Stage 02 additive unified-performance storage; public Naver sources remain external.
+model UnifiedProduct {
+  id             String   @id @default(uuid()) @db.Uuid
+  canonicalName  String   @map("canonical_name") @db.VarChar(256)
+  normalizedName String   @unique @map("normalized_name") @db.VarChar(256)
+  active         Boolean  @default(true)
+  version        Int      @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  rules          UnifiedRule[]
+
+  @@map("unified_products")
+}
+
+// Typed discriminated payloads are validated by management.service.ts.
+// NAME, SALE_UNIT, ALLOCATION and SCOPE_POLICY share lifecycle/audit/CAS semantics.
+model UnifiedRule {
+  id          String   @id @default(uuid()) @db.Uuid
+  kind        String   @db.VarChar(16)
+  productId   String?  @map("product_id") @db.Uuid
+  platform    String?  @db.VarChar(16)
+  scopeKey    String?  @map("scope_key") @db.VarChar(256)
+  identityKey String   @map("identity_key") @db.VarChar(64)
+  payload     Json
+  validFrom   DateTime @map("valid_from") @db.Date
+  validTo     DateTime? @map("valid_to") @db.Date
+  active      Boolean  @default(true)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  product     UnifiedProduct? @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([kind, platform, scopeKey, validFrom])
+  @@index([productId, validFrom])
+  @@map("unified_rules")
+}
+
+model UnifiedMappingAudit {
+  id          String   @id @default(uuid()) @db.Uuid
+  entityType  String   @map("entity_type") @db.VarChar(32)
+  entityId    String   @map("entity_id") @db.Uuid
+  action      String   @db.VarChar(16)
+  actorUserId String   @map("actor_user_id") @db.Uuid
+  before      Json?
+  after       Json?
+  reason      String   @db.VarChar(1024)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  actor       AppUser @relation(fields: [actorUserId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "unified_audit_actor_fkey")
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("unified_mapping_audits")
+}
+
+model UnifiedAggregationRun {
+  id                String   @id @default(uuid()) @db.Uuid
+  sourceSystem      String   @map("source_system") @db.VarChar(64)
+  platform          String   @db.VarChar(16)
+  scopeKey          String   @map("scope_key") @db.VarChar(256)
+  businessDate      DateTime @map("business_date") @db.Date
+  status            String   @default("STAGING") @db.VarChar(16)
+  contractVersion   String   @map("contract_version") @db.VarChar(64)
+  versions          Json
+  readSnapshotId    String   @map("read_snapshot_id") @db.VarChar(128)
+  sourceFingerprint String?  @map("source_fingerprint") @db.VarChar(128)
+  sourceWatermarks  Json     @map("source_watermarks")
+  checkpoint        Json?
+  controlTotals     Json     @map("control_totals")
+  issues            Json
+  startedAt         DateTime @default(now()) @map("started_at") @db.Timestamptz(3)
+  completedAt       DateTime? @map("completed_at") @db.Timestamptz(3)
+  publishedAt       DateTime? @map("published_at") @db.Timestamptz(3)
+  facts             UnifiedDailyFact[]
+  coverage          UnifiedSourceCoverage[]
+  matches           UnifiedProductMatchResult[]
+  publications      UnifiedSourcePublication[]
+
+  @@unique([id, sourceSystem, platform, scopeKey, businessDate], map: "unified_run_partition_key")
+  @@index([platform, scopeKey, businessDate, status])
+  @@map("unified_aggregation_runs")
+}
+
+// A reader pins these source/day run IDs in one RepeatableRead transaction.
+model UnifiedSourcePublication {
+  sourceSystem String @map("source_system") @db.VarChar(64)
+  platform     String @db.VarChar(16)
+  scopeKey     String @map("scope_key") @db.VarChar(256)
+  businessDate DateTime @map("business_date") @db.Date
+  runId        String @map("run_id") @db.Uuid
+  revision     Int @default(1)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  run          UnifiedAggregationRun @relation(fields: [runId, sourceSystem, platform, scopeKey, businessDate], references: [id, sourceSystem, platform, scopeKey, businessDate], onDelete: Restrict)
+
+  @@id([sourceSystem, platform, scopeKey, businessDate])
+  @@map("unified_source_publications")
+}
+
+// SALE/AD_SPEND/COMMON_EXPENSE/SHIPPING_INCOME retain separate measures, never a sales x media join.
+// payload is the corresponding SaleFact/AdSpendFact/CommonExpenseFact including cost/FX evidence.
+model UnifiedDailyFact {
+  id             String @id @default(uuid()) @db.Uuid
+  runId          String @map("run_id") @db.Uuid
+  component      String @db.VarChar(32)
+  factKey        String @map("fact_key") @db.VarChar(256)
+  productName    String? @map("product_name") @db.VarChar(256)
+  saleUnitName   String? @map("sale_unit_name") @db.VarChar(256)
+  amountKrw      Decimal? @map("amount_krw") @db.Decimal(30, 6)
+  originalAmount Decimal? @map("original_amount") @db.Decimal(30, 6)
+  currency       String? @db.VarChar(8)
+  quantity       Decimal? @db.Decimal(24, 6)
+  attribution    String @db.VarChar(16)
+  payload        Json
+  run            UnifiedAggregationRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, component, factKey])
+  @@index([productName, runId, component])
+  @@map("unified_daily_facts")
+}
+
+model UnifiedSourceCoverage {
+  id              String @id @default(uuid()) @db.Uuid
+  runId           String @map("run_id") @db.Uuid
+  component       String @db.VarChar(32)
+  participation   String @db.VarChar(32)
+  collectionState String @map("collection_state") @db.VarChar(32)
+  zeroConfirmed   Boolean @default(false) @map("zero_confirmed")
+  rowsPresent     Int @map("rows_present")
+  sourceAsOf      DateTime? @map("source_as_of") @db.Timestamptz(3)
+  isEstimate      Boolean @map("is_estimate")
+  details         Json
+  run             UnifiedAggregationRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, component])
+  @@map("unified_source_coverage")
+}
+
+model UnifiedProductMatchResult {
+  id            String @id @default(uuid()) @db.Uuid
+  runId         String @map("run_id") @db.Uuid
+  sourceKey     String @map("source_key") @db.VarChar(256)
+  nameInputHash String @map("name_input_hash") @db.VarChar(64)
+  ruleVersion   String @map("rule_version") @db.VarChar(128)
+  matchStatus   String @map("match_status") @db.VarChar(32)
+  productName   String? @map("product_name") @db.VarChar(256)
+  evidence      Json
+  run           UnifiedAggregationRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, sourceKey, nameInputHash])
+  @@index([matchStatus, runId])
+  @@map("unified_product_match_results")
+}
+
 enum UploadStatus {
   PENDING
   VALIDATING
@@ -311,6 +463,7 @@ model AppUser {
   securityAuditEvents  SecurityAuditEvent[] @relation("SecurityAuditActor")
   storageTombstones    StorageTombstone[]    @relation("StorageTombstoneActor")
   googleMappingAudits GoogleMappingAudit[]
+  unifiedMappingAudits UnifiedMappingAudit[]
 
   @@index([invitedBy])
   @@index([inviteStatus, createdAt])

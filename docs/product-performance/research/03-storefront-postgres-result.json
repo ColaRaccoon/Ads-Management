@@ -1,0 +1,21 @@
+{
+  "stage": "03",
+  "startedAt": "2026-10-27T07:53:26.444Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55448,
+    "database": "unified_stage03"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh PG17 loopback identity checked before synthetic writes",
+    "all migrations applied",
+    "non-owner source reader SELECT grants; unified configuration RLS read policy",
+    "actual reader adapter tests pass with skip0"
+  ],
+  "testOutput": "✔ actual isolated reader preserves storefront ownership, dated money, missing days and immutable source rows (1063.0914ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1842.4877\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-27T07:53:37.145Z"
+}

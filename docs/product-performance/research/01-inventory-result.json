@@ -1,0 +1,2664 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "rowsChanged": 0,
+  "queries": [
+    {
+      "name": "identity_and_features",
+      "observedAt": "2026-10-27T06:40:24.1055328+00:00",
+      "sqlSha256": "9057d614010d38d95122cce0ef51b71f7f672adbaee233dbd97cbc243f6a2b22",
+      "elapsedMs": 1226,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "database_name": "postgres",
+        "management_role": "postgres",
+        "read_only": "on",
+        "unified_tables": 0
+      },
+      "reason": null
+    },
+    {
+      "name": "products",
+      "observedAt": "2026-10-27T06:40:24.8727148+00:00",
+      "sqlSha256": "11a25b7f9fa840e889ed61d162255c79fa4b630312d0069271162f0c6fd88d88",
+      "elapsedMs": 727,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "name": "노필수면안대",
+          "display_name": "노필수면안대",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "다이어트양말",
+          "display_name": "다이어트양말",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "두줄무릎보호대",
+          "display_name": "두줄무릎보호대",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "러닝양말",
+          "display_name": "러닝양말",
+          "is_active": true,
+          "cost_rules": 2
+        },
+        {
+          "name": "러닝조끼",
+          "display_name": "러닝조끼",
+          "is_active": true,
+          "cost_rules": 2
+        },
+        {
+          "name": "바라클라바",
+          "display_name": "바라클라바",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "버닝 슬라이드",
+          "display_name": "버닝 슬라이드",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "버닝웨이브바",
+          "display_name": "버닝웨이브바",
+          "is_active": true,
+          "cost_rules": 2
+        },
+        {
+          "name": "베놈무릎보호대",
+          "display_name": "베놈무릎보호대",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "뷰티레그보드",
+          "display_name": "뷰티레그보드",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "스카이스텝",
+          "display_name": "스카이스텝",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "아이언볼",
+          "display_name": "아이언볼",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "에어스텝퍼",
+          "display_name": "에어스텝퍼",
+          "is_active": true,
+          "cost_rules": 2
+        },
+        {
+          "name": "유쉴드마스크",
+          "display_name": "유쉴드마스크",
+          "is_active": true,
+          "cost_rules": 3
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "자이로볼",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "퍼펙트스케이트",
+          "display_name": "퍼펙트스케이트",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "퍼펙트슬라이드",
+          "display_name": "퍼펙트슬라이드",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "풀업바",
+          "display_name": "풀업바",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "플로우라이트",
+          "display_name": "플로우라이트",
+          "is_active": true,
+          "cost_rules": 2
+        },
+        {
+          "name": "한줄보호대",
+          "display_name": "한줄보호대",
+          "is_active": true,
+          "cost_rules": 1
+        },
+        {
+          "name": "에어스텝퍼",
+          "display_name": "에어스텝퍼",
+          "is_active": false,
+          "cost_rules": 1
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "coupang_products",
+      "observedAt": "2026-10-27T06:40:25.5893631+00:00",
+      "sqlSha256": "aa147993ccac1584ef65314f95a646ba1c4cf6e9f00669dff4fbd71bcb9e09da",
+      "elapsedMs": 711,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "standard_name": "nbr요가매트",
+          "display_name": "nbr요가매트",
+          "is_active": true
+        },
+        {
+          "standard_name": "tpe요가매트",
+          "display_name": "tpe요가매트",
+          "is_active": true
+        },
+        {
+          "standard_name": "다이어트양말",
+          "display_name": "다이어트양말",
+          "is_active": true
+        },
+        {
+          "standard_name": "다이어트양말 10개입",
+          "display_name": "다이어트양말 10개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "다이어트양말 3개입",
+          "display_name": "다이어트양말 3개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "다이어트양말 5개입",
+          "display_name": "다이어트양말 5개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "데일리 깔창",
+          "display_name": "데일리 깔창",
+          "is_active": true
+        },
+        {
+          "standard_name": "데일리 깔창 2개입",
+          "display_name": "데일리 깔창 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "두줄보호대",
+          "display_name": "두줄보호대",
+          "is_active": true
+        },
+        {
+          "standard_name": "두줄보호대 2개입",
+          "display_name": "두줄보호대 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "러닝모자",
+          "display_name": "러닝모자",
+          "is_active": true
+        },
+        {
+          "standard_name": "러닝모자+러닝조끼",
+          "display_name": "러닝모자+러닝조끼",
+          "is_active": true
+        },
+        {
+          "standard_name": "러닝장갑",
+          "display_name": "러닝장갑",
+          "is_active": true
+        },
+        {
+          "standard_name": "러닝장갑 2개입",
+          "display_name": "러닝장갑 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "러닝조끼",
+          "display_name": "러닝조끼",
+          "is_active": true
+        },
+        {
+          "standard_name": "레그워머",
+          "display_name": "레그워머",
+          "is_active": true
+        },
+        {
+          "standard_name": "레그워머 2개입",
+          "display_name": "레그워머 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "리프팅밴드",
+          "display_name": "리프팅밴드",
+          "is_active": true
+        },
+        {
+          "standard_name": "마사지양말",
+          "display_name": "마사지양말",
+          "is_active": true
+        },
+        {
+          "standard_name": "마사지양말 3개",
+          "display_name": "마사지양말 3개",
+          "is_active": true
+        },
+        {
+          "standard_name": "목도리",
+          "display_name": "목도리",
+          "is_active": true
+        },
+        {
+          "standard_name": "목도리 2개입",
+          "display_name": "목도리 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "무릎키퍼_1개입",
+          "display_name": "무릎키퍼_1개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "무릎키퍼_2개입",
+          "display_name": "무릎키퍼_2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "바라클라바 베이직",
+          "display_name": "바라클라바 베이직",
+          "is_active": true
+        },
+        {
+          "standard_name": "바라클라바 베이직 2개입",
+          "display_name": "바라클라바 베이직 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "바라클라바 프로",
+          "display_name": "바라클라바 프로",
+          "is_active": true
+        },
+        {
+          "standard_name": "바라클라바 프로 2개입",
+          "display_name": "바라클라바 프로 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "발목보호대데일리",
+          "display_name": "발목보호대데일리",
+          "is_active": true
+        },
+        {
+          "standard_name": "발목보호대데일리 2개입",
+          "display_name": "발목보호대데일리 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "방한마스크",
+          "display_name": "방한마스크",
+          "is_active": true
+        },
+        {
+          "standard_name": "방한마스크 2개입",
+          "display_name": "방한마스크 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "버닝슬라이드",
+          "display_name": "버닝슬라이드",
+          "is_active": true
+        },
+        {
+          "standard_name": "버닝웨이브바 1개입",
+          "display_name": "버닝웨이브바 1개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "버닝웨이브바 2개입",
+          "display_name": "버닝웨이브바 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "베놈공용",
+          "display_name": "베놈공용",
+          "is_active": true
+        },
+        {
+          "standard_name": "베놈공용 2개입",
+          "display_name": "베놈공용 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "베놈여성",
+          "display_name": "베놈여성",
+          "is_active": true
+        },
+        {
+          "standard_name": "베놈여성 2개입",
+          "display_name": "베놈여성 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "뷰티케겔",
+          "display_name": "뷰티케겔",
+          "is_active": true
+        },
+        {
+          "standard_name": "비니",
+          "display_name": "비니",
+          "is_active": true
+        },
+        {
+          "standard_name": "비니 2개입",
+          "display_name": "비니 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "삼대장",
+          "display_name": "삼대장",
+          "is_active": true
+        },
+        {
+          "standard_name": "소프트물병",
+          "display_name": "소프트물병",
+          "is_active": true
+        },
+        {
+          "standard_name": "손목보호대",
+          "display_name": "손목보호대",
+          "is_active": true
+        },
+        {
+          "standard_name": "손목보호대 2개입",
+          "display_name": "손목보호대 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "손목보호대프로",
+          "display_name": "손목보호대프로",
+          "is_active": true
+        },
+        {
+          "standard_name": "손목보호대프로 2개입",
+          "display_name": "손목보호대프로 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "스카이스텝",
+          "display_name": "스카이스텝",
+          "is_active": true
+        },
+        {
+          "standard_name": "스카이스텝 2개입",
+          "display_name": "스카이스텝 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "스탭마스터",
+          "display_name": "스탭마스터",
+          "is_active": true
+        },
+        {
+          "standard_name": "스트레칭보드",
+          "display_name": "스트레칭보드",
+          "is_active": true
+        },
+        {
+          "standard_name": "스포츠양말",
+          "display_name": "스포츠양말",
+          "is_active": true
+        },
+        {
+          "standard_name": "스포츠양말 10개입",
+          "display_name": "스포츠양말 10개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "스포츠양말 3개입",
+          "display_name": "스포츠양말 3개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "스포츠양말 5개입",
+          "display_name": "스포츠양말 5개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "스포츠양말 7개입",
+          "display_name": "스포츠양말 7개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "신규폼롤러 소프트45",
+          "display_name": "신규폼롤러 소프트45",
+          "is_active": true
+        },
+        {
+          "standard_name": "신규폼롤러 소프트60",
+          "display_name": "신규폼롤러 소프트60",
+          "is_active": true
+        },
+        {
+          "standard_name": "신규폼롤러 하드",
+          "display_name": "신규폼롤러 하드",
+          "is_active": true
+        },
+        {
+          "standard_name": "실리콘리프팅밴드",
+          "display_name": "실리콘리프팅밴드",
+          "is_active": true
+        },
+        {
+          "standard_name": "실리콘리프팅밴드 2개입",
+          "display_name": "실리콘리프팅밴드 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "실크안대",
+          "display_name": "실크안대",
+          "is_active": true
+        },
+        {
+          "standard_name": "실크안대 2개입",
+          "display_name": "실크안대 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "싸커발목보호대",
+          "display_name": "싸커발목보호대",
+          "is_active": true
+        },
+        {
+          "standard_name": "싸커발목보호대 2개입",
+          "display_name": "싸커발목보호대 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "에어스텝퍼",
+          "display_name": "에어스텝퍼",
+          "is_active": true
+        },
+        {
+          "standard_name": "이지드림안대 3d",
+          "display_name": "이지드림안대 3d",
+          "is_active": true
+        },
+        {
+          "standard_name": "이지드림안대 3d+3d",
+          "display_name": "이지드림안대 3d+3d",
+          "is_active": true
+        },
+        {
+          "standard_name": "이지드림안대 3d+양면",
+          "display_name": "이지드림안대 3d+양면",
+          "is_active": true
+        },
+        {
+          "standard_name": "이지드림안대 양면",
+          "display_name": "이지드림안대 양면",
+          "is_active": true
+        },
+        {
+          "standard_name": "이지드림안대 양면+양면",
+          "display_name": "이지드림안대 양면+양면",
+          "is_active": true
+        },
+        {
+          "standard_name": "자외선마스크",
+          "display_name": "자외선마스크",
+          "is_active": true
+        },
+        {
+          "standard_name": "자이로볼 메딕",
+          "display_name": "자이로볼 메딕",
+          "is_active": true
+        },
+        {
+          "standard_name": "자이로볼 메딕메탈",
+          "display_name": "자이로볼 메딕메탈",
+          "is_active": true
+        },
+        {
+          "standard_name": "자이로볼 메탈",
+          "display_name": "자이로볼 메탈",
+          "is_active": true
+        },
+        {
+          "standard_name": "자이로볼 아이언",
+          "display_name": "자이로볼 아이언",
+          "is_active": true
+        },
+        {
+          "standard_name": "자이로볼 챌린지",
+          "display_name": "자이로볼 챌린지",
+          "is_active": true
+        },
+        {
+          "standard_name": "자이로볼 챌린지메탈",
+          "display_name": "자이로볼 챌린지메탈",
+          "is_active": true
+        },
+        {
+          "standard_name": "자이로볼 호크아이",
+          "display_name": "자이로볼 호크아이",
+          "is_active": true
+        },
+        {
+          "standard_name": "축구양말_장목_1개입",
+          "display_name": "축구양말_장목_1개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "축구양말_장목_3개입",
+          "display_name": "축구양말_장목_3개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "축구양말_중목_1개입",
+          "display_name": "축구양말_중목_1개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "축구양말_중목_3개입",
+          "display_name": "축구양말_중목_3개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "카프슬리브",
+          "display_name": "카프슬리브",
+          "is_active": true
+        },
+        {
+          "standard_name": "카프슬리브 2개입",
+          "display_name": "카프슬리브 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "케겔",
+          "display_name": "케겔",
+          "is_active": true
+        },
+        {
+          "standard_name": "케겔 맥스",
+          "display_name": "케겔 맥스",
+          "is_active": true
+        },
+        {
+          "standard_name": "코어브릿지",
+          "display_name": "코어브릿지",
+          "is_active": true
+        },
+        {
+          "standard_name": "코어브릿지 프로",
+          "display_name": "코어브릿지 프로",
+          "is_active": true
+        },
+        {
+          "standard_name": "쿨토시",
+          "display_name": "쿨토시",
+          "is_active": true
+        },
+        {
+          "standard_name": "퍼슬2",
+          "display_name": "퍼슬2",
+          "is_active": true
+        },
+        {
+          "standard_name": "퍼펙트스케이트",
+          "display_name": "퍼펙트스케이트",
+          "is_active": true
+        },
+        {
+          "standard_name": "퍼펙트슬라이드",
+          "display_name": "퍼펙트슬라이드",
+          "is_active": true
+        },
+        {
+          "standard_name": "퍼펙트슬라이드 프로",
+          "display_name": "퍼펙트슬라이드 프로",
+          "is_active": true
+        },
+        {
+          "standard_name": "페이스&바디롤러",
+          "display_name": "페이스&바디롤러",
+          "is_active": true
+        },
+        {
+          "standard_name": "포론깔창",
+          "display_name": "포론깔창",
+          "is_active": true
+        },
+        {
+          "standard_name": "포론깔창 2개입",
+          "display_name": "포론깔창 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "폼롤러",
+          "display_name": "폼롤러",
+          "is_active": true
+        },
+        {
+          "standard_name": "푸샵바",
+          "display_name": "푸샵바",
+          "is_active": true
+        },
+        {
+          "standard_name": "풀업바",
+          "display_name": "풀업바",
+          "is_active": true
+        },
+        {
+          "standard_name": "풀업밴드 그린",
+          "display_name": "풀업밴드 그린",
+          "is_active": true
+        },
+        {
+          "standard_name": "풀업밴드 레드",
+          "display_name": "풀업밴드 레드",
+          "is_active": true
+        },
+        {
+          "standard_name": "풀업밴드 블랙",
+          "display_name": "풀업밴드 블랙",
+          "is_active": true
+        },
+        {
+          "standard_name": "풀업밴드 세트",
+          "display_name": "풀업밴드 세트",
+          "is_active": true
+        },
+        {
+          "standard_name": "풀업밴드 퍼플",
+          "display_name": "풀업밴드 퍼플",
+          "is_active": true
+        },
+        {
+          "standard_name": "풀업세트",
+          "display_name": "풀업세트",
+          "is_active": true
+        },
+        {
+          "standard_name": "풋파일",
+          "display_name": "풋파일",
+          "is_active": true
+        },
+        {
+          "standard_name": "플레시 ab슬라이드",
+          "display_name": "플레시 ab슬라이드",
+          "is_active": true
+        },
+        {
+          "standard_name": "플로우라이트_1개입",
+          "display_name": "플로우라이트_1개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "플로우라이트_2개입",
+          "display_name": "플로우라이트_2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "한줄보호대",
+          "display_name": "한줄보호대",
+          "is_active": true
+        },
+        {
+          "standard_name": "한줄보호대 2개입",
+          "display_name": "한줄보호대 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "한줄보호대 4개입",
+          "display_name": "한줄보호대 4개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "핸드워머",
+          "display_name": "핸드워머",
+          "is_active": true
+        },
+        {
+          "standard_name": "핸드워머 2개입",
+          "display_name": "핸드워머 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "히트체인지",
+          "display_name": "히트체인지",
+          "is_active": true
+        },
+        {
+          "standard_name": "히트체인지 2개입",
+          "display_name": "히트체인지 2개입",
+          "is_active": true
+        },
+        {
+          "standard_name": "힙업밴드",
+          "display_name": "힙업밴드",
+          "is_active": true
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "connections",
+      "observedAt": "2026-10-27T06:40:26.3541619+00:00",
+      "sqlSha256": "4f29429418a50606a45a1b390107ec344acb1a75290baa022f83bcd41022d277",
+      "elapsedMs": 761,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "provider": "GOOGLE",
+          "display_name": "Google Ads",
+          "shop_key": "default",
+          "currency_code": "KRW",
+          "time_zone": "Asia/Seoul",
+          "access_state": "READY",
+          "enabled": true
+        },
+        {
+          "id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "provider": "META",
+          "display_name": "Meta Ads",
+          "shop_key": "default",
+          "currency_code": "USD",
+          "time_zone": "Asia/Seoul",
+          "access_state": "READY",
+          "enabled": true
+        },
+        {
+          "id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "provider": "CAFE24",
+          "display_name": "Cafe24",
+          "shop_key": "shop1",
+          "currency_code": "KRW",
+          "time_zone": "Asia/Seoul",
+          "access_state": "READY",
+          "enabled": true
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "policies",
+      "observedAt": "2026-10-27T06:40:27.0713851+00:00",
+      "sqlSha256": "def537d885d6ea01fbc3d890719ec89a374dff8cf35c38031224490c2490baf0",
+      "elapsedMs": 713,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_AD",
+          "from_date": "2026-10-23",
+          "to_date": null,
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_ADSET",
+          "from_date": "2026-10-23",
+          "to_date": null,
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "data_kind": "GOOGLE_CAMPAIGN",
+          "from_date": "2026-10-20",
+          "to_date": "2026-10-23",
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "data_kind": "GOOGLE_CAMPAIGN",
+          "from_date": "2026-10-23",
+          "to_date": null,
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "from_date": "2026-10-23",
+          "to_date": "2026-10-24",
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "from_date": "2026-10-24",
+          "to_date": "2026-10-25",
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "from_date": "2026-10-25",
+          "to_date": "2026-10-26",
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "from_date": "2026-10-26",
+          "to_date": "2026-10-27",
+          "primary_source": "API"
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "from_date": "2026-10-27",
+          "to_date": null,
+          "primary_source": "CSV"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "public_inventory",
+      "observedAt": "2026-10-27T06:40:27.8379336+00:00",
+      "sqlSha256": "6ff4a2ea7dec806b24b1aae3ce40c4fb9767cff75d4e58cf46d924e228c37961",
+      "elapsedMs": 764,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "table_name": "canonical_sales_units",
+          "columns": "id,payload,payload_hash,updated_at"
+        },
+        {
+          "table_name": "order_source_signatures",
+          "columns": "id,payload,payload_hash,updated_at"
+        },
+        {
+          "table_name": "order_sync_states",
+          "columns": "id,payload,payload_hash,updated_at"
+        },
+        {
+          "table_name": "stores",
+          "columns": "id,payload,payload_hash,updated_at"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_units",
+      "observedAt": "2026-10-27T06:40:28.5882329+00:00",
+      "sqlSha256": "e0c54c55e6a54d9441175732468a67613cff05d358b2828ab35d59a733ef2114",
+      "elapsedMs": 747,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "id": "01952725-7a46-42e0-b6d2-d026f4bdcbd4",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "021fc821-bfa4-4136-bc9b-d0e2c6712a96",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "038d2801-5ce4-4995-8a0d-e2c354e71834",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "06403a11-4274-4d91-a7b1-ca18c99f0c8c",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "08d45360-9312-4991-97c9-fe350793b8f4",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "09d9f8d7-870e-4bc5-89d9-1a4ddd3c151e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "0a9b81dc-bfdb-4fd3-9013-ed2b492bd94b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "0fffd984-814f-43b5-ae9b-245fbc4b302e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "13a07cd0-c51a-4d72-b74d-02001c4f70c5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "14a058a3-3b41-4a7b-9e06-c20c94a605ad",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "18b9212e-44d8-4711-a21e-47db46382a2b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "1ba4d8f9-db90-4f63-8806-7be6badea102",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "1c182064-e97c-4de1-bb33-abf4f12c57e6",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "false",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "1d2d03a7-7729-42b8-96a3-d8e6655acb63",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "208a4ead-e15c-42f8-8835-eb765bc9561f",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "2131d6d3-0601-400a-a389-a1d7673cf61a",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "28b9fd1e-09de-45ae-be83-027921306071",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "29bde2f1-46d8-49c6-ad1a-53703539e230",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "2ac843c3-9931-4278-bf9c-876392ba69f4",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "2bb1f004-0a6b-4e7b-948e-3aea27cb4112",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "2d7d2a97-ed47-4f32-9d3f-f7a2f8e96010",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "2f1d38c1-ddfc-4a6a-8be8-021d6f5c1518",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "34c27df9-c2d5-4b6c-b53f-5629ce9739a4",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "37f0c7c6-eb88-4520-a02a-07ac81702577",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "3a3e9d78-af1a-47bf-9933-6c58628ebbec",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "3be7c15f-6097-4653-8e32-a9b5d5b4ab59",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "4345149d-7188-4563-8e90-cff1fb0c593e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "43499fe0-02d3-4572-b313-588efdedfa15",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "440079d0-3aa6-46ce-a2ea-583df7bcefe3",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "44def751-f254-47bc-a2e3-53a56478ef4f",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "45a6a325-8de6-4d16-82cf-cbbde9aabdd8",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "47753537-ad16-43c9-aa85-c1c0baba601b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "47d4e2d7-4abf-46e3-8848-13a4bcf2e148",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "47f54152-2459-444d-b345-ccaa01232cf7",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "4817e33a-be48-4115-a74b-e3907cdc706b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "48b594f7-2f77-4add-82ff-3afb32e22a88",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "4a20062f-c788-461e-bd44-c5cbd66c873d",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "4ac0d206-70a8-4a85-8072-95c58bf6660a",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "4cae6ae7-8e25-4214-821d-1d06fa3f4529",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "4cbcebe9-fca5-4920-aa3c-8a73a8a160e7",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "55813926-a6b6-4b14-a935-de5a202a751e",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "580ffa86-bfa7-45c0-91be-174fce0ebbf5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "58c5b066-fa9c-41ce-a1ee-cad5d56fe122",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "597044d9-b242-40fd-bc40-29a445573e8d",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "59e924eb-e8b0-40fd-8aa4-3906feab64a5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "5ace2f59-ccb9-43e5-91ab-3092f1c3cf0e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "621d78b4-01dc-4cc8-90b8-c01b354f54d1",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "63027ddb-4e42-442c-8c45-2c0fc8b11c9c",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "6659498a-13e8-4e97-a267-183f66c81e2d",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "68830691-eb3d-49c4-b9b1-b4bc12bce85b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "6b8fe055-6e35-439b-a7b4-e4502a2fc254",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "6d1b39a0-a49b-4023-b94f-0bb0cd03b689",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "6d871d86-128f-46b3-95d4-b1f0a7bb9320",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "6e8d51e2-48d5-4663-82bf-674e77109b57",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "722a3fc5-7a0a-4be6-8b26-ae1dfa19b0d0",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "773f5c19-0326-44a7-a7d6-7f16e0aec63e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "7cfff932-d7c8-48c0-841f-19df309571b8",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "85d5c600-639c-416a-9960-d4e9561fe6c2",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "861c46b5-ad0d-4a19-99c9-ca5296fd4316",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "87c269ec-0021-4dec-a959-13c69d248ec2",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "8c9345e6-3555-4d29-b8c5-df2c9b7d4e60",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "9377cc60-88c9-4a55-b334-61ed729c98ce",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "94a080c5-f4c8-4aeb-bb7a-f0ad2c69b57a",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "98b0f410-22ae-4d0d-8e49-ebb4cd88d6b5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "99a3a41e-59c1-4ed6-a6e2-4980ca69762b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "99c2f290-49d8-4e4d-a5e4-69ce42e3aab1",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "9a6f1a8f-07ce-42a0-8570-9b53af61dee0",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "9d26fb4e-b33e-4b0b-82ac-de87cda5f48b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "a130d1e4-4300-4760-945b-ef4457bfbad9",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "a316843a-9e4c-43e9-9943-5dfbc768daae",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "a3a53351-0249-4d89-8488-ddbc096d430d",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "a4b69545-0eb6-4403-b181-46b43251c496",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "b19974f6-a440-4e4a-a041-656c142caa79",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "b1ad5cf1-17c9-494a-ac59-0f1354fde5d7",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "b2679fe1-dadc-4390-ac00-8979f9c3c663",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "b7ec4d84-5ada-431e-97a6-b58a75d8572e",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "be7d4c04-be8f-48da-8580-14b8f1243088",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "be940f58-6f9b-423f-9be5-514df4535b26",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "c20e0b7d-e3ae-4a15-b7fb-592fb4baf24a",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "c2814031-53a2-4845-9b90-4ee82622b9f0",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "c976abd7-716b-4ca7-af32-29ea7a91f901",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "c9edc3e7-4643-4863-80b4-2c79afce7027",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "caa528ae-65b1-48a5-92d5-c6fe00303b60",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "ce6159b9-137a-4f7a-87d2-ca9e3dabe0aa",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "cf0cdef0-12e1-4864-8024-b1c9e658ed6d",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "cf3025bd-058f-4b77-9ff6-a7ad75c4a903",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "d815f925-d252-488b-bede-02b3e0ec085b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "d9ec6a50-6c30-46cf-9a35-b930a899252a",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "db53cae7-b818-4df8-9c94-9f801345d532",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "ddc2dd13-89bc-4c81-8cd8-cc5fb05cb590",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "e0ad6322-537d-4a2a-89b5-3e59bed79f46",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "e2f355f2-1b8f-494f-a1c5-60bd515bb673",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "eb7d6109-7488-48db-b7ac-da403bf118b4",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "ec0352ae-ec4c-4878-a71e-6fa207eac4e3",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "f29ba9ab-52d0-4da1-b864-65a02b492de9",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "f7a756e9-fee6-41c7-acaf-a4f8ad87c575",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "fa1db8b9-309d-497a-92d0-b957b5c089ac",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        },
+        {
+          "id": "fee266ec-00ac-4d03-9771-50fb6facd3ca",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": null,
+          "active": "true",
+          "group_id": null,
+          "aliases": null,
+          "costs": null
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_payload_keys",
+      "observedAt": "2026-10-27T06:40:29.5559535+00:00",
+      "sqlSha256": "0be1096b38b19a4d2941135410f4ed2facd0c4607fb355970c84106de6777ef2",
+      "elapsedMs": 963,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "kind": "unit",
+          "key": "id"
+        },
+        {
+          "kind": "unit",
+          "key": "memo"
+        },
+        {
+          "kind": "unit",
+          "key": "isGroup"
+        },
+        {
+          "kind": "unit",
+          "key": "storeId"
+        },
+        {
+          "kind": "unit",
+          "key": "isActive"
+        },
+        {
+          "kind": "unit",
+          "key": "createdAt"
+        },
+        {
+          "kind": "unit",
+          "key": "updatedAt"
+        },
+        {
+          "kind": "unit",
+          "key": "displayName"
+        },
+        {
+          "kind": "unit",
+          "key": "isStoreLevel"
+        },
+        {
+          "kind": "unit",
+          "key": "matchAliases"
+        },
+        {
+          "kind": "unit",
+          "key": "deactivatedAt"
+        },
+        {
+          "kind": "unit",
+          "key": "linkedProductIds"
+        },
+        {
+          "kind": "unit",
+          "key": "linkedManageCodes"
+        },
+        {
+          "kind": "unit",
+          "key": "linkedOptionCodes"
+        },
+        {
+          "kind": "unit",
+          "key": "parentSalesUnitId"
+        },
+        {
+          "kind": "unit",
+          "key": "normalizedMatchAliases"
+        },
+        {
+          "kind": "order",
+          "key": "id"
+        },
+        {
+          "kind": "order",
+          "key": "orderId"
+        },
+        {
+          "kind": "order",
+          "key": "storeId"
+        },
+        {
+          "kind": "order",
+          "key": "quantity"
+        },
+        {
+          "kind": "order",
+          "key": "createdAt"
+        },
+        {
+          "kind": "order",
+          "key": "orderDate"
+        },
+        {
+          "kind": "order",
+          "key": "productId"
+        },
+        {
+          "kind": "order",
+          "key": "updatedAt"
+        },
+        {
+          "kind": "order",
+          "key": "isCanceled"
+        },
+        {
+          "kind": "order",
+          "key": "isReturned"
+        },
+        {
+          "kind": "order",
+          "key": "optionCode"
+        },
+        {
+          "kind": "order",
+          "key": "rawPayload"
+        },
+        {
+          "kind": "order",
+          "key": "saleStatus"
+        },
+        {
+          "kind": "order",
+          "key": "orderStatus"
+        },
+        {
+          "kind": "order",
+          "key": "paymentDate"
+        },
+        {
+          "kind": "order",
+          "key": "packageNumber"
+        },
+        {
+          "kind": "order",
+          "key": "saleCommission"
+        },
+        {
+          "kind": "order",
+          "key": "channelCommission"
+        },
+        {
+          "kind": "order",
+          "key": "deliveryFeeAmount"
+        },
+        {
+          "kind": "order",
+          "key": "externalProductId"
+        },
+        {
+          "kind": "order",
+          "key": "paymentCommission"
+        },
+        {
+          "kind": "order",
+          "key": "totalProductAmount"
+        },
+        {
+          "kind": "order",
+          "key": "canonicalSalesUnitId"
+        },
+        {
+          "kind": "order",
+          "key": "productPaymentAmount"
+        },
+        {
+          "kind": "order",
+          "key": "externalProductOrderId"
+        },
+        {
+          "kind": "order",
+          "key": "orderSourceSignatureId"
+        },
+        {
+          "kind": "order",
+          "key": "knowledgeShoppingSellingInterlockCommission"
+        },
+        {
+          "kind": "ad",
+          "key": "id"
+        },
+        {
+          "kind": "ad",
+          "key": "adType"
+        },
+        {
+          "kind": "ad",
+          "key": "clicks"
+        },
+        {
+          "kind": "ad",
+          "key": "status"
+        },
+        {
+          "kind": "ad",
+          "key": "storeId"
+        },
+        {
+          "kind": "ad",
+          "key": "weekday"
+        },
+        {
+          "kind": "ad",
+          "key": "uploadId"
+        },
+        {
+          "kind": "ad",
+          "key": "createdAt"
+        },
+        {
+          "kind": "ad",
+          "key": "totalCost"
+        },
+        {
+          "kind": "ad",
+          "key": "updatedAt"
+        },
+        {
+          "kind": "ad",
+          "key": "campaignId"
+        },
+        {
+          "kind": "ad",
+          "key": "reasonNote"
+        },
+        {
+          "kind": "ad",
+          "key": "reportDate"
+        },
+        {
+          "kind": "ad",
+          "key": "impressions"
+        },
+        {
+          "kind": "ad",
+          "key": "campaignName"
+        },
+        {
+          "kind": "ad",
+          "key": "mappingReason"
+        },
+        {
+          "kind": "ad",
+          "key": "sourceUploadId"
+        },
+        {
+          "kind": "ad",
+          "key": "matchedRuleCount"
+        },
+        {
+          "kind": "ad",
+          "key": "totalConversions"
+        },
+        {
+          "kind": "ad",
+          "key": "reasonNoteInherited"
+        },
+        {
+          "kind": "ad",
+          "key": "canonicalSalesUnitId"
+        },
+        {
+          "kind": "ad",
+          "key": "totalConversionSales"
+        },
+        {
+          "kind": "ad",
+          "key": "adCampaignSignatureId"
+        },
+        {
+          "kind": "ad",
+          "key": "normalizedCampaignName"
+        },
+        {
+          "kind": "upload",
+          "key": "id"
+        },
+        {
+          "kind": "upload",
+          "key": "state"
+        },
+        {
+          "kind": "upload",
+          "key": "storeId"
+        },
+        {
+          "kind": "upload",
+          "key": "fileHash"
+        },
+        {
+          "kind": "upload",
+          "key": "isActive"
+        },
+        {
+          "kind": "upload",
+          "key": "createdAt"
+        },
+        {
+          "kind": "upload",
+          "key": "updatedAt"
+        },
+        {
+          "kind": "upload",
+          "key": "reportDate"
+        },
+        {
+          "kind": "upload",
+          "key": "sourceType"
+        },
+        {
+          "kind": "upload",
+          "key": "detectedWeekday"
+        },
+        {
+          "kind": "upload",
+          "key": "originalFileName"
+        },
+        {
+          "kind": "upload",
+          "key": "previewCreatedAt"
+        },
+        {
+          "kind": "upload",
+          "key": "previewExpiresAt"
+        },
+        {
+          "kind": "upload",
+          "key": "replacedUploadId"
+        },
+        {
+          "kind": "upload",
+          "key": "previewRuleSnapshotHash"
+        },
+        {
+          "kind": "upload",
+          "key": "weekdayValidationStatus"
+        },
+        {
+          "kind": "upload",
+          "key": "previewOverrideSnapshotHash"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "indexes",
+      "observedAt": "2026-10-27T06:40:30.4843596+00:00",
+      "sqlSha256": "7a6a133eb02c52d96f14554cdc9a5f800c5cd62f36e5a8f3af3538e86d1d40e1",
+      "elapsedMs": 924,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE UNIQUE INDEX cafe24_order_lines_api_current_key ON meta_ads.cafe24_order_lines USING btree (connection_id, order_line_key) WHERE ((source = 'API'::meta_ads.\"SourceKind\") AND (is_current = true))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE UNIQUE INDEX cafe24_order_lines_api_version_key ON meta_ads.cafe24_order_lines USING btree (connection_id, order_line_key, import_version) WHERE (source = 'API'::meta_ads.\"SourceKind\")"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_cafe24_product_rule_id_idx ON meta_ads.cafe24_order_lines USING btree (cafe24_product_rule_id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_connection_id_order_date_idx ON meta_ads.cafe24_order_lines USING btree (connection_id, order_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE UNIQUE INDEX cafe24_order_lines_csv_account_current_key ON meta_ads.cafe24_order_lines USING btree (connection_id, order_line_key) WHERE ((source = 'CSV'::meta_ads.\"SourceKind\") AND (connection_id IS NOT NULL) AND (is_current = true))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE UNIQUE INDEX cafe24_order_lines_csv_legacy_current_key ON meta_ads.cafe24_order_lines USING btree (order_line_key) WHERE ((source = 'CSV'::meta_ads.\"SourceKind\") AND (connection_id IS NULL) AND (is_current = true))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_is_current_order_date_idx ON meta_ads.cafe24_order_lines USING btree (is_current, order_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_order_date_idx ON meta_ads.cafe24_order_lines USING btree (order_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_order_line_key_idx ON meta_ads.cafe24_order_lines USING btree (order_line_key)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_order_line_key_is_current_idx ON meta_ads.cafe24_order_lines USING btree (order_line_key, is_current)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE UNIQUE INDEX cafe24_order_lines_pkey ON meta_ads.cafe24_order_lines USING btree (id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_product_id_order_date_idx ON meta_ads.cafe24_order_lines USING btree (product_id, order_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_product_no_idx ON meta_ads.cafe24_order_lines USING btree (product_no)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE INDEX cafe24_order_lines_superseded_by_order_line_id_idx ON meta_ads.cafe24_order_lines USING btree (superseded_by_order_line_id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "cafe24_order_lines",
+          "indexdef": "CREATE UNIQUE INDEX cafe24_order_lines_upload_batch_id_row_number_key ON meta_ads.cafe24_order_lines USING btree (upload_batch_id, row_number)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_ad_metrics",
+          "indexdef": "CREATE INDEX coupang_ad_metrics_ad_metric_key_is_current_idx ON meta_ads.coupang_ad_metrics USING btree (ad_metric_key, is_current)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_ad_metrics",
+          "indexdef": "CREATE INDEX coupang_ad_metrics_conversion_product_id_metric_date_idx ON meta_ads.coupang_ad_metrics USING btree (conversion_product_id, metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_ad_metrics",
+          "indexdef": "CREATE INDEX coupang_ad_metrics_is_current_metric_date_idx ON meta_ads.coupang_ad_metrics USING btree (is_current, metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_ad_metrics",
+          "indexdef": "CREATE INDEX coupang_ad_metrics_metric_date_idx ON meta_ads.coupang_ad_metrics USING btree (metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_ad_metrics",
+          "indexdef": "CREATE UNIQUE INDEX coupang_ad_metrics_pkey ON meta_ads.coupang_ad_metrics USING btree (id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_ad_metrics",
+          "indexdef": "CREATE INDEX coupang_ad_metrics_spend_product_id_metric_date_idx ON meta_ads.coupang_ad_metrics USING btree (spend_product_id, metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_ad_metrics",
+          "indexdef": "CREATE UNIQUE INDEX coupang_ad_metrics_upload_batch_id_row_number_key ON meta_ads.coupang_ad_metrics USING btree (upload_batch_id, row_number)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_sale_lines",
+          "indexdef": "CREATE INDEX coupang_sale_lines_coupang_product_id_sale_date_idx ON meta_ads.coupang_sale_lines USING btree (coupang_product_id, sale_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_sale_lines",
+          "indexdef": "CREATE INDEX coupang_sale_lines_coupang_product_rule_id_idx ON meta_ads.coupang_sale_lines USING btree (coupang_product_rule_id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_sale_lines",
+          "indexdef": "CREATE INDEX coupang_sale_lines_is_current_sale_date_idx ON meta_ads.coupang_sale_lines USING btree (is_current, sale_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_sale_lines",
+          "indexdef": "CREATE UNIQUE INDEX coupang_sale_lines_pkey ON meta_ads.coupang_sale_lines USING btree (id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_sale_lines",
+          "indexdef": "CREATE INDEX coupang_sale_lines_sale_date_idx ON meta_ads.coupang_sale_lines USING btree (sale_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_sale_lines",
+          "indexdef": "CREATE INDEX coupang_sale_lines_sale_line_key_is_current_idx ON meta_ads.coupang_sale_lines USING btree (sale_line_key, is_current)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "coupang_sale_lines",
+          "indexdef": "CREATE UNIQUE INDEX coupang_sale_lines_upload_batch_id_row_number_key ON meta_ads.coupang_sale_lines USING btree (upload_batch_id, row_number)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "google_campaign_daily_costs",
+          "indexdef": "CREATE UNIQUE INDEX google_campaign_daily_costs_connection_id_metric_date_campa_key ON meta_ads.google_campaign_daily_costs USING btree (connection_id, metric_date, campaign_id, version)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "google_campaign_daily_costs",
+          "indexdef": "CREATE INDEX google_campaign_daily_costs_connection_id_metric_date_idx ON meta_ads.google_campaign_daily_costs USING btree (connection_id, metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "google_campaign_daily_costs",
+          "indexdef": "CREATE UNIQUE INDEX google_campaign_daily_costs_one_current ON meta_ads.google_campaign_daily_costs USING btree (connection_id, metric_date, campaign_id) WHERE is_current"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "google_campaign_daily_costs",
+          "indexdef": "CREATE UNIQUE INDEX google_campaign_daily_costs_pkey ON meta_ads.google_campaign_daily_costs USING btree (id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_api_current_key ON meta_ads.meta_adset_daily_metrics USING btree (connection_id, metric_date, meta_adset_id) WHERE ((source = 'API'::meta_ads.\"SourceKind\") AND (is_current = true))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_api_version_key ON meta_ads.meta_adset_daily_metrics USING btree (connection_id, metric_date, meta_adset_id, import_version) WHERE (source = 'API'::meta_ads.\"SourceKind\")"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_connection_id_metric_date_idx ON meta_ads.meta_adset_daily_metrics USING btree (connection_id, metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_csv_account_current_key ON meta_ads.meta_adset_daily_metrics USING btree (connection_id, metric_date, meta_adset_id) WHERE ((source = 'CSV'::meta_ads.\"SourceKind\") AND (connection_id IS NOT NULL) AND (is_current = true))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_csv_account_version_key ON meta_ads.meta_adset_daily_metrics USING btree (connection_id, metric_date, meta_adset_id, import_version) WHERE ((source = 'CSV'::meta_ads.\"SourceKind\") AND (connection_id IS NOT NULL))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_csv_legacy_current_key ON meta_ads.meta_adset_daily_metrics USING btree (metric_date, meta_adset_id) WHERE ((source = 'CSV'::meta_ads.\"SourceKind\") AND (connection_id IS NULL) AND (is_current = true))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_csv_legacy_version_key ON meta_ads.meta_adset_daily_metrics USING btree (metric_date, meta_adset_id, import_version) WHERE ((source = 'CSV'::meta_ads.\"SourceKind\") AND (connection_id IS NULL))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_metric_date_current_idx ON meta_ads.meta_adset_daily_metrics USING btree (metric_date) WHERE (is_current = true)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_metric_date_idx ON meta_ads.meta_adset_daily_metrics USING btree (metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_pkey ON meta_ads.meta_adset_daily_metrics USING btree (id)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_product_id_metric_date_idx ON meta_ads.meta_adset_daily_metrics USING btree (product_id, metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_product_metric_date_current_idx ON meta_ads.meta_adset_daily_metrics USING btree (product_id, metric_date) WHERE (is_current = true)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_stage_metric_date_current_idx ON meta_ads.meta_adset_daily_metrics USING btree (stage, metric_date) WHERE (is_current = true)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_stage_metric_date_idx ON meta_ads.meta_adset_daily_metrics USING btree (stage, metric_date)"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE INDEX meta_adset_daily_metrics_unmatched_current_idx ON meta_ads.meta_adset_daily_metrics USING btree (metric_date) WHERE ((is_current = true) AND (product_id IS NULL))"
+        },
+        {
+          "schemaname": "meta_ads",
+          "tablename": "meta_adset_daily_metrics",
+          "indexdef": "CREATE UNIQUE INDEX meta_adset_daily_metrics_upload_row_id_key ON meta_ads.meta_adset_daily_metrics USING btree (upload_row_id)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "ad_campaign_daily_costs",
+          "indexdef": "CREATE UNIQUE INDEX ad_campaign_daily_costs_pkey ON public.ad_campaign_daily_costs USING btree (id)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "ad_campaign_daily_costs",
+          "indexdef": "CREATE INDEX idx_ad_costs_store_report_campaign ON public.ad_campaign_daily_costs USING btree (((payload ->> 'storeId'::text)), ((payload ->> 'reportDate'::text)), ((payload ->> 'campaignId'::text)))"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "ad_campaign_daily_costs",
+          "indexdef": "CREATE INDEX idx_ad_costs_store_signature_upload_report ON public.ad_campaign_daily_costs USING btree (((payload ->> 'storeId'::text)), ((payload ->> 'adCampaignSignatureId'::text)), ((payload ->> 'sourceUploadId'::text)), ((payload ->> 'reportDate'::text)))"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "canonical_sales_units",
+          "indexdef": "CREATE UNIQUE INDEX canonical_sales_units_pkey ON public.canonical_sales_units USING btree (id)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "order_items",
+          "indexdef": "CREATE UNIQUE INDEX idx_order_items_store_external_product_order ON public.order_items USING btree (((payload ->> 'storeId'::text)), ((payload ->> 'externalProductOrderId'::text)))"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "order_items",
+          "indexdef": "CREATE INDEX idx_order_items_store_order_status ON public.order_items USING btree (((payload ->> 'storeId'::text)), ((payload ->> 'orderStatus'::text)))"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "order_items",
+          "indexdef": "CREATE INDEX idx_order_items_store_payment_date ON public.order_items USING btree (((payload ->> 'storeId'::text)), ((payload ->> 'paymentDate'::text)))"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "order_items",
+          "indexdef": "CREATE INDEX idx_order_items_store_sale_status ON public.order_items USING btree (((payload ->> 'storeId'::text)), ((payload ->> 'saleStatus'::text)))"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "order_items",
+          "indexdef": "CREATE INDEX idx_order_items_store_signature ON public.order_items USING btree (((payload ->> 'storeId'::text)), ((payload ->> 'orderSourceSignatureId'::text)))"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "order_items",
+          "indexdef": "CREATE UNIQUE INDEX order_items_pkey ON public.order_items USING btree (id)"
+        },
+        {
+          "schemaname": "public",
+          "tablename": "order_sync_states",
+          "indexdef": "CREATE UNIQUE INDEX order_sync_states_pkey ON public.order_sync_states USING btree (id)"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "runtime_access",
+      "observedAt": "2026-10-27T06:40:31.2073595+00:00",
+      "sqlSha256": "a3dadc07fc515902fb5e51b6fc92a10a88ee32f38a983f519420b0313595a874",
+      "elapsedMs": 709,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "ad_campaign_daily_costs",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "ad_excel_uploads",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "canonical_sales_units",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "daily_fake_purchases",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "daily_sales_unit_profits",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "daily_store_summaries",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "order_items",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "order_source_signatures",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "order_sync_states",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "nspname": "public",
+          "relname": "stores",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "ad_campaign_daily_costs",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "ad_excel_uploads",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "canonical_sales_units",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "daily_fake_purchases",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "daily_sales_unit_profits",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "daily_store_summaries",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "order_items",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "order_source_signatures",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "order_sync_states",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "nspname": "public",
+          "relname": "stores",
+          "relrowsecurity": false,
+          "schema_usage": true,
+          "table_select": false,
+          "any_column_select": false
+        }
+      ],
+      "reason": null
+    }
+  ]
+}

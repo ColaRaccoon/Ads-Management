@@ -1,0 +1,699 @@
+{
+  "sourceComparison": [
+    {
+      "source": "meta",
+      "period": "2026-10-26",
+      "rows": "200",
+      "unmappedRows": "2",
+      "rawAmount": "3836.4",
+      "unit": "USD",
+      "basis": "selected-current source amount",
+      "scopeStatus": "7day contains legacy unbound CSV"
+    },
+    {
+      "source": "meta",
+      "period": "2026-10-20..26",
+      "rows": "839",
+      "unmappedRows": "9",
+      "rawAmount": "22728.42",
+      "unit": "USD",
+      "basis": "selected-current source amount",
+      "scopeStatus": "7day contains legacy unbound CSV"
+    },
+    {
+      "source": "google",
+      "period": "2026-10-26",
+      "rows": "5",
+      "unmappedRows": null,
+      "rawAmount": "243012033468",
+      "unit": "MICROS_KRW",
+      "basis": "selected-current source amount",
+      "scopeStatus": "bound"
+    },
+    {
+      "source": "google",
+      "period": "2026-10-20..26",
+      "rows": "20",
+      "unmappedRows": null,
+      "rawAmount": "962763487744",
+      "unit": "MICROS_KRW",
+      "basis": "selected-current source amount",
+      "scopeStatus": "bound"
+    },
+    {
+      "source": "cafe24",
+      "period": "2026-10-26",
+      "rows": "320",
+      "unmappedRows": "2",
+      "rawAmount": "11863900",
+      "unit": "KRW",
+      "basis": "sum(sale_price_krw), NOT quantity/coupon adjusted business revenue",
+      "scopeStatus": "7day contains legacy unbound CSV"
+    },
+    {
+      "source": "cafe24",
+      "period": "2026-10-20..26",
+      "rows": "1958",
+      "unmappedRows": "40",
+      "rawAmount": "72527600",
+      "unit": "KRW",
+      "basis": "sum(sale_price_krw), NOT quantity/coupon adjusted business revenue",
+      "scopeStatus": "7day contains legacy unbound CSV"
+    },
+    {
+      "source": "coupang_sales",
+      "period": "2026-10-26",
+      "rows": "317",
+      "unmappedRows": "2",
+      "rawAmount": "8008710",
+      "unit": "KRW",
+      "basis": "selected-current source amount",
+      "scopeStatus": "LEGACY_COUPANG_SINGLE_UPLOAD_USER_CONFIRMED"
+    },
+    {
+      "source": "coupang_sales",
+      "period": "2026-10-20..26",
+      "rows": "2291",
+      "unmappedRows": "17",
+      "rawAmount": "61643800",
+      "unit": "KRW",
+      "basis": "selected-current source amount",
+      "scopeStatus": "LEGACY_COUPANG_SINGLE_UPLOAD_USER_CONFIRMED"
+    },
+    {
+      "source": "coupang_ads",
+      "period": "2026-10-26",
+      "rows": "265",
+      "unmappedRows": "5",
+      "rawAmount": "2111728",
+      "unit": "KRW",
+      "basis": "selected-current source amount",
+      "scopeStatus": "LEGACY_COUPANG_SINGLE_UPLOAD_USER_CONFIRMED"
+    },
+    {
+      "source": "coupang_ads",
+      "period": "2026-10-20..26",
+      "rows": "1792",
+      "unmappedRows": "40",
+      "rawAmount": "14556211",
+      "unit": "KRW",
+      "basis": "selected-current source amount",
+      "scopeStatus": "LEGACY_COUPANG_SINGLE_UPLOAD_USER_CONFIRMED"
+    },
+    {
+      "source": "naver_sales",
+      "scope": "인피니티스토어",
+      "period": "2026-10-26",
+      "rows": "247",
+      "unmappedRows": "0",
+      "rawAmount": "6947990",
+      "unit": "KRW",
+      "basis": "SALE productPaymentAmount"
+    },
+    {
+      "source": "naver_sales",
+      "scope": "인피니티스토어",
+      "period": "2026-10-20..26",
+      "rows": "2616",
+      "unmappedRows": "0",
+      "rawAmount": "53010120",
+      "unit": "KRW",
+      "basis": "SALE productPaymentAmount"
+    },
+    {
+      "source": "naver_ads",
+      "scope": "인피니티스토어",
+      "period": "2026-10-26",
+      "rows": "43",
+      "unmappedRows": "0",
+      "rawAmount": "1790594",
+      "unit": "KRW",
+      "basis": "active confirmed PASSED upload totalCost"
+    },
+    {
+      "source": "naver_ads",
+      "scope": "인피니티스토어",
+      "period": "2026-10-20..26",
+      "rows": "316",
+      "unmappedRows": "0",
+      "rawAmount": "21648984",
+      "unit": "KRW",
+      "basis": "active confirmed PASSED upload totalCost"
+    },
+    {
+      "source": "naver_sales",
+      "scope": "파티마스토어",
+      "period": "2026-10-26",
+      "rows": "206",
+      "unmappedRows": "6",
+      "rawAmount": "6647680",
+      "unit": "KRW",
+      "basis": "SALE productPaymentAmount"
+    },
+    {
+      "source": "naver_sales",
+      "scope": "파티마스토어",
+      "period": "2026-10-20..26",
+      "rows": "1205",
+      "unmappedRows": "17",
+      "rawAmount": "40138760",
+      "unit": "KRW",
+      "basis": "SALE productPaymentAmount"
+    },
+    {
+      "source": "naver_ads",
+      "scope": "파티마스토어",
+      "period": "2026-10-26",
+      "rows": "57",
+      "unmappedRows": "3",
+      "rawAmount": "2276953",
+      "unit": "KRW",
+      "basis": "active confirmed PASSED upload totalCost"
+    },
+    {
+      "source": "naver_ads",
+      "scope": "파티마스토어",
+      "period": "2026-10-20..26",
+      "rows": "450",
+      "unmappedRows": "21",
+      "rawAmount": "18526618",
+      "unit": "KRW",
+      "basis": "active confirmed PASSED upload totalCost"
+    }
+  ],
+  "storedComparison": [
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-20",
+      "rawSaleRevenue": "8846360",
+      "storedRevenue": "8846360",
+      "revenueDifference": "0",
+      "rawAdSpend": "3552230",
+      "storedAdSpend": "3552230",
+      "adDifference": "0",
+      "storedExcludedRevenue": "382100",
+      "storedExcludedAdSpend": "0",
+      "storedProfit": "1772465",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-21T00:38:12.537Z"
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-21",
+      "rawSaleRevenue": "8983190",
+      "storedRevenue": "8983190",
+      "revenueDifference": "0",
+      "rawAdSpend": "3402620",
+      "storedAdSpend": "3402620",
+      "adDifference": "0",
+      "storedExcludedRevenue": "183100",
+      "storedExcludedAdSpend": "0",
+      "storedProfit": "1830289",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-22T01:05:03.030Z"
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-22",
+      "rawSaleRevenue": "9385300",
+      "storedRevenue": "9385300",
+      "revenueDifference": "0",
+      "rawAdSpend": "3849714",
+      "storedAdSpend": "3849714",
+      "adDifference": "0",
+      "storedExcludedRevenue": "620700",
+      "storedExcludedAdSpend": "0",
+      "storedProfit": "1607095",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-23T00:41:54.993Z"
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-23",
+      "rawSaleRevenue": "5403000",
+      "storedRevenue": "5403000",
+      "revenueDifference": "0",
+      "rawAdSpend": "2281794",
+      "storedAdSpend": "2281794",
+      "adDifference": "0",
+      "storedExcludedRevenue": "460600",
+      "storedExcludedAdSpend": "0",
+      "storedProfit": "978922",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-24T05:45:07.698Z"
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-24",
+      "rawSaleRevenue": "7787540",
+      "storedRevenue": "7787540",
+      "revenueDifference": "0",
+      "rawAdSpend": "3994876",
+      "storedAdSpend": "3994876",
+      "adDifference": "0",
+      "storedExcludedRevenue": "467020",
+      "storedExcludedAdSpend": "0",
+      "storedProfit": "416632",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-25T05:03:30.809Z"
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-25",
+      "rawSaleRevenue": "5656740",
+      "storedRevenue": "5656740",
+      "revenueDifference": "0",
+      "rawAdSpend": "2777156",
+      "storedAdSpend": "2777156",
+      "adDifference": "0",
+      "storedExcludedRevenue": "145800",
+      "storedExcludedAdSpend": "0",
+      "storedProfit": "474427",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-26T01:05:56.513Z"
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-26",
+      "rawSaleRevenue": "6947990",
+      "storedRevenue": "6947990",
+      "revenueDifference": "0",
+      "rawAdSpend": "1790594",
+      "storedAdSpend": "1790594",
+      "adDifference": "0",
+      "storedExcludedRevenue": "453710",
+      "storedExcludedAdSpend": "0",
+      "storedProfit": "2272081",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v2",
+      "calculatedAt": "2026-10-27T00:54:50.549Z"
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-20",
+      "rawSaleRevenue": "7145550",
+      "storedRevenue": "7145550",
+      "revenueDifference": "0",
+      "rawAdSpend": "3088395",
+      "storedAdSpend": "2245783",
+      "adDifference": "842612",
+      "storedExcludedRevenue": "247800",
+      "storedExcludedAdSpend": "1685224",
+      "storedProfit": "1523652",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-21T00:43:38.227Z"
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-21",
+      "rawSaleRevenue": "6042160",
+      "storedRevenue": "6042160",
+      "revenueDifference": "0",
+      "rawAdSpend": "2631246",
+      "storedAdSpend": "1912989",
+      "adDifference": "718257",
+      "storedExcludedRevenue": "216750",
+      "storedExcludedAdSpend": "1436514",
+      "storedProfit": "1242366",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-23T00:42:50.155Z"
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-22",
+      "rawSaleRevenue": "4779750",
+      "storedRevenue": "4779750",
+      "revenueDifference": "0",
+      "rawAdSpend": "2376048",
+      "storedAdSpend": "1750299",
+      "adDifference": "625749",
+      "storedExcludedRevenue": "219050",
+      "storedExcludedAdSpend": "1251498",
+      "storedProfit": "811923",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-23T00:42:50.155Z"
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-23",
+      "rawSaleRevenue": "6264780",
+      "storedRevenue": "6258780",
+      "revenueDifference": "6000",
+      "rawAdSpend": "2496254",
+      "storedAdSpend": "1808467",
+      "adDifference": "687787",
+      "storedExcludedRevenue": "122600",
+      "storedExcludedAdSpend": "687787",
+      "storedProfit": "1530574",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v2",
+      "calculatedAt": "2026-10-27T01:20:42.566Z"
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-24",
+      "rawSaleRevenue": "4502980",
+      "storedRevenue": "4502980",
+      "revenueDifference": "0",
+      "rawAdSpend": "2861567",
+      "storedAdSpend": "1901282",
+      "adDifference": "960285",
+      "storedExcludedRevenue": "159400",
+      "storedExcludedAdSpend": "960285",
+      "storedProfit": "439318",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v2",
+      "calculatedAt": "2026-10-27T01:20:42.566Z"
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-25",
+      "rawSaleRevenue": "4755860",
+      "storedRevenue": "4707860",
+      "revenueDifference": "48000",
+      "rawAdSpend": "2796155",
+      "storedAdSpend": "2062094",
+      "adDifference": "734061",
+      "storedExcludedRevenue": "437060",
+      "storedExcludedAdSpend": "1468122",
+      "storedProfit": "367324",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v1",
+      "calculatedAt": "2026-10-26T01:03:02.485Z"
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-26",
+      "rawSaleRevenue": "6647680",
+      "storedRevenue": "6629680",
+      "revenueDifference": "18000",
+      "rawAdSpend": "2276953",
+      "storedAdSpend": "1520397",
+      "adDifference": "756556",
+      "storedExcludedRevenue": "298750",
+      "storedExcludedAdSpend": "756556",
+      "storedProfit": "1827576",
+      "storedProfitStatus": "COMPLETE",
+      "calculationVersion": "profit-v2",
+      "calculatedAt": "2026-10-27T00:36:02.430Z"
+    }
+  ],
+  "naverCostPresence": [
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-20",
+      "sale_rows": 424,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-21",
+      "sale_rows": 467,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-22",
+      "sale_rows": 489,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-23",
+      "sale_rows": 250,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-24",
+      "sale_rows": 438,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-25",
+      "sale_rows": 301,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "인피니티스토어",
+      "date": "2026-10-26",
+      "sale_rows": 247,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-20",
+      "sale_rows": 222,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-21",
+      "sale_rows": 182,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-22",
+      "sale_rows": 146,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-23",
+      "sale_rows": 173,
+      "unmapped_rows": 2,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-24",
+      "sale_rows": 130,
+      "unmapped_rows": 0,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-25",
+      "sale_rows": 146,
+      "unmapped_rows": 9,
+      "no_cost_anywhere": 0
+    },
+    {
+      "store": "파티마스토어",
+      "date": "2026-10-26",
+      "sale_rows": 206,
+      "unmapped_rows": 6,
+      "no_cost_anywhere": 0
+    }
+  ],
+  "cafe24CostPresence": [
+    {
+      "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "order_date": "2026-10-23",
+      "source": "API",
+      "rows": 229,
+      "unmapped": 0,
+      "missing_cost": 0
+    },
+    {
+      "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "order_date": "2026-10-23",
+      "source": "CSV",
+      "rows": 228,
+      "unmapped": 0,
+      "missing_cost": 0
+    },
+    {
+      "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "order_date": "2026-10-24",
+      "source": "API",
+      "rows": 279,
+      "unmapped": 2,
+      "missing_cost": 0
+    },
+    {
+      "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "order_date": "2026-10-25",
+      "source": "API",
+      "rows": 395,
+      "unmapped": 6,
+      "missing_cost": 0
+    },
+    {
+      "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "order_date": "2026-10-26",
+      "source": "API",
+      "rows": 320,
+      "unmapped": 2,
+      "missing_cost": 0
+    },
+    {
+      "connection_id": null,
+      "order_date": "2026-10-20",
+      "source": "CSV",
+      "rows": 255,
+      "unmapped": 9,
+      "missing_cost": 0
+    },
+    {
+      "connection_id": null,
+      "order_date": "2026-10-21",
+      "source": "CSV",
+      "rows": 247,
+      "unmapped": 11,
+      "missing_cost": 0
+    },
+    {
+      "connection_id": null,
+      "order_date": "2026-10-22",
+      "source": "CSV",
+      "rows": 233,
+      "unmapped": 10,
+      "missing_cost": 0
+    }
+  ],
+  "coupangCostPresence": [
+    {
+      "sale_date": "2026-10-20",
+      "rows": 355,
+      "unmapped": 2,
+      "missing_cost": 0,
+      "growth_shipping_null": 0,
+      "global_fee_missing": 0
+    },
+    {
+      "sale_date": "2026-10-21",
+      "rows": 340,
+      "unmapped": 3,
+      "missing_cost": 0,
+      "growth_shipping_null": 0,
+      "global_fee_missing": 0
+    },
+    {
+      "sale_date": "2026-10-22",
+      "rows": 311,
+      "unmapped": 1,
+      "missing_cost": 0,
+      "growth_shipping_null": 0,
+      "global_fee_missing": 0
+    },
+    {
+      "sale_date": "2026-10-23",
+      "rows": 332,
+      "unmapped": 3,
+      "missing_cost": 0,
+      "growth_shipping_null": 0,
+      "global_fee_missing": 0
+    },
+    {
+      "sale_date": "2026-10-24",
+      "rows": 337,
+      "unmapped": 4,
+      "missing_cost": 0,
+      "growth_shipping_null": 0,
+      "global_fee_missing": 0
+    },
+    {
+      "sale_date": "2026-10-25",
+      "rows": 299,
+      "unmapped": 2,
+      "missing_cost": 0,
+      "growth_shipping_null": 0,
+      "global_fee_missing": 0
+    },
+    {
+      "sale_date": "2026-10-26",
+      "rows": 317,
+      "unmapped": 2,
+      "missing_cost": 0,
+      "growth_shipping_null": 0,
+      "global_fee_missing": 0
+    }
+  ],
+  "fx": [
+    {
+      "rate_date": "2026-10-20",
+      "source_date": "2026-10-20",
+      "base_currency": "USD",
+      "quote_currency": "KRW",
+      "rate": "1332.100000",
+      "provider": "KOREA_EXIM",
+      "fallback_type": "EXACT"
+    },
+    {
+      "rate_date": "2026-10-21",
+      "source_date": "2026-10-21",
+      "base_currency": "USD",
+      "quote_currency": "KRW",
+      "rate": "1328.000000",
+      "provider": "KOREA_EXIM",
+      "fallback_type": "EXACT"
+    },
+    {
+      "rate_date": "2026-10-22",
+      "source_date": "2026-10-22",
+      "base_currency": "USD",
+      "quote_currency": "KRW",
+      "rate": "1325.500000",
+      "provider": "KOREA_EXIM",
+      "fallback_type": "EXACT"
+    },
+    {
+      "rate_date": "2026-10-23",
+      "source_date": "2026-10-23",
+      "base_currency": "USD",
+      "quote_currency": "KRW",
+      "rate": "1324.600000",
+      "provider": "KOREA_EXIM",
+      "fallback_type": "EXACT"
+    },
+    {
+      "rate_date": "2026-10-24",
+      "source_date": "2026-10-23",
+      "base_currency": "USD",
+      "quote_currency": "KRW",
+      "rate": "1324.600000",
+      "provider": "KOREA_EXIM",
+      "fallback_type": "PREVIOUS_AVAILABLE"
+    },
+    {
+      "rate_date": "2026-10-25",
+      "source_date": "2026-10-23",
+      "base_currency": "USD",
+      "quote_currency": "KRW",
+      "rate": "1324.600000",
+      "provider": "KOREA_EXIM",
+      "fallback_type": "PREVIOUS_AVAILABLE"
+    },
+    {
+      "rate_date": "2026-10-26",
+      "source_date": "2026-10-26",
+      "base_currency": "USD",
+      "quote_currency": "KRW",
+      "rate": "1324.300000",
+      "provider": "KOREA_EXIM",
+      "fallback_type": "EXACT"
+    }
+  ]
+}

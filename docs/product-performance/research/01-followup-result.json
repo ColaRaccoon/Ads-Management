@@ -1,0 +1,359 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "rowsChanged": 0,
+  "queries": [
+    {
+      "name": "exchange_rates_corrected",
+      "observedAt": "2026-10-27T06:45:16.6708698+00:00",
+      "sqlSha256": "594b8d97e2fb6412ce12b0db232c74428feeddd0599d31c89d8cf12b03183270",
+      "elapsedMs": 1132,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "rate_date": "2026-10-20",
+          "source_date": "2026-10-20",
+          "base_currency": "USD",
+          "quote_currency": "KRW",
+          "rate": "1332.100000",
+          "provider": "KOREA_EXIM",
+          "fallback_type": "EXACT"
+        },
+        {
+          "rate_date": "2026-10-21",
+          "source_date": "2026-10-21",
+          "base_currency": "USD",
+          "quote_currency": "KRW",
+          "rate": "1328.000000",
+          "provider": "KOREA_EXIM",
+          "fallback_type": "EXACT"
+        },
+        {
+          "rate_date": "2026-10-22",
+          "source_date": "2026-10-22",
+          "base_currency": "USD",
+          "quote_currency": "KRW",
+          "rate": "1325.500000",
+          "provider": "KOREA_EXIM",
+          "fallback_type": "EXACT"
+        },
+        {
+          "rate_date": "2026-10-23",
+          "source_date": "2026-10-23",
+          "base_currency": "USD",
+          "quote_currency": "KRW",
+          "rate": "1324.600000",
+          "provider": "KOREA_EXIM",
+          "fallback_type": "EXACT"
+        },
+        {
+          "rate_date": "2026-10-24",
+          "source_date": "2026-10-23",
+          "base_currency": "USD",
+          "quote_currency": "KRW",
+          "rate": "1324.600000",
+          "provider": "KOREA_EXIM",
+          "fallback_type": "PREVIOUS_AVAILABLE"
+        },
+        {
+          "rate_date": "2026-10-25",
+          "source_date": "2026-10-23",
+          "base_currency": "USD",
+          "quote_currency": "KRW",
+          "rate": "1324.600000",
+          "provider": "KOREA_EXIM",
+          "fallback_type": "PREVIOUS_AVAILABLE"
+        },
+        {
+          "rate_date": "2026-10-26",
+          "source_date": "2026-10-26",
+          "base_currency": "USD",
+          "quote_currency": "KRW",
+          "rate": "1324.300000",
+          "provider": "KOREA_EXIM",
+          "fallback_type": "EXACT"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_cost_coverage_infinity",
+      "observedAt": "2026-10-27T06:45:17.8004498+00:00",
+      "sqlSha256": "73983ecc1ee19827bc2fd6ab4beb76b4b4d1a8b182c2510c9bd5398a3468ae5b",
+      "elapsedMs": 1085,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "date": "2026-10-20",
+          "sale_rows": 424,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-21",
+          "sale_rows": 467,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-22",
+          "sale_rows": 489,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-23",
+          "sale_rows": 250,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-24",
+          "sale_rows": 438,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-25",
+          "sale_rows": 301,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-26",
+          "sale_rows": 247,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_cost_coverage_patima",
+      "observedAt": "2026-10-27T06:45:18.6532646+00:00",
+      "sqlSha256": "a27745bd66bc0ef5bb7b5b52f18b75e1949aece0aaa383531040b4545b90e5fa",
+      "elapsedMs": 850,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "date": "2026-10-20",
+          "sale_rows": 222,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-21",
+          "sale_rows": 182,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-22",
+          "sale_rows": 146,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-23",
+          "sale_rows": 173,
+          "unmapped_rows": 2,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-24",
+          "sale_rows": 130,
+          "unmapped_rows": 0,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-25",
+          "sale_rows": 146,
+          "unmapped_rows": 9,
+          "no_cost_anywhere": 0
+        },
+        {
+          "date": "2026-10-26",
+          "sale_rows": 206,
+          "unmapped_rows": 6,
+          "no_cost_anywhere": 0
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_stored_daily_recent",
+      "observedAt": "2026-10-27T06:45:19.3850524+00:00",
+      "sqlSha256": "a95f1c0d2e507e6eff353115292808eb02b3338790e02dfbc9ce858b1f8a7cb9",
+      "elapsedMs": 729,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-20",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-21T00:38:12.537Z",
+          "total_revenue": "8846360",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-21",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-22T01:05:03.030Z",
+          "total_revenue": "8983190",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-22",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-23T00:41:54.993Z",
+          "total_revenue": "9385300",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-23",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-24T05:45:07.698Z",
+          "total_revenue": "5403000",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-24",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-25T05:03:30.809Z",
+          "total_revenue": "7787540",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-25",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-26T01:05:56.513Z",
+          "total_revenue": "5656740",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-26",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T00:54:50.549Z",
+          "total_revenue": "6947990",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-20",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-21T00:43:38.227Z",
+          "total_revenue": "7145550",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-21",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-23T00:42:50.155Z",
+          "total_revenue": "6042160",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-22",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-23T00:42:50.155Z",
+          "total_revenue": "4779750",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T01:20:42.566Z",
+          "total_revenue": "6258780",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-24",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T01:20:42.566Z",
+          "total_revenue": "4502980",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-25",
+          "calculation_version": "profit-v1",
+          "calculated_at": "2026-10-26T01:03:02.485Z",
+          "total_revenue": "4707860",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-26",
+          "calculation_version": "profit-v2",
+          "calculated_at": "2026-10-27T00:36:02.430Z",
+          "total_revenue": "6629680",
+          "net_profit": null,
+          "cost_snapshot_id": null,
+          "mapping_basis_hash": null
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "legacy_connection_counts",
+      "observedAt": "2026-10-27T06:45:20.2805734+00:00",
+      "sqlSha256": "67190e28376ac518fd630edf76faf84be2a0c198a8013fc47faa43d9f36e8a07",
+      "elapsedMs": 893,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "source_kind": "META_ADSET",
+          "rows": 839,
+          "unbound": 39
+        },
+        {
+          "source_kind": "CAFE24_ORDER",
+          "rows": 2186,
+          "unbound": 735
+        }
+      ],
+      "reason": null
+    }
+  ]
+}

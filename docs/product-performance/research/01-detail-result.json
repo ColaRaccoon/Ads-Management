@@ -1,0 +1,2111 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "rowsChanged": 0,
+  "queries": [
+    {
+      "name": "naver_order_first_infinity",
+      "observedAt": "2026-10-27T06:44:07.2826577+00:00",
+      "sqlSha256": "c4d982a9ec09fb3bc293a30bbb119562228f210e62597c03ff561048a20d65f6",
+      "elapsedMs": 929,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "date": "2026-02-26"
+      },
+      "reason": null
+    },
+    {
+      "name": "naver_order_last_infinity",
+      "observedAt": "2026-10-27T06:44:08.2008534+00:00",
+      "sqlSha256": "9b20ba702ac319c90024ba42edf62a947080e27078f355886e93abe4517f45c7",
+      "elapsedMs": 882,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "date": "2026-10-26"
+      },
+      "reason": null
+    },
+    {
+      "name": "naver_order_first_patima",
+      "observedAt": "2026-10-27T06:44:08.9181708+00:00",
+      "sqlSha256": "5862dac0323f98de6a68d1df3f6be6a5461c6efba1a22a66c67f77e0f76e3e33",
+      "elapsedMs": 713,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "date": "2026-05-13"
+      },
+      "reason": null
+    },
+    {
+      "name": "naver_order_last_patima",
+      "observedAt": "2026-10-27T06:44:09.6890781+00:00",
+      "sqlSha256": "0ebbea885e76168d621c1b7827bb5ac503d6735e91cb3cc60e87d1ef4e5a7561",
+      "elapsedMs": 769,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "date": "2026-10-26"
+      },
+      "reason": null
+    },
+    {
+      "name": "naver_cost_settings_corrected",
+      "observedAt": "2026-10-27T06:44:10.4408445+00:00",
+      "sqlSha256": "6e77310f53057f849abfb290ae9dc2f40f6adf335457d52846b012b9683ff418",
+      "elapsedMs": 749,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "01952725-7a46-42e0-b6d2-d026f4bdcbd4",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "11000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "038d2801-5ce4-4995-8a0d-e2c354e71834",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "10600",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "09d9f8d7-870e-4bc5-89d9-1a4ddd3c151e",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "14000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "0a9b81dc-bfdb-4fd3-9013-ed2b492bd94b",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "0",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "0fffd984-814f-43b5-ae9b-245fbc4b302e",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "4000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "13a07cd0-c51a-4d72-b74d-02001c4f70c5",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "2500",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "208a4ead-e15c-42f8-8835-eb765bc9561f",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "2ac843c3-9931-4278-bf9c-876392ba69f4",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "5300",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "2f1d38c1-ddfc-4a6a-8be8-021d6f5c1518",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "1500",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "3a3e9d78-af1a-47bf-9933-6c58628ebbec",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "3be7c15f-6097-4653-8e32-a9b5d5b4ab59",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "4345149d-7188-4563-8e90-cff1fb0c593e",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "5000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "45a6a325-8de6-4d16-82cf-cbbde9aabdd8",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "1000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "47753537-ad16-43c9-aa85-c1c0baba601b",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "8000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "47f54152-2459-444d-b345-ccaa01232cf7",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "1000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "4817e33a-be48-4115-a74b-e3907cdc706b",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "5500",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "4a20062f-c788-461e-bd44-c5cbd66c873d",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "4cae6ae7-8e25-4214-821d-1d06fa3f4529",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "5000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "4cbcebe9-fca5-4920-aa3c-8a73a8a160e7",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "580ffa86-bfa7-45c0-91be-174fce0ebbf5",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "58c5b066-fa9c-41ce-a1ee-cad5d56fe122",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "597044d9-b242-40fd-bc40-29a445573e8d",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "5ace2f59-ccb9-43e5-91ab-3092f1c3cf0e",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "5000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "621d78b4-01dc-4cc8-90b8-c01b354f54d1",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "12000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "63027ddb-4e42-442c-8c45-2c0fc8b11c9c",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "0",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "68830691-eb3d-49c4-b9b1-b4bc12bce85b",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "6e8d51e2-48d5-4663-82bf-674e77109b57",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "722a3fc5-7a0a-4be6-8b26-ae1dfa19b0d0",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "1800",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "773f5c19-0326-44a7-a7d6-7f16e0aec63e",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "94a080c5-f4c8-4aeb-bb7a-f0ad2c69b57a",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "98b0f410-22ae-4d0d-8e49-ebb4cd88d6b5",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "14000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "b1ad5cf1-17c9-494a-ac59-0f1354fde5d7",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "11000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "c976abd7-716b-4ca7-af32-29ea7a91f901",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "5500",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "ce6159b9-137a-4f7a-87d2-ca9e3dabe0aa",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "d815f925-d252-488b-bede-02b3e0ec085b",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "14000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "ddc2dd13-89bc-4c81-8cd8-cc5fb05cb590",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "e0ad6322-537d-4a2a-89b5-3e59bed79f46",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "e2f355f2-1b8f-494f-a1c5-60bd515bb673",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": "f7a756e9-fee6-41c7-acaf-a4f8ad87c575",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": "0",
+          "active": "true"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_cost_snapshots",
+      "observedAt": "2026-10-27T06:44:11.2195888+00:00",
+      "sqlSha256": "c75aec47d53ac375d69db49099dd04e0d4ce898dd68a3ab5267cc38454b8d904",
+      "elapsedMs": 776,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "effective_from": "2026-04-30"
+        },
+        {
+          "id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "effective_from": "2024-01-01"
+        },
+        {
+          "id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "effective_from": "2026-05-01"
+        },
+        {
+          "id": "fce61417-93d3-427b-a864-40e81932488d",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "effective_from": "2026-06-01"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_cost_entries",
+      "observedAt": "2026-10-27T06:44:12.0224846+00:00",
+      "sqlSha256": "3ccb69701fdfa3f0a3a15790ebc0aa6bd9c2ad43be24f35182d2728fdaff1735",
+      "elapsedMs": 799,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "01952725-7a46-42e0-b6d2-d026f4bdcbd4",
+          "unit_cost": "13000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "038d2801-5ce4-4995-8a0d-e2c354e71834",
+          "unit_cost": "11000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "09d9f8d7-870e-4bc5-89d9-1a4ddd3c151e",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "0fffd984-814f-43b5-ae9b-245fbc4b302e",
+          "unit_cost": "4500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "13a07cd0-c51a-4d72-b74d-02001c4f70c5",
+          "unit_cost": "2500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "208a4ead-e15c-42f8-8835-eb765bc9561f",
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "2ac843c3-9931-4278-bf9c-876392ba69f4",
+          "unit_cost": "5500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "2f1d38c1-ddfc-4a6a-8be8-021d6f5c1518",
+          "unit_cost": "1650",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "3a3e9d78-af1a-47bf-9933-6c58628ebbec",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "3be7c15f-6097-4653-8e32-a9b5d5b4ab59",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "4345149d-7188-4563-8e90-cff1fb0c593e",
+          "unit_cost": "5000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "45a6a325-8de6-4d16-82cf-cbbde9aabdd8",
+          "unit_cost": "2000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "47753537-ad16-43c9-aa85-c1c0baba601b",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "47f54152-2459-444d-b345-ccaa01232cf7",
+          "unit_cost": "2000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "4817e33a-be48-4115-a74b-e3907cdc706b",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "4a20062f-c788-461e-bd44-c5cbd66c873d",
+          "unit_cost": "10800",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "4cae6ae7-8e25-4214-821d-1d06fa3f4529",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "4cbcebe9-fca5-4920-aa3c-8a73a8a160e7",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "580ffa86-bfa7-45c0-91be-174fce0ebbf5",
+          "unit_cost": "3200",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "58c5b066-fa9c-41ce-a1ee-cad5d56fe122",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "597044d9-b242-40fd-bc40-29a445573e8d",
+          "unit_cost": "3200",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "5ace2f59-ccb9-43e5-91ab-3092f1c3cf0e",
+          "unit_cost": "5000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "621d78b4-01dc-4cc8-90b8-c01b354f54d1",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "63027ddb-4e42-442c-8c45-2c0fc8b11c9c",
+          "unit_cost": "0",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "68830691-eb3d-49c4-b9b1-b4bc12bce85b",
+          "unit_cost": "6400",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "6e8d51e2-48d5-4663-82bf-674e77109b57",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "722a3fc5-7a0a-4be6-8b26-ae1dfa19b0d0",
+          "unit_cost": "1800",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "773f5c19-0326-44a7-a7d6-7f16e0aec63e",
+          "unit_cost": "7500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "94a080c5-f4c8-4aeb-bb7a-f0ad2c69b57a",
+          "unit_cost": "5400",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "98b0f410-22ae-4d0d-8e49-ebb4cd88d6b5",
+          "unit_cost": "15000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "b1ad5cf1-17c9-494a-ac59-0f1354fde5d7",
+          "unit_cost": "12000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "c976abd7-716b-4ca7-af32-29ea7a91f901",
+          "unit_cost": "6500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "ce6159b9-137a-4f7a-87d2-ca9e3dabe0aa",
+          "unit_cost": "9200",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "d815f925-d252-488b-bede-02b3e0ec085b",
+          "unit_cost": "18400",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "ddc2dd13-89bc-4c81-8cd8-cc5fb05cb590",
+          "unit_cost": "3300",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "e0ad6322-537d-4a2a-89b5-3e59bed79f46",
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "e2f355f2-1b8f-494f-a1c5-60bd515bb673",
+          "unit_cost": "5000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "snapshot_id": "d0656cbe-05fe-4994-a386-3b628fb50631",
+          "unit_id": "f7a756e9-fee6-41c7-acaf-a4f8ad87c575",
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "021fc821-bfa4-4136-bc9b-d0e2c6712a96",
+          "unit_cost": "22000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "08d45360-9312-4991-97c9-fe350793b8f4",
+          "unit_cost": "10300",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "1d2d03a7-7729-42b8-96a3-d8e6655acb63",
+          "unit_cost": "11000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "28b9fd1e-09de-45ae-be83-027921306071",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "34c27df9-c2d5-4b6c-b53f-5629ce9739a4",
+          "unit_cost": "10500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "37f0c7c6-eb88-4520-a02a-07ac81702577",
+          "unit_cost": "8500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "43499fe0-02d3-4572-b313-588efdedfa15",
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "440079d0-3aa6-46ce-a2ea-583df7bcefe3",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "44def751-f254-47bc-a2e3-53a56478ef4f",
+          "unit_cost": "16000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "47d4e2d7-4abf-46e3-8848-13a4bcf2e148",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "4ac0d206-70a8-4a85-8072-95c58bf6660a",
+          "unit_cost": "18000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "55813926-a6b6-4b14-a935-de5a202a751e",
+          "unit_cost": "1800",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "6b8fe055-6e35-439b-a7b4-e4502a2fc254",
+          "unit_cost": "2500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "6d1b39a0-a49b-4023-b94f-0bb0cd03b689",
+          "unit_cost": "4500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "6d871d86-128f-46b3-95d4-b1f0a7bb9320",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "85d5c600-639c-416a-9960-d4e9561fe6c2",
+          "unit_cost": "52000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "861c46b5-ad0d-4a19-99c9-ca5296fd4316",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "87c269ec-0021-4dec-a959-13c69d248ec2",
+          "unit_cost": "18000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "9377cc60-88c9-4a55-b334-61ed729c98ce",
+          "unit_cost": "10500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "99a3a41e-59c1-4ed6-a6e2-4980ca69762b",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "99c2f290-49d8-4e4d-a5e4-69ce42e3aab1",
+          "unit_cost": "9500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "a316843a-9e4c-43e9-9943-5dfbc768daae",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "a4b69545-0eb6-4403-b181-46b43251c496",
+          "unit_cost": "4300",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "b19974f6-a440-4e4a-a041-656c142caa79",
+          "unit_cost": "8500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "b2679fe1-dadc-4390-ac00-8979f9c3c663",
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "b7ec4d84-5ada-431e-97a6-b58a75d8572e",
+          "unit_cost": "38000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "be7d4c04-be8f-48da-8580-14b8f1243088",
+          "unit_cost": "16000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "c20e0b7d-e3ae-4a15-b7fb-592fb4baf24a",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "c2814031-53a2-4845-9b90-4ee82622b9f0",
+          "unit_cost": "4500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "c9edc3e7-4643-4863-80b4-2c79afce7027",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "caa528ae-65b1-48a5-92d5-c6fe00303b60",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "cf3025bd-058f-4b77-9ff6-a7ad75c4a903",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "eb7d6109-7488-48db-b7ac-da403bf118b4",
+          "unit_cost": "28000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "ec0352ae-ec4c-4878-a71e-6fa207eac4e3",
+          "unit_cost": "17200",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "f29ba9ab-52d0-4da1-b864-65a02b492de9",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "8495b32c-876b-4f2d-85cf-59fb3fc15fd6",
+          "unit_id": "fee266ec-00ac-4d03-9771-50fb6facd3ca",
+          "unit_cost": "20000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "021fc821-bfa4-4136-bc9b-d0e2c6712a96",
+          "unit_cost": "22000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "08d45360-9312-4991-97c9-fe350793b8f4",
+          "unit_cost": "10300",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "14a058a3-3b41-4a7b-9e06-c20c94a605ad",
+          "unit_cost": "8000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "1d2d03a7-7729-42b8-96a3-d8e6655acb63",
+          "unit_cost": "11000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "28b9fd1e-09de-45ae-be83-027921306071",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "2d7d2a97-ed47-4f32-9d3f-f7a2f8e96010",
+          "unit_cost": "12000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "34c27df9-c2d5-4b6c-b53f-5629ce9739a4",
+          "unit_cost": "10500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "37f0c7c6-eb88-4520-a02a-07ac81702577",
+          "unit_cost": "8500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "43499fe0-02d3-4572-b313-588efdedfa15",
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "440079d0-3aa6-46ce-a2ea-583df7bcefe3",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "44def751-f254-47bc-a2e3-53a56478ef4f",
+          "unit_cost": "16000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "47d4e2d7-4abf-46e3-8848-13a4bcf2e148",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "4ac0d206-70a8-4a85-8072-95c58bf6660a",
+          "unit_cost": "18000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "55813926-a6b6-4b14-a935-de5a202a751e",
+          "unit_cost": "1800",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "6b8fe055-6e35-439b-a7b4-e4502a2fc254",
+          "unit_cost": "2500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "6d1b39a0-a49b-4023-b94f-0bb0cd03b689",
+          "unit_cost": "4500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "6d871d86-128f-46b3-95d4-b1f0a7bb9320",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "85d5c600-639c-416a-9960-d4e9561fe6c2",
+          "unit_cost": "52000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "861c46b5-ad0d-4a19-99c9-ca5296fd4316",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "87c269ec-0021-4dec-a959-13c69d248ec2",
+          "unit_cost": "18000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "9377cc60-88c9-4a55-b334-61ed729c98ce",
+          "unit_cost": "10500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "99a3a41e-59c1-4ed6-a6e2-4980ca69762b",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "99c2f290-49d8-4e4d-a5e4-69ce42e3aab1",
+          "unit_cost": "9500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "a316843a-9e4c-43e9-9943-5dfbc768daae",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "a4b69545-0eb6-4403-b181-46b43251c496",
+          "unit_cost": "4300",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "b19974f6-a440-4e4a-a041-656c142caa79",
+          "unit_cost": "8500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "b2679fe1-dadc-4390-ac00-8979f9c3c663",
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "b7ec4d84-5ada-431e-97a6-b58a75d8572e",
+          "unit_cost": "38000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "be7d4c04-be8f-48da-8580-14b8f1243088",
+          "unit_cost": "16000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "c20e0b7d-e3ae-4a15-b7fb-592fb4baf24a",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "c2814031-53a2-4845-9b90-4ee82622b9f0",
+          "unit_cost": "4500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "c9edc3e7-4643-4863-80b4-2c79afce7027",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "caa528ae-65b1-48a5-92d5-c6fe00303b60",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "cf0cdef0-12e1-4864-8024-b1c9e658ed6d",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "cf3025bd-058f-4b77-9ff6-a7ad75c4a903",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "eb7d6109-7488-48db-b7ac-da403bf118b4",
+          "unit_cost": "28000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "ec0352ae-ec4c-4878-a71e-6fa207eac4e3",
+          "unit_cost": "17200",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "f29ba9ab-52d0-4da1-b864-65a02b492de9",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "fa1db8b9-309d-497a-92d0-b957b5c089ac",
+          "unit_cost": "48000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "cac8c604-bcd0-45b9-b785-974a54576876",
+          "unit_id": "fee266ec-00ac-4d03-9771-50fb6facd3ca",
+          "unit_cost": "20000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "021fc821-bfa4-4136-bc9b-d0e2c6712a96",
+          "unit_cost": "22000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "08d45360-9312-4991-97c9-fe350793b8f4",
+          "unit_cost": "10300",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "14a058a3-3b41-4a7b-9e06-c20c94a605ad",
+          "unit_cost": "8000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "1d2d03a7-7729-42b8-96a3-d8e6655acb63",
+          "unit_cost": "11000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "28b9fd1e-09de-45ae-be83-027921306071",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "29bde2f1-46d8-49c6-ad1a-53703539e230",
+          "unit_cost": "76000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "2d7d2a97-ed47-4f32-9d3f-f7a2f8e96010",
+          "unit_cost": "12000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "34c27df9-c2d5-4b6c-b53f-5629ce9739a4",
+          "unit_cost": "10500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "37f0c7c6-eb88-4520-a02a-07ac81702577",
+          "unit_cost": "8500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "43499fe0-02d3-4572-b313-588efdedfa15",
+          "unit_cost": "3000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "440079d0-3aa6-46ce-a2ea-583df7bcefe3",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "44def751-f254-47bc-a2e3-53a56478ef4f",
+          "unit_cost": "16000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "47d4e2d7-4abf-46e3-8848-13a4bcf2e148",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "4ac0d206-70a8-4a85-8072-95c58bf6660a",
+          "unit_cost": "18000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "55813926-a6b6-4b14-a935-de5a202a751e",
+          "unit_cost": "1800",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "6659498a-13e8-4e97-a267-183f66c81e2d",
+          "unit_cost": "32000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "6b8fe055-6e35-439b-a7b4-e4502a2fc254",
+          "unit_cost": "2500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "6d1b39a0-a49b-4023-b94f-0bb0cd03b689",
+          "unit_cost": "4500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "6d871d86-128f-46b3-95d4-b1f0a7bb9320",
+          "unit_cost": "10000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "85d5c600-639c-416a-9960-d4e9561fe6c2",
+          "unit_cost": "52000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "861c46b5-ad0d-4a19-99c9-ca5296fd4316",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "87c269ec-0021-4dec-a959-13c69d248ec2",
+          "unit_cost": "18000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "9377cc60-88c9-4a55-b334-61ed729c98ce",
+          "unit_cost": "10500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "99a3a41e-59c1-4ed6-a6e2-4980ca69762b",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "99c2f290-49d8-4e4d-a5e4-69ce42e3aab1",
+          "unit_cost": "9500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "a316843a-9e4c-43e9-9943-5dfbc768daae",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "a4b69545-0eb6-4403-b181-46b43251c496",
+          "unit_cost": "4300",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "b19974f6-a440-4e4a-a041-656c142caa79",
+          "unit_cost": "8500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "b2679fe1-dadc-4390-ac00-8979f9c3c663",
+          "unit_cost": "7000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "b7ec4d84-5ada-431e-97a6-b58a75d8572e",
+          "unit_cost": "38000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "be7d4c04-be8f-48da-8580-14b8f1243088",
+          "unit_cost": "16000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "c20e0b7d-e3ae-4a15-b7fb-592fb4baf24a",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "c2814031-53a2-4845-9b90-4ee82622b9f0",
+          "unit_cost": "4500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "c9edc3e7-4643-4863-80b4-2c79afce7027",
+          "unit_cost": "6000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "caa528ae-65b1-48a5-92d5-c6fe00303b60",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "cf0cdef0-12e1-4864-8024-b1c9e658ed6d",
+          "unit_cost": "9000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "cf3025bd-058f-4b77-9ff6-a7ad75c4a903",
+          "unit_cost": "11500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "eb7d6109-7488-48db-b7ac-da403bf118b4",
+          "unit_cost": "28000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "ec0352ae-ec4c-4878-a71e-6fa207eac4e3",
+          "unit_cost": "17200",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "f29ba9ab-52d0-4da1-b864-65a02b492de9",
+          "unit_cost": "3500",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "fa1db8b9-309d-497a-92d0-b957b5c089ac",
+          "unit_cost": "48000",
+          "other_cost": "0",
+          "fee_rate": null
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "snapshot_id": "fce61417-93d3-427b-a864-40e81932488d",
+          "unit_id": "fee266ec-00ac-4d03-9771-50fb6facd3ca",
+          "unit_cost": "20000",
+          "other_cost": "0",
+          "fee_rate": null
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "google_campaign_names",
+      "observedAt": "2026-10-27T06:44:12.7846901+00:00",
+      "sqlSha256": "5217ae4c282ea0143adeb53e24df4a850e30f37c289c7163006b52b1ea22c7fd",
+      "elapsedMs": 756,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "metric_date": "2026-10-20",
+          "campaign_name": "러닝 양말 - 2026-10-20",
+          "cost_micros": "75897227316"
+        },
+        {
+          "metric_date": "2026-10-20",
+          "campaign_name": "버닝 웨이브바 - 2026-10-19",
+          "cost_micros": "48702560585"
+        },
+        {
+          "metric_date": "2026-10-20",
+          "campaign_name": "에어스텝퍼_ 2026-10-19",
+          "cost_micros": "47497676252"
+        },
+        {
+          "metric_date": "2026-10-20",
+          "campaign_name": "풀업바_2026-10-19",
+          "cost_micros": "48289836503"
+        },
+        {
+          "metric_date": "2026-10-20",
+          "campaign_name": "플로우라이트- 2026-10-20",
+          "cost_micros": "55540151573"
+        },
+        {
+          "metric_date": "2026-10-23",
+          "campaign_name": "두줄무릎보호대 - 2026-10-21",
+          "cost_micros": "47527110163"
+        },
+        {
+          "metric_date": "2026-10-23",
+          "campaign_name": "버닝 웨이브바 - 2026-10-19",
+          "cost_micros": "49315148017"
+        },
+        {
+          "metric_date": "2026-10-23",
+          "campaign_name": "자이로볼 아이언- 2026-10-23",
+          "cost_micros": "30089769107"
+        },
+        {
+          "metric_date": "2026-10-23",
+          "campaign_name": "풀업바_2026-10-19",
+          "cost_micros": "48969715083"
+        },
+        {
+          "metric_date": "2026-10-23",
+          "campaign_name": "플로우라이트- 2026-10-20",
+          "cost_micros": "51466061958"
+        },
+        {
+          "metric_date": "2026-10-25",
+          "campaign_name": "두줄무릎보호대 - 2026-10-21",
+          "cost_micros": "47765129881"
+        },
+        {
+          "metric_date": "2026-10-25",
+          "campaign_name": "버닝 웨이브바 - 2026-10-19",
+          "cost_micros": "51333642295"
+        },
+        {
+          "metric_date": "2026-10-25",
+          "campaign_name": "자이로볼 아이언- 2026-10-23",
+          "cost_micros": "14719779758"
+        },
+        {
+          "metric_date": "2026-10-25",
+          "campaign_name": "풀업바_2026-10-19",
+          "cost_micros": "51134944621"
+        },
+        {
+          "metric_date": "2026-10-25",
+          "campaign_name": "플로우라이트- 2026-10-20",
+          "cost_micros": "51502701164"
+        },
+        {
+          "metric_date": "2026-10-26",
+          "campaign_name": "두줄무릎보호대 - 2026-10-21",
+          "cost_micros": "47746740609"
+        },
+        {
+          "metric_date": "2026-10-26",
+          "campaign_name": "버닝 웨이브바 - 2026-10-19",
+          "cost_micros": "50603791553"
+        },
+        {
+          "metric_date": "2026-10-26",
+          "campaign_name": "자이로볼 아이언- 2026-10-23",
+          "cost_micros": "43527638996"
+        },
+        {
+          "metric_date": "2026-10-26",
+          "campaign_name": "풀업바_2026-10-19",
+          "cost_micros": "50497522636"
+        },
+        {
+          "metric_date": "2026-10-26",
+          "campaign_name": "플로우라이트- 2026-10-20",
+          "cost_micros": "50636339674"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "cafe24_cost_presence",
+      "observedAt": "2026-10-27T06:44:13.7590504+00:00",
+      "sqlSha256": "4f10452545c916e0e688abb65d953d079a4d5f1e4bb30ade5790db42ce4d2275",
+      "elapsedMs": 967,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "order_date": "2026-10-23",
+          "source": "API",
+          "rows": 229,
+          "unmapped": 0,
+          "missing_cost": 0
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "order_date": "2026-10-23",
+          "source": "CSV",
+          "rows": 228,
+          "unmapped": 0,
+          "missing_cost": 0
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "order_date": "2026-10-24",
+          "source": "API",
+          "rows": 279,
+          "unmapped": 2,
+          "missing_cost": 0
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "order_date": "2026-10-25",
+          "source": "API",
+          "rows": 395,
+          "unmapped": 6,
+          "missing_cost": 0
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "order_date": "2026-10-26",
+          "source": "API",
+          "rows": 320,
+          "unmapped": 2,
+          "missing_cost": 0
+        },
+        {
+          "connection_id": null,
+          "order_date": "2026-10-20",
+          "source": "CSV",
+          "rows": 255,
+          "unmapped": 9,
+          "missing_cost": 0
+        },
+        {
+          "connection_id": null,
+          "order_date": "2026-10-21",
+          "source": "CSV",
+          "rows": 247,
+          "unmapped": 11,
+          "missing_cost": 0
+        },
+        {
+          "connection_id": null,
+          "order_date": "2026-10-22",
+          "source": "CSV",
+          "rows": 233,
+          "unmapped": 10,
+          "missing_cost": 0
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "coupang_cost_presence",
+      "observedAt": "2026-10-27T06:44:14.6466150+00:00",
+      "sqlSha256": "48d8be0760cd20abc0ff3af2c2b199049150e2e9eeebefa4aad8d92b04e2f6bc",
+      "elapsedMs": 883,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "sale_date": "2026-10-20",
+          "rows": 355,
+          "unmapped": 2,
+          "missing_cost": 0,
+          "growth_shipping_null": 0,
+          "global_fee_missing": 0
+        },
+        {
+          "sale_date": "2026-10-21",
+          "rows": 340,
+          "unmapped": 3,
+          "missing_cost": 0,
+          "growth_shipping_null": 0,
+          "global_fee_missing": 0
+        },
+        {
+          "sale_date": "2026-10-22",
+          "rows": 311,
+          "unmapped": 1,
+          "missing_cost": 0,
+          "growth_shipping_null": 0,
+          "global_fee_missing": 0
+        },
+        {
+          "sale_date": "2026-10-23",
+          "rows": 332,
+          "unmapped": 3,
+          "missing_cost": 0,
+          "growth_shipping_null": 0,
+          "global_fee_missing": 0
+        },
+        {
+          "sale_date": "2026-10-24",
+          "rows": 337,
+          "unmapped": 4,
+          "missing_cost": 0,
+          "growth_shipping_null": 0,
+          "global_fee_missing": 0
+        },
+        {
+          "sale_date": "2026-10-25",
+          "rows": 299,
+          "unmapped": 2,
+          "missing_cost": 0,
+          "growth_shipping_null": 0,
+          "global_fee_missing": 0
+        },
+        {
+          "sale_date": "2026-10-26",
+          "rows": 317,
+          "unmapped": 2,
+          "missing_cost": 0,
+          "growth_shipping_null": 0,
+          "global_fee_missing": 0
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "exchange_rates_recent",
+      "observedAt": "2026-10-27T06:44:15.3917927+00:00",
+      "sqlSha256": "d0af61cfff304214832ff729b934469df6895eedfe47b5d3c4c353d16d356e07",
+      "elapsedMs": 727,
+      "httpStatus": 400,
+      "status": "NOT_MEASURED",
+      "rows": null,
+      "reason": "QUERY_REJECTED"
+    },
+    {
+      "name": "signature_keys",
+      "observedAt": "2026-10-27T06:44:16.1370657+00:00",
+      "sqlSha256": "7ac2af71f3960eda0ca7e188600317b2cfc27b97dfd7e3b7e276cb9eb09f43d7",
+      "elapsedMs": 742,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "key": "id"
+        },
+        {
+          "key": "storeId"
+        },
+        {
+          "key": "createdAt"
+        },
+        {
+          "key": "updatedAt"
+        },
+        {
+          "key": "lastSeenAt"
+        },
+        {
+          "key": "usageCount"
+        },
+        {
+          "key": "confirmedAt"
+        },
+        {
+          "key": "firstSeenAt"
+        },
+        {
+          "key": "mappingStatus"
+        },
+        {
+          "key": "mappingRuleHash"
+        },
+        {
+          "key": "sourceSignature"
+        },
+        {
+          "key": "lastAutoMappedAt"
+        },
+        {
+          "key": "sampleOptionCode"
+        },
+        {
+          "key": "canonicalSalesUnitId"
+        },
+        {
+          "key": "normalizedOptionInfo"
+        },
+        {
+          "key": "normalizedProductName"
+        },
+        {
+          "key": "rawOptionInfoSnapshot"
+        },
+        {
+          "key": "rawProductNameSnapshot"
+        },
+        {
+          "key": "sampleOptionManageCode"
+        },
+        {
+          "key": "sampleExternalProductId"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_common_recent",
+      "observedAt": "2026-10-27T06:44:16.8926810+00:00",
+      "sqlSha256": "ecd61231f2d410f04cce4dda9bfb3139373f938e9f9cf799006e3d29fc045341",
+      "elapsedMs": 751,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-20",
+          "amount": "284000"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-21",
+          "amount": "124000"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-22",
+          "amount": "148800"
+        },
+        {
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "amount": "650580"
+        }
+      ],
+      "reason": null
+    }
+  ]
+}

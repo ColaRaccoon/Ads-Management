@@ -1,0 +1,12 @@
+{
+  "node": "v24.14.0",
+  "packages": {
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "@nestjs/core": "11.2.3",
+    "prisma": "6.12.0",
+    "@prisma/client": "6.12.0",
+    "typescript": "5.9.3",
+    "@supabase/supabase-js": "2.112.4"
+  }
+}

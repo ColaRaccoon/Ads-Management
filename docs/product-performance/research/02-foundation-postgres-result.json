@@ -1,0 +1,88 @@
+{
+  "stage": "02",
+  "startedAt": "2026-10-27T07:27:16.161Z",
+  "head": "38136a44cbe06eaa65c074074cf1a88f1435cf00",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55447,
+    "database": "unified_stage02",
+    "owner": "unified_owner"
+  },
+  "remoteWrites": 0,
+  "realBusinessData": false,
+  "migration": "20261027071504_unified_performance_foundation",
+  "migrationSha256": "7aa3744d68228689f4eb15b3175603869e1adc12934f8a9ea861ba98c9cbdbcc",
+  "checks": [
+    {
+      "name": "new isolated PG17 identity validated before feature writes",
+      "passed": true
+    },
+    {
+      "name": "all new DDL rolls back transactionally without changing baseline product",
+      "passed": true
+    },
+    {
+      "name": "Prisma baseline+new migration deploy, repeat deploy has no pending migration, existing product preserved",
+      "passed": true
+    },
+    {
+      "name": "RLS enabled and forced for all eight feature tables",
+      "passed": true
+    },
+    {
+      "name": "actual non-owner reader/writer/API/config logins enforce source SELECT/DML/credential and feature write boundaries",
+      "passed": true,
+      "sourceTables": 12,
+      "runtimeRoles": [
+        {
+          "rolname": "unified_reader",
+          "rolsuper": false,
+          "rolbypassrls": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false
+        },
+        {
+          "rolname": "unified_writer",
+          "rolsuper": false,
+          "rolbypassrls": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false
+        },
+        {
+          "rolname": "unified_api",
+          "rolsuper": false,
+          "rolbypassrls": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false
+        },
+        {
+          "rolname": "unified_config",
+          "rolsuper": false,
+          "rolbypassrls": false,
+          "rolcreatedb": false,
+          "rolcreaterole": false
+        }
+      ]
+    },
+    {
+      "name": "database exclusion protects identical inclusive rule ranges; numeric storage rejects overflow",
+      "passed": true
+    },
+    {
+      "name": "same-name distinct orders preserved; failed/rolled-back source revision retains previous publication",
+      "passed": true
+    },
+    {
+      "name": "publication composite FK prevents cross-source/scope/day pointer",
+      "passed": true
+    },
+    {
+      "name": "real config service CRUD, read-only preview, audit rollback, wildcard/date/CAS/concurrency and revision fingerprints",
+      "passed": true
+    }
+  ],
+  "status": "PASS",
+  "stopExit": 0,
+  "endedAt": "2026-10-27T07:27:30.110Z",
+  "localEvidence": "C:\\Users\\seong\\AppData\\Local\\UnifiedPerformanceStage02\\run-2f27b80a-951a-43f7-a231-cfbf1c99ac08"
+}

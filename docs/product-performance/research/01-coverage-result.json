@@ -1,0 +1,3483 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "rowsChanged": 0,
+  "queries": [
+    {
+      "name": "naver_units_named",
+      "observedAt": "2026-10-27T06:41:36.5047051+00:00",
+      "sqlSha256": "d3c98df5cc1b4040fd9ec312e25989d3b4e06131bbcac8d56ed08941660b3770",
+      "elapsedMs": 971,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "id": "13a07cd0-c51a-4d72-b74d-02001c4f70c5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "다이어트 양말",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "a130d1e4-4300-4760-945b-ef4457bfbad9",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "두줄보호대",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": [
+            "두줄",
+            "두줄보호대",
+            "두줄 무릎보호대",
+            "인피니티 가드 두줄"
+          ]
+        },
+        {
+          "id": "47753537-ad16-43c9-aa85-c1c0baba601b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "두줄보호대 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "a130d1e4-4300-4760-945b-ef4457bfbad9",
+          "aliases": []
+        },
+        {
+          "id": "0fffd984-814f-43b5-ae9b-245fbc4b302e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "두줄보호대 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "a130d1e4-4300-4760-945b-ef4457bfbad9",
+          "aliases": []
+        },
+        {
+          "id": "d815f925-d252-488b-bede-02b3e0ec085b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝깔창 PORON 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "ce6159b9-137a-4f7a-87d2-ca9e3dabe0aa",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝깔창 PORON 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "4a20062f-c788-461e-bd44-c5cbd66c873d",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝깔창 데일리 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "94a080c5-f4c8-4aeb-bb7a-f0ad2c69b57a",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝깔창 데일리 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "러닝깔창",
+            "밸런스엑스"
+          ]
+        },
+        {
+          "id": "6e8d51e2-48d5-4663-82bf-674e77109b57",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝모자",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "러닝모자",
+            "런닝모자",
+            "볼캡"
+          ]
+        },
+        {
+          "id": "45a6a325-8de6-4d16-82cf-cbbde9aabdd8",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝양말",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "러닝양말",
+            "런닝양말",
+            "스포츠양말",
+            "축구양말",
+            "사커엑스"
+          ]
+        },
+        {
+          "id": "2ac843c3-9931-4278-bf9c-876392ba69f4",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝장갑",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "러닝장갑",
+            "런닝장갑",
+            "글러브"
+          ]
+        },
+        {
+          "id": "038d2801-5ce4-4995-8a0d-e2c354e71834",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝장갑 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "621d78b4-01dc-4cc8-90b8-c01b354f54d1",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "러닝조끼",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "러닝조끼",
+            "런닝조끼",
+            "조끼",
+            "러닝베스트",
+            "베스트"
+          ]
+        },
+        {
+          "id": "e0ad6322-537d-4a2a-89b5-3e59bed79f46",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "무릎키퍼",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "무릎키퍼"
+          ]
+        },
+        {
+          "id": "59e924eb-e8b0-40fd-8aa4-3906feab64a5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "바라클라바",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "b1ad5cf1-17c9-494a-ac59-0f1354fde5d7",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "바라클라바 베이직 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "59e924eb-e8b0-40fd-8aa4-3906feab64a5",
+          "aliases": []
+        },
+        {
+          "id": "4817e33a-be48-4115-a74b-e3907cdc706b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "바라클라바 베이직 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "59e924eb-e8b0-40fd-8aa4-3906feab64a5",
+          "aliases": [
+            "바라클라바"
+          ]
+        },
+        {
+          "id": "98b0f410-22ae-4d0d-8e49-ebb4cd88d6b5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "바라클라바 프로 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "59e924eb-e8b0-40fd-8aa4-3906feab64a5",
+          "aliases": []
+        },
+        {
+          "id": "773f5c19-0326-44a7-a7d6-7f16e0aec63e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "바라클라바 프로 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "59e924eb-e8b0-40fd-8aa4-3906feab64a5",
+          "aliases": []
+        },
+        {
+          "id": "3be7c15f-6097-4653-8e32-a9b5d5b4ab59",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "발목보호대 데일리",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "597044d9-b242-40fd-bc40-29a445573e8d",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "발목보호대 싸커",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "8c9345e6-3555-4d29-b8c5-df2c9b7d4e60",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "베놈 무릎보호대",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": [
+            "베놈",
+            "김남일",
+            "왓츠인마이백"
+          ]
+        },
+        {
+          "id": "58c5b066-fa9c-41ce-a1ee-cad5d56fe122",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "베놈 무릎보호대 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "8c9345e6-3555-4d29-b8c5-df2c9b7d4e60",
+          "aliases": []
+        },
+        {
+          "id": "5ace2f59-ccb9-43e5-91ab-3092f1c3cf0e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "베놈 무릎보호대 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "8c9345e6-3555-4d29-b8c5-df2c9b7d4e60",
+          "aliases": []
+        },
+        {
+          "id": "4cae6ae7-8e25-4214-821d-1d06fa3f4529",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "베놈 무릎보호대(여성용) 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "8c9345e6-3555-4d29-b8c5-df2c9b7d4e60",
+          "aliases": []
+        },
+        {
+          "id": "4345149d-7188-4563-8e90-cff1fb0c593e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "베놈 무릎보호대(여성용) 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "8c9345e6-3555-4d29-b8c5-df2c9b7d4e60",
+          "aliases": []
+        },
+        {
+          "id": "4cbcebe9-fca5-4920-aa3c-8a73a8a160e7",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "손목보호대 기본형 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "208a4ead-e15c-42f8-8835-eb765bc9561f",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "손목보호대 기본형 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "09d9f8d7-870e-4bc5-89d9-1a4ddd3c151e",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "손목보호대 프로 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "e2f355f2-1b8f-494f-a1c5-60bd515bb673",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "손목보호대 프로 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "722a3fc5-7a0a-4be6-8b26-ae1dfa19b0d0",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "스카이깔창",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "스카이깔창",
+            "스카이스텝",
+            "스카이",
+            "쿠션 깔창"
+          ]
+        },
+        {
+          "id": "0a9b81dc-bfdb-4fd3-9013-ed2b492bd94b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "스토어 전체 광고비",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "47f54152-2459-444d-b345-ccaa01232cf7",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "스포츠 양말",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "63027ddb-4e42-442c-8c45-2c0fc8b11c9c",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "식별 불가능",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "ddc2dd13-89bc-4c81-8cd8-cc5fb05cb590",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "자외선마스크",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "자외선마스크",
+            "유쉴드마스크",
+            "스포츠마스크",
+            "골프마스크",
+            "안면마스크",
+            "햇빛가리개"
+          ]
+        },
+        {
+          "id": "c976abd7-716b-4ca7-af32-29ea7a91f901",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "카프슬리브",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "카프슬리브",
+            "종아리보호대",
+            "종아리",
+            "컴프레션슬리브"
+          ]
+        },
+        {
+          "id": "01952725-7a46-42e0-b6d2-d026f4bdcbd4",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "카프슬리브 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "2f1d38c1-ddfc-4a6a-8be8-021d6f5c1518",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "쿨토시",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": [
+            "쿨토시",
+            "유쉴드 손등",
+            "손등쿨토시",
+            "팔토시",
+            "암슬리브"
+          ]
+        },
+        {
+          "id": "2131d6d3-0601-400a-a389-a1d7673cf61a",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "한줄보호대",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": [
+            "한줄",
+            "한줄보호대",
+            "한줄 무릎보호대",
+            "인피니티 가드 한줄"
+          ]
+        },
+        {
+          "id": "68830691-eb3d-49c4-b9b1-b4bc12bce85b",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "한줄보호대 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "2131d6d3-0601-400a-a389-a1d7673cf61a",
+          "aliases": []
+        },
+        {
+          "id": "580ffa86-bfa7-45c0-91be-174fce0ebbf5",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "한줄보호대 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "2131d6d3-0601-400a-a389-a1d7673cf61a",
+          "aliases": []
+        },
+        {
+          "id": "be940f58-6f9b-423f-9be5-514df4535b26",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "히트체인지 넥워머",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": [
+            "히트체인지",
+            "넥워머",
+            "히트체인지 넥워머",
+            "목토시",
+            "방한마스크",
+            "비니"
+          ]
+        },
+        {
+          "id": "f7a756e9-fee6-41c7-acaf-a4f8ad87c575",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "히트체인지 넥워머 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "be940f58-6f9b-423f-9be5-514df4535b26",
+          "aliases": []
+        },
+        {
+          "id": "3a3e9d78-af1a-47bf-9933-6c58628ebbec",
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "히트체인지 넥워머 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "be940f58-6f9b-423f-9be5-514df4535b26",
+          "aliases": []
+        },
+        {
+          "id": "47d4e2d7-4abf-46e3-8848-13a4bcf2e148",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "NBR요가매트",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "db53cae7-b818-4df8-9c94-9f801345d532",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "버닝슬라이드",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "6659498a-13e8-4e97-a267-183f66c81e2d",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "버닝슬라이드 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "db53cae7-b818-4df8-9c94-9f801345d532",
+          "aliases": []
+        },
+        {
+          "id": "be7d4c04-be8f-48da-8580-14b8f1243088",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "버닝슬라이드 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "db53cae7-b818-4df8-9c94-9f801345d532",
+          "aliases": []
+        },
+        {
+          "id": "1ba4d8f9-db90-4f63-8806-7be6badea102",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "버닝웨이브",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "c9edc3e7-4643-4863-80b4-2c79afce7027",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "버닝웨이브바",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "1ba4d8f9-db90-4f63-8806-7be6badea102",
+          "aliases": []
+        },
+        {
+          "id": "2d7d2a97-ed47-4f32-9d3f-f7a2f8e96010",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "버닝웨이브바 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "1ba4d8f9-db90-4f63-8806-7be6badea102",
+          "aliases": []
+        },
+        {
+          "id": "85d5c600-639c-416a-9960-d4e9561fe6c2",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "스텝마스터",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "9a6f1a8f-07ce-42a0-8570-9b53af61dee0",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "스토어 전체 광고",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "d9ec6a50-6c30-46cf-9a35-b930a899252a",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "스토어 전체 광고비",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "14a058a3-3b41-4a7b-9e06-c20c94a605ad",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "실리콘리프팅+페이스롤러",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "cf0cdef0-12e1-4864-8024-b1c9e658ed6d",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "실리콘리프팅1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "c2814031-53a2-4845-9b90-4ee82622b9f0",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "실리콘리프팅밴드",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "06403a11-4274-4d91-a7b1-ca18c99f0c8c",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "에어스텝퍼",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "29bde2f1-46d8-49c6-ad1a-53703539e230",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "에어스텝퍼 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "06403a11-4274-4d91-a7b1-ca18c99f0c8c",
+          "aliases": []
+        },
+        {
+          "id": "b7ec4d84-5ada-431e-97a6-b58a75d8572e",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "에어스텝퍼 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "06403a11-4274-4d91-a7b1-ca18c99f0c8c",
+          "aliases": []
+        },
+        {
+          "id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "1c182064-e97c-4de1-bb33-abf4f12c57e6",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 2+1 챌린지 + 아이언",
+          "active": "false",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "4ac0d206-70a8-4a85-8072-95c58bf6660a",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 2+1(메탈)",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "ec0352ae-ec4c-4878-a71e-6fa207eac4e3",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 3+1 메딕",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "87c269ec-0021-4dec-a959-13c69d248ec2",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 3+1 챌린지",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "a4b69545-0eb6-4403-b181-46b43251c496",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 메딕",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "08d45360-9312-4991-97c9-fe350793b8f4",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 메딕+메탈",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "a316843a-9e4c-43e9-9943-5dfbc768daae",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 메탈",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "6d1b39a0-a49b-4023-b94f-0bb0cd03b689",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 챌린지",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "34c27df9-c2d5-4b6c-b53f-5629ce9739a4",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 챌린지+메탈",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "440079d0-3aa6-46ce-a2ea-583df7bcefe3",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 풀메탈",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "99a3a41e-59c1-4ed6-a6e2-4980ca69762b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "자이로볼 호크아이",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+          "aliases": []
+        },
+        {
+          "id": "9d26fb4e-b33e-4b0b-82ac-de87cda5f48b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "케겔",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "b19974f6-a440-4e4a-a041-656c142caa79",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "케겔 기본형",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "9d26fb4e-b33e-4b0b-82ac-de87cda5f48b",
+          "aliases": []
+        },
+        {
+          "id": "caa528ae-65b1-48a5-92d5-c6fe00303b60",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "케겔 프로형",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "9d26fb4e-b33e-4b0b-82ac-de87cda5f48b",
+          "aliases": []
+        },
+        {
+          "id": "2bb1f004-0a6b-4e7b-948e-3aea27cb4112",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "코어브릿지",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "99c2f290-49d8-4e4d-a5e4-69ce42e3aab1",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "코어브릿지 기본형",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "2bb1f004-0a6b-4e7b-948e-3aea27cb4112",
+          "aliases": []
+        },
+        {
+          "id": "6d871d86-128f-46b3-95d4-b1f0a7bb9320",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "코어브릿지 프로형",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "2bb1f004-0a6b-4e7b-948e-3aea27cb4112",
+          "aliases": []
+        },
+        {
+          "id": "fee266ec-00ac-4d03-9771-50fb6facd3ca",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "퍼펙트 스케이트",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "861c46b5-ad0d-4a19-99c9-ca5296fd4316",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "퍼펙트 슬라이드 기본형",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "a3a53351-0249-4d89-8488-ddbc096d430d",
+          "aliases": []
+        },
+        {
+          "id": "44def751-f254-47bc-a2e3-53a56478ef4f",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "퍼펙트 슬라이드 프로형",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "a3a53351-0249-4d89-8488-ddbc096d430d",
+          "aliases": []
+        },
+        {
+          "id": "fa1db8b9-309d-497a-92d0-b957b5c089ac",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "퍼펙트스케이트+퍼펙트슬라이드2",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "a3a53351-0249-4d89-8488-ddbc096d430d",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "퍼펙트슬라이드",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "eb7d6109-7488-48db-b7ac-da403bf118b4",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "퍼펙트슬라이드2",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "7cfff932-d7c8-48c0-841f-19df309571b8",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "페이스 롤러",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "b2679fe1-dadc-4390-ac00-8979f9c3c663",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "페이스 롤러 1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "7cfff932-d7c8-48c0-841f-19df309571b8",
+          "aliases": []
+        },
+        {
+          "id": "9377cc60-88c9-4a55-b334-61ed729c98ce",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "페이스 롤러 2+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "7cfff932-d7c8-48c0-841f-19df309571b8",
+          "aliases": []
+        },
+        {
+          "id": "f29ba9ab-52d0-4da1-b864-65a02b492de9",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "페이스 롤러 단품",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "7cfff932-d7c8-48c0-841f-19df309571b8",
+          "aliases": []
+        },
+        {
+          "id": "cf3025bd-058f-4b77-9ff6-a7ad75c4a903",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "푸쉬업바",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "28b9fd1e-09de-45ae-be83-027921306071",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "풀업바",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "18b9212e-44d8-4711-a21e-47db46382a2b",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "풀업밴드",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "c20e0b7d-e3ae-4a15-b7fb-592fb4baf24a",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "풀업밴드 그린",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "18b9212e-44d8-4711-a21e-47db46382a2b",
+          "aliases": []
+        },
+        {
+          "id": "55813926-a6b6-4b14-a935-de5a202a751e",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "풀업밴드 레드",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "18b9212e-44d8-4711-a21e-47db46382a2b",
+          "aliases": []
+        },
+        {
+          "id": "43499fe0-02d3-4572-b313-588efdedfa15",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "풀업밴드 보라",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "18b9212e-44d8-4711-a21e-47db46382a2b",
+          "aliases": []
+        },
+        {
+          "id": "6b8fe055-6e35-439b-a7b4-e4502a2fc254",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "풀업밴드 블랙",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "18b9212e-44d8-4711-a21e-47db46382a2b",
+          "aliases": []
+        },
+        {
+          "id": "37f0c7c6-eb88-4520-a02a-07ac81702577",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "풀업밴드 세트",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "18b9212e-44d8-4711-a21e-47db46382a2b",
+          "aliases": []
+        },
+        {
+          "id": "1d2d03a7-7729-42b8-96a3-d8e6655acb63",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "플로우라이트",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "48b594f7-2f77-4add-82ff-3afb32e22a88",
+          "aliases": []
+        },
+        {
+          "id": "48b594f7-2f77-4add-82ff-3afb32e22a88",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "플로우라이트",
+          "active": "true",
+          "is_group": "true",
+          "parent_id": null,
+          "aliases": []
+        },
+        {
+          "id": "021fc821-bfa4-4136-bc9b-d0e2c6712a96",
+          "store_id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "플로우라이트1+1",
+          "active": "true",
+          "is_group": "false",
+          "parent_id": "48b594f7-2f77-4add-82ff-3afb32e22a88",
+          "aliases": []
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_stores",
+      "observedAt": "2026-10-27T06:41:37.2638895+00:00",
+      "sqlSha256": "a419bc08e71552e8db327c7ddc4a63ff6b8e6a48c83cf394b5e64e744155c829",
+      "elapsedMs": 726,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "인피니티스토어",
+          "store_name": null,
+          "display_name": null
+        },
+        {
+          "id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "파티마스토어",
+          "store_name": null,
+          "display_name": null
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_cost_keys",
+      "observedAt": "2026-10-27T06:41:38.0018644+00:00",
+      "sqlSha256": "5d164f5e2d5ba7c61577fc4ab89615547384a6552454ba8349d6ad5962f73e3d",
+      "elapsedMs": 733,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "kind": "setting",
+          "key": "id"
+        },
+        {
+          "kind": "setting",
+          "key": "feeRate"
+        },
+        {
+          "kind": "setting",
+          "key": "storeId"
+        },
+        {
+          "kind": "setting",
+          "key": "isActive"
+        },
+        {
+          "kind": "setting",
+          "key": "unitCost"
+        },
+        {
+          "kind": "setting",
+          "key": "createdAt"
+        },
+        {
+          "kind": "setting",
+          "key": "otherCost"
+        },
+        {
+          "kind": "setting",
+          "key": "updatedAt"
+        },
+        {
+          "kind": "setting",
+          "key": "effectiveTo"
+        },
+        {
+          "kind": "setting",
+          "key": "deactivatedAt"
+        },
+        {
+          "kind": "setting",
+          "key": "effectiveFrom"
+        },
+        {
+          "kind": "setting",
+          "key": "canonicalSalesUnitId"
+        },
+        {
+          "kind": "snapshot",
+          "key": "id"
+        },
+        {
+          "kind": "snapshot",
+          "key": "storeId"
+        },
+        {
+          "kind": "snapshot",
+          "key": "createdAt"
+        },
+        {
+          "kind": "snapshot",
+          "key": "updatedAt"
+        },
+        {
+          "kind": "snapshot",
+          "key": "effectiveFrom"
+        },
+        {
+          "kind": "snapshot",
+          "key": "sourceFileName"
+        },
+        {
+          "kind": "entry",
+          "key": "id"
+        },
+        {
+          "kind": "entry",
+          "key": "feeRate"
+        },
+        {
+          "kind": "entry",
+          "key": "storeId"
+        },
+        {
+          "kind": "entry",
+          "key": "unitCost"
+        },
+        {
+          "kind": "entry",
+          "key": "createdAt"
+        },
+        {
+          "kind": "entry",
+          "key": "otherCost"
+        },
+        {
+          "kind": "entry",
+          "key": "updatedAt"
+        },
+        {
+          "kind": "entry",
+          "key": "snapshotId"
+        },
+        {
+          "kind": "entry",
+          "key": "canonicalSalesUnitId"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_settings",
+      "observedAt": "2026-10-27T06:41:38.7150239+00:00",
+      "sqlSha256": "582421dc68ae78e16a2e55e2ded392f3aabd371ada598c6d2d10967d9b30a6dd",
+      "elapsedMs": 709,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "e2f355f2-1b8f-494f-a1c5-60bd515bb673",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "01952725-7a46-42e0-b6d2-d026f4bdcbd4",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "621d78b4-01dc-4cc8-90b8-c01b354f54d1",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "4cbcebe9-fca5-4920-aa3c-8a73a8a160e7",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "4cae6ae7-8e25-4214-821d-1d06fa3f4529",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "773f5c19-0326-44a7-a7d6-7f16e0aec63e",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "ce6159b9-137a-4f7a-87d2-ca9e3dabe0aa",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "13a07cd0-c51a-4d72-b74d-02001c4f70c5",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "580ffa86-bfa7-45c0-91be-174fce0ebbf5",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "d815f925-d252-488b-bede-02b3e0ec085b",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "722a3fc5-7a0a-4be6-8b26-ae1dfa19b0d0",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "0fffd984-814f-43b5-ae9b-245fbc4b302e",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "47753537-ad16-43c9-aa85-c1c0baba601b",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "58c5b066-fa9c-41ce-a1ee-cad5d56fe122",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "5ace2f59-ccb9-43e5-91ab-3092f1c3cf0e",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "63027ddb-4e42-442c-8c45-2c0fc8b11c9c",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "597044d9-b242-40fd-bc40-29a445573e8d",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "b1ad5cf1-17c9-494a-ac59-0f1354fde5d7",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "2ac843c3-9931-4278-bf9c-876392ba69f4",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "038d2801-5ce4-4995-8a0d-e2c354e71834",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "0a9b81dc-bfdb-4fd3-9013-ed2b492bd94b",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "ddc2dd13-89bc-4c81-8cd8-cc5fb05cb590",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "3a3e9d78-af1a-47bf-9933-6c58628ebbec",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "47f54152-2459-444d-b345-ccaa01232cf7",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "4345149d-7188-4563-8e90-cff1fb0c593e",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "68830691-eb3d-49c4-b9b1-b4bc12bce85b",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "3be7c15f-6097-4653-8e32-a9b5d5b4ab59",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "c976abd7-716b-4ca7-af32-29ea7a91f901",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "208a4ead-e15c-42f8-8835-eb765bc9561f",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "98b0f410-22ae-4d0d-8e49-ebb4cd88d6b5",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "e0ad6322-537d-4a2a-89b5-3e59bed79f46",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "94a080c5-f4c8-4aeb-bb7a-f0ad2c69b57a",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "4817e33a-be48-4115-a74b-e3907cdc706b",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "f7a756e9-fee6-41c7-acaf-a4f8ad87c575",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "09d9f8d7-870e-4bc5-89d9-1a4ddd3c151e",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "6e8d51e2-48d5-4663-82bf-674e77109b57",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "2f1d38c1-ddfc-4a6a-8be8-021d6f5c1518",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "4a20062f-c788-461e-bd44-c5cbd66c873d",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        },
+        {
+          "store_id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "unit_id": null,
+          "canonical_id": "45a6a325-8de6-4d16-82cf-cbbde9aabdd8",
+          "effective_from": "2024-01-01",
+          "product_cost": null,
+          "shipping_cost": null,
+          "active": "true"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "cafe24_rules",
+      "observedAt": "2026-10-27T06:41:39.4994056+00:00",
+      "sqlSha256": "645259627f6937e984fd9949188ea725341b6c34f036c824e88825c12a1d12c1",
+      "elapsedMs": 779,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "name": "노필수면안대",
+          "display_name": "노필수면안대",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "노필",
+            "수면안대"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "다이어트양말",
+          "display_name": "다이어트양말",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "다이어트양말"
+          ],
+          "option_exclude_keywords": [
+            "공동구매",
+            "유튜브"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-10-21",
+          "valid_to": null
+        },
+        {
+          "name": "두줄무릎보호대",
+          "display_name": "두줄무릎보호대 1+1",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "두줄"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": "34900.00",
+          "product_cost_krw_override": "9000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "러닝양말",
+          "display_name": "러닝양말",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "러닝양말"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-09-02",
+          "valid_to": null
+        },
+        {
+          "name": "러닝조끼",
+          "display_name": "러닝조끼",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "러닝조끼"
+          ],
+          "option_exclude_keywords": [
+            "공동구매",
+            "유튜브"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-10-21",
+          "valid_to": null
+        },
+        {
+          "name": "바라클라바",
+          "display_name": "바라클라바",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "바라클라바"
+          ],
+          "option_exclude_keywords": [
+            "유튜브",
+            "공동구매",
+            "프로",
+            "1+1"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-10-25",
+          "valid_to": null
+        },
+        {
+          "name": "바라클라바",
+          "display_name": "바라클라바 1+1",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "바라클라바",
+            "1+1"
+          ],
+          "option_exclude_keywords": [
+            "유튜브",
+            "공동구매",
+            "프로"
+          ],
+          "sale_price_krw_override": "32800.00",
+          "product_cost_krw_override": "12000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-10-25",
+          "valid_to": null
+        },
+        {
+          "name": "바라클라바",
+          "display_name": "바라클라바 프로",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "바라클라바",
+            "프로"
+          ],
+          "option_exclude_keywords": [
+            "유튜브",
+            "공동구매",
+            "1+1"
+          ],
+          "sale_price_krw_override": "28900.00",
+          "product_cost_krw_override": "7500.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-10-25",
+          "valid_to": null
+        },
+        {
+          "name": "바라클라바",
+          "display_name": "바라클라바 프로 1+1",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "바라클라바",
+            "프로",
+            "1+1"
+          ],
+          "option_exclude_keywords": [
+            "유튜브",
+            "공동구매"
+          ],
+          "sale_price_krw_override": "38900.00",
+          "product_cost_krw_override": "15000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-10-25",
+          "valid_to": null
+        },
+        {
+          "name": "버닝 슬라이드",
+          "display_name": "버닝 슬라이드 1+1",
+          "product_name_aliases": [
+            "블루+블루",
+            "다크그레이+블루",
+            "다크그레이+다크그레이"
+          ],
+          "option_include_keywords": [
+            "버닝",
+            "슬라이드",
+            "+"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": "87800.00",
+          "product_cost_krw_override": "32000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "버닝 슬라이드",
+          "display_name": "버닝 슬라이드 단품",
+          "product_name_aliases": [
+            "버닝 슬라이드",
+            "버닝슬라이드"
+          ],
+          "option_include_keywords": [
+            "버닝",
+            "슬라이드"
+          ],
+          "option_exclude_keywords": [
+            "블루+블루",
+            "다크그레이+블루",
+            "다크그레이+다크그레이"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-01-01",
+          "valid_to": null
+        },
+        {
+          "name": "버닝웨이브바",
+          "display_name": "버닝 웨이브바",
+          "product_name_aliases": [
+            "버닝 웨이브바",
+            "버닝웨이브바"
+          ],
+          "option_include_keywords": [
+            "웨이브"
+          ],
+          "option_exclude_keywords": [
+            "블랙+블랙",
+            "그레이+그레이",
+            "블랙+그레이"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-01-01",
+          "valid_to": null
+        },
+        {
+          "name": "버닝웨이브바",
+          "display_name": "버닝 웨이브바 1+1",
+          "product_name_aliases": [
+            "블랙+블랙",
+            "그레이+그레이",
+            "블랙+그레이"
+          ],
+          "option_include_keywords": [
+            "+"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": "63800.00",
+          "product_cost_krw_override": "12000.00",
+          "shipping_krw_override": "2800.00",
+          "extra_cost_krw_override": "0.00",
+          "valid_from": "2026-08-21",
+          "valid_to": null
+        },
+        {
+          "name": "베놈무릎보호대",
+          "display_name": "베놈무릎보호대",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "베놈"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-09-15",
+          "valid_to": null
+        },
+        {
+          "name": "뷰티레그보드",
+          "display_name": "뷰티레그보드",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "뷰티레그보드",
+            "[뷰티레그보드]"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-08-31",
+          "valid_to": null
+        },
+        {
+          "name": "스카이스텝",
+          "display_name": "스카이스텝",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "스카이스텝"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "아이언볼",
+          "display_name": "아이언볼",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "아이언볼"
+          ],
+          "option_exclude_keywords": [
+            "유튜브",
+            "공동구매"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-10-20",
+          "valid_to": null
+        },
+        {
+          "name": "에어스텝퍼",
+          "display_name": "에어스텝퍼 89,000",
+          "product_name_aliases": [
+            "에어스텝퍼",
+            "에어 스텝퍼"
+          ],
+          "option_include_keywords": [],
+          "option_exclude_keywords": [
+            "공동구매",
+            "플로우"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-09-08",
+          "valid_to": null
+        },
+        {
+          "name": "유쉴드마스크",
+          "display_name": "유쉴드마스크",
+          "product_name_aliases": [
+            "유쉴드마스크",
+            "유쉴드"
+          ],
+          "option_include_keywords": [],
+          "option_exclude_keywords": [
+            "1+1"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-01-01",
+          "valid_to": null
+        },
+        {
+          "name": "유쉴드마스크",
+          "display_name": "유쉴드마스크 1+1",
+          "product_name_aliases": [
+            "유쉴드마스크",
+            "유쉴드"
+          ],
+          "option_include_keywords": [
+            "1+1"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": "31600.00",
+          "product_cost_krw_override": "6600.00",
+          "shipping_krw_override": "2800.00",
+          "extra_cost_krw_override": "0.00",
+          "valid_from": "2026-01-01",
+          "valid_to": null
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "메딕+메탈",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "메딕+메탈"
+          ],
+          "option_exclude_keywords": [
+            "비밀링크"
+          ],
+          "sale_price_krw_override": "39800.00",
+          "product_cost_krw_override": "10300.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "자이로볼 아이언",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "아이언"
+          ],
+          "option_exclude_keywords": [
+            "챌린지",
+            "메딕",
+            "메탈",
+            "호크아이",
+            "비밀링크",
+            "아이언볼"
+          ],
+          "sale_price_krw_override": "39800.00",
+          "product_cost_krw_override": "9000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "자이로볼메딕",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "메딕"
+          ],
+          "option_exclude_keywords": [
+            "메딕+메탈",
+            "비밀링크"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": "4300.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "자이로볼메탈",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "메탈"
+          ],
+          "option_exclude_keywords": [
+            "챌린지+메탈",
+            "메딕+메탈",
+            "비밀링크"
+          ],
+          "sale_price_krw_override": "24900.00",
+          "product_cost_krw_override": "6000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "자이로볼챌린지",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "챌린지"
+          ],
+          "option_exclude_keywords": [
+            "챌린지+메탈",
+            "비밀링크"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": "4500.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "자이로볼호크아이",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "호크아이"
+          ],
+          "option_exclude_keywords": [
+            "챌린지",
+            "메딕",
+            "메탈",
+            "아이언",
+            "비밀링크"
+          ],
+          "sale_price_krw_override": "39800.00",
+          "product_cost_krw_override": "9000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "자이로볼",
+          "display_name": "챌린지+메탈",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "챌린지+메탈"
+          ],
+          "option_exclude_keywords": [
+            "비밀링크"
+          ],
+          "sale_price_krw_override": "39800.00",
+          "product_cost_krw_override": "10500.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "퍼펙트스케이트",
+          "display_name": "퍼펙트스케이트",
+          "product_name_aliases": [
+            "퍼펙트스케이트"
+          ],
+          "option_include_keywords": [
+            "스케이트"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "퍼펙트슬라이드",
+          "display_name": "퍼펙트슬라이드_기본형",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "일반형"
+          ],
+          "option_exclude_keywords": [
+            "프로형"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": "0.00",
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "퍼펙트슬라이드",
+          "display_name": "퍼펙트슬라이드_프로형",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "고급"
+          ],
+          "option_exclude_keywords": [
+            "일반형"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": "16000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-06-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업바",
+          "display_name": "풀업바",
+          "product_name_aliases": [
+            "풀업바"
+          ],
+          "option_include_keywords": [
+            "풀업바"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 (크로스셀링)",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "그린"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "블랙",
+            "레드",
+            "SET",
+            "🚀"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": "1100.00",
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 🚀",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "그린",
+            "🚀"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "블랙",
+            "레드",
+            "SET"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 레드 (크로스셀링)",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "레드"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "블랙",
+            "SET",
+            "🚀"
+          ],
+          "sale_price_krw_override": "16800.00",
+          "product_cost_krw_override": "1800.00",
+          "shipping_krw_override": "1100.00",
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 레드 🚀",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "레드",
+            "🚀"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "블랙",
+            "SET"
+          ],
+          "sale_price_krw_override": "16800.00",
+          "product_cost_krw_override": "1800.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 블랙 (크로스셀링)",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "블랙"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "레드",
+            "SET",
+            "🚀"
+          ],
+          "sale_price_krw_override": "17800.00",
+          "product_cost_krw_override": "2500.00",
+          "shipping_krw_override": "1100.00",
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 블랙 🚀",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "블랙",
+            "🚀"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "레드",
+            "SET"
+          ],
+          "sale_price_krw_override": "17800.00",
+          "product_cost_krw_override": "2500.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 세트 (크로스셀링)",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "SET"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "블랙",
+            "레드",
+            "🚀"
+          ],
+          "sale_price_krw_override": "39800.00",
+          "product_cost_krw_override": "8500.00",
+          "shipping_krw_override": "1100.00",
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 세트 🚀",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "SET",
+            "🚀"
+          ],
+          "option_exclude_keywords": [
+            "퍼플",
+            "블랙",
+            "레드"
+          ],
+          "sale_price_krw_override": "39800.00",
+          "product_cost_krw_override": "8500.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 퍼플 (크로스셀링)",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "퍼플"
+          ],
+          "option_exclude_keywords": [
+            "블랙",
+            "레드",
+            "SET",
+            "🚀"
+          ],
+          "sale_price_krw_override": "18800.00",
+          "product_cost_krw_override": "3000.00",
+          "shipping_krw_override": "1100.00",
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "풀업밴드",
+          "display_name": "풀업밴드 퍼플 🚀",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "풀업밴드",
+            "퍼플",
+            "🚀"
+          ],
+          "option_exclude_keywords": [
+            "블랙",
+            "레드",
+            "SET"
+          ],
+          "sale_price_krw_override": "18800.00",
+          "product_cost_krw_override": "3000.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "플로우라이트",
+          "display_name": "플로우라이트 1+1",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "플로우라이트",
+            "+"
+          ],
+          "option_exclude_keywords": [],
+          "sale_price_krw_override": "87800.00",
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-09-03",
+          "valid_to": null
+        },
+        {
+          "name": "플로우라이트",
+          "display_name": "플로우라이트 단품",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "플로우라이트"
+          ],
+          "option_exclude_keywords": [
+            "+"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-09-03",
+          "valid_to": null
+        },
+        {
+          "name": "한줄보호대",
+          "display_name": "한줄보호대 1+1",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "한줄",
+            "1+1"
+          ],
+          "option_exclude_keywords": [
+            "두줄"
+          ],
+          "sale_price_krw_override": "39800.00",
+          "product_cost_krw_override": "6400.00",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        },
+        {
+          "name": "한줄보호대",
+          "display_name": "한줄보호대 단품",
+          "product_name_aliases": [],
+          "option_include_keywords": [
+            "한줄"
+          ],
+          "option_exclude_keywords": [
+            "두줄",
+            "1+1"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "valid_from": "2026-07-01",
+          "valid_to": null
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "google_sale_units",
+      "observedAt": "2026-10-27T06:41:40.8017114+00:00",
+      "sqlSha256": "448054cacaeca2758e296b11f60373e9730e1f46ec8ec4c9fc05b63de5fb9ee3",
+      "elapsedMs": 1297,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "name": "두줄무릎보호대",
+        "option_name": "",
+        "option_scope": "PRODUCT",
+        "sale_unit_label": "1+1 세트",
+        "sale_price_krw_override": "34900.00",
+        "product_cost_krw_override": "9000.00",
+        "shipping_krw_override": "0.00",
+        "extra_cost_krw_override": "0.00",
+        "start_date": "2026-10-24",
+        "end_date": null
+      },
+      "reason": null
+    },
+    {
+      "name": "meta_bounds",
+      "observedAt": "2026-10-27T06:41:42.1549025+00:00",
+      "sqlSha256": "24128f84c013b32a3f1a4807c57d2079b5b3be47483012db21c77b58f1b01b80",
+      "elapsedMs": 1348,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+          "min_date": "2026-10-23",
+          "max_date": "2026-10-26",
+          "current_rows": 800
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "min_date": "2026-06-01",
+          "max_date": "2026-10-22",
+          "current_rows": 4518
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "meta_recent_daily",
+      "observedAt": "2026-10-27T06:41:43.0000607+00:00",
+      "sqlSha256": "ec2a701961ddf2637c8ceb3803eaa6828f533967c4ba66aa3f48b68ebf0add39",
+      "elapsedMs": 826,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+          "date": "2026-10-23",
+          "source": "API",
+          "rows": 200,
+          "unmapped_rows": 2,
+          "raw_amount": "2772.4300"
+        },
+        {
+          "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+          "date": "2026-10-24",
+          "source": "API",
+          "rows": 200,
+          "unmapped_rows": 2,
+          "raw_amount": "3253.2600"
+        },
+        {
+          "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+          "date": "2026-10-25",
+          "source": "API",
+          "rows": 200,
+          "unmapped_rows": 2,
+          "raw_amount": "3929.4800"
+        },
+        {
+          "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+          "date": "2026-10-26",
+          "source": "API",
+          "rows": 200,
+          "unmapped_rows": 2,
+          "raw_amount": "3836.4000"
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "date": "2026-10-20",
+          "source": "CSV",
+          "rows": 12,
+          "unmapped_rows": 0,
+          "raw_amount": "3171.8500"
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "date": "2026-10-21",
+          "source": "CSV",
+          "rows": 13,
+          "unmapped_rows": 0,
+          "raw_amount": "3035.4700"
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "date": "2026-10-22",
+          "source": "CSV",
+          "rows": 14,
+          "unmapped_rows": 1,
+          "raw_amount": "2729.5300"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "google_bounds",
+      "observedAt": "2026-10-27T06:41:43.7247209+00:00",
+      "sqlSha256": "0bb64fd90cf915d46b152581d1a08d1f43c297418e73413762a007fd935cd835",
+      "elapsedMs": 720,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "min_date": "2026-10-20",
+        "max_date": "2026-10-26",
+        "current_rows": 20
+      },
+      "reason": null
+    },
+    {
+      "name": "google_recent_daily",
+      "observedAt": "2026-10-27T06:41:44.4634435+00:00",
+      "sqlSha256": "00c3c9ff89b64e9f8382cf353dff774135e7b164f79a05d2c5e02ecaef7b0b0c",
+      "elapsedMs": 734,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-20",
+          "source": "API",
+          "rows": 5,
+          "unmapped_rows": null,
+          "raw_amount": "275927452229"
+        },
+        {
+          "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-23",
+          "source": "API",
+          "rows": 5,
+          "unmapped_rows": null,
+          "raw_amount": "227367804328"
+        },
+        {
+          "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-25",
+          "source": "API",
+          "rows": 5,
+          "unmapped_rows": null,
+          "raw_amount": "216456197719"
+        },
+        {
+          "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "date": "2026-10-26",
+          "source": "API",
+          "rows": 5,
+          "unmapped_rows": null,
+          "raw_amount": "243012033468"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "cafe24_bounds",
+      "observedAt": "2026-10-27T06:41:47.5995172+00:00",
+      "sqlSha256": "b9aad7874ce0a0917383d0d12774f484ecae6ac3bf3238035762cc7a7c7160ea",
+      "elapsedMs": 3131,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "min_date": "2026-10-23",
+          "max_date": "2026-10-26",
+          "current_rows": 1452
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "min_date": "2026-06-11",
+          "max_date": "2026-10-22",
+          "current_rows": 36012
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "cafe24_recent_daily",
+      "observedAt": "2026-10-27T06:41:48.4032637+00:00",
+      "sqlSha256": "697e674ce5c2e73e19bad0379d1626f2e23c6f2f2302fc27927b9a61b2e31189",
+      "elapsedMs": 799,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "date": "2026-10-23",
+          "source": "API",
+          "rows": 229,
+          "unmapped_rows": 0,
+          "raw_amount": "8423900.00"
+        },
+        {
+          "scope": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "date": "2026-10-23",
+          "source": "CSV",
+          "rows": 228,
+          "unmapped_rows": 0,
+          "raw_amount": "8375000.00"
+        },
+        {
+          "scope": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "date": "2026-10-24",
+          "source": "API",
+          "rows": 279,
+          "unmapped_rows": 2,
+          "raw_amount": "10031100.00"
+        },
+        {
+          "scope": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "date": "2026-10-25",
+          "source": "API",
+          "rows": 395,
+          "unmapped_rows": 6,
+          "raw_amount": "14350800.00"
+        },
+        {
+          "scope": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "date": "2026-10-26",
+          "source": "API",
+          "rows": 320,
+          "unmapped_rows": 2,
+          "raw_amount": "11863900.00"
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "date": "2026-10-20",
+          "source": "CSV",
+          "rows": 255,
+          "unmapped_rows": 9,
+          "raw_amount": "9937000.00"
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "date": "2026-10-21",
+          "source": "CSV",
+          "rows": 247,
+          "unmapped_rows": 11,
+          "raw_amount": "9379700.00"
+        },
+        {
+          "scope": "LEGACY_UNBOUND",
+          "date": "2026-10-22",
+          "source": "CSV",
+          "rows": 233,
+          "unmapped_rows": 10,
+          "raw_amount": "8541200.00"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "coupang_sales_bounds",
+      "observedAt": "2026-10-27T06:41:49.6425587+00:00",
+      "sqlSha256": "a7254e2f4f3ec2190ed6a86985b552e6e7af2bdb6e4a6d6406257d49e3e77a1e",
+      "elapsedMs": 1232,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "scope": "UNIDENTIFIED_SCOPE",
+        "min_date": "2026-07-01",
+        "max_date": "2026-10-26",
+        "current_rows": 38203
+      },
+      "reason": null
+    },
+    {
+      "name": "coupang_sales_recent_daily",
+      "observedAt": "2026-10-27T06:41:50.3919132+00:00",
+      "sqlSha256": "1e9a61cd83b547675da2d9bdd32f3fd58ba4b2e27ff798a398e8d84a08f4f179",
+      "elapsedMs": 745,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-20",
+          "source": "CSV",
+          "rows": 355,
+          "unmapped_rows": 2,
+          "raw_amount": "9542050.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-21",
+          "source": "CSV",
+          "rows": 340,
+          "unmapped_rows": 3,
+          "raw_amount": "9759140.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-22",
+          "source": "CSV",
+          "rows": 311,
+          "unmapped_rows": 1,
+          "raw_amount": "9492700.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-23",
+          "source": "CSV",
+          "rows": 332,
+          "unmapped_rows": 3,
+          "raw_amount": "7983940.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-24",
+          "source": "CSV",
+          "rows": 337,
+          "unmapped_rows": 4,
+          "raw_amount": "8047540.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-25",
+          "source": "CSV",
+          "rows": 299,
+          "unmapped_rows": 2,
+          "raw_amount": "8809720.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-26",
+          "source": "CSV",
+          "rows": 317,
+          "unmapped_rows": 2,
+          "raw_amount": "8008710.00"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "coupang_ads_bounds",
+      "observedAt": "2026-10-27T06:41:51.4012746+00:00",
+      "sqlSha256": "8c901b5814b2abb70119b8dae177a934910a8ed87b0383e31a3cd10dd6d096eb",
+      "elapsedMs": 1005,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "scope": "UNIDENTIFIED_SCOPE",
+        "min_date": "2026-07-01",
+        "max_date": "2026-10-26",
+        "current_rows": 47498
+      },
+      "reason": null
+    },
+    {
+      "name": "coupang_ads_recent_daily",
+      "observedAt": "2026-10-27T06:41:52.1249082+00:00",
+      "sqlSha256": "ee3398e3949fb985fa6cde8c073b1b2a1a456382b95775da6b3c6aa844d6387e",
+      "elapsedMs": 717,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-20",
+          "source": "CSV",
+          "rows": 262,
+          "unmapped_rows": 5,
+          "raw_amount": "2672104.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-21",
+          "source": "CSV",
+          "rows": 256,
+          "unmapped_rows": 6,
+          "raw_amount": "2309461.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-22",
+          "source": "CSV",
+          "rows": 270,
+          "unmapped_rows": 6,
+          "raw_amount": "2013671.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-23",
+          "source": "CSV",
+          "rows": 242,
+          "unmapped_rows": 6,
+          "raw_amount": "1544442.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-24",
+          "source": "CSV",
+          "rows": 245,
+          "unmapped_rows": 6,
+          "raw_amount": "1675414.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-25",
+          "source": "CSV",
+          "rows": 252,
+          "unmapped_rows": 6,
+          "raw_amount": "2229391.00"
+        },
+        {
+          "scope": "UNIDENTIFIED_SCOPE",
+          "date": "2026-10-26",
+          "source": "CSV",
+          "rows": 265,
+          "unmapped_rows": 5,
+          "raw_amount": "2111728.00"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "source_coverage_recent",
+      "observedAt": "2026-10-27T06:41:52.9552738+00:00",
+      "sqlSha256": "5f1c3c7a1ba9a50bfc24f1515df290bb1c3a66a7e323f9e18b6885f8634247f9",
+      "elapsedMs": 826,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_AD",
+          "metric_date": "2026-10-23",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-24 02:21:05.598+00",
+          "reconciliation_status": null,
+          "row_count": 553,
+          "total_amount": "2772.430000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_AD",
+          "metric_date": "2026-10-24",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-25 03:15:33.878+00",
+          "reconciliation_status": null,
+          "row_count": 553,
+          "total_amount": "3253.260000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_AD",
+          "metric_date": "2026-10-25",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 00:54:51.18+00",
+          "reconciliation_status": null,
+          "row_count": 556,
+          "total_amount": "3929.480000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_AD",
+          "metric_date": "2026-10-26",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 17:03:38.243+00",
+          "reconciliation_status": null,
+          "row_count": 559,
+          "total_amount": "3836.400000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_ADSET",
+          "metric_date": "2026-10-23",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-24 02:21:05.598+00",
+          "reconciliation_status": null,
+          "row_count": 200,
+          "total_amount": "2772.430000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_ADSET",
+          "metric_date": "2026-10-24",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-25 03:15:33.878+00",
+          "reconciliation_status": null,
+          "row_count": 200,
+          "total_amount": "3253.260000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_ADSET",
+          "metric_date": "2026-10-25",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 00:54:51.18+00",
+          "reconciliation_status": null,
+          "row_count": 200,
+          "total_amount": "3929.480000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+          "data_kind": "META_ADSET",
+          "metric_date": "2026-10-26",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 17:03:38.243+00",
+          "reconciliation_status": null,
+          "row_count": 200,
+          "total_amount": "3836.400000",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "data_kind": "GOOGLE_CAMPAIGN",
+          "metric_date": "2026-10-20",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 17:04:06.571+00",
+          "reconciliation_status": null,
+          "row_count": 5,
+          "total_amount": "275927.452229",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "data_kind": "GOOGLE_CAMPAIGN",
+          "metric_date": "2026-10-23",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-24 01:31:20.198+00",
+          "reconciliation_status": null,
+          "row_count": 5,
+          "total_amount": "227367.804328",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "data_kind": "GOOGLE_CAMPAIGN",
+          "metric_date": "2026-10-25",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 07:10:24.341+00",
+          "reconciliation_status": null,
+          "row_count": 5,
+          "total_amount": "216456.197719",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "data_kind": "GOOGLE_CAMPAIGN",
+          "metric_date": "2026-10-26",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 17:01:27.716+00",
+          "reconciliation_status": null,
+          "row_count": 5,
+          "total_amount": "243012.033468",
+          "warning_codes": []
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "metric_date": "2026-10-23",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-24 01:42:51.627+00",
+          "reconciliation_status": "CSV_API_INPUTS_REVIEWED",
+          "row_count": 229,
+          "total_amount": "6684558.000000",
+          "warning_codes": [
+            "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+            "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+            "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+          ]
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "metric_date": "2026-10-24",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-25 01:41:03.428+00",
+          "reconciliation_status": "CAFE24_API_ONLY_VERIFIED",
+          "row_count": 279,
+          "total_amount": "7490956.000000",
+          "warning_codes": [
+            "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+            "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+            "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+          ]
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "metric_date": "2026-10-25",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-25 17:44:16.674+00",
+          "reconciliation_status": "CAFE24_API_ONLY_VERIFIED",
+          "row_count": 395,
+          "total_amount": "10642816.000000",
+          "warning_codes": [
+            "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+            "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+            "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+          ]
+        },
+        {
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "data_kind": "CAFE24_ORDER",
+          "metric_date": "2026-10-26",
+          "source": "API",
+          "state": "COMPLETE_NONZERO",
+          "last_success_at": "2026-10-26 17:38:20.535+00",
+          "reconciliation_status": "CAFE24_API_ONLY_VERIFIED",
+          "row_count": 320,
+          "total_amount": "9450851.000000",
+          "warning_codes": [
+            "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+            "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+            "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+          ]
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_orders_bounds_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "observedAt": "2026-10-27T06:42:01.7224764+00:00",
+      "sqlSha256": "0961e738b15844826f083ab6e4f70c9d655e18f6c800f7d858c5775afdaa64f5",
+      "elapsedMs": 8763,
+      "httpStatus": 400,
+      "status": "NOT_MEASURED",
+      "rows": null,
+      "reason": "STATEMENT_TIMEOUT_8S"
+    },
+    {
+      "name": "naver_orders_daily_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "observedAt": "2026-10-27T06:42:03.1326889+00:00",
+      "sqlSha256": "515e0f04d9d9faa66bf7bc0315bef0f7c35141d669718710522a31c90a150cfc",
+      "elapsedMs": 1404,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-20",
+          "sale_status": "CANCELED",
+          "rows": 13,
+          "unmapped_rows": 0,
+          "raw_revenue": "382100"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-20",
+          "sale_status": "SALE",
+          "rows": 424,
+          "unmapped_rows": 0,
+          "raw_revenue": "8846360"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-21",
+          "sale_status": "CANCELED",
+          "rows": 8,
+          "unmapped_rows": 0,
+          "raw_revenue": "183100"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-21",
+          "sale_status": "SALE",
+          "rows": 467,
+          "unmapped_rows": 0,
+          "raw_revenue": "8983190"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-22",
+          "sale_status": "CANCELED",
+          "rows": 24,
+          "unmapped_rows": 0,
+          "raw_revenue": "620700"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-22",
+          "sale_status": "SALE",
+          "rows": 489,
+          "unmapped_rows": 0,
+          "raw_revenue": "9385300"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-23",
+          "sale_status": "CANCELED",
+          "rows": 7,
+          "unmapped_rows": 0,
+          "raw_revenue": "460600"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-23",
+          "sale_status": "SALE",
+          "rows": 250,
+          "unmapped_rows": 0,
+          "raw_revenue": "5403000"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-24",
+          "sale_status": "CANCELED",
+          "rows": 21,
+          "unmapped_rows": 0,
+          "raw_revenue": "467020"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-24",
+          "sale_status": "SALE",
+          "rows": 438,
+          "unmapped_rows": 0,
+          "raw_revenue": "7787540"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-25",
+          "sale_status": "CANCELED",
+          "rows": 8,
+          "unmapped_rows": 0,
+          "raw_revenue": "145800"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-25",
+          "sale_status": "SALE",
+          "rows": 301,
+          "unmapped_rows": 0,
+          "raw_revenue": "5656740"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-26",
+          "sale_status": "CANCELED",
+          "rows": 17,
+          "unmapped_rows": 0,
+          "raw_revenue": "453710"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-26",
+          "sale_status": "SALE",
+          "rows": 247,
+          "unmapped_rows": 0,
+          "raw_revenue": "6947990"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_ads_bounds_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "observedAt": "2026-10-27T06:42:06.4034224+00:00",
+      "sqlSha256": "706700ead4ca224254339d270a0ddd285da85722c2d1f740eea80642704ed905",
+      "elapsedMs": 3266,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+        "min_date": "2026-03-03",
+        "max_date": "2026-10-26",
+        "rows": 7709
+      },
+      "reason": null
+    },
+    {
+      "name": "naver_ads_daily_5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "observedAt": "2026-10-27T06:42:08.9645934+00:00",
+      "sqlSha256": "1a7e5ed37ad96df0e4e8ed860cd68546a3af3e7cb9a1d50dea03dd3d2798c816",
+      "elapsedMs": 2555,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-20",
+          "rows": 49,
+          "unmapped_rows": 0,
+          "raw_spend": "3552230"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-21",
+          "rows": 50,
+          "unmapped_rows": 0,
+          "raw_spend": "3402620"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-22",
+          "rows": 49,
+          "unmapped_rows": 0,
+          "raw_spend": "3849714"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-23",
+          "rows": 42,
+          "unmapped_rows": 0,
+          "raw_spend": "2281794"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-24",
+          "rows": 42,
+          "unmapped_rows": 0,
+          "raw_spend": "3994876"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-25",
+          "rows": 41,
+          "unmapped_rows": 0,
+          "raw_spend": "2777156"
+        },
+        {
+          "scope": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "date": "2026-10-26",
+          "rows": 43,
+          "unmapped_rows": 0,
+          "raw_spend": "1790594"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_orders_bounds_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "observedAt": "2026-10-27T06:42:17.8089742+00:00",
+      "sqlSha256": "a24340de9bd7b05b96ec32d634062cdcc94f443eb48704495d74f07cd71dfd3c",
+      "elapsedMs": 8840,
+      "httpStatus": 400,
+      "status": "NOT_MEASURED",
+      "rows": null,
+      "reason": "STATEMENT_TIMEOUT_8S"
+    },
+    {
+      "name": "naver_orders_daily_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "observedAt": "2026-10-27T06:42:18.8596982+00:00",
+      "sqlSha256": "c30b4528fcc04af1ee94fb32592cfa5a4bc6be18002ea8702d65914f6fe1e19f",
+      "elapsedMs": 1046,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-20",
+          "sale_status": "CANCELED",
+          "rows": 7,
+          "unmapped_rows": 0,
+          "raw_revenue": "198900"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-20",
+          "sale_status": "RETURNED",
+          "rows": 1,
+          "unmapped_rows": 0,
+          "raw_revenue": "48900"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-20",
+          "sale_status": "SALE",
+          "rows": 222,
+          "unmapped_rows": 0,
+          "raw_revenue": "7145550"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-21",
+          "sale_status": "CANCELED",
+          "rows": 7,
+          "unmapped_rows": 0,
+          "raw_revenue": "216750"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-21",
+          "sale_status": "SALE",
+          "rows": 182,
+          "unmapped_rows": 0,
+          "raw_revenue": "6042160"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-22",
+          "sale_status": "CANCELED",
+          "rows": 6,
+          "unmapped_rows": 0,
+          "raw_revenue": "219050"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-22",
+          "sale_status": "SALE",
+          "rows": 146,
+          "unmapped_rows": 0,
+          "raw_revenue": "4779750"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "sale_status": "CANCELED",
+          "rows": 3,
+          "unmapped_rows": 0,
+          "raw_revenue": "66800"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "sale_status": "RETURNED",
+          "rows": 1,
+          "unmapped_rows": 0,
+          "raw_revenue": "49800"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "sale_status": "SALE",
+          "rows": 173,
+          "unmapped_rows": 2,
+          "raw_revenue": "6264780"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-24",
+          "sale_status": "CANCELED",
+          "rows": 4,
+          "unmapped_rows": 0,
+          "raw_revenue": "159400"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-24",
+          "sale_status": "SALE",
+          "rows": 130,
+          "unmapped_rows": 0,
+          "raw_revenue": "4502980"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-25",
+          "sale_status": "CANCELED",
+          "rows": 12,
+          "unmapped_rows": 1,
+          "raw_revenue": "389060"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-25",
+          "sale_status": "SALE",
+          "rows": 146,
+          "unmapped_rows": 9,
+          "raw_revenue": "4755860"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-26",
+          "sale_status": "CANCELED",
+          "rows": 7,
+          "unmapped_rows": 1,
+          "raw_revenue": "280750"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-26",
+          "sale_status": "SALE",
+          "rows": 206,
+          "unmapped_rows": 6,
+          "raw_revenue": "6647680"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_ads_bounds_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "observedAt": "2026-10-27T06:42:22.8970668+00:00",
+      "sqlSha256": "89dd0c2773f606c327b5fef0e58c1efd41a8ab837dd375bfefef3318958a74ec",
+      "elapsedMs": 4032,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+        "min_date": "2026-05-14",
+        "max_date": "2026-10-26",
+        "rows": 12291
+      },
+      "reason": null
+    },
+    {
+      "name": "naver_ads_daily_78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "observedAt": "2026-10-27T06:42:23.7155809+00:00",
+      "sqlSha256": "f694f22655aeea0da7cd357a5c49296f0ff9d5ec784c0cef7ca9c6b6cbe890cf",
+      "elapsedMs": 814,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-20",
+          "rows": 64,
+          "unmapped_rows": 3,
+          "raw_spend": "3088395"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-21",
+          "rows": 60,
+          "unmapped_rows": 3,
+          "raw_spend": "2631246"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-22",
+          "rows": 63,
+          "unmapped_rows": 3,
+          "raw_spend": "2376048"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-23",
+          "rows": 69,
+          "unmapped_rows": 3,
+          "raw_spend": "2496254"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-24",
+          "rows": 72,
+          "unmapped_rows": 3,
+          "raw_spend": "2861567"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-25",
+          "rows": 65,
+          "unmapped_rows": 3,
+          "raw_spend": "2796155"
+        },
+        {
+          "scope": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "date": "2026-10-26",
+          "rows": 57,
+          "unmapped_rows": 3,
+          "raw_spend": "2276953"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "naver_sync_count",
+      "observedAt": "2026-10-27T06:42:24.4193254+00:00",
+      "sqlSha256": "5a21f988ecd9050ffe57a47ff89d80be1ef8603e58a0a6ff3901557eb779c2d3",
+      "elapsedMs": 699,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "rows": 0
+      },
+      "reason": null
+    },
+    {
+      "name": "naver_cost_access",
+      "observedAt": "2026-10-27T06:42:25.1873663+00:00",
+      "sqlSha256": "4463de30a9779f2d162021052eb9911b40df7451e44aaed252dda2504585fb02",
+      "elapsedMs": 763,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "rolname": "meta_ads_app",
+          "relname": "sales_unit_cost_settings",
+          "relrowsecurity": false,
+          "table_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "relname": "sales_unit_cost_snapshot_entries",
+          "relrowsecurity": false,
+          "table_select": false
+        },
+        {
+          "rolname": "meta_ads_app",
+          "relname": "sales_unit_cost_snapshots",
+          "relrowsecurity": false,
+          "table_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "relname": "sales_unit_cost_settings",
+          "relrowsecurity": false,
+          "table_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "relname": "sales_unit_cost_snapshot_entries",
+          "relrowsecurity": false,
+          "table_select": false
+        },
+        {
+          "rolname": "meta_ads_prod_runtime",
+          "relname": "sales_unit_cost_snapshots",
+          "relrowsecurity": false,
+          "table_select": false
+        }
+      ],
+      "reason": null
+    }
+  ]
+}
