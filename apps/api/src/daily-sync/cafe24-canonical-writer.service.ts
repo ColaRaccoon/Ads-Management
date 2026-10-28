@@ -168,7 +168,7 @@ export class Cafe24CanonicalWriterService {
         continue;
       }
       const match = this.cafe24Matcher.match({
-        productNo, productName: row.productName, optionName: row.optionName,
+        productNo, productName: row.productName, optionName: row.optionName, optionValue: row.optionValue,
         orderDate: row.orderDate
       }, rules);
       const version = (latestVersions.get(hash) ?? 0) + 1;
@@ -177,7 +177,7 @@ export class Cafe24CanonicalWriterService {
         id: randomUUID(),
         connectionId: input.connectionId, canonicalKeyHash: hash,
         orderNo: row.orderNo.trim(), lineOrderNo: row.lineOrderNo.trim(), productNo,
-        optionName: row.optionName.trim(), orderedAt: row.orderedAt, orderDate: row.orderDate,
+        optionName: row.optionName.trim(), optionValue: row.optionValue ?? null, orderedAt: row.orderedAt, orderDate: row.orderDate,
         providerUpdatedAt: revisionAt,
         fetchedAt, contentFingerprint: fingerprint,
         fingerprintKeyVersion: observation?.version ?? null,
@@ -208,7 +208,7 @@ export class Cafe24CanonicalWriterService {
         source: SourceKind.API, providerUpdatedAt: revisionAt,
         rowNumber: null, sourceRowHash: null, orderLineKey: key,
         orderNo: row.orderNo.trim(), lineOrderNo: row.lineOrderNo.trim(), productNo,
-        productName: row.productName, optionName: row.optionName.trim(),
+        productName: row.productName, optionName: row.optionName.trim(), optionValue: row.optionValue ?? null,
         quantity: new Prisma.Decimal(row.quantity), salePriceKrw: new Prisma.Decimal(row.salePriceKrw),
         totalOrderKrw: optionalDecimal(row.totalOrderKrw), totalPaidKrw: new Prisma.Decimal(row.totalPaidKrw),
         totalPaidInputSource: row.totalPaidInputSource ?? null,
@@ -265,6 +265,9 @@ export class Cafe24CanonicalWriterService {
     return rows.map((rule) => ({
       id: rule.id, productId: rule.productId, displayName: rule.displayName,
       productNumbers: strings(rule.productNumbers), productNameAliases: strings(rule.productNameAliases),
+      matchTarget: rule.matchTarget,
+      productNameIncludeKeywords: strings(rule.productNameIncludeKeywords),
+      productNameExcludeKeywords: strings(rule.productNameExcludeKeywords),
       optionIncludeKeywords: strings(rule.optionIncludeKeywords),
       optionExcludeKeywords: strings(rule.optionExcludeKeywords),
       priority: rule.priority, validFrom: formatDateOnly(rule.validFrom),
@@ -328,6 +331,8 @@ function validateCafe24Order(row: Cafe24ApiOrder) {
   [row.orderNo, row.lineOrderNo, row.productNo].forEach(requiredId);
   requiredName(row.productName);
   if (!cafe24OptionCompositionFits(row.optionName) ||
+      (row.optionValue != null && (typeof row.optionValue !== "string" || row.optionValue.length > 256 ||
+        /[\u0000-\u001f\u007f]/.test(row.optionValue))) ||
       (row.paymentMethod !== null &&
         (typeof row.paymentMethod !== "string" || row.paymentMethod.length > 256)) ||
       (row.orderStatus != null && (typeof row.orderStatus !== "string" || row.orderStatus.length > 64)) ||
@@ -360,6 +365,7 @@ function validateCafe24Order(row: Cafe24ApiOrder) {
 }
 function sameCafe24Version(prior: {
   productNo: string; optionName: string; orderNo: string; lineOrderNo: string;
+  optionValue?: string | null;
   quantity: Prisma.Decimal; salePriceKrw: Prisma.Decimal; totalOrderKrw: Prisma.Decimal | null;
   totalPaidKrw: Prisma.Decimal; paymentMethod: string | null; orderedAt: Date; orderDate: Date;
   totalPaidInputSource?: string | null;
@@ -383,6 +389,7 @@ function sameCafe24Version(prior: {
   return prior.orderNo === row.orderNo.trim() && prior.lineOrderNo === row.lineOrderNo.trim() &&
     sameTime(prior.providerUpdatedAt, row.providerUpdatedAt) &&
     prior.productNo === productNo && prior.optionName === row.optionName.trim() &&
+    (prior.optionValue ?? null) === (row.optionValue ?? null) &&
     prior.quantity.eq(row.quantity) && prior.salePriceKrw.eq(row.salePriceKrw) &&
     (prior.totalOrderKrw === null ? row.totalOrderKrw === null :
       row.totalOrderKrw !== null && prior.totalOrderKrw.eq(row.totalOrderKrw)) &&
@@ -408,6 +415,7 @@ function sameCafe24Version(prior: {
 function sameCafe24CurrentLine(line: {
   orderNo: string; lineOrderNo: string; productNo: string; productName: string;
   optionName: string; quantity: Prisma.Decimal; salePriceKrw: Prisma.Decimal;
+  optionValue?: string | null;
   totalOrderKrw: Prisma.Decimal | null; totalPaidKrw: Prisma.Decimal;
   totalPaidInputSource?: string | null;
   paymentMethod: string | null; orderedAt: Date | null; orderDate: Date | null;
@@ -419,6 +427,7 @@ function sameCafe24CurrentLine(line: {
   providerUpdatedAt: Date | null; importVersion: number;
 }, prior: {
   orderNo: string; lineOrderNo: string; productNo: string; optionName: string;
+  optionValue?: string | null;
   quantity: Prisma.Decimal; salePriceKrw: Prisma.Decimal;
   totalOrderKrw: Prisma.Decimal | null; totalPaidKrw: Prisma.Decimal;
   totalPaidInputSource?: string | null;
@@ -433,6 +442,7 @@ function sameCafe24CurrentLine(line: {
   return line.importVersion === prior.version &&
     line.orderNo === prior.orderNo && line.lineOrderNo === prior.lineOrderNo &&
     line.productNo === prior.productNo && line.optionName === prior.optionName &&
+    (line.optionValue ?? null) === (prior.optionValue ?? null) &&
     line.quantity.eq(prior.quantity) && line.salePriceKrw.eq(prior.salePriceKrw) &&
     (line.totalOrderKrw === null ? prior.totalOrderKrw === null :
       prior.totalOrderKrw !== null && line.totalOrderKrw.eq(prior.totalOrderKrw)) &&

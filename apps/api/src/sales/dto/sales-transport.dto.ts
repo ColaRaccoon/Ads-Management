@@ -4,6 +4,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -51,6 +52,24 @@ export class Cafe24RulesQueryDto extends ProductIdQueryDto {
 
 export class Cafe24RuleDto {
   [key: string]: unknown;
+
+  @IsOptionalUndefined()
+  @IsIn(["LEGACY_COMBINED", "SEPARATE"])
+  matchTarget?: string;
+
+  @IsOptionalUndefined()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  productNameIncludeKeywords?: string[];
+
+  @IsOptionalUndefined()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  productNameExcludeKeywords?: string[];
 
   @IsOptionalUndefined()
   @IsUuidV4()

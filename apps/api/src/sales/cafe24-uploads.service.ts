@@ -449,7 +449,7 @@ export class Cafe24UploadsService {
     const refreshedBatchIds = new Set<string>();
     const rematchLine = async (line: Cafe24OrderLine) => {
       const match = this.matcher.match({ productNo: line.productNo, productName: line.productName,
-        optionName: line.optionName, orderDate: line.orderDate }, rules);
+        optionName: line.optionName, optionValue: line.optionValue, orderDate: line.orderDate }, rules);
       const retainedIssues = nonMatchIssues(line.validationErrors);
       const matchIssues: RowIssue[] = [];
       let productId: string | null = null;
@@ -600,6 +600,9 @@ export class Cafe24UploadsService {
         displayName: optionalString(body.displayName) ?? product.displayName,
         productNumbers: stringArray(body.productNumbers) ?? [],
         productNameAliases: stringArray(body.productNameAliases) ?? [],
+        matchTarget: String(body.matchTarget ?? "SEPARATE"),
+        productNameIncludeKeywords: stringArray(body.productNameIncludeKeywords) ?? [],
+        productNameExcludeKeywords: stringArray(body.productNameExcludeKeywords) ?? [],
         optionIncludeKeywords: stringArray(body.optionIncludeKeywords) ?? [],
         optionExcludeKeywords: stringArray(body.optionExcludeKeywords) ?? [],
         adCostSourceProductId,
@@ -648,6 +651,9 @@ export class Cafe24UploadsService {
         productNumbers: body.productNumbers === undefined ? undefined : stringArray(body.productNumbers) ?? [],
         productNameAliases:
           body.productNameAliases === undefined ? undefined : stringArray(body.productNameAliases) ?? [],
+        matchTarget: body.matchTarget === undefined ? undefined : String(body.matchTarget),
+        productNameIncludeKeywords: body.productNameIncludeKeywords === undefined ? undefined : stringArray(body.productNameIncludeKeywords) ?? [],
+        productNameExcludeKeywords: body.productNameExcludeKeywords === undefined ? undefined : stringArray(body.productNameExcludeKeywords) ?? [],
         optionIncludeKeywords:
           body.optionIncludeKeywords === undefined ? undefined : stringArray(body.optionIncludeKeywords) ?? [],
         optionExcludeKeywords:
@@ -848,6 +854,7 @@ export class Cafe24UploadsService {
           productNo: input.parsedRow?.productNo ?? rawString(input.rawRow, "productNo"),
           productName: input.parsedRow?.productName ?? rawString(input.rawRow, "productName"),
           optionName: input.parsedRow?.optionName ?? rawString(input.rawRow, "optionName"),
+          optionValue: input.parsedRow?.optionValue ?? null,
           quantity: new Prisma.Decimal(input.parsedRow?.quantity ?? 0),
           salePriceKrw: new Prisma.Decimal(input.parsedRow?.salePriceKrw ?? 0),
           totalOrderKrw:
@@ -1093,12 +1100,22 @@ function cafe24RuleAuditSnapshot(rule: {
   productId: string;
   priority: number;
   isActive: boolean;
+  matchTarget?: string;
+  productNameIncludeKeywords?: Prisma.JsonValue;
+  productNameExcludeKeywords?: Prisma.JsonValue;
+  optionIncludeKeywords?: Prisma.JsonValue;
+  optionExcludeKeywords?: Prisma.JsonValue;
 }) {
   return {
     id: rule.id,
     productId: rule.productId,
     priority: rule.priority,
-    isActive: rule.isActive
+    isActive: rule.isActive,
+    matchTarget: rule.matchTarget,
+    productNameIncludeKeywords: rule.productNameIncludeKeywords,
+    productNameExcludeKeywords: rule.productNameExcludeKeywords,
+    optionIncludeKeywords: rule.optionIncludeKeywords,
+    optionExcludeKeywords: rule.optionExcludeKeywords
   } satisfies Prisma.InputJsonObject;
 }
 

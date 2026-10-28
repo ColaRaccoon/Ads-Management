@@ -4,9 +4,9 @@ import { cafe24ObservationHmac } from "./cafe24-observed-revision";
 /** HMAC the complete normalized line; a bare hash could reveal low-entropy amounts/statuses. */
 export function cafe24CanonicalFingerprint(key: Buffer, connectionId: string,
   row: Cafe24ApiOrder, productNo: string) {
-  return cafe24ObservationHmac(key, "CANONICAL_LINE_V2", JSON.stringify([
+  return cafe24ObservationHmac(key, "CANONICAL_LINE_V3", JSON.stringify([
     connectionId, row.orderNo.trim(), row.lineOrderNo.trim(), productNo, row.productName,
-    row.optionName.trim(), row.orderedAt.toISOString(), row.orderDate.toISOString(),
+    row.optionName.trim(), row.optionValue ?? null, row.orderedAt.toISOString(), row.orderDate.toISOString(),
     row.providerUpdatedAt?.toISOString() ?? null, row.quantity, row.salePriceKrw,
     row.totalOrderKrw, row.totalPaidKrw, row.totalPaidInputSource ?? null,
     row.paymentMethod,

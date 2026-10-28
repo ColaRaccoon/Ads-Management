@@ -87,6 +87,7 @@ type Cafe24UnmatchedLine = {
   productNo: string;
   productName: string;
   optionName: string;
+  optionValue?: string | null;
   quantity: number;
 };
 
@@ -237,7 +238,7 @@ export default function SalesPage() {
             { key: "order", header: "주문번호", render: (row) => row.orderNo },
             { key: "productNo", header: "상품번호", render: (row) => row.productNo },
             { key: "name", header: "상품명", render: (row) => row.productName },
-            { key: "option", header: "옵션", render: (row) => row.optionName },
+            { key: "option", header: "옵션명 (원본)", render: (row) => row.optionValue ?? "원본 옵션값 미확보" },
             { key: "qty", header: "수량", render: (row) => number(row.quantity) }
           ]}
         />

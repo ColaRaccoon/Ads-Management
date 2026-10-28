@@ -16,6 +16,7 @@ export async function loadCafe24MatcherRules(
 export type Cafe24MatcherRuleRow = Pick<Cafe24ProductRule,
   "id" | "productId" | "displayName" | "productNumbers" | "productNameAliases" |
   "optionIncludeKeywords" | "optionExcludeKeywords" | "priority" |
+  "matchTarget" | "productNameIncludeKeywords" | "productNameExcludeKeywords" |
   "validFrom" | "validTo" | "isActive" | "adCostSourceProductId" | "roasGroup">;
 
 /** Pure projection for already selected, ordered rules; it never changes DB state. */
@@ -26,6 +27,9 @@ export function toCafe24MatcherRules(rows: readonly Cafe24MatcherRuleRow[]): Caf
     displayName: rule.displayName,
     productNumbers: jsonStringArray(rule.productNumbers),
     productNameAliases: jsonStringArray(rule.productNameAliases),
+    matchTarget: rule.matchTarget,
+    productNameIncludeKeywords: jsonStringArray(rule.productNameIncludeKeywords),
+    productNameExcludeKeywords: jsonStringArray(rule.productNameExcludeKeywords),
     optionIncludeKeywords: jsonStringArray(rule.optionIncludeKeywords),
     optionExcludeKeywords: jsonStringArray(rule.optionExcludeKeywords),
     priority: rule.priority,

@@ -1,6 +1,7 @@
 /** Minimal normalized Cafe24 order-line input used by the day snapshot writer. */
 export type Cafe24ApiOrder = {
   orderNo: string; lineOrderNo: string; productNo: string; productName: string; optionName: string;
+  optionValue?: string | null;
   orderedAt: Date; orderDate: Date; providerUpdatedAt: Date | null;
   quantity: string; salePriceKrw: string; totalOrderKrw: string | null;
   totalPaidKrw: string; paymentMethod: string | null;

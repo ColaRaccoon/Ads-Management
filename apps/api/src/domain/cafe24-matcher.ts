@@ -7,6 +7,9 @@ export type Cafe24RuleInput = {
   displayName?: string | null;
   productNumbers: string[];
   productNameAliases: string[];
+  matchTarget?: string;
+  productNameIncludeKeywords?: string[];
+  productNameExcludeKeywords?: string[];
   optionIncludeKeywords: string[];
   optionExcludeKeywords: string[];
   priority: number;
@@ -26,7 +29,7 @@ export type Cafe24MatchResult = {
 };
 
 export class Cafe24ProductMatcher {
-  match(row: Pick<ParsedCafe24OrderRow, "productNo" | "productName" | "optionName" | "orderDate">, rules: Cafe24RuleInput[]): Cafe24MatchResult {
+  match(row: Cafe24MatchRow, rules: Cafe24RuleInput[]): Cafe24MatchResult {
     const orderedRules = rules
       .filter((rule) => rule.isActive !== false)
       .filter((rule) => isRuleEffective(rule, row.orderDate))
@@ -52,12 +55,16 @@ export class Cafe24ProductMatcher {
 }
 
 export function matchesRule(
-  row: Pick<ParsedCafe24OrderRow, "productNo" | "productName" | "optionName" | "orderDate">,
+  row: Cafe24MatchRow,
   rule: Cafe24RuleInput
 ) {
   const productNo = normalizeProductNo(row.productNo);
   const productName = normalizeCafe24Text(row.productName);
-  const optionName = normalizeCafe24Text(row.optionName);
+  const separate = rule.matchTarget === "SEPARATE";
+  if (rule.matchTarget && !["SEPARATE", "LEGACY_COMBINED"].includes(rule.matchTarget)) return false;
+  // Never infer an original option by splitting the combined display text.
+  if (separate && row.optionValue == null) return false;
+  const optionName = normalizeCafe24Text(separate ? row.optionValue : row.optionName);
 
   const productNumbers = uniqueNormalized(rule.productNumbers, normalizeProductNo);
   if (productNumbers.length > 0 && !productNumbers.includes(productNo)) {
@@ -65,9 +72,14 @@ export function matchesRule(
   }
 
   const aliases = uniqueNormalized(rule.productNameAliases, normalizeCafe24Text);
-  if (aliases.length > 0 && aliases.every((alias) => !productName.includes(alias) && !optionName.includes(alias))) {
+  if (aliases.length > 0 && aliases.every((alias) => !productName.includes(alias) && (separate || !optionName.includes(alias)))) {
     return false;
   }
+
+  const productInclude = uniqueNormalized(rule.productNameIncludeKeywords ?? [], normalizeCafe24Text);
+  const productExclude = uniqueNormalized(rule.productNameExcludeKeywords ?? [], normalizeCafe24Text);
+  if (productInclude.some((keyword) => !productName.includes(keyword)) ||
+      productExclude.some((keyword) => productName.includes(keyword))) return false;
 
   const includeKeywords = uniqueNormalized(rule.optionIncludeKeywords, normalizeCafe24Text);
   if (includeKeywords.length > 0 && includeKeywords.some((keyword) => !optionName.includes(keyword))) {
@@ -88,6 +100,10 @@ export function normalizeCafe24Text(value: string | null | undefined) {
     .join("")
     .toLowerCase();
 }
+
+type Cafe24MatchRow = Pick<ParsedCafe24OrderRow, "productNo" | "productName" | "optionName" | "orderDate"> & {
+  optionValue?: string | null;
+};
 
 export function normalizeProductNo(value: string | number | null | undefined) {
   const text = String(value ?? "").trim();

@@ -3,6 +3,7 @@
 import { RefreshCw, Save, Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
+import { useState } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost, rangeQuery } from "@/lib/api";
 import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
@@ -263,7 +264,7 @@ function Cafe24ReadOnlyRule({ rule }: { rule: Record<string, any> }) {
           {rule.isActive === false ? "비활성" : "활성"}
         </span>
       </summary>
-      <Cafe24KeywordBadges excludeKeywords={excludeKeywords} includeKeywords={includeKeywords} />
+      <Cafe24RuleConditions rule={rule} />
       <p className="muted">우선순위 {rule.priority ?? 100} · 적용 {dateInputText(rule.validFrom) || "-"} ~ {dateInputText(rule.validTo) || "계속"}</p>
       {rule.note ? <p>{String(rule.note)}</p> : null}
     </details>
@@ -300,7 +301,7 @@ function Cafe24SavedRule({
             <span className="muted">우선순위 {rule.priority ?? 100}</span>
           </span>
         </span>
-        <Cafe24KeywordBadges excludeKeywords={excludeKeywords} includeKeywords={includeKeywords} />
+        <Cafe24RuleConditions rule={rule} />
       </summary>
       <Cafe24RuleForm
         isSaving={isSaving}
@@ -334,6 +335,7 @@ function Cafe24RuleForm({
 }) {
   const includeKeywords = listArray(rule?.optionIncludeKeywords);
   const excludeKeywords = listArray(rule?.optionExcludeKeywords);
+  const [matchTarget, setMatchTarget] = useState(String(rule?.matchTarget ?? (rule ? "LEGACY_COMBINED" : "SEPARATE")));
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit(cafe24RulePayload(new FormData(event.currentTarget)));
@@ -359,7 +361,7 @@ function Cafe24RuleForm({
 
       <div className="rule-form-title">
         <strong>상품 식별 조건</strong>
-        <span>카페24 상품번호나 상품명 별칭으로 후보 주문 행을 찾습니다.</span>
+        <span>상품명 조건과 옵션 조건을 모두 만족하는 주문 행을 연결합니다.</span>
       </div>
       <Field label="매핑 제품" help="이 카페24 규칙이 맞을 때 연결할 제품">
         <Cafe24ProductSelect
@@ -375,18 +377,30 @@ function Cafe24RuleForm({
       <Field label="카페24 상품번호" help="쉼표 또는 줄바꿈으로 구분">
         <TextareaInput defaultValue={listText(rule?.productNumbers)} name="productNumbers" placeholder="12345, 67890" />
       </Field>
-      <Field label="상품명 별칭" help="쉼표 또는 줄바꿈으로 구분한 상품명 키워드">
+      <Field label="매핑 방식" help="기존 규칙은 기존 검사 대상을 유지합니다. 분리 방식은 카페24 원본 옵션값이 있는 주문만 검사합니다.">
+        <select className="select" name="matchTarget" value={matchTarget} onChange={(event) => setMatchTarget(event.target.value)}>
+          <option value="SEPARATE">상품명 / 옵션값 분리</option>
+          <option value="LEGACY_COMBINED">기존 상품명 포함 옵션 문자열</option>
+        </select>
+      </Field>
+      <Field label="상품명 포함 키워드" help="상품명에 모든 키워드가 있어야 합니다. 쉼표 또는 줄바꿈으로 구분합니다.">
+        <TextareaInput defaultValue={listText(rule?.productNameIncludeKeywords)} name="productNameIncludeKeywords" placeholder="방한, 마스크" />
+      </Field>
+      <Field label="상품명 제외 키워드" help="상품명에 하나라도 있으면 제외합니다. 옵션값은 검사하지 않습니다.">
+        <TextareaInput defaultValue={listText(rule?.productNameExcludeKeywords)} name="productNameExcludeKeywords" placeholder="공동구매, 유튜브" />
+      </Field>
+      <Field label="상품명 별칭 (하나 이상 포함)" help={matchTarget === "SEPARATE" ? "입력하면 별칭 중 하나가 상품명에 있어야 합니다. 비워도 됩니다." : "기존 규칙: 상품명 또는 상품명 포함 옵션 문자열에서 검사합니다."}>
         <TextareaInput defaultValue={listText(rule?.productNameAliases)} name="productNameAliases" placeholder="웨이브바, 슬라이드 매트" />
       </Field>
 
       <div className="rule-form-title">
         <strong>옵션 키워드 조건</strong>
-        <span>포함 키워드는 모두 옵션명에 있어야 합니다. 제외 키워드는 하나라도 있으면 이 규칙에서 제외됩니다.</span>
+        <span>{matchTarget === "SEPARATE" ? "카페24 원본 옵션값만 검사합니다. 상품명에 있는 단어는 영향을 주지 않습니다." : "기존 규칙: 상품명이 포함된 옵션 문자열을 검사합니다."} 포함은 모두, 제외는 하나라도 있으면 적용됩니다.</span>
       </div>
-      <Field label="포함 키워드" help="모든 키워드가 포함된 주문 행만 이 매핑으로 연결">
+      <Field label="옵션명 포함 키워드" help="옵션에 모든 키워드가 있어야 합니다. 여러 선택지를 넣으면 모두 포함해야 하므로 선택지별 규칙을 만드세요.">
         <TextareaInput defaultValue={listText(rule?.optionIncludeKeywords)} name="optionIncludeKeywords" placeholder="+, 블랙, 2개" />
       </Field>
-      <Field label="제외 키워드" help="키워드가 하나라도 포함된 주문 행은 이 매핑에서 제외">
+      <Field label="옵션명 제외 키워드" help="옵션에 키워드가 하나라도 있으면 제외합니다.">
         <TextareaInput defaultValue={listText(rule?.optionExcludeKeywords)} name="optionExcludeKeywords" placeholder="+, 샘플, 리필" />
       </Field>
 
@@ -461,6 +475,17 @@ function Cafe24KeywordSummary({ includeKeywords, excludeKeywords }: { includeKey
   );
 }
 
+function Cafe24RuleConditions({ rule }: { rule: Record<string, any> }) {
+  return <span style={{ display: "grid", gap: 4 }}>
+    <span className="muted">{rule.matchTarget === "SEPARATE" ? "상품명 / 원본 옵션값 분리" : "기존 상품명 포함 옵션 문자열"}</span>
+    <span>상품명</span>
+    <Cafe24KeywordBadges includeKeywords={listArray(rule.productNameIncludeKeywords)} excludeKeywords={listArray(rule.productNameExcludeKeywords)} />
+    {listArray(rule.productNameAliases).length ? <span className="muted">상품명 별칭 중 하나: {listArray(rule.productNameAliases).join(", ")}</span> : null}
+    <span>옵션명</span>
+    <Cafe24KeywordBadges includeKeywords={listArray(rule.optionIncludeKeywords)} excludeKeywords={listArray(rule.optionExcludeKeywords)} />
+  </span>;
+}
+
 function Cafe24KeywordBadges({ includeKeywords, excludeKeywords }: { includeKeywords: string[]; excludeKeywords: string[] }) {
   return (
     <span className="toolbar" style={{ flexWrap: "wrap" }}>
@@ -471,7 +496,7 @@ function Cafe24KeywordBadges({ includeKeywords, excludeKeywords }: { includeKeyw
           </span>
         ))
       ) : (
-        <span className="badge keep">포함: 모든 옵션</span>
+        <span className="badge keep">포함: 제한 없음</span>
       )}
       {excludeKeywords.length > 0 ? (
         excludeKeywords.map((keyword) => (
@@ -580,6 +605,9 @@ function cafe24RulePayload(form: FormData) {
     displayName: textValue(form.get("displayName")),
     productNumbers: listValue(form.get("productNumbers")),
     productNameAliases: listValue(form.get("productNameAliases")),
+    matchTarget: textValue(form.get("matchTarget")),
+    productNameIncludeKeywords: listValue(form.get("productNameIncludeKeywords")),
+    productNameExcludeKeywords: listValue(form.get("productNameExcludeKeywords")),
     optionIncludeKeywords: listValue(form.get("optionIncludeKeywords")),
     optionExcludeKeywords: listValue(form.get("optionExcludeKeywords")),
     roasGroup: nullableTextValue(form.get("roasGroup")),

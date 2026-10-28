@@ -902,6 +902,7 @@ model Cafe24OrderLine {
   productNo           String              @map("product_no")
   productName         String              @map("product_name")
   optionName          String              @map("option_name")
+  optionValue         String?             @map("option_value") @db.VarChar(256)
   quantity            Decimal             @default(0) @db.Decimal(14, 4)
   salePriceKrw        Decimal             @default(0) @map("sale_price_krw") @db.Decimal(14, 2)
   totalOrderKrw       Decimal?            @map("total_order_krw") @db.Decimal(14, 2)
@@ -974,6 +975,9 @@ model Cafe24ProductRule {
   displayName              String             @map("display_name")
   productNumbers           Json               @default("[]") @map("product_numbers")
   productNameAliases       Json               @default("[]") @map("product_name_aliases")
+  matchTarget              String             @default("LEGACY_COMBINED") @map("match_target") @db.VarChar(32)
+  productNameIncludeKeywords Json              @default("[]") @map("product_name_include_keywords")
+  productNameExcludeKeywords Json              @default("[]") @map("product_name_exclude_keywords")
   optionIncludeKeywords    Json               @default("[]") @map("option_include_keywords")
   optionExcludeKeywords    Json               @default("[]") @map("option_exclude_keywords")
   adCostSourceProductId    String?            @map("ad_cost_source_product_id") @db.Uuid
@@ -2032,6 +2036,7 @@ model Cafe24OrderApiVersion {
   lineOrderNo         String           @map("line_order_no") @db.VarChar(256)
   productNo           String           @map("product_no") @db.VarChar(256)
   optionName          String           @map("option_name") @db.VarChar(514)
+  optionValue         String?          @map("option_value") @db.VarChar(256)
   orderedAt           DateTime         @map("ordered_at") @db.Timestamptz(3)
   orderDate           DateTime         @map("order_date") @db.Date
   providerUpdatedAt   DateTime?        @map("provider_updated_at") @db.Timestamptz(3)

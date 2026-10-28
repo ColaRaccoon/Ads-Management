@@ -162,7 +162,7 @@ export function normalizeCafe24Order(rawOrder: unknown, rawItems: unknown,
     const lineStatus = requiredText(item.order_status, "CAFE24_FIELD_ITEM_STATUS", 64);
     return {
       orderNo, lineOrderNo, productNo, productName,
-      optionName, orderedAt, orderDate, providerUpdatedAt,
+      optionName, optionValue: option, orderedAt, orderDate, providerUpdatedAt,
       quantity: decimal(item.quantity, "CAFE24_FIELD_QUANTITY", 14, 4),
       salePriceKrw: decimal(item.product_price, "CAFE24_FIELD_PRODUCT_PRICE"),
       // The order-level values remain repeated in the v1 legacy line projection;

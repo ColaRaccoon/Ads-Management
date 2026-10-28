@@ -13,6 +13,7 @@ export const CAFE24_ORDER_COLUMN_ALIASES = {
   productNo: ["상품번호", "상품 번호"],
   productName: ["주문상품명", "주문 상품명", "상품명"],
   optionName: ["주문상품명(옵션포함)", "주문상품명 (옵션포함)", "주문 상품명(옵션포함)", "옵션포함명"],
+  optionValue: ["옵션값", "선택옵션", "선택 옵션"],
   quantity: ["수량", "주문수량", "주문 수량"],
   salePriceKrw: ["판매가", "상품 판매가", "판매가(원)"],
   paymentMethod: ["결제수단", "결제 수단"],
@@ -38,7 +39,7 @@ export const CAFE24_ORDER_REQUIRED_COLUMNS = CAFE24_ORDER_REQUIRED_KEYS.map(
   (key) => CAFE24_ORDER_COLUMN_ALIASES[key][0]
 );
 
-export const CAFE24_ORDER_OPTIONAL_COLUMNS = [CAFE24_ORDER_COLUMN_ALIASES.totalOrderKrw[0]] as const;
+export const CAFE24_ORDER_OPTIONAL_COLUMNS = [CAFE24_ORDER_COLUMN_ALIASES.totalOrderKrw[0], CAFE24_ORDER_COLUMN_ALIASES.optionValue[0]] as const;
 
 export type ParsedCafe24OrderRow = {
   orderNo: string;
@@ -46,6 +47,7 @@ export type ParsedCafe24OrderRow = {
   productNo: string;
   productName: string;
   optionName: string;
+  optionValue?: string | null;
   quantity: number;
   salePriceKrw: number;
   totalOrderKrw: number | null;
@@ -113,6 +115,10 @@ export class Cafe24CsvParser {
     const productNo = this.requiredText(rawRow, "productNo", issues);
     const productName = this.requiredText(rawRow, "productName", issues);
     const optionName = this.requiredText(rawRow, "optionName", issues);
+    const optionValue = textValue(readColumn(rawRow, "optionValue")) || null;
+    if (optionValue != null && (optionValue.length > 256 || /[\u0000-\u001f\u007f]/.test(optionValue))) {
+      issues.push({ columnName: "옵션값", errorCode: "INVALID_OPTION_VALUE", message: "Original option value exceeds its field limit or contains control characters." });
+    }
     const quantity = this.requiredNumber(rawRow, "quantity", issues);
     const salePriceKrw = this.requiredNumber(rawRow, "salePriceKrw", issues);
     const totalOrderKrw = this.optionalNumber(rawRow, "totalOrderKrw", issues);
@@ -145,6 +151,7 @@ export class Cafe24CsvParser {
             productNo: normalizeCafe24ProductNoText(productNo),
             productName,
             optionName,
+            optionValue,
             quantity,
             salePriceKrw,
             totalOrderKrw,
