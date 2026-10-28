@@ -1,0 +1,15 @@
+{
+  "realBusinessData": true,
+  "sourceRowsChanged": 0,
+  "queries": 32,
+  "projectedRows": 956,
+  "sha256": "d6955df854e713c7ab4709580eb4fac4eebdbabcec48ff705e38d6d4c7e6362b",
+  "gzipSha256": "4008b618138f1ce24d3fec1afa5c312fe50996516f024b1b9fb34b07f0e9866f",
+  "file": "docs/product-performance/research/05-live-result-20261028.json.gz",
+  "rawBytes": 1402237,
+  "gzipBytes": 97853,
+  "identifiersHashedOnServer": true,
+  "runtimeAccessProof": false,
+  "readMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "atomicRemoteSnapshot": false
+}

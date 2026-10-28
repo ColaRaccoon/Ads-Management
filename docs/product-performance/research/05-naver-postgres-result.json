@@ -1,0 +1,22 @@
+{
+  "stage": "05",
+  "startedAt": "2026-10-28T06:16:09.588Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55450,
+    "database": "unified_stage05"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh PG17 loopback identity checked before synthetic writes",
+    "all migrations applied",
+    "non-owner source reader SELECT grants; unified configuration RLS read policy",
+    "explicit public source projections only; separate web role cannot read sources",
+    "actual reader adapter tests pass with skip0"
+  ],
+  "testOutput": "✔ Naver actual non-owner reader: source conservation, narrow projections, replacement/zero, failed SELECT recovery and minimum privileges (455.6196ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1235.765\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-28T06:16:19.597Z"
+}

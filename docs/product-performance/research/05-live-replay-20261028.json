@@ -1,0 +1,314 @@
+{
+  "status": "PASS_INPUT_CONSERVATION",
+  "realBusinessData": true,
+  "period": "2026-10-26",
+  "stores": 2,
+  "sourceRowsChanged": 0,
+  "runtimePermissionProof": false,
+  "captureSnapshot": "Separate READ ONLY requests; no atomic remote snapshot is claimed",
+  "reference": {
+    "head": "8f7648e4356cb443e7655afa9bd4319b22c89a27",
+    "helperSha256": "e2778de74043c6b6dcf2eaf0a1486462330f6e74386ba76808cacd26f03ebd98"
+  },
+  "queryElapsedMs": {
+    "min": 697,
+    "max": 1440
+  },
+  "results": [
+    {
+      "store": "infinity",
+      "date": "2026-10-26",
+      "sourceOrders": 264,
+      "saleRows": 247,
+      "mappedProductRows": 172,
+      "sourceRevenue": "6947990.000000",
+      "unifiedRevenue": "6947990.000000",
+      "acceptedAds": 43,
+      "sourceAdSpend": "1790594.000000",
+      "unifiedAdSpend": "1790594.000000",
+      "unallocatedAdSpend": "874702.000000",
+      "fakeRows": 0,
+      "shipping": {
+        "SHIPPING_INCOME": "574000.000000",
+        "SHIPPING_COST": "492800.000000"
+      },
+      "comparableRows": 247,
+      "comparison": [
+        {
+          "field": "operatingRevenue",
+          "legacy": "6947990.000000",
+          "unifiedKnown": "6947990.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "productCost",
+          "legacy": "1871400.000000",
+          "unifiedKnown": "1871400.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "platformFee",
+          "legacy": "400316.000000",
+          "unifiedKnown": "400316.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "otherDirectCost",
+          "legacy": "0.000000",
+          "unifiedKnown": "0.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "vatExpense",
+          "legacy": "694799.000000",
+          "unifiedKnown": "694799.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        }
+      ],
+      "costDifferences": [],
+      "coverage": [
+        {
+          "component": "SALE",
+          "state": "COMPLETE",
+          "missingCostRows": 0,
+          "issues": [
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_SALE_UNIT_NAME_RESTORED",
+            "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+            "NAVER_SOURCE_ESTIMATE",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING"
+          ]
+        },
+        {
+          "component": "AD_SPEND",
+          "state": "COMPLETE",
+          "missingCostRows": 0,
+          "issues": [
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED"
+          ]
+        },
+        {
+          "component": "COMMON_EXPENSE",
+          "state": "COMPLETE",
+          "missingCostRows": 0,
+          "issues": [
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING"
+          ]
+        }
+      ],
+      "unresolvedCostSample": []
+    },
+    {
+      "store": "patima",
+      "date": "2026-10-26",
+      "sourceOrders": 213,
+      "saleRows": 206,
+      "mappedProductRows": 171,
+      "sourceRevenue": "6647680.000000",
+      "unifiedRevenue": "6647680.000000",
+      "acceptedAds": 57,
+      "sourceAdSpend": "2276953.000000",
+      "unifiedAdSpend": "2276953.000000",
+      "unallocatedAdSpend": "1485997.000000",
+      "fakeRows": 0,
+      "shipping": {
+        "SHIPPING_INCOME": "287000.000000",
+        "SHIPPING_COST": "623000.000000"
+      },
+      "comparableRows": 200,
+      "comparison": [
+        {
+          "field": "operatingRevenue",
+          "legacy": "6629680.000000",
+          "unifiedKnown": "6629680.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "productCost",
+          "legacy": "1853900.000000",
+          "unifiedKnown": "1853900.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "platformFee",
+          "legacy": "428839.000000",
+          "unifiedKnown": "428839.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "otherDirectCost",
+          "legacy": "0.000000",
+          "unifiedKnown": "0.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "field": "vatExpense",
+          "legacy": "662968.000000",
+          "unifiedKnown": "662968.000000",
+          "missingRows": 0,
+          "difference": "0.000000"
+        }
+      ],
+      "costDifferences": [],
+      "coverage": [
+        {
+          "component": "SALE",
+          "state": "COMPLETE",
+          "missingCostRows": 6,
+          "issues": [
+            "COST_VALUES_INCOMPLETE",
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_SALE_UNIT_NAME_RESTORED",
+            "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+            "NAVER_SOURCE_ESTIMATE",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING",
+            "SALE_UNIT_NAME_UNRESOLVED"
+          ]
+        },
+        {
+          "component": "AD_SPEND",
+          "state": "COMPLETE",
+          "missingCostRows": 0,
+          "issues": [
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED"
+          ]
+        },
+        {
+          "component": "COMMON_EXPENSE",
+          "state": "COMPLETE",
+          "missingCostRows": 0,
+          "issues": [
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING"
+          ]
+        }
+      ],
+      "unresolvedCostSample": [
+        {
+          "name": "블랙",
+          "option": "버닝슬라이드 전용 덧신: 블랙",
+          "unit": null,
+          "product": null,
+          "issues": [
+            "COST_VALUES_INCOMPLETE",
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING",
+            "SALE_UNIT_NAME_UNRESOLVED"
+          ]
+        },
+        {
+          "name": "블랙",
+          "option": "버닝슬라이드 전용 덧신: 블랙",
+          "unit": null,
+          "product": null,
+          "issues": [
+            "COST_VALUES_INCOMPLETE",
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING",
+            "SALE_UNIT_NAME_UNRESOLVED"
+          ]
+        },
+        {
+          "name": "블랙",
+          "option": "버닝슬라이드 전용 덧신: 블랙",
+          "unit": null,
+          "product": null,
+          "issues": [
+            "COST_VALUES_INCOMPLETE",
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING",
+            "SALE_UNIT_NAME_UNRESOLVED"
+          ]
+        },
+        {
+          "name": "블랙",
+          "option": "버닝슬라이드 전용 덧신: 블랙",
+          "unit": null,
+          "product": null,
+          "issues": [
+            "COST_VALUES_INCOMPLETE",
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING",
+            "SALE_UNIT_NAME_UNRESOLVED"
+          ]
+        },
+        {
+          "name": "블랙",
+          "option": "버닝슬라이드 전용 덧신: 블랙",
+          "unit": null,
+          "product": null,
+          "issues": [
+            "COST_VALUES_INCOMPLETE",
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING",
+            "SALE_UNIT_NAME_UNRESOLVED"
+          ]
+        },
+        {
+          "name": "블랙",
+          "option": "버닝슬라이드 전용 덧신: 블랙",
+          "unit": null,
+          "product": null,
+          "issues": [
+            "COST_VALUES_INCOMPLETE",
+            "NAME_UNMATCHED",
+            "NAVER_ESTIMATED_SOURCE",
+            "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+            "NAVER_ORDER_SYNC_STATE_MISSING",
+            "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+            "NAVER_STORED_FINGERPRINT_MISSING",
+            "SALE_UNIT_NAME_UNRESOLVED"
+          ]
+        }
+      ]
+    }
+  ]
+}

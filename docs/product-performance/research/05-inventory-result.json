@@ -1,0 +1,208 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "rowsChanged": 0,
+  "queries": [
+    {
+      "name": "identity",
+      "observedAt": "2026-10-28T05:52:18.8368795+00:00",
+      "sqlSha256": "6aea517111a9974fcec9ba0b3cf587bb7c9594e5fde34587526d91be64d55988",
+      "elapsedMs": 979,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "db": "postgres",
+        "role": "postgres",
+        "read_only": "on"
+      },
+      "reason": null
+    },
+    {
+      "name": "stores",
+      "observedAt": "2026-10-28T05:52:19.6240742+00:00",
+      "sqlSha256": "6340608e5d066fefc77d3a00c150d21ffbfca3bc82e217c9af21016edb248591",
+      "elapsedMs": 750,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "id": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "name": "인피니티스토어",
+          "platform": "NAVER_SMARTSTORE",
+          "delivery_unit_cost": "2800"
+        },
+        {
+          "id": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "name": "파티마스토어",
+          "platform": "NAVER_SMARTSTORE",
+          "delivery_unit_cost": "3500"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "runtime_access",
+      "observedAt": "2026-10-28T05:52:20.3604528+00:00",
+      "sqlSha256": "9d15c5e98a1bfc75ff6155071c4d839b6b4645b0e76f2cb1df1705224d3fd580",
+      "elapsedMs": 733,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "table_name": "ad_campaign_daily_costs",
+          "can_read": false
+        },
+        {
+          "table_name": "ad_excel_uploads",
+          "can_read": false
+        },
+        {
+          "table_name": "canonical_sales_units",
+          "can_read": false
+        },
+        {
+          "table_name": "daily_fake_purchases",
+          "can_read": false
+        },
+        {
+          "table_name": "daily_sales_unit_profits",
+          "can_read": false
+        },
+        {
+          "table_name": "daily_store_summaries",
+          "can_read": false
+        },
+        {
+          "table_name": "operations",
+          "can_read": false
+        },
+        {
+          "table_name": "order_items",
+          "can_read": false
+        },
+        {
+          "table_name": "order_source_signatures",
+          "can_read": false
+        },
+        {
+          "table_name": "order_sync_batch_items",
+          "can_read": false
+        },
+        {
+          "table_name": "order_sync_batches",
+          "can_read": false
+        },
+        {
+          "table_name": "order_sync_states",
+          "can_read": false
+        },
+        {
+          "table_name": "products",
+          "can_read": false
+        },
+        {
+          "table_name": "sales_unit_cost_settings",
+          "can_read": false
+        },
+        {
+          "table_name": "sales_unit_cost_snapshot_entries",
+          "can_read": false
+        },
+        {
+          "table_name": "sales_unit_cost_snapshots",
+          "can_read": false
+        },
+        {
+          "table_name": "stores",
+          "can_read": false
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "operation_shape",
+      "observedAt": "2026-10-28T05:52:21.2955426+00:00",
+      "sqlSha256": "9296fdfad6bcd7b3a930fe6a38dba869fe47a17b34f49b6d3e600d8184c79d7c",
+      "elapsedMs": 932,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "result_key": "affectedDates"
+        },
+        {
+          "result_key": "rawPayloadRetentionDays"
+        },
+        {
+          "result_key": "coverageGap"
+        },
+        {
+          "result_key": "orderSourceSignaturesCreated"
+        },
+        {
+          "result_key": "syncedItemCount"
+        },
+        {
+          "result_key": "summaryWarning"
+        },
+        {
+          "result_key": "summaryStatus"
+        },
+        {
+          "result_key": "rawPayloadRetentionCutoffDate"
+        },
+        {
+          "result_key": "unknownOrderStatusCount"
+        },
+        {
+          "result_key": "paymentDateMissingCount"
+        },
+        {
+          "result_key": "summaryRecalculation"
+        },
+        {
+          "result_key": "ordersUpserted"
+        },
+        {
+          "result_key": "orderItemsUpserted"
+        },
+        {
+          "result_key": "historicalCoverageGap"
+        },
+        {
+          "result_key": "syncSource"
+        },
+        {
+          "result_key": "rawPayloadPrunedOrderCount"
+        },
+        {
+          "result_key": "rawPayloadPrunedOrderItemCount"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "sync_counts",
+      "observedAt": "2026-10-28T05:52:22.0758325+00:00",
+      "sqlSha256": "fc1053a50bceee96b40ce426fcab9faa7fe67bcc7dc4ac162319642c36cefada",
+      "elapsedMs": 778,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "kind": "states",
+          "count": "0"
+        },
+        {
+          "kind": "batches",
+          "count": "83"
+        },
+        {
+          "kind": "items",
+          "count": "84"
+        }
+      ],
+      "reason": null
+    }
+  ]
+}
