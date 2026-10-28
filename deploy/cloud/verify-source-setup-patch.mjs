@@ -14,6 +14,14 @@ expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled, profile] = process.argv.slice(2);
 if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch profile');
 if (profile === 'reporting') {
+  // Cafe24 now retains provider option_value separately and applies explicit
+  // product/option predicates. Keep the reviewed scope exact; financial
+  // calculators, coupons, other sources and deleted modules stay protected.
+  for (const name of ['daily-sync/cafe24-canonical-fingerprint.js',
+    'daily-sync/cafe24-canonical-writer.service.js', 'daily-sync/cafe24-option-backfill.js',
+    'daily-sync/cafe24-order-adapter.js', 'daily-sync/cafe24-rule-loader.js',
+    'domain/cafe24-csv.js', 'domain/cafe24-matcher.js',
+    'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js']) expected.add(name);
   for (const name of ['daily-sync/canonical-api-writer.service.js', 'daily-sync/meta-mcp-ads.client.js',
     'daily-sync/meta-mcp-capture.js', 'daily-sync/meta-mcp-purchase.js', 'daily-sync/meta-mcp-wire-reader.js',
     'domain/meta-current-metadata.js', 'domain/meta-reporting-measurements.js',
