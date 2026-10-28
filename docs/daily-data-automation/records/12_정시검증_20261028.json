@@ -1,0 +1,680 @@
+{
+  "verifiedAt": "2026-10-28T09:24:05.718Z",
+  "state": "CAFE24_META_THREE_CONSECUTIVE_DAILY_SUCCESSES_VERIFIED_WEEKLY_PENDING",
+  "observationDayKst": "2026-10-28",
+  "consecutiveScheduledSuccess": {
+    "cafe24Daily": 3,
+    "cafe24Required": 3,
+    "metaDaily": 3,
+    "metaDailyRequired": 3,
+    "dailyGateComplete": true,
+    "metaWeekly": 0,
+    "metaWeeklyRequired": 2,
+    "googleDailyObserved": 2,
+    "googleD7Observed": 2,
+    "googleFinalRequired": "Latest approved Google acceptance record; not inferred from obsolete weekly schedule"
+  },
+  "previousReceipt": "12_정시검증_20261027.json",
+  "evidence": {
+    "cron": [
+      {
+        "fires": 1,
+        "jobid": 1,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "storage-renewal-daily",
+        "schedule": "0 19 * * *",
+        "last_fire": "2026-10-27T19:00:00.047185+00:00",
+        "first_fire": "2026-10-27T19:00:00.047185+00:00"
+      },
+      {
+        "fires": 1,
+        "jobid": 2,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "storage-renewal-verify",
+        "schedule": "15 19 * * *",
+        "last_fire": "2026-10-27T19:15:00.281757+00:00",
+        "first_fire": "2026-10-27T19:15:00.281757+00:00"
+      },
+      {
+        "fires": 1,
+        "jobid": 3,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "storage-renewal-audit",
+        "schedule": "20 19 * * *",
+        "last_fire": "2026-10-27T19:20:00.180395+00:00",
+        "first_fire": "2026-10-27T19:20:00.180395+00:00"
+      },
+      {
+        "fires": 120,
+        "jobid": 4,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "daily-data-sync-prod-tick",
+        "schedule": "* 17,18 * * *",
+        "last_fire": "2026-10-27T18:59:00.075481+00:00",
+        "first_fire": "2026-10-27T17:00:00.249311+00:00"
+      }
+    ],
+    "runs": [
+      {
+        "id": "fa8633b5-2cc1-4ab1-a4d8-6a50c7f3cb25",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-27",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-27",
+        "started_at": "2026-10-27T17:00:12.736+00:00",
+        "finished_at": "2026-10-27T17:38:24.598+00:00",
+        "request_key": "schedule:prod-cafe24:7d92c73c65507fc91ceffe8700048ef222f341970a0312ff62de375ac444861d",
+        "rows_fetched": 312,
+        "attempt_count": 36,
+        "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "rows_published": 312,
+        "safe_error_code": null
+      },
+      {
+        "id": "53f4a4ff-a389-4ec7-ae86-2ca91bf12341",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-27",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-27",
+        "started_at": "2026-10-27T17:01:02.786+00:00",
+        "finished_at": "2026-10-27T17:01:12.434+00:00",
+        "request_key": "schedule:prod-google-daily:ecb8bda8706f9ae0065e2046098d859387f5387f6935cc557aa827340f1e36ac",
+        "rows_fetched": 7,
+        "attempt_count": 1,
+        "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "rows_published": 7,
+        "safe_error_code": null
+      },
+      {
+        "id": "99199271-6b57-4665-b29d-1d2bc9c07ab6",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-27",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-27",
+        "started_at": "2026-10-27T17:03:05.82+00:00",
+        "finished_at": "2026-10-27T17:03:38.181+00:00",
+        "request_key": "schedule:prod-meta-daily:254d7b01fec5dcde92fe50e0f77be2c2b9d89df774e740083f2af408a5ced383",
+        "rows_fetched": 761,
+        "attempt_count": 1,
+        "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+        "rows_published": 761,
+        "safe_error_code": null
+      },
+      {
+        "id": "21deffa8-30b7-4567-b569-fe9ec3f431ca",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-21",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-21",
+        "started_at": "2026-10-27T17:04:02.49+00:00",
+        "finished_at": "2026-10-27T17:04:06.906+00:00",
+        "request_key": "schedule:prod-google-recheck-d7:d72d07df898e1cf3e289b3298ff3cdaaab87a2f203c2544d18fba0ce08f24af1",
+        "rows_fetched": 7,
+        "attempt_count": 1,
+        "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "rows_published": 7,
+        "safe_error_code": null
+      }
+    ],
+    "units": [
+      {
+        "key": "2026-10-27",
+        "runId": "99199271-6b57-4665-b29d-1d2bc9c07ab6",
+        "status": "SUCCEEDED",
+        "fetched": 761,
+        "attempts": 1,
+        "published": 761,
+        "completedAt": "2026-10-27T17:03:36.957+00:00"
+      },
+      {
+        "key": "2026-10-21",
+        "runId": "21deffa8-30b7-4567-b569-fe9ec3f431ca",
+        "status": "SUCCEEDED",
+        "fetched": 7,
+        "attempts": 1,
+        "published": 7,
+        "completedAt": "2026-10-27T17:04:05.875+00:00"
+      },
+      {
+        "key": "2026-10-27",
+        "runId": "fa8633b5-2cc1-4ab1-a4d8-6a50c7f3cb25",
+        "status": "SUCCEEDED",
+        "fetched": 312,
+        "attempts": 1,
+        "published": 312,
+        "completedAt": "2026-10-27T17:38:22.821+00:00"
+      },
+      {
+        "key": "2026-10-27",
+        "runId": "53f4a4ff-a389-4ec7-ae86-2ca91bf12341",
+        "status": "SUCCEEDED",
+        "fetched": 7,
+        "attempts": 1,
+        "published": 7,
+        "completedAt": "2026-10-27T17:01:10.672+00:00"
+      }
+    ],
+    "leases": 0,
+    "history": [
+      {
+        "ids": [
+          "a0b6a5eb-7c5c-47e0-a885-e10166d4407a",
+          "246d83c9-1996-429f-856e-b11f7b237e86",
+          "fa8633b5-2cc1-4ab1-a4d8-6a50c7f3cb25"
+        ],
+        "runs": 3,
+        "dates": [
+          "2026-10-25",
+          "2026-10-26",
+          "2026-10-27"
+        ],
+        "succeeded": 3,
+        "schedule_key": "prod-cafe24"
+      },
+      {
+        "ids": [
+          "f9214457-2c08-4e40-a3cd-b27a4f864a49",
+          "53f4a4ff-a389-4ec7-ae86-2ca91bf12341"
+        ],
+        "runs": 2,
+        "dates": [
+          "2026-10-26",
+          "2026-10-27"
+        ],
+        "succeeded": 2,
+        "schedule_key": "prod-google-daily"
+      },
+      {
+        "ids": [
+          "4e78fa21-8821-4a9a-944b-94dcb84351cd",
+          "21deffa8-30b7-4567-b569-fe9ec3f431ca"
+        ],
+        "runs": 2,
+        "dates": [
+          "2026-10-20",
+          "2026-10-21"
+        ],
+        "succeeded": 2,
+        "schedule_key": "prod-google-recheck-d7"
+      },
+      {
+        "ids": [
+          "47cba532-4ef5-4795-a589-46c4c63bdb79",
+          "5ec1d1d8-9c73-40f3-a332-ceddea1be0b9",
+          "99199271-6b57-4665-b29d-1d2bc9c07ab6"
+        ],
+        "runs": 3,
+        "dates": [
+          "2026-10-25",
+          "2026-10-26",
+          "2026-10-27"
+        ],
+        "succeeded": 3,
+        "schedule_key": "prod-meta-daily"
+      }
+    ],
+    "stopped": false,
+    "storage": [
+      {
+        "at": "2026-10-27T19:00:00.04721+00:00",
+        "http": 200,
+        "mode": "renew",
+        "state": "HEALTHY",
+        "readinessVerified": "true"
+      },
+      {
+        "at": "2026-10-27T19:15:00.281783+00:00",
+        "http": 200,
+        "mode": "check",
+        "state": "HEALTHY",
+        "readinessVerified": "true"
+      }
+    ],
+    "attempts": [
+      {
+        "status": "PARTIAL",
+        "requests": 35,
+        "safe_code": "APP_INCOMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-27T17:38:00.083248+00:00",
+        "last_attempt": "2026-10-27T17:37:00.331738+00:00",
+        "schedule_key": "prod-cafe24",
+        "first_attempt": "2026-10-27T17:00:00.487825+00:00",
+        "scheduled_for": "2026-10-27T17:00:00+00:00",
+        "completed_units": 0
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-27T17:39:00.191748+00:00",
+        "last_attempt": "2026-10-27T17:38:00.101093+00:00",
+        "schedule_key": "prod-cafe24",
+        "first_attempt": "2026-10-27T17:38:00.101093+00:00",
+        "scheduled_for": "2026-10-27T17:00:00+00:00",
+        "completed_units": 1
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-27T17:02:00.27736+00:00",
+        "last_attempt": "2026-10-27T17:01:00.318606+00:00",
+        "schedule_key": "prod-google-daily",
+        "first_attempt": "2026-10-27T17:01:00.318606+00:00",
+        "scheduled_for": "2026-10-27T17:01:00+00:00",
+        "completed_units": 1
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-27T17:05:00.215186+00:00",
+        "last_attempt": "2026-10-27T17:04:00.09561+00:00",
+        "schedule_key": "prod-google-recheck-d7",
+        "first_attempt": "2026-10-27T17:04:00.09561+00:00",
+        "scheduled_for": "2026-10-27T17:04:00+00:00",
+        "completed_units": 1
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-27T17:04:00.071107+00:00",
+        "last_attempt": "2026-10-27T17:03:00.351067+00:00",
+        "schedule_key": "prod-meta-daily",
+        "first_attempt": "2026-10-27T17:03:00.351067+00:00",
+        "scheduled_for": "2026-10-27T17:03:00+00:00",
+        "completed_units": 1
+      }
+    ],
+    "coverage": [
+      {
+        "date": "2026-10-27",
+        "kind": "GOOGLE_CAMPAIGN",
+        "rows": 7,
+        "state": "COMPLETE_NONZERO",
+        "amount": 313811.321417,
+        "lastRun": "53f4a4ff-a389-4ec7-ae86-2ca91bf12341",
+        "warnings": [],
+        "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "lastSuccessAt": "2026-10-27T17:01:10.855+00:00"
+      },
+      {
+        "date": "2026-10-27",
+        "kind": "META_AD",
+        "rows": 561,
+        "state": "COMPLETE_NONZERO",
+        "amount": 3711.58,
+        "lastRun": "99199271-6b57-4665-b29d-1d2bc9c07ab6",
+        "warnings": [],
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "lastSuccessAt": "2026-10-27T17:03:37.046+00:00"
+      },
+      {
+        "date": "2026-10-27",
+        "kind": "META_ADSET",
+        "rows": 200,
+        "state": "COMPLETE_NONZERO",
+        "amount": 3711.58,
+        "lastRun": "99199271-6b57-4665-b29d-1d2bc9c07ab6",
+        "warnings": [],
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "lastSuccessAt": "2026-10-27T17:03:37.046+00:00"
+      },
+      {
+        "date": "2026-10-21",
+        "kind": "GOOGLE_CAMPAIGN",
+        "rows": 7,
+        "state": "COMPLETE_NONZERO",
+        "amount": 280709.070369,
+        "lastRun": "21deffa8-30b7-4567-b569-fe9ec3f431ca",
+        "warnings": [],
+        "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "lastSuccessAt": "2026-10-27T17:04:05.962+00:00"
+      },
+      {
+        "date": "2026-10-27",
+        "kind": "CAFE24_ORDER",
+        "rows": 312,
+        "state": "COMPLETE_NONZERO",
+        "amount": 8554033,
+        "lastRun": "fa8633b5-2cc1-4ab1-a4d8-6a50c7f3cb25",
+        "warnings": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ],
+        "connectionId": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "lastSuccessAt": "2026-10-27T17:38:22.821+00:00"
+      }
+    ],
+    "policies": [
+      {
+        "to": null,
+        "date": "2026-10-27",
+        "from": "2026-10-23",
+        "kind": "GOOGLE_CAMPAIGN",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": null,
+        "date": "2026-10-27",
+        "from": "2026-10-23",
+        "kind": "META_AD",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": null,
+        "date": "2026-10-27",
+        "from": "2026-10-23",
+        "kind": "META_ADSET",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": "2026-10-23",
+        "date": "2026-10-21",
+        "from": "2026-10-20",
+        "kind": "GOOGLE_CAMPAIGN",
+        "primary": "API",
+        "version": 2
+      },
+      {
+        "to": "2026-10-28",
+        "date": "2026-10-27",
+        "from": "2026-10-27",
+        "kind": "CAFE24_ORDER",
+        "primary": "API",
+        "version": 10
+      }
+    ],
+    "metaByRun": [
+      {
+        "usd": 3711.58,
+        "kind": "ADSET",
+        "rows": 200,
+        "sync_run_id": "99199271-6b57-4665-b29d-1d2bc9c07ab6",
+        "current_rows": 200
+      },
+      {
+        "usd": 3711.58,
+        "kind": "AD",
+        "rows": 561,
+        "sync_run_id": "99199271-6b57-4665-b29d-1d2bc9c07ab6",
+        "current_rows": 561
+      }
+    ],
+    "schedules": [
+      {
+        "key": "prod-cafe24",
+        "anchor": "2026-10-24T17:00:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 110,
+        "cadence": 1
+      },
+      {
+        "key": "prod-google",
+        "anchor": "2026-10-30T17:01:00+00:00",
+        "offset": 1,
+        "paused": true,
+        "window": 90,
+        "cadence": 7
+      },
+      {
+        "key": "prod-google-daily",
+        "anchor": "2026-10-26T17:01:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 90,
+        "cadence": 1
+      },
+      {
+        "key": "prod-google-recheck-d7",
+        "anchor": "2026-10-26T17:04:00+00:00",
+        "offset": 7,
+        "paused": false,
+        "window": 90,
+        "cadence": 1
+      },
+      {
+        "key": "prod-meta",
+        "anchor": "2026-10-30T17:02:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 90,
+        "cadence": 7
+      },
+      {
+        "key": "prod-meta-daily",
+        "anchor": "2026-10-25T17:03:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 100,
+        "cadence": 1
+      }
+    ],
+    "cafeCurrent": {
+      "keys": 312,
+      "rows": 312,
+      "orders": 287,
+      "unmapped": 8
+    },
+    "connections": [
+      {
+        "id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "state": "READY",
+        "enabled": true,
+        "provider": "GOOGLE"
+      },
+      {
+        "id": "2155a401-bd86-4111-9280-3c95ed207546",
+        "state": "READY",
+        "enabled": true,
+        "provider": "META"
+      },
+      {
+        "id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "state": "READY",
+        "enabled": true,
+        "provider": "CAFE24"
+      }
+    ],
+    "googleCurrent": [
+      {
+        "cost": 280709.070369,
+        "rows": 7,
+        "metric_date": "2026-10-21",
+        "campaign_keys": 7
+      },
+      {
+        "cost": 313811.321417,
+        "rows": 7,
+        "metric_date": "2026-10-27",
+        "campaign_keys": 7
+      }
+    ],
+    "duplicateGroups": 0
+  },
+  "exceptions": {
+    "fx": [
+      {
+        "date": "2026-10-27",
+        "rate": 1322.6,
+        "fallback": "EXACT",
+        "sourceDate": "2026-10-27"
+      }
+    ],
+    "unmappedCafeProducts": [
+      {
+        "rows": 1,
+        "product_no": "162"
+      },
+      {
+        "rows": 6,
+        "product_no": "181"
+      },
+      {
+        "rows": 1,
+        "product_no": "217"
+      }
+    ]
+  },
+  "mappingExceptions": {
+    "unmapped": [
+      {
+        "rows": 1,
+        "product_no": "162",
+        "option_name": "[인피니티 한줄 무릎보호대] 무릎 한줄 보호대 1+1⚡역대급 50% 반값 할인 적용⚡(옵션=한줄보호대1+1(여성용)⭐️추천⭐️)",
+        "product_name": "[인피니티 한줄 무릎보호대] 무릎 한줄 보호대 1+1⚡역대급 50% 반값 할인 적용⚡"
+      },
+      {
+        "rows": 1,
+        "product_no": "181",
+        "option_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스(⭐옵션⭐=모던그레이1+1(여성용)⭐추천⭐)",
+        "product_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스"
+      },
+      {
+        "rows": 1,
+        "product_no": "181",
+        "option_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스(⭐옵션⭐=모던블랙1+1(여성용)⭐추천⭐)",
+        "product_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스"
+      },
+      {
+        "rows": 2,
+        "product_no": "181",
+        "option_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스(⭐옵션⭐=모던블랙1+1⭐런칭할인⭐)",
+        "product_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스"
+      },
+      {
+        "rows": 2,
+        "product_no": "181",
+        "option_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스(⭐옵션⭐=코랄핑크1+1(여성용)⭐추천⭐)",
+        "product_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스"
+      },
+      {
+        "rows": 1,
+        "product_no": "217",
+        "option_name": "[유튜브][버닝 웨이브바] 버닝웨이브바 ✨안전 스트랩 + 전용 보관케이스 더블 무료 증정 혜택✨(옵션선택=옵션1.블랙(2개 1쌍))",
+        "product_name": "[유튜브][버닝 웨이브바] 버닝웨이브바 ✨안전 스트랩 + 전용 보관케이스 더블 무료 증정 혜택✨"
+      }
+    ],
+    "numberRules": null
+  },
+  "runtime": {
+    "window": {
+      "from": "2026-10-27T17:00:00Z",
+      "to": "2026-10-27T17:40:00Z"
+    },
+    "logRows": 277,
+    "errors": [
+      {
+        "time": "2026-10-27T17:00:11.391952305Z",
+        "message": "[Nest] 12  - 10/27/2026, 5:00:06 PM   ERROR [ApiExceptionFilter] {\"requestId\":\"dc6cf74b-7cda-4ae7-9a53-82371f1d0d76\",\"status\":503,\"code\":\"SERVICE_NOT_READY\",\"errorType\":\"ServiceUnavailableException\"}"
+      }
+    ],
+    "ready": [
+      {
+        "time": "2026-10-27T17:00:11.392912675Z",
+        "attributes": [
+          {
+            "key": "code",
+            "value": "\"BUNDLE_READY\""
+          },
+          {
+            "key": "releaseGitSha",
+            "value": "\"94a5305403e2d41bdc7b82ac7682dbb0ec2b18e3\""
+          }
+        ]
+      }
+    ],
+    "scheduledHttp": {
+      "count": 39,
+      "all200": true
+    },
+    "usage": {
+      "windowHours": 24,
+      "sampleSeconds": 300,
+      "metrics": [
+        {
+          "measurement": "MEMORY_USAGE_GB",
+          "current": 0.135483392,
+          "average": 0.18714470545104603,
+          "min": 0.13544980480000002,
+          "max": 0.47322043733333335,
+          "sampleCount": 289
+        },
+        {
+          "measurement": "MEMORY_LIMIT_GB",
+          "current": 0.99999744,
+          "average": 0.9999974399999965,
+          "min": 0.99999744,
+          "max": 0.99999744,
+          "sampleCount": 289
+        },
+        {
+          "measurement": "CPU_USAGE",
+          "current": 0,
+          "average": 0.0025432765282583612,
+          "min": 0,
+          "max": 0.06671669666666667,
+          "sampleCount": 289
+        }
+      ],
+      "note": "Mixed scheduled and interactive traffic across releases; not a cost/billing estimate."
+    },
+    "latestDeployment": {
+      "id": "f0aaa666-4fc6-4b1e-84e6-63afd403283b",
+      "status": "SLEEPING",
+      "createdAt": "2026-10-28T01:45:09.147Z",
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix: make sidebar navigation independently scrollable",
+        "commitHash": "672f69501f1c11b4ad4b07d4ea5d5f02904e6822",
+        "branch": "codex/sidebar-scroll"
+      }
+    }
+  },
+  "interpretation": {
+    "dailyGate": "Original3 scheduled runs verified in DB history, covering10/25,10/26,10/27. Manual runs excluded.",
+    "cafeSteps": "36 resumable chunks:35 partial progress responses then1 success; not36 failed attempts",
+    "readiness": "1 startup SERVICE_NOT_READY503 before BUNDLE_READY; all39 final scheduled HTTP responses200 and all4 jobs succeeded",
+    "scheduledRelease": "94a5305403e2d41bdc7b82ac7682dbb0ec2b18e3",
+    "latestDeploymentMetadataRelease": "672f69501f1c11b4ad4b07d4ea5d5f02904e6822",
+    "resourceUsage": "24-hour samples include user traffic and later deployments; no billing estimate",
+    "mapping": "Known181:6rows; newly observed162:1row,217:1row. No active valid rule explicitly includes these numbers; alias/option/product relation needs review. No assumed mapping or cost changes."
+  },
+  "nextExpected": {
+    "on": "2026-10-29",
+    "cafe24AndMetaDataDay": "2026-10-28",
+    "googleD1DataDay": "2026-10-28",
+    "googleD7DataDay": "2026-10-22",
+    "metaWeeklyFirst": "2026-10-31 02:02KST /2026-10-24 through2026-10-30",
+    "metaWeeklySecond": "2026-11-07 02:02KST /2026-10-31 through2026-11-06"
+  },
+  "changesThisHeartbeat": {
+    "productionWrites": 0,
+    "providerRequests": 0,
+    "credentialOperations": 0,
+    "deployments": 0,
+    "scheduleWrites": 0,
+    "existingFollowupPromptUpdated": true
+  },
+  "overallComplete": false
+}
