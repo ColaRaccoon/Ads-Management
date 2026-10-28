@@ -1,0 +1,1129 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "rowsChanged": 0,
+  "queries": [
+    {
+      "name": "identity",
+      "observedAt": "2026-10-28T04:45:29.1558935+00:00",
+      "sqlSha256": "576aa00ab13179bd7cd065bc142ee7b1d8dcfcf2136c6b35e4d3965a7d897aec",
+      "elapsedMs": 969,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": {
+        "database": "postgres",
+        "role": "postgres",
+        "read_only": "on",
+        "unified_products": null
+      },
+      "reason": null
+    },
+    {
+      "name": "source_bounds",
+      "observedAt": "2026-10-28T04:45:37.1686948+00:00",
+      "sqlSha256": "f61477cdbaf8bb57b0ce0aad7c42869510fbbce7c3de23bfe97ef2bd09944089",
+      "elapsedMs": 7976,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "platform": "META",
+          "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+          "from_date": "2026-10-23",
+          "to_date": "2026-10-27",
+          "rows": "1000"
+        },
+        {
+          "platform": "META",
+          "scope": "LEGACY_UNBOUND",
+          "from_date": "2026-06-01",
+          "to_date": "2026-10-22",
+          "rows": "4518"
+        },
+        {
+          "platform": "CAFE24",
+          "scope": "LEGACY_UNBOUND",
+          "from_date": "2026-06-11",
+          "to_date": "2026-10-22",
+          "rows": "36012"
+        },
+        {
+          "platform": "CAFE24",
+          "scope": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "from_date": "2026-10-23",
+          "to_date": "2026-10-27",
+          "rows": "1764"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "from_date": "2026-10-20",
+          "to_date": "2026-10-27",
+          "rows": "34"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "name": "safe_schema",
+      "observedAt": "2026-10-28T04:45:38.1514950+00:00",
+      "sqlSha256": "4e40d7af998da2675b7c44db41d94ff3b282fa7205233a794aced8db10deb3d0",
+      "elapsedMs": 976,
+      "httpStatus": 201,
+      "status": "SUCCESS",
+      "rows": [
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "scope",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "product_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "discount_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "priority",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "valid_from",
+          "data_type": "date"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "valid_to",
+          "data_type": "date"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "is_active",
+          "data_type": "boolean"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "note",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "cafe24_coupon_rules",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "upload_batch_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "row_number",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "source_row_hash",
+          "data_type": "character"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "order_line_key",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "order_no",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "line_order_no",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "product_no",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "product_name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "option_name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "quantity",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "sale_price_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "total_paid_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "payment_method",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "ordered_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "order_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "product_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "cafe24_product_rule_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "match_source",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "validation_status",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "validation_errors",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "import_version",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "is_current",
+          "data_type": "boolean"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "superseded_by_order_line_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "raw_row",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "total_order_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "connection_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "sync_run_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "source",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "provider_updated_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "total_paid_input_source",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "provider_payment_codes",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "provider_coupon_signal",
+          "data_type": "boolean"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "actual_order_price_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "actual_payment_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "actual_shipping_fee_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "initial_order_price_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "initial_payment_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "initial_shipping_fee_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_order_lines",
+          "column_name": "option_value",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "display_name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_numbers",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_name_aliases",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "option_include_keywords",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "option_exclude_keywords",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "ad_cost_source_product_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "roas_group",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "sale_price_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_cost_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "shipping_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "extra_cost_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "priority",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "is_active",
+          "data_type": "boolean"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "valid_from",
+          "data_type": "date"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "valid_to",
+          "data_type": "date"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "note",
+          "data_type": "text"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "match_target",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_name_include_keywords",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_name_exclude_keywords",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "rate_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "source_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "base_currency",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "quote_currency",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "rate",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "provider",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "provider_payload",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "fallback_type",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "fetched_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "exchange_rates",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "kind",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "connection_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "identity_key",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "campaign_id",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "product_no",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "option_name",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "product_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "start_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "end_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "option_scope",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "sale_price_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "product_cost_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "shipping_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "extra_cost_krw_override",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "google_performance_mappings",
+          "column_name": "sale_unit_label",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "upload_batch_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "upload_row_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "meta_adset_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "metric_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "date_start",
+          "data_type": "date"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "date_end",
+          "data_type": "date"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "adset_name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "adset_name_key",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "delivery_status",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "attribution_setting",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "result_count",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "result_indicator",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "reach",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "frequency",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "cost_per_result_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "adset_budget_label",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "adset_budget_type",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "spend_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "end_status",
+          "data_type": "text"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "start_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "impressions",
+          "data_type": "bigint"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "cpm_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "link_clicks",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "shop_clicks",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "cpc_link_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "ctr_link_pct",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "clicks_all",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "ctr_all_pct",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "cpc_all_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "landing_page_views",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "cost_per_landing_page_view_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "product_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "stage",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "product_match_source",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "stage_match_source",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "product_match_rule_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "import_version",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "is_current",
+          "data_type": "boolean"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "superseded_by_metric_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "raw_row",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "connection_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "sync_run_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "source",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "source_revision",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "action_report_time",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "attribution_windows",
+          "data_type": "ARRAY"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "metric_unavailable_reasons",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "current_metadata",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "metadata_observed_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "purchase_count",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "column_name": "purchase_value_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "product_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "sale_price_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "vat_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "product_cost_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "shipping_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "extra_cost_krw",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "fx_rate_krw_per_usd",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "effective_from",
+          "data_type": "date"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "effective_to",
+          "data_type": "date"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "note",
+          "data_type": "text"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "created_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "product_cost_rules",
+          "column_name": "updated_at",
+          "data_type": "timestamp without time zone"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "provider",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "external_account_id",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "shop_key",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "display_name",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "currency_code",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "time_zone",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "credential_ref",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "credential_expires_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "access_state",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "enabled",
+          "data_type": "boolean"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "source_connections",
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "connection_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "data_kind",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "metric_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "source",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "state",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "last_attempt_run_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "last_success_run_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "last_success_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "last_attempt_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "row_count",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "total_amount",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "reconciliation_status",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_coverage",
+          "column_name": "warning_codes",
+          "data_type": "ARRAY"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "connection_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "data_kind",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "from_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "to_date",
+          "data_type": "date"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "primary_source",
+          "data_type": "USER-DEFINED"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "effective_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "version",
+          "data_type": "integer"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "changed_by_user_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "reason",
+          "data_type": "character varying"
+        },
+        {
+          "table_name": "source_policies",
+          "column_name": "coupon_input_source",
+          "data_type": "character varying"
+        }
+      ],
+      "reason": null
+    }
+  ]
+}

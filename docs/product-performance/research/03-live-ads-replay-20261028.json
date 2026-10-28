@@ -1,0 +1,3448 @@
+{
+  "status": "PASS_REAL_CAPTURE_REPLAY",
+  "databaseAccessByReplay": false,
+  "networkAccessByReplay": false,
+  "operationalWrites": 0,
+  "captureMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "inputPath": "docs/product-performance/research/03-live-ads-result-20261028.json.gz",
+  "inputSha256": "afccf72d6ec504e034e0da8f4df82724017570ee89e8f4e7fed062f3d1dc75d3",
+  "capturedRows": {
+    "META": 1160,
+    "GOOGLE": 27
+  },
+  "comparisons": [
+    {
+      "platform": "META",
+      "days": 1,
+      "from": "2026-10-26",
+      "to": "2026-10-26",
+      "sourceRows": 200,
+      "normalizedRows": 200,
+      "originalSelected": "3836.400000",
+      "normalizedOriginal": "3836.400000",
+      "withheldOriginal": "0.000000",
+      "assignedOriginal": "3836.400000",
+      "unmatchedOriginal": "0.000000",
+      "prior01Original": "3836.400000",
+      "differenceFrom01": "0.000000",
+      "knownKrw": "5080544.520000",
+      "assignedKrw": "5080544.520000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "completeDays": 1,
+      "incompleteDates": [],
+      "products": [
+        {
+          "productName": null,
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "노필수면안대",
+          "rows": 14,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "다이어트양말",
+          "rows": 1,
+          "originalAmount": "518.500000",
+          "knownKrw": "686649.550000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 22,
+          "originalAmount": "545.300000",
+          "knownKrw": "722140.790000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "181.670000",
+          "knownKrw": "240585.581000"
+        },
+        {
+          "productName": "러닝조끼",
+          "rows": 1,
+          "originalAmount": "137.010000",
+          "knownKrw": "181442.343000"
+        },
+        {
+          "productName": "버닝 슬라이드",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 42,
+          "originalAmount": "171.570000",
+          "knownKrw": "227210.151000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "447.090000",
+          "knownKrw": "592081.287000"
+        },
+        {
+          "productName": "뷰티레그보드",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "스카이스텝",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 1,
+          "originalAmount": "54.390000",
+          "knownKrw": "72028.677000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 25,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "유쉴드마스크",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "자이로볼",
+          "rows": 20,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트스케이트",
+          "rows": 7,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 10,
+          "originalAmount": "157.530000",
+          "knownKrw": "208616.979000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 21,
+          "originalAmount": "1439.430000",
+          "knownKrw": "1906237.149000"
+        },
+        {
+          "productName": "풀업밴드",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 10,
+          "originalAmount": "183.910000",
+          "knownKrw": "243552.013000"
+        },
+        {
+          "productName": "한줄보호대",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        }
+      ],
+      "observedQueryTimes": [
+        {
+          "name": "ads_connections",
+          "observedAt": "2026-10-28T04:47:36.2600248+00:00"
+        },
+        {
+          "name": "ads_policies",
+          "observedAt": "2026-10-28T04:47:36.9973571+00:00"
+        },
+        {
+          "name": "ads_coverage",
+          "observedAt": "2026-10-28T04:47:37.7352901+00:00"
+        },
+        {
+          "name": "meta_rows",
+          "observedAt": "2026-10-28T04:47:39.7636644+00:00"
+        },
+        {
+          "name": "google_rows",
+          "observedAt": "2026-10-28T04:47:40.6839120+00:00"
+        },
+        {
+          "name": "ads_rates",
+          "observedAt": "2026-10-28T04:47:41.5448937+00:00"
+        },
+        {
+          "name": "ads_name_cost_rules",
+          "observedAt": "2026-10-28T04:47:43.5443407+00:00"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "days": 7,
+      "from": "2026-10-20",
+      "to": "2026-10-26",
+      "sourceRows": 839,
+      "normalizedRows": 839,
+      "originalSelected": "22728.420000",
+      "normalizedOriginal": "22728.420000",
+      "withheldOriginal": "0.000000",
+      "assignedOriginal": "22728.420000",
+      "unmatchedOriginal": "0.000000",
+      "prior01Original": "22728.420000",
+      "differenceFrom01": "0.000000",
+      "knownKrw": "30141480.262000",
+      "assignedKrw": "30141480.262000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "completeDays": 7,
+      "incompleteDates": [],
+      "products": [
+        {
+          "productName": null,
+          "rows": 8,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "노필수면안대",
+          "rows": 56,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "다이어트양말",
+          "rows": 5,
+          "originalAmount": "1256.420000",
+          "knownKrw": "1664128.892000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 94,
+          "originalAmount": "3574.610000",
+          "knownKrw": "4739954.750000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 14,
+          "originalAmount": "1467.120000",
+          "knownKrw": "1949839.215000"
+        },
+        {
+          "productName": "러닝조끼",
+          "rows": 4,
+          "originalAmount": "299.290000",
+          "knownKrw": "396398.431000"
+        },
+        {
+          "productName": "버닝 슬라이드",
+          "rows": 24,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 171,
+          "originalAmount": "1032.760000",
+          "knownKrw": "1369571.192000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 11,
+          "originalAmount": "3340.890000",
+          "knownKrw": "4431456.054000"
+        },
+        {
+          "productName": "뷰티레그보드",
+          "rows": 8,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "스카이스텝",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 6,
+          "originalAmount": "453.150000",
+          "knownKrw": "600453.893000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 103,
+          "originalAmount": "140.860000",
+          "knownKrw": "187156.531000"
+        },
+        {
+          "productName": "유쉴드마스크",
+          "rows": 16,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "자이로볼",
+          "rows": 80,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트스케이트",
+          "rows": 28,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 43,
+          "originalAmount": "792.310000",
+          "knownKrw": "1049921.383000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 93,
+          "originalAmount": "8988.880000",
+          "knownKrw": "11919628.455000"
+        },
+        {
+          "productName": "풀업밴드",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 43,
+          "originalAmount": "1382.130000",
+          "knownKrw": "1832971.466000"
+        },
+        {
+          "productName": "한줄보호대",
+          "rows": 24,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        }
+      ],
+      "observedQueryTimes": [
+        {
+          "name": "ads_connections",
+          "observedAt": "2026-10-28T04:47:36.2600248+00:00"
+        },
+        {
+          "name": "ads_policies",
+          "observedAt": "2026-10-28T04:47:36.9973571+00:00"
+        },
+        {
+          "name": "ads_coverage",
+          "observedAt": "2026-10-28T04:47:37.7352901+00:00"
+        },
+        {
+          "name": "meta_rows",
+          "observedAt": "2026-10-28T04:47:39.7636644+00:00"
+        },
+        {
+          "name": "google_rows",
+          "observedAt": "2026-10-28T04:47:40.6839120+00:00"
+        },
+        {
+          "name": "ads_rates",
+          "observedAt": "2026-10-28T04:47:41.5448937+00:00"
+        },
+        {
+          "name": "ads_name_cost_rules",
+          "observedAt": "2026-10-28T04:47:43.5443407+00:00"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "days": 30,
+      "from": "2026-09-27",
+      "to": "2026-10-26",
+      "sourceRows": 1160,
+      "normalizedRows": 1160,
+      "originalSelected": "125017.560000",
+      "normalizedOriginal": "125017.560000",
+      "withheldOriginal": "0.000000",
+      "assignedOriginal": "125017.560000",
+      "unmatchedOriginal": "0.000000",
+      "prior01Original": null,
+      "differenceFrom01": null,
+      "knownKrw": "168156482.752000",
+      "assignedKrw": "168156482.752000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "completeDays": 30,
+      "incompleteDates": [],
+      "products": [
+        {
+          "productName": null,
+          "rows": 8,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "노필수면안대",
+          "rows": 56,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "다이어트양말",
+          "rows": 5,
+          "originalAmount": "1256.420000",
+          "knownKrw": "1664128.892000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 153,
+          "originalAmount": "28446.440000",
+          "knownKrw": "38315410.202000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 47,
+          "originalAmount": "13965.880000",
+          "knownKrw": "18829281.648000"
+        },
+        {
+          "productName": "러닝조끼",
+          "rows": 4,
+          "originalAmount": "299.290000",
+          "knownKrw": "396398.431000"
+        },
+        {
+          "productName": "버닝 슬라이드",
+          "rows": 24,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 209,
+          "originalAmount": "6501.150000",
+          "knownKrw": "8735268.680000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 35,
+          "originalAmount": "14512.220000",
+          "knownKrw": "19446442.021000"
+        },
+        {
+          "productName": "뷰티레그보드",
+          "rows": 8,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "스카이스텝",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 6,
+          "originalAmount": "453.150000",
+          "knownKrw": "600453.893000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 143,
+          "originalAmount": "5324.330000",
+          "knownKrw": "7193579.060000"
+        },
+        {
+          "productName": "유쉴드마스크",
+          "rows": 16,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "자이로볼",
+          "rows": 80,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트스케이트",
+          "rows": 28,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 43,
+          "originalAmount": "792.310000",
+          "knownKrw": "1049921.383000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 185,
+          "originalAmount": "45188.320000",
+          "knownKrw": "60787719.758000"
+        },
+        {
+          "productName": "풀업밴드",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 78,
+          "originalAmount": "8278.050000",
+          "knownKrw": "11137878.784000"
+        },
+        {
+          "productName": "한줄보호대",
+          "rows": 24,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        }
+      ],
+      "observedQueryTimes": [
+        {
+          "name": "ads_connections",
+          "observedAt": "2026-10-28T04:47:36.2600248+00:00"
+        },
+        {
+          "name": "ads_policies",
+          "observedAt": "2026-10-28T04:47:36.9973571+00:00"
+        },
+        {
+          "name": "ads_coverage",
+          "observedAt": "2026-10-28T04:47:37.7352901+00:00"
+        },
+        {
+          "name": "meta_rows",
+          "observedAt": "2026-10-28T04:47:39.7636644+00:00"
+        },
+        {
+          "name": "google_rows",
+          "observedAt": "2026-10-28T04:47:40.6839120+00:00"
+        },
+        {
+          "name": "ads_rates",
+          "observedAt": "2026-10-28T04:47:41.5448937+00:00"
+        },
+        {
+          "name": "ads_name_cost_rules",
+          "observedAt": "2026-10-28T04:47:43.5443407+00:00"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "days": 1,
+      "from": "2026-10-26",
+      "to": "2026-10-26",
+      "sourceRows": 5,
+      "normalizedRows": 5,
+      "originalSelected": "243012.033468",
+      "normalizedOriginal": "243012.033468",
+      "withheldOriginal": "0.000000",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "243012.033468",
+      "prior01Original": "243012.033468",
+      "differenceFrom01": "0.000000",
+      "knownKrw": "243012.033468",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "243012.033468",
+      "missingFxOriginal": "0.000000",
+      "completeDays": 1,
+      "incompleteDates": [],
+      "products": [
+        {
+          "productName": null,
+          "rows": 5,
+          "originalAmount": "243012.033468",
+          "knownKrw": "243012.033468"
+        }
+      ],
+      "observedQueryTimes": [
+        {
+          "name": "ads_connections",
+          "observedAt": "2026-10-28T04:47:36.2600248+00:00"
+        },
+        {
+          "name": "ads_policies",
+          "observedAt": "2026-10-28T04:47:36.9973571+00:00"
+        },
+        {
+          "name": "ads_coverage",
+          "observedAt": "2026-10-28T04:47:37.7352901+00:00"
+        },
+        {
+          "name": "meta_rows",
+          "observedAt": "2026-10-28T04:47:39.7636644+00:00"
+        },
+        {
+          "name": "google_rows",
+          "observedAt": "2026-10-28T04:47:40.6839120+00:00"
+        },
+        {
+          "name": "ads_rates",
+          "observedAt": "2026-10-28T04:47:41.5448937+00:00"
+        },
+        {
+          "name": "ads_name_cost_rules",
+          "observedAt": "2026-10-28T04:47:43.5443407+00:00"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "days": 7,
+      "from": "2026-10-20",
+      "to": "2026-10-26",
+      "sourceRows": 27,
+      "normalizedRows": 27,
+      "originalSelected": "1243472.558113",
+      "normalizedOriginal": "1243472.558113",
+      "withheldOriginal": "0.000000",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "1243472.558113",
+      "prior01Original": "962763.487744",
+      "differenceFrom01": "280709.070369",
+      "knownKrw": "1243472.558113",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "1243472.558113",
+      "missingFxOriginal": "0.000000",
+      "completeDays": 5,
+      "incompleteDates": [
+        "2026-10-22",
+        "2026-10-24"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 27,
+          "originalAmount": "1243472.558113",
+          "knownKrw": "1243472.558113"
+        }
+      ],
+      "observedQueryTimes": [
+        {
+          "name": "ads_connections",
+          "observedAt": "2026-10-28T04:47:36.2600248+00:00"
+        },
+        {
+          "name": "ads_policies",
+          "observedAt": "2026-10-28T04:47:36.9973571+00:00"
+        },
+        {
+          "name": "ads_coverage",
+          "observedAt": "2026-10-28T04:47:37.7352901+00:00"
+        },
+        {
+          "name": "meta_rows",
+          "observedAt": "2026-10-28T04:47:39.7636644+00:00"
+        },
+        {
+          "name": "google_rows",
+          "observedAt": "2026-10-28T04:47:40.6839120+00:00"
+        },
+        {
+          "name": "ads_rates",
+          "observedAt": "2026-10-28T04:47:41.5448937+00:00"
+        },
+        {
+          "name": "ads_name_cost_rules",
+          "observedAt": "2026-10-28T04:47:43.5443407+00:00"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "days": 30,
+      "from": "2026-09-27",
+      "to": "2026-10-26",
+      "sourceRows": 27,
+      "normalizedRows": 27,
+      "originalSelected": "1243472.558113",
+      "normalizedOriginal": "1243472.558113",
+      "withheldOriginal": "0.000000",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "1243472.558113",
+      "prior01Original": null,
+      "differenceFrom01": null,
+      "knownKrw": "1243472.558113",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "1243472.558113",
+      "missingFxOriginal": "0.000000",
+      "completeDays": 5,
+      "incompleteDates": [
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+        "2026-10-04",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-22",
+        "2026-10-24"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 27,
+          "originalAmount": "1243472.558113",
+          "knownKrw": "1243472.558113"
+        }
+      ],
+      "observedQueryTimes": [
+        {
+          "name": "ads_connections",
+          "observedAt": "2026-10-28T04:47:36.2600248+00:00"
+        },
+        {
+          "name": "ads_policies",
+          "observedAt": "2026-10-28T04:47:36.9973571+00:00"
+        },
+        {
+          "name": "ads_coverage",
+          "observedAt": "2026-10-28T04:47:37.7352901+00:00"
+        },
+        {
+          "name": "meta_rows",
+          "observedAt": "2026-10-28T04:47:39.7636644+00:00"
+        },
+        {
+          "name": "google_rows",
+          "observedAt": "2026-10-28T04:47:40.6839120+00:00"
+        },
+        {
+          "name": "ads_rates",
+          "observedAt": "2026-10-28T04:47:41.5448937+00:00"
+        },
+        {
+          "name": "ads_name_cost_rules",
+          "observedAt": "2026-10-28T04:47:43.5443407+00:00"
+        }
+      ]
+    }
+  ],
+  "daily": [
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-09-27",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 11,
+      "selectedRows": 11,
+      "withheldRows": 0,
+      "originalSelected": "2887.030000",
+      "normalizedOriginal": "2887.030000",
+      "assignedOriginal": "2887.030000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "3926360.800000",
+      "completeKrw": "3926360.800000",
+      "assignedKrw": "3926360.800000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "676008038b31501a217758776734cbce731f1122049bc188121a07f3045031d9",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "1086.220000",
+          "knownKrw": "1477259.200000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "256.290000",
+          "knownKrw": "348554.400000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "101.870000",
+          "knownKrw": "138543.200000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "247.610000",
+          "knownKrw": "336749.600000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "845.450000",
+          "knownKrw": "1149812.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "349.590000",
+          "knownKrw": "475442.400000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-09-28",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 14,
+      "selectedRows": 14,
+      "withheldRows": 0,
+      "originalSelected": "3149.640000",
+      "normalizedOriginal": "3149.640000",
+      "assignedOriginal": "3149.640000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "4258313.280000",
+      "completeKrw": "4258313.280000",
+      "assignedKrw": "4258313.280000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "90ac98d825c3f0feb69afbc614c658a54e6fd0aa6d7d425c8a625d85bc7075df",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "987.360000",
+          "knownKrw": "1334910.720000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "235.180000",
+          "knownKrw": "317963.360000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "207.370000",
+          "knownKrw": "280364.240000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "240.290000",
+          "knownKrw": "324872.080000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 5,
+          "originalAmount": "1149.720000",
+          "knownKrw": "1554421.440000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "329.720000",
+          "knownKrw": "445781.440000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-09-29",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 20,
+      "selectedRows": 20,
+      "withheldRows": 0,
+      "originalSelected": "3775.990000",
+      "normalizedOriginal": "3775.990000",
+      "assignedOriginal": "3775.990000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5135346.400000",
+      "completeKrw": "5135346.400000",
+      "assignedKrw": "5135346.400000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "d997c0b936c9cb32d1a15db5123e13cb2c59d7678d46486e306509f20ccab92b",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1357.680000",
+          "knownKrw": "1846444.800000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "189.420000",
+          "knownKrw": "257611.200000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "192.220000",
+          "knownKrw": "261419.200000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "53.570000",
+          "knownKrw": "72855.200000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "161.810000",
+          "knownKrw": "220061.600000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 6,
+          "originalAmount": "1501.450000",
+          "knownKrw": "2041972.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 5,
+          "originalAmount": "319.840000",
+          "knownKrw": "434982.400000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-09-30",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 21,
+      "selectedRows": 21,
+      "withheldRows": 0,
+      "originalSelected": "4646.110000",
+      "normalizedOriginal": "4646.110000",
+      "assignedOriginal": "4646.110000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "6311275.824000",
+      "completeKrw": "6311275.824000",
+      "assignedKrw": "6311275.824000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "5050167650be14ba0bf60cdfb33719ff934a3dbb8c06ddee6f744a66c8123010",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1480.510000",
+          "knownKrw": "2011124.784000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "194.070000",
+          "knownKrw": "263624.688000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "287.040000",
+          "knownKrw": "389915.136000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "122.580000",
+          "knownKrw": "166512.672000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "313.610000",
+          "knownKrw": "426007.824000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 6,
+          "originalAmount": "1877.060000",
+          "knownKrw": "2549798.304000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 5,
+          "originalAmount": "371.240000",
+          "knownKrw": "504292.416000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-01",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 19,
+      "selectedRows": 19,
+      "withheldRows": 0,
+      "originalSelected": "5065.490000",
+      "normalizedOriginal": "5065.490000",
+      "assignedOriginal": "5065.490000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "6867284.793000",
+      "completeKrw": "6867284.793000",
+      "assignedKrw": "6867284.793000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "f9b0717f02a13733bd4d6f8eb0d150d82f1cd4bd6b79a4859ae096eef4db8c28",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1261.590000",
+          "knownKrw": "1710337.563000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 1,
+          "originalAmount": "485.970000",
+          "knownKrw": "658829.529000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "316.410000",
+          "knownKrw": "428957.037000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "112.200000",
+          "knownKrw": "152109.540000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "491.480000",
+          "knownKrw": "666299.436000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 5,
+          "originalAmount": "2023.650000",
+          "knownKrw": "2743462.305000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 5,
+          "originalAmount": "374.190000",
+          "knownKrw": "507289.383000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-02",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 16,
+      "selectedRows": 16,
+      "withheldRows": 0,
+      "originalSelected": "6242.490000",
+      "normalizedOriginal": "6242.490000",
+      "assignedOriginal": "6242.490000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "8487289.404000",
+      "completeKrw": "8487289.404000",
+      "assignedKrw": "8487289.404000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "bef46908603430b83e9c1ffe59309f2228fa415fc0095d16b5538a3011d5ab16",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1422.140000",
+          "knownKrw": "1933541.544000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "804.500000",
+          "knownKrw": "1093798.200000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "320.410000",
+          "knownKrw": "435629.436000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "198.480000",
+          "knownKrw": "269853.408000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "545.130000",
+          "knownKrw": "741158.748000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 5,
+          "originalAmount": "2566.800000",
+          "knownKrw": "3489821.280000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "385.030000",
+          "knownKrw": "523486.788000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-03",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 16,
+      "selectedRows": 16,
+      "withheldRows": 0,
+      "originalSelected": "5967.490000",
+      "normalizedOriginal": "5967.490000",
+      "assignedOriginal": "5967.490000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "8113399.404000",
+      "completeKrw": "8113399.404000",
+      "assignedKrw": "8113399.404000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "533f05560ee25ec4432e34b62315bc5b8890f181112938c47515e16455b1c1c7",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1395.710000",
+          "knownKrw": "1897607.316000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "725.220000",
+          "knownKrw": "986009.112000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "176.240000",
+          "knownKrw": "239615.904000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "281.290000",
+          "knownKrw": "382441.884000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "439.190000",
+          "knownKrw": "597122.724000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 5,
+          "originalAmount": "2625.250000",
+          "knownKrw": "3569289.900000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "324.590000",
+          "knownKrw": "441312.564000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-04",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 14,
+      "selectedRows": 14,
+      "withheldRows": 0,
+      "originalSelected": "5252.210000",
+      "normalizedOriginal": "5252.210000",
+      "assignedOriginal": "5252.210000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "7140904.716000",
+      "completeKrw": "7140904.716000",
+      "assignedKrw": "7140904.716000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "318adaf0497dd118022d8e16c172a6023dedc75e53dc403deed54d7059ab4991",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1331.680000",
+          "knownKrw": "1810552.128000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "766.400000",
+          "knownKrw": "1041997.440000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "97.570000",
+          "knownKrw": "132656.172000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "347.840000",
+          "knownKrw": "472923.264000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "323.960000",
+          "knownKrw": "440456.016000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "2116.360000",
+          "knownKrw": "2877403.056000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "268.400000",
+          "knownKrw": "364916.640000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-05",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 13,
+      "selectedRows": 13,
+      "withheldRows": 0,
+      "originalSelected": "4814.990000",
+      "normalizedOriginal": "4814.990000",
+      "assignedOriginal": "4814.990000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "6546460.404000",
+      "completeKrw": "6546460.404000",
+      "assignedKrw": "6546460.404000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "b02dab433c1ff527ac16fb8dbafd5b0d7667fc3209dc9986c568aecf7a2fc371",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "1443.680000",
+          "knownKrw": "1962827.328000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "778.600000",
+          "knownKrw": "1058584.560000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "96.890000",
+          "knownKrw": "131731.644000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "284.080000",
+          "knownKrw": "386235.168000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "263.270000",
+          "knownKrw": "357941.892000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "1685.310000",
+          "knownKrw": "2291347.476000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "263.160000",
+          "knownKrw": "357792.336000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-06",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 14,
+      "selectedRows": 14,
+      "withheldRows": 0,
+      "originalSelected": "4512.520000",
+      "normalizedOriginal": "4512.520000",
+      "assignedOriginal": "4512.520000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "6130258.420000",
+      "completeKrw": "6130258.420000",
+      "assignedKrw": "6130258.420000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "bd384687d7618b21c2dcdc1bf2e91814262873942aa7a805a9a55d4808a15eec",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "979.000000",
+          "knownKrw": "1329971.500000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "782.640000",
+          "knownKrw": "1063216.440000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "306.790000",
+          "knownKrw": "416774.215000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "332.890000",
+          "knownKrw": "452231.065000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "193.460000",
+          "knownKrw": "262815.410000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "1651.220000",
+          "knownKrw": "2243182.370000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "266.520000",
+          "knownKrw": "362067.420000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-07",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 14,
+      "selectedRows": 14,
+      "withheldRows": 0,
+      "originalSelected": "4917.160000",
+      "normalizedOriginal": "4917.160000",
+      "assignedOriginal": "4917.160000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "6605712.744000",
+      "completeKrw": "6605712.744000",
+      "assignedKrw": "6605712.744000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "d2d533824f2c181c4f8669e0ab626f6224a53a675e89c5d2bd763b52b114b464",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "1126.910000",
+          "knownKrw": "1513890.894000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "636.590000",
+          "knownKrw": "855195.006000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "401.700000",
+          "knownKrw": "539643.780000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "445.370000",
+          "knownKrw": "598310.058000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "194.180000",
+          "knownKrw": "260861.412000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "1815.130000",
+          "knownKrw": "2438445.642000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "297.280000",
+          "knownKrw": "399365.952000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-08",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 13,
+      "selectedRows": 13,
+      "withheldRows": 0,
+      "originalSelected": "4268.950000",
+      "normalizedOriginal": "4268.950000",
+      "assignedOriginal": "4268.950000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5716977.840000",
+      "completeKrw": "5716977.840000",
+      "assignedKrw": "5716977.840000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "85196587b21f0bdac649fc889820a88aa86fafa3af317fd30faff947f6ecf29a",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "1124.870000",
+          "knownKrw": "1506425.904000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "353.770000",
+          "knownKrw": "473768.784000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "664.700000",
+          "knownKrw": "890166.240000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "185.810000",
+          "knownKrw": "248836.752000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "1645.090000",
+          "knownKrw": "2203104.528000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "294.710000",
+          "knownKrw": "394675.632000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-09",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 12,
+      "selectedRows": 12,
+      "withheldRows": 0,
+      "originalSelected": "3935.790000",
+      "normalizedOriginal": "3935.790000",
+      "assignedOriginal": "3935.790000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5270809.968000",
+      "completeKrw": "5270809.968000",
+      "assignedKrw": "5270809.968000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "f8402fb2c3abab19684d29a9412e305337ebef558c75d64d2d1cf1504aa60796",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "1050.870000",
+          "knownKrw": "1407325.104000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "352.510000",
+          "knownKrw": "472081.392000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "638.260000",
+          "knownKrw": "854757.792000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "171.750000",
+          "knownKrw": "230007.600000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1437.550000",
+          "knownKrw": "1925166.960000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "284.850000",
+          "knownKrw": "381471.120000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-10",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 12,
+      "selectedRows": 12,
+      "withheldRows": 0,
+      "originalSelected": "3779.620000",
+      "normalizedOriginal": "3779.620000",
+      "assignedOriginal": "3779.620000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5061667.104000",
+      "completeKrw": "5061667.104000",
+      "assignedKrw": "5061667.104000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "fb14cf3f46d533cd54d3e1713f8f7382331c4c1cf36d13493d88c48d57c609a3",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "882.040000",
+          "knownKrw": "1181227.968000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "327.770000",
+          "knownKrw": "438949.584000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "638.340000",
+          "knownKrw": "854864.928000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "171.770000",
+          "knownKrw": "230034.384000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1471.990000",
+          "knownKrw": "1971289.008000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "287.710000",
+          "knownKrw": "385301.232000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-11",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 11,
+      "selectedRows": 11,
+      "withheldRows": 0,
+      "originalSelected": "4252.460000",
+      "normalizedOriginal": "4252.460000",
+      "assignedOriginal": "4252.460000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5694894.432000",
+      "completeKrw": "5694894.432000",
+      "assignedKrw": "5694894.432000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "8ad13f9aac8237310f1c10e6f585a122dd554f4079644c11ef5d0c0748e55cdc",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "1128.910000",
+          "knownKrw": "1511836.272000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "381.490000",
+          "knownKrw": "510891.408000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "695.220000",
+          "knownKrw": "931038.624000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "188.680000",
+          "knownKrw": "252680.256000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1533.880000",
+          "knownKrw": "2054172.096000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "324.280000",
+          "knownKrw": "434275.776000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-12",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 12,
+      "selectedRows": 12,
+      "withheldRows": 0,
+      "originalSelected": "4203.940000",
+      "normalizedOriginal": "4203.940000",
+      "assignedOriginal": "4203.940000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5624871.720000",
+      "completeKrw": "5624871.720000",
+      "assignedKrw": "5624871.720000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "19a6c083fd066cd2f03517d4b4c4c73a49c182db2bb4b818837e671de42d89ca",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1054.490000",
+          "knownKrw": "1410907.620000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "347.630000",
+          "knownKrw": "465128.940000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "840.030000",
+          "knownKrw": "1123960.140000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "210.420000",
+          "knownKrw": "281541.960000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1459.790000",
+          "knownKrw": "1953199.020000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "291.580000",
+          "knownKrw": "390134.040000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-13",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 12,
+      "selectedRows": 12,
+      "withheldRows": 0,
+      "originalSelected": "4102.450000",
+      "normalizedOriginal": "4102.450000",
+      "assignedOriginal": "4102.450000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5480052.710000",
+      "completeKrw": "5480052.710000",
+      "assignedKrw": "5480052.710000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "444287bcc231809d1fedbaba2de4abb617724f9ff2007483b4fadd7c2ebd5055",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1080.580000",
+          "knownKrw": "1443438.764000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "349.770000",
+          "knownKrw": "467222.766000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "879.580000",
+          "knownKrw": "1174942.964000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "167.790000",
+          "knownKrw": "224133.882000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1323.730000",
+          "knownKrw": "1768238.534000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "301.000000",
+          "knownKrw": "402075.800000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-14",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 14,
+      "selectedRows": 14,
+      "withheldRows": 0,
+      "originalSelected": "4967.970000",
+      "normalizedOriginal": "4967.970000",
+      "assignedOriginal": "4967.970000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "6659563.785000",
+      "completeKrw": "6659563.785000",
+      "assignedKrw": "6659563.785000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "4deb6063651a5f785c39f05007334bf08a7929bd03afbc1551b1c8a60fe9175e",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1106.260000",
+          "knownKrw": "1482941.530000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "1001.860000",
+          "knownKrw": "1342993.330000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "280.550000",
+          "knownKrw": "376077.275000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "940.110000",
+          "knownKrw": "1260217.455000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "148.600000",
+          "knownKrw": "199198.300000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1211.780000",
+          "knownKrw": "1624391.090000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "278.810000",
+          "knownKrw": "373744.805000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-15",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 15,
+      "selectedRows": 15,
+      "withheldRows": 0,
+      "originalSelected": "5240.470000",
+      "normalizedOriginal": "5240.470000",
+      "assignedOriginal": "5240.470000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "7014893.142000",
+      "completeKrw": "7014893.142000",
+      "assignedKrw": "7014893.142000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "5b7765ff9983539d70ada95dee87d962b8f2edec0adb075d71163ecf48081aba",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "1027.270000",
+          "knownKrw": "1375103.622000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "1321.510000",
+          "knownKrw": "1768973.286000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 2,
+          "originalAmount": "188.320000",
+          "knownKrw": "252085.152000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "1008.770000",
+          "knownKrw": "1350339.522000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "141.280000",
+          "knownKrw": "189117.408000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "1257.330000",
+          "knownKrw": "1683061.938000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "295.990000",
+          "knownKrw": "396212.214000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-16",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 14,
+      "selectedRows": 14,
+      "withheldRows": 0,
+      "originalSelected": "4743.110000",
+      "normalizedOriginal": "4743.110000",
+      "assignedOriginal": "4743.110000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "6396083.835000",
+      "completeKrw": "6396083.835000",
+      "assignedKrw": "6396083.835000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "63ea6a82d3ce77d146e1d60342de585a933f0f858b89680e093e74de28eed3f0",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "823.280000",
+          "knownKrw": "1110193.080000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "1340.160000",
+          "knownKrw": "1807205.760000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "146.390000",
+          "knownKrw": "197406.915000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "777.790000",
+          "knownKrw": "1048849.815000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 2,
+          "originalAmount": "98.040000",
+          "knownKrw": "132206.940000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "1258.490000",
+          "knownKrw": "1697073.765000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "298.960000",
+          "knownKrw": "403147.560000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-17",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 13,
+      "selectedRows": 13,
+      "withheldRows": 0,
+      "originalSelected": "4369.640000",
+      "normalizedOriginal": "4369.640000",
+      "assignedOriginal": "4369.640000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5892459.540000",
+      "completeKrw": "5892459.540000",
+      "assignedKrw": "5892459.540000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "b2a9866dc7eeea0da24ac72d47365cdf68b04f88dd1cbb33c7696e767b396c6e",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 3,
+          "originalAmount": "681.180000",
+          "knownKrw": "918571.230000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "1402.780000",
+          "knownKrw": "1891648.830000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "75.160000",
+          "knownKrw": "101353.260000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "645.230000",
+          "knownKrw": "870092.655000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "94.370000",
+          "knownKrw": "127257.945000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 4,
+          "originalAmount": "1223.940000",
+          "knownKrw": "1650483.090000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "246.980000",
+          "knownKrw": "333052.530000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-18",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 10,
+      "selectedRows": 10,
+      "withheldRows": 0,
+      "originalSelected": "3837.170000",
+      "normalizedOriginal": "3837.170000",
+      "assignedOriginal": "3837.170000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5174423.745000",
+      "completeKrw": "5174423.745000",
+      "assignedKrw": "5174423.745000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "5b456679991f1f6434e391d768c07e67aae72118254505425930de15b6094f42",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "566.810000",
+          "knownKrw": "764343.285000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "902.840000",
+          "knownKrw": "1217479.740000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "679.930000",
+          "knownKrw": "916885.605000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "115.120000",
+          "knownKrw": "155239.320000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1337.930000",
+          "knownKrw": "1804198.605000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "234.540000",
+          "knownKrw": "316277.190000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-19",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 11,
+      "selectedRows": 11,
+      "withheldRows": 0,
+      "originalSelected": "3356.450000",
+      "normalizedOriginal": "3356.450000",
+      "assignedOriginal": "3356.450000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "4505698.480000",
+      "completeKrw": "4505698.480000",
+      "assignedKrw": "4505698.480000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "53b81c2acf88653594cd9916898496e79ba899c905902b68893f679f43123ea6",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "472.790000",
+          "knownKrw": "634673.296000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "674.730000",
+          "knownKrw": "905757.552000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "160.520000",
+          "knownKrw": "215482.048000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "585.070000",
+          "knownKrw": "785397.968000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "75.850000",
+          "knownKrw": "101821.040000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1180.540000",
+          "knownKrw": "1584756.896000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "206.950000",
+          "knownKrw": "277809.680000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-20",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 12,
+      "selectedRows": 12,
+      "withheldRows": 0,
+      "originalSelected": "3171.850000",
+      "normalizedOriginal": "3171.850000",
+      "assignedOriginal": "3171.850000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "4225221.385000",
+      "completeKrw": "4225221.385000",
+      "assignedKrw": "4225221.385000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "43f60540d5c0fb63c15d58a02f801cdae3956c6d0fced6395b3d8258ac8b757f",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "392.890000",
+          "knownKrw": "523368.769000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "640.240000",
+          "knownKrw": "852863.704000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "165.150000",
+          "knownKrw": "219996.315000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "546.070000",
+          "knownKrw": "727419.847000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "56.270000",
+          "knownKrw": "74957.267000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 1,
+          "originalAmount": "33.620000",
+          "knownKrw": "44785.202000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1144.170000",
+          "knownKrw": "1524148.857000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "193.440000",
+          "knownKrw": "257681.424000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-21",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 13,
+      "selectedRows": 13,
+      "withheldRows": 0,
+      "originalSelected": "3035.470000",
+      "normalizedOriginal": "3035.470000",
+      "assignedOriginal": "3035.470000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "4031104.160000",
+      "completeKrw": "4031104.160000",
+      "assignedKrw": "4031104.160000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "60e3205e4b7c577ad6e9c690a4e461fdf1c446e205602dc40889651245b5c2c2",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "529.380000",
+          "knownKrw": "703016.640000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "465.630000",
+          "knownKrw": "618356.640000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "87.340000",
+          "knownKrw": "115987.520000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "508.110000",
+          "knownKrw": "674770.080000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 1,
+          "originalAmount": "38.870000",
+          "knownKrw": "51619.360000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "34.260000",
+          "knownKrw": "45497.280000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 1,
+          "originalAmount": "56.670000",
+          "knownKrw": "75257.760000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1127.810000",
+          "knownKrw": "1497731.680000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "187.400000",
+          "knownKrw": "248867.200000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "LEGACY_UNBOUND",
+      "date": "2026-10-22",
+      "selectedSource": "CSV",
+      "complete": true,
+      "candidateRows": 14,
+      "selectedRows": 14,
+      "withheldRows": 0,
+      "originalSelected": "2729.530000",
+      "normalizedOriginal": "2729.530000",
+      "assignedOriginal": "2729.530000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "3617992.015000",
+      "completeKrw": "3617992.015000",
+      "assignedKrw": "3617992.015000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "3cfb9b0a49aa6d10c08d1de86d0412bc22cdb5ee1a1b66ad982f6ae2f6010ead",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": [
+        {
+          "productName": "다이어트양말",
+          "rows": 1,
+          "originalAmount": "33.900000",
+          "knownKrw": "44934.450000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 2,
+          "originalAmount": "492.630000",
+          "knownKrw": "652981.065000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "179.580000",
+          "knownKrw": "238033.290000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 1,
+          "originalAmount": "103.540000",
+          "knownKrw": "137242.270000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 1,
+          "originalAmount": "471.320000",
+          "knownKrw": "624734.660000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 1,
+          "originalAmount": "106.180000",
+          "knownKrw": "140741.590000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 1,
+          "originalAmount": "38.740000",
+          "knownKrw": "51349.870000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 1,
+          "originalAmount": "33.320000",
+          "knownKrw": "44165.660000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 3,
+          "originalAmount": "1082.230000",
+          "knownKrw": "1434495.865000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 1,
+          "originalAmount": "188.090000",
+          "knownKrw": "249313.295000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-23",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 200,
+      "selectedRows": 200,
+      "withheldRows": 0,
+      "originalSelected": "2772.430000",
+      "normalizedOriginal": "2772.430000",
+      "assignedOriginal": "2772.430000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "3672360.778000",
+      "completeKrw": "3672360.778000",
+      "assignedKrw": "3672360.778000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "49b8fa4ff993daa5ee33a1dce82bc48685432c105c54222998723a14c606756c",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "노필수면안대",
+          "rows": 14,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "다이어트양말",
+          "rows": 1,
+          "originalAmount": "82.160000",
+          "knownKrw": "108829.136000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 22,
+          "originalAmount": "492.420000",
+          "knownKrw": "652259.532000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "러닝조끼",
+          "rows": 1,
+          "originalAmount": "23.050000",
+          "knownKrw": "30532.030000"
+        },
+        {
+          "productName": "버닝 슬라이드",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 42,
+          "originalAmount": "162.020000",
+          "knownKrw": "214611.692000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "431.690000",
+          "knownKrw": "571816.574000"
+        },
+        {
+          "productName": "뷰티레그보드",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "스카이스텝",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 1,
+          "originalAmount": "71.640000",
+          "knownKrw": "94894.344000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 25,
+          "originalAmount": "11.590000",
+          "knownKrw": "15352.114000"
+        },
+        {
+          "productName": "유쉴드마스크",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "자이로볼",
+          "rows": 20,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트스케이트",
+          "rows": 7,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 10,
+          "originalAmount": "115.110000",
+          "knownKrw": "152474.706000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 21,
+          "originalAmount": "1204.250000",
+          "knownKrw": "1595149.550000"
+        },
+        {
+          "productName": "풀업밴드",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 10,
+          "originalAmount": "178.500000",
+          "knownKrw": "236441.100000"
+        },
+        {
+          "productName": "한줄보호대",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-24",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 200,
+      "selectedRows": 200,
+      "withheldRows": 0,
+      "originalSelected": "3253.260000",
+      "normalizedOriginal": "3253.260000",
+      "assignedOriginal": "3253.260000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "4309268.196000",
+      "completeKrw": "4309268.196000",
+      "assignedKrw": "4309268.196000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "32d372701e41a06596c1ebc059bdfb30a66a79bfc2ccfdc1cfb16b7852a2bcc6",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "노필수면안대",
+          "rows": 14,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "다이어트양말",
+          "rows": 1,
+          "originalAmount": "151.670000",
+          "knownKrw": "200902.082000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 22,
+          "originalAmount": "552.030000",
+          "knownKrw": "731218.938000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "러닝조끼",
+          "rows": 1,
+          "originalAmount": "42.860000",
+          "knownKrw": "56772.356000"
+        },
+        {
+          "productName": "버닝 슬라이드",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 42,
+          "originalAmount": "167.940000",
+          "knownKrw": "222453.324000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "455.080000",
+          "knownKrw": "602798.968000"
+        },
+        {
+          "productName": "뷰티레그보드",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "스카이스텝",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 1,
+          "originalAmount": "116.980000",
+          "knownKrw": "154951.708000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 25,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "유쉴드마스크",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "자이로볼",
+          "rows": 20,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트스케이트",
+          "rows": 7,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 10,
+          "originalAmount": "150.600000",
+          "knownKrw": "199484.760000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 21,
+          "originalAmount": "1405.160000",
+          "knownKrw": "1861274.936000"
+        },
+        {
+          "productName": "풀업밴드",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 10,
+          "originalAmount": "210.940000",
+          "knownKrw": "279411.124000"
+        },
+        {
+          "productName": "한줄보호대",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-25",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 200,
+      "selectedRows": 200,
+      "withheldRows": 0,
+      "originalSelected": "3929.480000",
+      "normalizedOriginal": "3929.480000",
+      "assignedOriginal": "3929.480000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5204989.208000",
+      "completeKrw": "5204989.208000",
+      "assignedKrw": "5204989.208000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "8c1e59d7ecfe844e6369acedf00c741e086efd6e5e980057fe1f95e0f3d9eee1",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "노필수면안대",
+          "rows": 14,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "다이어트양말",
+          "rows": 1,
+          "originalAmount": "470.190000",
+          "knownKrw": "622813.674000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 22,
+          "originalAmount": "569.960000",
+          "knownKrw": "754969.016000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "러닝조끼",
+          "rows": 1,
+          "originalAmount": "96.370000",
+          "knownKrw": "127651.702000"
+        },
+        {
+          "productName": "버닝 슬라이드",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 42,
+          "originalAmount": "175.200000",
+          "knownKrw": "232069.920000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "481.530000",
+          "knownKrw": "637834.638000"
+        },
+        {
+          "productName": "뷰티레그보드",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "스카이스텝",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 1,
+          "originalAmount": "65.090000",
+          "knownKrw": "86218.214000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 25,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "유쉴드마스크",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "자이로볼",
+          "rows": 20,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트스케이트",
+          "rows": 7,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 10,
+          "originalAmount": "245.460000",
+          "knownKrw": "325136.316000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 21,
+          "originalAmount": "1585.830000",
+          "knownKrw": "2100590.418000"
+        },
+        {
+          "productName": "풀업밴드",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 10,
+          "originalAmount": "239.850000",
+          "knownKrw": "317705.310000"
+        },
+        {
+          "productName": "한줄보호대",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        }
+      ]
+    },
+    {
+      "platform": "META",
+      "scope": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-26",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 200,
+      "selectedRows": 200,
+      "withheldRows": 0,
+      "originalSelected": "3836.400000",
+      "normalizedOriginal": "3836.400000",
+      "assignedOriginal": "3836.400000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "5080544.520000",
+      "completeKrw": "5080544.520000",
+      "assignedKrw": "5080544.520000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "86c1cde045b30513acc8ae8629f926b31555db5b475c05ea3cf0df09a91d343b",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "노필수면안대",
+          "rows": 14,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "다이어트양말",
+          "rows": 1,
+          "originalAmount": "518.500000",
+          "knownKrw": "686649.550000"
+        },
+        {
+          "productName": "두줄무릎보호대",
+          "rows": 22,
+          "originalAmount": "545.300000",
+          "knownKrw": "722140.790000"
+        },
+        {
+          "productName": "러닝양말",
+          "rows": 2,
+          "originalAmount": "181.670000",
+          "knownKrw": "240585.581000"
+        },
+        {
+          "productName": "러닝조끼",
+          "rows": 1,
+          "originalAmount": "137.010000",
+          "knownKrw": "181442.343000"
+        },
+        {
+          "productName": "버닝 슬라이드",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "버닝웨이브바",
+          "rows": 42,
+          "originalAmount": "171.570000",
+          "knownKrw": "227210.151000"
+        },
+        {
+          "productName": "베놈무릎보호대",
+          "rows": 2,
+          "originalAmount": "447.090000",
+          "knownKrw": "592081.287000"
+        },
+        {
+          "productName": "뷰티레그보드",
+          "rows": 2,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "스카이스텝",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "아이언볼",
+          "rows": 1,
+          "originalAmount": "54.390000",
+          "knownKrw": "72028.677000"
+        },
+        {
+          "productName": "에어스텝퍼",
+          "rows": 25,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "유쉴드마스크",
+          "rows": 4,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "자이로볼",
+          "rows": 20,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트스케이트",
+          "rows": 7,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "퍼펙트슬라이드",
+          "rows": 10,
+          "originalAmount": "157.530000",
+          "knownKrw": "208616.979000"
+        },
+        {
+          "productName": "풀업바",
+          "rows": 21,
+          "originalAmount": "1439.430000",
+          "knownKrw": "1906237.149000"
+        },
+        {
+          "productName": "풀업밴드",
+          "rows": 1,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        },
+        {
+          "productName": "플로우라이트",
+          "rows": 10,
+          "originalAmount": "183.910000",
+          "knownKrw": "243552.013000"
+        },
+        {
+          "productName": "한줄보호대",
+          "rows": 6,
+          "originalAmount": "0.000000",
+          "knownKrw": "0.000000"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-20",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 5,
+      "selectedRows": 5,
+      "withheldRows": 0,
+      "originalSelected": "275927.452229",
+      "normalizedOriginal": "275927.452229",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "275927.452229",
+      "knownKrw": "275927.452229",
+      "completeKrw": "275927.452229",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "275927.452229",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "0b42a011ace13b76c3e97e4e83a61d87dfa9c4e1b850d7ab240469eddb1acf02",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 5,
+          "originalAmount": "275927.452229",
+          "knownKrw": "275927.452229"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-21",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 7,
+      "selectedRows": 7,
+      "withheldRows": 0,
+      "originalSelected": "280709.070369",
+      "normalizedOriginal": "280709.070369",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "280709.070369",
+      "knownKrw": "280709.070369",
+      "completeKrw": "280709.070369",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "280709.070369",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "d02c0ae5121f0ebe2e31cc974c83de86158f1339e63f174336273ad3c329fddc",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 7,
+          "originalAmount": "280709.070369",
+          "knownKrw": "280709.070369"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-22",
+      "selectedSource": "API",
+      "complete": false,
+      "candidateRows": 0,
+      "selectedRows": 0,
+      "withheldRows": 0,
+      "originalSelected": "0.000000",
+      "normalizedOriginal": "0.000000",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "0.000000",
+      "completeKrw": null,
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "f736da0e9e072b3519b6df79fff33b938d42a9e0a9aa8aa0161382d8156834d9",
+      "issues": [
+        "GOOGLE_CURRENT_LINEAGE_UNVERIFIED",
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": []
+    },
+    {
+      "platform": "GOOGLE",
+      "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-23",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 5,
+      "selectedRows": 5,
+      "withheldRows": 0,
+      "originalSelected": "227367.804328",
+      "normalizedOriginal": "227367.804328",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "227367.804328",
+      "knownKrw": "227367.804328",
+      "completeKrw": "227367.804328",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "227367.804328",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "384bf09cf83f74210f145e05413b94fa129e1c4f1c049af3aaaea6b9215314db",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 5,
+          "originalAmount": "227367.804328",
+          "knownKrw": "227367.804328"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-24",
+      "selectedSource": "API",
+      "complete": false,
+      "candidateRows": 0,
+      "selectedRows": 0,
+      "withheldRows": 0,
+      "originalSelected": "0.000000",
+      "normalizedOriginal": "0.000000",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "0.000000",
+      "knownKrw": "0.000000",
+      "completeKrw": null,
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "0.000000",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "fe89db0d8458a9ea362ba17370bf24f06be600fa2a5d98035d67369ec9cc8fc8",
+      "issues": [
+        "GOOGLE_CURRENT_LINEAGE_UNVERIFIED",
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF"
+      ],
+      "products": []
+    },
+    {
+      "platform": "GOOGLE",
+      "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-25",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 5,
+      "selectedRows": 5,
+      "withheldRows": 0,
+      "originalSelected": "216456.197719",
+      "normalizedOriginal": "216456.197719",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "216456.197719",
+      "knownKrw": "216456.197719",
+      "completeKrw": "216456.197719",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "216456.197719",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "3d084d75d3390f4cac3df57cfaa51c2eb9113f2ab14da6dc15abb57a726f63c6",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 5,
+          "originalAmount": "216456.197719",
+          "knownKrw": "216456.197719"
+        }
+      ]
+    },
+    {
+      "platform": "GOOGLE",
+      "scope": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-26",
+      "selectedSource": "API",
+      "complete": true,
+      "candidateRows": 5,
+      "selectedRows": 5,
+      "withheldRows": 0,
+      "originalSelected": "243012.033468",
+      "normalizedOriginal": "243012.033468",
+      "assignedOriginal": "0.000000",
+      "unmatchedOriginal": "243012.033468",
+      "knownKrw": "243012.033468",
+      "completeKrw": "243012.033468",
+      "assignedKrw": "0.000000",
+      "unmatchedKrw": "243012.033468",
+      "missingFxOriginal": "0.000000",
+      "fingerprint": "9070876b7c16cce38a47643d9759b3e501d4fa3a5c0c0f01ce90ce0c757b5bd9",
+      "issues": [
+        "MANAGEMENT_CAPTURE_NOT_RUNTIME_PERMISSION_PROOF",
+        "NAME_UNMATCHED"
+      ],
+      "products": [
+        {
+          "productName": null,
+          "rows": 5,
+          "originalAmount": "243012.033468",
+          "knownKrw": "243012.033468"
+        }
+      ]
+    }
+  ],
+  "previousGoogleEvidenceSha256": "4ad641b60d52f9b74a4b187b9ad4a8c9ba131d948bcd64ffc97015b9e61de9a9",
+  "googleBaselineDaily": [
+    {
+      "date": "2026-10-20",
+      "previousRows": 5,
+      "currentRows": 5,
+      "previousAmount": "275927.452229",
+      "currentAmount": "275927.452229",
+      "previousDateState": "CAPTURED_ROWS",
+      "difference": "0.000000",
+      "comparableNameDifferences": [
+        {
+          "name": "러닝 양말 - 2026-10-20",
+          "difference": "0.000000"
+        },
+        {
+          "name": "버닝 웨이브바 - 2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "에어스텝퍼_ 2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "풀업바_2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "플로우라이트- 2026-10-20",
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-21",
+      "previousRows": 0,
+      "currentRows": 7,
+      "previousAmount": "0.000000",
+      "currentAmount": "280709.070369",
+      "previousDateState": "NO_CAPTURE_NOT_CONFIRMED_ZERO",
+      "difference": "280709.070369",
+      "comparableNameDifferences": []
+    },
+    {
+      "date": "2026-10-23",
+      "previousRows": 5,
+      "currentRows": 5,
+      "previousAmount": "227367.804328",
+      "currentAmount": "227367.804328",
+      "previousDateState": "CAPTURED_ROWS",
+      "difference": "0.000000",
+      "comparableNameDifferences": [
+        {
+          "name": "두줄무릎보호대 - 2026-10-21",
+          "difference": "0.000000"
+        },
+        {
+          "name": "버닝 웨이브바 - 2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "자이로볼 아이언- 2026-10-23",
+          "difference": "0.000000"
+        },
+        {
+          "name": "풀업바_2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "플로우라이트- 2026-10-20",
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "previousRows": 5,
+      "currentRows": 5,
+      "previousAmount": "216456.197719",
+      "currentAmount": "216456.197719",
+      "previousDateState": "CAPTURED_ROWS",
+      "difference": "0.000000",
+      "comparableNameDifferences": [
+        {
+          "name": "두줄무릎보호대 - 2026-10-21",
+          "difference": "0.000000"
+        },
+        {
+          "name": "버닝 웨이브바 - 2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "자이로볼 아이언- 2026-10-23",
+          "difference": "0.000000"
+        },
+        {
+          "name": "풀업바_2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "플로우라이트- 2026-10-20",
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "previousRows": 5,
+      "currentRows": 5,
+      "previousAmount": "243012.033468",
+      "currentAmount": "243012.033468",
+      "previousDateState": "CAPTURED_ROWS",
+      "difference": "0.000000",
+      "comparableNameDifferences": [
+        {
+          "name": "두줄무릎보호대 - 2026-10-21",
+          "difference": "0.000000"
+        },
+        {
+          "name": "버닝 웨이브바 - 2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "자이로볼 아이언- 2026-10-23",
+          "difference": "0.000000"
+        },
+        {
+          "name": "풀업바_2026-10-19",
+          "difference": "0.000000"
+        },
+        {
+          "name": "플로우라이트- 2026-10-20",
+          "difference": "0.000000"
+        }
+      ]
+    }
+  ],
+  "skippedUnsupportedMetaRules": [],
+  "limitations": [
+    "Management READ ONLY capture proves source observation, not actual runtime reader permissions.",
+    "Capture queries use independent READ ONLY statements; they do not establish a shared Repeatable Read snapshot.",
+    "Policy-enabled selection is replayed explicitly; deployment environment flags are not read by this offline script.",
+    "Google historical name rules were not inferred or backdated. Unclassified spend remains in unmatched amounts.",
+    "Absent dates are not confirmed zero. A 30-day query range does not establish 30 complete collection days.",
+    "Meta dated legacy name rules are projected without production migration; unsupported rule syntax remains unclassified."
+  ]
+}

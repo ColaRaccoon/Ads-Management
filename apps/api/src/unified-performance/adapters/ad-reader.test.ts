@@ -13,7 +13,7 @@ const request = (platform: "META" | "GOOGLE"): AdapterRequest => ({ contractVers
   calculationVersion: "c", fxVersion: "f", sourcePolicySnapshot: {}, sourceWatermarks: {}, cursor: null, limit: 100 });
 const decimal = (value: string) => new Prisma.Decimal(value);
 
-function fixture(platform: "META" | "GOOGLE", options: { rows?: number; badLink?: boolean; provider?: string; lastFailed?: boolean } = {}) {
+function fixture(platform: "META" | "GOOGLE", options: { rows?: number; badLink?: boolean; badMetaProof?: boolean; provider?: string; lastFailed?: boolean } = {}) {
   const reads: string[] = [];
   const count = options.rows ?? 1;
   const coverage = { connectionId: scope, dataKind: platform === "META" ? "META_ADSET" : "GOOGLE_CAMPAIGN", metricDate: date,
@@ -35,7 +35,7 @@ function fixture(platform: "META" | "GOOGLE", options: { rows?: number; badLink?
     sourceRecordLink: { findMany: async () => google.map(row => ({ connectionId: scope, recordId: row.id,
       version: options.badLink ? 1 : 2, syncRunId: "old-run" })) },
     runUnit: { findMany: async () => [{ runId: "success", unitKey: "2026-10-26", status: "SUCCEEDED", publishedCount: count }] },
-    $queryRaw: async () => [{ dataKind: "META_ADSET", connectionId: scope, metricDate: date }]
+    $queryRaw: async () => options.badMetaProof ? [] : [{ dataKind: "META_ADSET", connectionId: scope, metricDate: date }]
   } as unknown as Prisma.TransactionClient;
   const management = { snapshot: async () => ({ products: [{ canonicalName: "보호대", active: true }], rules: [], versions }) } as unknown as UnifiedManagementRepository;
   return { tx, management, reads };
@@ -51,6 +51,44 @@ test("Meta reader selects API over overlapping CSV and never queries ad-level ro
   } finally { if (previous === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = previous; }
 });
 
+test("Meta unverified API rows retain observed coverage without becoming spend or a zero day", async () => {
+  const previous = process.env.DAILY_SYNC_FEATURE_ENABLED; process.env.DAILY_SYNC_FEATURE_ENABLED = "true";
+  try {
+    const broken = fixture("META", { badMetaProof: true });
+    const batch = await readAdDay(broken.tx, broken.management, request("META"), "META");
+    assert.equal(batch.adSpends.length, 0);
+    assert.equal(batch.coverage[0].rowsPresent, 1);
+    assert.equal(batch.coverage[0].collectionState, "PARTIAL");
+    assert.equal(batch.coverage[0].zeroConfirmed, false);
+    assert.ok(batch.coverage[0].quality.issues.includes("SOURCE_SELECTION_REQUIRED"));
+    assert.ok(batch.sourceControlTotals.every(control => control.selectedAmount === null));
+    const changed = fixture("META", { rows: 2, badMetaProof: true });
+    const changedBatch = await readAdDay(changed.tx, changed.management, request("META"), "META");
+    assert.notEqual(batch.sourceFingerprint, changedBatch.sourceFingerprint);
+  } finally { if (previous === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = previous; }
+});
+
+test("Meta API zero requires intact publish proof and source-off reads only overlapping CSV", async () => {
+  const previous = process.env.DAILY_SYNC_FEATURE_ENABLED; process.env.DAILY_SYNC_FEATURE_ENABLED = "true";
+  try {
+    const zero = fixture("META", { rows: 0 });
+    const zeroBatch = await readAdDay(zero.tx, zero.management, request("META"), "META");
+    assert.equal(zeroBatch.coverage[0].zeroConfirmed, true);
+    assert.equal(zeroBatch.sourceControlTotals[0].selectedAmount, "0.000000");
+    const missing = fixture("META", { rows: 0, badMetaProof: true });
+    const missingBatch = await readAdDay(missing.tx, missing.management, request("META"), "META");
+    assert.equal(missingBatch.coverage[0].zeroConfirmed, false);
+    assert.equal(missingBatch.sourceControlTotals[0].selectedAmount, null);
+    process.env.DAILY_SYNC_FEATURE_ENABLED = "false";
+    const csv = fixture("META");
+    const csvBatch = await readAdDay(csv.tx, csv.management, request("META"), "META");
+    assert.equal(csvBatch.adSpends.length, 1);
+    assert.equal(csvBatch.adSpends[0].ref.selectedSource, "CSV");
+    assert.equal(csvBatch.adSpends[0].originalAmount, "999.000000");
+    assert.equal(csvBatch.sourceControlTotals[0].excludedByPolicyRows, 1);
+  } finally { if (previous === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = previous; }
+});
+
 test("Google unchanged reread accepts per-row earlier run/version and a later failed attempt keeps prior success", async () => {
   const previous = process.env.DAILY_SYNC_FEATURE_ENABLED; process.env.DAILY_SYNC_FEATURE_ENABLED = "true";
   try {
@@ -60,6 +98,25 @@ test("Google unchanged reread accepts per-row earlier run/version and a later fa
     const zero = fixture("GOOGLE", { rows: 0 });
     const zeroBatch = await readAdDay(zero.tx, zero.management, request("GOOGLE"), "GOOGLE");
     assert.equal(zeroBatch.coverage[0].zeroConfirmed, true); assert.equal(zeroBatch.sourceControlTotals[0].selectedAmount, "0.000000");
+  } finally { if (previous === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = previous; }
+});
+
+test("legacy Meta policy evidence fingerprint does not depend on database row order", async () => {
+  const previous = process.env.DAILY_SYNC_FEATURE_ENABLED; process.env.DAILY_SYNC_FEATURE_ENABLED = "true";
+  try {
+    const policies = [scope, "20000000-0000-4000-8000-000000000001"].map(connectionId => ({
+      connectionId, dataKind: "META_ADSET", fromDate: date, toDate: null, primarySource: "CSV"
+    }));
+    const fingerprints: string[] = [];
+    for (const ordered of [policies, [...policies].reverse()]) {
+      const f = fixture("META", { rows: 0 });
+      f.tx.sourcePolicy.findMany = (async () => ordered) as typeof f.tx.sourcePolicy.findMany;
+      const fingerprint = (await readAdDay(f.tx, f.management, { ...request("META"), scopeKeys: ["LEGACY_UNBOUND"] }, "META")).sourceFingerprint;
+      assert.notEqual(fingerprint, null);
+      assert.ok(fingerprint);
+      fingerprints.push(fingerprint);
+    }
+    assert.equal(fingerprints[0], fingerprints[1]);
   } finally { if (previous === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = previous; }
 });
 

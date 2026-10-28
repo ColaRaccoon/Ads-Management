@@ -1,0 +1,30 @@
+[
+  {
+    "name": "ads_connections",
+    "sql": "SELECT id::text,provider::text,currency_code,time_zone FROM meta_ads.source_connections WHERE provider::text IN ('META','GOOGLE') ORDER BY id"
+  },
+  {
+    "name": "ads_policies",
+    "sql": "SELECT connection_id::text,data_kind::text,from_date::text,to_date::text,primary_source::text,version FROM meta_ads.source_policies WHERE data_kind::text IN ('META_ADSET','GOOGLE_CAMPAIGN') AND from_date<='2026-10-26' AND (to_date IS NULL OR to_date>'2026-09-27') ORDER BY connection_id,data_kind,from_date"
+  },
+  {
+    "name": "ads_coverage",
+    "sql": "SELECT c.connection_id::text,c.data_kind::text,c.metric_date::text AS date,c.source::text,c.state::text,md5(c.last_success_run_id::text) AS last_success_run,c.last_success_at,c.row_count,c.total_amount::text,c.warning_codes,(SELECT count(*)::int FROM meta_ads.run_units u JOIN meta_ads.sync_runs s ON s.id=u.run_id WHERE u.run_id=c.last_success_run_id AND s.connection_id=c.connection_id AND u.unit_key=c.metric_date::text AND u.status::text='SUCCEEDED') AS publish_unit_count,(SELECT max(u.published_count) FROM meta_ads.run_units u JOIN meta_ads.sync_runs s ON s.id=u.run_id WHERE u.run_id=c.last_success_run_id AND s.connection_id=c.connection_id AND u.unit_key=c.metric_date::text AND u.status::text='SUCCEEDED') AS published_count FROM meta_ads.source_coverage c WHERE c.data_kind::text IN ('META_ADSET','GOOGLE_CAMPAIGN') AND c.metric_date BETWEEN '2026-09-27' AND '2026-10-26' ORDER BY c.connection_id,c.data_kind,c.metric_date"
+  },
+  {
+    "name": "meta_rows",
+    "sql": "SELECT count(*)::text AS row_count,coalesce(jsonb_agg(to_jsonb(r) ORDER BY r.date,r.id),'[]'::jsonb) AS rows FROM (SELECT md5(m.id::text) AS id,coalesce(m.connection_id::text,'LEGACY_UNBOUND') AS scope,m.metric_date::text AS date,md5(m.meta_adset_id::text) AS entity_key,m.adset_name AS original_name,m.source::text,m.import_version AS version,md5(m.source_revision) AS revision,md5(coalesce(m.sync_run_id::text,m.upload_batch_id::text)) AS run_or_upload,m.spend_usd::text AS amount,m.purchase_value_usd::text AS conversion_revenue,m.created_at AT TIME ZONE 'UTC' AS observed_at,m.updated_at AT TIME ZONE 'UTC' AS updated_at,(SELECT count(*)::int FROM meta_ads.source_record_links l WHERE l.record_id=m.id AND l.connection_id=m.connection_id AND l.data_kind::text='META_ADSET' AND l.source::text='API' AND l.record_table='meta_adset_daily_metrics' AND l.is_current) AS link_count,(SELECT count(*)::int FROM meta_ads.source_record_links l WHERE l.record_id=m.id AND l.connection_id=m.connection_id AND l.data_kind::text='META_ADSET' AND l.source::text='API' AND l.record_table='meta_adset_daily_metrics' AND l.is_current AND l.version=m.import_version) AS valid_links FROM meta_ads.meta_adset_daily_metrics m WHERE m.is_current AND m.metric_date BETWEEN '2026-09-27' AND '2026-10-26') r"
+  },
+  {
+    "name": "google_rows",
+    "sql": "SELECT count(*)::text AS row_count,coalesce(jsonb_agg(to_jsonb(r) ORDER BY r.date,r.id),'[]'::jsonb) AS rows FROM (SELECT md5(m.id::text) AS id,m.connection_id::text AS scope,m.metric_date::text AS date,md5(m.campaign_id) AS entity_key,m.campaign_name AS original_name,m.source::text,m.version,NULL::text AS revision,md5(m.sync_run_id::text) AS run_or_upload,m.cost_micros::text AS amount,m.conversion_value::text AS conversion_revenue,m.fetched_at AS observed_at,m.fetched_at AS updated_at,(SELECT count(*)::int FROM meta_ads.source_record_links l WHERE l.record_id=m.id AND l.connection_id=m.connection_id AND l.data_kind::text='GOOGLE_CAMPAIGN' AND l.source::text='API' AND l.record_table='google_campaign_daily_costs' AND l.is_current) AS link_count,(SELECT count(*)::int FROM meta_ads.source_record_links l WHERE l.record_id=m.id AND l.connection_id=m.connection_id AND l.data_kind::text='GOOGLE_CAMPAIGN' AND l.source::text='API' AND l.record_table='google_campaign_daily_costs' AND l.is_current AND l.version=m.version AND l.sync_run_id=m.sync_run_id) AS valid_links FROM meta_ads.google_campaign_daily_costs m WHERE m.is_current AND m.metric_date BETWEEN '2026-09-27' AND '2026-10-26') r"
+  },
+  {
+    "name": "ads_rates",
+    "sql": "SELECT rate_date::text,source_date::text,base_currency,quote_currency,rate::text,provider,fallback_type::text FROM meta_ads.exchange_rates WHERE rate_date BETWEEN '2026-09-27' AND '2026-10-26' AND quote_currency='KRW' AND provider='KOREA_EXIM' ORDER BY rate_date,base_currency"
+  },
+  {
+    "name": "ads_name_cost_rules",
+    "sql": "SELECT (SELECT coalesce(jsonb_agg(jsonb_build_object('canonicalName',p.display_name,'active',p.is_active) ORDER BY p.id),'[]'::jsonb) FROM meta_ads.products p) AS products,(SELECT coalesce(jsonb_agg(jsonb_build_object('id',md5(r.id::text),'product_name',p.display_name,'match_type',r.match_type::text,'pattern',r.pattern,'valid_from',r.valid_from::text,'valid_to',r.valid_to::text,'active',r.is_active) ORDER BY r.id),'[]'::jsonb) FROM meta_ads.product_match_rules r JOIN meta_ads.products p ON p.id=r.product_id WHERE r.valid_from<='2026-10-26' AND (r.valid_to IS NULL OR r.valid_to>='2026-09-27')) AS name_rules,(SELECT coalesce(jsonb_agg(jsonb_build_object('id',md5(c.id::text),'product_name',p.display_name,'active',p.is_active,'from',c.effective_from::text,'to',c.effective_to::text,'rate',c.fx_rate_krw_per_usd::text) ORDER BY c.id),'[]'::jsonb) FROM meta_ads.product_cost_rules c JOIN meta_ads.products p ON p.id=c.product_id WHERE c.effective_from<='2026-10-26' AND (c.effective_to IS NULL OR c.effective_to>='2026-09-27')) AS cost_rules"
+  }
+]

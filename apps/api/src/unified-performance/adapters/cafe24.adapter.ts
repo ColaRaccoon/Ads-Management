@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../common/prisma.service";
 import { createSourceReadContext, selectCurrentSourceRows } from "../../common/source-read-policy";
 import { hasCafe24CouponPaymentToken } from "../../domain/cafe24-coupon-matcher";
+import { normalizeCafe24Text } from "../../domain/cafe24-matcher";
 import { assertAdapterBatch, assertAdapterRequest } from "../adapter-contract";
 import { ExactDecimal as D, money, quantizeMoney } from "../domain/decimal";
 import { assertBusinessDate, normalizeProductName, resolveProductName, type NameRule } from "../domain/product-name-resolver";
@@ -15,17 +16,21 @@ import { cafe24OrderCoupon, type Cafe24CouponPolicy } from "./cafe24-coupon";
 type Configuration = Awaited<ReturnType<UnifiedManagementRepository["snapshot"]>>;
 const day = (v: Date) => v.toISOString().slice(0, 10);
 const hash = (v: unknown) => createHash("sha256").update(JSON.stringify(v)).digest("hex");
+const byId = <T extends { id: string }>(rows: readonly T[]) => [...rows].sort((a, b) => a.id.localeCompare(b.id));
 const fields = { id: true, connectionId: true, source: true, syncRunId: true, uploadBatchId: true,
-  orderLineKey: true, orderNo: true, productNo: true, productName: true, optionName: true,
+  orderLineKey: true, orderNo: true, productNo: true, productName: true, optionName: true, optionValue: true,
   quantity: true, salePriceKrw: true, totalOrderKrw: true, totalPaidKrw: true, paymentMethod: true,
   providerCouponSignal: true, actualOrderPriceKrw: true, actualShippingFeeKrw: true,
   orderDate: true, importVersion: true, validationStatus: true, createdAt: true, providerUpdatedAt: true,
   sourceRowHash: true } satisfies Prisma.Cafe24OrderLineSelect;
-export type Cafe24SelectedLine = Prisma.Cafe24OrderLineGetPayload<{ select: typeof fields }>;
+type SelectedLine = Prisma.Cafe24OrderLineGetPayload<{ select: typeof fields }>;
+// Older non-PII snapshots predate the separate option projection.
+export type Cafe24SelectedLine = Omit<SelectedLine, "optionValue"> & { optionValue?: string | null };
 export interface Cafe24UnitRule {
   id: string; productName: string; from: string; to: string | null; source: "UNIFIED" | "GOOGLE_SALE" | "LEGACY";
   unit: SaleUnitDefinition;
   nameAliases?: string[]; optionExclude?: string[];
+  matchTarget?: string; nameInclude?: string[]; nameExclude?: string[];
 }
 export interface Cafe24Snapshot {
   configuration: Configuration;
@@ -60,14 +65,23 @@ function unitsFor(request: AdapterRequest, config: Configuration): Cafe24UnitRul
       unit: r.payload as unknown as SaleUnitDefinition }));
 }
 const orderKey = (l: Cafe24SelectedLine) => JSON.stringify([l.source, l.connectionId ?? "LEGACY_UNBOUND", l.source === "CSV" && !l.connectionId ? l.uploadBatchId : null, l.orderNo]);
-function unitMatches(rule: Cafe24UnitRule, product: string, sourceName: string, option: string, date: string, unitName: string | null) {
+function unitMatches(rule: Cafe24UnitRule, product: string, line: Cafe24SelectedLine, date: string, unitName: string | null) {
   const u = rule.unit;
+  const separate = rule.matchTarget === "SEPARATE";
+  if (rule.matchTarget && !["SEPARATE", "LEGACY_COMBINED"].includes(rule.matchTarget) || separate && line.optionValue == null) return false;
+  const normalize = rule.source === "LEGACY" ? normalizeCafe24Text : normalizeProductName;
+  const sourceName = normalize(line.productName);
+  const option = normalize(rule.source === "GOOGLE_SALE" || rule.source === "LEGACY" && !separate
+    ? line.optionName : line.optionValue ?? line.optionName);
   return normalizeProductName(rule.productName) === normalizeProductName(product) && rule.from <= date && (!rule.to || date <= rule.to) &&
     (!unitName || normalizeProductName(u.saleUnitName) === normalizeProductName(unitName)) &&
-    (!rule.nameAliases?.length || rule.nameAliases.some(alias => sourceName.includes(normalizeProductName(alias)))) &&
-    !(rule.optionExclude ?? []).some(term => option.includes(normalizeProductName(term))) &&
-    (u.optionExact == null || normalizeProductName(u.optionExact) === option) &&
-    (u.optionInclude ?? []).every(t => option.includes(normalizeProductName(t)));
+    (!rule.nameAliases?.length || rule.nameAliases.some(alias => sourceName.includes(normalize(alias)) ||
+      rule.source === "LEGACY" && !separate && option.includes(normalize(alias)))) &&
+    (rule.nameInclude ?? []).every(term => sourceName.includes(normalize(term))) &&
+    !(rule.nameExclude ?? []).some(term => sourceName.includes(normalize(term))) &&
+    !(rule.optionExclude ?? []).some(term => option.includes(normalize(term))) &&
+    (u.optionExact == null || normalize(u.optionExact) === option) &&
+    (u.optionInclude ?? []).every(t => option.includes(normalize(t)));
 }
 
 /** No report totals are inputs: sales have a single Cafe24 owner, independently of ad selection. */
@@ -78,8 +92,8 @@ export function normalizeCafe24Snapshot(request: AdapterRequest, snapshot: Cafe2
   if (snapshot.lines.length > request.limit) throw new Error("Cafe24 day exceeds adapter page limit; split upstream collection grain.");
   const config = snapshot.configuration, rules = nameRules(config), units = [...unitsFor(request, config), ...snapshot.unitRules];
   const catalog = config.products.map(p => ({ canonicalName: p.canonicalName, active: p.active }));
-  const context = snapshot.contextLines ?? snapshot.lines;
-  const resolved = new Map(context.map(l => [l.id, resolveProductName({ originalName: l.productName, originalOption: l.optionName,
+  const context = byId(snapshot.contextLines ?? snapshot.lines);
+  const resolved = new Map(context.map(l => [l.id, resolveProductName({ originalName: l.productName, originalOption: l.optionValue ?? l.optionName,
     nameField: "product_name", platform: "CAFE24", scopeKey: snapshot.scopeKey, businessDate: snapshot.date }, catalog, rules, request.nameRuleVersion)]));
   const couponByLine = new Map<string, ReturnType<typeof cafe24OrderCoupon>>();
   const groups = new Map<string, Cafe24SelectedLine[]>();
@@ -109,7 +123,7 @@ export function normalizeCafe24Snapshot(request: AdapterRequest, snapshot: Cafe2
     if (snapshot.timeZone !== "Asia/Seoul") issues.push("TIME_ZONE_MISMATCH");
     if (name.matchStatus !== "MATCHED") issues.push(`NAME_${name.matchStatus}`);
     let candidates = name.canonicalProductName && name.matchStatus === "MATCHED" ?
-      units.filter(u => unitMatches(u, name.canonicalProductName!, name.normalizedName, name.normalizedOption, snapshot.date, name.saleUnitName)) : [];
+      units.filter(u => unitMatches(u, name.canonicalProductName!, l, snapshot.date, name.saleUnitName)) : [];
     let google = l.productName.includes("[유튜브]") ? candidates.filter(u => u.source === "GOOGLE_SALE") : [];
     if (google.some(u => u.unit.optionExact != null)) google = google.filter(u => u.unit.optionExact != null);
     const unified = candidates.filter(u => u.source === "UNIFIED");
@@ -156,7 +170,7 @@ export function normalizeCafe24Snapshot(request: AdapterRequest, snapshot: Cafe2
         providerUpdatedAt: l.providerUpdatedAt?.toISOString() ?? null, observedAt: snapshot.observedAt, businessDate: snapshot.date,
         dateBasis: "ORDER_DATE", sourceTimeZone: snapshot.timeZone },
       name, productName: name.canonicalProductName, marketplace: "CAFE24", ...q, saleUnitName: name.saleUnitName,
-      optionName: l.optionName, operatingRevenue: revenue, revenueBasis: "REGISTERED_SALE_PRICE",
+      optionName: l.optionValue ?? l.optionName, operatingRevenue: revenue, revenueBasis: "REGISTERED_SALE_PRICE",
       collectedPaymentAmount: consistentPayment && paymentOwners.get(orderKey(l)) === l.id ? l.totalPaidKrw.toFixed() : null,
       paymentGrain: "ORDER", paymentAllocationStatus: "ORDER_REFERENCE_ONCE_NOT_PRODUCT_ALLOCATION",
       discountTreatment: `ORDER_COUPON_${coupon.status}_ALREADY_IN_OPERATING_REVENUE`, refundTreatment: "REFUNDS_NOT_VERIFIED",
@@ -181,11 +195,11 @@ export function normalizeCafe24Snapshot(request: AdapterRequest, snapshot: Cafe2
   const unmapped = sales.filter(s => s.name.matchStatus !== "MATCHED");
   const missingCost = sales.filter(s => s.profitBeforeAds === null).length;
   const fingerprint = hash([snapshot.sourceVersion, snapshot.date, snapshot.scopeKey, snapshot.currency, snapshot.timeZone,
-    snapshot.lines, snapshot.unitRules, snapshot.couponRules, snapshot.couponInputSource, snapshot.selectedSource, snapshot.complete, snapshot.sourceIssues,
+    byId(snapshot.lines), context, byId(snapshot.unitRules), byId(snapshot.couponRules), snapshot.couponInputSource, snapshot.selectedSource, snapshot.complete, snapshot.sourceIssues,
     request.scopePolicyVersion, request.nameRuleVersion, request.saleUnitRuleVersion, request.calculationVersion]);
   const coverage = { sourceSystem: "CAFE24", platform: "CAFE24" as const, scopeKey: snapshot.scopeKey, date: snapshot.date,
-    participation: "INCLUDED" as const, collectionState: snapshot.complete ? snapshot.sourceIssues.includes("STALE_DATA") ? "STALE" as const : "COMPLETE" as const : sales.length ? "PARTIAL" as const : "NOT_COLLECTED" as const,
-    rowsPresent: sales.length, zeroConfirmed: snapshot.complete && !sales.length && !snapshot.sourceIssues.includes("STALE_DATA"), selectedSource: snapshot.selectedSource,
+    participation: "INCLUDED" as const, collectionState: snapshot.complete ? snapshot.sourceIssues.includes("STALE_DATA") ? "STALE" as const : "COMPLETE" as const : context.length ? "PARTIAL" as const : "NOT_COLLECTED" as const,
+    rowsPresent: context.length, zeroConfirmed: snapshot.complete && !context.length && !snapshot.sourceIssues.includes("STALE_DATA"), selectedSource: snapshot.selectedSource,
     selectedUploadId: null, sourceVersion: snapshot.sourceVersion, collectedAt: snapshot.collectedAt, sourceAsOf: snapshot.collectedAt,
     calculatedAt: snapshot.observedAt, lastSuccessAt: snapshot.collectedAt, sourceFingerprint: fingerprint,
     nameRuleVersion: request.nameRuleVersion, costRuleVersion: request.saleUnitRuleVersion, mappedRows: mapped.length, unmappedRows: unmapped.length,
@@ -272,14 +286,14 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
     const when = new Date(`${date}T00:00:00Z`);
     const configuration = await this.management.snapshot(tx); checkVersions(request, configuration);
     const [policies, coverage, batches, costs, overrides, mappings, couponRules] = await Promise.all([
-      tx.sourcePolicy.findMany({ where: { dataKind: "CAFE24_ORDER", fromDate: { lte: when }, OR: [{ toDate: null }, { toDate: { gt: when } }] }, take: 10001 }),
-      legacy ? [] : tx.sourceCoverage.findMany({ where: { connectionId: scope, dataKind: "CAFE24_ORDER", metricDate: when }, take: 2 }),
+      tx.sourcePolicy.findMany({ where: { dataKind: "CAFE24_ORDER", fromDate: { lte: when }, OR: [{ toDate: null }, { toDate: { gt: when } }] }, orderBy: { id: "asc" }, take: 10001 }),
+      legacy ? [] : tx.sourceCoverage.findMany({ where: { connectionId: scope, dataKind: "CAFE24_ORDER", metricDate: when }, orderBy: [{ connectionId: "asc" }, { dataKind: "asc" }, { metricDate: "asc" }], take: 2 }),
       tx.cafe24UploadBatch.findMany({ where: { status: { in: ["IMPORTED", "PARTIAL"] }, OR: [{ orderStart: null }, { orderEnd: null }, { orderStart: { lte: when }, orderEnd: { gte: when } }] },
-        select: { id: true, rowCount: true, _count: { select: { rows: true } }, importedAt: true }, take: 10001 }),
-      tx.productCostRule.findMany({ where: { effectiveFrom: { lte: when }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: when } }] }, include: { product: { select: { displayName: true } } }, take: 10001 }),
-      tx.cafe24ProductRule.findMany({ where: { isActive: true }, include: { product: { select: { displayName: true } } }, take: 10001 }),
-      legacy ? [] : tx.googlePerformanceMapping.findMany({ where: { kind: "SALE", connectionId: scope, startDate: { lte: when }, OR: [{ endDate: null }, { endDate: { gte: when } }] }, include: { product: { select: { displayName: true } } }, take: 10001 }),
-      tx.cafe24CouponRule.findMany({ where: { isActive: true, validFrom: { lte: when }, OR: [{ validTo: null }, { validTo: { gte: when } }] }, include: { product: { select: { displayName: true } } }, take: 10001 })
+        select: { id: true, rowCount: true, _count: { select: { rows: true } }, importedAt: true }, orderBy: { id: "asc" }, take: 10001 }),
+      tx.productCostRule.findMany({ where: { effectiveFrom: { lte: when }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: when } }] }, include: { product: { select: { displayName: true } } }, orderBy: { id: "asc" }, take: 10001 }),
+      tx.cafe24ProductRule.findMany({ where: { isActive: true, validFrom: { lte: when }, OR: [{ validTo: null }, { validTo: { gte: when } }] }, include: { product: { select: { displayName: true } } }, orderBy: { id: "asc" }, take: 10001 }),
+      legacy ? [] : tx.googlePerformanceMapping.findMany({ where: { kind: "SALE", connectionId: scope, startDate: { lte: when }, OR: [{ endDate: null }, { endDate: { gte: when } }] }, include: { product: { select: { displayName: true } } }, orderBy: { id: "asc" }, take: 10001 }),
+      tx.cafe24CouponRule.findMany({ where: { isActive: true, validFrom: { lte: when }, OR: [{ validTo: null }, { validTo: { gte: when } }] }, include: { product: { select: { displayName: true } } }, orderBy: { id: "asc" }, take: 10001 })
     ]);
     if ([policies, batches, costs, overrides, mappings, couponRules].some(rows => rows.length > 10000)) throw new Error("Cafe24 configuration source bound exceeded.");
     const candidates = await tx.cafe24OrderLine.findMany({ where: { isCurrent: true, orderDate: when, connectionId: legacy ? null : scope,
@@ -289,7 +303,7 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
     const context = createSourceReadContext(tx, when, when, policies, coverage);
     const selected = await selectCurrentSourceRows(tx, "CAFE24_ORDER", candidates, l => l.orderDate, context);
     const selectedPolicy = policies.filter(p => p.connectionId === scope);
-    const source = process.env.DAILY_SYNC_FEATURE_ENABLED === "true" ? selectedPolicy.length === 1 ? selectedPolicy[0].primarySource : null : "CSV";
+    const source = legacy ? "CSV" : process.env.DAILY_SYNC_FEATURE_ENABLED === "true" ? selectedPolicy.length === 1 ? selectedPolicy[0].primarySource : null : "CSV";
     let complete = selected.length > 0 && source === "CSV";
     const stored = coverage.find(c => c.source === source);
     if (source === "API" && stored?.lastSuccessAt && stored.lastSuccessRunId && stored.rowCount === selected.length) {
@@ -307,8 +321,10 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
         const matchedOverrides = overrides.filter(o => o.product.displayName === name);
         const defs = matchedOverrides.length ? matchedOverrides : [null];
         for (const o of defs) unitRules.push({ id: o ? `${c.id}:${o.id}` : c.id, productName: name,
-          from: day(c.effectiveFrom), to: c.effectiveTo ? day(c.effectiveTo) : null, source: "LEGACY",
+          from: o && o.validFrom > c.effectiveFrom ? day(o.validFrom) : day(c.effectiveFrom),
+          to: [c.effectiveTo, o?.validTo].filter((value): value is Date => value instanceof Date).map(day).sort()[0] ?? null, source: "LEGACY",
           nameAliases: o ? strings(o.productNameAliases) : [], optionExclude: o ? strings(o.optionExcludeKeywords) : [],
+          matchTarget: o?.matchTarget, nameInclude: o ? strings(o.productNameIncludeKeywords) : [], nameExclude: o ? strings(o.productNameExcludeKeywords) : [],
           unit: { saleUnitName: o?.displayName ?? "단품", quantityBasis: "SALE_UNIT_TOTAL",
             optionInclude: o ? strings(o.optionIncludeKeywords) : [], unitsPerSaleUnit: o && [o.displayName, ...strings(o.optionIncludeKeywords)].some(v => v.includes("1+1")) ? "2" : "1",
             salePrice: (o?.salePriceKrwOverride ?? c.salePriceKrw).toFixed(), productCost: (o?.productCostKrwOverride ?? c.productCostKrw).toFixed(),
@@ -332,7 +348,7 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
         priority: r.priority, createdAt: r.createdAt.toISOString() })), selectedSource: legacy ? "LEGACY_UNBOUND" : source,
       complete: complete && !selected.some(l => l.validationStatus === "ERROR"),
       collectedAt: stored?.lastSuccessAt?.toISOString() ?? batches.filter(b => selected.some(l => l.uploadBatchId === b.id)).map(b => b.importedAt?.toISOString()).filter((s): s is string => !!s).sort().at(-1) ?? null,
-      sourceVersion: hash([selected, selectedPolicy, costs, overrides, unitRules, couponRules]),
+      sourceVersion: hash([selected, selectedPolicy, coverage, connection, batches.filter(b => selected.some(l => l.uploadBatchId === b.id)), costs, overrides, unitRules, couponRules]),
       couponInputSource: selectedPolicy.length === 1 ? selectedPolicy[0].couponInputSource : null, sourceIssues: issues,
       excludedByPolicyRows: candidates.length - selected.filter(l => l.validationStatus !== "ERROR").length };
   }

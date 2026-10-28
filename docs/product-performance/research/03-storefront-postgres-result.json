@@ -1,6 +1,6 @@
 {
   "stage": "03",
-  "startedAt": "2026-10-27T07:53:26.444Z",
+  "startedAt": "2026-10-28T04:42:51.775Z",
   "target": {
     "host": "127.0.0.1",
     "port": 55448,
@@ -15,7 +15,7 @@
     "non-owner source reader SELECT grants; unified configuration RLS read policy",
     "actual reader adapter tests pass with skip0"
   ],
-  "testOutput": "✔ actual isolated reader preserves storefront ownership, dated money, missing days and immutable source rows (1063.0914ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1842.4877\n",
+  "testOutput": "✔ actual isolated reader preserves storefront ownership, dated money, missing days and immutable source rows (1178.0727ms)\n✔ actual isolated reader applies separate Cafe24 options and dated rules after product IDs change (222.6238ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2221.7594\n",
   "stopExitCode": 0,
-  "finishedAt": "2026-10-27T07:53:37.145Z"
+  "finishedAt": "2026-10-28T04:43:01.881Z"
 }

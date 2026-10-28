@@ -72,6 +72,15 @@ test("Google complete SALE configuration overrides Cafe24 costs with Google excl
   assert.equal(sale.costRuleRef, "google"); assert.equal(sale.operatingRevenue, "30000.000000"); assert.equal(sale.productCost, "8000.000000");
 });
 
+test("Google SALE option keys keep their existing collected display field when a separate Cafe24 option exists", () => {
+  const s = snapshot({ lines: [line({ productName: "[유튜브] 두줄무릎보호대", optionName: "두줄무릎보호대 1+1 세트", optionValue: "1+1 세트" })] });
+  s.unitRules.push({ ...s.unitRules[0], id: "google-display-option", source: "GOOGLE_SALE",
+    unit: { ...s.unitRules[0].unit, optionExact: "두줄무릎보호대 1+1 세트", salePrice: "30000", productCost: "8000" } });
+  const sale = normalizeCafe24Snapshot(request(), s).sales[0];
+  assert.equal(sale.costRuleRef, "google-display-option");
+  assert.equal(sale.operatingRevenue, "30000.000000");
+});
+
 test("Google partial configuration and unit ambiguity preserve null totals without mixing inputs", () => {
   const s = snapshot({ lines: [line({ productName: "[유튜브] 두줄무릎보호대" })] });
   s.unitRules.push({ ...s.unitRules[0], id: "partial", source: "GOOGLE_SALE", unit: { ...s.unitRules[0].unit, salePrice: null } });
@@ -110,6 +119,23 @@ test("Coupon allocation maintains decimal precision and source separation", () =
   const policy = [{ id: "c", productName: null, scope: "GLOBAL" as const, amount: "0.03", from: "2026-01-01", to: null, priority: 1, createdAt: date.toISOString() }];
   const result = cafe24OrderCoupon(["a", "b", "c"].map(key => ({ key, productName: key, date: "2026-10-26", signal: true, total: "100.03", paid: "100", weight: "1", valid: true })), policy);
   assert.equal([...result.allocations.values()].reduce((s, v) => s.plus(v!), new D(0)).toFixed(), "0.03");
+});
+
+test("Whole-order coupon product totals match the legacy result when a product has several source lines", () => {
+  const lines = [{ key: "z1", productName: "A" }, { key: "z2", productName: "A" }, { key: "a", productName: "B" }];
+  const policy = [{ id: "c", productName: null, scope: "GLOBAL" as const, amount: "1", from: "2026-01-01", to: null, priority: 1, createdAt: date.toISOString() }];
+  const result = cafe24OrderCoupon(lines.map(line => ({ ...line, date: "2026-10-26", signal: true, total: "300", paid: "299", weight: "100", valid: true })), policy);
+  const old = resolveCafe24CouponOrder({ orderNo: "order", lines: lines.map(line => ({ orderDate: date, paymentMethod: "쿠폰", totalOrderKrw: 300,
+    totalPaidKrw: 299, productId: line.productName, salePriceKrw: 100, quantity: 1 })),
+    rules: [{ id: "c", name: "c", productId: null, scope: "GLOBAL", discountKrw: 1, priority: 1, validFrom: new Date("2026-01-01"), validTo: null, isActive: true, createdAt: date }] });
+  for (const product of ["A", "B"]) {
+    const total = lines.filter(line => line.productName === product).reduce((sum, line) => sum.plus(result.allocations.get(line.key)!), new D(0));
+    assert.equal(total.toNumber(), old.allocationsByProductId.get(product));
+  }
+  const combined = cafe24OrderCoupon([{ key: "A", productName: "A", weight: "200" }, { key: "B", productName: "B", weight: "100" }]
+    .map(line => ({ ...line, date: "2026-10-26", signal: true, total: "300", paid: "299", valid: true })), policy);
+  assert.equal(new D(result.allocations.get("z1")!).plus(result.allocations.get("z2")!).toFixed(), new D(combined.allocations.get("A")!).toFixed());
+  assert.equal(result.allocations.get("a"), combined.allocations.get("B"));
 });
 
 test("Cafe24 read rejects excluded source and invalid date before any query", async () => {
@@ -208,5 +234,108 @@ test("Cafe24 reader applies existing CSV/API source policy and day pagination", 
     const result = await adapter.read({ ...request(), to: "2026-10-27" });
     assert.equal(result.sales.length, 1); assert.equal(result.sales[0].ref.selectedSource, "CSV");
     assert.equal(result.sourceControlTotals[0].excludedByPolicyRows, 1); assert.equal(result.nextCursor, "2026-10-27");
+  } finally { if (old === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = old; }
+});
+
+test("Cafe24 separate-option rules apply product predicates without matching the combined display text", () => {
+  const s = snapshot({ lines: [line({ optionName: "두줄무릎보호대 1+1 세트", optionValue: "1+1 세트" })] });
+  Object.assign(s.unitRules[0], { matchTarget: "SEPARATE", nameInclude: ["두줄 무릎보호대"], nameExclude: ["리퍼"] });
+  assert.equal(normalizeCafe24Snapshot(request(), s).sales[0].productCost, "9000.000000");
+  // The display name still contains the set token, but the actual option does not.
+  s.lines[0].optionValue = "단품";
+  assert.equal(normalizeCafe24Snapshot(request(), s).sales[0].productCost, null);
+  s.lines[0].optionValue = null;
+  assert.equal(normalizeCafe24Snapshot(request(), s).sales[0].productCost, null);
+  s.lines[0].optionValue = "1+1 세트"; s.lines[0].productName = "리퍼 두줄무릎보호대";
+  assert.equal(normalizeCafe24Snapshot(request(), s).sales[0].productCost, null);
+  s.lines[0].productName = "두줄무릎보호대"; s.unitRules[0].nameInclude = ["다른 제품"];
+  assert.equal(normalizeCafe24Snapshot(request(), s).sales[0].productCost, null);
+});
+
+test("Cafe24 legacy alias matching preserves aliases in the combined option only for legacy rules", () => {
+  const s = snapshot({ lines: [line({ optionName: "두줄무릎보호대 1+1 세트" })] });
+  s.unitRules[0].nameAliases = ["보호대 1+1"];
+  delete s.unitRules[0].unit.optionExact;
+  assert.equal(normalizeCafe24Snapshot(request(), s).sales[0].productCost, "9000.000000");
+  s.unitRules[0].matchTarget = "SEPARATE"; s.lines[0].optionValue = "두줄무릎보호대 1+1 세트";
+  assert.equal(normalizeCafe24Snapshot(request(), s).sales[0].productCost, null);
+});
+
+test("Cafe24 fingerprint includes error siblings that determine whole-order coupons", () => {
+  const selected = line({ paymentMethod: "쿠폰", totalOrderKrw: new D(44900), totalPaidKrw: new D(41900) });
+  const sibling = line({ id: "sibling", orderLineKey: "order:2", productName: "러닝양말", validationStatus: "ERROR", salePriceKrw: new D(10000),
+    totalOrderKrw: new D(44900), totalPaidKrw: new D(41900) });
+  const s = snapshot({ lines: [selected], contextLines: [selected, sibling], complete: false,
+    couponRules: [{ id: "coupon", productName: null, scope: "GLOBAL", amount: "3000", from: "2026-01-01", to: null, priority: 1, createdAt: date.toISOString() }] });
+  const before = normalizeCafe24Snapshot(request(), s);
+  assert.equal(before.sales[0].operatingRevenue, null);
+  sibling.validationStatus = "VALID";
+  const after = normalizeCafe24Snapshot(request(), s);
+  assert.notEqual(after.sales[0].operatingRevenue, null);
+  assert.notEqual(before.sourceFingerprint, after.sourceFingerprint);
+});
+
+test("Cafe24 observed error rows remain partial coverage when no sale facts can be emitted", () => {
+  const result = normalizeCafe24Snapshot(request(), snapshot({ lines: [], contextLines: [line({ validationStatus: "ERROR" })], complete: false,
+    sourceIssues: ["INVALID_ORDER_LINES_EXCLUDED", "SOURCE_COLLECTION_INCOMPLETE"], excludedByPolicyRows: 1 }));
+  assert.equal(result.sales.length, 0);
+  assert.equal(result.coverage[0].rowsPresent, 1);
+  assert.equal(result.coverage[0].collectionState, "PARTIAL");
+  assert.equal(result.coverage[0].zeroConfirmed, false);
+  assert.equal(result.sourceControlTotals[0].selectedAmount, null);
+});
+
+test("Cafe24 monetary facts and fingerprint are stable under source and configuration row reordering", () => {
+  const lines = [line({ id: "z", orderLineKey: "order:1", paymentMethod: "쿠폰", totalOrderKrw: new D("44900"), totalPaidKrw: new D("41900") }),
+    line({ id: "a", orderLineKey: "order:2", productName: "러닝양말", salePriceKrw: new D("10000"), totalOrderKrw: new D("44900"), totalPaidKrw: new D("41900") })];
+  const s = snapshot({ lines, contextLines: lines,
+    couponRules: ["first", "second"].map(id => ({ id, productName: null, scope: "GLOBAL", amount: "3000", from: "2026-01-01", to: null, priority: 1, createdAt: date.toISOString() })) });
+  s.unitRules.push({ ...s.unitRules[0], id: "unrelated", productName: "unrelated" });
+  const before = normalizeCafe24Snapshot(request(), s);
+  s.lines = [...s.lines].reverse(); s.contextLines = [...s.contextLines!].reverse();
+  s.unitRules.reverse(); s.couponRules.reverse();
+  const after = normalizeCafe24Snapshot(request(), s);
+  assert.equal(before.sourceFingerprint, after.sourceFingerprint);
+  const revenues = (result: typeof before) => result.sales.map(sale => [sale.ref.sourceRecordKey, sale.operatingRevenue]).sort();
+  assert.deepEqual(revenues(before), revenues(after));
+});
+
+test("Cafe24 legacy CSV coverage stays complete with daily sync enabled and no account policy", async () => {
+  const old = process.env.DAILY_SYNC_FEATURE_ENABLED; process.env.DAILY_SYNC_FEATURE_ENABLED = "true";
+  try {
+    const tx = { $executeRaw: async () => 0,
+      sourcePolicy: { findMany: async () => [] }, cafe24UploadBatch: { findMany: async () => [{ id: "batch", rowCount: 1, _count: { rows: 1 }, importedAt: date }] },
+      productCostRule: { findMany: async () => [] }, cafe24ProductRule: { findMany: async () => [] }, cafe24CouponRule: { findMany: async () => [] },
+      cafe24OrderLine: { findMany: async () => [line({ connectionId: null })] } };
+    const adapter = new Cafe24PerformanceAdapter({ $transaction: async (work: (client: unknown) => unknown) => work(tx) } as never,
+      { snapshot: async () => config } as unknown as UnifiedManagementRepository);
+    const result = await adapter.read({ ...request(), scopeKeys: ["LEGACY_UNBOUND"] });
+    assert.equal(result.coverage[0].collectionState, "COMPLETE");
+    assert.equal(result.coverage[0].selectedSource, "LEGACY_UNBOUND");
+    assert.equal(result.sourceControlTotals[0].selectedAmount, "34900.000000");
+  } finally { if (old === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = old; }
+});
+
+test("Cafe24 reader retains separate rule predicates and intersects rule and cost effective dates", async () => {
+  let filter: unknown;
+  const tx = { $executeRaw: async () => 0, sourceConnection: { findUnique: async () => ({ provider: "CAFE24", currencyCode: "KRW", timeZone: "Asia/Seoul" }) },
+    sourcePolicy: { findMany: async () => [] }, sourceCoverage: { findMany: async () => [] }, cafe24UploadBatch: { findMany: async () => [{ id: "batch", rowCount: 1, _count: { rows: 1 }, importedAt: date }] },
+    productCostRule: { findMany: async () => [{ id: "cost", product: { displayName: "두줄무릎보호대" }, effectiveFrom: new Date("2026-01-01"), effectiveTo: null,
+      salePriceKrw: new D(34900), productCostKrw: new D(9000), shippingKrw: new D(0), extraCostKrw: new D(0) }] },
+    cafe24ProductRule: { findMany: async (query: { where: unknown }) => { filter = query.where; return [{ id: "rule", product: { displayName: "두줄무릎보호대" },
+      displayName: "1+1 세트", validFrom: new Date("2026-10-25"), validTo: new Date("2026-10-27"), matchTarget: "SEPARATE", productNameAliases: [],
+      productNameIncludeKeywords: ["두줄무릎보호대"], productNameExcludeKeywords: ["리퍼"], optionIncludeKeywords: ["1+1"], optionExcludeKeywords: [] }]; } },
+    googlePerformanceMapping: { findMany: async () => [] }, cafe24CouponRule: { findMany: async () => [] },
+    cafe24OrderLine: { findMany: async () => [line({ optionName: "display text", optionValue: "1+1 세트" })] } };
+  const old = process.env.DAILY_SYNC_FEATURE_ENABLED; delete process.env.DAILY_SYNC_FEATURE_ENABLED;
+  try {
+    const adapter = new Cafe24PerformanceAdapter({ $transaction: async (work: (client: unknown) => unknown) => work(tx) } as never,
+      { snapshot: async () => config } as unknown as UnifiedManagementRepository);
+    const result = await adapter.read(request());
+    assert.deepEqual(filter, { isActive: true, validFrom: { lte: date }, OR: [{ validTo: null }, { validTo: { gte: date } }] });
+    assert.equal(result.sales[0].productCost, "9000.000000");
+    assert.equal(result.sales[0].costEffectiveFrom, "2026-10-25");
+    assert.equal(result.sales[0].costEffectiveTo, "2026-10-27");
+    assert.equal(result.sales[0].optionName, "1+1 세트");
   } finally { if (old === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = old; }
 });

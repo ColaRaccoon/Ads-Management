@@ -60,6 +60,11 @@ export async function readAdDay(tx: Prisma.TransactionClient, management: Unifie
     } catch (error) {
       if (!(error instanceof ConflictException)) throw error;
       sourceIssues.push("SOURCE_SELECTION_REQUIRED");
+      if (selectedSource === "API") {
+        const observed = candidates.filter(row => row.source === "API");
+        unverifiedRows = observed.length;
+        unverifiedFingerprint = adHash(observed);
+      }
       excludedRows = candidates.length;
     }
     // Legacy fallback is resolved by the fixed product NAME, never a stale source product FK.
@@ -115,6 +120,7 @@ export async function readAdDay(tx: Prisma.TransactionClient, management: Unifie
   return normalizeAdDay(request, { platform, date, scopeKey: scope, currency, timeZone, rows: normalizedRows, selectedSource, complete,
     sourceIssues, storedCoverage: stored, fx: rate ? { rate: rate.rate.toFixed(), sourceDate: day(rate.sourceDate), provider: rate.provider, fallbackType: rate.fallbackType } : null,
     legacyFx, excludedRows, configuration, unverifiedRows, sourceSelectionEvidence: { feature, unverifiedFingerprint, policies: policies.map(policy => [policy.connectionId,
-      policy.dataKind, policy.fromDate.toISOString(), policy.toDate?.toISOString() ?? null, policy.primarySource]),
+      policy.dataKind, policy.fromDate.toISOString(), policy.toDate?.toISOString() ?? null, policy.primarySource])
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b), "en")),
       coverage: stored ? [stored.lastSuccessRunId, stored.lastSuccessAt?.toISOString(), stored.rowCount, stored.totalAmount?.toFixed(), stored.warningCodes] : null } });
 }

@@ -1,4 +1,5 @@
 import { ExactDecimal as D, money, quantizeMoney } from "../domain/decimal";
+type Decimal = InstanceType<typeof D>;
 
 export interface Cafe24CouponInput {
   key: string; productName: string | null; date: string; signal: boolean | null;
@@ -39,21 +40,38 @@ export function cafe24OrderCoupon(lines: Cafe24CouponInput[], rules: Cafe24Coupo
     a.priority - b.priority || b.from.localeCompare(a.from) || b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id));
   const rule = plausible[0];
   const targets = lines.filter(l => rule.scope === "GLOBAL" || l.productName === rule.productName);
-  const totalWeight = targets.reduce((s, l) => s.plus(D.max(0, money(l.weight))), new D(0));
-  if (totalWeight.lte(0)) return empty("UNKNOWN", null, ["COUPON_NON_POSITIVE_ALLOCATION_BASE"]);
+  const weightsByProduct = new Map<string, Decimal>();
+  for (const line of targets) weightsByProduct.set(line.productName!,
+    (weightsByProduct.get(line.productName!) ?? new D(0)).plus(D.max(0, money(line.weight))));
+  if ([...weightsByProduct.values()].reduce((s, value) => s.plus(value), new D(0)).lte(0))
+    return empty("UNKNOWN", null, ["COUPON_NON_POSITIVE_ALLOCATION_BASE"]);
   const scale = money(rule.amount).isInteger() ? 0 : 2;
-  const quantum = new D(10).pow(-scale);
-  const shares = targets.map(l => {
-    const exact = money(rule.amount).mul(D.max(0, money(l.weight))).div(totalWeight);
-    const base = exact.toDecimalPlaces(scale, D.ROUND_DOWN);
-    return { key: l.key, base, remainder: exact.minus(base) };
-  }).sort((a, b) => b.remainder.cmp(a.remainder) || a.key.localeCompare(b.key));
-  let residual = money(rule.amount).minus(shares.reduce((s, r) => s.plus(r.base), new D(0)));
-  for (const share of shares) if (residual.gte(quantum)) { share.base = share.base.plus(quantum); residual = residual.minus(quantum); }
-  if (!residual.isZero()) throw new Error("Unresolved Cafe24 coupon allocation residual.");
+  // Preserve the existing product-level allocation before splitting a product's
+  // share across source lines. Splitting an order item must not move a won of
+  // discount to another product merely by adding another rounding candidate.
+  const productShares = allocate(money(rule.amount), [...weightsByProduct].map(([key, weight]) => ({ key, weight })), scale);
   const allocations = new Map(lines.map(l => [l.key, "0" as string | null]));
-  shares.forEach(s => allocations.set(s.key, quantizeMoney(s.base)));
+  for (const [productName, amount] of productShares) {
+    const productLines = targets.filter(line => line.productName === productName);
+    if (amount.isZero()) continue;
+    for (const [key, share] of allocate(amount, productLines.map(line => ({ key: line.key, weight: D.max(0, money(line.weight)) })), scale))
+      allocations.set(key, quantizeMoney(share));
+  }
   const ignored = gap.minus(rule.amount);
   return { status: "APPLIED", amount: rule.amount, ruleId: rule.id, estimated: ignored.abs().gt(1),
     issues: ignored.gt(1) ? ["COUPON_IGNORED_RESIDUAL"] : [], allocations };
+}
+
+function allocate(amount: Decimal, weights: Array<{ key: string; weight: Decimal }>, scale: number): Map<string, Decimal> {
+  const totalWeight = weights.reduce((sum, line) => sum.plus(line.weight), new D(0));
+  const quantum = new D(10).pow(-scale);
+  const shares = weights.map(l => {
+    const exact = amount.mul(l.weight).div(totalWeight);
+    const base = exact.toDecimalPlaces(scale, D.ROUND_DOWN);
+    return { key: l.key, base, remainder: exact.minus(base) };
+  }).sort((a, b) => b.remainder.cmp(a.remainder) || a.key.localeCompare(b.key));
+  let residual = amount.minus(shares.reduce((s, r) => s.plus(r.base), new D(0)));
+  for (const share of shares) if (residual.gte(quantum)) { share.base = share.base.plus(quantum); residual = residual.minus(quantum); }
+  if (!residual.isZero()) throw new Error("Unresolved Cafe24 coupon allocation residual.");
+  return new Map(shares.map(share => [share.key, share.base]));
 }

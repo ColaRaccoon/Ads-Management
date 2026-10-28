@@ -115,3 +115,55 @@ test("actual isolated reader preserves storefront ownership, dated money, missin
     assert.deepEqual(await owner.$queryRaw`SELECT (SELECT count(*) FROM cafe24_order_lines)::int cafe,(SELECT sum(spend_usd)::text FROM meta_adset_daily_metrics) meta,(SELECT sum(cost_micros)::text FROM google_campaign_daily_costs) google`, before);
   } finally { await owner.$disconnect(); await db.$disconnect(); }
 });
+
+test("actual isolated reader applies separate Cafe24 options and dated rules after product IDs change", { skip: !process.env.UNIFIED_STAGE03_READER_URL }, async () => {
+  assert.equal(process.env.UNIFIED_STAGE03_FIXTURE_URL, fixtureUrl);
+  assert.equal(process.env.UNIFIED_STAGE03_READER_URL, readerUrl);
+  const owner = new PrismaClient({ datasourceUrl: fixtureUrl }), db = new PrismaClient({ datasourceUrl: readerUrl });
+  try {
+    const name = "Stage03 분리 상품";
+    const product = await owner.product.create({ data: { code: "stage03-separate", name, displayName: name } });
+    await owner.unifiedProduct.create({ data: { canonicalName: name, normalizedName: name.toLowerCase() } });
+    await owner.productCostRule.create({ data: { productId: product.id, effectiveFrom: new Date("2026-09-01"),
+      salePriceKrw: "100", productCostKrw: "20", shippingKrw: "0", extraCostKrw: "0", fxRateKrwPerUsd: "1300" } });
+    const connection = await owner.sourceConnection.create({ data: { provider: "CAFE24", externalAccountId: "stage03-separate",
+      displayName: "Synthetic separate options", currencyCode: "KRW", timeZone: "Asia/Seoul", enabled: true, accessState: "READY" } });
+    await owner.sourcePolicy.create({ data: { connectionId: connection.id, dataKind: "CAFE24_ORDER", primarySource: "CSV",
+      fromDate: new Date("2026-09-01"), version: 1, reason: "Synthetic separate option regression" } });
+    for (const unit of [
+      { displayName: "단품", option: "단품", from: "2026-10-26", to: null, price: "100", cost: "20", shipping: "0", other: "0" },
+      { displayName: "1+1 세트", option: "1+1", from: "2026-10-26", to: "2026-10-27", price: "200", cost: "60", shipping: "5", other: "2" },
+      { displayName: "만료 세트", option: "1+1", from: "2026-09-01", to: "2026-10-25", price: "999", cost: "999", shipping: "0", other: "0" },
+      { displayName: "미래 세트", option: "1+1", from: "2026-10-27", to: null, price: "888", cost: "888", shipping: "0", other: "0" }
+    ]) await owner.cafe24ProductRule.create({ data: { productId: product.id, displayName: unit.displayName, matchTarget: "SEPARATE",
+      productNumbers: ["retired-product-id"], productNameAliases: [], productNameIncludeKeywords: [name], productNameExcludeKeywords: ["리퍼"],
+      optionIncludeKeywords: [unit.option], optionExcludeKeywords: [], validFrom: new Date(unit.from), validTo: unit.to ? new Date(unit.to) : null,
+      salePriceKrwOverride: unit.price, productCostKrwOverride: unit.cost, shippingKrwOverride: unit.shipping, extraCostKrwOverride: unit.other } });
+    const upload = await owner.cafe24UploadBatch.create({ data: { originalFilename: "synthetic-separate.csv", fileHashSha256: digest("stage03-separate"),
+      columnSchema: {}, rowCount: 2, validRowCount: 2, status: "IMPORTED", orderStart: date, orderEnd: date, importedAt: at } });
+    for (const [index, optionValue, quantity] of [[0, "단품", "1"], [1, "1+1", "2"]] as const)
+      await owner.cafe24OrderLine.create({ data: { uploadBatchId: upload.id, connectionId: connection.id, source: "CSV", orderLineKey: `separate-${index}:line`,
+        orderNo: `separate-order-${index}`, lineOrderNo: `separate-line-${index}`, productNo: `new-product-id-${index}`, productName: name,
+        // Both keywords in display text must never choose the actual option.
+        optionName: `${name} 1+1 단품 광고문구`, optionValue, quantity, salePriceKrw: "75", totalOrderKrw: "500", totalPaidKrw: "500",
+        paymentMethod: "신용카드", orderDate: date, rowNumber: index + 1, sourceRowHash: digest(`separate-${index}`) } });
+    const serviceDb = db as unknown as PrismaService, repository = new UnifiedManagementRepository(serviceDb), config = await repository.snapshot();
+    const request: AdapterRequest = { contractVersion: CONTRACT_VERSION, runId: randomUUID(), readSnapshotId: "separate-options", from: "2026-10-26", to: "2026-10-26",
+      scopeKeys: [connection.id], platforms: ["CAFE24"], ...config.versions, calculationVersion: "stage03-separate", fxVersion: "unused-krw",
+      sourcePolicySnapshot: {}, sourceWatermarks: {}, cursor: null, limit: 100 };
+    const adapter = new Cafe24PerformanceAdapter(serviceDb, repository);
+    const result = await adapter.read(request), repeated = await adapter.read(request);
+    assert.equal(result.sourceFingerprint, repeated.sourceFingerprint);
+    assert.equal(result.coverage[0].collectionState, "COMPLETE");
+    assert.equal(result.sales.length, 2);
+    const single = result.sales.find(s => s.optionName === "단품")!, set = result.sales.find(s => s.optionName === "1+1")!;
+    assert.equal(single.operatingRevenue, "100.000000"); assert.equal(single.profitBeforeAds, "70.000000");
+    assert.equal(set.operatingRevenue, "400.000000"); assert.equal(set.productCost, "120.000000");
+    assert.equal(set.physicalQuantity, "4"); assert.equal(set.calculationQuantity, "2"); assert.equal(set.profitBeforeAds, "226.000000");
+    assert.equal(set.costEffectiveFrom, "2026-10-26"); assert.equal(set.costEffectiveTo, "2026-10-27");
+    assert.equal(total(result.sales.map(s => s.operatingRevenue)), "500");
+    assert.equal(total(result.sales.map(s => s.profitBeforeAds)), "296");
+    assert(result.sourceControlTotals.every(c => c.difference !== null && new D(c.difference).isZero()));
+    assert.equal(await owner.cafe24OrderLine.count({ where: { uploadBatchId: upload.id, productNo: { startsWith: "new-product-id-" } } }), 2);
+  } finally { await owner.$disconnect(); await db.$disconnect(); }
+});
