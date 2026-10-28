@@ -1,0 +1,21 @@
+{
+  "stage": "04",
+  "startedAt": "2026-10-28T05:45:46.229Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55449,
+    "database": "unified_stage04"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh PG17 loopback identity checked before synthetic writes",
+    "all migrations applied",
+    "non-owner source reader SELECT grants; unified configuration RLS read policy",
+    "actual reader adapter tests pass with skip0"
+  ],
+  "testOutput": "✔ Coupang actual non-owner reader preserves versions, name units, costs, and immutable sources (360.6538ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1182.825\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-28T05:45:56.954Z"
+}

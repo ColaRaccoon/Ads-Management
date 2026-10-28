@@ -1,0 +1,24 @@
+// Reviewed projections only: no raw uploads, filenames, credentials or customer fields.
+import { writeFileSync } from 'node:fs';
+const out = 'docs/product-performance/research/04-live-queries-20261028.json';
+const queries = [];
+const add = (name, sql) => queries.push({ name, sql });
+const pack = (sql) => `SELECT count(*)::text AS row_count, coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS rows FROM (${sql}) t`;
+const safe = field => `CASE WHEN ${field} ~ '([0-9]{2,3}[- ][0-9]{3,4}[- ][0-9]{4}|@)' THEN '[REDACTED_NAME]' ELSE ${field} END`;
+add('identity', "SELECT current_database() AS db, current_user AS role, current_setting('transaction_read_only') AS read_only");
+add('catalog', pack('SELECT display_name AS "canonicalName", is_active AS active FROM meta_ads.products ORDER BY display_name,id'));
+add('products', pack('SELECT md5(id::text) AS id, standard_name AS "standardName", display_name AS "displayName", is_active AS "isActive" FROM meta_ads.coupang_products ORDER BY id'));
+add('rules', pack('SELECT md5(id::text) AS id, md5(coupang_product_id::text) AS "productId", display_name AS "displayName", include_keywords AS "includeKeywords", exclude_keywords AS "excludeKeywords", ad_enabled AS "adEnabled", is_active AS "isActive", valid_from::text AS "validFrom", valid_to::text AS "validTo" FROM meta_ads.coupang_product_rules ORDER BY id'));
+const costFields = ['sale_price_krw','product_cost_krw','sales_fee_rate','sales_fee_krw','seller_shipping_fee_krw','hanaro_shipping_fee_krw','growth_inbound_fee_krw','growth_shipping_fee_krw','return_rate','return_cost_per_unit_krw','extra_cost_krw'];
+const camel = field => field.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+add('costs', pack(`SELECT md5(id::text) AS id, md5(coupang_product_id::text) AS "productId", effective_from::text AS "from", effective_to::text AS "to", ${costFields.map(f => `${f}::text AS "${camel(f)}"`).join(',')} FROM meta_ads.coupang_cost_rules ORDER BY id`));
+add('fees', pack('SELECT md5(id::text) AS id, sales_fee_rate::text AS rate, effective_from::text AS "from", effective_to::text AS "to" FROM meta_ads.coupang_sales_fee_rules ORDER BY id'));
+add('batches', pack("SELECT md5(id::text) AS id, source_type::text AS \"sourceType\",status::text AS status,data_start::text AS \"dataStart\",data_end::text AS \"dataEnd\",row_count AS \"rowCount\",valid_row_count AS \"validRowCount\",error_count AS \"errorCount\",uploaded_at AS \"uploadedAt\",imported_at AS \"importedAt\" FROM meta_ads.coupang_upload_batches ORDER BY id"));
+add('manual', pack(`SELECT md5(id::text) AS id, md5(coupang_product_id::text) AS "legacyProductId", purchase_date::text AS date, ${safe('product_display_name')} AS "productName", ${safe('rule_display_name')} AS "optionName", sale_method AS "saleMethod", quantity::text AS quantity, sales_amount_krw::text AS "salesAmountKrw",base_sale_price_krw::text AS "baseSalePriceKrw",vendor_fee_total_krw::text AS "vendorFeeTotalKrw",total_cost_krw::text AS "totalCostKrw",updated_at AS "updatedAt" FROM meta_ads.coupang_manual_purchases WHERE purchase_date BETWEEN '2026-09-27' AND '2026-10-26' ORDER BY purchase_date,id`));
+for (let i = 0; i < 30; i++) {
+  const date = new Date(Date.parse('2026-09-27') + i * 86400000).toISOString().slice(0,10);
+  add(`sales:${date}`, pack(`SELECT md5(id::text) AS id,md5(sale_line_key) AS "saleLineKey",md5(upload_batch_id::text) AS "uploadBatchId",sale_date::text AS date,${safe('product_name')} AS "productName",${safe('option_name')} AS "optionName",sale_method AS "saleMethod",sales_krw::text AS "salesKrw",cancel_amount_krw::text AS "cancelAmountKrw",net_sales_krw::text AS "netSalesKrw",sales_quantity::text AS "salesQuantity",order_count AS "orderCount",import_version::text AS "sourceVersion",is_current AS "isCurrent",validation_status::text AS "validationStatus",created_at AS "observedAt",md5(coupang_product_id::text) AS "legacyProductId" FROM meta_ads.coupang_sale_lines WHERE sale_date='${date}' ORDER BY id`));
+  add(`ads:${date}`, pack(`SELECT md5(id::text) AS id,md5(ad_metric_key) AS "adMetricKey",md5(upload_batch_id::text) AS "uploadBatchId",metric_date::text AS date,${safe('ad_execution_product_name')} AS "adExecutionProductName",${safe('campaign_name')} AS "campaignName",${safe('ad_group_name')} AS "adGroupName",${safe('ad_name')} AS "adName",ad_spend_krw::text AS "adSpendKrw",total_conversion_sales_1d_krw::text AS "totalConversionSales1dKrw",import_version::text AS "sourceVersion",is_current AS "isCurrent",validation_status::text AS "validationStatus",created_at AS "observedAt",md5(spend_product_id::text) AS "legacySpendProductId" FROM meta_ads.coupang_ad_metrics WHERE metric_date='${date}' ORDER BY id`));
+}
+writeFileSync(out, JSON.stringify(queries, null, 2) + '\n');
+console.log(JSON.stringify({output:out,queries:queries.length}));

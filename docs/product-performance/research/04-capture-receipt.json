@@ -1,0 +1,13 @@
+{
+  "stage": "04",
+  "rowsChanged": 0,
+  "connectionMode": "MANAGEMENT_READ_ONLY_NOT_RUNTIME_PROOF",
+  "queries": 68,
+  "successful": 68,
+  "originalBytes": 17199576,
+  "gzipBytes": 1662536,
+  "rawSha256": "3b2f6eaefa5ad0c17339b673372b19925c9344ed6204bf62e8943bedb065ddf0",
+  "gzipSha256": "d82a903c45fade66ee34feabe43891ef93e241be8ec4d1550b01094eeb8c4d1f",
+  "privacyChecks": "PASS: pseudonymized source keys, allowlisted projections, no raw uploads/credentials/customer fields",
+  "snapshotBoundary": "Independent READ ONLY transactions; not one repeatable-read production snapshot; not runtime role proof"
+}

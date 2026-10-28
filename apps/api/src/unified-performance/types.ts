@@ -180,7 +180,7 @@ export interface SourceCoverage {
 }
 export interface ControlTotal {
   /** Absent in v1.1.0 sources means the platform's primary amount. Additive stage03 dimension. */
-  measure?: "AD_SPEND" | "OPERATING_REVENUE" | "REGISTERED_GROSS" | "SOURCE_LIST_PRICE_GROSS" | "PRODUCT_COST" | "DIRECT_SHIPPING_COST" | "OTHER_DIRECT_COST" | "VAT_EXPENSE" | "COUPON";
+  measure?: "AD_SPEND" | "OPERATING_REVENUE" | "REGISTERED_GROSS" | "SOURCE_LIST_PRICE_GROSS" | "PRODUCT_COST" | "DIRECT_SHIPPING_COST" | "OTHER_DIRECT_COST" | "VAT_EXPENSE" | "COUPON" | "PLATFORM_FEE" | "RETURN_COST" | "MANUAL_VENDOR_FEE";
   sourceSystem: string;
   platform: Platform;
   scopeKey: string;

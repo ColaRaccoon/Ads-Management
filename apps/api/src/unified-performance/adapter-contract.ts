@@ -83,7 +83,7 @@ export function assertAdapterBatch(request: AdapterRequest, platform: Platform, 
     for (const key of ["unmatchedAmount", "missingFxAmount", "unallocatedAmount"] as const) nullableMoney(coverage[key]);
   }
   for (const control of batch.sourceControlTotals) {
-    if (control.measure !== undefined && !["AD_SPEND", "OPERATING_REVENUE", "REGISTERED_GROSS", "SOURCE_LIST_PRICE_GROSS", "PRODUCT_COST", "DIRECT_SHIPPING_COST", "OTHER_DIRECT_COST", "VAT_EXPENSE", "COUPON"].includes(control.measure))
+    if (control.measure !== undefined && !["AD_SPEND", "OPERATING_REVENUE", "REGISTERED_GROSS", "SOURCE_LIST_PRICE_GROSS", "PRODUCT_COST", "DIRECT_SHIPPING_COST", "OTHER_DIRECT_COST", "VAT_EXPENSE", "COUPON", "PLATFORM_FEE", "RETURN_COST", "MANUAL_VENDOR_FEE"].includes(control.measure))
       throw new Error("Unknown control total measure.");
     assertBusinessDate(control.date);
     if (control.platform !== platform || !request.scopeKeys.includes(control.scopeKey) || control.date < request.from || control.date > request.to) throw new Error("Control total scope mismatch.");
