@@ -1,0 +1,38 @@
+{
+  "stage": "07",
+  "startedAt": "2026-10-28T07:27:39.966Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55452,
+    "database": "unified_stage07"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh fixed loopback PG17 identity checked; all migrations applied and second deploy empty",
+    "separate non-owner configuration, read-only viewer and publication worker roles; source and credential access denied",
+    "real Nest HTTP routes, production permission guard/DTO validation and actual restricted PostgreSQL logins exercised; fixture principals replace external authentication only"
+  ],
+  "deploymentRead": {
+    "checkedOn": "2026-10-28",
+    "projects": 2,
+    "services": 5,
+    "repository": "ColaRaccoon/Ads-Management",
+    "service": "grand-fascination",
+    "branch": "codex/sidebar-scroll",
+    "commit": "672f69501f1c11b4ad4b07d4ea5d5f02904e6822",
+    "stagedChanges": false,
+    "otherServices": [
+      "other repository/main",
+      "no Git source",
+      "no Git source",
+      "Postgres image"
+    ],
+    "configWrites": 0
+  },
+  "testOutput": "▶ stage07 real HTTP management, restricted database roles, conflicts, preview, history recovery and queue publication\n  ✔ actual config/viewer/worker identities and source/write restrictions (279.0544ms)\n  ✔ real permission guard denies unauthenticated/read-only writes; canonical catalog loads (88.106ms)\n  ✔ name preview is read-only, independent of external IDs, and shows ambiguous/unclassified reasons (60.1969ms)\n  ✔ CAS blocks stale preview/save and concurrent changes; audit restores a historical rule (112.701ms)\n  ✔ sale unit costs preserve explicit zero/null and allocation validation rejects invalid weights (36.6589ms)\n  ✔ impact preview reads published selected scope without writing rules, allocations or jobs (188.1359ms)\n  ✔ changing rule platform and account previews and saves the union of old/new impact scopes (45.5181ms)\n  ✔ rebuild real HTTP submission is idempotent, permission checked, and exposes failed/published status (103.2998ms)\n✔ stage07 real HTTP management, restricted database roles, conflicts, preview, history recovery and queue publication (1084.421ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2684.2098\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-28T07:27:55.174Z",
+  "localEvidence": "C:\\Users\\seong\\AppData\\Local\\UnifiedPerformanceStage02\\stage07-cd34aa7c-ee96-478b-8c71-25e5a0481744"
+}

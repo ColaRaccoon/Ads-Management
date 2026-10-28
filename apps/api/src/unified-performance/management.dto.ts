@@ -19,6 +19,7 @@ export class ProductInput {
 }
 export class ProductPreviewInput extends ProductInput { @IsOptional() @IsUUID() id?: string; }
 export class RuleInput {
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(128) expectedConfigurationVersion?: string;
   @IsIn(RULE_KINDS) kind!: RuleKind;
   @IsOptional() @IsUUID() productId?: string | null;
   @IsOptional() @IsIn(CONFIG_PLATFORMS) platform?: (typeof CONFIG_PLATFORMS)[number] | null;
@@ -35,6 +36,9 @@ export class DeleteConfigurationInput {
   @IsString() @MinLength(1) @MaxLength(1024) reason!: string;
 }
 export class RulePreviewInput extends RuleInput {
+  @IsOptional() @IsDateOnly() impactFrom?: string;
+  @IsOptional() @IsDateOnly() impactTo?: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(5) @IsIn(CONFIG_PLATFORMS, { each: true }) previewPlatforms?: (typeof CONFIG_PLATFORMS)[number][];
   @IsOptional() @IsUUID() id?: string;
   // Synthetic or deliberately selected name fields only; no raw source payloads.
   @IsOptional() @IsArray() @ArrayMaxSize(100) @IsObject({ each: true })

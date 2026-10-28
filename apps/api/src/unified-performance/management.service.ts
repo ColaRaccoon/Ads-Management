@@ -8,6 +8,7 @@ import { assertBusinessDate, CatalogProduct, NameInput, NameRule, normalizeProdu
 import { SaleUnitDefinition, validateSaleUnit } from "./domain/sale-unit-validation";
 import { ConfigurationQuery, DeleteConfigurationInput, ProductInput, RuleInput, RulePreviewInput, CONFIG_PLATFORMS, RULE_KINDS } from "./management.dto";
 import { ManagementTransaction, managementVersions, UnifiedManagementRepository } from "./management.repository";
+import { affectedConfigurationScope, configurationImpact } from "./management-impact";
 
 type Actor = Pick<AuthenticatedUser, "id" | "permissions">;
 const Decimal = Prisma.Decimal.clone({ precision: 80, rounding: Prisma.Decimal.ROUND_HALF_UP });
@@ -169,6 +170,13 @@ function payloadConflict(kind: string, left: UnifiedRule, right: ReturnType<type
 @Injectable()
 export class UnifiedManagementService {
   constructor(private readonly repository: UnifiedManagementRepository) {}
+  async configuration() {
+    assertUnifiedEnabled();
+    return this.repository.read(async tx => {
+      const catalog = await this.catalog(tx);
+      return { ...catalog, rules: catalog.rules.map(row => ({ ...row, validFrom: date(row.validFrom), validTo: row.validTo ? date(row.validTo) : null })) };
+    });
+  }
   private async catalog(tx: ManagementTransaction) {
     const products = bounded(await tx.unifiedProduct.findMany({ orderBy: { id: "asc" }, take: 10001 }));
     const rules = bounded(await tx.unifiedRule.findMany({ orderBy: { id: "asc" }, take: 10001 }));
@@ -262,6 +270,8 @@ export class UnifiedManagementService {
   }
   private async scope(tx: ManagementTransaction, platform: string | null, scopeKey: string | null) {
     if (!scopeKey) return;
+    if (scopeKey === "LEGACY_UNBOUND" && (platform === "META" || platform === "CAFE24") &&
+        (process.env.UNIFIED_REPORT_LEGACY_PLATFORMS ?? "META,CAFE24").split(",").includes(platform)) return;
     if (platform === "COUPANG") { if (scopeKey !== "LEGACY_COUPANG_SINGLE_UPLOAD") bad("쿠팡의 확인된 단일 업로드 범위를 사용해 주세요."); return; }
     if (platform === "NAVER") {
       // Names are configuration-only here. Reader access to public is intentionally
@@ -317,7 +327,12 @@ export class UnifiedManagementService {
           saleUnitName: candidates.length === 1 ? (candidates[0].payload as unknown as SaleUnitDefinition).saleUnitName : resolution.saleUnitName,
           unitPreview };
       });
-      return { ...result, samples, versions: catalog.versions, writesPerformed: false };
+      const versionConflict = prepared.before ? input.expectedVersion !== prepared.before.version : input.expectedVersion !== undefined;
+      const configurationConflict = input.expectedConfigurationVersion !== undefined && input.expectedConfigurationVersion !== catalog.versions.configurationVersion;
+      const impact = input.impactFrom !== undefined || input.impactTo !== undefined
+        ? await configurationImpact(tx, input, prepared.before, catalog.products) : undefined;
+      return { ...result, canSave: result.canSave && !versionConflict && !configurationConflict,
+        versionConflict: versionConflict || configurationConflict, samples, versions: catalog.versions, impact, writesPerformed: false };
     });
   }
   async saveRule(input: RuleInput, actor: Actor, id?: string) {
@@ -325,33 +340,36 @@ export class UnifiedManagementService {
     return this.conflicts(() => this.repository.mutate(async tx => {
       const prepared = await this.prepare(tx, input, id);
       this.expected(prepared.before?.version, input.expectedVersion);
+      if (input.expectedConfigurationVersion !== undefined && input.expectedConfigurationVersion !== prepared.catalog.versions.configurationVersion)
+        throw new ConflictException({ code: "UNIFIED_CONFIGURATION_CHANGED", message: "미리보기 이후 설정이 변경되었습니다. 다시 미리보기해 주세요." });
       if (!prepared.canSave) throw new ConflictException({ code: "UNIFIED_RULE_OVERLAP", message: "같은 기간과 범위의 이름/규칙이 충돌합니다." });
       const after = id ? await tx.unifiedRule.update({ where: { id, version: input.expectedVersion }, data: { ...prepared.after, version: { increment: 1 } } }) : await tx.unifiedRule.create({ data: prepared.after });
       await this.record(tx, "RULE", after.id, prepared.before ? "UPDATE" : "CREATE", actor, prepared.before, after, input.reason);
-      return { rule: { ...after, validFrom: date(after.validFrom), validTo: after.validTo ? date(after.validTo) : null }, affectedRange: prepared.affectedRange, rebuildRequired: true };
+      return { rule: { ...after, validFrom: date(after.validFrom), validTo: after.validTo ? date(after.validTo) : null }, affectedRange: prepared.affectedRange,
+        affectedScope: affectedConfigurationScope(input, prepared.before), rebuildRequired: true };
     }));
   }
   async deleteProduct(id: string, input: DeleteConfigurationInput, actor: Actor) {
     assertUnifiedEnabled(); requirePermission(actor, "products.manage"); reason(input.reason);
-    return this.repository.mutate(async tx => {
+    return this.conflicts(() => this.repository.mutate(async tx => {
       const before = await tx.unifiedProduct.findUnique({ where: { id } });
       if (!before) throw new NotFoundException("기준 제품을 찾을 수 없습니다.");
       this.expected(before.version, input.expectedVersion);
       const after = await tx.unifiedProduct.update({ where: { id, version: input.expectedVersion }, data: { active: false, version: { increment: 1 } } });
       await this.record(tx, "PRODUCT", id, "DEACTIVATE", actor, before, after, input.reason);
       return { product: after, affectedRange: { from: null, to: null }, rebuildRequired: true };
-    });
+    }));
   }
   async deleteRule(id: string, input: DeleteConfigurationInput, actor: Actor) {
     assertUnifiedEnabled(); requirePermission(actor, "mappings.manage"); reason(input.reason);
-    return this.repository.mutate(async tx => {
+    return this.conflicts(() => this.repository.mutate(async tx => {
       const before = await tx.unifiedRule.findUnique({ where: { id } });
       if (!before) throw new NotFoundException("규칙을 찾을 수 없습니다.");
       this.expected(before.version, input.expectedVersion);
       const after = await tx.unifiedRule.update({ where: { id, version: input.expectedVersion }, data: { active: false, version: { increment: 1 } } });
       await this.record(tx, "RULE", id, "DEACTIVATE", actor, before, after, input.reason);
       return { rule: { ...after, validFrom: date(after.validFrom), validTo: after.validTo ? date(after.validTo) : null }, affectedRange: { from: date(before.validFrom), to: before.validTo ? date(before.validTo) : null }, rebuildRequired: true };
-    });
+    }));
   }
   private record(tx: ManagementTransaction, entityType: string, entityId: string, action: string, actor: Actor, before: unknown, after: unknown, changeReason: string) {
     return tx.unifiedMappingAudit.create({ data: { entityType, entityId, action, actorUserId: actor.id, before: before ? json(before) : Prisma.DbNull,

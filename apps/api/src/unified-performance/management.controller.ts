@@ -9,6 +9,8 @@ export class UnifiedProductsController {
   constructor(private readonly service: UnifiedManagementService) {}
   @Get() @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   list(@Query() query: ConfigurationQuery) { return this.service.listProducts(query); }
+  @Get("configuration") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  configuration() { return this.service.configuration(); }
   @Post("preview") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   preview(@Body() input: ProductPreviewInput) { return this.service.previewProduct(input, input.id); }
   @Get(":id/audit") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")

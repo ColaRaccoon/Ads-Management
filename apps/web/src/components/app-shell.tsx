@@ -33,6 +33,9 @@ type NavItem = {
 };
 
 const navGroups: Array<{ label: string; items: NavItem[] }> = [
+  { label: "제품 통합", items: [
+    { href: "/products/mappings", label: "제품명과 배분 설정", icon: Settings, requiredPermission: "data.read" }
+  ] },
   {
     label: "자사몰",
     items: [
