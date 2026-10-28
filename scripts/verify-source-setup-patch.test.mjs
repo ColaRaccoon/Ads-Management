@@ -24,6 +24,9 @@ const google = ['app.module.js', 'google/google-access.js', 'google/google-mappi
   'google/google-performance.js', 'google/google-read.service.js', 'google/google-sale-configuration.js',
   'google/google.controller.js', 'google/google.dto.js', 'google/google.module.js',
   'google/google-performance.test.js', 'google/google.service.test.js'];
+const cafe24 = ['daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24-canonical-writer.service.js',
+  'daily-sync/cafe24-option-backfill.js', 'daily-sync/cafe24-order-adapter.js', 'daily-sync/cafe24-rule-loader.js',
+  'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js'];
 const preserved = ['metrics/metrics.service.js', 'sales/sales-metrics.service.js',
   'coupang/coupang.service.js', 'domain/margin-calculator.js'];
 
@@ -39,6 +42,10 @@ async function fixture(run, profile = 'reporting') {
       if (name === 'app.module.js') await put(baseline, name, 'old root module\n');
       await put(compiled, name, 'reviewed Google module\n');
     }
+    if (profile === 'reporting') for (const name of cafe24) {
+      if (name !== 'daily-sync/cafe24-option-backfill.js') await put(baseline, name, 'old Cafe24 module\n');
+      await put(compiled, name, 'reviewed Cafe24 option mapping module\n');
+    }
     for (const name of preserved) { await put(baseline, name, 'legacy\r\n'); await put(compiled, name, 'legacy\n'); }
     const verify = (selected = profile) => spawnSync(process.execPath,
       [verifier, baseline, compiled, ...(selected ? [selected] : [])], { encoding: 'utf8', windowsHide: true });
@@ -50,10 +57,10 @@ async function fixture(run, profile = 'reporting') {
   }
 }
 
-test('reporting accepts only the complete reviewed Google patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
+test('reporting accepts the complete reviewed Google and Cafe24 patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
   const result = verify(); assert.equal(result.status, 0, result.stderr);
   const proof = JSON.parse(result.stdout);
-  assert.equal(proof.changed, existing.length + reporting.length + google.length);
+  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length);
   for (const name of ['meta', 'cafe24', 'coupang', 'margin']) {
     assert.equal(proof.protectedUnchanged[name].files, 1);
     assert.match(proof.protectedUnchanged[name].sha256, /^[a-f0-9]{64}$/);
@@ -66,9 +73,16 @@ test('another Google module cannot bypass the exact allowlist', () => fixture(as
 }));
 
 test('Meta and Coupang calculation mutations remain blocked', async () => {
-  for (const name of ['sales/sales-metrics.service.js', 'coupang/coupang.service.js', 'domain/margin-calculator.js'])
+  for (const name of ['sales/sales-metrics.service.js', 'coupang/coupang.service.js', 'domain/margin-calculator.js', 'domain/cafe24-sales-calculator.js', 'domain/cafe24-coupon-matcher.js'])
     await fixture(async ({ compiled, put, verify }) => { await put(compiled, name, 'regression'); const result = verify();
       assert.notEqual(result.status, 0); assert.ok(result.stderr.includes(`Unreviewed C7 API change: ${name}`)); });
+});
+
+test('missing reviewed Cafe24 module and unreviewed helpers fail closed', async () => {
+  await fixture(async ({ compiled, verify }) => { await rm(join(compiled, 'domain/cafe24-matcher.js'));
+    const result = verify(); assert.notEqual(result.status, 0); assert.match(result.stderr, /Expected patch changes missing/); });
+  await fixture(async ({ compiled, put, verify }) => { await put(compiled, 'daily-sync/cafe24-unreviewed.js', 'unexpected');
+    const result = verify(); assert.notEqual(result.status, 0); assert.match(result.stderr, /Unreviewed C7 API change/); });
 });
 
 test('missing reviewed Google patch and removed legacy module fail closed', async () => {
