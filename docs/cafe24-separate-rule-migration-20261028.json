@@ -1,0 +1,1826 @@
+{
+  "mode": "APPLY",
+  "scanned": 37776,
+  "selectedRows": 37776,
+  "ruleChanges": 48,
+  "products": 22,
+  "retainedHistorical": 1225,
+  "changedRows": 378,
+  "ambiguous": 0,
+  "counts": {
+    "두줄무릎보호대 1+1": 5609,
+    "풀업바": 11174,
+    "에어스텝퍼 89,000": 1418,
+    "버닝 웨이브바": 9970,
+    "풀업밴드 퍼플 (크로스셀링)": 501,
+    "풀업밴드 (크로스셀링)": 1342,
+    "플로우라이트 단품": 661,
+    "노필수면안대": 1106,
+    "버닝 웨이브바 1+1": 426,
+    "NO_MATCH": 826,
+    "버닝 슬라이드 단품": 679,
+    "러닝양말": 1291,
+    "다이어트양말": 167,
+    "두줄무릎보호대 단품": 156,
+    "베놈무릎보호대": 896,
+    "퍼펙트슬라이드_프로형": 88,
+    "풀업밴드 세트 🚀": 60,
+    "퍼펙트슬라이드_기본형": 19,
+    "풀업밴드 퍼플 🚀": 80,
+    "유쉴드마스크": 102,
+    "풀업밴드 세트 (크로스셀링)": 353,
+    "풀업밴드 레드 (크로스셀링)": 12,
+    "플로우라이트 1+1": 100,
+    "스카이스텝": 12,
+    "풀업밴드 🚀": 270,
+    "뷰티레그보드": 80,
+    "풀업밴드 블랙 (크로스셀링)": 47,
+    "자이로볼메탈": 48,
+    "유쉴드마스크 1+1": 46,
+    "챌린지+메탈": 11,
+    "러닝조끼": 34,
+    "자이로볼챌린지": 47,
+    "버닝 슬라이드 1+1": 33,
+    "자이로볼 아이언": 30,
+    "자이로볼메딕": 13,
+    "아이언볼": 11,
+    "한줄보호대 1+1": 11,
+    "메딕+메탈": 10,
+    "풀업밴드 블랙 🚀": 10,
+    "퍼펙트스케이트": 4,
+    "한줄보호대 단품": 4,
+    "방한마스크 단품": 3,
+    "방한마스크 1+1": 6,
+    "자이로볼호크아이": 5,
+    "바라클라바 프로": 1,
+    "퍼펙트슬라이드 프로 1+1": 3,
+    "풀업밴드 레드 🚀": 1
+  },
+  "transitions": {
+    "풀업밴드 세트 (크로스셀링) -> 풀업밴드 세트 🚀": 40,
+    "풀업밴드 퍼플 (크로스셀링) -> 풀업밴드 퍼플 🚀": 32,
+    "UNMATCHED -> 풀업밴드 세트 (크로스셀링)": 2,
+    "UNMATCHED -> 풀업밴드 퍼플 🚀": 32,
+    "풀업밴드 (크로스셀링) -> 풀업밴드 🚀": 106,
+    "퍼펙트슬라이드_기본형 -> NO_MATCH": 3,
+    "UNMATCHED -> 챌린지+메탈": 4,
+    "UNMATCHED -> 자이로볼메탈": 6,
+    "풀업밴드 세트 (크로스셀링) -> 풀업밴드 🚀": 96,
+    "UNMATCHED -> 자이로볼 아이언": 1,
+    "UNMATCHED -> 풀업바": 13,
+    "UNMATCHED -> 메딕+메탈": 5,
+    "UNMATCHED -> 풀업밴드 블랙 🚀": 3,
+    "풀업밴드 세트 🚀 -> 풀업밴드 🚀": 4,
+    "UNMATCHED -> 한줄보호대 1+1": 1,
+    "UNMATCHED -> 버닝 슬라이드 1+1": 5,
+    "UNMATCHED -> 한줄보호대 단품": 1,
+    "UNMATCHED -> 베놈무릎보호대": 1,
+    "UNMATCHED -> 바라클라바 프로": 1,
+    "UNMATCHED -> 다이어트양말": 3,
+    "UNMATCHED -> 풀업밴드 (크로스셀링)": 3,
+    "UNMATCHED -> 러닝조끼": 1,
+    "풀업밴드 블랙 (크로스셀링) -> 풀업밴드 블랙 🚀": 3,
+    "UNMATCHED -> 풀업밴드 퍼플 (크로스셀링)": 1,
+    "UNMATCHED -> 플로우라이트 단품": 2,
+    "UNMATCHED -> 자이로볼챌린지": 2,
+    "퍼펙트슬라이드_프로형 -> 퍼펙트슬라이드 프로 1+1": 2,
+    "UNMATCHED -> 노필수면안대": 1,
+    "풀업밴드 레드 (크로스셀링) -> 풀업밴드 레드 🚀": 1,
+    "UNMATCHED -> 자이로볼호크아이": 1,
+    "UNMATCHED -> 버닝 웨이브바": 1,
+    "자이로볼 아이언 -> 아이언볼": 1
+  },
+  "residual": {
+    "NO_RULE_PRODUCT_15": 44,
+    "NO_RULE_PRODUCT_142": 121,
+    "NO_RULE_PRODUCT_165": 73,
+    "NO_RULE_PRODUCT_158": 22,
+    "NO_RULE_PRODUCT_141": 114,
+    "138: 에어스텝퍼 86,500 / ⭐옵션⭐=[55%OFF] 밀키바이올렛(퍼플)": 59,
+    "NO_RULE_PRODUCT_193": 67,
+    "NO_RULE_PRODUCT_172": 12,
+    "NO_RULE_PRODUCT_178": 17,
+    "NO_RULE_PRODUCT_150": 6,
+    "135: 두줄무릎보호대 1+1 / 컬러=옵션3.코랄핑크": 1,
+    "12: 퍼펙트슬라이드 프로 1+1 / 💫허벅지운동기구 5% 추가할인=케겔 일반형(블랙)": 2,
+    "NO_RULE_PRODUCT_211": 13,
+    "NO_RULE_PRODUCT_162": 19,
+    "NO_RULE_PRODUCT_181": 15,
+    "138: 에어스텝퍼 86,500 / ⭐옵션⭐=[55% OFF]허니피치(핑크)": 65,
+    "NO_RULE_PRODUCT_23": 9,
+    "200: 러닝조끼 / ⭐옵션선택⭐=옵션1.블랙, ⭐사은품⭐=인피니티 러닝삭스 미들컷(중목) - 화이트 S(225-245)": 1,
+    "122: 플로우라이트 1+1 / ⭐️옵션 선택⭐️=옵션2.플로우라이트 베이비블루": 5,
+    "NO_RULE_PRODUCT_209": 24,
+    "NO_RULE_PRODUCT_212": 1,
+    "NO_RULE_PRODUCT_112": 7,
+    "NO_RULE_PRODUCT_113": 7,
+    "96: 에어스텝퍼 86,500 / ⭐옵션⭐=[55% OFF]허니피치(핑크)": 17,
+    "NO_RULE_PRODUCT_210": 1,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 하이컷 (장목) - 화이트 - M (245~265)": 3,
+    "14: 자이로볼챌린지 / ❤️복근운동기구 5% 추가할인=퍼팩트 슬라이드 고급형(블랙)": 3,
+    "121: 버닝 슬라이드 단품 / 컬러=블루+블루": 1,
+    "NO_RULE_PRODUCT_123": 3,
+    "NO_RULE_PRODUCT_201": 7,
+    "NO_RULE_PRODUCT_149": 4,
+    "NO_RULE_PRODUCT_143": 12,
+    "NO_RULE_PRODUCT_152": 6,
+    "NO_RULE_PRODUCT_173": 2,
+    "NO_RULE_PRODUCT_140": 1,
+    "NO_RULE_PRODUCT_213": 1,
+    "NO_RULE_PRODUCT_132": 5,
+    "NO_RULE_PRODUCT_153": 2,
+    "NO_RULE_PRODUCT_191": 3,
+    "84: 다이어트양말 / ⭐옵션선택1⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택2⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택3⭐=여성용( 220-250 ) / 블루, ⭐옵션선택4⭐=여": 1,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 미들컷 (중목) - 블랙 - M (245~265)": 1,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 미들컷 (중목) - 화이트 -  M (245~265)": 2,
+    "96: 에어스텝퍼 86,500 / ⭐옵션⭐=[55%OFF] 밀키바이올렛(퍼플)": 4,
+    "NO_RULE_PRODUCT_184": 1,
+    "NO_RULE_PRODUCT_203": 5,
+    "14: 자이로볼챌린지 / ❤️복근운동기구 5% 추가할인=퍼팩트 슬라이드 일반형(화이트)": 1,
+    "69: 베놈무릎보호대 / 컬러=옵션1. 베놈블루+베놈블루, 사이즈=S(29~32cm)": 1,
+    "200: 러닝조끼 / ⭐옵션선택⭐=옵션1.블랙, ⭐사은품⭐=인피니티 러닝삭스 하이컷(장목) - 화이트 M(245-265)": 1,
+    "137: 에어스텝퍼 86,500 / ⭐옵션⭐=[55%OFF] 밀키바이올렛(퍼플)": 7,
+    "NO_RULE_PRODUCT_199": 3,
+    "NO_RULE_PRODUCT_177": 2,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 미들컷 (중목) - 화이트 - L (265~285)": 1,
+    "84: 다이어트양말 / ⭐옵션선택1⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택2⭐=여성용( 220-250 ) / 베이지, ⭐옵션선택3⭐=여성용( 220-250 ) / 그린, ⭐옵션선택4⭐=여성": 1,
+    "84: 다이어트양말 / ⭐옵션선택1⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택2⭐=여성용( 220-250 ) / 베이지, ⭐옵션선택3⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택4⭐=": 1,
+    "122: 플로우라이트 1+1 / ⭐️옵션 선택⭐️=옵션5.플로우라이트 베이비핑크+베이비블루": 1,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 미들컷 (중목) - 블루 -  L (265~285)": 1,
+    "12: 퍼펙트슬라이드 프로 1+1 / 👍손목운동기구 5% 추가할인=자이로볼 아이언": 1,
+    "12: 퍼펙트슬라이드 프로 1+1 / 💫허벅지운동기구 5% 추가할인=케겔 일반형(화이트)": 1,
+    "14: 자이로볼챌린지 / 💫허벅지운동기구 5% 추가할인=케겔 맥스(블랙)": 1,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 미들컷 (중목) - 블랙 - L (265~285)": 1,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 하이컷 (장목) - 화이트 - S (225~245)": 1,
+    "69: 베놈무릎보호대 / 컬러=옵션1. 베놈블루+베놈블루, 사이즈=L(35~39cm)": 2,
+    "12: 퍼펙트슬라이드 프로 1+1 / 💫허벅지운동기구 5% 추가할인=케겔 맥스(블랙)": 1,
+    "NO_RULE_PRODUCT_185": 1,
+    "69: 베놈무릎보호대 / 컬러=옵션2. 베놈 그레이+베놈 그레이, 사이즈=M(32~35cm)": 1,
+    "122: 플로우라이트 1+1 / ⭐️옵션 선택⭐️=옵션1. 플로우라이트 베이비핑크": 1,
+    "85: 러닝양말 / 5개 주문시 5개 더! 삭스-컬러-사이즈 선택=인피니티 러닝삭스 하이컷 (장목) - 화이트 - L (265~285)": 1,
+    "NO_RULE_PRODUCT_188": 1,
+    "NO_RULE_PRODUCT_217": 1,
+    "84: 다이어트양말 / ⭐옵션선택1⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택2⭐=여성용( 220-250 ) / 퍼플, ⭐옵션선택3⭐=여성용( 220-250 ) / 그린, ⭐옵션선택4⭐=남성용": 1,
+    "137: 에어스텝퍼 86,500 / ⭐옵션⭐=[55% OFF]허니피치(핑크)": 1,
+    "12: 퍼펙트슬라이드 프로 1+1 / 👍손목운동기구 5% 추가할인=자이로볼 챌린지": 1
+  },
+  "plan": [
+    {
+      "id": "07cfaea0-9fd5-4c95-b71d-7de4aa9c9d6f",
+      "name": "풀업밴드 퍼플 (크로스셀링)",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "퍼플"
+        ],
+        "optionExcludeKeywords": [
+          "블랙",
+          "레드",
+          "SET",
+          "🚀"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드"
+        ],
+        "productNameExcludeKeywords": [
+          "🚀"
+        ],
+        "optionIncludeKeywords": [
+          "퍼플"
+        ],
+        "optionExcludeKeywords": [
+          "블랙",
+          "레드",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "0da829ad-8cf5-416c-90b2-5f3769c8fcf5",
+      "name": "풀업바",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "풀업바"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업바"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업바"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업바"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "0f1788a8-8f2a-4e73-baff-8d194044db2c",
+      "name": "베놈무릎보호대",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "베놈"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "베놈",
+          "무릎보호대"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "14dc9e48-5d19-40fe-85f0-18a485d34ca7",
+      "name": "러닝양말",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "러닝양말"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "러닝",
+          "양말"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "15546384-2b89-4939-8424-eb7530dacc6e",
+      "name": "풀업밴드 (크로스셀링)",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "그린"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드",
+          "SET",
+          "🚀"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드"
+        ],
+        "productNameExcludeKeywords": [
+          "🚀"
+        ],
+        "optionIncludeKeywords": [
+          "그린"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "1d0bf195-d382-4303-851c-c4835a9a586c",
+      "name": "퍼펙트스케이트",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "퍼펙트스케이트"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "스케이트"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "퍼펙트",
+          "스케이트"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "스케이트"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "1e22fe01-1811-406b-8ded-e801446b1ace",
+      "name": "퍼펙트슬라이드 프로 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "프로",
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "일반"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "퍼펙트",
+          "슬라이드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "슬라이드",
+          "프로",
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "일반"
+        ]
+      }
+    },
+    {
+      "id": "237563f4-4b0e-477e-bda0-ea8985d2dc57",
+      "name": "자이로볼챌린지",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "챌린지"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지+메탈",
+          "비밀링크"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "자이로볼"
+        ],
+        "productNameExcludeKeywords": [
+          "비밀링크"
+        ],
+        "optionIncludeKeywords": [
+          "챌린지"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지+메탈"
+        ]
+      }
+    },
+    {
+      "id": "354badbd-9efc-4530-a6cf-86dc444169ff",
+      "name": "스카이스텝",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "스카이스텝"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "스카이스텝"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "3687c7ff-3b1b-411a-a38b-61efe3272a14",
+      "name": "에어스텝퍼 86,500",
+      "isActive": false,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "에어스텝퍼"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "에어",
+          "스텝퍼"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "440fc16c-24aa-4a59-aa31-01ae8e03ba20",
+      "name": "퍼펙트슬라이드_기본형",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "일반형"
+        ],
+        "optionExcludeKeywords": [
+          "프로형"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "퍼펙트",
+          "슬라이드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "슬라이드",
+          "일반형"
+        ],
+        "optionExcludeKeywords": [
+          "프로형"
+        ]
+      }
+    },
+    {
+      "id": "4920084d-4f62-4e1f-8d39-a4fab8c83afe",
+      "name": "풀업밴드 블랙 🚀",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "블랙",
+          "🚀"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "레드",
+          "SET"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드",
+          "🚀"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "블랙"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "레드",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "4e2a7e06-ed85-46dc-bf19-04d1954dc042",
+      "name": "버닝 웨이브바",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "버닝 웨이브바",
+          "버닝웨이브바"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "웨이브"
+        ],
+        "optionExcludeKeywords": [
+          "블랙+블랙",
+          "그레이+그레이",
+          "블랙+그레이"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "버닝",
+          "웨이브",
+          "바"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "+"
+        ]
+      }
+    },
+    {
+      "id": "4eb63fe2-a605-471b-9b36-33d273e555c4",
+      "name": "퍼펙트슬라이드_프로형",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "고급",
+          "프로"
+        ],
+        "optionExcludeKeywords": [
+          "일반형",
+          "1+1"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "퍼펙트",
+          "슬라이드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "슬라이드",
+          "프로"
+        ],
+        "optionExcludeKeywords": [
+          "일반형",
+          "1+1"
+        ]
+      }
+    },
+    {
+      "id": "4f5afb2f-5db5-473b-9cca-f3230555ddbb",
+      "name": "버닝 슬라이드 단품",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "버닝 슬라이드",
+          "버닝슬라이드"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "버닝",
+          "슬라이드"
+        ],
+        "optionExcludeKeywords": [
+          "블루+블루",
+          "다크그레이+블루",
+          "다크그레이+다크그레이"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "버닝",
+          "슬라이드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "+"
+        ]
+      }
+    },
+    {
+      "id": "598e8201-f113-4fd9-92da-c1c37d14d7d3",
+      "name": "풀업밴드 세트 🚀",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "SET",
+          "🚀"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드",
+          "🚀"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "SET"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드"
+        ]
+      }
+    },
+    {
+      "id": "5d4c0a55-2c8f-4084-8ca3-686f5cb1059a",
+      "name": "메딕+메탈",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "메딕+메탈"
+        ],
+        "optionExcludeKeywords": [
+          "비밀링크"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "자이로볼"
+        ],
+        "productNameExcludeKeywords": [
+          "비밀링크"
+        ],
+        "optionIncludeKeywords": [
+          "메딕+메탈"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "61f396ab-6bcb-4d43-99c4-ea848a91697c",
+      "name": "두줄무릎보호대 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "두줄"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "두줄",
+          "보호대"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "1+1"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "62cac4c0-d0e2-4375-8010-bd0b540c5982",
+      "name": "자이로볼메딕",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "메딕"
+        ],
+        "optionExcludeKeywords": [
+          "메딕+메탈",
+          "비밀링크"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "자이로볼"
+        ],
+        "productNameExcludeKeywords": [
+          "비밀링크"
+        ],
+        "optionIncludeKeywords": [
+          "메딕"
+        ],
+        "optionExcludeKeywords": [
+          "메딕+메탈"
+        ]
+      }
+    },
+    {
+      "id": "6b526ae9-ed4b-4d0e-b067-122b22b9a3c6",
+      "name": "버닝 슬라이드 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "블루+블루",
+          "다크그레이+블루",
+          "다크그레이+다크그레이"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "버닝",
+          "슬라이드",
+          "+"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "버닝",
+          "슬라이드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "+"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "7a3e9629-c45c-4ad6-b254-c5298dcd472d",
+      "name": "풀업밴드 레드 (크로스셀링)",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "레드"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "SET",
+          "🚀"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드"
+        ],
+        "productNameExcludeKeywords": [
+          "🚀"
+        ],
+        "optionIncludeKeywords": [
+          "레드"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "7d5d46cd-a5fd-41ac-95c2-4a68ad619bc1",
+      "name": "뷰티레그보드",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "뷰티레그보드",
+          "[뷰티레그보드]"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "뷰티레그보드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "7d8823de-f1bf-4b91-8138-36433b36b035",
+      "name": "유쉴드마스크",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "유쉴드마스크",
+          "유쉴드"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "1+1"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "유쉴드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "1+1"
+        ]
+      }
+    },
+    {
+      "id": "7e43f927-392f-4632-8aaa-7b81dfcc4040",
+      "name": "풀업밴드 레드 🚀",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "레드",
+          "🚀"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "SET"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드",
+          "🚀"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "레드"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "801b7078-ec66-4c75-abf5-50444f3b104d",
+      "name": "한줄보호대 단품",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "한줄"
+        ],
+        "optionExcludeKeywords": [
+          "두줄",
+          "1+1"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "한줄",
+          "보호대"
+        ],
+        "productNameExcludeKeywords": [
+          "두줄"
+        ],
+        "optionIncludeKeywords": [
+          "한줄"
+        ],
+        "optionExcludeKeywords": [
+          "두줄",
+          "1+1"
+        ]
+      }
+    },
+    {
+      "id": "87845693-ef3d-43f0-a31a-820446d64eae",
+      "name": "두줄무릎보호대 단품",
+      "isActive": false,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "단품"
+        ],
+        "optionExcludeKeywords": [
+          "1+1"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "두줄",
+          "보호대"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "단품"
+        ],
+        "optionExcludeKeywords": [
+          "1+1"
+        ]
+      }
+    },
+    {
+      "id": "901a695a-87e3-4b9a-8942-aef0b69f8f46",
+      "name": "풀업밴드 퍼플 🚀",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "퍼플",
+          "🚀"
+        ],
+        "optionExcludeKeywords": [
+          "블랙",
+          "레드",
+          "SET"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드",
+          "🚀"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "퍼플"
+        ],
+        "optionExcludeKeywords": [
+          "블랙",
+          "레드",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "953a210b-a9ca-4a8a-9046-57b8f544a9b7",
+      "name": "자이로볼호크아이",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "호크아이"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지",
+          "메딕",
+          "메탈",
+          "아이언",
+          "비밀링크"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "자이로볼"
+        ],
+        "productNameExcludeKeywords": [
+          "비밀링크"
+        ],
+        "optionIncludeKeywords": [
+          "호크아이"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지",
+          "메딕",
+          "메탈",
+          "아이언"
+        ]
+      }
+    },
+    {
+      "id": "9b037612-4063-4320-b9a7-2a9400556d7d",
+      "name": "다이어트양말",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "다이어트양말"
+        ],
+        "optionExcludeKeywords": [
+          "공동구매",
+          "유튜브"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "다이어트",
+          "양말"
+        ],
+        "productNameExcludeKeywords": [
+          "공동구매",
+          "유튜브"
+        ],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "공동구매",
+          "유튜브"
+        ]
+      }
+    },
+    {
+      "id": "9e31136c-7ed0-4687-9d08-26a0393a347f",
+      "name": "풀업밴드 세트 (크로스셀링)",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "SET"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드",
+          "🚀"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드"
+        ],
+        "productNameExcludeKeywords": [
+          "🚀"
+        ],
+        "optionIncludeKeywords": [
+          "SET"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드"
+        ]
+      }
+    },
+    {
+      "id": "a149a389-f9ab-403b-b703-35bbe41bc090",
+      "name": "플로우라이트 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "플로우라이트",
+          "+"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "플로우라이트"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "+"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "b1283d37-7540-433f-afa9-46f6a0cf34dd",
+      "name": "바라클라바",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "바라클라바"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매",
+          "프로",
+          "1+1"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "바라클라바"
+        ],
+        "productNameExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매",
+          "프로",
+          "1+1"
+        ]
+      }
+    },
+    {
+      "id": "b165da60-67aa-4c54-bca1-c66b126c1cc0",
+      "name": "버닝 웨이브바 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "블랙+블랙",
+          "그레이+그레이",
+          "블랙+그레이"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "+"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "버닝",
+          "웨이브",
+          "바"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "+"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "b375837e-9297-4bf2-b9a1-0e642c3a8cef",
+      "name": "한줄보호대 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "한줄",
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "두줄"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "한줄",
+          "보호대"
+        ],
+        "productNameExcludeKeywords": [
+          "두줄"
+        ],
+        "optionIncludeKeywords": [
+          "한줄",
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "두줄"
+        ]
+      }
+    },
+    {
+      "id": "b8541361-5dbb-4dcb-85af-1cbb43621c19",
+      "name": "노필수면안대",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "노필",
+          "수면안대"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "노필",
+          "수면안대"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "bcdf0807-11c5-4b61-a329-5469ea9078ac",
+      "name": "바라클라바 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "바라클라바",
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매",
+          "프로"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "바라클라바"
+        ],
+        "productNameExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ],
+        "optionIncludeKeywords": [
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매",
+          "프로"
+        ]
+      }
+    },
+    {
+      "id": "bd1a0d75-7a32-47e4-9ed9-4217dbe5ebe4",
+      "name": "에어스텝퍼 89,000",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "에어스텝퍼",
+          "에어 스텝퍼"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "공동구매",
+          "플로우"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "에어",
+          "스텝퍼"
+        ],
+        "productNameExcludeKeywords": [
+          "공동구매",
+          "플로우"
+        ],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "공동구매",
+          "플로우"
+        ]
+      }
+    },
+    {
+      "id": "bdfb4f95-4459-4dc7-b5e0-92106dbfd59c",
+      "name": "풀업밴드 블랙 (크로스셀링)",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "블랙"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "레드",
+          "SET",
+          "🚀"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드"
+        ],
+        "productNameExcludeKeywords": [
+          "🚀"
+        ],
+        "optionIncludeKeywords": [
+          "블랙"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "레드",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "bfe391e6-43a6-4085-b66d-3e108e7437d1",
+      "name": "챌린지+메탈",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "챌린지+메탈"
+        ],
+        "optionExcludeKeywords": [
+          "비밀링크"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "자이로볼"
+        ],
+        "productNameExcludeKeywords": [
+          "비밀링크"
+        ],
+        "optionIncludeKeywords": [
+          "챌린지+메탈"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "c1138d3d-846d-4bdc-b56a-f1b434131587",
+      "name": "플로우라이트 단품",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "플로우라이트"
+        ],
+        "optionExcludeKeywords": [
+          "+"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "플로우라이트"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "+"
+        ]
+      }
+    },
+    {
+      "id": "c1c77708-dc3d-4dff-a824-6f912c12844a",
+      "name": "풀업밴드 🚀",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "풀업밴드",
+          "그린",
+          "🚀"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드",
+          "SET"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "풀업밴드",
+          "🚀"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "그린"
+        ],
+        "optionExcludeKeywords": [
+          "퍼플",
+          "블랙",
+          "레드",
+          "SET"
+        ]
+      }
+    },
+    {
+      "id": "c53d341c-1bcd-4c6f-bdce-bcb809b33fbc",
+      "name": "러닝조끼",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "러닝조끼"
+        ],
+        "optionExcludeKeywords": [
+          "공동구매",
+          "유튜브"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "러닝",
+          "조끼"
+        ],
+        "productNameExcludeKeywords": [
+          "공동구매",
+          "유튜브"
+        ],
+        "optionIncludeKeywords": [],
+        "optionExcludeKeywords": [
+          "공동구매",
+          "유튜브"
+        ]
+      }
+    },
+    {
+      "id": "c75b4324-20ad-4f55-9074-e8bb299083cc",
+      "name": "바라클라바 프로",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "바라클라바",
+          "프로"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매",
+          "1+1"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "바라클라바"
+        ],
+        "productNameExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ],
+        "optionIncludeKeywords": [
+          "프로"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매",
+          "1+1"
+        ]
+      }
+    },
+    {
+      "id": "ed6ebc8a-4a1f-4571-886c-d8f251aa37ce",
+      "name": "유쉴드마스크 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [
+          "유쉴드마스크",
+          "유쉴드"
+        ],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "1+1"
+        ],
+        "optionExcludeKeywords": []
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "유쉴드"
+        ],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "1+1"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "f0eeb1d0-a094-47ad-ac79-156eb3da6b7f",
+      "name": "자이로볼 아이언",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "아이언"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지",
+          "메딕",
+          "메탈",
+          "호크아이",
+          "비밀링크",
+          "아이언볼"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "자이로볼"
+        ],
+        "productNameExcludeKeywords": [
+          "비밀링크"
+        ],
+        "optionIncludeKeywords": [
+          "아이언"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지",
+          "메딕",
+          "메탈",
+          "호크아이",
+          "아이언볼"
+        ]
+      }
+    },
+    {
+      "id": "f460f132-5b28-4b4a-9985-7818120128df",
+      "name": "바라클라바 프로 1+1",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "바라클라바",
+          "프로",
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "바라클라바"
+        ],
+        "productNameExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ],
+        "optionIncludeKeywords": [
+          "프로",
+          "1+1"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ]
+      }
+    },
+    {
+      "id": "f54dbd1d-a4b8-4223-8320-4992cc7fbbab",
+      "name": "아이언볼",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "아이언볼"
+        ],
+        "optionExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "아이언볼"
+        ],
+        "productNameExcludeKeywords": [
+          "유튜브",
+          "공동구매"
+        ],
+        "optionIncludeKeywords": [
+          "아이언볼"
+        ],
+        "optionExcludeKeywords": []
+      }
+    },
+    {
+      "id": "f5ae6f90-f5e1-4b34-8044-182e4a915bde",
+      "name": "자이로볼메탈",
+      "isActive": true,
+      "before": {
+        "matchTarget": "LEGACY_COMBINED",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [],
+        "productNameExcludeKeywords": [],
+        "optionIncludeKeywords": [
+          "메탈"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지+메탈",
+          "메딕+메탈",
+          "비밀링크"
+        ]
+      },
+      "after": {
+        "matchTarget": "SEPARATE",
+        "productNameAliases": [],
+        "productNameIncludeKeywords": [
+          "자이로볼"
+        ],
+        "productNameExcludeKeywords": [
+          "비밀링크"
+        ],
+        "optionIncludeKeywords": [
+          "메탈"
+        ],
+        "optionExcludeKeywords": [
+          "챌린지+메탈",
+          "메딕+메탈"
+        ]
+      }
+    }
+  ],
+  "verification": {
+    "legacyRemaining": 0,
+    "currentRows": 37776,
+    "rawOrderFingerprintUnchanged": true,
+    "ruleFinancialAndEffectiveSettingsUnchanged": true,
+    "changedRowsVerified": 378,
+    "batchesRefreshed": 45
+  },
+  "residualReasons": {
+    "NO_PRODUCT_RULE": 632,
+    "INACTIVE_RULE_OR_PRODUCT": 153,
+    "ADD_ON_OR_UNCONFIGURED_OPTION": 12,
+    "OUTSIDE_RULE_DATES": 29
+  },
+  "idempotence": {
+    "ruleChanges": 0,
+    "changedRows": 0,
+    "ambiguous": 0
+  }
+}
