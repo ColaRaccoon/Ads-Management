@@ -1,5 +1,6 @@
 // Offline replay of a bounded, pseudonymized READ ONLY capture. No DB/network calls.
 import assert from "node:assert/strict";
+import { captureReportReplay } from "./unified-report-replay-capture";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
@@ -139,6 +140,7 @@ try {
         { snapshot: async () => configuration } as unknown as UnifiedManagementRepository);
       try {
         const batch = await adapter.read(request);
+        captureReportReplay(request, batch);
         assert(batch.sourceControlTotals.every(c => c.difference === null || decimal(c.difference).isZero()), `Source control mismatch: ${scope}/${day}`);
         outputs.push({ scope, date: day, batch, selected: selectedLines, candidates: sourceRows });
       } catch (error) {

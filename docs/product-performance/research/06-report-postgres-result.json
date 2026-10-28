@@ -1,0 +1,21 @@
+{
+  "stage": "06",
+  "startedAt": "2026-10-28T06:45:56.234Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55451,
+    "database": "unified_stage06"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh PG17 loopback identity checked before synthetic writes",
+    "all migrations applied and repeated deploy has no pending migration",
+    "actual non-owner writer/API logins with separate source-denied permissions",
+    "actual publication/recovery/read-role tests pass with skip0"
+  ],
+  "testOutput": "✔ stage06 actual writer/API roles enforce atomic immutable publication, idempotency and recovery (626.7448ms)\n✔ stage06 full-day replacement preserves cost/name history, lineage and deletion without duplicating totals (547.4684ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2153.6045\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-28T06:46:11.908Z"
+}

@@ -1,0 +1,4176 @@
+{
+  "status": "PASS_INTEGRATED_CAPTURE_REPLAY",
+  "stage": 6,
+  "sourceObservationDate": "2026-10-28",
+  "databaseAccess": false,
+  "sourceWrites": 0,
+  "providerCalls": 0,
+  "previousStageEvidenceUnchanged": true,
+  "partitionCount": 99,
+  "compactFacts": 4091,
+  "compactCaptureSha256": "5e6c5ac3e2cfe9d395d370137c6620fabe02d767d4859687ebc884f544397ba3",
+  "platforms": [
+    {
+      "platform": "META",
+      "scopes": 2,
+      "observedDays": 30,
+      "compactFacts": 263
+    },
+    {
+      "platform": "GOOGLE",
+      "scopes": 1,
+      "observedDays": 7,
+      "compactFacts": 5
+    },
+    {
+      "platform": "NAVER",
+      "scopes": 2,
+      "observedDays": 1,
+      "compactFacts": 58
+    },
+    {
+      "platform": "COUPANG",
+      "scopes": 1,
+      "observedDays": 30,
+      "compactFacts": 3665
+    },
+    {
+      "platform": "CAFE24",
+      "scopes": 2,
+      "observedDays": 30,
+      "compactFacts": 100
+    }
+  ],
+  "periods": [
+    {
+      "days": 1,
+      "from": "2026-10-26",
+      "to": "2026-10-26",
+      "previousFrom": "2026-10-25",
+      "previousTo": "2026-10-25",
+      "actualPartitionCount": 6,
+      "actualPreviousPartitionCount": 4,
+      "synthesizedMissingComponents": 4,
+      "actualNaverDays": 1,
+      "selectionChecks": 32,
+      "reconciliation": [
+        {
+          "measure": "OPERATING_REVENUE",
+          "sourceKnown": "33122880.000000",
+          "reportKnown": "33122880.000000",
+          "assigned": "23182480.000000",
+          "unassigned": "9940400.000000",
+          "unknownSourceRows": 12,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "PROFIT_BEFORE_ADS",
+          "sourceKnown": "13675838.746545",
+          "reportKnown": "13675838.746545",
+          "assigned": "12422290.746545",
+          "unassigned": "1253548.000000",
+          "unknownSourceRows": 212,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_KRW",
+          "sourceKnown": "11502831.553468",
+          "reportKnown": "11502831.553468",
+          "assigned": "8836390.520000",
+          "unassigned": "2666441.033468",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_USD",
+          "sourceKnown": "3836.400000",
+          "reportKnown": "3836.400000",
+          "assigned": "3836.400000",
+          "unassigned": "0.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_KRW",
+          "sourceKnown": "6422287.033468",
+          "reportKnown": "6422287.033468",
+          "assigned": "3755846.000000",
+          "unassigned": "2666441.033468",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_INCOME",
+          "sourceKnown": "861000.000000",
+          "reportKnown": "861000.000000",
+          "assigned": null,
+          "unassigned": "861000.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_COST",
+          "sourceKnown": "1115800.000000",
+          "reportKnown": "1115800.000000",
+          "assigned": null,
+          "unassigned": "1115800.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        }
+      ],
+      "checks": [
+        {
+          "platforms": [],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": null,
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": null,
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "5080544.520000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "5204989.208000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "-124444.688000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "0.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "0.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "243012.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "243012.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "216456.197719",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "26555.835749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "243012.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "243012.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "5323556.553468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "5421445.405719",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "-97888.852251",
+          "scopeBalances": {
+            "unallocatedAdSpend": "243012.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "243012.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "3343101.000000",
+            "mer": "3.3424739776"
+          },
+          "completeTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "3.3424739776"
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "9148091.520000",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "-1737443.520000",
+            "mer": "1.4861755559"
+          },
+          "completeTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "5204989.208000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "3943102.312000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "4310559.033468",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "3100088.966532",
+            "mer": "3.1540386976"
+          },
+          "completeTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "4310559.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "3.1540386976"
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "216456.197719",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "4094102.835749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2603711.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2603711.033468",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "9391103.553468",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "-1980455.553468",
+            "mer": "1.4477180368"
+          },
+          "completeTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "5421445.405719",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "3969658.147749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2603711.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2603711.033468",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": "2111728.000000",
+            "profitBeforeAds": "3493010.746545",
+            "estimatedProfit": "1381282.746545",
+            "mer": "3.7924912678"
+          },
+          "completeTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": "2111728.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "3.7924912678"
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "2229391.000000",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "1682528.020363",
+            "mer": "3.9516262513"
+          },
+          "revenueChange": "-801010.000000",
+          "adSpendChange": "-117663.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "62730.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "85800.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "62730.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": "7192272.520000",
+            "profitBeforeAds": "3493010.746545",
+            "estimatedProfit": "-3699261.773455",
+            "mer": "1.1135159267"
+          },
+          "completeTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "7434380.208000",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "-3522461.187637",
+            "mer": "1.1849972363"
+          },
+          "revenueChange": "-801010.000000",
+          "adSpendChange": "-242107.688000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "62730.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "85800.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "62730.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": "2354740.033468",
+            "profitBeforeAds": "3493010.746545",
+            "estimatedProfit": "1138270.713077",
+            "mer": "3.4011015595"
+          },
+          "completeTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": "2354740.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "3.4011015595"
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "2445847.197719",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "1466071.822644",
+            "mer": "3.6019093949"
+          },
+          "revenueChange": "-801010.000000",
+          "adSpendChange": "-91107.164251",
+          "scopeBalances": {
+            "unallocatedAdSpend": "305742.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "85800.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "305742.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": "7435284.553468",
+            "profitBeforeAds": "3493010.746545",
+            "estimatedProfit": "-3942273.806923",
+            "mer": "1.0771221925"
+          },
+          "completeTotals": {
+            "revenue": "8008710.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "7650836.405719",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "-3738917.385356",
+            "mer": "1.1514714905"
+          },
+          "revenueChange": "-801010.000000",
+          "adSpendChange": "-215551.852251",
+          "scopeBalances": {
+            "unallocatedAdSpend": "305742.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "85800.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "305742.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": "6179275.000000",
+            "profitBeforeAds": "11158458.746545",
+            "estimatedProfit": "4724383.746545",
+            "mer": "3.4962645294"
+          },
+          "completeTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": "6179275.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "3.4962645294"
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "2229391.000000",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "1682528.020363",
+            "mer": "3.9516262513"
+          },
+          "revenueChange": "12794660.000000",
+          "adSpendChange": "3949884.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2423429.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2531100.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2423429.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": "11259819.520000",
+            "profitBeforeAds": "11158458.746545",
+            "estimatedProfit": "-356160.773455",
+            "mer": "1.9187145906"
+          },
+          "completeTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "7434380.208000",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "-3522461.187637",
+            "mer": "1.1849972363"
+          },
+          "revenueChange": "12794660.000000",
+          "adSpendChange": "3825439.312000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2423429.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2531100.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2423429.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": "6422287.033468",
+            "profitBeforeAds": "11158458.746545",
+            "estimatedProfit": "4481371.713077",
+            "mer": "3.3639698580"
+          },
+          "completeTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": "6422287.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "3.3639698580"
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "2445847.197719",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "1466071.822644",
+            "mer": "3.6019093949"
+          },
+          "revenueChange": "12794660.000000",
+          "adSpendChange": "3976439.835749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2666441.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2531100.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2666441.033468",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": "11502831.553468",
+            "profitBeforeAds": "11158458.746545",
+            "estimatedProfit": "-599172.806923",
+            "mer": "1.8781792900"
+          },
+          "completeTotals": {
+            "revenue": "21604380.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "8809720.000000",
+            "adSpend": "7650836.405719",
+            "profitBeforeAds": "3911919.020363",
+            "estimatedProfit": "-3738917.385356",
+            "mer": "1.1514714905"
+          },
+          "revenueChange": "12794660.000000",
+          "adSpendChange": "3851995.147749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2666441.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2531100.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2666441.033468",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "11518500.000000",
+            "adSpend": null,
+            "profitBeforeAds": "2517380.000000",
+            "estimatedProfit": "2517380.000000",
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": null,
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "3034220.000000",
+            "mer": null
+          },
+          "revenueChange": "-2164100.000000",
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": null,
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7409300.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": null,
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "11518500.000000",
+            "adSpend": "5080544.520000",
+            "profitBeforeAds": "2517380.000000",
+            "estimatedProfit": "-2563164.520000",
+            "mer": "2.2671782433"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": "5204989.208000",
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "-2170769.208000",
+            "mer": "2.6287470450"
+          },
+          "revenueChange": "-2164100.000000",
+          "adSpendChange": "-124444.688000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "0.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7409300.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "0.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "11518500.000000",
+            "adSpend": "243012.033468",
+            "profitBeforeAds": "2517380.000000",
+            "estimatedProfit": "2274367.966532",
+            "mer": "47.3988873539"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "243012.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": "216456.197719",
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "2817763.802281",
+            "mer": "63.2118652373"
+          },
+          "revenueChange": "-2164100.000000",
+          "adSpendChange": "26555.835749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "243012.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7409300.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "243012.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "11518500.000000",
+            "adSpend": "5323556.553468",
+            "profitBeforeAds": "2517380.000000",
+            "estimatedProfit": "-2806176.553468",
+            "mer": "2.1636851012"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": "5421445.405719",
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "-2387225.405719",
+            "mer": "2.5237918998"
+          },
+          "revenueChange": "-2164100.000000",
+          "adSpendChange": "-97888.852251",
+          "scopeBalances": {
+            "unallocatedAdSpend": "243012.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7409300.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "243012.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "25114170.000000",
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": "10182828.000000",
+            "estimatedProfit": "5860481.000000",
+            "mer": "6.1742789942"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": null,
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "3034220.000000",
+            "mer": null
+          },
+          "revenueChange": "11431570.000000",
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9854600.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "25114170.000000",
+            "adSpend": "9148091.520000",
+            "profitBeforeAds": "10182828.000000",
+            "estimatedProfit": "779936.480000",
+            "mer": "2.7452906374"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": "5204989.208000",
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "-2170769.208000",
+            "mer": "2.6287470450"
+          },
+          "revenueChange": "11431570.000000",
+          "adSpendChange": "3943102.312000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9854600.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "25114170.000000",
+            "adSpend": "4310559.033468",
+            "profitBeforeAds": "10182828.000000",
+            "estimatedProfit": "5617468.966532",
+            "mer": "5.8261979026"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "4310559.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": "216456.197719",
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "2817763.802281",
+            "mer": "63.2118652373"
+          },
+          "revenueChange": "11431570.000000",
+          "adSpendChange": "4094102.835749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2603711.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9854600.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2603711.033468",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "25114170.000000",
+            "adSpend": "9391103.553468",
+            "profitBeforeAds": "10182828.000000",
+            "estimatedProfit": "536924.446532",
+            "mer": "2.6742512056"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "13682600.000000",
+            "adSpend": "5421445.405719",
+            "profitBeforeAds": "3034220.000000",
+            "estimatedProfit": "-2387225.405719",
+            "mer": "2.5237918998"
+          },
+          "revenueChange": "11431570.000000",
+          "adSpendChange": "3969658.147749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2603711.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9854600.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2603711.033468",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "19527210.000000",
+            "adSpend": "2111728.000000",
+            "profitBeforeAds": "6010390.746545",
+            "estimatedProfit": "3898662.746545",
+            "mer": "9.2470289734"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "2111728.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "2229391.000000",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "4716748.020363",
+            "mer": "10.0889973988"
+          },
+          "revenueChange": "-2965110.000000",
+          "adSpendChange": "-117663.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "62730.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7495100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "62730.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "19527210.000000",
+            "adSpend": "7192272.520000",
+            "profitBeforeAds": "6010390.746545",
+            "estimatedProfit": "-1181881.773455",
+            "mer": "2.7150264323"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "7434380.208000",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "-488241.187637",
+            "mer": "3.0254465565"
+          },
+          "revenueChange": "-2965110.000000",
+          "adSpendChange": "-242107.688000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "62730.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7495100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "62730.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "19527210.000000",
+            "adSpend": "2354740.033468",
+            "profitBeforeAds": "6010390.746545",
+            "estimatedProfit": "3655650.713077",
+            "mer": "8.2927243443"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "2354740.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "2445847.197719",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "4500291.822644",
+            "mer": "9.1961264060"
+          },
+          "revenueChange": "-2965110.000000",
+          "adSpendChange": "-91107.164251",
+          "scopeBalances": {
+            "unallocatedAdSpend": "305742.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7495100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "305742.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "19527210.000000",
+            "adSpend": "7435284.553468",
+            "profitBeforeAds": "6010390.746545",
+            "estimatedProfit": "-1424893.806923",
+            "mer": "2.6262895333"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "7650836.405719",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "-704697.385356",
+            "mer": "2.9398511231"
+          },
+          "revenueChange": "-2965110.000000",
+          "adSpendChange": "-215551.852251",
+          "scopeBalances": {
+            "unallocatedAdSpend": "305742.033468",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "7495100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "305742.033468",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "33122880.000000",
+            "adSpend": "6179275.000000",
+            "profitBeforeAds": "13675838.746545",
+            "estimatedProfit": "7241763.746545",
+            "mer": "5.3603181603"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "6179275.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "2229391.000000",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "4716748.020363",
+            "mer": "10.0889973988"
+          },
+          "revenueChange": "10630560.000000",
+          "adSpendChange": "3949884.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2423429.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9940400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2423429.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "33122880.000000",
+            "adSpend": "11259819.520000",
+            "profitBeforeAds": "13675838.746545",
+            "estimatedProfit": "2161219.226545",
+            "mer": "2.9416883584"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "7434380.208000",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "-488241.187637",
+            "mer": "3.0254465565"
+          },
+          "revenueChange": "10630560.000000",
+          "adSpendChange": "3825439.312000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2423429.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9940400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2423429.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "33122880.000000",
+            "adSpend": "6422287.033468",
+            "profitBeforeAds": "13675838.746545",
+            "estimatedProfit": "6998751.713077",
+            "mer": "5.1574898206"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "6422287.033468",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "2445847.197719",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "4500291.822644",
+            "mer": "9.1961264060"
+          },
+          "revenueChange": "10630560.000000",
+          "adSpendChange": "3976439.835749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2666441.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9940400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2666441.033468",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "33122880.000000",
+            "adSpend": "11502831.553468",
+            "profitBeforeAds": "13675838.746545",
+            "estimatedProfit": "1918207.193077",
+            "mer": "2.8795414282"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "22492320.000000",
+            "adSpend": "7650836.405719",
+            "profitBeforeAds": "6946139.020363",
+            "estimatedProfit": "-704697.385356",
+            "mer": "2.9398511231"
+          },
+          "revenueChange": "10630560.000000",
+          "adSpendChange": "3851995.147749",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2666441.033468",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "9940400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2666441.033468",
+          "unallocatedExpense": "1115800.000000"
+        }
+      ]
+    },
+    {
+      "days": 7,
+      "from": "2026-10-20",
+      "to": "2026-10-26",
+      "previousFrom": "2026-10-13",
+      "previousTo": "2026-10-19",
+      "actualPartitionCount": 30,
+      "actualPreviousPartitionCount": 21,
+      "synthesizedMissingComponents": 76,
+      "actualNaverDays": 1,
+      "selectionChecks": 32,
+      "reconciliation": [
+        {
+          "measure": "OPERATING_REVENUE",
+          "sourceKnown": "144227170.000000",
+          "reportKnown": "144227170.000000",
+          "assigned": "101780770.000000",
+          "unassigned": "42446400.000000",
+          "unknownSourceRows": 107,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "PROFIT_BEFORE_ADS",
+          "sourceKnown": "52165988.378185",
+          "reportKnown": "52165988.378185",
+          "assigned": "50912440.378185",
+          "unassigned": "1253548.000000",
+          "unknownSourceRows": 1171,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_KRW",
+          "sourceKnown": "50008710.820113",
+          "reportKnown": "50008710.820113",
+          "assigned": "45989396.262000",
+          "unassigned": "4019314.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_USD",
+          "sourceKnown": "22728.420000",
+          "reportKnown": "22728.420000",
+          "assigned": "22728.420000",
+          "unassigned": "0.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_KRW",
+          "sourceKnown": "19867230.558113",
+          "reportKnown": "19867230.558113",
+          "assigned": "15847916.000000",
+          "unassigned": "4019314.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_INCOME",
+          "sourceKnown": "861000.000000",
+          "reportKnown": "861000.000000",
+          "assigned": null,
+          "unassigned": "861000.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_COST",
+          "sourceKnown": "1115800.000000",
+          "reportKnown": "1115800.000000",
+          "assigned": null,
+          "unassigned": "1115800.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        }
+      ],
+      "checks": [
+        {
+          "platforms": [],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": null,
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": null,
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "30141480.262000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "-10981694.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "0.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "0.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "1243472.558113",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "31384952.820113",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "-9738222.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "3343101.000000",
+            "mer": "3.3424739776"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "34209027.262000",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "-26798379.262000",
+            "mer": "0.3974293071"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "-6914147.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "5311019.558113",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "2099628.441887",
+            "mer": "2.5598983117"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "35452499.820113",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "-28041851.820113",
+            "mer": "0.3834897417"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": "-5670675.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": "14556211.000000",
+            "profitBeforeAds": "27077440.378185",
+            "estimatedProfit": "12521229.378185",
+            "mer": "4.2348795301"
+          },
+          "completeTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": "14556211.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "4.2348795301"
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "15323835.221816",
+            "mer": "4.1030436123"
+          },
+          "revenueChange": "-19561920.000000",
+          "adSpendChange": "-5235370.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "415143.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "510000.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "415143.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": "44697691.262000",
+            "profitBeforeAds": "27077440.378185",
+            "estimatedProfit": "-17620250.883815",
+            "mer": "1.3791271598"
+          },
+          "completeTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "-25799340.015184",
+            "mer": "1.3331042430"
+          },
+          "revenueChange": "-19561920.000000",
+          "adSpendChange": "-16217064.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "415143.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "510000.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "415143.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": "15799683.558113",
+            "profitBeforeAds": "27077440.378185",
+            "estimatedProfit": "11277756.820072",
+            "mer": "3.9015844699"
+          },
+          "completeTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "15323835.221816",
+            "mer": "4.1030436123"
+          },
+          "revenueChange": "-19561920.000000",
+          "adSpendChange": "-3991897.441887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "1658615.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "510000.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1658615.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": "45941163.820113",
+            "profitBeforeAds": "27077440.378185",
+            "estimatedProfit": "-18863723.441928",
+            "mer": "1.3417988330"
+          },
+          "completeTotals": {
+            "revenue": "61643800.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "-25799340.015184",
+            "mer": "1.3331042430"
+          },
+          "revenueChange": "-19561920.000000",
+          "adSpendChange": "-14973592.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "1658615.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "510000.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1658615.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "75239470.000000",
+            "adSpend": "18623758.000000",
+            "profitBeforeAds": "34742888.378185",
+            "estimatedProfit": "15864330.378185",
+            "mer": "4.0399724911"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "15323835.221816",
+            "mer": "4.1030436123"
+          },
+          "revenueChange": "-5966250.000000",
+          "adSpendChange": "-1167823.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2775842.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2955300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2775842.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "75239470.000000",
+            "adSpend": "48765238.262000",
+            "profitBeforeAds": "34742888.378185",
+            "estimatedProfit": "-14277149.883815",
+            "mer": "1.5428914670"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "-25799340.015184",
+            "mer": "1.3331042430"
+          },
+          "revenueChange": "-5966250.000000",
+          "adSpendChange": "-12149517.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2775842.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2955300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2775842.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "75239470.000000",
+            "adSpend": "19867230.558113",
+            "profitBeforeAds": "34742888.378185",
+            "estimatedProfit": "14620857.820072",
+            "mer": "3.7871141516"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "15323835.221816",
+            "mer": "4.1030436123"
+          },
+          "revenueChange": "-5966250.000000",
+          "adSpendChange": "75649.558113",
+          "scopeBalances": {
+            "unallocatedAdSpend": "4019314.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2955300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4019314.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "75239470.000000",
+            "adSpend": "50008710.820113",
+            "profitBeforeAds": "34742888.378185",
+            "estimatedProfit": "-15520622.441928",
+            "mer": "1.5045272867"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "81205720.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "35115416.221816",
+            "estimatedProfit": "-25799340.015184",
+            "mer": "1.3331042430"
+          },
+          "revenueChange": "-5966250.000000",
+          "adSpendChange": "-10906045.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "4019314.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2955300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4019314.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "68987700.000000",
+            "adSpend": null,
+            "profitBeforeAds": "17423100.000000",
+            "estimatedProfit": "17423100.000000",
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": null,
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "16465860.000000",
+            "mer": null
+          },
+          "revenueChange": "-13782000.000000",
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": null,
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "39491100.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": null,
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "68987700.000000",
+            "adSpend": "30141480.262000",
+            "profitBeforeAds": "17423100.000000",
+            "estimatedProfit": "-12718380.262000",
+            "mer": "2.2887960180"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "-24657315.237000",
+            "mer": "2.0127263890"
+          },
+          "revenueChange": "-13782000.000000",
+          "adSpendChange": "-10981694.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "0.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "39491100.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "0.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "68987700.000000",
+            "adSpend": "1243472.558113",
+            "profitBeforeAds": "17423100.000000",
+            "estimatedProfit": "16179627.441887",
+            "mer": "55.4798733192"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": null,
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "16465860.000000",
+            "mer": null
+          },
+          "revenueChange": "-13782000.000000",
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "39491100.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "68987700.000000",
+            "adSpend": "31384952.820113",
+            "profitBeforeAds": "17423100.000000",
+            "estimatedProfit": "-13961852.820113",
+            "mer": "2.1981138667"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "-24657315.237000",
+            "mer": "2.0127263890"
+          },
+          "revenueChange": "-13782000.000000",
+          "adSpendChange": "-9738222.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "39491100.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "82583370.000000",
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": "25088548.000000",
+            "estimatedProfit": "20766201.000000",
+            "mer": "20.3029909673"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": null,
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "16465860.000000",
+            "mer": null
+          },
+          "revenueChange": "-186330.000000",
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "41936400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "82583370.000000",
+            "adSpend": "34209027.262000",
+            "profitBeforeAds": "25088548.000000",
+            "estimatedProfit": "-9375279.262000",
+            "mer": "2.4140812122"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "-24657315.237000",
+            "mer": "2.0127263890"
+          },
+          "revenueChange": "-186330.000000",
+          "adSpendChange": "-6914147.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "41936400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "82583370.000000",
+            "adSpend": "5311019.558113",
+            "profitBeforeAds": "25088548.000000",
+            "estimatedProfit": "19522728.441887",
+            "mer": "15.5494381251"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": null,
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "16465860.000000",
+            "mer": null
+          },
+          "revenueChange": "-186330.000000",
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "41936400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "82583370.000000",
+            "adSpend": "35452499.820113",
+            "profitBeforeAds": "25088548.000000",
+            "estimatedProfit": "-10618751.820113",
+            "mer": "2.3294089393"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "82769700.000000",
+            "adSpend": "41123175.237000",
+            "profitBeforeAds": "16465860.000000",
+            "estimatedProfit": "-24657315.237000",
+            "mer": "2.0127263890"
+          },
+          "revenueChange": "-186330.000000",
+          "adSpendChange": "-5670675.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "41936400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "130631500.000000",
+            "adSpend": "14556211.000000",
+            "profitBeforeAds": "44500540.378185",
+            "estimatedProfit": "29944329.378185",
+            "mer": "8.9742790895"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "14556211.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "31789695.221816",
+            "mer": "8.2851097141"
+          },
+          "revenueChange": "-33343920.000000",
+          "adSpendChange": "-5235370.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "415143.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "40001100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "415143.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "130631500.000000",
+            "adSpend": "44697691.262000",
+            "profitBeforeAds": "44500540.378185",
+            "estimatedProfit": "-197150.883815",
+            "mer": "2.9225558706"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "-9333480.015184",
+            "mer": "2.6918833815"
+          },
+          "revenueChange": "-33343920.000000",
+          "adSpendChange": "-16217064.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "415143.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "40001100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "415143.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "130631500.000000",
+            "adSpend": "15799683.558113",
+            "profitBeforeAds": "44500540.378185",
+            "estimatedProfit": "28700856.820072",
+            "mer": "8.2679820466"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "31789695.221816",
+            "mer": "8.2851097141"
+          },
+          "revenueChange": "-33343920.000000",
+          "adSpendChange": "-3991897.441887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "1658615.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "40001100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1658615.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "130631500.000000",
+            "adSpend": "45941163.820113",
+            "profitBeforeAds": "44500540.378185",
+            "estimatedProfit": "-1440623.441928",
+            "mer": "2.8434521274"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "-9333480.015184",
+            "mer": "2.6918833815"
+          },
+          "revenueChange": "-33343920.000000",
+          "adSpendChange": "-14973592.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "1658615.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "40001100.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1658615.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "144227170.000000",
+            "adSpend": "18623758.000000",
+            "profitBeforeAds": "52165988.378185",
+            "estimatedProfit": "33287430.378185",
+            "mer": "7.7442570935"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "31789695.221816",
+            "mer": "8.2851097141"
+          },
+          "revenueChange": "-19748250.000000",
+          "adSpendChange": "-1167823.000000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2775842.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "42446400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2775842.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "144227170.000000",
+            "adSpend": "48765238.262000",
+            "profitBeforeAds": "52165988.378185",
+            "estimatedProfit": "3145950.116185",
+            "mer": "2.9575815712"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "-9333480.015184",
+            "mer": "2.6918833815"
+          },
+          "revenueChange": "-19748250.000000",
+          "adSpendChange": "-12149517.975000",
+          "scopeBalances": {
+            "unallocatedAdSpend": "2775842.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "42446400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2775842.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "144227170.000000",
+            "adSpend": "19867230.558113",
+            "profitBeforeAds": "52165988.378185",
+            "estimatedProfit": "32043957.820072",
+            "mer": "7.2595508256"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "19791581.000000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "31789695.221816",
+            "mer": "8.2851097141"
+          },
+          "revenueChange": "-19748250.000000",
+          "adSpendChange": "75649.558113",
+          "scopeBalances": {
+            "unallocatedAdSpend": "4019314.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "42446400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4019314.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "144227170.000000",
+            "adSpend": "50008710.820113",
+            "profitBeforeAds": "52165988.378185",
+            "estimatedProfit": "1902477.558072",
+            "mer": "2.8840409528"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": "163975420.000000",
+            "adSpend": "60914756.237000",
+            "profitBeforeAds": "51581276.221816",
+            "estimatedProfit": "-9333480.015184",
+            "mer": "2.6918833815"
+          },
+          "revenueChange": "-19748250.000000",
+          "adSpendChange": "-10906045.416887",
+          "scopeBalances": {
+            "unallocatedAdSpend": "4019314.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "42446400.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4019314.558113",
+          "unallocatedExpense": "1115800.000000"
+        }
+      ]
+    },
+    {
+      "days": 30,
+      "from": "2026-09-27",
+      "to": "2026-10-26",
+      "previousFrom": "2026-08-28",
+      "previousTo": "2026-09-26",
+      "actualPartitionCount": 99,
+      "actualPreviousPartitionCount": 0,
+      "synthesizedMissingComponents": 375,
+      "actualNaverDays": 1,
+      "selectionChecks": 32,
+      "reconciliation": [
+        {
+          "measure": "OPERATING_REVENUE",
+          "sourceKnown": "747560740.000000",
+          "reportKnown": "747560740.000000",
+          "assigned": "528303450.000000",
+          "unassigned": "219257290.000000",
+          "unknownSourceRows": 495,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "PROFIT_BEFORE_ADS",
+          "sourceKnown": "251042391.521465",
+          "reportKnown": "251042391.521465",
+          "assigned": "249788843.521465",
+          "unassigned": "1253548.000000",
+          "unknownSourceRows": 6278,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_KRW",
+          "sourceKnown": "256931049.310113",
+          "reportKnown": "256931049.310113",
+          "assigned": "251518852.752000",
+          "unassigned": "5412196.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_USD",
+          "sourceKnown": "125017.560000",
+          "reportKnown": "125017.560000",
+          "assigned": "125017.560000",
+          "unassigned": "0.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_KRW",
+          "sourceKnown": "88774566.558113",
+          "reportKnown": "88774566.558113",
+          "assigned": "83362370.000000",
+          "unassigned": "5412196.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_INCOME",
+          "sourceKnown": "861000.000000",
+          "reportKnown": "861000.000000",
+          "assigned": null,
+          "unassigned": "861000.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_COST",
+          "sourceKnown": "1115800.000000",
+          "reportKnown": "1115800.000000",
+          "assigned": null,
+          "unassigned": "1115800.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        }
+      ],
+      "checks": [
+        {
+          "platforms": [],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": null,
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": null,
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "168156482.752000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "0.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "0.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "1243472.558113",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE"
+          ],
+          "knownTotals": {
+            "revenue": null,
+            "adSpend": "169399955.310113",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": null,
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "3343101.000000",
+            "mer": "3.3424739776"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "172224029.752000",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "-164813381.752000",
+            "mer": "0.0789417715"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "5311019.558113",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "2099628.441887",
+            "mer": "2.5598983117"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER"
+          ],
+          "knownTotals": {
+            "revenue": "13595670.000000",
+            "adSpend": "173467502.310113",
+            "profitBeforeAds": "7665448.000000",
+            "estimatedProfit": "-166056854.310113",
+            "mer": "0.0783758907"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "2445300.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": "83463547.000000",
+            "profitBeforeAds": "156683223.521465",
+            "estimatedProfit": "73219676.521465",
+            "mer": "4.2708749246"
+          },
+          "completeTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": "83463547.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": "4.2708749246"
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1808025.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "1154390.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1808025.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": "251620029.752000",
+            "profitBeforeAds": "156683223.521465",
+            "estimatedProfit": "-94936806.230535",
+            "mer": "1.4166692944"
+          },
+          "completeTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1808025.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "1154390.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1808025.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": "84707019.558113",
+            "profitBeforeAds": "156683223.521465",
+            "estimatedProfit": "71976203.963352",
+            "mer": "4.2081798163"
+          },
+          "completeTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3051497.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "1154390.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3051497.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": "252863502.310113",
+            "profitBeforeAds": "156683223.521465",
+            "estimatedProfit": "-96180278.788648",
+            "mer": "1.4097027319"
+          },
+          "completeTotals": {
+            "revenue": "356462370.000000",
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3051497.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "1154390.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3051497.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "370058040.000000",
+            "adSpend": "87531094.000000",
+            "profitBeforeAds": "164348671.521465",
+            "estimatedProfit": "76562777.521465",
+            "mer": "4.2277323759"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "4168724.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "3599690.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4168724.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "370058040.000000",
+            "adSpend": "255687576.752000",
+            "profitBeforeAds": "164348671.521465",
+            "estimatedProfit": "-91593705.230535",
+            "mer": "1.4473055152"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "4168724.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "3599690.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4168724.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "370058040.000000",
+            "adSpend": "88774566.558113",
+            "profitBeforeAds": "164348671.521465",
+            "estimatedProfit": "75319304.963352",
+            "mer": "4.1685141854"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "5412196.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "3599690.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "5412196.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "COUPANG"
+          ],
+          "knownTotals": {
+            "revenue": "370058040.000000",
+            "adSpend": "256931049.310113",
+            "profitBeforeAds": "164348671.521465",
+            "estimatedProfit": "-92837177.788648",
+            "mer": "1.4403009718"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "5412196.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "3599690.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "5412196.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "377502700.000000",
+            "adSpend": null,
+            "profitBeforeAds": "86693720.000000",
+            "estimatedProfit": "86693720.000000",
+            "mer": null
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": null,
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "215657600.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": null,
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "377502700.000000",
+            "adSpend": "168156482.752000",
+            "profitBeforeAds": "86693720.000000",
+            "estimatedProfit": "-81462762.752000",
+            "mer": "2.2449488347"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "0.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "215657600.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "0.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "377502700.000000",
+            "adSpend": "1243472.558113",
+            "profitBeforeAds": "86693720.000000",
+            "estimatedProfit": "85450247.441887",
+            "mer": "303.5874797051"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "215657600.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "377502700.000000",
+            "adSpend": "169399955.310113",
+            "profitBeforeAds": "86693720.000000",
+            "estimatedProfit": "-82706235.310113",
+            "mer": "2.2284698913"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1243472.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "215657600.000000",
+            "unclassifiedProfitBeforeAds": null
+          },
+          "profitBalanceChecked": false,
+          "unallocatedAdSpend": "1243472.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "391098370.000000",
+            "adSpend": "4067547.000000",
+            "profitBeforeAds": "94359168.000000",
+            "estimatedProfit": "90036821.000000",
+            "mer": "96.1509160189"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "218102900.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "391098370.000000",
+            "adSpend": "172224029.752000",
+            "profitBeforeAds": "94359168.000000",
+            "estimatedProfit": "-78119661.752000",
+            "mer": "2.2708699278"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "2360699.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "218102900.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "2360699.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "391098370.000000",
+            "adSpend": "5311019.558113",
+            "profitBeforeAds": "94359168.000000",
+            "estimatedProfit": "88793348.441887",
+            "mer": "73.6390378007"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "218102900.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "391098370.000000",
+            "adSpend": "173467502.310113",
+            "profitBeforeAds": "94359168.000000",
+            "estimatedProfit": "-79363134.310113",
+            "mer": "2.2545915794"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3604171.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "218102900.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3604171.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "733965070.000000",
+            "adSpend": "83463547.000000",
+            "profitBeforeAds": "243376943.521465",
+            "estimatedProfit": "159913396.521465",
+            "mer": "8.7938399023"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": "83463547.000000",
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1808025.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "216811990.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1808025.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "733965070.000000",
+            "adSpend": "251620029.752000",
+            "profitBeforeAds": "243376943.521465",
+            "estimatedProfit": "-8243086.230535",
+            "mer": "2.9169580447"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "1808025.000000",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "216811990.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "1808025.000000",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "733965070.000000",
+            "adSpend": "84707019.558113",
+            "profitBeforeAds": "243376943.521465",
+            "estimatedProfit": "158669923.963352",
+            "mer": "8.6647490825"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3051497.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "216811990.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3051497.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "733965070.000000",
+            "adSpend": "252863502.310113",
+            "profitBeforeAds": "243376943.521465",
+            "estimatedProfit": "-9486558.788648",
+            "mer": "2.9026137157"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "3051497.558113",
+            "unallocatedExpense": null,
+            "shippingIncome": null,
+            "unallocatedShippingIncome": null,
+            "unclassifiedRevenue": "216811990.000000",
+            "unclassifiedProfitBeforeAds": "0.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "3051497.558113",
+          "unallocatedExpense": null
+        },
+        {
+          "platforms": [
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "747560740.000000",
+            "adSpend": "87531094.000000",
+            "profitBeforeAds": "251042391.521465",
+            "estimatedProfit": "163256497.521465",
+            "mer": "8.5405163564"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "4168724.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "219257290.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4168724.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "747560740.000000",
+            "adSpend": "255687576.752000",
+            "profitBeforeAds": "251042391.521465",
+            "estimatedProfit": "-4899985.230535",
+            "mer": "2.9237272671"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "4168724.000000",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "219257290.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "4168724.000000",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "GOOGLE",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "747560740.000000",
+            "adSpend": "88774566.558113",
+            "profitBeforeAds": "251042391.521465",
+            "estimatedProfit": "162013024.963352",
+            "mer": "8.4208886507"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "5412196.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "219257290.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "5412196.558113",
+          "unallocatedExpense": "1115800.000000"
+        },
+        {
+          "platforms": [
+            "META",
+            "GOOGLE",
+            "NAVER",
+            "COUPANG",
+            "CAFE24"
+          ],
+          "knownTotals": {
+            "revenue": "747560740.000000",
+            "adSpend": "256931049.310113",
+            "profitBeforeAds": "251042391.521465",
+            "estimatedProfit": "-6143457.788648",
+            "mer": "2.9095772660"
+          },
+          "completeTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "previousKnownTotals": {
+            "revenue": null,
+            "adSpend": null,
+            "profitBeforeAds": null,
+            "estimatedProfit": null,
+            "mer": null
+          },
+          "revenueChange": null,
+          "adSpendChange": null,
+          "scopeBalances": {
+            "unallocatedAdSpend": "5412196.558113",
+            "unallocatedExpense": "1115800.000000",
+            "shippingIncome": "861000.000000",
+            "unallocatedShippingIncome": "861000.000000",
+            "unclassifiedRevenue": "219257290.000000",
+            "unclassifiedProfitBeforeAds": "1253548.000000"
+          },
+          "profitBalanceChecked": true,
+          "unallocatedAdSpend": "5412196.558113",
+          "unallocatedExpense": "1115800.000000"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "This verifies integrated stage-06 transfer, aggregation, selection, ratios and bucket conservation over already accepted source captures.",
+    "Source adapter parity replays execute separately; they do not alone establish integrated correctness.",
+    "Naver input is observed only on 2026-10-26. Seven/thirty-day complete totals remain null where the unobserved dates are selected.",
+    "Captured read-only statements were independent; a remote atomic snapshot and runtime reader grants are not claimed.",
+    "Capture-missing dates and non-active historical account dates are not treated as confirmed zero; collection horizon policy remains explicit.",
+    "Known partial numbers retain unknown cost/revenue rows; no settlement accuracy claim is made for accepted Naver estimates."
+  ]
+}

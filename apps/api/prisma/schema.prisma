@@ -69,6 +69,12 @@ model UnifiedAggregationRun {
   scopeKey          String   @map("scope_key") @db.VarChar(256)
   businessDate      DateTime @map("business_date") @db.Date
   status            String   @default("STAGING") @db.VarChar(16)
+  idempotencyKey    String?  @unique @map("idempotency_key") @db.VarChar(64)
+  requestedBy      String?  @map("requested_by") @db.Uuid
+  reason           String?  @db.VarChar(1024)
+  leaseToken       String?  @map("lease_token") @db.Uuid
+  leaseExpiresAt   DateTime? @map("lease_expires_at") @db.Timestamptz(3)
+  attempts         Int      @default(0)
   contractVersion   String   @map("contract_version") @db.VarChar(64)
   versions          Json
   readSnapshotId    String   @map("read_snapshot_id") @db.VarChar(128)
@@ -87,6 +93,7 @@ model UnifiedAggregationRun {
 
   @@unique([id, sourceSystem, platform, scopeKey, businessDate], map: "unified_run_partition_key")
   @@index([platform, scopeKey, businessDate, status])
+  @@index([status, leaseExpiresAt, startedAt])
   @@map("unified_aggregation_runs")
 }
 
@@ -102,11 +109,12 @@ model UnifiedSourcePublication {
   run          UnifiedAggregationRun @relation(fields: [runId, sourceSystem, platform, scopeKey, businessDate], references: [id, sourceSystem, platform, scopeKey, businessDate], onDelete: Restrict)
 
   @@id([sourceSystem, platform, scopeKey, businessDate])
+  @@index([platform, scopeKey, businessDate])
   @@map("unified_source_publications")
 }
 
 // SALE/AD_SPEND/COMMON_EXPENSE/SHIPPING_INCOME retain separate measures, never a sales x media join.
-// payload is the corresponding SaleFact/AdSpendFact/CommonExpenseFact including cost/FX evidence.
+// Stage06 payload is a compact ReportFact, without source order keys or original names.
 model UnifiedDailyFact {
   id             String @id @default(uuid()) @db.Uuid
   runId          String @map("run_id") @db.Uuid

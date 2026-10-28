@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { captureReportReplay } from "./unified-report-replay-capture";
 import { createHash } from "node:crypto";
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -64,6 +65,8 @@ for (let date = "2026-09-27"; date <= "2026-10-26"; date = new Date(Date.parse(d
     excludedRows: rawAds.length - ads.length, unverifiedRows: adCandidates.length - ads.length, configuration: config,
     rows: ads.map(row => ({ ...row, observedAt: iso(row.observedAt), updatedAt: null })) as any });
   const normalizedSales = saleBatch.sales.filter(fact => fact.ref.recordKind === "SALE");
+  captureReportReplay(req(date), { ...saleBatch, adSpends: adBatch.adSpends, coverage: [...saleBatch.coverage, ...adBatch.coverage],
+    sourceControlTotals: [...saleBatch.sourceControlTotals, ...adBatch.sourceControlTotals] });
   const selectedNet = total(sales.map(row => row.netSalesKrw));
   const exclusion = total(normalizedSales.flatMap(fact => fact.costComponents.filter(component => component.kind === "MANUAL_SALES_EXCLUSION" && component.amount !== null).map(component => component.amount!)));
   if (normalizedSales.every(fact => fact.operatingRevenue !== null)) assert.equal(sum(normalizedSales.map(fact => fact.operatingRevenue!)).plus(exclusion).toFixed(6), selectedNet);
@@ -182,6 +185,6 @@ const result = { status: "PASS", captureSha256: createHash("sha256").update(byte
       rows: skipped.filter(item => item.reason === reason && item.productName === productName).reduce((n, item) => n + item.rows, 0),
       matchStatuses: [...new Set(skipped.filter(item => item.reason === reason && item.productName === productName).flatMap(item => item.adapterStates?.map((state: Raw) => state.matchStatus) ?? []))],
       issues: [...new Set(skipped.filter(item => item.reason === reason && item.productName === productName).flatMap(item => item.adapterStates?.flatMap((state: Raw) => state.issues) ?? []))].sort() })) })) };
-const output = resolve(root, "04-live-replay-20261028.json"); writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
+const output = process.env.UNIFIED_REPLAY_EVIDENCE_OUTPUT ?? resolve(root, "04-live-replay-20261028.json"); writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
 console.log(JSON.stringify({ status: result.status, queryReceipts: result.queryReceipts, periods: periods.map(({ byProduct, ...item }) => item),
   comparableGroups: comparisons.length, skippedGroups: skipped.length, output }, null, 2));

@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import assert from "node:assert/strict";
+import { captureReportReplay } from "./unified-report-replay-capture";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -45,6 +46,7 @@ for (const label of ["infinity", "patima"]) {
   const errors = Object.fromEntries(Object.keys(raw).map(key => [key, []])) as Parameters<typeof normalizeNaverDay>[2];
   const observedAt = naverTimestamp(receipt(`${label}:${date}:order_items`).observedAt)!;
   const batch = normalizeNaverDay(request, raw, errors, { products: receipt("catalog").rows, nameRules: [] }, observedAt);
+  captureReportReplay(request, batch);
   const sourceSales = raw.order_items.filter(row => row.saleStatus === "SALE");
   assert.equal(sum(batch.sales.map(f => f.operatingRevenue)).toFixed(6), sum(sourceSales.map(r => r.productPaymentAmount as string)).toFixed(6));
   assert.equal(batch.sales.length, sourceSales.length);
@@ -94,5 +96,5 @@ for (const label of ["infinity", "patima"]) {
 const evidence = { status: "PASS_INPUT_CONSERVATION", realBusinessData: true, period: "2026-10-26", stores: 2, sourceRowsChanged: 0,
   runtimePermissionProof: false, captureSnapshot: "Separate READ ONLY requests; no atomic remote snapshot is claimed", reference,
   queryElapsedMs: { min: Math.min(...capture.queries.map((q: Raw) => q.elapsedMs)), max: Math.max(...capture.queries.map((q: Raw) => q.elapsedMs)) }, results };
-writeFileSync("docs/product-performance/research/05-live-replay-20261028.json", JSON.stringify(evidence, null, 2) + "\n");
+writeFileSync(process.env.UNIFIED_REPLAY_EVIDENCE_OUTPUT ?? "docs/product-performance/research/05-live-replay-20261028.json", JSON.stringify(evidence, null, 2) + "\n");
 console.log(JSON.stringify(evidence, null, 2));

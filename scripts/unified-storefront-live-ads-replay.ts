@@ -1,5 +1,6 @@
 // Offline replay of reviewed, pseudonymized READ ONLY captures; never connects to a database.
 import assert from "node:assert/strict";
+import { captureReportReplay } from "./unified-report-replay-capture";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
@@ -106,6 +107,7 @@ for (const platform of ["META", "GOOGLE"] as const) {
       legacyFx, unverifiedRows: withheld ? selected.length : 0, excludedRows: candidates.length - selected.length,
       configuration: { products: configuration.products, nameRules }, sourceSelectionEvidence: { policies: owned, coverage: stored ?? null,
         capturedQueryHash: createHash("sha256").update(inputText).digest("hex"), independentlyReadStatements: true } });
+    captureReportReplay({ ...request, from: date, to: date }, batch);
     const normalizedOriginal = quantizeMoney(sum(batch.adSpends.map(f => f.originalAmount)));
     if (!withheld) assert.equal(normalizedOriginal, originalSelected);
     const assignedOriginal = quantizeMoney(sum(batch.adSpends.filter(f => f.productName !== null).map(f => f.originalAmount)));
