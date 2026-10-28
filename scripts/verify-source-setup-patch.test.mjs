@@ -79,7 +79,7 @@ test('Meta and Coupang calculation mutations remain blocked', async () => {
 });
 
 test('missing reviewed Cafe24 module and unreviewed helpers fail closed', async () => {
-  await fixture(async ({ compiled, verify }) => { await rm(join(compiled, 'domain/cafe24-matcher.js'));
+  await fixture(async ({ compiled, verify }) => { await rm(join(compiled, 'daily-sync/cafe24-option-backfill.js'));
     const result = verify(); assert.notEqual(result.status, 0); assert.match(result.stderr, /Expected patch changes missing/); });
   await fixture(async ({ compiled, put, verify }) => { await put(compiled, 'daily-sync/cafe24-unreviewed.js', 'unexpected');
     const result = verify(); assert.notEqual(result.status, 0); assert.match(result.stderr, /Unreviewed C7 API change/); });
