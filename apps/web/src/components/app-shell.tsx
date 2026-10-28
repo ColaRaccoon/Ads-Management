@@ -34,6 +34,7 @@ type NavItem = {
 
 const navGroups: Array<{ label: string; items: NavItem[] }> = [
   { label: "제품 통합", items: [
+    { href: "/products/performance", label: "제품 통합 성과", icon: BarChart3, requiredPermission: "data.read" },
     { href: "/products/mappings", label: "제품명과 배분 설정", icon: Settings, requiredPermission: "data.read" }
   ] },
   {
@@ -121,7 +122,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <strong>운영 대시보드</strong>
           </div>
           <Suspense fallback={<div className="toolbar" />}>
-            {pathname.startsWith("/google/") ? <GoogleDateRangePicker /> : <DateRangePicker />}
+            {pathname === "/products/performance" ? null : pathname.startsWith("/google/") ? <GoogleDateRangePicker /> : <DateRangePicker />}
           </Suspense>
           <div className="account-toolbar">
             <div className="account-summary">

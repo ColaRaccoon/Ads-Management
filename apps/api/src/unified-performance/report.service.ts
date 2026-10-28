@@ -81,6 +81,7 @@ export class UnifiedReportService {
     const currentDays = daysBetween(query.from, query.to), previousDays = daysBetween(query.compareFrom, query.compareTo);
     const comparison = { known: compareTotals(current.knownTotals, previous.knownTotals, currentDays, previousDays),
       complete: compareTotals(current.completeTotals, previous.completeTotals, currentDays, previousDays), byMedium: compareMedia(current, previous),
+      previousByMarketplace: previous.byMarketplace,
       currentDays, previousDays, unequalPeriods: currentDays !== previousDays };
     const { coverage: _currentCoverage, ...totals } = current;
     const versionKeys = ["scopePolicyVersion", "nameRuleVersion", "saleUnitRuleVersion", "allocationRuleVersion", "calculationVersion", "fxVersion"] as const;

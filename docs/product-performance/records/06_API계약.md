@@ -51,6 +51,7 @@ cursor는 조회 조건·발행 포인터·실패 상태·설정·허용 범위�
 - `unclassifiedSales`, `unallocatedAdSpends`, `unallocatedExpenses`, `scopeBalances`: 플랫폼·범위·날짜별 잔액. 원천 주문키·광고명·옵션·payload는 반환하지 않는다. scopeBalances는 무분류 매출/광고 전 이익, 미배분 광고비/비용/배송수입 및 배송수입 소계를 구분한다.
 - `coverage`, `comparisonCoverage`: 당기·전기의 구성요소별 participation, collectionState, rowsPresent, zeroConfirmed, 기준시각·누락 행수·부분금액·추정 여부·안전한 issue 코드.
 - `comparison`: known/complete 각각 current/previous/change/changePct/reason와 일평균, 매체별 비중·비중 변화 %p·선택 광고비 증감 기여 %p. 다른 길이 기간은 unequalPeriods=true.
+- 08단계에서 `comparison.previousByMarketplace`를 추가했다. 당기 `byMarketplace`와 같은 선택·발행 스냅샷의 비교기간 판매처별 확인 매출이며, 별도 원천 읽기·재계산이나 기존 금액 필드의 의미 변경은 없다.
 - `warnings`, `provisional`: 부분합·미분류·미배분·0분모·현재 설정 변경 등을 표시한다. KST 오늘 이후를 포함하면 잠정이다.
 
 `summary.items`는 productName, saleUnits, knownTotals, completeTotals, productProfitSubtotal, metricAvailability, byMarketplace, byMedium, comparison, mediumComparison, quality, isEstimate, commonExpenseAllocationStatus다. `total`, `nextCursor`를 함께 반환한다. 제품 페이지로 범위 합계가 줄어들지 않는다.

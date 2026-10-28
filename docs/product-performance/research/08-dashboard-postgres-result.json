@@ -1,0 +1,40 @@
+{
+  "stage": "08",
+  "startedAt": "2026-10-28T07:59:34.731Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55453,
+    "database": "unified_stage08"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh fixed loopback PG17 identity checked; all migrations applied and second deploy empty",
+    "actual non-owner read-only viewer role; raw source, credentials and aggregate writes denied",
+    "real Nest HTTP permission guard, DTO validation, report repository/service and PostgreSQL reads; only authentication principal is a loopback fixture",
+    "32 platform combinations, precise amounts, same-scope comparison, null versus zero, Naver estimate, pagination and cursor invalidation exercised",
+    "production loadDashboard uses the real HTTP API; KPI cards, comparison table and chart tooltip SSR preserve exact decimal amounts in all 32 selections"
+  ],
+  "deploymentRead": {
+    "checkedOn": "2026-10-28",
+    "projects": 2,
+    "services": 5,
+    "repository": "ColaRaccoon/Ads-Management",
+    "service": "grand-fascination",
+    "branch": "codex/sidebar-scroll",
+    "commit": "672f69501f1c11b4ad4b07d4ea5d5f02904e6822",
+    "stagedChanges": false,
+    "otherServices": [
+      "other repository/main",
+      "no Git source",
+      "no Git source",
+      "Postgres image"
+    ],
+    "configWrites": 0
+  },
+  "testOutput": "▶ stage08 dashboard real HTTP aggregates and precise read-only display inputs\n  ✔ read-only role, real guards, exact canonical name, authorized scopes and API errors (157.8141ms)\n  ✔ all 32 platform selections preserve precise sales, costs, profits, medium shares and comparison (854.0991ms)\n  ✔ zero, physically missing dates, missing costs, zero-base and profit transitions remain distinct (53.5444ms)\n  ✔ day/week/month, partial periods and unequal comparison use server bucket ranges (38.2936ms)\n  ✔ all timeseries and diagnostic pages preserve selection/snapshot and refuse foreign cursors (192.9621ms)\n  ✔ production dashboard loader renders exact API card/table/tooltip values across 32 selections (1554.0763ms)\n✔ stage08 dashboard real HTTP aggregates and precise read-only display inputs (3169.264ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 5143.9654\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-28T07:59:54.145Z",
+  "localEvidence": "C:\\Users\\seong\\AppData\\Local\\UnifiedPerformanceStage02\\stage08-43831e7e-6473-4726-bf72-55370b121c47"
+}
