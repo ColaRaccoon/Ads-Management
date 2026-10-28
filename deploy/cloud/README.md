@@ -1,5 +1,8 @@
 # Single-container cloud bundle
 
+현재 운영 Railway 배포 대상, 사용한 도구·명령, 필요한 권한은
+[Railway 운영 배포 절차와 권한](RAILWAY_DEPLOYMENT.md)에 기록되어 있습니다.
+
 This is the production target introduced on 2026-09-01: one continuously
 running 1GB Node container using the existing Supabase Pro Auth, PostgreSQL and
 private Storage services. The Next.js standalone server is the only public
@@ -71,7 +74,7 @@ Useful read-only checks after startup:
 Invoke-WebRequest http://127.0.0.1:3200/backend-api/health/live
 docker compose -f deploy/cloud/compose.local.yaml ps
 docker compose -f deploy/cloud/compose.local.yaml exec app node -e "fetch('http://127.0.0.1:4200/api/health/live').then(r=>console.log(r.status))"
-docker compose -f deploy/cloud/compose.local.yaml exec app node -e "fetch('http://127.0.0.1:4200/api/health/ready',{headers:{'x-internal-probe':process.env.INTERNAL_PROBE_TOKEN}}).then(async r=>{if(!r.ok)process.exit(1);const b=await r.json();if(b.releaseId!==process.env.RELEASE_GIT_SHA||!b.runtimeConfigFingerprint)process.exit(1);console.log('ready',b.releaseId)})"
+docker compose -f deploy/cloud/compose.local.yaml exec app node -e "fetch('http://127.0.0.1:4200/api/health/ready',{headers:{'x-internal-probe-token':process.env.INTERNAL_PROBE_TOKEN}}).then(async r=>{if(!r.ok)process.exit(1);const b=await r.json();if(b.releaseId!==process.env.RELEASE_GIT_SHA||!b.runtimeConfigFingerprint)process.exit(1);console.log('ready',b.releaseId)})"
 ```
 
 The readiness command consumes the token only inside the container and prints

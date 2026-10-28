@@ -32,6 +32,8 @@ EXCHANGE_RATE_LOOKBACK_DAYS=10
 
 ## 실행
 
+운영 사이트 배포는 [Railway 운영 배포 절차와 권한](deploy/cloud/RAILWAY_DEPLOYMENT.md)을 참고하세요.
+
 2026-10-08 사용자 요청으로 테스트 소스·fixture·테스트 명령을 제거했습니다. 현재 체크아웃은 타입 검사(`npm.cmd run lint`)와 빌드 검증을 사용합니다. 이전 작업 기록의 테스트 결과는 당시 증거로 보존합니다.
 
 ```powershell
