@@ -8,7 +8,8 @@ import { REQUIRED_PERMISSIONS } from "../auth/route-decorators";
 import { UnifiedReportController } from "./report.controller";
 import { ReportQueryDto, RebuildInputDto } from "./report.dto";
 import { parseReportQuery, reportBuckets, datesIn } from "./report-query";
-import { missingCoverage, selectReportScopes, type ReportSnapshot, type UnifiedReportRepository } from "./report.repository";
+import { missingCoverage, selectReportScopes, type ReportSnapshot, UnifiedReportRepository } from "./report.repository";
+import type { UnifiedManagementRepository } from "./management.repository";
 import { UnifiedReportService } from "./report.service";
 import type { UnifiedAggregationRepository } from "./aggregation.repository";
 import type { PublishedReportFact } from "./report-contract";
@@ -156,4 +157,134 @@ test("request participation reuse preserves date policy bounds and refreshes aft
   const refreshed = await f.service.read("timeseries", input, actor) as any;
   assert.equal(refreshed.knownTotals.revenue, "200.000000");
   assert.equal(refreshed.items[0].knownTotals.revenue, "100.000000");
+}));
+
+function inFlightFixture() {
+  let reads = 0, gate = Promise.resolve(), release: (() => void) | undefined, fail = false;
+  const scopeKey = "LEGACY_COUPANG_SINGLE_UPLOAD";
+  const state = { revision: 1, configurationVersion: "config-1", amount: "100.000000" };
+  const tx = {
+    sourceConnection: { findMany: async () => [] },
+    unifiedSourcePublication: {
+      findMany: async (input: any) => input.where.AND[0].OR.some((part: any) => part.platform === "COUPANG" && part.scopeKey === scopeKey) ? [{
+        sourceSystem: "COUPANG", platform: "COUPANG", scopeKey, businessDate: new Date("2026-10-26"),
+        runId: `run-${state.revision}`, revision: state.revision,
+        run: { versions: {}, controlTotals: [], publishedAt: new Date("2026-10-27"), startedAt: new Date("2026-10-27") }
+      }] : [],
+      groupBy: async () => []
+    },
+    unifiedDailyFact: { findMany: async () => [{ runId: `run-${state.revision}`, payload: {
+      ...fixture().snapshot.facts[0], marketplace: "COUPANG", amountKrw: state.amount, completeAmountKrw: state.amount
+    } }] },
+    unifiedSourceCoverage: { findMany: async () => [] },
+    unifiedAggregationRun: { findMany: async () => [] }
+  };
+  const management = {
+    read: async (work: (tx: unknown) => Promise<unknown>) => {
+      reads++; const barrier = gate; await barrier;
+      if (fail) { fail = false; throw Error("SYNTHETIC_SNAPSHOT_FAILURE"); }
+      return work(tx);
+    },
+    snapshot: async () => ({ products: [{ id: "A", canonicalName: "A", active: true }], rules: [],
+      versions: { configurationVersion: state.configurationVersion } })
+  } as unknown as UnifiedManagementRepository;
+  return { repository: new UnifiedReportRepository(management), management, state,
+    query: parseReportQuery({ ...query, platforms: ["COUPANG"], scopeKeys: [scopeKey], productName: "A" }),
+    reads: () => reads, hold: () => { gate = new Promise<void>(resolve => { release = resolve; }); },
+    resume: () => { release?.(); gate = Promise.resolve(); }, failNext: () => { fail = true; } };
+}
+
+test("concurrent effective report reads share one RR load while pagination and grain stay response-local", async () => {
+  const f = inFlightFixture(); f.hold();
+  const first = f.repository.snapshot(f.query);
+  const second = f.repository.snapshot({ ...f.query, limit: 1, cursor: "response-local", grain: "month", selectionHash: "response-local" });
+  assert.equal(first, second); assert.equal(f.reads(), 1);
+  f.resume();
+  const [a, b] = await Promise.all([first, second]); assert.equal(a, b);
+  await f.repository.snapshot(f.query); assert.equal(f.reads(), 2, "settled results must never remain cached");
+});
+
+test("in-flight reads separate account/date/product/lookback and repository runtime-role instances", async () => {
+  const f = inFlightFixture(); f.hold();
+  const requests = [f.repository.snapshot(f.query),
+    f.repository.snapshot({ ...f.query, platforms: [], scopeKeys: undefined }),
+    f.repository.snapshot({ ...f.query, scopeKeys: [] }), f.repository.snapshot({ ...f.query, scopeKeys: undefined }),
+    f.repository.snapshot({ ...f.query, from: "2026-10-25" }), f.repository.snapshot({ ...f.query, compareFrom: "2026-10-24" }),
+    f.repository.snapshot({ ...f.query, productName: undefined }), f.repository.snapshot(f.query, "2026-10-12"),
+    new UnifiedReportRepository(f.management).snapshot(f.query)];
+  assert.equal(f.reads(), requests.length);
+  f.resume(); await Promise.all(requests);
+});
+
+test("scope allowlist changes create separate in-flight reads and each read pins its captured policy", async () => {
+  const savedNaver = process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS, savedLegacy = process.env.UNIFIED_REPORT_LEGACY_PLATFORMS;
+  try {
+    const f = inFlightFixture(); f.hold();
+    const input = { ...f.query, platforms: ["NAVER" as const], scopeKeys: undefined };
+    process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS = "store-a";
+    const before = f.repository.snapshot(input);
+    process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS = "store-b";
+    const after = f.repository.snapshot(input);
+    assert.equal(f.reads(), 2);
+    f.resume(); const [a,b] = await Promise.all([before,after]);
+    assert.deepEqual(a.scopes.map(scope => scope.scopeKey), ["store-a"]);
+    assert.deepEqual(b.scopes.map(scope => scope.scopeKey), ["store-b"]);
+    f.hold(); process.env.UNIFIED_REPORT_LEGACY_PLATFORMS = "META";
+    const withLegacy = f.repository.snapshot({ ...input, platforms: ["META"] });
+    process.env.UNIFIED_REPORT_LEGACY_PLATFORMS = "";
+    const noLegacy = f.repository.snapshot({ ...input, platforms: ["META"] });
+    assert.equal(f.reads(), 4); f.resume();
+    const [c,d] = await Promise.all([withLegacy,noLegacy]);
+    assert.deepEqual(c.scopes.map(scope => scope.scopeKey), ["LEGACY_UNBOUND"]); assert.deepEqual(d.scopes, []);
+  } finally {
+    if (savedNaver === undefined) delete process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS; else process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS = savedNaver;
+    if (savedLegacy === undefined) delete process.env.UNIFIED_REPORT_LEGACY_PLATFORMS; else process.env.UNIFIED_REPORT_LEGACY_PLATFORMS = savedLegacy;
+  }
+});
+
+test("failed singleflight is evicted and the next request retries the database", async () => {
+  const f = inFlightFixture(); f.hold(); f.failNext();
+  const first = f.repository.snapshot(f.query), second = f.repository.snapshot(f.query);
+  assert.equal(first, second); assert.equal(f.reads(), 1); f.resume();
+  await assert.rejects(Promise.all([first,second]), /SYNTHETIC_SNAPSHOT_FAILURE/);
+  await f.repository.snapshot(f.query); assert.equal(f.reads(), 2);
+});
+
+test("the first request after settlement sees changed configuration and a new publication immediately", async () => {
+  const f = inFlightFixture(), before = await f.repository.snapshot(f.query);
+  f.state.configurationVersion = "config-2"; f.state.revision = 2; f.state.amount = "200.000000";
+  const after = await f.repository.snapshot(f.query);
+  assert.equal(f.reads(), 2); assert.notEqual(before.snapshotHash, after.snapshotHash);
+  assert.equal(before.versions.configurationVersion, "config-1"); assert.equal(after.versions.configurationVersion, "config-2");
+  assert.equal(before.publications[0].runId, "run-1"); assert.equal(after.publications[0].runId, "run-2");
+  assert.equal(before.facts[0].amountKrw, "100.000000"); assert.equal(after.facts[0].amountKrw, "200.000000");
+});
+
+test("concurrent endpoint calculations leave the shared snapshot unchanged and still enforce caller permission", async () => enabled(async () => {
+  const f = inFlightFixture(), original = f.repository.snapshot.bind(f.repository);
+  let shared: ReportSnapshot | undefined, before = "";
+  const freeze = (value: unknown): void => {
+    if (!value || typeof value !== "object" || Object.isFrozen(value)) return;
+    for (const child of Object.values(value)) freeze(child);
+    Object.freeze(value);
+  };
+  f.repository.snapshot = (input, lookback) => original(input,lookback).then(snapshot => {
+    if (!shared) { shared = snapshot; before = JSON.stringify(snapshot); freeze(snapshot); }
+    return snapshot;
+  });
+  const service = new UnifiedReportService(f.repository, {} as UnifiedAggregationRepository);
+  f.hold();
+  const requests = (["summary","timeseries","diagnostics","options"] as const).map(kind => service.read(kind,{ ...f.query },readActor));
+  await assert.rejects(service.read("summary",{ ...f.query },{ ...actor, permissions: [] }), /실행 권한/);
+  assert.equal(f.reads(), 1); f.resume();
+  const results = await Promise.all(requests);
+  assert(results.every(result => result.snapshotHash === results[0].snapshotHash));
+  assert.equal(JSON.stringify(shared), before, "shared arrays, rows, dates and versions must not be mutated by consumers");
+  shared = undefined; before = ""; f.hold();
+  const analyses = [service.read("relationships",{ ...f.query, analysisMedia: ["COUPANG_ADS"] },readActor),
+    service.read("relationships",{ ...f.query, analysisMedia: [] },readActor)];
+  assert.equal(f.reads(), 2, "relationship lookback has its own load shared across analysis-media choices");
+  f.resume(); const relationships = await Promise.all(analyses);
+  assert.deepEqual(relationships[0].knownTotals, relationships[1].knownTotals);
+  assert.equal(JSON.stringify(shared), before, "relationship calculations must also preserve shared input");
 }));

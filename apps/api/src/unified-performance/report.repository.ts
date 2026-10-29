@@ -8,6 +8,11 @@ import { PLATFORM_COMPONENTS } from "./domain/platform-selection";
 import type { Platform, SourceCoverage } from "./types";
 
 export interface ReportScope { platform: Platform; scopeKey: string; label: string }
+type ReportScopePolicy = { legacyPlatforms: string; naverStoreIds: string };
+const reportScopePolicy = (): ReportScopePolicy => ({
+  legacyPlatforms: process.env.UNIFIED_REPORT_LEGACY_PLATFORMS ?? "META,CAFE24",
+  naverStoreIds: process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS ?? ""
+});
 const MAX_RUNS = 20000, MAX_FACTS = 100000;
 const at = (date: string) => new Date(`${date}T00:00:00Z`);
 const day = (date: Date) => date.toISOString().slice(0, 10);
@@ -16,17 +21,17 @@ function bounded<T>(rows: T[], max: number): T[] {
   return rows;
 }
 /** Metadata only: never queries sales, ads, public JSONB, credentials, or source adapters. */
-export async function reportScopes(tx: Prisma.TransactionClient, platforms: Platform[]): Promise<ReportScope[]> {
+export async function reportScopes(tx: Prisma.TransactionClient, platforms: Platform[], policy = reportScopePolicy()): Promise<ReportScope[]> {
   const connections = platforms.some(p => ["META", "GOOGLE", "CAFE24"].includes(p)) ? bounded(await tx.sourceConnection.findMany({
     where: { provider: { in: platforms.filter((p): p is "META" | "GOOGLE" | "CAFE24" => ["META", "GOOGLE", "CAFE24"].includes(p)) } },
     select: { id: true, provider: true, displayName: true }, orderBy: { id: "asc" }, take: 101
   }), 100) : [];
   const scopes: ReportScope[] = connections.map(c => ({ platform: c.provider as Platform, scopeKey: c.id, label: c.displayName }));
-  const legacy = (process.env.UNIFIED_REPORT_LEGACY_PLATFORMS ?? "META,CAFE24").split(",");
+  const legacy = policy.legacyPlatforms.split(",");
   for (const platform of ["META", "CAFE24"] as const) if (platforms.includes(platform) && legacy.includes(platform))
     scopes.push({ platform, scopeKey: "LEGACY_UNBOUND", label: `${platform} 기존 CSV` });
   if (platforms.includes("COUPANG")) scopes.push({ platform: "COUPANG", scopeKey: "LEGACY_COUPANG_SINGLE_UPLOAD", label: "쿠팡 단일 업로드" });
-  if (platforms.includes("NAVER")) for (const scopeKey of [...new Set((process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS ?? "").split(",").map(s => s.trim()).filter(Boolean))].sort()) {
+  if (platforms.includes("NAVER")) for (const scopeKey of [...new Set(policy.naverStoreIds.split(",").map(s => s.trim()).filter(Boolean))].sort()) {
     if (!/^[A-Za-z0-9가-힣][A-Za-z0-9가-힣._:-]{0,255}$/.test(scopeKey)) throw new ServiceUnavailableException("네이버 스토어 허용 목록을 확인해 주세요.");
     scopes.push({ platform: "NAVER", scopeKey, label: "네이버 스토어" });
   }
@@ -48,6 +53,8 @@ export function missingCoverage(scope: ReportScope, date: string): SourceCoverag
 
 @Injectable()
 export class UnifiedReportRepository {
+  // Instance-local to this fixed runtime DB role. Retain only unsettled reads, never report results.
+  private readonly inFlight = new Map<string, ReturnType<UnifiedReportRepository["loadSnapshot"]>>();
   constructor(private readonly management: UnifiedManagementRepository) {}
   access(platforms: Platform[], scopeKeys?: string[], productNames: string[] = []) {
     return this.management.read(async tx => {
@@ -60,9 +67,27 @@ export class UnifiedReportRepository {
   }
   /** All selected pointers, versions, compact facts and failure markers share one read-only RR snapshot. */
   snapshot(query: ReportQuery, lookbackFrom?: string) {
+    const policy = reportScopePolicy();
+    // Caller permissions are checked by the service before every invocation. This workspace's
+    // DB role is fixed per repository; server scope allowlists must also be part of sharing.
+    const key = reportHash([query.from, query.to, query.compareFrom, query.compareTo, lookbackFrom ?? query.from,
+      [...new Set(query.platforms)].sort(), query.scopeKeys === undefined ? null : [...new Set(query.scopeKeys)].sort(),
+      query.productName ?? null, [...new Set(policy.legacyPlatforms.split(","))].sort(),
+      [...new Set(policy.naverStoreIds.split(",").map(value => value.trim()).filter(Boolean))].sort()]);
+    const existing = this.inFlight.get(key);
+    if (existing) return existing;
+    const pinnedQuery = { ...query, platforms: [...query.platforms], scopeKeys: query.scopeKeys?.slice() };
+    const pending = this.loadSnapshot(pinnedQuery, lookbackFrom, policy);
+    this.inFlight.set(key, pending);
+    const clear = () => { if (this.inFlight.get(key) === pending) this.inFlight.delete(key); };
+    // Handle both branches instead of an unobserved finally() rejection promise.
+    void pending.then(clear, clear);
+    return pending;
+  }
+  private loadSnapshot(query: ReportQuery, lookbackFrom: string | undefined, policy: ReportScopePolicy) {
     return this.management.read(async tx => {
       const catalog = await this.management.snapshot(tx);
-      const scopes = selectReportScopes(await reportScopes(tx, query.platforms), query.scopeKeys);
+      const scopes = selectReportScopes(await reportScopes(tx, query.platforms, policy), query.scopeKeys);
       const partitions = scopes.map(s => ({ platform: s.platform, scopeKey: s.scopeKey }));
       const dateWhere = { OR: [{ businessDate: { gte: at(lookbackFrom ?? query.from), lte: at(query.to) } }, { businessDate: { gte: at(query.compareFrom), lte: at(query.compareTo) } }] };
       const where: Prisma.UnifiedSourcePublicationWhereInput = { AND: [{ OR: partitions }, dateWhere] };
