@@ -27,6 +27,25 @@ const google = ['app.module.js', 'google/google-access.js', 'google/google-mappi
 const cafe24 = ['daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24-canonical-writer.service.js',
   'daily-sync/cafe24-option-backfill.js', 'daily-sync/cafe24-order-adapter.js', 'daily-sync/cafe24-rule-loader.js',
   'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js'];
+const unified = [
+  'adapter-contract', 'adapter-contract.test', 'adapters/ad-reader', 'adapters/ad-reader.test', 'adapters/ad-source',
+  'adapters/cafe24-coupon', 'adapters/cafe24.adapter', 'adapters/cafe24.adapter.test',
+  'adapters/coupang-ads', 'adapters/coupang-ads.test', 'adapters/coupang-configuration', 'adapters/coupang-configuration.test',
+  'adapters/coupang-sales', 'adapters/coupang-sales.test', 'adapters/coupang.adapter', 'adapters/coupang.adapter.test',
+  'adapters/google.adapter', 'adapters/google.adapter.test', 'adapters/meta.adapter', 'adapters/meta.adapter.test',
+  'adapters/naver-ads-common', 'adapters/naver-ads-common.test', 'adapters/naver-configuration', 'adapters/naver-reader',
+  'adapters/naver-sales', 'adapters/naver-sales.test', 'adapters/naver.adapter', 'adapters/naver.adapter.test',
+  'adapters/storefront-adapters.service', 'adapters/storefront-adapters.service.test',
+  'aggregation.repository', 'aggregation.worker', 'aggregation.worker.test',
+  'domain/decimal', 'domain/legacy-name-migration', 'domain/legacy-name-migration.test',
+  'domain/platform-selection', 'domain/platform-selection.test', 'domain/product-name-resolver', 'domain/product-name-resolver.test',
+  'domain/relationship-calculation', 'domain/relationship-calculation.test', 'domain/report-allocation',
+  'domain/report-calculation', 'domain/report-calculation.test', 'domain/sale-unit-validation', 'domain/sale-unit-validation.test',
+  'management-impact', 'management-impact.test', 'management.controller', 'management.dto', 'management.repository',
+  'management.service', 'management.service.test', 'relationship-input', 'relationship-input.test', 'relationship-query',
+  'report-contract', 'report-query', 'report.controller', 'report.dto', 'report.repository', 'report.service', 'report.service.test',
+  'types', 'unified-performance.module'
+].map(name => `unified-performance/${name}.js`);
 const preserved = ['metrics/metrics.service.js', 'sales/sales-metrics.service.js',
   'coupang/coupang.service.js', 'domain/margin-calculator.js'];
 
@@ -46,6 +65,7 @@ async function fixture(run, profile = 'reporting') {
       if (name !== 'daily-sync/cafe24-option-backfill.js') await put(baseline, name, 'old Cafe24 module\n');
       await put(compiled, name, 'reviewed Cafe24 option mapping module\n');
     }
+    if (profile === 'reporting') for (const name of unified) await put(compiled, name, 'reviewed unified module\n');
     for (const name of preserved) { await put(baseline, name, 'legacy\r\n'); await put(compiled, name, 'legacy\n'); }
     const verify = (selected = profile) => spawnSync(process.execPath,
       [verifier, baseline, compiled, ...(selected ? [selected] : [])], { encoding: 'utf8', windowsHide: true });
@@ -57,14 +77,37 @@ async function fixture(run, profile = 'reporting') {
   }
 }
 
-test('reporting accepts the complete reviewed Google and Cafe24 patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
+test('reporting accepts the complete reviewed Google, Cafe24 and unified patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
   const result = verify(); assert.equal(result.status, 0, result.stderr);
   const proof = JSON.parse(result.stdout);
-  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length);
+  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + unified.length);
   for (const name of ['meta', 'cafe24', 'coupang', 'margin']) {
     assert.equal(proof.protectedUnchanged[name].files, 1);
     assert.match(proof.protectedUnchanged[name].sha256, /^[a-f0-9]{64}$/);
   }
+}));
+
+test('unified closure rejects unknown additions and missing reviewed modules', async () => {
+  await fixture(async ({ compiled, put, verify }) => {
+    await put(compiled, 'unified-performance/adapters/unreviewed.adapter.js', 'unexpected');
+    const result = verify(); assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Unreviewed C7 API change: unified-performance\/adapters\/unreviewed.adapter.js/);
+  });
+  await fixture(async ({ compiled, verify }) => {
+    await rm(join(compiled, 'unified-performance/report.controller.js'));
+    const result = verify(); assert.notEqual(result.status, 0); assert.match(result.stderr, /Expected patch changes missing/);
+  });
+  await fixture(async ({ baseline, compiled, put, verify }) => {
+    const name = 'unified-performance/report.repository.js';
+    await put(baseline, name, 'same'); await put(compiled, name, 'same');
+    const result = verify(); assert.notEqual(result.status, 0); assert.match(result.stderr, /Expected patch changes missing/);
+  });
+});
+
+test('unified additions do not authorize changes to existing mappings routes', () => fixture(async ({ compiled, put, verify }) => {
+  await put(compiled, 'mappings/mappings.controller.js', 'removed existing endpoints');
+  const result = verify(); assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Unreviewed C7 API change: mappings\/mappings.controller.js/);
 }));
 
 test('another Google module cannot bypass the exact allowlist', () => fixture(async ({ compiled, put, verify }) => {
@@ -96,4 +139,10 @@ test('original source setup profile keeps its old scope and rejects Google addit
   const original = verify(); assert.equal(original.status, 0, original.stderr);
   await put(compiled, 'google/google-read.service.js', 'Google');
   const expanded = verify(); assert.notEqual(expanded.status, 0); assert.match(expanded.stderr, /Unreviewed C7 API change/);
+}, ''));
+
+test('original source setup profile also rejects unified additions', () => fixture(async ({ compiled, put, verify }) => {
+  await put(compiled, 'unified-performance/report.controller.js', 'unified');
+  const result = verify(); assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Unreviewed C7 API change: unified-performance\/report.controller.js/);
 }, ''));

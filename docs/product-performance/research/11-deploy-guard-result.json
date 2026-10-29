@@ -1,0 +1,288 @@
+{
+  "stage": 11,
+  "kind": "local build-guard review",
+  "timestamp": "2026-10-29T04:08:01.392Z",
+  "remoteWrites": 0,
+  "profile": "reporting",
+  "reviewedModules": 66,
+  "compiledModules": 66,
+  "exactMatch": true,
+  "moduleHashes": [
+    {
+      "path": "unified-performance/adapter-contract.js",
+      "sha256": "12b8ff5f608c2dad3ddcd829f43c16284121c32d22e22a8bf239fa923d906245"
+    },
+    {
+      "path": "unified-performance/adapter-contract.test.js",
+      "sha256": "10df482d439693ac6eb7308de7f90f60cd28cff408922466b1ec510c08055fab"
+    },
+    {
+      "path": "unified-performance/adapters/ad-reader.js",
+      "sha256": "5bd889839b8cc22ed32ca839b0b2270f95903621c24730c30e205128b268c5b6"
+    },
+    {
+      "path": "unified-performance/adapters/ad-reader.test.js",
+      "sha256": "900d954a4c232b02597c67f74d648a1333c299f70191997427ac94303d7b4ff4"
+    },
+    {
+      "path": "unified-performance/adapters/ad-source.js",
+      "sha256": "7d6740ef480515271f9a2e9fc36f49ddc0963f020a7bcc27aee485d6b513a558"
+    },
+    {
+      "path": "unified-performance/adapters/cafe24-coupon.js",
+      "sha256": "f9e66b96820866b538d80add49f898bcd23328a080f0bc990293c738930b33f4"
+    },
+    {
+      "path": "unified-performance/adapters/cafe24.adapter.js",
+      "sha256": "33e603031f35662df6e0ec16d32849aaa391547d3c943653401ca300b03abd53"
+    },
+    {
+      "path": "unified-performance/adapters/cafe24.adapter.test.js",
+      "sha256": "161cb54e7f993eddd649f9cd4153c0a469bcb057e85fbb52b698b217fe66e0f5"
+    },
+    {
+      "path": "unified-performance/adapters/coupang-ads.js",
+      "sha256": "ae64f2095a13908a7eb04f594c46e0f1fce5694f606fb3ff8dd61e8fc797c256"
+    },
+    {
+      "path": "unified-performance/adapters/coupang-ads.test.js",
+      "sha256": "bda964396ac8a06700cca03b42d47a8d1eb341b33433730e92bc67993a629938"
+    },
+    {
+      "path": "unified-performance/adapters/coupang-configuration.js",
+      "sha256": "23ad72921aa35d71e122af12ec0c325b686be0a46dad14cdeae12ae745412122"
+    },
+    {
+      "path": "unified-performance/adapters/coupang-configuration.test.js",
+      "sha256": "ce6f43d4eda0137b4770042ded60c78b2aa92ef6a204c0c5048d48daa88e6931"
+    },
+    {
+      "path": "unified-performance/adapters/coupang-sales.js",
+      "sha256": "9977d406b3e8eaa82aa34c2e90ef9b0db2aa66d491b223d9c5c69ad928432443"
+    },
+    {
+      "path": "unified-performance/adapters/coupang-sales.test.js",
+      "sha256": "61fd779b655bb988e82a11eddb8d2f9e634fa2aeb721555bfb2fa1cdb7716864"
+    },
+    {
+      "path": "unified-performance/adapters/coupang.adapter.js",
+      "sha256": "6dffa52a24de286b9a6bfb5d6f48017d0b93b9bb3751af716edc82b38d11ebe5"
+    },
+    {
+      "path": "unified-performance/adapters/coupang.adapter.test.js",
+      "sha256": "e1af40dab8e947b85e6072663eeeac1688dd530735333c5f259d0137827c50fd"
+    },
+    {
+      "path": "unified-performance/adapters/google.adapter.js",
+      "sha256": "36182952380fd99b7c14d89c4bedf33ef2e728a50a457d4dd03df530a30f46d2"
+    },
+    {
+      "path": "unified-performance/adapters/google.adapter.test.js",
+      "sha256": "a6bf9a01ba0337727905b19458e73e9e6f7ed88697a378b0bbae3803b71ac2c4"
+    },
+    {
+      "path": "unified-performance/adapters/meta.adapter.js",
+      "sha256": "74e23509ce22bddf3d305e41f9b10b7eddab999df85396d291991d9a562f6589"
+    },
+    {
+      "path": "unified-performance/adapters/meta.adapter.test.js",
+      "sha256": "e11a662fbc3b6a89a70da6914efae803fe7a71b71f5ff4a0b9d40e74c1dae11b"
+    },
+    {
+      "path": "unified-performance/adapters/naver-ads-common.js",
+      "sha256": "cd22e390abbc69b604f332206dff9d86a051118d63812e487a92f7b9863e5f09"
+    },
+    {
+      "path": "unified-performance/adapters/naver-ads-common.test.js",
+      "sha256": "767b86921dac3d4d801d5efa415a2c5ab047edeef04c97b7ac6abd790dffcc42"
+    },
+    {
+      "path": "unified-performance/adapters/naver-configuration.js",
+      "sha256": "fdbbe66353b4e47604dec6ca275cfee68f505d156f9dcbb1fea39c4ae98bf9d3"
+    },
+    {
+      "path": "unified-performance/adapters/naver-reader.js",
+      "sha256": "5f30568a4916beee364b266cc0f9fa842ac9fe0158256b29a9e60f6716bf3a7a"
+    },
+    {
+      "path": "unified-performance/adapters/naver-sales.js",
+      "sha256": "2fbe814f84122dd664b3463b3d3580bf3993a71cbee9c61efbed7b11f9f84e43"
+    },
+    {
+      "path": "unified-performance/adapters/naver-sales.test.js",
+      "sha256": "561b423d841ef718e54eb3e316e3e10362ce45bd59394b413092947570679786"
+    },
+    {
+      "path": "unified-performance/adapters/naver.adapter.js",
+      "sha256": "b9ddda2235411168dae905b07d05b1db864447abc8615ce061c6c2cfa0ccdfdb"
+    },
+    {
+      "path": "unified-performance/adapters/naver.adapter.test.js",
+      "sha256": "d4d532a8b9950ff907c3a20bf6d2eea4c84e273221053819a3d7e2a58477c5cc"
+    },
+    {
+      "path": "unified-performance/adapters/storefront-adapters.service.js",
+      "sha256": "d75895fb67b542fa98a78f55eb0c28e0d27cc02d9e255f70f25f39902b739a29"
+    },
+    {
+      "path": "unified-performance/adapters/storefront-adapters.service.test.js",
+      "sha256": "944315e5073020804ebc9b55583f630952ae2da8ed2503a8d7258e696e040b25"
+    },
+    {
+      "path": "unified-performance/aggregation.repository.js",
+      "sha256": "3a2f53435028c10d483d946e6568736ee87926382fe12d6171ff69d615f731ce"
+    },
+    {
+      "path": "unified-performance/aggregation.worker.js",
+      "sha256": "6fcc2d5ebbefe0ed285e3c084b3d3b78c9612472e70c00028779e090dc2bded0"
+    },
+    {
+      "path": "unified-performance/aggregation.worker.test.js",
+      "sha256": "9009a5777de61cabb9b5abfadd2dfc0f1e5b33ce270c1cefd769bdc5e93ed725"
+    },
+    {
+      "path": "unified-performance/domain/decimal.js",
+      "sha256": "cb7b870037af3f901600df3431b2904c5e35832dac58c429b850e7ca29024be7"
+    },
+    {
+      "path": "unified-performance/domain/legacy-name-migration.js",
+      "sha256": "d20ac6186774396bad0fd4eda77824037f76fc1281b80af4fd71d35769eee19d"
+    },
+    {
+      "path": "unified-performance/domain/legacy-name-migration.test.js",
+      "sha256": "eb15b8cf3cd02b81dfb023752f3a4ad8766132522033a0177689bfc5516c33c2"
+    },
+    {
+      "path": "unified-performance/domain/platform-selection.js",
+      "sha256": "76c8bd0860ad768c922360a3ef6d042c75a337bc61902e2c4279bc3507698c3a"
+    },
+    {
+      "path": "unified-performance/domain/platform-selection.test.js",
+      "sha256": "0de6b7b05d5280db5360eae281e46e17f4548b72dfade947fb3fdd84d72177a5"
+    },
+    {
+      "path": "unified-performance/domain/product-name-resolver.js",
+      "sha256": "94c675507334c845e441f22eb96cb6aad1f14e3690238ad39a429359e8d8fe81"
+    },
+    {
+      "path": "unified-performance/domain/product-name-resolver.test.js",
+      "sha256": "08828a0af326d999d7ce4d991516ef66e9a1d02fd2f53d4c438f897e85270cf6"
+    },
+    {
+      "path": "unified-performance/domain/relationship-calculation.js",
+      "sha256": "fce59612735900d5cbacaeaa8dbd8db06b8532916061bea7eaa75c99f8e2976d"
+    },
+    {
+      "path": "unified-performance/domain/relationship-calculation.test.js",
+      "sha256": "57b667b67e37d60dc3af7637c013dd3d0f2849b557c994fa766dd0f4cf6cabbd"
+    },
+    {
+      "path": "unified-performance/domain/report-allocation.js",
+      "sha256": "cb149197da669e35c4947b27ff1624d507a86f6bce3e66c1ebf0152d5a5efaf9"
+    },
+    {
+      "path": "unified-performance/domain/report-calculation.js",
+      "sha256": "e24586f664143b58451f19f96179319171815bbd471ba3d7053f11fca55a4704"
+    },
+    {
+      "path": "unified-performance/domain/report-calculation.test.js",
+      "sha256": "95573413939cfc787f44e25ad60812a6b485653360fa892775ce0d24514cb746"
+    },
+    {
+      "path": "unified-performance/domain/sale-unit-validation.js",
+      "sha256": "47bc4c201f9d5fad8352cdf85add07c4ecb753a8d817b1bad4d1411b350de32d"
+    },
+    {
+      "path": "unified-performance/domain/sale-unit-validation.test.js",
+      "sha256": "efb63ba26714a55d2487613552b6d45daacb57aed7ab43a9367bdaad76554348"
+    },
+    {
+      "path": "unified-performance/management-impact.js",
+      "sha256": "050eca7152c2bdd5f66d1f23427e4c4100ab744743cbe13f0f4490c9766061a1"
+    },
+    {
+      "path": "unified-performance/management-impact.test.js",
+      "sha256": "a0047687d6b9ccee098e8d5e075a77900dcf7609c74d3116dda4bda15bda4416"
+    },
+    {
+      "path": "unified-performance/management.controller.js",
+      "sha256": "ecfda5962c48891a3028f90ec9908cefd2f3fe6b74da74b9375c269dcb67a5c7"
+    },
+    {
+      "path": "unified-performance/management.dto.js",
+      "sha256": "266fde1e90a2cef150b760784747906be3f912e0b0ba11982b0b4edcf14ae27e"
+    },
+    {
+      "path": "unified-performance/management.repository.js",
+      "sha256": "dd75fddc85f75c65fe7fc96d65a495f930a19776c99a9a2cdf830cdecb915cce"
+    },
+    {
+      "path": "unified-performance/management.service.js",
+      "sha256": "b087c4e9bb13afbd51f123dbffe04e4dc75e57407a4d5bb07397982dc1808758"
+    },
+    {
+      "path": "unified-performance/management.service.test.js",
+      "sha256": "db4eb220e904f78a4559726fee2317a476272eb8da86dcc0de49a40f744770d2"
+    },
+    {
+      "path": "unified-performance/relationship-input.js",
+      "sha256": "a23d9baa576cd5c769364f0e7a7f3cd18916c91a6c0265be42727c40be36344d"
+    },
+    {
+      "path": "unified-performance/relationship-input.test.js",
+      "sha256": "44d989f71b0f71b1258b8b5a8550da56a8b38079d5381d92bf9a2f284c2a2465"
+    },
+    {
+      "path": "unified-performance/relationship-query.js",
+      "sha256": "9ebf43649987cd9c923ee2ff3d52e2208da8a1469c7a65761915ae09b9b7affc"
+    },
+    {
+      "path": "unified-performance/report-contract.js",
+      "sha256": "727ac60f854143f6eaf9414fe1781fd32166f3a241d52eca54ff40e9abbdbc2a"
+    },
+    {
+      "path": "unified-performance/report-query.js",
+      "sha256": "c87b7972960484d3435f4dc260fe5b51fa6df5c23b7c032b252713ffba02b494"
+    },
+    {
+      "path": "unified-performance/report.controller.js",
+      "sha256": "23fd3257cf870c2ad308ee3d09bdd60073d9d3dc99f152e68946dc4db136696a"
+    },
+    {
+      "path": "unified-performance/report.dto.js",
+      "sha256": "12a9eb50d8b599c0ec0f87806d0a547a0d1a2d9266f56c69ca3fc52eded1a495"
+    },
+    {
+      "path": "unified-performance/report.repository.js",
+      "sha256": "d1b6e2bb5777d63e94f60c21aca6743613a88787b2c4abc6c532b0088651d99c"
+    },
+    {
+      "path": "unified-performance/report.service.js",
+      "sha256": "e44c1938401a9a99fb713bd7f94c90dc03028ec704ce338e611c94f6145fec31"
+    },
+    {
+      "path": "unified-performance/report.service.test.js",
+      "sha256": "3e5ab2bdac20163239d1c607f0deda592739e6816e21418d0f62ddfc627de792"
+    },
+    {
+      "path": "unified-performance/types.js",
+      "sha256": "7192af542e80af45717c516477be9369774a301a968b59a27273b155e3d50561"
+    },
+    {
+      "path": "unified-performance/unified-performance.module.js",
+      "sha256": "b7875c0953806cb160371fd4fbf80ba3755a13915104a55bbfdc636a49efa747"
+    }
+  ],
+  "tests": {
+    "command": "node --test scripts/verify-source-setup-patch.test.mjs",
+    "exitCode": 0,
+    "stdout": "✔ reporting accepts the complete reviewed Google, Cafe24 and unified patch and proves legacy groups unchanged (240.1321ms)\n✔ unified closure rejects unknown additions and missing reviewed modules (656.6961ms)\n✔ unified additions do not authorize changes to existing mappings routes (210.8178ms)\n✔ another Google module cannot bypass the exact allowlist (191.8689ms)\n✔ Meta and Coupang calculation mutations remain blocked (904.6403ms)\n✔ missing reviewed Cafe24 module and unreviewed helpers fail closed (364.9791ms)\n✔ missing reviewed Google patch and removed legacy module fail closed (401.1486ms)\n✔ original source setup profile keeps its old scope and rejects Google additions (174.4031ms)\n✔ original source setup profile also rejects unified additions (104.4976ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3322.024\n",
+    "stderr": ""
+  },
+  "realC7ImageVerification": false,
+  "limitations": [
+    "Current locally compiled closure compared; real pinned C7 image build not run",
+    "tsconfig emits .test.js; allowlist names them explicitly, no test runner launched at application import",
+    "Existing operating Google fallback and mappings endpoints regress in HEAD vs e80; parent must preserve before promotion"
+  ]
+}

@@ -35,6 +35,39 @@ if (profile === 'reporting') {
     'google/google.dto.js', 'google/google.module.js',
     // The existing build excludes *.spec.ts, but emits these *.test.ts files.
     'google/google-performance.test.js', 'google/google.service.test.js', 'google/google-campaign-matcher.test.js']) expected.add(name);
+  // Product performance is additive and opt-in. Keep the compiled closure exact:
+  // a new adapter/controller/helper still requires review, including test modules
+  // emitted by the existing tsconfig (as with Google above). Existing platform
+  // calculators and mappings modules remain outside the reviewed change set.
+  for (const name of [
+    'adapter-contract.js', 'adapter-contract.test.js',
+    'adapters/ad-reader.js', 'adapters/ad-reader.test.js', 'adapters/ad-source.js',
+    'adapters/cafe24-coupon.js', 'adapters/cafe24.adapter.js', 'adapters/cafe24.adapter.test.js',
+    'adapters/coupang-ads.js', 'adapters/coupang-ads.test.js',
+    'adapters/coupang-configuration.js', 'adapters/coupang-configuration.test.js',
+    'adapters/coupang-sales.js', 'adapters/coupang-sales.test.js',
+    'adapters/coupang.adapter.js', 'adapters/coupang.adapter.test.js',
+    'adapters/google.adapter.js', 'adapters/google.adapter.test.js',
+    'adapters/meta.adapter.js', 'adapters/meta.adapter.test.js',
+    'adapters/naver-ads-common.js', 'adapters/naver-ads-common.test.js',
+    'adapters/naver-configuration.js', 'adapters/naver-reader.js',
+    'adapters/naver-sales.js', 'adapters/naver-sales.test.js',
+    'adapters/naver.adapter.js', 'adapters/naver.adapter.test.js',
+    'adapters/storefront-adapters.service.js', 'adapters/storefront-adapters.service.test.js',
+    'aggregation.repository.js', 'aggregation.worker.js', 'aggregation.worker.test.js',
+    'domain/decimal.js', 'domain/legacy-name-migration.js', 'domain/legacy-name-migration.test.js',
+    'domain/platform-selection.js', 'domain/platform-selection.test.js',
+    'domain/product-name-resolver.js', 'domain/product-name-resolver.test.js',
+    'domain/relationship-calculation.js', 'domain/relationship-calculation.test.js',
+    'domain/report-allocation.js', 'domain/report-calculation.js', 'domain/report-calculation.test.js',
+    'domain/sale-unit-validation.js', 'domain/sale-unit-validation.test.js',
+    'management-impact.js', 'management-impact.test.js', 'management.controller.js', 'management.dto.js',
+    'management.repository.js', 'management.service.js', 'management.service.test.js',
+    'relationship-input.js', 'relationship-input.test.js', 'relationship-query.js',
+    'report-contract.js', 'report-query.js', 'report.controller.js', 'report.dto.js',
+    'report.repository.js', 'report.service.js', 'report.service.test.js',
+    'types.js', 'unified-performance.module.js'
+  ]) expected.add(`unified-performance/${name}`);
 }
 if (!baseline || !compiled) throw Error('Two compiled directories required');
 let checked = 0, changed = 0;
