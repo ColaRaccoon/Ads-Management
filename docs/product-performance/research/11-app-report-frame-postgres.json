@@ -1,0 +1,18 @@
+{
+  "stage": 11,
+  "kind": "SINGLE_PARAMETERIZED_REPORT_FRAME",
+  "remoteWrites": 0,
+  "synthetic": true,
+  "status": "PASS",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55464,
+    "database": "unified_stage11_frame"
+  },
+  "checks": [
+    "fresh PG17 loopback identity checked before writes; all migrations applied",
+    "actual non-owner restricted report login; source_connections only id/provider/display_name granted"
+  ],
+  "output": "▶ report-only one-statement frame equals the previous Prisma reader under actual restricted PG17 login\n  ✔ 32 platform selections preserve Dates, nulls, exact strings, partial/stale and endpoint/cursor semantics (2501.8823ms)\n  ✔ one data statement plus the same read-only RR transaction; no source/credential access (10.5292ms)\n  ✔ RLS hidden publications stay hidden and empty/forbidden account scopes retain their meaning (40.7658ms)\n  ✔ settled reads see fresh settings/publication and old cursors invalidate (29.7047ms)\n  ✔ invalid stored report payload is rejected by both readers rather than emitted as a normal version (13.3273ms)\n  ✔ catalog, connection, scope, partition and fact guards reject at their existing limits (6170.8423ms)\n✔ report-only one-statement frame equals the previous Prisma reader under actual restricted PG17 login (9015.1766ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9928.158\n",
+  "stopExit": 0
+}

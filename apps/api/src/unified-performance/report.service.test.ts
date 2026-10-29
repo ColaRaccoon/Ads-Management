@@ -164,20 +164,21 @@ function inFlightFixture() {
   const scopeKey = "LEGACY_COUPANG_SINGLE_UPLOAD";
   const state = { revision: 1, configurationVersion: "config-1", amount: "100.000000" };
   const tx = {
-    sourceConnection: { findMany: async () => [] },
-    unifiedSourcePublication: {
-      findMany: async (input: any) => input.where.AND[0].OR.some((part: any) => part.platform === "COUPANG" && part.scopeKey === scopeKey) ? [{
-        sourceSystem: "COUPANG", platform: "COUPANG", scopeKey, businessDate: new Date("2026-10-26"),
-        runId: `run-${state.revision}`, revision: state.revision,
-        run: { versions: {}, controlTotals: [], publishedAt: new Date("2026-10-27"), startedAt: new Date("2026-10-27") }
-      }] : [],
-      groupBy: async () => []
-    },
-    unifiedDailyFact: { findMany: async () => [{ runId: `run-${state.revision}`, payload: {
-      ...fixture().snapshot.facts[0], marketplace: "COUPANG", amountKrw: state.amount, completeAmountKrw: state.amount
-    } }] },
-    unifiedSourceCoverage: { findMany: async () => [] },
-    unifiedAggregationRun: { findMany: async () => [] }
+    $queryRaw: async (statement: any) => {
+      const scopeIndex = statement.values.findIndex((value: unknown) => typeof value === "string" && value.includes('"scopeKey"'));
+      const fixed = scopeIndex >= 0 ? JSON.parse(statement.values[scopeIndex]) : [];
+      const requested = typeof statement.values[scopeIndex+1] === "string" && statement.values[scopeIndex+1].startsWith("[") ? JSON.parse(statement.values[scopeIndex+1]) : undefined;
+      const included = fixed.some((scope: any) => scope.platform === "COUPANG") && (requested === undefined || requested.includes(scopeKey));
+      return [{ frame: {
+        products: [{id:"A",canonical_name:"A",normalized_name:"a",active:true,version:Number(state.configurationVersion.split("-")[1]),created_at:"2026-10-01T00:00:00Z",updated_at:"2026-10-01T00:00:00Z"}],
+        rules: [], connections: [], publications: included ? [{
+          publication:{source_system:"COUPANG",platform:"COUPANG",scope_key:scopeKey,business_date:"2026-10-26",run_id:`run-${state.revision}`,revision:state.revision,updated_at:"2026-10-27T00:00:00Z"},
+          run:{versions:{},control_totals:[],published_at:"2026-10-27T00:00:00Z",started_at:"2026-10-27T00:00:00Z"}
+        }] : [],
+        facts: included ? [{run_id:`run-${state.revision}`,payload:{...fixture().snapshot.facts[0],marketplace:"COUPANG",amountKrw:state.amount,completeAmountKrw:state.amount}}] : [],
+        coverage: [], failures: [], ranges: []
+      }}];
+    }
   };
   const management = {
     read: async (work: (tx: unknown) => Promise<unknown>) => {
@@ -255,7 +256,7 @@ test("the first request after settlement sees changed configuration and a new pu
   f.state.configurationVersion = "config-2"; f.state.revision = 2; f.state.amount = "200.000000";
   const after = await f.repository.snapshot(f.query);
   assert.equal(f.reads(), 2); assert.notEqual(before.snapshotHash, after.snapshotHash);
-  assert.equal(before.versions.configurationVersion, "config-1"); assert.equal(after.versions.configurationVersion, "config-2");
+  assert.notEqual(before.versions.configurationVersion, after.versions.configurationVersion);
   assert.equal(before.publications[0].runId, "run-1"); assert.equal(after.publications[0].runId, "run-2");
   assert.equal(before.facts[0].amountKrw, "100.000000"); assert.equal(after.facts[0].amountKrw, "200.000000");
 });

@@ -1,0 +1,16 @@
+{
+  "stage": 11,
+  "synthetic": true,
+  "remoteWrites": 0,
+  "checks": [
+    "actual report-role limits: products10001,rules10001,connections101,scopes51,partitions>20000,failedRuns20001,facts100001"
+  ],
+  "equivalenceCases": 192,
+  "sessionTimeZone": "Asia/Seoul",
+  "statementCounts": {
+    "old": 13,
+    "next": 5,
+    "newDataStatements": 1
+  },
+  "status": "PASS"
+}

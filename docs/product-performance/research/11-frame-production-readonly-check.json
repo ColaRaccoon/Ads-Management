@@ -1,0 +1,14 @@
+{
+  "stage": 11,
+  "status": "PASS",
+  "observedAt": "2026-10-29T05:55:52.864Z",
+  "actualRole": "meta_ads_unified_report",
+  "databaseWrites": 0,
+  "sourceWrites": 0,
+  "comparison": "Old production-role report vs new single SELECT frame on unchanged real publications",
+  "checks": [
+    "same selection, known/complete totals, balances, warnings and items",
+    "same coverage and publication identities after normalizing noncontract row ordering",
+    "all 38 immutable runs preserved"
+  ]
+}
