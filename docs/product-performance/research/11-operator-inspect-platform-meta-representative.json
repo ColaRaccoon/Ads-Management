@@ -1,0 +1,220 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T07:01:44.422Z",
+  "operation": "inspect-platform",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "summary": {
+    "selection": {
+      "selectedPlatforms": [
+        "META"
+      ],
+      "excludedPlatforms": [
+        "GOOGLE",
+        "NAVER",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "scopeKeys": [
+        "2155a401-bd86-4111-9280-3c95ed207546"
+      ],
+      "productName": null,
+      "from": "2026-10-28",
+      "to": "2026-10-28",
+      "compareFrom": "2026-10-28",
+      "compareTo": "2026-10-28",
+      "grain": "day",
+      "selectionHash": "0f2f30bd62966636a61802ee2f4e8a4507083b51f4afaedc3991ea9f771d23dd"
+    },
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": "4754157.542000",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": "4754157.542000",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "4754157.542000",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "coverage": [
+      {
+        "sourceSystem": "META_ADSET",
+        "platform": "META",
+        "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+        "date": "2026-10-28",
+        "component": "AD_SPEND",
+        "participation": "INCLUDED",
+        "collectionState": "COMPLETE",
+        "rowsPresent": 200,
+        "zeroConfirmed": false,
+        "sourceAsOf": "2026-10-28T17:03:39.554Z",
+        "calculatedAt": null,
+        "lastSuccessAt": "2026-10-28T17:03:39.554Z",
+        "mappedRows": 0,
+        "unmappedRows": 200,
+        "unmatchedAmount": "3589.940000",
+        "missingCostRows": 0,
+        "missingFxAmount": "0.000000",
+        "unallocatedAmount": "4754157.542000",
+        "isEstimate": false,
+        "issues": [
+          "NAME_UNMATCHED"
+        ]
+      }
+    ],
+    "warnings": [
+      "NAME_UNMATCHED",
+      "UNALLOCATED_BALANCE"
+    ],
+    "items": [
+      {
+        "productName": "풀업바",
+        "saleUnits": [],
+        "knownTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": null,
+        "metricAvailability": {
+          "state": "AD_ONLY",
+          "revenue": false,
+          "adSpend": true,
+          "profitBeforeAds": false,
+          "estimatedProfit": false,
+          "mer": false
+        },
+        "byMarketplace": [],
+        "byMedium": [
+          {
+            "medium": "META",
+            "adSpend": null,
+            "share": null
+          }
+        ],
+        "isEstimate": false,
+        "quality": [
+          "NAME_UNMATCHED",
+          "UNALLOCATED_BALANCE"
+        ],
+        "commonExpenseAllocationStatus": "COMPLETE",
+        "comparison": {
+          "revenue": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "adSpend": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "profitBeforeAds": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "estimatedProfit": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "mer": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "META",
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "share": null,
+            "previousShare": null,
+            "shareChangePp": null,
+            "spendChangeContributionPp": null,
+            "reason": "MISSING_INPUT"
+          }
+        ]
+      }
+    ],
+    "publishedRunIdsBySource": [
+      {
+        "sourceSystem": "META",
+        "platform": "META",
+        "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+        "date": "2026-10-28",
+        "runId": "75406c01-9d4a-4403-a4be-04574c6b332a",
+        "revision": 1
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": "75406c01-9d4a-4403-a4be-04574c6b332a",
+      "platform": "META",
+      "businessDate": "2026-10-28T00:00:00.000Z",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "publishedAt": "2026-10-29T06:52:04.587Z"
+    },
+    {
+      "id": "d0841384-66b2-4088-a0d7-98e2801f4af1",
+      "platform": "META",
+      "businessDate": "2026-10-28T00:00:00.000Z",
+      "status": "FAILED",
+      "attempts": 1,
+      "issues": [
+        "SOURCE_EXECUTION_FAILED"
+      ],
+      "publishedAt": null
+    }
+  ],
+  "status": "PASS"
+}

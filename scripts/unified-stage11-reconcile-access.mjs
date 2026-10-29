@@ -13,7 +13,8 @@ const models = {
   RunUnit: all,
   MetaAdsetDailyMetric: 'id metaAdsetId adsetName connectionId source importVersion sourceRevision uploadBatchId syncRunId metricDate spendUsd purchaseValueUsd createdAt updatedAt isCurrent',
   GoogleCampaignDailyCost: 'id campaignId campaignName connectionId source version syncRunId metricDate costMicros conversionValue fetchedAt isCurrent',
-  ExchangeRate: 'rate sourceDate provider fallbackType rateDate baseCurrency quoteCurrency',
+  // Prisma take:2 without explicit orderBy orders by the primary key, even when id is not selected.
+  ExchangeRate: 'id rate sourceDate provider fallbackType rateDate baseCurrency quoteCurrency',
   Product: 'id displayName isActive',
   ProductCostRule: all,
   Cafe24OrderLine: 'id connectionId source syncRunId uploadBatchId orderLineKey orderNo productNo productName optionName optionValue quantity salePriceKrw totalOrderKrw totalPaidKrw paymentMethod providerCouponSignal actualOrderPriceKrw actualShippingFeeKrw orderDate importVersion validationStatus createdAt providerUpdatedAt sourceRowHash isCurrent matchSource productId cafe24ProductRuleId',

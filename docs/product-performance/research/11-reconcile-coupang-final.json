@@ -1,0 +1,261 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "PASS",
+  "observedAt": "2026-10-29T06:52:24.200Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "COUPANG",
+    "scopeKeyHash": "2ba401c512698c8ab1ee217d48ac45f8714eb56f5472715828cbf7d93f00cf0c",
+    "date": "2026-10-28",
+    "productName": null
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 145,
+  "publishedFacts": 145,
+  "sourceHash": "1a2cb020e18071da00e35fa4125ab7b72a214570bf0bd1e5ee7ace006398adae",
+  "publishedHash": "1a2cb020e18071da00e35fa4125ab7b72a214570bf0bd1e5ee7ace006398adae",
+  "publication": [
+    {
+      "runId": "b9a3916d-67ec-4cea-a75e-e07195538249",
+      "revision": 1,
+      "publishedAt": "2026-10-29T06:41:42.071Z",
+      "versions": {
+        "fxVersion": "stored-daily-fx-v1",
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+        "calculationVersion": "unified-report-v1",
+        "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+        "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "participationOverrides": {}
+      }
+    }
+  ],
+  "versions": {
+    "configurationVersion": "43f1f92ca4ea00025c75aa5c8df2d983160d212326eff2e204a303ac87380479",
+    "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "OPERATING_REVENUE",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "8434030.000000",
+      "assignedAmount": "8434030.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PRODUCT_COST",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "2053200.000000",
+      "assignedAmount": "2053200.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "DIRECT_SHIPPING_COST",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "979514.000000",
+      "assignedAmount": "979514.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "OTHER_DIRECT_COST",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "0.000000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "VAT_EXPENSE",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "766730.000001",
+      "assignedAmount": "766730.000001",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PLATFORM_FEE",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "1001962.764000",
+      "assignedAmount": "1001962.764000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "RETURN_COST",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "0.000000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "MANUAL_VENDOR_FEE",
+      "currency": "KRW",
+      "selectedRows": 358,
+      "selectedAmount": "31820.000000",
+      "assignedAmount": "31820.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "AD_SPEND",
+      "currency": "KRW",
+      "selectedRows": 296,
+      "selectedAmount": "2094307.000000",
+      "assignedAmount": "2035976.000000",
+      "unmatchedAmount": "58331.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": "8434030.000000",
+      "adSpend": "2094307.000000",
+      "profitBeforeAds": "3600803.235999",
+      "estimatedProfit": "1506496.235999",
+      "mer": "4.0271220981"
+    },
+    "completeTotals": {
+      "revenue": "8434030.000000",
+      "adSpend": "2094307.000000",
+      "profitBeforeAds": "3600803.235999",
+      "estimatedProfit": "1506496.235999",
+      "mer": "4.0271220981"
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "58331.000000",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": "0.000000",
+      "unclassifiedProfitBeforeAds": "0.000000"
+    },
+    "issues": [
+      "NAME_AMBIGUOUS",
+      "NAME_NAME_MISSING",
+      "NAME_UNMATCHED",
+      "NORMAL_COST_RULE_MISSING",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": "8434030.000000",
+      "adSpend": "2094307.000000",
+      "profitBeforeAds": "3600803.235999",
+      "estimatedProfit": "1506496.235999",
+      "mer": "4.0271220981"
+    },
+    "completeTotals": {
+      "revenue": "8434030.000000",
+      "adSpend": "2094307.000000",
+      "profitBeforeAds": "3600803.235999",
+      "estimatedProfit": "1506496.235999",
+      "mer": "4.0271220981"
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "58331.000000",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": "0.000000",
+      "unclassifiedProfitBeforeAds": "0.000000"
+    },
+    "issues": [
+      "NAME_AMBIGUOUS",
+      "NAME_NAME_MISSING",
+      "NAME_UNMATCHED",
+      "NORMAL_COST_RULE_MISSING",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "quality": [
+    {
+      "component": "SALE",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 358,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAME_AMBIGUOUS",
+        "NAME_UNMATCHED",
+        "NORMAL_COST_RULE_MISSING"
+      ],
+      "sourceAsOf": "2026-10-29T00:54:34.015Z"
+    },
+    {
+      "component": "DIRECT_COST",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 358,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAME_AMBIGUOUS",
+        "NAME_UNMATCHED",
+        "NORMAL_COST_RULE_MISSING"
+      ],
+      "sourceAsOf": "2026-10-29T00:54:34.015Z"
+    },
+    {
+      "component": "AD_SPEND",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 296,
+      "missingCostRows": 0,
+      "isEstimate": false,
+      "issues": [
+        "NAME_AMBIGUOUS",
+        "NAME_NAME_MISSING",
+        "NAME_UNMATCHED"
+      ],
+      "sourceAsOf": "2026-10-29T00:56:09.385Z"
+    },
+    {
+      "component": "COMMON_EXPENSE",
+      "participation": "NOT_APPLICABLE",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 0,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "COMMON_COSTS_INCLUDED_IN_DIRECT_LEDGER"
+      ],
+      "sourceAsOf": "2026-10-29T00:54:34.015Z"
+    }
+  ]
+}

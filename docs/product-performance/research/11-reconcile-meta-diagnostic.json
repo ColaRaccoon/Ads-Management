@@ -1,0 +1,11 @@
+{
+  "stage": 11,
+  "status": "FAIL_EXCEPTION",
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "errorClass": "PrismaClientUnknownRequestError",
+  "prismaCode": null,
+  "databaseCode": null,
+  "permissionObject": "exchange_rates",
+  "transactionExpired": false
+}

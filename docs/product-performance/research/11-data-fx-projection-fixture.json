@@ -1,0 +1,102 @@
+{
+  "stage": 11,
+  "kind": "LOCAL_ACTUAL_PRISMA_FX_IMPLICIT_PRIMARY_KEY_REHEARSAL",
+  "remoteWrites": 0,
+  "status": "PASS",
+  "queryMetadata": [
+    {
+      "table": "meta_ads.exchange_rates",
+      "columns": [
+        "base_currency",
+        "fallback_type",
+        "id",
+        "provider",
+        "quote_currency",
+        "rate",
+        "rate_date",
+        "source_date"
+      ],
+      "orderByColumns": [
+        "id"
+      ],
+      "parametersRecorded": false
+    },
+    {
+      "table": "meta_ads.exchange_rates",
+      "columns": [
+        "base_currency",
+        "fallback_type",
+        "id",
+        "provider",
+        "quote_currency",
+        "rate",
+        "rate_date",
+        "source_date"
+      ],
+      "orderByColumns": [
+        "id"
+      ],
+      "parametersRecorded": false
+    },
+    {
+      "table": "meta_ads.exchange_rates",
+      "columns": [
+        "base_currency",
+        "fallback_type",
+        "id",
+        "provider",
+        "quote_currency",
+        "rate",
+        "rate_date",
+        "source_date"
+      ],
+      "orderByColumns": [
+        "id"
+      ],
+      "parametersRecorded": false
+    },
+    {
+      "table": "meta_ads.exchange_rates",
+      "columns": [
+        "base_currency",
+        "fallback_type",
+        "id",
+        "provider",
+        "quote_currency",
+        "rate",
+        "rate_date",
+        "source_date"
+      ],
+      "orderByColumns": [
+        "id"
+      ],
+      "parametersRecorded": false
+    }
+  ],
+  "beforeIdGrant": {
+    "declaredSevenColumnsSelectSucceeded": true,
+    "actualPrismaFailures": [
+      {
+        "currency": "USD",
+        "className": "PrismaClientUnknownRequestError",
+        "permissionDenied": true
+      },
+      {
+        "currency": "KRW",
+        "className": "PrismaClientUnknownRequestError",
+        "permissionDenied": true
+      }
+    ]
+  },
+  "afterIdGrant": {
+    "sameActualPrismaUsdAndKrwReads": "PASS",
+    "addedColumn": "id"
+  },
+  "permissions": {
+    "idSelect": true,
+    "broadSelect": false,
+    "providerPayloadSelect": false,
+    "sourceWritableColumns": 0,
+    "reportSourceSelect": false
+  }
+}

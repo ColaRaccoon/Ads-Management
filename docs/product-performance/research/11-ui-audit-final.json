@@ -1,6 +1,4 @@
 {
-  "operation": "MANAGEMENT_READ_ONLY",
-  "stage": 11,
   "rows": {
     "audit": {
       "auditCount": 4,
@@ -16,7 +14,13 @@
       },
       "runStatusCounts": [
         {
-          "count": 73,
+          "count": 2,
+          "status": "FAILED",
+          "maximum_attempts": 1,
+          "minimum_attempts": 1
+        },
+        {
+          "count": 76,
           "status": "PUBLISHED",
           "maximum_attempts": 1,
           "minimum_attempts": 1
@@ -24,7 +28,9 @@
       ]
     }
   },
-  "observedAt": "2026-10-29T06:26:42.4412670Z",
-  "remoteWrites": 0,
-  "projectRef": "iygjmosbelbosfxidqxv"
+  "operation": "MANAGEMENT_READ_ONLY",
+  "stage": 11,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "observedAt": "2026-10-29T06:53:21.6782239Z",
+  "remoteWrites": 0
 }

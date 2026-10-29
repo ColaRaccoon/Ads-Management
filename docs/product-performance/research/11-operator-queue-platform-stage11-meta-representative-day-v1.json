@@ -1,0 +1,41 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T06:41:23.808Z",
+  "operation": "queue-platform",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "request": {
+    "from": "2026-10-28",
+    "to": "2026-10-28",
+    "platforms": [
+      "META"
+    ],
+    "scopeKeys": [
+      "2155a401-bd86-4111-9280-3c95ed207546"
+    ],
+    "productNames": []
+  },
+  "result": {
+    "contractVersion": "product-performance-v1.1.0",
+    "status": "QUEUED",
+    "execution": "ASYNC_WORKER",
+    "executionScope": "FULL_SOURCE_DAY",
+    "requestedProductNames": [],
+    "jobs": [
+      {
+        "jobId": "d0841384-66b2-4088-a0d7-98e2801f4af1",
+        "platform": "META",
+        "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+        "date": "2026-10-28",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T06:41:24.325Z",
+        "completedAt": null
+      }
+    ]
+  },
+  "status": "PASS"
+}

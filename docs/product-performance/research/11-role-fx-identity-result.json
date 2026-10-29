@@ -1,0 +1,14 @@
+{
+  "legacyRolePrivilegesChanged": false,
+  "operation": "WORKER_FX_IDENTITY_COLUMN_SELECT",
+  "membershipRestoredByTransactionGuard": true,
+  "stage": 11,
+  "httpStatus": 201,
+  "sourceWrites": 0,
+  "runtimePrivilegesChanged": true,
+  "credentialPrivilegesChanged": false,
+  "status": "APPLIED",
+  "observedAt": "2026-10-29T06:51:15.5847783Z",
+  "sqlSha256": "9362b176fd9f851603cff52216f9c274b86cadf317f7af1eaa582b3648d2f1b3",
+  "ownerPoliciesAdded": 0
+}

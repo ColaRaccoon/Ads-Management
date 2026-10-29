@@ -91,4 +91,14 @@ async function main() {
     if (evidence.status!=="PASS") process.exitCode=2;
   } finally { await client.$disconnect(); }
 }
-main().catch(() => { console.error("STAGE11_RECONCILIATION_FAILED_NO_RAW_ERROR_LOGGED"); process.exitCode=1; });
+main().catch(error => {
+  const message=String(error?.message??'');
+  const evidence={stage:11,status:'FAIL_EXCEPTION',databaseWrites:0,providerCalls:0,
+    errorClass:error?.constructor?.name??'Error',prismaCode:/^P\d{4}$/.test(error?.code??'')?error.code:null,
+    databaseCode:/^[0-9A-Z]{5}$/.test(error?.meta?.code??'')?error.meta.code:null,
+    permissionObject:message.match(/permission denied for (?:schema|table|function) ["']?([a-z0-9_]+)/i)?.[1]??null,
+    transactionExpired:/transaction.*(?:expired|closed)|expired.*transaction/i.test(message)};
+  const output=process.argv.find(value=>value.startsWith('--output='))?.slice(9);
+  if(output&&/^docs\/product-performance\/research\/11-[a-z0-9-]+\.json$/.test(output))writeFileSync(output,JSON.stringify(evidence,null,2)+'\n');
+  console.error("STAGE11_RECONCILIATION_FAILED_NO_RAW_ERROR_LOGGED");process.exitCode=1;
+});

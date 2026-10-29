@@ -1,0 +1,24 @@
+{
+  "changedTextFiles": 40,
+  "actualRoleDenialChecks": 13,
+  "status": "PASS",
+  "observedAt": "2026-10-29T07:01:09.3599376Z",
+  "sourcePublicationReplays": [
+    "CAFE24",
+    "NAVER",
+    "META",
+    "GOOGLE",
+    "COUPANG"
+  ],
+  "semanticTypecheck": {
+    "diagnostics": 0,
+    "files": 3
+  },
+  "sourceWrites": 0,
+  "sourceAppDiffAgainstRelease": 0,
+  "jwtLikeMatches": 0,
+  "productionCredentialUrlMatches": 0,
+  "stage": 11,
+  "generatedCredentialMatches": 0,
+  "actualRoleProjectionChecks": 44
+}

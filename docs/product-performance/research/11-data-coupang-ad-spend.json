@@ -1,0 +1,94 @@
+{
+  "operation": "MANAGEMENT_READ_ONLY",
+  "stage": 11,
+  "observedAt": "2026-10-29T06:54:05.4439628Z",
+  "remoteWrites": 0,
+  "rows": {
+    "coupang_ad_spend": {
+      "runId": "b9a3916d-67ec-4cea-a75e-e07195538249",
+      "cohorts": [
+        {
+          "rows": 4,
+          "match_status": "NAME_MISSING",
+          "raw_ad_spend": "19104.00",
+          "unified_product_present": false,
+          "published_audit_ad_spend": "19104.000000",
+          "legacy_spend_product_present": false
+        },
+        {
+          "rows": 2,
+          "match_status": "UNMATCHED",
+          "raw_ad_spend": "16131.00",
+          "unified_product_present": false,
+          "published_audit_ad_spend": "16131.000000",
+          "legacy_spend_product_present": false
+        },
+        {
+          "rows": 1,
+          "match_status": "AMBIGUOUS",
+          "raw_ad_spend": "404.00",
+          "unified_product_present": false,
+          "published_audit_ad_spend": "404.000000",
+          "legacy_spend_product_present": true
+        },
+        {
+          "rows": 12,
+          "match_status": "NAME_MISSING",
+          "raw_ad_spend": "22692.00",
+          "unified_product_present": false,
+          "published_audit_ad_spend": "22692.000000",
+          "legacy_spend_product_present": true
+        },
+        {
+          "rows": 277,
+          "match_status": "MATCHED",
+          "raw_ad_spend": "2035976.00",
+          "unified_product_present": true,
+          "published_audit_ad_spend": "2035976.000000",
+          "legacy_spend_product_present": true
+        }
+      ],
+      "privacy": "Only mapping-cohort counts/amounts and public run identity; raw ad names, row keys, external entity identifiers and source payloads are not returned.",
+      "adCoverage": {
+        "rows": 296,
+        "state": "COMPLETE",
+        "quality": {
+          "issues": [
+            "NAME_AMBIGUOUS",
+            "NAME_NAME_MISSING",
+            "NAME_UNMATCHED"
+          ],
+          "confidence": "SOURCE_REPORTED",
+          "isEstimate": false
+        },
+        "mappedRows": 277,
+        "unmappedRows": 19,
+        "unallocatedAmount": "58331.000000"
+      },
+      "limitation": "Legacy linked sum matches the legacy service spendProductId inclusion rule; it is not a newly executed legacy HTTP report.",
+      "currentRows": 296,
+      "businessDate": "2026-10-28",
+      "selectedRows": 296,
+      "auditMissingRows": 0,
+      "selectedRawAdSpend": "2094307.00",
+      "legacyLinkedAdSpend": "2059072.00",
+      "publishedAttribution": [
+        {
+          "ad_spend": "2035976.000000",
+          "attribution": "DIRECT",
+          "fact_groups": 50,
+          "source_rows": 277
+        },
+        {
+          "ad_spend": "58331.000000",
+          "attribution": "UNALLOCATED",
+          "fact_groups": 1,
+          "source_rows": 19
+        }
+      ],
+      "auditAmountDifference": "0.000000",
+      "legacyUnlinkedAdSpend": "35235.00"
+    }
+  },
+  "projectRef": "iygjmosbelbosfxidqxv"
+}

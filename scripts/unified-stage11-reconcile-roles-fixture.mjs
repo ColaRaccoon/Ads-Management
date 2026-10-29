@@ -98,6 +98,17 @@ for(const role of ['meta_ads_unified_report','meta_ads_unified_worker']){
  }finally{await c.end();}
 }
 evidence.checks.push('Actual two restricted login roles deny credential/reference columns, credential tables, raw report source/match access; worker exact44table SELECT and zero source DML');
+const fx=run(process.execPath,['--import','tsx','--test','scripts/unified-stage11-reconcile-fx-projection.test.ts'],{env:{...process.env,TSX_TSCONFIG_PATH:'apps/api/tsconfig.json',UNIFIED_STAGE11_FK_OWNER_URL:url,
+ UNIFIED_STAGE11_FK_REPORT_URL:url.replace(owner,'meta_ads_unified_report'),UNIFIED_STAGE11_FK_WORKER_URL:url.replace(owner,'meta_ads_unified_worker')}});
+assert.match(fx.stdout,/pass 1/);assert.match(fx.stdout,/skipped 0/);evidence.fxImplicitIdTest='PASS';
+const fxFixClient=new Client({host:'127.0.0.1',port,user:'postgres',database});await fxFixClient.connect();
+try{
+ const before=(await fxFixClient.query("SELECT jsonb_agg(to_jsonb(a) ORDER BY oid) snapshot FROM pg_auth_members a WHERE roleid IN (SELECT oid FROM pg_roles WHERE rolname IN ('meta_ads_app','patima_app')) AND member=(SELECT oid FROM pg_roles WHERE rolname='postgres')")).rows[0].snapshot;
+ const fix=readFileSync('scripts/unified-stage11-reconcile-roles-fx-fix.sql','utf8').replace('BEGIN;','BEGIN; GRANT meta_ads_app TO postgres WITH ADMIN FALSE, INHERIT FALSE, SET TRUE;').replace('COMMIT;',"RESET ROLE; REVOKE meta_ads_app FROM postgres GRANTED BY postgres; COMMIT;");
+ await fxFixClient.query(fix);
+ const after=(await fxFixClient.query("SELECT jsonb_agg(to_jsonb(a) ORDER BY oid) snapshot FROM pg_auth_members a WHERE roleid IN (SELECT oid FROM pg_roles WHERE rolname IN ('meta_ads_app','patima_app')) AND member=(SELECT oid FROM pg_roles WHERE rolname='postgres')")).rows[0].snapshot;
+ assert.deepEqual(after,before);evidence.fxCorrectiveSqlExecutedAsOwner='PASS';
+}finally{await fxFixClient.end();}
 const fk=run(process.execPath,['--import','tsx','--test','scripts/unified-stage11-reconcile-fk.test.ts'],{env:{...process.env,TSX_TSCONFIG_PATH:'apps/api/tsconfig.json',UNIFIED_STAGE11_FK_OWNER_URL:url,
  UNIFIED_STAGE11_FK_REPORT_URL:url.replace(owner,'meta_ads_unified_report'),UNIFIED_STAGE11_FK_WORKER_URL:url.replace(owner,'meta_ads_unified_worker')}});
 assert.match(fk.stdout,/pass 1/);assert.match(fk.stdout,/skipped 0/);evidence.fkTest='PASS';

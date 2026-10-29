@@ -1,0 +1,126 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "REVIEW_REQUIRED",
+  "observedAt": "2026-10-29T06:51:32.925Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "META",
+    "scopeKeyHash": "df98ac8e69c6b17437f69f036dcfdf1e387bc13b010b3097d0f51c00f7603019",
+    "date": "2026-10-28",
+    "productName": null
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 1,
+  "publishedFacts": 0,
+  "sourceHash": "e412f9a10b4c3bc842317d19a066e7e0a25fe86cce5b590a921e5c25fe6315c8",
+  "publishedHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "publication": [],
+  "versions": {
+    "configurationVersion": "43f1f92ca4ea00025c75aa5c8df2d983160d212326eff2e204a303ac87380479",
+    "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "AD_SPEND",
+      "currency": "USD",
+      "selectedRows": 200,
+      "selectedAmount": "3589.940000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "3589.940000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "AD_SPEND",
+      "currency": "KRW",
+      "selectedRows": 200,
+      "selectedAmount": "4754157.542000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "4754157.542000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": "4754157.542000",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": "4754157.542000",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "4754157.542000",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "NAME_UNMATCHED",
+      "UNALLOCATED_BALANCE"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": null,
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "INCOMPLETE_COVERAGE",
+      "NOT_COLLECTED"
+    ]
+  },
+  "quality": [
+    {
+      "component": "AD_SPEND",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 200,
+      "missingCostRows": 0,
+      "isEstimate": false,
+      "issues": [
+        "NAME_UNMATCHED"
+      ],
+      "sourceAsOf": "2026-10-28T17:03:39.554Z"
+    }
+  ]
+}

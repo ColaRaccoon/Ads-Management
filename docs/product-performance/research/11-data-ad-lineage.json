@@ -1,0 +1,143 @@
+{
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "rows": {
+    "ad_lineage": {
+      "privacy": "No raw campaign/adset names, entity identifiers, provider responses, source payloads or credentials returned.",
+      "policies": [
+        {
+          "policy": [
+            {
+              "to": null,
+              "from": "2026-10-23",
+              "source": "API"
+            }
+          ],
+          "platform": "GOOGLE",
+          "applicable_policies": 1
+        },
+        {
+          "policy": [
+            {
+              "to": null,
+              "from": "2026-10-23",
+              "source": "API"
+            }
+          ],
+          "platform": "META",
+          "applicable_policies": 1
+        }
+      ],
+      "limitation": "Management read-only evidence plus role privilege metadata does not reproduce an actual worker connection or its interactive transaction timeout.",
+      "connections": [
+        {
+          "platform": "META",
+          "provider": "META",
+          "time_zone": "Asia/Seoul",
+          "currency_code": "USD"
+        },
+        {
+          "platform": "GOOGLE",
+          "provider": "GOOGLE",
+          "time_zone": "Asia/Seoul",
+          "currency_code": "KRW"
+        }
+      ],
+      "businessDate": "2026-10-28",
+      "workerRawEnumUsage": [
+        {
+          "type": "RunUnitStatus",
+          "usage": false
+        },
+        {
+          "type": "SourceDataKind",
+          "usage": false
+        },
+        {
+          "type": "SourceKind",
+          "usage": false
+        }
+      ],
+      "coverageAndReceipts": [
+        {
+          "state": "COMPLETE_NONZERO",
+          "source": "API",
+          "platform": "META",
+          "row_count": 200,
+          "total_amount": "3589.940000",
+          "warning_codes": [],
+          "last_success_at": "2026-10-29T02:03:39.554+09:00",
+          "published_count": 765,
+          "succeeded_day_units": 1,
+          "raw_google_amount_matches": null
+        },
+        {
+          "state": "COMPLETE_NONZERO",
+          "source": "API",
+          "platform": "GOOGLE",
+          "row_count": 5,
+          "total_amount": "279467.600350",
+          "warning_codes": [],
+          "last_success_at": "2026-10-29T02:01:10.408+09:00",
+          "published_count": 5,
+          "succeeded_day_units": 1,
+          "raw_google_amount_matches": true
+        }
+      ],
+      "metaCurrentApiLineage": {
+        "links": 200,
+        "raw_rows": 200,
+        "distinct_entities": 200,
+        "valid_linked_rows": 200,
+        "valid_version_links": 200
+      },
+      "googleCurrentApiAmount": {
+        "rows": 5,
+        "raw_krw": 279467.60035
+      },
+      "googleCurrentApiLineage": {
+        "links": 5,
+        "raw_rows": 5,
+        "distinct_entities": 5,
+        "valid_linked_rows": 5,
+        "valid_version_and_run_links": 5
+      },
+      "workerExchangeRateIdHasSelect": false,
+      "workerExplicitProjectionPrivileges": [
+        {
+          "table_name": "source_connections",
+          "schema_usage": true,
+          "missing_select_columns": []
+        },
+        {
+          "table_name": "sync_runs",
+          "schema_usage": true,
+          "missing_select_columns": []
+        },
+        {
+          "table_name": "products",
+          "schema_usage": true,
+          "missing_select_columns": []
+        },
+        {
+          "table_name": "meta_adset_daily_metrics",
+          "schema_usage": true,
+          "missing_select_columns": []
+        },
+        {
+          "table_name": "google_campaign_daily_costs",
+          "schema_usage": true,
+          "missing_select_columns": []
+        },
+        {
+          "table_name": "exchange_rates",
+          "schema_usage": true,
+          "missing_select_columns": []
+        }
+      ]
+    }
+  },
+  "observedAt": "2026-10-29T06:48:01.0819449Z",
+  "stage": 11,
+  "remoteWrites": 0
+}

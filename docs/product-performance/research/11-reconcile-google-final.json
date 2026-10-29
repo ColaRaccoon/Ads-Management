@@ -1,0 +1,131 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "PASS",
+  "observedAt": "2026-10-29T06:52:18.010Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "GOOGLE",
+    "scopeKeyHash": "d067c0479de19414ba46400c64ae115bf6f7bf612dd7b256a34c8fc9a2a5ac90",
+    "date": "2026-10-28",
+    "productName": null
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 1,
+  "publishedFacts": 1,
+  "sourceHash": "d7e7e4996c23f867ebff976c0b284eec7c20e943109612adbd9221128107c649",
+  "publishedHash": "d7e7e4996c23f867ebff976c0b284eec7c20e943109612adbd9221128107c649",
+  "publication": [
+    {
+      "runId": "86372747-2fe7-4c17-a4d0-3c0a18cb1c9d",
+      "revision": 1,
+      "publishedAt": "2026-10-29T06:52:09.324Z",
+      "versions": {
+        "fxVersion": "stored-daily-fx-v1",
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+        "calculationVersion": "unified-report-v1",
+        "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+        "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "participationOverrides": {}
+      }
+    }
+  ],
+  "versions": {
+    "configurationVersion": "43f1f92ca4ea00025c75aa5c8df2d983160d212326eff2e204a303ac87380479",
+    "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "AD_SPEND",
+      "currency": "KRW",
+      "selectedRows": 5,
+      "selectedAmount": "279467.600350",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "279467.600350",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": "279467.600350",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": "279467.600350",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "279467.600350",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "NAME_UNMATCHED",
+      "UNALLOCATED_BALANCE"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": "279467.600350",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": "279467.600350",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "279467.600350",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "NAME_UNMATCHED",
+      "UNALLOCATED_BALANCE"
+    ]
+  },
+  "quality": [
+    {
+      "component": "AD_SPEND",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 5,
+      "missingCostRows": 0,
+      "isEstimate": false,
+      "issues": [
+        "NAME_UNMATCHED"
+      ],
+      "sourceAsOf": "2026-10-28T17:01:10.408Z"
+    }
+  ]
+}

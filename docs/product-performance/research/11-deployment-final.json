@@ -16,12 +16,37 @@
   },
   "featureEnabled": true,
   "readinessEvidence": "11-app-ready-final.json",
-  "publishedRuns": 73,
+  "publishedRuns": 76,
   "audits": 4,
   "existingSourceSchedulesChanged": false,
   "sourceWrites": 0,
   "nextObservationKst": "2026-10-30 02:00–03:59",
   "coldLatencyLimitation": "One idle batch 2162–2603ms; distinct from consecutive-query p95",
   "developmentBranch": "codex/product-performance-stage11",
-  "releaseBranchIsNotUpdatedByEvidencePush": true
+  "releaseBranchIsNotUpdatedByEvidencePush": true,
+  "failedHistoricalRuns": 2,
+  "stagingRuns": 0,
+  "totalRuns": 78,
+  "currentPublicationPlatforms": [
+    "CAFE24",
+    "NAVER",
+    "META",
+    "GOOGLE",
+    "COUPANG"
+  ],
+  "fxIdentityPrivilegeCorrection": {
+    "evidence": "11-role-fx-identity-result.json",
+    "addedWorkerColumns": [
+      "meta_ads.exchange_rates.id"
+    ],
+    "sourceWrites": 0,
+    "broadSourceSelect": false,
+    "credentialAccess": false
+  },
+  "additionalPlatformReconciliation": [
+    "11-reconcile-meta-final.json",
+    "11-reconcile-google-final.json",
+    "11-reconcile-coupang-final.json"
+  ],
+  "additionalPlatformUiEvidence": "11-ui-platforms-final.json"
 }

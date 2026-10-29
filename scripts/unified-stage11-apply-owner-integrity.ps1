@@ -1,9 +1,10 @@
-param([switch]$Execute,[string]$ExpectedSqlSha256)
+param([switch]$Execute,[string]$ExpectedSqlSha256,[ValidateSet('NewTableFk','FxIdentity')][string]$Fix='NewTableFk')
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'cloud/daily-data-sync/protected-context.ps1')
-$path=Join-Path $PSScriptRoot 'unified-stage11-reconcile-roles-fk-fix.sql'
+$fixFile=if($Fix -eq 'FxIdentity'){'unified-stage11-reconcile-roles-fx-fix.sql'}else{'unified-stage11-reconcile-roles-fk-fix.sql'}
+$path=Join-Path $PSScriptRoot $fixFile
 $hash=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
-if(-not $Execute){@{status='READY';sqlSha256=$hash;sourceWrites=0;newParentTables=2}|ConvertTo-Json -Compress;return}
+if(-not $Execute){@{status='READY';fix=$Fix;sqlSha256=$hash;sourceWrites=0}|ConvertTo-Json -Compress;return}
 if($ExpectedSqlSha256 -cne $hash){throw 'OWNER_INTEGRITY_REVIEW_HASH_REQUIRED'}
 $body=[IO.File]::ReadAllText($path)
 $first=$body.IndexOf('BEGIN;');$last=$body.LastIndexOf('COMMIT;')
@@ -25,10 +26,12 @@ $token=$null;$headers=$null;$reply=$null
 try{
  $token=Get-Phase08SupabaseCredential;$headers=@{Authorization=('Bearer '+$token)}
  $reply=Invoke-WebRequest -Uri 'https://api.supabase.com/v1/projects/iygjmosbelbosfxidqxv/database/query' -Method Post -Headers $headers -Body (@{query=$sql}|ConvertTo-Json -Compress) -ContentType application/json -MaximumRedirection 0 -TimeoutSec 45 -SkipHttpErrorCheck
- $receipt=@{stage=11;operation='NEW_TABLE_OWNER_FK_COLUMN_PRIVILEGES';observedAt=[DateTime]::UtcNow.ToString('o');httpStatus=[int]$reply.StatusCode;sqlSha256=$hash;sourceWrites=0;runtimePrivilegesChanged=$false;ownerPoliciesAdded=0}
+ $operation=if($Fix -eq 'FxIdentity'){'WORKER_FX_IDENTITY_COLUMN_SELECT'}else{'NEW_TABLE_OWNER_FK_COLUMN_PRIVILEGES'}
+ $receipt=@{stage=11;operation=$operation;observedAt=[DateTime]::UtcNow.ToString('o');httpStatus=[int]$reply.StatusCode;sqlSha256=$hash;sourceWrites=0;runtimePrivilegesChanged=($Fix -eq 'FxIdentity');legacyRolePrivilegesChanged=$false;credentialPrivilegesChanged=$false;ownerPoliciesAdded=0}
  $receipt.status=if([int]$reply.StatusCode -in @(200,201)){'APPLIED'}else{'FAIL'}
  $receipt.membershipRestoredByTransactionGuard=($receipt.status -eq 'APPLIED')
- $receipt|ConvertTo-Json -Depth 8|Set-Content docs/product-performance/research/11-role-owner-integrity-result.json
+ $output=if($Fix -eq 'FxIdentity'){'docs/product-performance/research/11-role-fx-identity-result.json'}else{'docs/product-performance/research/11-role-owner-integrity-result.json'}
+ $receipt|ConvertTo-Json -Depth 8|Set-Content $output
  if($receipt.status -eq 'FAIL'){throw 'OWNER_INTEGRITY_APPLY_FAILED_CHECK_READBACK'}
- Write-Output 'NEW_TABLE_OWNER_FK_PRIVILEGES_APPLIED'
+ Write-Output 'STAGE11_RESTRICTED_OWNER_FIX_APPLIED'
 }finally{if($headers){$headers.Clear()};$token=$null;$headers=$null;$reply=$null;$sql=$null}
