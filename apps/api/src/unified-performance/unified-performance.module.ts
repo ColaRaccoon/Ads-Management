@@ -12,10 +12,12 @@ import { UnifiedReportController } from "./report.controller";
 import { UnifiedReportRepository } from "./report.repository";
 import { UnifiedReportService } from "./report.service";
 import { UnifiedAggregationRepository } from "./aggregation.repository";
+import { PrismaService } from "../common/prisma.service";
+import { UnifiedRuntimePrisma } from "./runtime-prisma";
 
 @Module({
   controllers: [UnifiedProductsController, UnifiedRulesController, UnifiedReportController],
-  providers: [UnifiedManagementRepository, UnifiedManagementService, MetaPerformanceAdapter, GooglePerformanceAdapter, Cafe24PerformanceAdapter, StorefrontAdaptersService, CoupangPerformanceAdapter, NaverPerformanceAdapter, UnifiedReportRepository, UnifiedReportService, UnifiedAggregationRepository],
+  providers: [{ provide: PrismaService, useClass: UnifiedRuntimePrisma }, UnifiedManagementRepository, UnifiedManagementService, MetaPerformanceAdapter, GooglePerformanceAdapter, Cafe24PerformanceAdapter, StorefrontAdaptersService, CoupangPerformanceAdapter, NaverPerformanceAdapter, UnifiedReportRepository, UnifiedReportService, UnifiedAggregationRepository],
   exports: [UnifiedManagementRepository, StorefrontAdaptersService, CoupangPerformanceAdapter, NaverPerformanceAdapter]
 })
 export class UnifiedPerformanceModule {}

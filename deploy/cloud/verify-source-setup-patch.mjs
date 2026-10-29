@@ -70,6 +70,7 @@ if (profile === 'reporting') {
     'relationship-input.js', 'relationship-input.test.js', 'relationship-query.js',
     'report-contract.js', 'report-query.js', 'report.controller.js', 'report.dto.js',
     'report.repository.js', 'report.service.js', 'report.service.test.js',
+    'runtime-prisma.js', 'runtime-prisma.test.js',
     'types.js', 'unified-performance.module.js'
   ]) expected.add(`unified-performance/${name}`);
 }
