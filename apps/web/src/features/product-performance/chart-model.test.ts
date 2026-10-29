@@ -20,9 +20,42 @@ test("missing inputs break lines, completed zero remains zero, and usable Naver 
   assert.equal(rows[0].revenue, 140);
   assert.equal(rows[0].ad0, 70);
   assert.equal(rows[1].revenue, null);
+  assert.equal(rows[1].revenueKnown, 27);
   assert.equal(rows[1].ad0, null);
   assert.equal(rows[2].revenue, 0);
   assert.equal(rows[2].ad0, 0);
+});
+
+test("partial publications plot known sales and each observed medium without making a missing medium zero", () => {
+  const partial = bucket("2026-10-28", null);
+  partial.completeTotals = { revenue: null, adSpend: null, profitBeforeAds: null, estimatedProfit: null, mer: null };
+  partial.knownTotals = { revenue: "3727300.000000", adSpend: "70.000000", profitBeforeAds: "2283870.000000", estimatedProfit: "2283800.000000", mer: null };
+  partial.byMedium = [{ medium: "NAVER_DA", adSpend: "70.000000", share: "100.0000000000" }, { medium: "META", adSpend: null, share: null }];
+  const missing = bucket("2026-10-29", null);
+  missing.completeTotals = { ...partial.completeTotals };
+  missing.knownTotals = { ...partial.completeTotals };
+  missing.byMedium = [];
+  const before = JSON.stringify(partial);
+  const [row, gap] = chartRows([partial, missing], ["NAVER_DA", "META", "GOOGLE"]);
+  assert.equal(row.revenue, null); assert.equal(row.revenueKnown, 3727300);
+  assert.equal(row.profitBeforeAdsKnown, 2283870); assert.equal(row.estimatedProfitKnown, 2283800);
+  assert.equal(row.adTotal, null); assert.equal(row.adTotalKnown, 70); assert.equal(row.ad0, 70);
+  assert.equal(row.ad1, null); assert.equal(row.ad2, null); assert.equal(row.partialAds, 1);
+  assert.equal(row.share0, 100); assert.equal(row.share1, null); assert.equal(row.share2, null);
+  assert.equal(gap.revenueKnown, null); assert.equal(gap.adTotalKnown, null); assert.equal(gap.ad0, null); assert.equal(gap.share0, null);
+  assert.equal(JSON.stringify(partial), before);
+});
+
+test("partial composition retains server shares and rejects negative or inconsistent known totals", () => {
+  const partial = bucket("2026-10-28");
+  partial.completeTotals.adSpend = null;
+  partial.knownTotals.adSpend = "100.000000";
+  partial.byMedium = [{ medium: "META", adSpend: "60.000000", share: "60.0000000000" }, { medium: "GOOGLE", adSpend: "40.000000", share: "40.0000000000" }];
+  assert.equal(compositionAvailable(partial), true);
+  assert.equal(chartRows([partial], ["META", "GOOGLE"])[0].share1, 40);
+  partial.byMedium[0].adSpend = "61.000000"; assert.equal(compositionAvailable(partial), false);
+  partial.byMedium[0].adSpend = "-10.000000"; partial.byMedium[1].adSpend = "110.000000"; assert.equal(compositionAvailable(partial), false);
+  partial.knownTotals.adSpend = "0.000000"; assert.equal(compositionAvailable(partial), false);
 });
 
 test("chart coordinates reject unsafe monetary magnitudes without modifying original decimal strings", () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bar, BarChart, CartesianGrid, ComposedChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { bucketLabel, chartNumber, chartRows, movingAverages } from "./chart-model";
 import { decimal, difference, label, money, percent, ratioPercent } from "./model";
 import type { Availability, Bucket, DashboardData, Metric } from "./types";
@@ -37,6 +37,15 @@ export function PerformanceCharts({ data }: { data: DashboardData }) {
   const averages = movingAverages(buckets);
   // Points keep single-day reports and complete days surrounded by missing inputs visible.
   const point = { r: buckets.length === 1 ? 4 : buckets.length <= 31 ? 2.5 : 1.5 };
+  const hasPartial = (metric: Metric) => buckets.some(bucket => bucket.completeTotals[metric] === null && bucket.knownTotals[metric] !== null);
+  const partialMetrics = ["revenue", "adSpend", "profitBeforeAds", "estimatedProfit"] as const;
+  const hasAds = rows.some(row => row.adTotalKnown !== null || media.some((_medium, index) => row[`ad${index}`] !== null));
+  const hasSales = rows.some(row => [row.revenueKnown, row.profitBeforeAdsKnown, row.estimatedProfitKnown].some(value => value !== null));
+  const hasComposition = rows.some(row => media.some((_medium, index) => row[`share${index}`] !== null));
+  const metricLines = (metric: "revenue" | "profitBeforeAds" | "estimatedProfit", name: string, color: string) => [
+    hasPartial(metric) ? <Line key={`${metric}Known`} dataKey={`${metric}Known`} name={`${name} · 확인된 부분 금액 포함`} stroke={color} strokeDasharray="5 4" dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} /> : null,
+    <Line key={metric} dataKey={metric} name={name} stroke={color} dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} />,
+  ];
   const syncId = `product-performance:${summary.selection.selectionHash}`;
   const tooltip = ({ active, label: date }: { active?: boolean; label?: string | number }) => {
     if (!active) return null;
@@ -56,7 +65,10 @@ export function PerformanceCharts({ data }: { data: DashboardData }) {
   if (!buckets.length) return <section className="panel"><h2>기간별 그래프</h2><p>선택 기간에 표시할 집계가 없습니다.</p></section>;
   return <>
     <section className="panel" style={{ marginTop: 16 }} aria-label="그래프 표시 설정">
-      <p>날짜축과 툴팁을 공유합니다. 금액 축은 원입니다. 누락·미완전 구간은 선을 끊고, 완료가 확인된 0원만 0으로 표시합니다.</p>
+      <p>날짜축과 툴팁을 공유합니다. 금액 축은 원입니다. 확인된 금액을 그리며, 입력이 없는 날짜는 선을 끊고 0원으로 채우지 않습니다.</p>
+      <p>확인된 금액이 있는 구간: {[summary.metricAvailability.revenue ? `매출 ${buckets.filter(bucket => bucket.knownTotals.revenue !== null).length}/${buckets.length}` : null,
+        summary.metricAvailability.adSpend ? `광고비 ${buckets.filter(bucket => bucket.knownTotals.adSpend !== null).length}/${buckets.length}` : null].filter(Boolean).join(" · ")}. 비어 있는 날짜의 미수집·미귀속 상태는 아래 데이터 진단에서 확인하세요.</p>
+      {partialMetrics.some(hasPartial) ? <p role="status">점선·옅은 막대는 확인된 부분 금액을 포함합니다. 실선은 완전 합계이며, 부분 금액을 전체 실적으로 해석하지 마세요. 날짜별 원금액과 누락 상태는 툴팁·아래 표에서 확인할 수 있습니다.</p> : null}
       <fieldset style={{ border: 0, padding: 0 }}><legend>차트 범례 · 계열 표시만 변경 (합계·비중 분모 유지)</legend>
         <div className="toolbar" style={{ flexWrap: "wrap" }}>{media.map((medium, index) => <label key={medium} style={{ color: mediumColor(medium, index) }}>
           <input type="checkbox" checked={!hidden.includes(medium)} onChange={() => toggle(medium)} /> {label(medium)} 표시
@@ -66,27 +78,32 @@ export function PerformanceCharts({ data }: { data: DashboardData }) {
       {unsafe ? <p role="status">일부 금액은 그래프의 안전한 숫자 범위를 넘어 좌표를 생략했습니다. 아래 표와 툴팁은 원래 금액을 보존합니다.</p> : null}
     </section>
     <div className="grid two" style={{ marginTop: 16 }}>
-      <section className="panel"><h2>매체별 광고비 추이</h2><p>선택 광고비 · 원{summary.completeTotals.adSpend === null ? " · 확인된 부분 금액은 아래 표에서 확인" : ""}</p>
-        {summary.metricAvailability.adSpend ? <div style={box}><ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} syncId={syncId} syncMethod="value" margin={{ left: 18, right: 16 }}>
+      <section className="panel" aria-label="매체별 광고비 추이"><h2>매체별 광고비 추이</h2><p>선택 광고비 · 원{hasPartial("adSpend") ? " · 확인된 부분 금액 포함" : ""}</p>
+        {summary.metricAvailability.adSpend ? hasAds ? <div style={box}><ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} syncId={syncId} syncMethod="value" margin={{ left: 18, right: 16 }}>
           <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={date => String(date).slice(5)} minTickGap={30} /><YAxis tickFormatter={axisAmount} width={72} /><Tooltip content={tooltip} />
-          {media.map((medium, index) => <Bar key={medium} dataKey={`ad${index}`} name={label(medium)} stackId="ads" fill={mediumColor(medium, index)} hide={hidden.includes(medium)} isAnimationActive={false} />)}
+          {media.map((medium, index) => <Bar key={medium} dataKey={`ad${index}`} name={label(medium)} stackId="ads" fill={mediumColor(medium, index)} hide={hidden.includes(medium)} isAnimationActive={false}>
+            {rows.map(row => <Cell key={row.date} fillOpacity={row.partialAds ? 0.55 : 1} />)}
+          </Bar>)}
+          {hasPartial("adSpend") ? <Line dataKey="adTotalKnown" name="선택 광고비 · 확인된 부분 금액 포함" stroke="#263b42" strokeWidth={2} strokeDasharray="5 4" dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} /> : null}
           <Line dataKey="adTotal" name="선택 광고비 합계" stroke="#263b42" strokeWidth={2} dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} />
           {average && summary.selection.grain === "day" ? <Line dataKey="movingAverage" name="7일 이동평균" stroke="#b06535" strokeDasharray="5 3" dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} /> : null}
-        </ComposedChart></ResponsiveContainer></div> : <p>광고비가 적용되는 플랫폼을 선택하세요.</p>}
+        </ComposedChart></ResponsiveContainer></div> : <p role="status">표시할 광고비 좌표가 없습니다. 원금액과 미수집·미귀속 상태를 아래 표·진단에서 확인하세요.</p> : <p>광고비가 적용되는 플랫폼을 선택하세요.</p>}
       </section>
-      <section className="panel"><h2>매출·이익 추이</h2><p>매출(파랑) · 광고 전 이익(초록) · {summary.profitLabel}(보라) · 원</p>
-        {summary.metricAvailability.revenue ? <div style={box}><ResponsiveContainer width="100%" height="100%"><LineChart data={rows} syncId={syncId} syncMethod="value" margin={{ left: 18, right: 16 }}>
+      <section className="panel" aria-label="매출·이익 추이"><h2>매출·이익 추이</h2><p>매출(파랑) · 광고 전 이익(초록) · {summary.profitLabel}(보라) · 원</p>
+        {summary.metricAvailability.revenue ? hasSales ? <div style={box}><ResponsiveContainer width="100%" height="100%"><LineChart data={rows} syncId={syncId} syncMethod="value" margin={{ left: 18, right: 16 }}>
           <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={date => String(date).slice(5)} minTickGap={30} /><YAxis tickFormatter={axisAmount} width={72} /><Tooltip content={tooltip} />
-          <Line dataKey="revenue" name="매출" stroke="#4686c6" dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} />
-          <Line dataKey="profitBeforeAds" name="광고 전 이익" stroke="#146c63" dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} />
-          <Line dataKey="estimatedProfit" name={summary.profitLabel} stroke="#9b65b2" dot={point} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false} />
-        </LineChart></ResponsiveContainer></div> : <p>매출·이익은 해당 없음입니다. 판매 플랫폼을 선택하세요.</p>}
+          {metricLines("revenue", "매출", "#4686c6")}
+          {metricLines("profitBeforeAds", "광고 전 이익", "#146c63")}
+          {metricLines("estimatedProfit", summary.profitLabel, "#9b65b2")}
+        </LineChart></ResponsiveContainer></div> : <p role="status">표시할 매출·이익 좌표가 없습니다. 원금액과 제품 규칙·원가 상태를 아래 표·진단에서 확인하세요.</p> : <p>매출·이익은 해당 없음입니다. 판매 플랫폼을 선택하세요.</p>}
       </section>
-      <section className="panel"><h2>광고비 구성 · 100%</h2><p>각 기간의 선택 광고비 합계가 분모입니다. 0분모·음수 정정·미완전 구간은 구성비를 그리지 않습니다.</p>
-        {summary.metricAvailability.adSpend ? <div style={box}><ResponsiveContainer width="100%" height="100%"><BarChart data={rows} syncId={syncId} syncMethod="value" margin={{ left: 18, right: 16 }}>
+      <section className="panel" aria-label="광고비 구성"><h2>광고비 구성 · 100%</h2><p>각 날짜의 확인된 광고비 합계가 분모입니다. 옅은 막대는 부분 금액 기준 구성으로, 누락 매체를 포함한 전체 비중은 아닙니다. 0분모·음수 정정·입력 없는 구간은 그리지 않습니다.</p>
+        {summary.metricAvailability.adSpend ? hasComposition ? <div style={box}><ResponsiveContainer width="100%" height="100%"><BarChart data={rows} syncId={syncId} syncMethod="value" margin={{ left: 18, right: 16 }}>
           <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={date => String(date).slice(5)} minTickGap={30} /><YAxis domain={[0, 100]} tickFormatter={value => `${value}%`} width={72} /><Tooltip content={tooltip} />
-          {media.map((medium, index) => <Bar key={medium} dataKey={`share${index}`} name={label(medium)} stackId="shares" fill={mediumColor(medium, index)} hide={hidden.includes(medium)} isAnimationActive={false} />)}
-        </BarChart></ResponsiveContainer></div> : <p>광고비 구성은 해당 없음입니다.</p>}
+          {media.map((medium, index) => <Bar key={medium} dataKey={`share${index}`} name={label(medium)} stackId="shares" fill={mediumColor(medium, index)} hide={hidden.includes(medium)} isAnimationActive={false}>
+            {rows.map(row => <Cell key={row.date} fillOpacity={row.partialAds ? 0.55 : 1} />)}
+          </Bar>)}
+        </BarChart></ResponsiveContainer></div> : <p role="status">구성비를 표시할 수 있는 광고비가 없습니다. 입력 누락·0원·음수 정정 여부를 확인하세요.</p> : <p>광고비 구성은 해당 없음입니다.</p>}
       </section>
       <section className="panel"><h2>판매처 매출 구성</h2><p>선택 판매처의 확인된 매출 · 원. Meta·Google의 전환매출을 더하지 않습니다.</p>
         {summary.metricAvailability.revenue ? <><div style={box}><ResponsiveContainer width="100%" height="100%"><BarChart data={marketplaceRows} layout="vertical" margin={{ left: 18, right: 16 }}>

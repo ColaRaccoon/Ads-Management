@@ -1,0 +1,1335 @@
+{
+  "completeTotals": {
+    "adSpend": null,
+    "estimatedProfit": null,
+    "mer": null,
+    "profitBeforeAds": null,
+    "revenue": null
+  },
+  "contractVersion": "product-performance-v1.1.0",
+  "items": [
+    {
+      "bucketFrom": "2026-09-29",
+      "bucketTo": "2026-09-29",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-09-29",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-09-30",
+      "bucketTo": "2026-09-30",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-09-30",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-01",
+      "bucketTo": "2026-10-01",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-01",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-02",
+      "bucketTo": "2026-10-02",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-02",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-03",
+      "bucketTo": "2026-10-03",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-03",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-04",
+      "bucketTo": "2026-10-04",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-04",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-05",
+      "bucketTo": "2026-10-05",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-05",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-06",
+      "bucketTo": "2026-10-06",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-06",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-07",
+      "bucketTo": "2026-10-07",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-07",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-08",
+      "bucketTo": "2026-10-08",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-08",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-09",
+      "bucketTo": "2026-10-09",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-09",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-10",
+      "bucketTo": "2026-10-10",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-10",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-11",
+      "bucketTo": "2026-10-11",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-11",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-12",
+      "bucketTo": "2026-10-12",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-12",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-13",
+      "bucketTo": "2026-10-13",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-13",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-14",
+      "bucketTo": "2026-10-14",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-14",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-15",
+      "bucketTo": "2026-10-15",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-15",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-16",
+      "bucketTo": "2026-10-16",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-16",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-17",
+      "bucketTo": "2026-10-17",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-17",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-18",
+      "bucketTo": "2026-10-18",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-18",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-19",
+      "bucketTo": "2026-10-19",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-19",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-20",
+      "bucketTo": "2026-10-20",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-20",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-21",
+      "bucketTo": "2026-10-21",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-21",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-22",
+      "bucketTo": "2026-10-22",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-22",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-23",
+      "bucketTo": "2026-10-23",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-23",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": "7543400.000000"
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-24",
+      "bucketTo": "2026-10-24",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-24",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": "9687400.000000"
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-25",
+      "bucketTo": "2026-10-25",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-25",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": "13479200.000000"
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-26",
+      "bucketTo": "2026-10-26",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": "4067547.000000",
+          "medium": "NAVER_DA",
+          "share": "100.0000000000"
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-26",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": "4067547.000000",
+        "estimatedProfit": "3330302.000000",
+        "mer": "6.0992706415",
+        "profitBeforeAds": "7652649.000000",
+        "revenue": "24809070.000000"
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-27",
+      "bucketTo": "2026-10-27",
+      "byMedium": [
+        {
+          "adSpend": null,
+          "medium": "COUPANG_ADS",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "GOOGLE",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "META",
+          "share": null
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-27",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": "10985000.000000"
+      },
+      "partial": false
+    },
+    {
+      "bucketFrom": "2026-10-28",
+      "bucketTo": "2026-10-28",
+      "byMedium": [
+        {
+          "adSpend": "2094307.000000",
+          "medium": "COUPANG_ADS",
+          "share": "29.3816910455"
+        },
+        {
+          "adSpend": "279467.600350",
+          "medium": "GOOGLE",
+          "share": "3.9207387889"
+        },
+        {
+          "adSpend": "4754157.542000",
+          "medium": "META",
+          "share": "66.6975701656"
+        },
+        {
+          "adSpend": null,
+          "medium": "NAVER_DA",
+          "share": null
+        }
+      ],
+      "completeTotals": {
+        "adSpend": null,
+        "estimatedProfit": null,
+        "mer": null,
+        "profitBeforeAds": null,
+        "revenue": null
+      },
+      "date": "2026-10-28",
+      "isEstimate": true,
+      "knownTotals": {
+        "adSpend": "7127932.142350",
+        "estimatedProfit": "-1243258.906351",
+        "mer": "2.7108465140",
+        "profitBeforeAds": "5884673.235999",
+        "revenue": "19322730.000000"
+      },
+      "partial": false
+    }
+  ],
+  "knownTotals": {
+    "adSpend": "11195479.142350",
+    "estimatedProfit": "2087043.093649",
+    "mer": "7.6662015898",
+    "profitBeforeAds": "13537322.235999",
+    "revenue": "85826800.000000"
+  },
+  "selection": {
+    "compareFrom": "2026-08-30",
+    "compareTo": "2026-09-28",
+    "excludedPlatforms": [],
+    "from": "2026-09-29",
+    "grain": "day",
+    "productName": null,
+    "scopeKeys": [
+      "2155a401-bd86-4111-9280-3c95ed207546",
+      "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "LEGACY_UNBOUND",
+      "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+    ],
+    "selectedPlatforms": [
+      "META",
+      "GOOGLE",
+      "NAVER",
+      "COUPANG",
+      "CAFE24"
+    ],
+    "selectionHash": "b2d9851e929f9cfa3cf01cf44de88260a82654a4b301acf1e8e6b756d6931473",
+    "to": "2026-10-28"
+  }
+}

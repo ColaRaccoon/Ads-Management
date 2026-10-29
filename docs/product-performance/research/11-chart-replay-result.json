@@ -1,0 +1,34 @@
+{
+  "stage": 11,
+  "status": "PASS",
+  "kind": "PRODUCTION_RESPONSE_CHART_REPLAY",
+  "observedAt": "2026-10-29T07:17:51.207Z",
+  "databaseWrites": 0,
+  "sourceCalls": 0,
+  "buckets": 30,
+  "metrics": {
+    "revenue": {
+      "before": 0,
+      "after": 6,
+      "missingPreserved": 24
+    },
+    "adSpend": {
+      "before": 0,
+      "after": 2,
+      "missingPreserved": 28
+    },
+    "profitBeforeAds": {
+      "before": 0,
+      "after": 2,
+      "missingPreserved": 28
+    },
+    "estimatedProfit": {
+      "before": 0,
+      "after": 2,
+      "missingPreserved": 28
+    }
+  },
+  "compositionPeriods": 2,
+  "serverMonetaryStringsPreserved": true,
+  "unobservedMediumNotCoercedToZero": true
+}

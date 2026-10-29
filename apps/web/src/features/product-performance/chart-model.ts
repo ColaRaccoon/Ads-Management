@@ -42,9 +42,12 @@ export function bucketLabel(bucket: Bucket) {
 }
 
 export function compositionAvailable(bucket: Bucket) {
-  return bucket.completeTotals.adSpend !== null && chartNumber(bucket.completeTotals.adSpend) !== null &&
-    chartNumber(bucket.completeTotals.adSpend)! > 0 && bucket.byMedium.length > 0 &&
-    bucket.byMedium.every(row => row.share !== null && chartNumber(row.share) !== null && chartNumber(row.share)! >= 0);
+  const total = bucket.completeTotals.adSpend ?? bucket.knownTotals.adSpend;
+  const known = bucket.byMedium.filter(row => row.adSpend !== null);
+  return total !== null && chartNumber(total) !== null && chartNumber(total)! > 0 && known.length > 0 &&
+    known.every(row => chartNumber(row.adSpend) !== null && chartNumber(row.adSpend)! >= 0 &&
+      row.share !== null && chartNumber(row.share) !== null && chartNumber(row.share)! >= 0 && chartNumber(row.share)! <= 100) &&
+    known.reduce((sum, row) => sum + micro(row.adSpend!), 0n) === micro(total);
 }
 
 export function chartRows(buckets: Bucket[], media: string[]) {
@@ -53,12 +56,17 @@ export function chartRows(buckets: Bucket[], media: string[]) {
     const row: Record<string, string | number | null> = { date: bucket.date,
       revenue: completeCoordinate(bucket, "revenue"), profitBeforeAds: completeCoordinate(bucket, "profitBeforeAds"),
       estimatedProfit: completeCoordinate(bucket, "estimatedProfit"), adTotal: completeCoordinate(bucket, "adSpend"),
+      revenueKnown: chartNumber(bucket.completeTotals.revenue ?? bucket.knownTotals.revenue),
+      profitBeforeAdsKnown: chartNumber(bucket.completeTotals.profitBeforeAds ?? bucket.knownTotals.profitBeforeAds),
+      estimatedProfitKnown: chartNumber(bucket.completeTotals.estimatedProfit ?? bucket.knownTotals.estimatedProfit),
+      adTotalKnown: chartNumber(bucket.completeTotals.adSpend ?? bucket.knownTotals.adSpend),
+      partialAds: bucket.completeTotals.adSpend === null ? 1 : 0,
       movingAverage: chartNumber(averages[index]) };
     media.forEach((medium, mediumIndex) => {
       const own = bucket.byMedium.find(item => item.medium === medium);
       // Missing inputs remain a gap. A missing series may be zero only when its total is complete.
-      row[`ad${mediumIndex}`] = bucket.completeTotals.adSpend === null ? null : chartNumber(own ? own.adSpend : "0");
-      row[`share${mediumIndex}`] = compositionAvailable(bucket) ? chartNumber(own?.share ?? "0") : null;
+      row[`ad${mediumIndex}`] = chartNumber(own ? own.adSpend : bucket.completeTotals.adSpend !== null ? "0" : null);
+      row[`share${mediumIndex}`] = compositionAvailable(bucket) ? chartNumber(own ? own.share : bucket.completeTotals.adSpend !== null ? "0" : null) : null;
     });
     return row;
   });

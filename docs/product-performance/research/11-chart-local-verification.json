@@ -1,0 +1,25 @@
+{
+  "stage": 11,
+  "status": "PASS",
+  "observedAt": "2026-10-29T07:20:19.680Z",
+  "webTests": {
+    "pass": 111,
+    "fail": 0,
+    "skipped": 0
+  },
+  "guardTests": {
+    "pass": 10,
+    "fail": 0
+  },
+  "webBuild": {
+    "status": "PASS",
+    "pages": 38
+  },
+  "typecheck": "PASS",
+  "apiSharedDeploymentSourceDiff": 0,
+  "sourceWrites": 0,
+  "logDigests": {
+    "11-web-charts-tests.log": "b473373a23d2a615c04ae3364392766e19fdd02bde69054c1ef5d85c5e9d1202",
+    "11-web-charts-build.log": "b4ba723e7fd6911f1e4273b19b20be6e577175f1506eeef88deb69569b0595fa"
+  }
+}

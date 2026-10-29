@@ -60,6 +60,22 @@ test("chart data table and seller composition preserve unsafe monetary strings a
   assert.match(html, /전기 확인 매출/);
 });
 
+test("partial chart values are labelled and genuinely missing inputs show explanations instead of empty axes", () => {
+  const data = fixture();
+  data.timeseries.items[0].completeTotals = { ...data.timeseries.items[0].completeTotals, revenue: null };
+  const html = renderToStaticMarkup(<PerformanceCharts data={data} />);
+  assert.match(html, /점선·옅은 막대는 확인된 부분 금액을 포함합니다/);
+  assert.match(html, /옅은 막대는 부분 금액 기준 구성/);
+  const missing = data.timeseries.items[0];
+  missing.knownTotals = { revenue: null, adSpend: null, profitBeforeAds: null, estimatedProfit: null, mer: null };
+  missing.completeTotals = { ...missing.knownTotals }; missing.byMedium = [];
+  data.timeseries.items = [missing];
+  const empty = renderToStaticMarkup(<PerformanceCharts data={data} />);
+  assert.match(empty, /표시할 광고비 좌표가 없습니다/);
+  assert.match(empty, /표시할 매출·이익 좌표가 없습니다/);
+  assert.match(empty, /구성비를 표시할 수 있는 광고비가 없습니다/);
+});
+
 test("diagnostic summary deduplicates inherited cost gaps, ignores excluded rows, and distinguishes confirmed zero from missing", () => {
   const rows = [coverage({ missingCostRows: 4, unmappedRows: 2 }), coverage({ component: "DIRECT_COST", missingCostRows: 4, unmappedRows: 2 }),
     coverage({ date: "2026-10-26", component: "AD_SPEND", collectionState: "NOT_COLLECTED" }), coverage({ date: "2026-10-25", zeroConfirmed: true, rowsPresent: 0 }),
