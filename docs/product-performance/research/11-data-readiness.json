@@ -1,0 +1,577 @@
+{
+  "stage": 11,
+  "rows": {
+    "readiness": {
+      "limits": "Aggregates only; no raw order identifiers, names, payloads or credentials. Current rows do not by themselves prove API lineage or numeric completeness.",
+      "coverage": [
+        {
+          "state": "COMPLETE_NONZERO",
+          "source": "API",
+          "dataKind": "GOOGLE_CAMPAIGN",
+          "rowCount": 5,
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "totalAmount": 279467.60035,
+          "warningCodes": [],
+          "lastAttemptAt": "2026-10-29T02:01:10.408+09:00",
+          "lastSuccessAt": "2026-10-29T02:01:10.408+09:00",
+          "reconciliationStatus": null
+        },
+        {
+          "state": "COMPLETE_NONZERO",
+          "source": "API",
+          "dataKind": "META_AD",
+          "rowCount": 565,
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+          "totalAmount": 3589.94,
+          "warningCodes": [],
+          "lastAttemptAt": "2026-10-29T02:03:39.554+09:00",
+          "lastSuccessAt": "2026-10-29T02:03:39.554+09:00",
+          "reconciliationStatus": null
+        },
+        {
+          "state": "COMPLETE_NONZERO",
+          "source": "API",
+          "dataKind": "META_ADSET",
+          "rowCount": 200,
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+          "totalAmount": 3589.94,
+          "warningCodes": [],
+          "lastAttemptAt": "2026-10-29T02:03:39.554+09:00",
+          "lastSuccessAt": "2026-10-29T02:03:39.554+09:00",
+          "reconciliationStatus": null
+        },
+        {
+          "state": "COMPLETE_NONZERO",
+          "source": "API",
+          "dataKind": "CAFE24_ORDER",
+          "rowCount": 323,
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "totalAmount": 9621097,
+          "warningCodes": [
+            "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+            "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+            "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+          ],
+          "lastAttemptAt": "2026-10-29T02:38:10.475+09:00",
+          "lastSuccessAt": "2026-10-29T02:38:10.475+09:00",
+          "reconciliationStatus": "CAFE24_API_ONLY_VERIFIED"
+        }
+      ],
+      "observedAt": "2026-10-29T13:12:38.26428+09:00",
+      "connections": [
+        {
+          "enabled": true,
+          "currency": "KRW",
+          "provider": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "timeZone": "Asia/Seoul",
+          "updatedAt": "2026-10-24T10:30:28.194+09:00",
+          "accessState": "READY"
+        },
+        {
+          "enabled": true,
+          "currency": "USD",
+          "provider": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+          "timeZone": "Asia/Seoul",
+          "updatedAt": "2026-10-24T11:19:30.11+09:00",
+          "accessState": "READY"
+        },
+        {
+          "enabled": true,
+          "currency": "KRW",
+          "provider": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "timeZone": "Asia/Seoul",
+          "updatedAt": "2026-10-29T02:00:09.236+09:00",
+          "accessState": "READY"
+        }
+      ],
+      "businessDate": "2026-10-28",
+      "activeCatalog": [
+        {
+          "canonical_name": "노필수면안대",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "다이어트양말",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "두줄무릎보호대",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "러닝양말",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "러닝조끼",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "바라클라바",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "방한마스크",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "버닝 슬라이드",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "버닝웨이브바",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "베놈무릎보호대",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "뷰티레그보드",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "스카이스텝",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "아이언볼",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "에어스텝퍼",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "유쉴드마스크",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "자이로볼",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "케겔",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "퍼펙트스케이트",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "퍼펙트슬라이드",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "풀업바",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "풀업밴드",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "플로우라이트",
+          "duplicate_count": 1
+        },
+        {
+          "canonical_name": "한줄보호대",
+          "duplicate_count": 1
+        }
+      ],
+      "exchangeRates": [
+        {
+          "base": "USD",
+          "rate": 1324.3,
+          "quote": "KRW",
+          "provider": "KOREA_EXIM",
+          "sourceDate": "2026-10-28",
+          "fallbackType": "EXACT"
+        }
+      ],
+      "sourceDayRows": [
+        {
+          "amount": "11791600.000000",
+          "source": "API",
+          "currency": "KRW",
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "amount_rows": 323,
+          "current_rows": 323,
+          "latest_source_at": "2026-10-28 17:38:09.349+00"
+        },
+        {
+          "amount": "2094307.00",
+          "source": "CSV",
+          "currency": "KRW",
+          "platform": "COUPANG_AD",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "amount_rows": 296,
+          "current_rows": 296,
+          "latest_source_at": "2026-10-29 00:56:09.385"
+        },
+        {
+          "amount": "8592030.00",
+          "source": "CSV",
+          "currency": "KRW",
+          "platform": "COUPANG_SALE",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "amount_rows": 357,
+          "current_rows": 357,
+          "latest_source_at": "2026-10-29 00:54:34.015"
+        },
+        {
+          "amount": "279467.600350000000",
+          "source": "API",
+          "currency": "KRW",
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "amount_rows": 5,
+          "current_rows": 5,
+          "latest_source_at": "2026-10-28 17:01:09.864+00"
+        },
+        {
+          "amount": "3589.9400",
+          "source": "API",
+          "currency": "USD",
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "amount_rows": 200,
+          "current_rows": 200,
+          "latest_source_at": "2026-10-29 01:17:03.809"
+        },
+        {
+          "amount": "1681391",
+          "source": "JSONB",
+          "currency": "KRW",
+          "platform": "NAVER_AD",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "amount_rows": 43,
+          "current_rows": 43,
+          "latest_source_at": "2026-10-29 01:13:58.675159+00"
+        },
+        {
+          "amount": "1945152",
+          "source": "JSONB",
+          "currency": "KRW",
+          "platform": "NAVER_AD",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "amount_rows": 62,
+          "current_rows": 62,
+          "latest_source_at": "2026-10-29 01:28:55.169223+00"
+        },
+        {
+          "amount": "6067360",
+          "source": "JSONB",
+          "currency": "KRW",
+          "platform": "NAVER_SALE",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "amount_rows": 274,
+          "current_rows": 285,
+          "latest_source_at": "2026-10-29 00:43:40.687036+00"
+        },
+        {
+          "amount": "4706550",
+          "source": "JSONB",
+          "currency": "KRW",
+          "platform": "NAVER_SALE",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "amount_rows": 161,
+          "current_rows": 166,
+          "latest_source_at": "2026-10-29 01:47:03.038041+00"
+        }
+      ],
+      "metaCandidates": [
+        {
+          "spend_usd": "1236.8400",
+          "current_rows": 21,
+          "canonical_name": "풀업바",
+          "exact_name_rows": 0,
+          "contains_name_rows": 21,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "496.6600",
+          "current_rows": 22,
+          "canonical_name": "두줄무릎보호대",
+          "exact_name_rows": 0,
+          "contains_name_rows": 22,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "414.5200",
+          "current_rows": 2,
+          "canonical_name": "베놈무릎보호대",
+          "exact_name_rows": 0,
+          "contains_name_rows": 2,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "362.8100",
+          "current_rows": 1,
+          "canonical_name": "다이어트양말",
+          "exact_name_rows": 0,
+          "contains_name_rows": 1,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "243.3900",
+          "current_rows": 42,
+          "canonical_name": "버닝웨이브바",
+          "exact_name_rows": 0,
+          "contains_name_rows": 42,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "225.1500",
+          "current_rows": 10,
+          "canonical_name": "퍼펙트슬라이드",
+          "exact_name_rows": 0,
+          "contains_name_rows": 10,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "212.7900",
+          "current_rows": 2,
+          "canonical_name": "러닝양말",
+          "exact_name_rows": 0,
+          "contains_name_rows": 2,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "137.7600",
+          "current_rows": 9,
+          "canonical_name": "플로우라이트",
+          "exact_name_rows": 0,
+          "contains_name_rows": 9,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "128.8100",
+          "current_rows": 1,
+          "canonical_name": "러닝조끼",
+          "exact_name_rows": 0,
+          "contains_name_rows": 1,
+          "fx_fallback_cost_rules": 1
+        },
+        {
+          "spend_usd": "76.3700",
+          "current_rows": 1,
+          "canonical_name": "방한마스크",
+          "exact_name_rows": 0,
+          "contains_name_rows": 1,
+          "fx_fallback_cost_rules": 1
+        }
+      ],
+      "sourcePolicies": [
+        {
+          "to": null,
+          "from": "2026-10-23",
+          "version": 1,
+          "dataKind": "GOOGLE_CAMPAIGN",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "primarySource": "API",
+          "couponInputSource": null
+        },
+        {
+          "to": null,
+          "from": "2026-10-23",
+          "version": 1,
+          "dataKind": "META_AD",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+          "primarySource": "API",
+          "couponInputSource": null
+        },
+        {
+          "to": null,
+          "from": "2026-10-23",
+          "version": 1,
+          "dataKind": "META_ADSET",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+          "primarySource": "API",
+          "couponInputSource": null
+        },
+        {
+          "to": "2026-10-29",
+          "from": "2026-10-28",
+          "version": 12,
+          "dataKind": "CAFE24_ORDER",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "primarySource": "API",
+          "couponInputSource": "API_ACTUAL_PRODUCT_PLUS_SHIPPING"
+        }
+      ],
+      "cafe24Candidates": [
+        {
+          "current_rows": 100,
+          "nonerror_rows": 100,
+          "canonical_name": "풀업바",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 100,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "3524900.000000",
+          "valid_unit_name_rules": 1,
+          "actual_coupon_inputs_rows": 100
+        },
+        {
+          "current_rows": 44,
+          "nonerror_rows": 44,
+          "canonical_name": "두줄무릎보호대",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 44,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "1535600.000000",
+          "valid_unit_name_rules": 1,
+          "actual_coupon_inputs_rows": 44
+        },
+        {
+          "current_rows": 36,
+          "nonerror_rows": 36,
+          "canonical_name": "다이어트양말",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 36,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "1432800.000000",
+          "valid_unit_name_rules": 1,
+          "actual_coupon_inputs_rows": 36
+        },
+        {
+          "current_rows": 31,
+          "nonerror_rows": 31,
+          "canonical_name": "풀업밴드",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 31,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "613800.000000",
+          "valid_unit_name_rules": 10,
+          "actual_coupon_inputs_rows": 31
+        },
+        {
+          "current_rows": 28,
+          "nonerror_rows": 28,
+          "canonical_name": "베놈무릎보호대",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 28,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "1369200.000000",
+          "valid_unit_name_rules": 1,
+          "actual_coupon_inputs_rows": 28
+        },
+        {
+          "current_rows": 17,
+          "nonerror_rows": 17,
+          "canonical_name": "퍼펙트슬라이드",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 17,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "846600.000000",
+          "valid_unit_name_rules": 3,
+          "actual_coupon_inputs_rows": 17
+        },
+        {
+          "current_rows": 15,
+          "nonerror_rows": 15,
+          "canonical_name": "방한마스크",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 15,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "266200.000000",
+          "valid_unit_name_rules": 2,
+          "actual_coupon_inputs_rows": 15
+        },
+        {
+          "current_rows": 13,
+          "nonerror_rows": 13,
+          "canonical_name": "러닝양말",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 13,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "635700.000000",
+          "valid_unit_name_rules": 1,
+          "actual_coupon_inputs_rows": 13
+        },
+        {
+          "current_rows": 9,
+          "nonerror_rows": 9,
+          "canonical_name": "버닝웨이브바",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 9,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "332100.000000",
+          "valid_unit_name_rules": 2,
+          "actual_coupon_inputs_rows": 9
+        },
+        {
+          "current_rows": 8,
+          "nonerror_rows": 8,
+          "canonical_name": "플로우라이트",
+          "exact_name_rows": 0,
+          "valid_cost_rules": 1,
+          "coupon_signal_rows": 8,
+          "valid_coupon_rules": 1,
+          "collected_list_gross": "318400.000000",
+          "valid_unit_name_rules": 2,
+          "actual_coupon_inputs_rows": 8
+        }
+      ],
+      "cronCatalogExists": true,
+      "managementReadOnly": true,
+      "scheduleSettingKeys": [],
+      "recentCollectionRuns": [
+        {
+          "runs": 2,
+          "status": "SUCCEEDED",
+          "trigger": "SCHEDULED",
+          "provider": "CAFE24",
+          "rows_fetched": 635,
+          "rows_published": 635,
+          "latest_started_at": "2026-10-28 17:00:05.462+00",
+          "latest_finished_at": "2026-10-28 17:38:12.265+00",
+          "maximum_requested_date": "2026-10-28",
+          "minimum_requested_date": "2026-10-27"
+        },
+        {
+          "runs": 4,
+          "status": "SUCCEEDED",
+          "trigger": "SCHEDULED",
+          "provider": "GOOGLE",
+          "rows_fetched": 23,
+          "rows_published": 23,
+          "latest_started_at": "2026-10-28 17:04:02.925+00",
+          "latest_finished_at": "2026-10-28 17:04:10.744+00",
+          "maximum_requested_date": "2026-10-28",
+          "minimum_requested_date": "2026-10-21"
+        },
+        {
+          "runs": 2,
+          "status": "SUCCEEDED",
+          "trigger": "SCHEDULED",
+          "provider": "META",
+          "rows_fetched": 1526,
+          "rows_published": 1526,
+          "latest_started_at": "2026-10-28 17:03:06.699+00",
+          "latest_finished_at": "2026-10-28 17:03:40.694+00",
+          "maximum_requested_date": "2026-10-28",
+          "minimum_requested_date": "2026-10-27"
+        }
+      ],
+      "unifiedCatalogExists": false
+    }
+  },
+  "remoteWrites": 0,
+  "observedAt": "2026-10-29T04:12:39.3861124Z",
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv"
+}

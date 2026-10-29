@@ -1,0 +1,74 @@
+{
+  "rows": {
+    "all_pullup_sales": {
+      "total": {
+        "rows": 110,
+        "orderedQuantity": "111.0000",
+        "collectedListGross": "3873900.000000"
+      },
+      "privacy": "Only phone/email-free product and option names, no order/customer identifiers or raw payload.",
+      "businessDate": "2026-10-28",
+      "canonicalName": "풀업바",
+      "matchedGroups": [
+        {
+          "rows": 10,
+          "source_label": "YOUTUBE_LABEL",
+          "nonerror_rows": 10,
+          "ordered_quantity": "10.0000",
+          "collected_list_gross": "349000.000000",
+          "legacy_unmapped_rows": 10,
+          "complete_coupon_input_rows": 10
+        },
+        {
+          "rows": 100,
+          "source_label": "GENERAL_LABEL",
+          "nonerror_rows": 100,
+          "ordered_quantity": "101.0000",
+          "collected_list_gross": "3524900.000000",
+          "legacy_unmapped_rows": 0,
+          "complete_coupon_input_rows": 100
+        }
+      ],
+      "googleSaleMappings": [
+        {
+          "end_date": null,
+          "start_date": "2026-10-19",
+          "option_name": "",
+          "option_scope": "PRODUCT",
+          "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "canonical_name": "풀업바",
+          "sale_unit_label": null,
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null
+        }
+      ],
+      "safeProductOptionNames": [
+        {
+          "rows": 60,
+          "option_name": "⭐옵션⭐=풀업바(72~97cm)",
+          "product_name": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+          "ordered_quantity": "60.0000"
+        },
+        {
+          "rows": 40,
+          "option_name": "⭐옵션⭐=풀업바(72~97cm)",
+          "product_name": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+          "ordered_quantity": "41.0000"
+        },
+        {
+          "rows": 10,
+          "option_name": "⭐옵션⭐=풀업바(72~97cm)",
+          "product_name": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+          "ordered_quantity": "10.0000"
+        }
+      ]
+    }
+  },
+  "observedAt": "2026-10-29T04:25:57.5523494Z",
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "stage": 11,
+  "remoteWrites": 0
+}

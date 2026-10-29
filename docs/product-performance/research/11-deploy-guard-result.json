@@ -1,11 +1,11 @@
 {
   "stage": 11,
   "kind": "local build-guard review",
-  "timestamp": "2026-10-29T04:08:01.392Z",
+  "timestamp": "2026-10-29T05:27:32.576Z",
   "remoteWrites": 0,
   "profile": "reporting",
-  "reviewedModules": 66,
-  "compiledModules": 66,
+  "reviewedModules": 68,
+  "compiledModules": 68,
   "exactMatch": true,
   "moduleHashes": [
     {
@@ -254,7 +254,7 @@
     },
     {
       "path": "unified-performance/report.repository.js",
-      "sha256": "d1b6e2bb5777d63e94f60c21aca6743613a88787b2c4abc6c532b0088651d99c"
+      "sha256": "000bbfa69cfee8564c53140cececf4326da7943aa6a61976f4c6dfae896ea789"
     },
     {
       "path": "unified-performance/report.service.js",
@@ -262,7 +262,15 @@
     },
     {
       "path": "unified-performance/report.service.test.js",
-      "sha256": "3e5ab2bdac20163239d1c607f0deda592739e6816e21418d0f62ddfc627de792"
+      "sha256": "dc1cab6783ef00df5c9631813b782d32814cf53e1a329f9696cc299384d68d14"
+    },
+    {
+      "path": "unified-performance/runtime-prisma.js",
+      "sha256": "7d6016e4ad0d985c1754306a4671e10f2fcd0f094b166d71d1077b4aea78b58b"
+    },
+    {
+      "path": "unified-performance/runtime-prisma.test.js",
+      "sha256": "5255f877ab597456db90e7d714693fc6a4ac6c46e49ebad1ffa941c96e0e9b9a"
     },
     {
       "path": "unified-performance/types.js",
@@ -270,19 +278,37 @@
     },
     {
       "path": "unified-performance/unified-performance.module.js",
-      "sha256": "b7875c0953806cb160371fd4fbf80ba3755a13915104a55bbfdc636a49efa747"
+      "sha256": "e1cefaf7a3f3a0f0c67230555dfaba8d1700c766862b16118b12ee1b55b2a735"
     }
   ],
   "tests": {
     "command": "node --test scripts/verify-source-setup-patch.test.mjs",
     "exitCode": 0,
-    "stdout": "✔ reporting accepts the complete reviewed Google, Cafe24 and unified patch and proves legacy groups unchanged (240.1321ms)\n✔ unified closure rejects unknown additions and missing reviewed modules (656.6961ms)\n✔ unified additions do not authorize changes to existing mappings routes (210.8178ms)\n✔ another Google module cannot bypass the exact allowlist (191.8689ms)\n✔ Meta and Coupang calculation mutations remain blocked (904.6403ms)\n✔ missing reviewed Cafe24 module and unreviewed helpers fail closed (364.9791ms)\n✔ missing reviewed Google patch and removed legacy module fail closed (401.1486ms)\n✔ original source setup profile keeps its old scope and rejects Google additions (174.4031ms)\n✔ original source setup profile also rejects unified additions (104.4976ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3322.024\n",
+    "stdout": "✔ reporting accepts the complete reviewed Google, Cafe24 and unified patch and proves legacy groups unchanged (275.1513ms)\n✔ unified closure rejects unknown additions and missing reviewed modules (730.3211ms)\n✔ unified additions do not authorize unknown mappings helpers (215.4744ms)\n✔ reviewed operating mappings modules cannot disappear in the combined release (240.0122ms)\n✔ another Google module cannot bypass the exact allowlist (208.0735ms)\n✔ Meta and Coupang calculation mutations remain blocked (939.6992ms)\n✔ missing reviewed Cafe24 module and unreviewed helpers fail closed (369.9775ms)\n✔ missing reviewed Google patch and removed legacy module fail closed (448.4343ms)\n✔ original source setup profile keeps its old scope and rejects Google additions (174.1997ms)\n✔ original source setup profile also rejects unified additions (103.0319ms)\nℹ tests 10\nℹ suites 0\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3766.5938\n",
     "stderr": ""
   },
   "realC7ImageVerification": false,
   "limitations": [
     "Current locally compiled closure compared; real pinned C7 image build not run",
     "tsconfig emits .test.js; allowlist names them explicitly, no test runner launched at application import",
-    "Existing operating Google fallback and mappings endpoints regress in HEAD vs e80; parent must preserve before promotion"
-  ]
+    "Module path guard does not validate semantics inside reviewed paths; e80 endpoint preservation uses separate exact-source diff"
+  ],
+  "operatingSourcePreservation": {
+    "baseline": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb",
+    "files": [
+      "apps/api/src/google/google-read.service.ts",
+      "apps/api/src/mappings/mappings.controller.ts",
+      "apps/api/src/mappings/mappings.service.ts",
+      "apps/api/src/mappings/dto/mappings-transport.dto.ts"
+    ],
+    "exactMatch": true,
+    "comparison": "git diff baseline -- four files; output empty"
+  },
+  "existingMappingModules": 3,
+  "afterSnapshotDedup": {
+    "sourceCommit": "31416b7398c72b869747c0b1e5275833d322ebd3",
+    "guardTests": 10,
+    "guardPass": 10,
+    "exactClosureStill68": true
+  }
 }

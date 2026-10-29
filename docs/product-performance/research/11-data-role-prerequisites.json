@@ -1,0 +1,30 @@
+{
+  "operation": "MANAGEMENT_READ_ONLY",
+  "observedAt": "2026-10-29T04:30:35.1729234Z",
+  "stage": 11,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "remoteWrites": 0,
+  "rows": [
+    {
+      "schema_name": "extensions",
+      "owner": "postgres",
+      "postgres_usage_grant": true,
+      "app_usage_grant": false,
+      "app_usage": false
+    },
+    {
+      "schema_name": "meta_ads",
+      "owner": "postgres",
+      "postgres_usage_grant": true,
+      "app_usage_grant": false,
+      "app_usage": true
+    },
+    {
+      "schema_name": "public",
+      "owner": "pg_database_owner",
+      "postgres_usage_grant": true,
+      "app_usage_grant": false,
+      "app_usage": true
+    }
+  ]
+}

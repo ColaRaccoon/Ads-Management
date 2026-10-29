@@ -1,0 +1,43 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T05:27:32.576Z",
+  "status": "PASS",
+  "api": {
+    "tests": 299,
+    "pass": 299,
+    "fail": 0,
+    "groups": [
+      {
+        "tests": 280,
+        "scope": "unified plus google-performance calculation"
+      },
+      {
+        "tests": 19,
+        "scope": "Google campaign matcher and service"
+      }
+    ]
+  },
+  "web": {
+    "tests": 77,
+    "pass": 77,
+    "fail": 0
+  },
+  "build": {
+    "api": "PASS",
+    "web": "PASS",
+    "pages": 38,
+    "apiAfterSnapshotDedup": "PASS"
+  },
+  "guard": {
+    "tests": 10,
+    "pass": 10
+  },
+  "lint": "PASS",
+  "prismaSchema": "PASS",
+  "logDigests": {
+    "11-api-tests.log": "40f9f2f637803a2b77366e8bc856455d03f599f34354a6b533e7339b361b4150",
+    "11-web-tests.log": "c4816b3f5b0733ae0e3b0f173ec4561b58062e7fb950f32dba40d19f0fd1058d",
+    "11-api-tests-after-perf.log": "a6e0e6597bb17891a4ceb571ecb49ff937801574e267454285ff08b7e5aa2ae3",
+    "11-google-regression-after-perf.log": "e3954f93247b72db6a0198d1e017204a44e1a42d883cf0b00c3419e517100a0b"
+  }
+}

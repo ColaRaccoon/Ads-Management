@@ -1,0 +1,21 @@
+{
+  "migrations": [
+    {
+      "bytes": 11851,
+      "sha256": "7aa3744d68228689f4eb15b3175603869e1adc12934f8a9ea861ba98c9cbdbcc",
+      "name": "20261027071504_unified_performance_foundation"
+    },
+    {
+      "bytes": 3302,
+      "sha256": "12bf695091cbeb745ef2801e423da47b632913393c0541ee5d2a6d43e582cef4",
+      "name": "20261028080000_unified_report_publication"
+    }
+  ],
+  "stage": 11,
+  "observedAt": "2026-10-29T04:15:03.9326958Z",
+  "sourceWrites": 0,
+  "httpStatus": 400,
+  "durationMs": 1814.8519,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "status": "FAILED"
+}

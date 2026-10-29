@@ -1,0 +1,11 @@
+{
+  "sourceRlsChanged": false,
+  "httpStatus": 201,
+  "operation": "PATIMA_OWNER_RESTRICTED_SOURCE_SELECT_GRANT",
+  "stage": 11,
+  "sourceWrites": 0,
+  "sqlSha256": "674548d0ddd8216b2f50b819ec47d4e4e35edf63a14c5f7151b5bae983c11f62",
+  "status": "APPLIED",
+  "sourceTables": 17,
+  "observedAt": "2026-10-29T04:38:16.7321468Z"
+}

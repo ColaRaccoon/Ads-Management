@@ -1,0 +1,18 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:52:26.256Z",
+  "status": "DEPLOYED_FEATURE_OFF",
+  "release": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "branch": "codex/product-performance-stage11",
+  "remoteRefVerified": true,
+  "deploymentId": "f12edd85-b4e7-4fa4-b56e-60a9ae078e92",
+  "deploymentStatus": "SUCCESS",
+  "featureEnabled": false,
+  "sourcePinned": true,
+  "previousRelease": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb",
+  "previousDeploymentId": "c5667ea9-72aa-425c-a7e2-6c857f515999",
+  "existingStorefrontSummaryUnchanged": true,
+  "exactReadiness": "PASS",
+  "readinessEvidence": "11-app-ready-off.json",
+  "offUiNoticeVerified": true
+}

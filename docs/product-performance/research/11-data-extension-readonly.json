@@ -1,0 +1,11 @@
+{
+  "rows": {
+    "extname": "btree_gist",
+    "extension_schema": "extensions"
+  },
+  "stage": 11,
+  "observedAt": "2026-10-29T04:17:01.0069078Z",
+  "remoteWrites": 0,
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv"
+}

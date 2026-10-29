@@ -1,0 +1,8 @@
+{
+  "stage": 11,
+  "status": "PASS_LOCAL_SECURITY_REVIEW",
+  "remoteWritesByReviewer": 0,
+  "commands": ["node --check scripts/unified-stage11-runtime.mjs", "node --input-type=module: synthetic validator and malformed-input redaction assertions", "npx @railway/cli@5.71.0 variable set --help"],
+  "checks": ["fixed target host/port/project/database/schema/legacy role and verify-full policy", "fixed new role names and distinct 64hex passwords", "script allowlist", "generic top-level error redaction", "child stdout/stderr capture and metadata-only terminal output", "verified public CA in unique exclusive-create temporary path with exact nonrecursive cleanup", "Railway variable setter stdin secret transport, skip-deploys and fixed project/service/environment", "original deployment URL preserved without Windows temporary certificate path"],
+  "limitation": "No real secret provisioning, restricted-role login, child DB operation or Railway variable write was performed by the reviewer. The main agent performs operational changes sequentially."
+}

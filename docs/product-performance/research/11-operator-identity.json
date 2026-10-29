@@ -1,0 +1,12 @@
+{
+  "rows": {
+    "id": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+    "role": "SUPER_ADMIN",
+    "is_active": true
+  },
+  "operation": "MANAGEMENT_READ_ONLY",
+  "remoteWrites": 0,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "stage": 11,
+  "observedAt": "2026-10-29T04:32:27.8242806Z"
+}

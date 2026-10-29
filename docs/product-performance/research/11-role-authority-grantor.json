@@ -1,0 +1,162 @@
+{
+  "remoteWrites": 0,
+  "rows": [
+    {
+      "membership_oid": "16631",
+      "parent": "anon",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16632",
+      "parent": "authenticated",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16633",
+      "parent": "service_role",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16637",
+      "parent": "pg_monitor",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16655",
+      "parent": "pg_read_all_data",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16656",
+      "parent": "pg_signal_backend",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16658",
+      "parent": "pg_create_subscription",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16659",
+      "parent": "authenticator",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "16663",
+      "parent": "supabase_privileged_role",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": false,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "membership_oid": "17560",
+      "parent": "patima_app",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "membership_oid": "17890",
+      "parent": "meta_ads_app",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "membership_oid": "26923",
+      "parent": "meta_ads_prod_runtime",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "membership_oid": "26925",
+      "parent": "meta_ads_prod_migration",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "membership_oid": "26927",
+      "parent": "meta_ads_prod_backup",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "membership_oid": "26928",
+      "parent": "meta_ads_app",
+      "member": "meta_ads_prod_migration",
+      "grantor": "postgres",
+      "admin_option": false,
+      "inherit_option": false,
+      "set_option": true
+    },
+    {
+      "membership_oid": "27230",
+      "parent": "storage_app",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "membership_oid": "30332",
+      "parent": "marketing_site_runtime",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    }
+  ],
+  "observedAt": "2026-10-29T04:25:37.9524573Z",
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "stage": 11
+}

@@ -1,0 +1,97 @@
+{
+  "observedAt": "2026-10-29T04:57:58.5986432Z",
+  "remoteWrites": 0,
+  "stage": 11,
+  "rows": {
+    "cafe24_cohorts": {
+      "runId": "9f71c8bb-b34d-4c0f-adcf-fc74aa1d2f3c",
+      "cohorts": [
+        {
+          "rows": 106,
+          "cohort": "REVENUE_AND_PROFIT_KNOWN",
+          "registered_vat": "373430.0000",
+          "ordered_quantity": "107.0000",
+          "registered_gross": "3734300.0000",
+          "coupon_signal_rows": 7,
+          "registered_product_cost": "1070000.0000",
+          "published_operating_revenue": "3727300.000000",
+          "published_profit_before_ads": "2283870.000000",
+          "rows_with_other_context_gaps": 0,
+          "rows_with_unknown_signal_context": 0,
+          "rows_with_unclassified_order_siblings": 27
+        },
+        {
+          "rows": 4,
+          "cohort": "REVENUE_UNKNOWN",
+          "registered_vat": "13960.0000",
+          "ordered_quantity": "4.0000",
+          "registered_gross": "139600.0000",
+          "coupon_signal_rows": 4,
+          "registered_product_cost": "40000.0000",
+          "published_operating_revenue": null,
+          "published_profit_before_ads": null,
+          "rows_with_other_context_gaps": 0,
+          "rows_with_unknown_signal_context": 0,
+          "rows_with_unclassified_order_siblings": 4
+        }
+      ],
+      "privacy": "All order identifiers and source join hashes stay inside CTEs; only cohort counts/quantities/money and safe published run ID returned.",
+      "businessDate": "2026-10-28",
+      "labelCohorts": [
+        {
+          "rows": 4,
+          "source_label": "GENERAL_LABEL",
+          "known_revenue": null,
+          "revenue_known": false,
+          "ordered_quantity": "4.0000",
+          "registered_gross": "139600.0000"
+        },
+        {
+          "rows": 96,
+          "source_label": "GENERAL_LABEL",
+          "known_revenue": "3378300.000000",
+          "revenue_known": true,
+          "ordered_quantity": "97.0000",
+          "registered_gross": "3385300.0000"
+        },
+        {
+          "rows": 10,
+          "source_label": "YOUTUBE_LABEL",
+          "known_revenue": "349000.000000",
+          "revenue_known": true,
+          "ordered_quantity": "10.0000",
+          "registered_gross": "349000.0000"
+        }
+      ],
+      "canonicalProduct": "풀업바",
+      "publishedProduct": {
+        "fact_groups": 1,
+        "source_rows": 110,
+        "known_profit": "2283870.000000",
+        "known_revenue": "3727300.000000",
+        "ordered_quantity": "111.000000"
+      },
+      "sourceMatchesWithoutAudit": 0,
+      "independentKnownArithmetic": {
+        "knownProfit": "2283870.0000",
+        "knownRevenue": "3727300.0000"
+      },
+      "sourceMatchAuditJoinedRows": 110,
+      "independentGlobalCouponCalculation": {
+        "activeRules": [
+          {
+            "scope": "GLOBAL",
+            "priority": 100,
+            "discount_krw": "1000.00"
+          }
+        ],
+        "eligibleOrders": 7,
+        "knownCouponTotal": "7000",
+        "configuredRuleAmount": "1000",
+        "singleGlobal1000RuleConfirmed": true
+      }
+    }
+  },
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv"
+}

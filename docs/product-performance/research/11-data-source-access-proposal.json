@@ -1,0 +1,757 @@
+{
+  "stage": 11,
+  "kind": "SOURCE_COLUMN_ALLOWLIST_PROPOSAL",
+  "databaseConnections": 0,
+  "databaseWrites": 0,
+  "sourceFiles": [
+    "adapters/ad-reader.ts",
+    "adapters/cafe24.adapter.ts",
+    "adapters/coupang.adapter.ts",
+    "adapters/naver-reader.ts",
+    "common/source-read-policy.ts",
+    "common/meta-source-read-coverage.ts"
+  ],
+  "metaAds": [
+    {
+      "schema": "meta_ads",
+      "table": "source_connections",
+      "columns": [
+        "currency_code",
+        "display_name",
+        "id",
+        "provider",
+        "time_zone"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "source_policies",
+      "columns": [
+        "changed_by_user_id",
+        "connection_id",
+        "coupon_input_source",
+        "data_kind",
+        "effective_at",
+        "from_date",
+        "id",
+        "primary_source",
+        "reason",
+        "to_date",
+        "version"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "source_coverage",
+      "columns": [
+        "connection_id",
+        "data_kind",
+        "last_attempt_at",
+        "last_attempt_run_id",
+        "last_success_at",
+        "last_success_run_id",
+        "metric_date",
+        "reconciliation_status",
+        "row_count",
+        "source",
+        "state",
+        "total_amount",
+        "warning_codes"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "source_record_links",
+      "columns": [
+        "binding_method",
+        "bound_at",
+        "canonical_key_hash",
+        "connection_id",
+        "data_kind",
+        "id",
+        "is_current",
+        "record_id",
+        "record_table",
+        "source",
+        "sync_run_id",
+        "version"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "sync_runs",
+      "columns": [
+        "connection_id",
+        "id"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "run_units",
+      "columns": [
+        "attempts",
+        "checkpoint_value",
+        "completed_at",
+        "fetched_count",
+        "published_count",
+        "run_id",
+        "status",
+        "unit_key"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "meta_adset_daily_metrics",
+      "columns": [
+        "adset_name",
+        "connection_id",
+        "created_at",
+        "id",
+        "import_version",
+        "is_current",
+        "meta_adset_id",
+        "metric_date",
+        "purchase_value_usd",
+        "source",
+        "source_revision",
+        "spend_usd",
+        "sync_run_id",
+        "updated_at",
+        "upload_batch_id"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "google_campaign_daily_costs",
+      "columns": [
+        "campaign_id",
+        "campaign_name",
+        "connection_id",
+        "conversion_value",
+        "cost_micros",
+        "fetched_at",
+        "id",
+        "is_current",
+        "metric_date",
+        "source",
+        "sync_run_id",
+        "version"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "exchange_rates",
+      "columns": [
+        "base_currency",
+        "fallback_type",
+        "provider",
+        "quote_currency",
+        "rate",
+        "rate_date",
+        "source_date"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "products",
+      "columns": [
+        "display_name",
+        "id",
+        "is_active"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "product_cost_rules",
+      "columns": [
+        "created_at",
+        "effective_from",
+        "effective_to",
+        "extra_cost_krw",
+        "fx_rate_krw_per_usd",
+        "id",
+        "note",
+        "product_cost_krw",
+        "product_id",
+        "sale_price_krw",
+        "shipping_krw",
+        "updated_at",
+        "vat_krw"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_order_lines",
+      "columns": [
+        "actual_order_price_krw",
+        "actual_shipping_fee_krw",
+        "cafe24_product_rule_id",
+        "connection_id",
+        "created_at",
+        "id",
+        "import_version",
+        "is_current",
+        "match_source",
+        "option_name",
+        "option_value",
+        "order_date",
+        "order_line_key",
+        "order_no",
+        "payment_method",
+        "product_id",
+        "product_name",
+        "product_no",
+        "provider_coupon_signal",
+        "provider_updated_at",
+        "quantity",
+        "sale_price_krw",
+        "source",
+        "source_row_hash",
+        "sync_run_id",
+        "total_order_krw",
+        "total_paid_krw",
+        "upload_batch_id",
+        "validation_status"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_upload_batches",
+      "columns": [
+        "id",
+        "imported_at",
+        "order_end",
+        "order_start",
+        "row_count",
+        "status"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_product_rules",
+      "columns": [
+        "ad_cost_source_product_id",
+        "created_at",
+        "display_name",
+        "extra_cost_krw_override",
+        "id",
+        "is_active",
+        "match_target",
+        "note",
+        "option_exclude_keywords",
+        "option_include_keywords",
+        "priority",
+        "product_cost_krw_override",
+        "product_id",
+        "product_name_aliases",
+        "product_name_exclude_keywords",
+        "product_name_include_keywords",
+        "product_numbers",
+        "roas_group",
+        "sale_price_krw_override",
+        "shipping_krw_override",
+        "updated_at",
+        "valid_from",
+        "valid_to"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_coupon_rules",
+      "columns": [
+        "created_at",
+        "discount_krw",
+        "id",
+        "is_active",
+        "name",
+        "note",
+        "priority",
+        "product_id",
+        "scope",
+        "updated_at",
+        "valid_from",
+        "valid_to"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "google_performance_mappings",
+      "columns": [
+        "campaign_id",
+        "connection_id",
+        "created_at",
+        "end_date",
+        "extra_cost_krw_override",
+        "id",
+        "identity_key",
+        "kind",
+        "option_name",
+        "option_scope",
+        "product_cost_krw_override",
+        "product_id",
+        "product_no",
+        "sale_price_krw_override",
+        "sale_unit_label",
+        "shipping_krw_override",
+        "start_date",
+        "updated_at"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_order_api_versions",
+      "columns": [
+        "canonical_key_hash",
+        "connection_id",
+        "content_fingerprint",
+        "fetched_at",
+        "fingerprint_key_version",
+        "id",
+        "is_current",
+        "order_date",
+        "version"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_products",
+      "columns": [
+        "display_name",
+        "id",
+        "is_active",
+        "standard_name"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_product_rules",
+      "columns": [
+        "ad_enabled",
+        "coupang_product_id",
+        "display_name",
+        "exclude_keywords",
+        "id",
+        "include_keywords",
+        "is_active",
+        "valid_from",
+        "valid_to"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_cost_rules",
+      "columns": [
+        "coupang_product_id",
+        "effective_from",
+        "effective_to",
+        "extra_cost_krw",
+        "growth_inbound_fee_krw",
+        "growth_shipping_fee_krw",
+        "hanaro_shipping_fee_krw",
+        "id",
+        "product_cost_krw",
+        "return_cost_per_unit_krw",
+        "return_rate",
+        "sale_price_krw",
+        "seller_shipping_fee_krw"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_sales_fee_rules",
+      "columns": [
+        "effective_from",
+        "effective_to",
+        "id",
+        "sales_fee_rate"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_manual_purchases",
+      "columns": [
+        "base_sale_price_krw",
+        "id",
+        "product_display_name",
+        "purchase_date",
+        "quantity",
+        "rule_display_name",
+        "sale_method",
+        "sales_amount_krw",
+        "total_cost_krw",
+        "updated_at",
+        "vendor_fee_total_krw"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_upload_batches",
+      "columns": [
+        "id",
+        "imported_at",
+        "source_type",
+        "status"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_sale_lines",
+      "columns": [
+        "cancel_amount_krw",
+        "created_at",
+        "id",
+        "import_version",
+        "is_current",
+        "net_sales_krw",
+        "option_name",
+        "order_count",
+        "product_name",
+        "sale_date",
+        "sale_line_key",
+        "sale_method",
+        "sales_krw",
+        "sales_quantity",
+        "source_row_hash",
+        "upload_batch_id",
+        "validation_status"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_ad_metrics",
+      "columns": [
+        "ad_execution_product_name",
+        "ad_group_name",
+        "ad_metric_key",
+        "ad_name",
+        "ad_spend_krw",
+        "campaign_name",
+        "created_at",
+        "id",
+        "import_version",
+        "is_current",
+        "metric_date",
+        "source_row_hash",
+        "total_conversion_sales_1d_krw",
+        "upload_batch_id",
+        "validation_status"
+      ],
+      "reason": "Explicit projection plus predicate/order/join columns used by reader.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "unified_products",
+      "columns": [
+        "active",
+        "canonical_name",
+        "created_at",
+        "id",
+        "normalized_name",
+        "updated_at",
+        "version"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "unified_rules",
+      "columns": [
+        "active",
+        "created_at",
+        "id",
+        "identity_key",
+        "kind",
+        "payload",
+        "platform",
+        "product_id",
+        "scope_key",
+        "updated_at",
+        "valid_from",
+        "valid_to",
+        "version"
+      ],
+      "reason": "Current reader selects every Prisma scalar field; narrowing requires source projection changes first.",
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    }
+  ],
+  "naver": [
+    {
+      "schema": "public",
+      "table": "stores",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "order_items",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "order_source_signatures",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "canonical_sales_units",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "sales_unit_cost_settings",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "sales_unit_cost_snapshots",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "sales_unit_cost_snapshot_entries",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "ad_excel_uploads",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "ad_campaign_daily_costs",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "daily_fake_purchases",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "daily_store_summaries",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "daily_sales_unit_profits",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "order_sync_states",
+      "columns": [
+        "id",
+        "payload",
+        "updated_at"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "operations",
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "order_sync_batch_items",
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    },
+    {
+      "schema": "public",
+      "table": "order_sync_batches",
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "access": "SELECT_ONLY",
+      "databaseVerified": false
+    }
+  ],
+  "forbidden": [
+    "source_credentials",
+    "commerce_api_credentials",
+    "connector_credentials",
+    "local_credentials",
+    "app_auth_sessions"
+  ],
+  "sourceConnectionForbiddenColumns": [
+    "credential_ref",
+    "external_account_id"
+  ],
+  "caveats": [
+    "No GRANT/REVOKE/RLS changes are executed by this generator.",
+    "Verify actual inherited/effective privileges and deny source DML/credential SELECT with real runtime roles before activation.",
+    "Naver payload access is limited to listed tables, not arbitrary public schema; reader projects fixed JSON fields.",
+    "Do not add Meta ad/adset/catalog/upload tables just because old fixture grants them; current reader does not query them directly."
+  ]
+}

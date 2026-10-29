@@ -1,0 +1,289 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:54:09.992Z",
+  "operation": "inspect",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "summary": {
+    "selection": {
+      "selectedPlatforms": [
+        "CAFE24"
+      ],
+      "excludedPlatforms": [
+        "META",
+        "GOOGLE",
+        "NAVER",
+        "COUPANG"
+      ],
+      "scopeKeys": [
+        "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+      ],
+      "productName": "풀업바",
+      "from": "2026-10-28",
+      "to": "2026-10-28",
+      "compareFrom": "2026-10-28",
+      "compareTo": "2026-10-28",
+      "grain": "day",
+      "selectionHash": "7ed37e37f094adf16580706571606050c17e52d564d938482bc477d17082e163"
+    },
+    "knownTotals": {
+      "revenue": "3727300.000000",
+      "adSpend": null,
+      "profitBeforeAds": "2283870.000000",
+      "estimatedProfit": "2283870.000000",
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": null,
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": "7161400.000000",
+      "unclassifiedProfitBeforeAds": null
+    },
+    "coverage": [
+      {
+        "sourceSystem": "CAFE24",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-28",
+        "component": "SALE",
+        "participation": "INCLUDED",
+        "collectionState": "COMPLETE",
+        "rowsPresent": 323,
+        "zeroConfirmed": false,
+        "sourceAsOf": "2026-10-28T17:38:10.475Z",
+        "calculatedAt": "2026-10-29T04:54:00.857Z",
+        "lastSuccessAt": "2026-10-28T17:38:10.475Z",
+        "mappedRows": 110,
+        "unmappedRows": 213,
+        "unmatchedAmount": "7161400.000000",
+        "missingCostRows": 217,
+        "missingFxAmount": null,
+        "unallocatedAmount": "0",
+        "isEstimate": true,
+        "issues": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COST_INPUT_MISSING",
+          "COUPON_IGNORED_RESIDUAL",
+          "COUPON_ORDER_CONTEXT_INCOMPLETE",
+          "COUPON_UNRESOLVED",
+          "NAME_UNMATCHED",
+          "REVENUE_INPUT_MISSING",
+          "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+          "SALE_UNIT_RULE_MISSING"
+        ]
+      },
+      {
+        "sourceSystem": "CAFE24",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-28",
+        "component": "DIRECT_COST",
+        "participation": "INCLUDED",
+        "collectionState": "PARTIAL",
+        "rowsPresent": 323,
+        "zeroConfirmed": false,
+        "sourceAsOf": "2026-10-28T17:38:10.475Z",
+        "calculatedAt": "2026-10-29T04:54:00.857Z",
+        "lastSuccessAt": "2026-10-28T17:38:10.475Z",
+        "mappedRows": 110,
+        "unmappedRows": 213,
+        "unmatchedAmount": "7161400.000000",
+        "missingCostRows": 217,
+        "missingFxAmount": null,
+        "unallocatedAmount": "0",
+        "isEstimate": true,
+        "issues": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COST_INPUT_MISSING",
+          "COUPON_IGNORED_RESIDUAL",
+          "COUPON_ORDER_CONTEXT_INCOMPLETE",
+          "COUPON_UNRESOLVED",
+          "NAME_UNMATCHED",
+          "REVENUE_INPUT_MISSING",
+          "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+          "SALE_UNIT_RULE_MISSING"
+        ]
+      },
+      {
+        "sourceSystem": "CAFE24",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-28",
+        "component": "COMMON_EXPENSE",
+        "participation": "NOT_APPLICABLE",
+        "collectionState": "COMPLETE",
+        "rowsPresent": 0,
+        "zeroConfirmed": true,
+        "sourceAsOf": "2026-10-28T17:38:10.475Z",
+        "calculatedAt": "2026-10-29T04:54:00.857Z",
+        "lastSuccessAt": "2026-10-28T17:38:10.475Z",
+        "mappedRows": 0,
+        "unmappedRows": 0,
+        "unmatchedAmount": "0.000000",
+        "missingCostRows": 0,
+        "missingFxAmount": null,
+        "unallocatedAmount": "0.000000",
+        "isEstimate": true,
+        "issues": [
+          "COMMON_COSTS_INCLUDED_IN_DIRECT_LEDGER"
+        ]
+      }
+    ],
+    "warnings": [
+      "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+      "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+      "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+      "COST_INPUT_MISSING",
+      "COUPON_IGNORED_RESIDUAL",
+      "COUPON_ORDER_CONTEXT_INCOMPLETE",
+      "COUPON_UNRESOLVED",
+      "INCOMPLETE_COVERAGE",
+      "NAME_UNMATCHED",
+      "PARTIAL_TOTAL",
+      "REVENUE_INPUT_MISSING",
+      "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+      "SALE_UNIT_RULE_MISSING",
+      "UNCLASSIFIED_SALES"
+    ],
+    "items": [
+      {
+        "productName": "풀업바",
+        "saleUnits": [
+          "풀업바 단품"
+        ],
+        "knownTotals": {
+          "revenue": "3727300.000000",
+          "adSpend": null,
+          "profitBeforeAds": "2283870.000000",
+          "estimatedProfit": "2283870.000000",
+          "mer": null
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": "2283870.000000",
+        "metricAvailability": {
+          "state": "SALE_ONLY",
+          "revenue": true,
+          "adSpend": false,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": false
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "CAFE24",
+            "revenue": "3727300.000000"
+          }
+        ],
+        "byMedium": [],
+        "isEstimate": true,
+        "quality": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COST_INPUT_MISSING",
+          "COUPON_IGNORED_RESIDUAL",
+          "COUPON_ORDER_CONTEXT_INCOMPLETE",
+          "COUPON_UNRESOLVED",
+          "INCOMPLETE_COVERAGE",
+          "NAME_UNMATCHED",
+          "PARTIAL_TOTAL",
+          "REVENUE_INPUT_MISSING",
+          "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+          "SALE_UNIT_RULE_MISSING",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "COMPLETE",
+        "comparison": {
+          "revenue": {
+            "current": "3727300.000000",
+            "previous": "3727300.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "3727300.000000",
+            "previousDailyAverage": "3727300.000000"
+          },
+          "adSpend": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "profitBeforeAds": {
+            "current": "2283870.000000",
+            "previous": "2283870.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "2283870.000000",
+            "previousDailyAverage": "2283870.000000"
+          },
+          "estimatedProfit": {
+            "current": "2283870.000000",
+            "previous": "2283870.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "2283870.000000",
+            "previousDailyAverage": "2283870.000000"
+          },
+          "mer": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": []
+      }
+    ],
+    "publishedRunIdsBySource": [
+      {
+        "sourceSystem": "CAFE24",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-28",
+        "runId": "9f71c8bb-b34d-4c0f-adcf-fc74aa1d2f3c",
+        "revision": 1
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": "9f71c8bb-b34d-4c0f-adcf-fc74aa1d2f3c",
+      "platform": "CAFE24",
+      "businessDate": "2026-10-28T00:00:00.000Z",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "publishedAt": "2026-10-29T04:54:01.057Z"
+    }
+  ],
+  "status": "PASS"
+}

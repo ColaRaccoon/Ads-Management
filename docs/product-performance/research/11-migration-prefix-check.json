@@ -1,0 +1,6 @@
+{
+  "httpStatus": 201,
+  "operation": "PREFLIGHT_TRANSACTION_ROLLBACK_NO_DDL",
+  "stage": 11,
+  "response": "[{\"pg_advisory_xact_lock\":\"\"}]"
+}

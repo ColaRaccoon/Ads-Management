@@ -1,0 +1,441 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:51:11.421Z",
+  "kind": "ACTUAL_RESTRICTED_LOGIN_CHECK",
+  "sourceWrites": 0,
+  "checks": [
+    "feature-only report client passes actual role startup checks",
+    "report denies source connection credential_ref",
+    "report denies source connection external_account_id",
+    "report denies app_auth_sessions",
+    "report denies local_credentials",
+    "worker denies source connection credential_ref",
+    "worker denies source connection external_account_id",
+    "worker denies app_auth_sessions",
+    "worker denies local_credentials",
+    "report denies raw Cafe24 source",
+    "report denies raw Naver source",
+    "report denies internal match audit",
+    "worker exact 44-table column SELECT succeeds; all source DML/TRUNCATE privileges false"
+  ],
+  "reportIdentity": {
+    "role": "meta_ads_unified_report",
+    "db": "postgres",
+    "rolsuper": false,
+    "rolbypassrls": false,
+    "rolcreatedb": false,
+    "rolcreaterole": false,
+    "rolinherit": false,
+    "owns": "0"
+  },
+  "workerIdentity": {
+    "role": "meta_ads_unified_worker",
+    "db": "postgres",
+    "rolsuper": false,
+    "rolbypassrls": false,
+    "rolcreatedb": false,
+    "rolcreaterole": false,
+    "rolinherit": false,
+    "owns": "0"
+  },
+  "currentCheck": "public.order_sync_batches",
+  "sourceAccess": [
+    {
+      "schema": "meta_ads",
+      "table": "source_connections",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "source_policies",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "source_coverage",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "source_record_links",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "sync_runs",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "run_units",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "meta_adset_daily_metrics",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "google_campaign_daily_costs",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "exchange_rates",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "products",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "product_cost_rules",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_order_lines",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_upload_batches",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_product_rules",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_coupon_rules",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "google_performance_mappings",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "cafe24_order_api_versions",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_products",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_product_rules",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_cost_rules",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_sales_fee_rules",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_manual_purchases",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_upload_batches",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_sale_lines",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "coupang_ad_metrics",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "unified_products",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "meta_ads",
+      "table": "unified_rules",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "stores",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "order_items",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "order_source_signatures",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "canonical_sales_units",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "sales_unit_cost_settings",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "sales_unit_cost_snapshots",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "sales_unit_cost_snapshot_entries",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "ad_excel_uploads",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "ad_campaign_daily_costs",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "daily_fake_purchases",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "daily_store_summaries",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "daily_sales_unit_profits",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "order_sync_states",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "operations",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "order_sync_batch_items",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    },
+    {
+      "schema": "public",
+      "table": "order_sync_batches",
+      "select": true,
+      "i": false,
+      "u": false,
+      "d": false,
+      "t": false
+    }
+  ],
+  "status": "PASS"
+}

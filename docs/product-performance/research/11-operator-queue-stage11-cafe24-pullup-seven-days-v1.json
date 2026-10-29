@@ -1,0 +1,117 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:55:39.974Z",
+  "operation": "queue",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "request": {
+    "from": "2026-10-22",
+    "to": "2026-10-28",
+    "platforms": [
+      "CAFE24"
+    ],
+    "scopeKeys": [
+      "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+    ],
+    "productNames": [
+      "풀업바"
+    ]
+  },
+  "result": {
+    "contractVersion": "product-performance-v1.1.0",
+    "status": "QUEUED",
+    "execution": "ASYNC_WORKER",
+    "executionScope": "FULL_SOURCE_DAY",
+    "requestedProductNames": [
+      "풀업바"
+    ],
+    "jobs": [
+      {
+        "jobId": "0568b455-42a4-4cc4-ad9c-d7880c1c418c",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-27",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:55:40.457Z",
+        "completedAt": null
+      },
+      {
+        "jobId": "12446885-d83a-4883-af2c-91f28f81a41a",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-25",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:55:40.457Z",
+        "completedAt": null
+      },
+      {
+        "jobId": "21e609e1-0fd2-4f0c-aedd-d59ac1af1041",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-23",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:55:40.457Z",
+        "completedAt": null
+      },
+      {
+        "jobId": "4ecd3d87-0494-434d-a48f-86f709181365",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-26",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:55:40.457Z",
+        "completedAt": null
+      },
+      {
+        "jobId": "9aa361c6-cda3-4fc5-aaef-81084cf48938",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-22",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:55:40.457Z",
+        "completedAt": null
+      },
+      {
+        "jobId": "9ac5d4c8-830a-4873-a647-03bbc047f95e",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-24",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:55:40.457Z",
+        "completedAt": null
+      },
+      {
+        "jobId": "9fa85d87-f65e-44a2-aa79-a12c46a67d60",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-28",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:55:40.457Z",
+        "completedAt": null
+      }
+    ]
+  },
+  "status": "PASS"
+}

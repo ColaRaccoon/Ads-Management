@@ -1,0 +1,575 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:05:42.715Z",
+  "source": "Railway read-only connected tools",
+  "remoteWrites": 0,
+  "services": [
+    {
+      "project": {
+        "id": "d72f4256-8632-437a-9dae-9b5d96736fc7",
+        "name": "cafe24-order-read-test"
+      },
+      "service": {
+        "id": "4b30daa8-9333-46b7-ad89-cfd64ff5266c",
+        "name": "phase08-daily-data-sync"
+      },
+      "environment": {
+        "id": "d261a432-a6a4-4031-b8ea-c619ac263cc3",
+        "name": "production"
+      },
+      "source": null,
+      "build": {
+        "builder": "DOCKERFILE",
+        "buildEnvironment": "V3",
+        "dockerfilePath": "deploy/cloud/phase08.Dockerfile"
+      },
+      "deploy": {
+        "startCommand": "node deploy/cloud/phase08-launch.mjs",
+        "cronSchedule": null,
+        "resourceLimits": {
+          "containers": {
+            "cpu": 1,
+            "memoryBytes": 1000000000
+          }
+        },
+        "sleepApplication": true
+      },
+      "domains": {
+        "serviceDomains": [
+          {
+            "id": "e0b7e3e1-dfd9-4b71-8c40-84c74d31ca60",
+            "domain": "phase08-daily-data-sync-production.up.railway.app",
+            "targetPort": 8000
+          }
+        ],
+        "customDomains": []
+      },
+      "latestDeployment": {
+        "id": "39c6b738-6d2f-4111-a97b-37f017b39886",
+        "status": "CRASHED",
+        "createdAt": "2026-10-20T03:27:17.113Z",
+        "url": null
+      },
+      "staged": null,
+      "newUnifiedVariables": [],
+      "existingScheduleVariableNames": [
+        "DAILY_SYNC_CAFE24_SCHEDULED_API_ONLY_ACTIVATION_ENABLED",
+        "DAILY_SYNC_CAFE24_SCHEDULED_BOOTSTRAP_ENABLED",
+        "DAILY_SYNC_CAFE24_SCHEDULED_COUPON_INPUT_SOURCE",
+        "DAILY_SYNC_FEATURE_ENABLED",
+        "DAILY_SYNC_SCHEDULES",
+        "DAILY_SYNC_SCHEDULE_ENABLED"
+      ],
+      "volumes": []
+    },
+    {
+      "project": {
+        "id": "d72f4256-8632-437a-9dae-9b5d96736fc7",
+        "name": "cafe24-order-read-test"
+      },
+      "service": {
+        "id": "deaaeaf9-ee5c-42fa-b32f-600c7a90befc",
+        "name": "cafe24-callback-test"
+      },
+      "environment": {
+        "id": "d261a432-a6a4-4031-b8ea-c619ac263cc3",
+        "name": "production"
+      },
+      "source": null,
+      "build": {
+        "builder": "RAILPACK",
+        "buildEnvironment": "V3"
+      },
+      "deploy": {
+        "cronSchedule": null
+      },
+      "domains": {
+        "serviceDomains": [
+          {
+            "id": "9045f8ba-f8e3-4f15-a542-78a940bacb37",
+            "domain": "cafe24-callback-test-production.up.railway.app",
+            "targetPort": 8000
+          }
+        ],
+        "customDomains": []
+      },
+      "latestDeployment": {
+        "id": "a2302c10-b37d-4719-a51e-b267a3665756",
+        "status": "SUCCESS",
+        "createdAt": "2026-10-22T23:56:33.706Z",
+        "url": null
+      },
+      "staged": null,
+      "newUnifiedVariables": [],
+      "existingScheduleVariableNames": [
+        "DAILY_SYNC_CAFE24_TEST_ENABLED",
+        "DAILY_SYNC_FEATURE_ENABLED"
+      ],
+      "volumes": []
+    },
+    {
+      "project": {
+        "id": "d72f4256-8632-437a-9dae-9b5d96736fc7",
+        "name": "cafe24-order-read-test"
+      },
+      "service": {
+        "id": "ef46528f-4b59-4ee6-9d9c-b0852b5a9274",
+        "name": "Postgres"
+      },
+      "environment": {
+        "id": "d261a432-a6a4-4031-b8ea-c619ac263cc3",
+        "name": "production"
+      },
+      "source": {
+        "image": "ghcr.io/railwayapp-templates/postgres-ssl:18"
+      },
+      "build": {
+        "builder": "RAILPACK",
+        "buildEnvironment": "V3"
+      },
+      "deploy": {
+        "cronSchedule": null
+      },
+      "domains": {
+        "serviceDomains": [],
+        "customDomains": []
+      },
+      "latestDeployment": {
+        "id": "cc384452-064c-46d2-ae07-07924d6865c8",
+        "status": "SUCCESS",
+        "createdAt": "2026-09-30T07:01:08.070Z",
+        "url": null
+      },
+      "staged": null,
+      "newUnifiedVariables": [],
+      "existingScheduleVariableNames": [],
+      "volumes": [
+        {
+          "id": "1afa822a-71a2-4491-84ac-d166e1140188",
+          "name": "postgres-volume",
+          "mountPath": "/var/lib/postgresql/data",
+          "sizeMB": 5000
+        }
+      ]
+    },
+    {
+      "project": {
+        "id": "6fe72710-1fc8-445a-a77f-da2da8fee200",
+        "name": "meta-ads-security-staging"
+      },
+      "service": {
+        "id": "d541d726-7785-42da-974a-06bbae702183",
+        "name": "patima-marketing"
+      },
+      "environment": {
+        "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+        "name": "staging"
+      },
+      "source": {
+        "repo": "ColaRaccoon/patima-marketing",
+        "branch": "main",
+        "checkSuites": true
+      },
+      "build": {
+        "builder": "DOCKERFILE",
+        "buildEnvironment": "V3",
+        "dockerfilePath": "deploy/Dockerfile"
+      },
+      "deploy": {
+        "cronSchedule": null,
+        "resourceLimits": {
+          "containers": {
+            "cpu": 0.5,
+            "memoryBytes": 1000000000
+          }
+        }
+      },
+      "domains": {
+        "serviceDomains": [
+          {
+            "id": "cf6a5541-da7c-49f1-907e-c9f4033fe194",
+            "domain": "patima-marketing-staging.up.railway.app",
+            "targetPort": 3200
+          }
+        ],
+        "customDomains": [
+          {
+            "id": "f3a03f13-182a-4491-96ac-3ae975b8605e",
+            "domain": "patima.co.kr",
+            "targetPort": 3200
+          },
+          {
+            "id": "0c9ae65e-1371-4802-aeef-2b761f15d2eb",
+            "domain": "www.patima.co.kr",
+            "targetPort": 3200
+          }
+        ]
+      },
+      "latestDeployment": {
+        "id": "4240aff4-0111-41e7-ae91-368ca7d1d8b2",
+        "status": "SUCCESS",
+        "createdAt": "2026-10-20T06:39:34.826Z",
+        "url": null
+      },
+      "staged": null,
+      "newUnifiedVariables": [],
+      "existingScheduleVariableNames": [],
+      "volumes": []
+    },
+    {
+      "project": {
+        "id": "6fe72710-1fc8-445a-a77f-da2da8fee200",
+        "name": "meta-ads-security-staging"
+      },
+      "service": {
+        "id": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+        "name": "grand-fascination"
+      },
+      "environment": {
+        "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+        "name": "staging"
+      },
+      "source": {
+        "repo": "ColaRaccoon/Ads-Management",
+        "branch": "codex/sidebar-scroll",
+        "commitSha": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb"
+      },
+      "build": {
+        "builder": "DOCKERFILE",
+        "buildEnvironment": "V3",
+        "dockerfilePath": "deploy/cloud/production-reporting.Dockerfile"
+      },
+      "deploy": {
+        "startCommand": "setpriv --no-new-privs node deploy/cloud/production-source-launch.mjs",
+        "preDeployCommand": [],
+        "cronSchedule": null,
+        "resourceLimits": {
+          "containers": {
+            "cpu": 1,
+            "memoryBytes": 1000000000
+          }
+        },
+        "sleepApplication": true
+      },
+      "domains": {
+        "serviceDomains": [
+          {
+            "id": "4ad02b1a-3de1-43b8-ae38-89d0ae38b2f6",
+            "domain": "grand-fascination-staging.up.railway.app",
+            "targetPort": 8000
+          }
+        ],
+        "customDomains": [
+          {
+            "id": "f354db68-1b2d-46cd-b96e-fe8dfafd3fb0",
+            "domain": "patimagroup-work.com",
+            "targetPort": 8000
+          }
+        ]
+      },
+      "latestDeployment": {
+        "id": "c5667ea9-72aa-425c-a7e2-6c857f515999",
+        "status": "SUCCESS",
+        "createdAt": "2026-10-29T01:41:27.087Z",
+        "url": null
+      },
+      "staged": null,
+      "newUnifiedVariables": [],
+      "existingScheduleVariableNames": [
+        "DAILY_SYNC_CAFE24_DAY_ACTIVATION_ENABLED",
+        "DAILY_SYNC_CAFE24_MANUAL_PREPARATION_ENABLED",
+        "DAILY_SYNC_CAFE24_RAILWAY_CALLBACK_ENABLED",
+        "DAILY_SYNC_CAFE24_SCHEDULED_API_ONLY_ACTIVATION_ENABLED",
+        "DAILY_SYNC_CAFE24_SCHEDULED_COUPON_INPUT_SOURCE",
+        "DAILY_SYNC_CAFE24_SCHEDULED_REVIEWED_BASELINE",
+        "DAILY_SYNC_ENABLED",
+        "DAILY_SYNC_FEATURE_ENABLED",
+        "DAILY_SYNC_SCHEDULES",
+        "DAILY_SYNC_SCHEDULE_ENABLED",
+        "DAILY_SYNC_SOURCE_ADMIN_ENABLED"
+      ],
+      "volumes": []
+    }
+  ],
+  "appVariables": {
+    "valuesRedacted": true,
+    "sealedVariableNames": [],
+    "selectedVariables": {
+      "UNIFIED_PERFORMANCE_ENABLED": {
+        "present": false
+      },
+      "UNIFIED_NAVER_ALLOWED_STORE_IDS": {
+        "present": false
+      },
+      "UNIFIED_AGGREGATION_DATABASE_URL": {
+        "present": false
+      },
+      "UNIFIED_REPORT_LEGACY_PLATFORMS": {
+        "present": false
+      },
+      "DAILY_SYNC_FEATURE_ENABLED": {
+        "present": true
+      },
+      "DAILY_SYNC_ENABLED": {
+        "present": true
+      },
+      "DAILY_SYNC_SCHEDULE_ENABLED": {
+        "present": true
+      },
+      "DAILY_SYNC_SCHEDULES": {
+        "present": true
+      },
+      "RELEASE_GIT_SHA": {
+        "present": true
+      },
+      "APP_ENV": {
+        "present": true
+      },
+      "DEPLOYMENT_MODE": {
+        "present": true
+      },
+      "RUNTIME_API_TARGET_ID": {
+        "present": true
+      },
+      "RUNTIME_DATABASE_ID": {
+        "present": true
+      },
+      "SUPABASE_DATABASE_PROJECT_REF": {
+        "present": true
+      },
+      "SUPABASE_DATABASE_SCHEMA": {
+        "present": true
+      },
+      "SUPABASE_DATABASE_RUNTIME_USER": {
+        "present": true
+      },
+      "PRISMA_CONNECTION_LIMIT": {
+        "present": true
+      }
+    }
+  },
+  "appDeployments": [
+    {
+      "id": "c5667ea9-72aa-425c-a7e2-6c857f515999",
+      "status": "SUCCESS",
+      "createdAt": "2026-10-29T01:41:27.087Z",
+      "updatedAt": "2026-10-29T04:00:12.881Z",
+      "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+      "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+      "url": null,
+      "snapshotId": "0f0bad83-a855-4c14-a816-f7b4d8798164",
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "asia-southeast1-eqsg3a"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix: retain explicit Google sale mapping for legacy CSV orders",
+        "commitHash": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb",
+        "branch": "codex/sidebar-scroll"
+      }
+    },
+    {
+      "id": "8b6f5c38-96ca-46e5-8649-8b2a2f027b44",
+      "status": "REMOVED",
+      "createdAt": "2026-10-29T01:12:12.896Z",
+      "updatedAt": "2026-10-29T01:43:12.585Z",
+      "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+      "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+      "url": null,
+      "snapshotId": "007fc728-0c3c-4417-a278-df63dc192795",
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "asia-southeast1-eqsg3a"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "feat: edit and deactivate Meta ad mapping rules with dated reapplication",
+        "commitHash": "41729e397a0a224f419c0219a86302d51c050986",
+        "branch": "codex/sidebar-scroll"
+      }
+    },
+    {
+      "id": "f0aaa666-4fc6-4b1e-84e6-63afd403283b",
+      "status": "REMOVED",
+      "createdAt": "2026-10-28T01:45:09.147Z",
+      "updatedAt": "2026-10-29T01:14:35.029Z",
+      "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+      "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+      "url": null,
+      "snapshotId": "4c2bc445-2df3-4029-a5cf-8a35f2cfa41b",
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "asia-southeast1-eqsg3a"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix: make sidebar navigation independently scrollable",
+        "commitHash": "672f69501f1c11b4ad4b07d4ea5d5f02904e6822",
+        "branch": "codex/sidebar-scroll"
+      }
+    },
+    {
+      "id": "54e89cb3-d72c-421c-a0e5-07c7a78c43be",
+      "status": "REMOVED",
+      "createdAt": "2026-10-28T00:57:40.049Z",
+      "updatedAt": "2026-10-28T01:47:06.128Z",
+      "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+      "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+      "url": null,
+      "snapshotId": "39f0a78d-6bea-47a2-ad12-0311008c1282",
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "asia-southeast1-eqsg3a"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "test: check missing additive Cafe24 helper independently",
+        "commitHash": "1802414ef28fd6016530df2246dc3e211fc5d615",
+        "branch": "codex/google-daily-d1-d7"
+      }
+    },
+    {
+      "id": "e5caf6d7-cae1-4126-a320-94ef77bdaccf",
+      "status": "FAILED",
+      "createdAt": "2026-10-28T00:54:59.905Z",
+      "updatedAt": "2026-10-28T00:55:34.483Z",
+      "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+      "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+      "url": null,
+      "snapshotId": "7f3a2d59-a5c2-4878-87f9-a68d205ec4b3",
+      "canRollback": false,
+      "canRedeploy": true,
+      "regions": [],
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix: match Cafe24 product names and original options separately",
+        "commitHash": "1c3014796052d5b0d5ea5adb7e1ab01829aabc2f",
+        "branch": "codex/google-daily-d1-d7"
+      }
+    }
+  ],
+  "backup": {
+    "actualDatabase": "Supabase external service variables present; Railway Postgres in cafe24-order-read-test is not proof of app DB backup",
+    "databaseBackupVerified": false,
+    "appRollbackCapability": true
+  },
+  "schedules": {
+    "railwayAutomationQuery": "not enabled for this user",
+    "actualScheduleValuesAvailable": false
+  },
+  "baselineMetrics": [
+    {
+      "service": {
+        "id": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+        "name": "grand-fascination"
+      },
+      "environment": {
+        "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+        "name": "staging"
+      },
+      "metrics": [
+        {
+          "measurement": "CPU_USAGE",
+          "current": 0.002119366666666667,
+          "average": 0.0012054273224043717,
+          "min": 0,
+          "max": 0.04333148333333333,
+          "sampleCount": 61
+        },
+        {
+          "measurement": "MEMORY_USAGE_GB",
+          "current": 0.186597376,
+          "average": 0.1482703318032788,
+          "min": 0.137299968,
+          "max": 0.186597376,
+          "sampleCount": 61
+        },
+        {
+          "measurement": "CPU_LIMIT",
+          "current": 1,
+          "average": 1,
+          "min": 1,
+          "max": 1,
+          "sampleCount": 61
+        },
+        {
+          "measurement": "MEMORY_LIMIT_GB",
+          "current": 0.99999744,
+          "average": 0.9999974400000009,
+          "min": 0.99999744,
+          "max": 0.99999744,
+          "sampleCount": 61
+        }
+      ]
+    },
+    {
+      "service": {
+        "id": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+        "name": "grand-fascination"
+      },
+      "environment": {
+        "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+        "name": "staging"
+      },
+      "window": {
+        "hoursBack": 1,
+        "bucketCount": 5
+      },
+      "slowestBucket": {
+        "ts": 1793243520,
+        "p50": 4606,
+        "p90": 4606,
+        "p95": 4606,
+        "p99": 4606
+      },
+      "samples": [
+        {
+          "ts": 1793242800,
+          "p50": 15,
+          "p90": 15,
+          "p95": 15,
+          "p99": 15
+        },
+        {
+          "ts": 1793243520,
+          "p50": 4606,
+          "p90": 4606,
+          "p95": 4606,
+          "p99": 4606
+        },
+        {
+          "ts": 1793244960,
+          "p50": 3569,
+          "p90": 3569,
+          "p95": 3569,
+          "p99": 3569
+        },
+        {
+          "ts": 1793245680,
+          "p50": 23,
+          "p90": 23,
+          "p95": 23,
+          "p99": 23
+        },
+        {
+          "ts": 1793246400,
+          "p50": 11,
+          "p90": 1344,
+          "p95": 3343,
+          "p99": 6268
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "OAuth variables names only; actual flags/schedules/DB role not verified",
+    "Public app route probes are separate and unauthenticated",
+    "All GET p95 buckets are existing traffic, not product 30-day report performance",
+    "No Supabase backup/PITR tool was available in the discovered names"
+  ]
+}

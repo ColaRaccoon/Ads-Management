@@ -1,0 +1,22 @@
+{
+  "stage": 11,
+  "kind": "FRESH_LOOPBACK_MIGRATION_ROLES_REHEARSAL",
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "Exact parent reviewed two-migration batch succeeds after local-only removal/history simulation; owner SET ROLE and extension schema reproduced",
+    "Ownership-aware role SQL applied under non-superuser NOINHERIT management login",
+    "Actual two restricted login roles deny credential/reference columns, credential tables, raw report source/match access; worker exact44table SELECT and zero source DML"
+  ],
+  "publicFixtureOwnershipSource": "11-management-metadata.json:17 patima_app-owned tables; RLS=false, FORCE=false",
+  "migrationSqlSha256": "fbada0db17024847bf43a55c27004078c2ab34ab5e10309f5556369c710f9732",
+  "roleSqlSha256": "f500540bd854057165f90b407b15d4440dd0b57a8435afe2bb26f2f973e41c87",
+  "correctiveSchemaUsageFix": "PASS",
+  "wrongPublicOwnerGrantRejectedBeforeCommit": true,
+  "correctivePublicGrantsFix": "PASS",
+  "membershipRestoredExactly": true,
+  "accessViolations": [],
+  "fkTest": "PASS",
+  "fkCorrectiveSqlExecutedAsOwner": "PASS",
+  "stopExit": 0
+}

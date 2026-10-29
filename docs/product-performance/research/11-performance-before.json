@@ -1,0 +1,416 @@
+{
+  "stage": 11,
+  "status": "FAIL_TARGET",
+  "source": "Production HttpRequest durationMs logs; mixed live UI and repeated 30-day representative requests",
+  "release": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "samples": [
+    {
+      "timestamp": "2026-10-29T05:06:08.441039553Z",
+      "path": "/api/unified-performance/options",
+      "method": "GET",
+      "status": 401,
+      "durationMs": 95
+    },
+    {
+      "timestamp": "2026-10-29T05:06:39.101477729Z",
+      "path": "/api/unified-performance/options",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2206
+    },
+    {
+      "timestamp": "2026-10-29T05:06:39.101483739Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2274
+    },
+    {
+      "timestamp": "2026-10-29T05:06:39.101489581Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3124
+    },
+    {
+      "timestamp": "2026-10-29T05:06:39.101495240Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3396
+    },
+    {
+      "timestamp": "2026-10-29T05:06:39.101501406Z",
+      "path": "/api/unified-performance/relationships",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2068
+    },
+    {
+      "timestamp": "2026-10-29T05:06:42.492126459Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1891
+    },
+    {
+      "timestamp": "2026-10-29T05:06:42.492134304Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1972
+    },
+    {
+      "timestamp": "2026-10-29T05:06:42.492142031Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2075
+    },
+    {
+      "timestamp": "2026-10-29T05:06:42.492148539Z",
+      "path": "/api/unified-performance/options",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2222
+    },
+    {
+      "timestamp": "2026-10-29T05:06:43.998695874Z",
+      "path": "/api/unified-performance/options",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3020
+    },
+    {
+      "timestamp": "2026-10-29T05:06:52.577128229Z",
+      "path": "/api/unified-performance/options",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1943
+    },
+    {
+      "timestamp": "2026-10-29T05:06:52.577134641Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2012
+    },
+    {
+      "timestamp": "2026-10-29T05:06:52.577140488Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2096
+    },
+    {
+      "timestamp": "2026-10-29T05:06:53.744296491Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2774
+    },
+    {
+      "timestamp": "2026-10-29T05:07:13.311227295Z",
+      "path": "/api/unified-performance/options",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1365
+    },
+    {
+      "timestamp": "2026-10-29T05:07:13.311238202Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1953
+    },
+    {
+      "timestamp": "2026-10-29T05:07:13.311245388Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2039
+    },
+    {
+      "timestamp": "2026-10-29T05:07:13.311252089Z",
+      "path": "/api/unified-performance/options",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2252
+    },
+    {
+      "timestamp": "2026-10-29T05:07:13.311259455Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3070
+    },
+    {
+      "timestamp": "2026-10-29T05:07:32.821445827Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2093
+    },
+    {
+      "timestamp": "2026-10-29T05:07:32.821452165Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2186
+    },
+    {
+      "timestamp": "2026-10-29T05:07:32.821457438Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2260
+    },
+    {
+      "timestamp": "2026-10-29T05:07:34.299520187Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1636
+    },
+    {
+      "timestamp": "2026-10-29T05:08:16.028835199Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1816
+    },
+    {
+      "timestamp": "2026-10-29T05:08:16.028843428Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1523
+    },
+    {
+      "timestamp": "2026-10-29T05:08:18.449508527Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1481
+    },
+    {
+      "timestamp": "2026-10-29T05:08:19.874924826Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1480
+    },
+    {
+      "timestamp": "2026-10-29T05:08:22.481250328Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1515
+    },
+    {
+      "timestamp": "2026-10-29T05:08:53.502885777Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1827
+    },
+    {
+      "timestamp": "2026-10-29T05:08:53.502892148Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1469
+    },
+    {
+      "timestamp": "2026-10-29T05:08:53.502898692Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1477
+    },
+    {
+      "timestamp": "2026-10-29T05:08:54.685022768Z",
+      "path": "/api/unified-performance/summary",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1477
+    },
+    {
+      "timestamp": "2026-10-29T05:08:55.912899398Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1467
+    },
+    {
+      "timestamp": "2026-10-29T05:09:46.943850035Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3821
+    },
+    {
+      "timestamp": "2026-10-29T05:09:46.943855111Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1478
+    },
+    {
+      "timestamp": "2026-10-29T05:09:46.943859853Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1458
+    },
+    {
+      "timestamp": "2026-10-29T05:09:46.943864793Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1488
+    },
+    {
+      "timestamp": "2026-10-29T05:09:46.943869844Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1476
+    },
+    {
+      "timestamp": "2026-10-29T05:09:48.150647642Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1472
+    },
+    {
+      "timestamp": "2026-10-29T05:09:49.241756333Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1464
+    },
+    {
+      "timestamp": "2026-10-29T05:09:51.470458885Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1477
+    },
+    {
+      "timestamp": "2026-10-29T05:09:53.841601840Z",
+      "path": "/api/unified-performance/timeseries",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1649
+    },
+    {
+      "timestamp": "2026-10-29T05:09:55.092354696Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1480
+    },
+    {
+      "timestamp": "2026-10-29T05:09:57.677437189Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1560
+    },
+    {
+      "timestamp": "2026-10-29T05:10:00.031080214Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1550
+    },
+    {
+      "timestamp": "2026-10-29T05:10:02.010997029Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1575
+    },
+    {
+      "timestamp": "2026-10-29T05:10:03.439297314Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1575
+    },
+    {
+      "timestamp": "2026-10-29T05:10:06.094225760Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1544
+    },
+    {
+      "timestamp": "2026-10-29T05:10:07.689483718Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1579
+    },
+    {
+      "timestamp": "2026-10-29T05:10:10.448502370Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1726
+    },
+    {
+      "timestamp": "2026-10-29T05:10:11.986795697Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1587
+    },
+    {
+      "timestamp": "2026-10-29T05:10:15.048214813Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1570
+    },
+    {
+      "timestamp": "2026-10-29T05:11:41.019400234Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4341
+    },
+    {
+      "timestamp": "2026-10-29T05:11:41.019406514Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1720
+    },
+    {
+      "timestamp": "2026-10-29T05:11:41.019413809Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1559
+    },
+    {
+      "timestamp": "2026-10-29T05:11:41.019420885Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1606
+    },
+    {
+      "timestamp": "2026-10-29T05:11:41.019427992Z",
+      "path": "/api/unified-performance/diagnostics",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1568
+    }
+  ],
+  "action": "Stop backfill, feature OFF, reduce duplicate snapshots; preserve all publications",
+  "limitation": "Runtime log arrival timestamps are batched; mixed selection windows are not a controlled single-query benchmark"
+}

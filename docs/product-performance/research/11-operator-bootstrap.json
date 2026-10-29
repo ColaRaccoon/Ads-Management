@@ -1,0 +1,61 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:50:07.195Z",
+  "operation": "bootstrap",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "phase": "SALE_UNIT save",
+  "product": {
+    "id": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+    "canonicalName": "풀업바"
+  },
+  "rules": [
+    {
+      "id": "06b05f8c-ea1a-4803-b38c-a4538ac38cfd",
+      "kind": "NAME",
+      "validFrom": "2026-10-28T00:00:00.000Z",
+      "payload": {
+        "terms": [
+          "풀업바"
+        ],
+        "matchType": "CONTAINS",
+        "nameField": "product_name",
+        "optionExact": null,
+        "excludeTerms": [],
+        "saleUnitName": "풀업바 단품",
+        "optionExclude": [],
+        "optionInclude": [
+          "풀업바"
+        ]
+      }
+    },
+    {
+      "id": "7502dd56-c8fb-4d43-894e-d6d2468149ef",
+      "kind": "SALE_UNIT",
+      "validFrom": "2026-10-28T00:00:00.000Z",
+      "payload": {
+        "otherCost": "0",
+        "salePrice": "34900",
+        "optionExact": null,
+        "productCost": "10000",
+        "saleUnitName": "풀업바 단품",
+        "shippingCost": "0",
+        "optionInclude": [
+          "풀업바(72~97cm)"
+        ],
+        "quantityBasis": "SALE_UNIT_TOTAL",
+        "unitsPerSaleUnit": "1"
+      }
+    }
+  ],
+  "versions": {
+    "configurationVersion": "fd07dde83e7d468f2706c704bc3fb8ac5f7812a3931853a57c9cca703f3a8046",
+    "nameRuleVersion": "4f953b3a11a90304705282024c22ee08f5bb398be3d418ed09dd723106f851f6",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "auditCount": 3,
+  "status": "PASS"
+}

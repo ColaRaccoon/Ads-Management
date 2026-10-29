@@ -1,0 +1,71 @@
+{
+  "credentialSource": "existing Supabase CLI keyring",
+  "pitrKeys": [
+    null
+  ],
+  "httpStatus": 200,
+  "remoteWrites": 0,
+  "region": "ap-northeast-2",
+  "pitrEnabled": false,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "backups": [
+    {
+      "id": 2097938955,
+      "is_physical_backup": true,
+      "status": "COMPLETED",
+      "inserted_at": "2026-10-28T17:56:19.281Z",
+      "updated_at": null
+    },
+    {
+      "id": 2088208596,
+      "is_physical_backup": true,
+      "status": "COMPLETED",
+      "inserted_at": "2026-10-27T17:56:14.645Z",
+      "updated_at": null
+    },
+    {
+      "id": 2078521192,
+      "is_physical_backup": true,
+      "status": "COMPLETED",
+      "inserted_at": "2026-10-26T17:56:26.794Z",
+      "updated_at": null
+    },
+    {
+      "id": 2068905114,
+      "is_physical_backup": true,
+      "status": "COMPLETED",
+      "inserted_at": "2026-10-25T17:54:17.906Z",
+      "updated_at": null
+    },
+    {
+      "id": 2059377908,
+      "is_physical_backup": true,
+      "status": "COMPLETED",
+      "inserted_at": "2026-10-24T17:54:40.309Z",
+      "updated_at": null
+    },
+    {
+      "id": 2049840996,
+      "is_physical_backup": true,
+      "status": "COMPLETED",
+      "inserted_at": "2026-10-23T17:55:02.506Z",
+      "updated_at": null
+    },
+    {
+      "id": 2040285438,
+      "is_physical_backup": true,
+      "status": "COMPLETED",
+      "inserted_at": "2026-10-22T17:55:27.747Z",
+      "updated_at": null
+    }
+  ],
+  "observedAt": "2026-10-29T04:07:47.7712938Z",
+  "responseKeys": [
+    "region",
+    "walg_enabled",
+    "pitr_enabled",
+    "backups",
+    "physical_backup_data"
+  ],
+  "walgEnabled": true
+}

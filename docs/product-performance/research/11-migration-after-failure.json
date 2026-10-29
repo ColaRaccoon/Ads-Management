@@ -1,0 +1,26 @@
+{
+  "remoteWrites": 0,
+  "rows": {
+    "preconditions": {
+      "roles": [],
+      "activeJobs": [],
+      "extensions": [
+        {
+          "name": "btree_gist",
+          "schema": "extensions",
+          "version": "1.7"
+        },
+        {
+          "name": "pgcrypto",
+          "schema": "extensions",
+          "version": "1.3"
+        }
+      ],
+      "unifiedTables": 0
+    }
+  },
+  "operation": "MANAGEMENT_READ_ONLY",
+  "stage": 11,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "observedAt": "2026-10-29T04:15:26.7215777Z"
+}

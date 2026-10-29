@@ -1,0 +1,30 @@
+{
+  "status": "APPLIED",
+  "loginEnabled": false,
+  "roleSqlSha256": "271344208c4a3e6fbcac5a19f82c98b1acf7eb0a2028d224dcbd1b84e7c4e4e6",
+  "httpStatus": 201,
+  "operation": "EXACT_RESTRICTED_ROLE_GRANTS",
+  "observedAt": "2026-10-29T04:29:24.6250324Z",
+  "sourceWrites": 0,
+  "stage": 11,
+  "result": [
+    {
+      "rolname": "meta_ads_unified_report",
+      "rolcanlogin": false,
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolinherit": false
+    },
+    {
+      "rolname": "meta_ads_unified_worker",
+      "rolcanlogin": false,
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolinherit": false
+    }
+  ]
+}

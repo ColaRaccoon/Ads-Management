@@ -1,0 +1,91 @@
+{
+  "stage": 11,
+  "synthetic": true,
+  "remoteWrites": 0,
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55469,
+    "database": "postgres"
+  },
+  "checks": [
+    "Fresh loopback PG17; real nonsuperuser ADMIN=true INHERIT=false SET=false fixture",
+    "Temporary SET grant allows SET ROLE; SET FALSE leaves grantor-specific row; explicit own-grant REVOKE restores exact rows",
+    "Rollback also restores membership rows exactly"
+  ],
+  "before": [
+    {
+      "oid": "16386",
+      "role": "stage11_object_owner",
+      "member": "stage11_executor",
+      "grantor": "bootstrap_fixture",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    }
+  ],
+  "temporary": [
+    {
+      "oid": "16386",
+      "role": "stage11_object_owner",
+      "member": "stage11_executor",
+      "grantor": "bootstrap_fixture",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "oid": "16387",
+      "role": "stage11_object_owner",
+      "member": "stage11_executor",
+      "grantor": "stage11_executor",
+      "admin_option": false,
+      "inherit_option": false,
+      "set_option": true
+    }
+  ],
+  "afterSetFalse": [
+    {
+      "oid": "16386",
+      "role": "stage11_object_owner",
+      "member": "stage11_executor",
+      "grantor": "bootstrap_fixture",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "oid": "16387",
+      "role": "stage11_object_owner",
+      "member": "stage11_executor",
+      "grantor": "stage11_executor",
+      "admin_option": false,
+      "inherit_option": false,
+      "set_option": false
+    }
+  ],
+  "exactRestoredBySetFalse": false,
+  "afterRevokeSelfGrant": [
+    {
+      "oid": "16386",
+      "role": "stage11_object_owner",
+      "member": "stage11_executor",
+      "grantor": "bootstrap_fixture",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    }
+  ],
+  "afterRollback": [
+    {
+      "oid": "16386",
+      "role": "stage11_object_owner",
+      "member": "stage11_executor",
+      "grantor": "bootstrap_fixture",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    }
+  ],
+  "status": "PASS",
+  "stopExitCode": 0
+}

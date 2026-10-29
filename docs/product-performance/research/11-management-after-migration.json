@@ -1,0 +1,2771 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "remoteWrites": 0,
+  "operation": "MANAGEMENT_READ_ONLY",
+  "observedAt": "2026-10-29T04:28:28.6217040Z",
+  "rows": {
+    "metadata": {
+      "locks": [],
+      "columns": [
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "connection_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "character",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "canonical_key_hash",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "order_no",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "line_order_no",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "product_no",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "option_name",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "ordered_at",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "date",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "order_date",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "provider_updated_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 10
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "quantity",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 11
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "sale_price_krw",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 12
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "total_order_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 13
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "total_paid_krw",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 14
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "payment_method",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 15
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "order_status",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 16
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "line_status",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 17
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "cancelled_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 18
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "cancel_amount_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 19
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "refunded_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 20
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "refund_amount_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 21
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "discount_amount_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 22
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "coupon_amount_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 23
+        },
+        {
+          "data_type": "integer",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "version",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 24
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "is_current",
+          "is_nullable": "NO",
+          "column_default": "true",
+          "ordinal_position": 25
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "sync_run_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 26
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "fetched_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 27
+        },
+        {
+          "data_type": "character",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "content_fingerprint",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 28
+        },
+        {
+          "data_type": "integer",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "fingerprint_key_version",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 29
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "total_paid_input_source",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 30
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "provider_payment_codes",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 31
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "provider_coupon_signal",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 32
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "actual_order_price_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 33
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "actual_payment_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 34
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "actual_shipping_fee_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 35
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "initial_order_price_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 36
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "initial_payment_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 37
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "initial_shipping_fee_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 38
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_api_versions",
+          "column_name": "option_value",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 39
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_lines",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_lines",
+          "column_name": "upload_batch_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "integer",
+          "table_name": "cafe24_order_lines",
+          "column_name": "row_number",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character",
+          "table_name": "cafe24_order_lines",
+          "column_name": "source_row_hash",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_order_lines",
+          "column_name": "order_line_key",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_order_lines",
+          "column_name": "order_no",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_order_lines",
+          "column_name": "line_order_no",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_order_lines",
+          "column_name": "product_no",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_order_lines",
+          "column_name": "product_name",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_order_lines",
+          "column_name": "option_name",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 10
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "quantity",
+          "is_nullable": "NO",
+          "column_default": "0",
+          "ordinal_position": 11
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "sale_price_krw",
+          "is_nullable": "NO",
+          "column_default": "0",
+          "ordinal_position": 12
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "total_paid_krw",
+          "is_nullable": "NO",
+          "column_default": "0",
+          "ordinal_position": 13
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_order_lines",
+          "column_name": "payment_method",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 14
+        },
+        {
+          "data_type": "timestamp without time zone",
+          "table_name": "cafe24_order_lines",
+          "column_name": "ordered_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 15
+        },
+        {
+          "data_type": "date",
+          "table_name": "cafe24_order_lines",
+          "column_name": "order_date",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 16
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_lines",
+          "column_name": "product_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 17
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_lines",
+          "column_name": "cafe24_product_rule_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 18
+        },
+        {
+          "data_type": "USER-DEFINED",
+          "table_name": "cafe24_order_lines",
+          "column_name": "match_source",
+          "is_nullable": "NO",
+          "column_default": "'UNMATCHED'::meta_ads.match_source",
+          "ordinal_position": 19
+        },
+        {
+          "data_type": "USER-DEFINED",
+          "table_name": "cafe24_order_lines",
+          "column_name": "validation_status",
+          "is_nullable": "NO",
+          "column_default": "'VALID'::meta_ads.row_validation_status",
+          "ordinal_position": 20
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_order_lines",
+          "column_name": "validation_errors",
+          "is_nullable": "NO",
+          "column_default": "'[]'::jsonb",
+          "ordinal_position": 21
+        },
+        {
+          "data_type": "integer",
+          "table_name": "cafe24_order_lines",
+          "column_name": "import_version",
+          "is_nullable": "NO",
+          "column_default": "1",
+          "ordinal_position": 22
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "cafe24_order_lines",
+          "column_name": "is_current",
+          "is_nullable": "NO",
+          "column_default": "true",
+          "ordinal_position": 23
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_lines",
+          "column_name": "superseded_by_order_line_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 24
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_order_lines",
+          "column_name": "raw_row",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 25
+        },
+        {
+          "data_type": "timestamp without time zone",
+          "table_name": "cafe24_order_lines",
+          "column_name": "created_at",
+          "is_nullable": "NO",
+          "column_default": "CURRENT_TIMESTAMP",
+          "ordinal_position": 26
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "total_order_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 27
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_lines",
+          "column_name": "connection_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 28
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_order_lines",
+          "column_name": "sync_run_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 29
+        },
+        {
+          "data_type": "USER-DEFINED",
+          "table_name": "cafe24_order_lines",
+          "column_name": "source",
+          "is_nullable": "NO",
+          "column_default": "'CSV'::meta_ads.\"SourceKind\"",
+          "ordinal_position": 30
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "cafe24_order_lines",
+          "column_name": "provider_updated_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 31
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_lines",
+          "column_name": "total_paid_input_source",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 32
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_order_lines",
+          "column_name": "provider_payment_codes",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 33
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "cafe24_order_lines",
+          "column_name": "provider_coupon_signal",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 34
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "actual_order_price_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 35
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "actual_payment_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 36
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "actual_shipping_fee_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 37
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "initial_order_price_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 38
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "initial_payment_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 39
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_order_lines",
+          "column_name": "initial_shipping_fee_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 40
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_order_lines",
+          "column_name": "option_value",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 41
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_product_rules",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_product_rules",
+          "column_name": "display_name",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_numbers",
+          "is_nullable": "NO",
+          "column_default": "'[]'::jsonb",
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_name_aliases",
+          "is_nullable": "NO",
+          "column_default": "'[]'::jsonb",
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_product_rules",
+          "column_name": "option_include_keywords",
+          "is_nullable": "NO",
+          "column_default": "'[]'::jsonb",
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_product_rules",
+          "column_name": "option_exclude_keywords",
+          "is_nullable": "NO",
+          "column_default": "'[]'::jsonb",
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "cafe24_product_rules",
+          "column_name": "ad_cost_source_product_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_product_rules",
+          "column_name": "roas_group",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_product_rules",
+          "column_name": "sale_price_krw_override",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 10
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_cost_krw_override",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 11
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_product_rules",
+          "column_name": "shipping_krw_override",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 12
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "cafe24_product_rules",
+          "column_name": "extra_cost_krw_override",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 13
+        },
+        {
+          "data_type": "integer",
+          "table_name": "cafe24_product_rules",
+          "column_name": "priority",
+          "is_nullable": "NO",
+          "column_default": "100",
+          "ordinal_position": 14
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "cafe24_product_rules",
+          "column_name": "is_active",
+          "is_nullable": "NO",
+          "column_default": "true",
+          "ordinal_position": 15
+        },
+        {
+          "data_type": "date",
+          "table_name": "cafe24_product_rules",
+          "column_name": "valid_from",
+          "is_nullable": "NO",
+          "column_default": "CURRENT_TIMESTAMP",
+          "ordinal_position": 16
+        },
+        {
+          "data_type": "date",
+          "table_name": "cafe24_product_rules",
+          "column_name": "valid_to",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 17
+        },
+        {
+          "data_type": "text",
+          "table_name": "cafe24_product_rules",
+          "column_name": "note",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 18
+        },
+        {
+          "data_type": "timestamp without time zone",
+          "table_name": "cafe24_product_rules",
+          "column_name": "created_at",
+          "is_nullable": "NO",
+          "column_default": "CURRENT_TIMESTAMP",
+          "ordinal_position": 19
+        },
+        {
+          "data_type": "timestamp without time zone",
+          "table_name": "cafe24_product_rules",
+          "column_name": "updated_at",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 20
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "cafe24_product_rules",
+          "column_name": "match_target",
+          "is_nullable": "NO",
+          "column_default": "'LEGACY_COMBINED'::character varying",
+          "ordinal_position": 21
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_name_include_keywords",
+          "is_nullable": "NO",
+          "column_default": "'[]'::jsonb",
+          "ordinal_position": 22
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "cafe24_product_rules",
+          "column_name": "product_name_exclude_keywords",
+          "is_nullable": "NO",
+          "column_default": "'[]'::jsonb",
+          "ordinal_position": 23
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "source_system",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "platform",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "scope_key",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "date",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "business_date",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "status",
+          "is_nullable": "NO",
+          "column_default": "'STAGING'::character varying",
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "contract_version",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "versions",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "read_snapshot_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "source_fingerprint",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 10
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "source_watermarks",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 11
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "checkpoint",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 12
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "control_totals",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 13
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "issues",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 14
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "started_at",
+          "is_nullable": "NO",
+          "column_default": "CURRENT_TIMESTAMP",
+          "ordinal_position": 15
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "completed_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 16
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "published_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 17
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "idempotency_key",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 18
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "requested_by",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 19
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "reason",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 20
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "lease_token",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 21
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "lease_expires_at",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 22
+        },
+        {
+          "data_type": "integer",
+          "table_name": "unified_aggregation_runs",
+          "column_name": "attempts",
+          "is_nullable": "NO",
+          "column_default": "0",
+          "ordinal_position": 23
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_daily_facts",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_daily_facts",
+          "column_name": "run_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_daily_facts",
+          "column_name": "component",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_daily_facts",
+          "column_name": "fact_key",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_daily_facts",
+          "column_name": "product_name",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_daily_facts",
+          "column_name": "sale_unit_name",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "unified_daily_facts",
+          "column_name": "amount_krw",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "unified_daily_facts",
+          "column_name": "original_amount",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_daily_facts",
+          "column_name": "currency",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "numeric",
+          "table_name": "unified_daily_facts",
+          "column_name": "quantity",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 10
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_daily_facts",
+          "column_name": "attribution",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 11
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_daily_facts",
+          "column_name": "payload",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 12
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_mapping_audits",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_mapping_audits",
+          "column_name": "entity_type",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_mapping_audits",
+          "column_name": "entity_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_mapping_audits",
+          "column_name": "action",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_mapping_audits",
+          "column_name": "actor_user_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_mapping_audits",
+          "column_name": "before",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_mapping_audits",
+          "column_name": "after",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_mapping_audits",
+          "column_name": "reason",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_mapping_audits",
+          "column_name": "created_at",
+          "is_nullable": "NO",
+          "column_default": "CURRENT_TIMESTAMP",
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_product_match_results",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_product_match_results",
+          "column_name": "run_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_product_match_results",
+          "column_name": "source_key",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_product_match_results",
+          "column_name": "name_input_hash",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_product_match_results",
+          "column_name": "rule_version",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_product_match_results",
+          "column_name": "match_status",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_product_match_results",
+          "column_name": "product_name",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_product_match_results",
+          "column_name": "evidence",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_products",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_products",
+          "column_name": "canonical_name",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_products",
+          "column_name": "normalized_name",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "unified_products",
+          "column_name": "active",
+          "is_nullable": "NO",
+          "column_default": "true",
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "integer",
+          "table_name": "unified_products",
+          "column_name": "version",
+          "is_nullable": "NO",
+          "column_default": "1",
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_products",
+          "column_name": "created_at",
+          "is_nullable": "NO",
+          "column_default": "CURRENT_TIMESTAMP",
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_products",
+          "column_name": "updated_at",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_rules",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_rules",
+          "column_name": "kind",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_rules",
+          "column_name": "product_id",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_rules",
+          "column_name": "platform",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_rules",
+          "column_name": "scope_key",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_rules",
+          "column_name": "identity_key",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_rules",
+          "column_name": "payload",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "date",
+          "table_name": "unified_rules",
+          "column_name": "valid_from",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "date",
+          "table_name": "unified_rules",
+          "column_name": "valid_to",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "unified_rules",
+          "column_name": "active",
+          "is_nullable": "NO",
+          "column_default": "true",
+          "ordinal_position": 10
+        },
+        {
+          "data_type": "integer",
+          "table_name": "unified_rules",
+          "column_name": "version",
+          "is_nullable": "NO",
+          "column_default": "1",
+          "ordinal_position": 11
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_rules",
+          "column_name": "created_at",
+          "is_nullable": "NO",
+          "column_default": "CURRENT_TIMESTAMP",
+          "ordinal_position": 12
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_rules",
+          "column_name": "updated_at",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 13
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_source_coverage",
+          "column_name": "id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_source_coverage",
+          "column_name": "run_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_source_coverage",
+          "column_name": "component",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_source_coverage",
+          "column_name": "participation",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_source_coverage",
+          "column_name": "collection_state",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "unified_source_coverage",
+          "column_name": "zero_confirmed",
+          "is_nullable": "NO",
+          "column_default": "false",
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "integer",
+          "table_name": "unified_source_coverage",
+          "column_name": "rows_present",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 7
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_source_coverage",
+          "column_name": "source_as_of",
+          "is_nullable": "YES",
+          "column_default": null,
+          "ordinal_position": 8
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "unified_source_coverage",
+          "column_name": "is_estimate",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 9
+        },
+        {
+          "data_type": "jsonb",
+          "table_name": "unified_source_coverage",
+          "column_name": "details",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 10
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_source_publications",
+          "column_name": "source_system",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 1
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_source_publications",
+          "column_name": "platform",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 2
+        },
+        {
+          "data_type": "character varying",
+          "table_name": "unified_source_publications",
+          "column_name": "scope_key",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 3
+        },
+        {
+          "data_type": "date",
+          "table_name": "unified_source_publications",
+          "column_name": "business_date",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 4
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "unified_source_publications",
+          "column_name": "run_id",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 5
+        },
+        {
+          "data_type": "integer",
+          "table_name": "unified_source_publications",
+          "column_name": "revision",
+          "is_nullable": "NO",
+          "column_default": "1",
+          "ordinal_position": 6
+        },
+        {
+          "data_type": "timestamp with time zone",
+          "table_name": "unified_source_publications",
+          "column_name": "updated_at",
+          "is_nullable": "NO",
+          "column_default": null,
+          "ordinal_position": 7
+        }
+      ],
+      "identity": {
+        "db": "postgres",
+        "role": "supabase_read_only_user",
+        "readOnly": "on"
+      },
+      "migrations": [
+        {
+          "checksum": "510fd80840a47b686bfd63cf9bc485574316ce3118229d589694afb48bd75955",
+          "finished_at": null,
+          "migration_name": "20260529000000_init",
+          "rolled_back_at": "2026-06-19T16:00:16.130846+09:00",
+          "applied_steps_count": 0
+        },
+        {
+          "checksum": "510fd80840a47b686bfd63cf9bc485574316ce3118229d589694afb48bd75955",
+          "finished_at": "2026-06-19T16:00:29.457009+09:00",
+          "migration_name": "20260529000000_init",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "8c1228869f5826c50ab804444da364fdeb7c61d3b9287efb97045db4892cefce",
+          "finished_at": "2026-06-19T16:00:29.543563+09:00",
+          "migration_name": "20260529150000_add_exchange_rates",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "5c27fc487809327ca6924c0079d5b24457bd4aaffadc025e787485092e8fa846",
+          "finished_at": "2026-06-19T16:00:29.627015+09:00",
+          "migration_name": "20260529153000_fix_exchange_rate_unique_index_name",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "9cf0d49e25c2cb327a1f166ae9338d15778b2a745118d69febb6065a22913639",
+          "finished_at": "2026-06-19T16:00:29.712116+09:00",
+          "migration_name": "20260529162500_remove_ad_cost_multiplier",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "24611653bff91c5fd0e24bb970232aa6ac7227d2909ded5e09e40bd40438abcc",
+          "finished_at": "2026-06-19T16:00:29.823618+09:00",
+          "migration_name": "20260601000000_add_meta_ad_daily_metrics",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "0fe7d3008598e5735757449e520a814d6f36643e7606e7a0440943cf0b3772c7",
+          "finished_at": "2026-06-19T16:00:29.926655+09:00",
+          "migration_name": "20260604000000_add_creative_change_logs",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "7f38d473e968defafb60528e0c826ddf17ced72aa0f3edefefb1e8d196cb4280",
+          "finished_at": "2026-06-19T16:00:30.013566+09:00",
+          "migration_name": "20260608000000_cleanup_orphan_creatives",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "f865cde4ad03def8b9323b946b5dd6a7735f39c823c3ac379d4c16376f57e049",
+          "finished_at": "2026-06-19T16:00:30.157826+09:00",
+          "migration_name": "20260610000000_add_product_change_logs",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "f57f0474b94b57aa9ec94fbb002e207e56c1439c7ced6a87852755302d2ab9e9",
+          "finished_at": "2026-06-19T16:00:30.260258+09:00",
+          "migration_name": "20260611000000_add_cafe24_sales",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "587678bd6b3b90be988722754eeddb6f05d263fe744f442e899384657a4c7647",
+          "finished_at": "2026-06-19T16:00:30.343741+09:00",
+          "migration_name": "20260611001000_add_cafe24_order_line_current_versions",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "f26876d18a9ef2fd90c7db6178c0f9d2c4882a15cb0f5495db952c784285f747",
+          "finished_at": "2026-06-29T09:35:11.802685+09:00",
+          "migration_name": "20260625000000_add_coupang_module_models",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "3bf48e4a12e2c922180b1d8d96d4caf3402fc4fa4f72d84b0a41ff0c955684d6",
+          "finished_at": "2026-06-29T09:35:11.8842+09:00",
+          "migration_name": "20260626000000_add_coupang_promotion_prices",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "c8051d939321ed67a1044e19257afb5edbe51d0e7863ee09e746d9519b5e8850",
+          "finished_at": "2026-07-01T15:25:34.01641+09:00",
+          "migration_name": "20260701000000_add_coupang_ad_metric_ad_name",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "ad63504845d2833f4ed58baee6e04a6bc14d7f6170a88efa217d8bc26551227a",
+          "finished_at": "2026-07-03T16:15:59.237446+09:00",
+          "migration_name": "20260703000000_add_coupang_product_groups",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "bd2cfbf9ef170ee1926b75dd55c4c05b2f27f13c670cbb0a7ea5f0b48b66005d",
+          "finished_at": "2026-07-09T16:30:00.320945+09:00",
+          "migration_name": "20260709000000_add_coupang_manual_purchases",
+          "rolled_back_at": null,
+          "applied_steps_count": 8
+        },
+        {
+          "checksum": "5034e828dc6e47cbb8cbe9fcab95787bbd3e9591a6e051f16aaabe0c699efa95",
+          "finished_at": "2026-07-11T09:02:47.712686+09:00",
+          "migration_name": "20260710000000_add_coupang_manual_purchase_vat",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "81e17e2a9ece358ce0f3f97051cb74d0aa04adfc496a1dfd7c302889e46aac87",
+          "finished_at": "2026-07-21T16:31:37.192306+09:00",
+          "migration_name": "20260721000000_add_coupang_manual_purchase_sales_amount",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "d904e42e12989eeb08014ef9d9d57584bb7abd195929e8c1686be8f732720ef8",
+          "finished_at": "2026-07-22T08:43:45.423749+09:00",
+          "migration_name": "20260721173000_add_coupang_manual_purchase_product_cost",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "372c395900cb695be168e21200d5cf28ed7624618fbcf03288394b4a7b455299",
+          "finished_at": "2026-07-22T11:27:48.160217+09:00",
+          "migration_name": "20260722000000_backfill_coupang_manual_purchase_sales_amount",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "a7ef0ded7ca0f674272da246ab2e7df376932d0e18a39939f51f920bf7699cdb",
+          "finished_at": "2026-07-22T15:20:16.178728+09:00",
+          "migration_name": "20260722150000_split_coupang_shipping_fees",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "f6b6f9dd14097b472a5afbb1e255a420083e52c005b0e9b69a2d3c061418a989",
+          "finished_at": "2026-07-23T09:18:21.629269+09:00",
+          "migration_name": "20260722200000_add_global_coupang_sales_fee_rules",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "1fb2027218c8f3ac741b8810d0886f51698d29c4bfd19128fe4cdc82e486e2ce",
+          "finished_at": null,
+          "migration_name": "20260723110000_normalize_coupang_cost_rule_history",
+          "rolled_back_at": "2026-07-25T13:26:30.679173+09:00",
+          "applied_steps_count": 0
+        },
+        {
+          "checksum": "f6a550fff124ccb59b21acf2d3396aa18a2d775f5ee1601434dc40cae9d33797",
+          "finished_at": "2026-07-25T13:26:36.875098+09:00",
+          "migration_name": "20260723110000_normalize_coupang_cost_rule_history",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "54eaf82d7a1c79e59f11badd5a633698c2825d7dccf4d9a58d41a37834c223c4",
+          "finished_at": "2026-07-25T13:31:22.340994+09:00",
+          "migration_name": "20260724000000_normalize_manual_purchase_accounting",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "8f226e37760ec518bb33a22282cd166c5ad582e58e02a45b73becc6d118bf919",
+          "finished_at": null,
+          "migration_name": "20260724000000_normalize_manual_purchase_accounting",
+          "rolled_back_at": "2026-07-25T13:31:18.976697+09:00",
+          "applied_steps_count": 0
+        },
+        {
+          "checksum": "efee917e524c0607fab1064a1b53c09d6626087f8493d4fa1e8cfa12d4c7ec32",
+          "finished_at": "2026-07-25T13:31:22.474032+09:00",
+          "migration_name": "20260724010000_remove_coupang_manual_purchase_vat",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "31a7afb9b25bb5ab24dbd5600c6b8f69d3d005f1ddf7dcdf3686652b379d5972",
+          "finished_at": "2026-07-25T13:31:22.632499+09:00",
+          "migration_name": "20260724170000_add_coupang_daily_report_categories",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "c5cba6a94cb75e971e19430aaf54537cbcc1ca79c8a8b017167758a3ce3ac25c",
+          "finished_at": "2026-07-31T10:31:02.190667+09:00",
+          "migration_name": "20260731000000_add_cafe24_coupon_rules",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "48c651230d0e47db09f35791f2404c6d90ffdbd6f1b762738bcdd3ac91596839",
+          "finished_at": "2026-08-11T08:54:08.637762+09:00",
+          "migration_name": "20260810170000_add_meta_video_play_counts",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "8cb632da14c4b6cd5fc58417fc83c34532eb197bc83bb7ae83570851c55f0825",
+          "finished_at": "2026-08-20T10:08:17.389128+09:00",
+          "migration_name": "20260820090000_add_meta_add_to_cart_count",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "6b867f1d564a5c6c383a13aa6d45448bc872650d80af99c581b7f1cb731a1d9f",
+          "finished_at": "2026-09-11T14:46:35.863783+09:00",
+          "migration_name": "20260824110000_add_security_auth",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "6fd63d3541ab1d023ca5beb8982e9009d84dc08571d6e6c139679c62c690e6fd",
+          "finished_at": "2026-09-11T14:46:36.123116+09:00",
+          "migration_name": "20260824140000_add_actor_attribution",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "780f8bb357263382698fb80058677f41159afe88b2f8db0ca4178f7e1693b21f",
+          "finished_at": "2026-09-11T14:46:36.269505+09:00",
+          "migration_name": "20260825090000_add_user_lifecycle_audit",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "c378bab4bbd506f786434929661463bfa84318d3b95882e5796e3ec7d39c2d63",
+          "finished_at": "2026-09-11T14:46:36.379034+09:00",
+          "migration_name": "20260825110000_protect_security_audit_truncate",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "349c028706866d18a66a22edb81ec6cd1a463ba88870e327e689084af0456d5f",
+          "finished_at": "2026-09-11T14:46:36.488208+09:00",
+          "migration_name": "20260825150000_add_distributed_rate_limits",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "476827c4c03aa04f765fd22ca7c080cc008407a61134d03e4c94f54684bd81eb",
+          "finished_at": "2026-09-11T14:46:16.710287+09:00",
+          "migration_name": "20260825170000_minimize_cafe24_coupang_raw_rows",
+          "rolled_back_at": null,
+          "applied_steps_count": 0
+        },
+        {
+          "checksum": "b27decf14c9d6dfae19621404b3258a4dc2f867950d9981e9607ae3385ffe4b0",
+          "finished_at": "2026-09-11T14:46:36.612373+09:00",
+          "migration_name": "20260825210000_add_storage_tombstones",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "0e4876a6c3fe0f3aa9637b7bbb9577b3acff8cd384ea681d50ed2621fcfed8ea",
+          "finished_at": "2026-09-11T14:46:36.733783+09:00",
+          "migration_name": "20260826010000_add_local_native_auth",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "c154a5778e4768b9341ac4f8514815f8c214aef53aeed0eec821c1c2e0c3a94e",
+          "finished_at": "2026-09-11T14:46:36.836894+09:00",
+          "migration_name": "20260826020000_add_local_edge_request_nonces",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "5ec6513bcfb8f9d5f314c7f3a1571e923ba8510fabd3a452e5da3c931afac7ff",
+          "finished_at": "2026-10-23T17:06:41.612601+09:00",
+          "migration_name": "20260929090000_common_sync_foundation",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "5594e493b9431a9448b156a23f7bc2a2fd2b85a1b6425f5832d3753508254101",
+          "finished_at": "2026-10-23T17:06:43.548405+09:00",
+          "migration_name": "20260929170000_canonical_import_origins",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "eef3b216e5e522cd025669645db0970aa239ea885762b4f53b57a43575f6ae3a",
+          "finished_at": "2026-10-23T17:06:44.54525+09:00",
+          "migration_name": "20260930093000_meta_action_report_time",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "0a6795d8cbd9dc751f314e841caa177e3a265730d99bc4eb8b0bc3c689eead8c",
+          "finished_at": "2026-10-23T17:06:45.324486+09:00",
+          "migration_name": "20260930130000_cafe24_oauth_attempts",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "ccbba4d4da6d467d7478fb5c2503ebb07a4fe748af00251f0f1b1ce25e53892b",
+          "finished_at": "2026-10-23T17:06:46.058697+09:00",
+          "migration_name": "20260930131000_cafe24_requery_state",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "96f152f138cc96cf06cecc7ba79e07f4d428bc1566b0fe1275dbb3754da73aa0",
+          "finished_at": "2026-10-23T17:06:46.862554+09:00",
+          "migration_name": "20260930160000_meta_nonadditive_reach",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "0146f5e3e85e342888af6b1ecc9372e901e983fa4b0455177e9b2964279ef0ef",
+          "finished_at": "2026-10-23T17:06:47.727642+09:00",
+          "migration_name": "20261001135600_cafe24_observed_revisions",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "9929e4b92efeb1fdb192cb64680598df851776e5de38718741a66f2f6425c9ac",
+          "finished_at": "2026-10-23T17:06:48.490898+09:00",
+          "migration_name": "20261002110000_cafe24_day_snapshot_fingerprints",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "dcb9ee4417231b7c0a80ac1af8035f84046f629c4d92a91f1bcb6dfad55a7ecd",
+          "finished_at": "2026-10-23T17:06:49.214557+09:00",
+          "migration_name": "20261006110000_cafe24_provider_payment_inputs",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "be2448028be981941c50fd2190a52282d8d6c6ba80f848f69612f42b476a8015",
+          "finished_at": "2026-10-23T17:06:50.050412+09:00",
+          "migration_name": "20261007100000_cafe24_option_composition_514",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "2ade3d4b1990605d75eb7a7f65b3b1716ce31ec27c10e7d2e7cbd24adbc2c32d",
+          "finished_at": "2026-10-23T17:06:51.059702+09:00",
+          "migration_name": "20261008143000_meta_conditional_metrics",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "28f199e30bebc7c823555eb710868189060dbf13646ca69a1d2b4789f6b67cfd",
+          "finished_at": "2026-10-23T17:06:51.902744+09:00",
+          "migration_name": "20261008170000_meta_current_metadata",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "64b050d905a410c3495673032ccca9dc17334b5584f5dc76fec33b336ff48eae",
+          "finished_at": "2026-10-23T17:06:52.68739+09:00",
+          "migration_name": "20261012150000_meta_provider_purchase_value",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "f707bbb34aa242e4f6b4f6970cde177a3ad9a92b93988242eef077a8535014de",
+          "finished_at": "2026-10-23T17:06:53.492778+09:00",
+          "migration_name": "20261012170000_scheduled_unit_checkpoints",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "0242d0a231ffe93fa35f1a94c5effaedb0f671a29a8a8d66b7a3b7d7aae7ad99",
+          "finished_at": "2026-10-23T17:06:54.334454+09:00",
+          "migration_name": "20261020160000_cafe24_observation_epochs",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "8db94a055e76280bfb4f2b3a442551d88020d6fbca96b86a19054358d3c89f7b",
+          "finished_at": "2026-10-24T11:18:59.687677+09:00",
+          "migration_name": "20261024021144_meta_adset_legacy_external_scope",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "d9626086807dde45b3d2b41c6c67478dd4c91191e8330361154dfdbb5bfcae66",
+          "finished_at": "2026-10-26T15:33:49.878606+09:00",
+          "migration_name": "20261026120000_google_performance_mappings",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "77dbb5f691035b0b72761ecc239a9af4eb758f17fdcbc96808d1c7aefa342b11",
+          "finished_at": "2026-10-26T15:33:49.905943+09:00",
+          "migration_name": "20261026130000_google_sale_configuration",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "7aa3744d68228689f4eb15b3175603869e1adc12934f8a9ea861ba98c9cbdbcc",
+          "finished_at": "2026-10-29T13:28:27.672153+09:00",
+          "migration_name": "20261027071504_unified_performance_foundation",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "a25f5f22dd711b132334816f8572baf77c64f38560add0b45804fd2d6214be8d",
+          "finished_at": "2026-10-28T09:43:25.057782+09:00",
+          "migration_name": "20261028003825_cafe24_separate_product_option",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        },
+        {
+          "checksum": "12bf695091cbeb745ef2801e423da47b632913393c0541ee5d2a6d43e582cef4",
+          "finished_at": "2026-10-29T13:28:27.688355+09:00",
+          "migration_name": "20261028080000_unified_report_publication",
+          "rolled_back_at": null,
+          "applied_steps_count": 1
+        }
+      ],
+      "sourceTables": [
+        {
+          "rls": false,
+          "name": "_prisma_migrations",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "40"
+        },
+        {
+          "rls": false,
+          "name": "adset_name_aliases",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "adset_product_histories",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "adset_stage_histories",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "app_auth_sessions",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "221"
+        },
+        {
+          "rls": false,
+          "name": "app_settings",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "9"
+        },
+        {
+          "rls": false,
+          "name": "app_users",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "11"
+        },
+        {
+          "rls": false,
+          "name": "cafe24_coupon_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "cafe24_oauth_attempts",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "cafe24_observed_day_checkpoints",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "cafe24_observed_epoch_day_checkpoints",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "cafe24_observed_epoch_order_revisions",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "cafe24_observed_order_revisions",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "cafe24_order_api_versions",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "1858"
+        },
+        {
+          "rls": false,
+          "name": "cafe24_order_lines",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "38063"
+        },
+        {
+          "rls": false,
+          "name": "cafe24_product_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "50"
+        },
+        {
+          "rls": true,
+          "name": "cafe24_sweep_states",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "cafe24_upload_batches",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "133"
+        },
+        {
+          "rls": false,
+          "name": "cafe24_upload_row_errors",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "1114"
+        },
+        {
+          "rls": false,
+          "name": "change_logs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "coupang_ad_metrics",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "45398"
+        },
+        {
+          "rls": false,
+          "name": "coupang_cost_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "120"
+        },
+        {
+          "rls": false,
+          "name": "coupang_cost_rules_backup_20260723",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "123"
+        },
+        {
+          "rls": false,
+          "name": "coupang_daily_report_categories",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "coupang_daily_report_category_products",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "85"
+        },
+        {
+          "rls": false,
+          "name": "coupang_manual_purchases",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "229"
+        },
+        {
+          "rls": false,
+          "name": "coupang_product_groups",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "coupang_product_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "144"
+        },
+        {
+          "rls": false,
+          "name": "coupang_products",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "118"
+        },
+        {
+          "rls": false,
+          "name": "coupang_promotion_prices",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "362"
+        },
+        {
+          "rls": false,
+          "name": "coupang_sale_lines",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "41563"
+        },
+        {
+          "rls": false,
+          "name": "coupang_sales_fee_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "coupang_upload_batches",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "251"
+        },
+        {
+          "rls": false,
+          "name": "coupang_upload_row_errors",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "797"
+        },
+        {
+          "rls": false,
+          "name": "creative_aliases",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "604"
+        },
+        {
+          "rls": false,
+          "name": "creative_change_logs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "creative_placements",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "1251"
+        },
+        {
+          "rls": false,
+          "name": "creatives",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "485"
+        },
+        {
+          "rls": false,
+          "name": "decision_logs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "79"
+        },
+        {
+          "rls": false,
+          "name": "decision_runs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "4"
+        },
+        {
+          "rls": false,
+          "name": "exchange_rates",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "107"
+        },
+        {
+          "rls": true,
+          "name": "google_campaign_daily_costs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "google_mapping_audits",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "google_performance_mappings",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "local_account_setup_tokens",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "local_credentials",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "local_edge_request_nonces",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "meta_ad_daily_metrics",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "16021"
+        },
+        {
+          "rls": false,
+          "name": "meta_ads",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "1294"
+        },
+        {
+          "rls": false,
+          "name": "meta_adset_daily_metrics",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "5937"
+        },
+        {
+          "rls": false,
+          "name": "meta_adsets",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "465"
+        },
+        {
+          "rls": false,
+          "name": "meta_campaigns",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "175"
+        },
+        {
+          "rls": false,
+          "name": "product_change_logs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "20"
+        },
+        {
+          "rls": false,
+          "name": "product_cost_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "product_cpa_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "product_match_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "16"
+        },
+        {
+          "rls": false,
+          "name": "products",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "report_exports",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "2"
+        },
+        {
+          "rls": true,
+          "name": "run_units",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "24"
+        },
+        {
+          "rls": false,
+          "name": "security_audit_events",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "39679"
+        },
+        {
+          "rls": false,
+          "name": "security_rate_limit_buckets",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "85"
+        },
+        {
+          "rls": true,
+          "name": "source_connections",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "source_coverage",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "source_credentials",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "source_policies",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "source_record_links",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "7107"
+        },
+        {
+          "rls": false,
+          "name": "storage_tombstones",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "sync_leases",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "3"
+        },
+        {
+          "rls": true,
+          "name": "sync_runs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "24"
+        },
+        {
+          "rls": true,
+          "name": "sync_unit_checkpoints",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "1"
+        },
+        {
+          "rls": true,
+          "name": "unified_aggregation_runs",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "unified_daily_facts",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "unified_mapping_audits",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "unified_product_match_results",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "unified_products",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "unified_rules",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "unified_source_coverage",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": true,
+          "name": "unified_source_publications",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": true,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "upload_batches",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "140"
+        },
+        {
+          "rls": false,
+          "name": "upload_row_errors",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "24"
+        },
+        {
+          "rls": false,
+          "name": "upload_rows",
+          "owner": "meta_ads_app",
+          "schema": "meta_ads",
+          "forceRls": false,
+          "rowsEstimate": "11942"
+        },
+        {
+          "rls": false,
+          "name": "ad_campaign_daily_costs",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "19921"
+        },
+        {
+          "rls": false,
+          "name": "ad_excel_uploads",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "1019"
+        },
+        {
+          "rls": false,
+          "name": "canonical_sales_units",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "99"
+        },
+        {
+          "rls": false,
+          "name": "daily_fake_purchases",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "48"
+        },
+        {
+          "rls": false,
+          "name": "daily_sales_unit_profits",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "4442"
+        },
+        {
+          "rls": false,
+          "name": "daily_store_summaries",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "299"
+        },
+        {
+          "rls": false,
+          "name": "operations",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "558"
+        },
+        {
+          "rls": false,
+          "name": "order_items",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "115298"
+        },
+        {
+          "rls": false,
+          "name": "order_source_signatures",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "852"
+        },
+        {
+          "rls": false,
+          "name": "order_sync_batch_items",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "51"
+        },
+        {
+          "rls": false,
+          "name": "order_sync_batches",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "81"
+        },
+        {
+          "rls": false,
+          "name": "order_sync_states",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "products",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "51"
+        },
+        {
+          "rls": false,
+          "name": "sales_unit_cost_settings",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "sales_unit_cost_snapshot_entries",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "156"
+        },
+        {
+          "rls": false,
+          "name": "sales_unit_cost_snapshots",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "-1"
+        },
+        {
+          "rls": false,
+          "name": "stores",
+          "owner": "patima_app",
+          "schema": "public",
+          "forceRls": false,
+          "rowsEstimate": "2"
+        }
+      ],
+      "activeTransactions": []
+    }
+  },
+  "stage": 11
+}

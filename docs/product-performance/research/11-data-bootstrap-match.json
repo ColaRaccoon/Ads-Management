@@ -1,0 +1,32 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "observedAt": "2026-10-29T04:23:54.7533120Z",
+  "stage": 11,
+  "rows": {
+    "bootstrap_match": {
+      "META": {
+        "spendUsd": "1236.8400",
+        "nameDraftMatches": 21,
+        "existingMappedRows": 21
+      },
+      "CAFE24": {
+        "orderedQuantity": "101.0000",
+        "youtubeNamedRows": 0,
+        "existingMappedRows": 100,
+        "productCostAt10000": "1010000.0000",
+        "registeredVatAt10pct": "352490.0000",
+        "missingSeparateOption": 0,
+        "nameOptionDraftMatches": 100,
+        "registeredGrossAt34900": "3524900.0000",
+        "completeProviderCouponInputRows": 100
+      },
+      "privacy": "Only pre-existing canonical name and aggregate draft-condition counts. No source-name/order/payload values.",
+      "businessDate": "2026-10-28",
+      "canonicalProduct": "풀업바",
+      "METADraftAdditionalCandidates": 0,
+      "CAFE24DraftAdditionalCandidates": 0
+    }
+  },
+  "operation": "MANAGEMENT_READ_ONLY",
+  "remoteWrites": 0
+}

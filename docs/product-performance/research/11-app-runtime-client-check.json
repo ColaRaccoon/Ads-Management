@@ -1,0 +1,21 @@
+{
+  "stage": 11,
+  "status": "PASS_LOCAL_CHECKS",
+  "remoteWrites": 0,
+  "runtimeTests": {"tests": 7, "pass": 7, "fail": 0, "skip": 0},
+  "commands": [
+    "TSX_TSCONFIG_PATH=apps/api/tsconfig.json node --import tsx --test apps/api/src/unified-performance/runtime-prisma.test.ts",
+    "node node_modules/typescript/bin/tsc --noEmit -p apps/api/tsconfig.json"
+  ],
+  "checks": [
+    "required separate restricted login when enabled",
+    "explicit same endpoint/database/meta_ads schema and Supabase pooler project suffix",
+    "reject URL target/role override parameters",
+    "reuse strict TLS translation and connection_limit",
+    "OFF lifecycle/query does not open a database connection",
+    "startup role flags reject administrators and owners with safe provider error redaction",
+    "separate connect/disconnect lifecycle and whole transaction idle lease",
+    "Nest module-local Prisma token preserves legacy global connection"
+  ],
+  "limitation": "Role rows/lifecycle are mocked for local checks; actual operating-role grants, denied source/credential reads and DB identity must be verified independently by the main agent."
+}

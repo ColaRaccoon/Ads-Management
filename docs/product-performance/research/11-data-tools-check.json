@@ -1,0 +1,15 @@
+{
+  "stage": 11,
+  "status": "PASS",
+  "kind": "SYNTHETIC_METADATA_SQL_SYNTAX_CHECK",
+  "databaseWrites": "new loopback cluster initialization only; no operational writes",
+  "host": "127.0.0.1",
+  "port": 55460,
+  "rows": 44,
+  "checks": [
+    "Generated catalog audit SQL executes as a read-only transaction",
+    "Missing table branch returns required columns safely",
+    "No operator grant, source query or operational connection was executed"
+  ],
+  "stopExit": 0
+}

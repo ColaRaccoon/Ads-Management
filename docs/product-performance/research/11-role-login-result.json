@@ -1,0 +1,11 @@
+{
+  "stage": 11,
+  "credentialStorage": "CurrentUser DPAPI; ACL current user and SYSTEM only",
+  "observedAt": "2026-10-29T04:29:25.9478677Z",
+  "roles": [
+    "meta_ads_unified_report",
+    "meta_ads_unified_worker"
+  ],
+  "operation": "RESTRICTED_ROLE_LOGIN_PROVISION",
+  "status": "PASS"
+}

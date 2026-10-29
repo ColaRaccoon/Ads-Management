@@ -1,0 +1,1104 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:07:25.975Z",
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "operation": "READ_ONLY_PREFLIGHT",
+  "sourceWrites": 0,
+  "schemaWrites": 0,
+  "release": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb",
+  "flags": {
+    "UNIFIED_PERFORMANCE_ENABLED": null,
+    "UNIFIED_NAVER_ALLOWED_STORE_IDS": {
+      "configured": false,
+      "count": 0
+    },
+    "UNIFIED_AGGREGATION_DATABASE_URL": {
+      "configured": false
+    },
+    "UNIFIED_REPORT_LEGACY_PLATFORMS": null,
+    "DAILY_SYNC_ENABLED": "false",
+    "DAILY_SYNC_FEATURE_ENABLED": "true",
+    "DAILY_SYNC_SCHEDULE_ENABLED": "true"
+  },
+  "identity": [
+    {
+      "db": "postgres",
+      "role": "meta_ads_prod_runtime",
+      "read_only": "on",
+      "version": "17.6",
+      "server": "2406:da12:557:f802:761c:fa6d:e629:7e16/128",
+      "search_path": "\"meta_ads\""
+    }
+  ],
+  "roles": [
+    {
+      "rolname": "meta_ads_app",
+      "rolsuper": false,
+      "rolinherit": true,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "meta_ads_prod_backup",
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "meta_ads_prod_migration",
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "meta_ads_prod_runtime",
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolbypassrls": false
+    }
+  ],
+  "memberships": [
+    {
+      "parent": "meta_ads_app",
+      "member": "meta_ads_prod_migration"
+    }
+  ],
+  "tables": [
+    {
+      "schema": "meta_ads",
+      "name": "_prisma_migrations",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "40"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "adset_name_aliases",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "adset_product_histories",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "adset_stage_histories",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "app_auth_sessions",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "221"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "app_settings",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "9"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "app_users",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "11"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_coupon_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_oauth_attempts",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_observed_day_checkpoints",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_observed_epoch_day_checkpoints",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_observed_epoch_order_revisions",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_observed_order_revisions",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_order_api_versions",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "1858"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_order_lines",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "38063"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_product_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "50"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_sweep_states",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_upload_batches",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "133"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "cafe24_upload_row_errors",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": true,
+      "estimated_rows": "1114"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "change_logs",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_ad_metrics",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "45398"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_cost_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "120"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_cost_rules_backup_20260723",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "123"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_daily_report_categories",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_daily_report_category_products",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": true,
+      "estimated_rows": "85"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_manual_purchases",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": true,
+      "estimated_rows": "229"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_product_groups",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_product_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "144"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_products",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "118"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_promotion_prices",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "362"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_sale_lines",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "41563"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_sales_fee_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_upload_batches",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "251"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "coupang_upload_row_errors",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": true,
+      "estimated_rows": "797"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "creative_aliases",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "604"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "creative_change_logs",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "creative_placements",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "1251"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "creatives",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "485"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "decision_logs",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "79"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "decision_runs",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "4"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "exchange_rates",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "107"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "google_campaign_daily_costs",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "google_mapping_audits",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "google_performance_mappings",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "local_account_setup_tokens",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "local_credentials",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "local_edge_request_nonces",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "meta_ad_daily_metrics",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "16021"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "meta_ads",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "1294"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "meta_adset_daily_metrics",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "5937"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "meta_adsets",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "465"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "meta_campaigns",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "175"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "product_change_logs",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "20"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "product_cost_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "product_cpa_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "product_match_rules",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "16"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "products",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "report_exports",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "2"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "run_units",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "24"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "security_audit_events",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "39679"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "security_rate_limit_buckets",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "65"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "source_connections",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "source_coverage",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "source_credentials",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "source_policies",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "source_record_links",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "7107"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "storage_tombstones",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": false,
+      "estimated_rows": "-1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "sync_leases",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "3"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "sync_runs",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "24"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "sync_unit_checkpoints",
+      "owner": "meta_ads_app",
+      "rls": true,
+      "force_rls": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "1"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "upload_batches",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "140"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "upload_row_errors",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": true,
+      "estimated_rows": "24"
+    },
+    {
+      "schema": "meta_ads",
+      "name": "upload_rows",
+      "owner": "meta_ads_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": true,
+      "can_delete": true,
+      "estimated_rows": "11942"
+    },
+    {
+      "schema": "public",
+      "name": "commerce_api_credentials",
+      "owner": "patima_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "2"
+    },
+    {
+      "schema": "public",
+      "name": "order_items",
+      "owner": "patima_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "115298"
+    },
+    {
+      "schema": "public",
+      "name": "stores",
+      "owner": "patima_app",
+      "rls": false,
+      "force_rls": false,
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "estimated_rows": "2"
+    }
+  ],
+  "migrationTables": [
+    {
+      "name": "meta_ads._prisma_migrations"
+    }
+  ],
+  "migrationAccess": [
+    {
+      "allowed": false
+    }
+  ],
+  "migrations": [],
+  "connectionPrivileges": [
+    {
+      "column_name": "id",
+      "can_select": true
+    },
+    {
+      "column_name": "provider",
+      "can_select": true
+    },
+    {
+      "column_name": "external_account_id",
+      "can_select": true
+    },
+    {
+      "column_name": "shop_key",
+      "can_select": true
+    },
+    {
+      "column_name": "display_name",
+      "can_select": true
+    },
+    {
+      "column_name": "currency_code",
+      "can_select": true
+    },
+    {
+      "column_name": "time_zone",
+      "can_select": true
+    },
+    {
+      "column_name": "credential_ref",
+      "can_select": true
+    },
+    {
+      "column_name": "credential_expires_at",
+      "can_select": true
+    },
+    {
+      "column_name": "access_state",
+      "can_select": true
+    },
+    {
+      "column_name": "enabled",
+      "can_select": true
+    },
+    {
+      "column_name": "created_at",
+      "can_select": true
+    },
+    {
+      "column_name": "updated_at",
+      "can_select": true
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "meta_ads",
+      "tablename": "source_connections",
+      "policyname": "source_connections_meta_ads_prod_migration",
+      "roles": [
+        "meta_ads_prod_migration"
+      ],
+      "cmd": "ALL",
+      "qual": "true",
+      "with_check": "true"
+    },
+    {
+      "schemaname": "meta_ads",
+      "tablename": "source_connections",
+      "policyname": "source_connections_meta_ads_prod_runtime",
+      "roles": [
+        "meta_ads_prod_runtime"
+      ],
+      "cmd": "ALL",
+      "qual": "true",
+      "with_check": "true"
+    }
+  ],
+  "sourceConnections": [
+    {
+      "id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "provider": "GOOGLE",
+      "display_name": "Google Ads",
+      "currency_code": "KRW",
+      "time_zone": "Asia/Seoul"
+    },
+    {
+      "id": "2155a401-bd86-4111-9280-3c95ed207546",
+      "provider": "META",
+      "display_name": "Meta Ads",
+      "currency_code": "USD",
+      "time_zone": "Asia/Seoul"
+    },
+    {
+      "id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "provider": "CAFE24",
+      "display_name": "Cafe24",
+      "currency_code": "KRW",
+      "time_zone": "Asia/Seoul"
+    }
+  ],
+  "status": "PASS"
+}

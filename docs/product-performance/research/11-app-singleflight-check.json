@@ -1,0 +1,10 @@
+{
+  "stage": 11,
+  "status": "PASS_LOCAL_REGRESSION",
+  "remoteWritesByReviewer": 0,
+  "files": ["apps/api/src/unified-performance/report.repository.ts", "apps/api/src/unified-performance/report.service.test.ts"],
+  "tests": {"reportTests": 17, "newRegressions": 6, "fail": 0, "skip": 0, "apiTypeCheckExit": 0},
+  "checks": ["concurrent identical effective queries share one RR load", "pagination/grain remain response-local", "platform/scope/date/product/lookback/runtime-role instance separation", "scope policy key and load capture consistency", "failure eviction and fresh retry", "fresh configuration/publication/facts immediately after settlement", "frozen input preserved by four endpoint calculations and two relationship-media variants", "caller permission checked before shared repository access"],
+  "cachePolicy": "Unsettled promises only. Success and failure remove the entry immediately. No TTL or settled-result cache.",
+  "limitations": ["Overlapping requests share an earlier consistent snapshot even if a write occurs during that in-flight read", "UI options and relationship lookback can have separate effective keys", "Production p95 improvement is not established by these local regression checks"]
+}

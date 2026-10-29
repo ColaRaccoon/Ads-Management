@@ -1,0 +1,26 @@
+{
+  "stage": 11,
+  "status": "PASS",
+  "existingMembershipsRestoredExactly": true,
+  "expectedNewRoleCreatorMemberships": [
+    {
+      "membership_oid": "39769",
+      "parent": "meta_ads_unified_report",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "membership_oid": "39771",
+      "parent": "meta_ads_unified_worker",
+      "member": "postgres",
+      "grantor": "supabase_admin",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    }
+  ],
+  "temporarySelfGrantsRemaining": 0
+}

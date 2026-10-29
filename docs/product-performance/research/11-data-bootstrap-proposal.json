@@ -1,0 +1,138 @@
+{
+  "stage": 11,
+  "kind": "REVIEWED_MINIMAL_BOOTSTRAP_PROPOSAL",
+  "writePerformed": false,
+  "observedAt": "2026-10-29T04:24:30.935Z",
+  "initialPartition": {
+    "platform": "CAFE24",
+    "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+    "date": "2026-10-28",
+    "productName": "풀업바",
+    "executionScope": "FULL_SOURCE_DAY",
+    "sourceRowsAllProducts": 323,
+    "representativeRows": 110,
+    "representativeOrderedQuantity": "111.0000"
+  },
+  "productInput": {
+    "canonicalName": "풀업바",
+    "active": true,
+    "reason": "11단계 기존 활성 기준 제품명으로 제한된 Cafe24 하루 검증"
+  },
+  "nameRuleDrafts": [
+    {
+      "canonicalProductName": "풀업바",
+      "kind": "NAME",
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "active": true,
+      "payload": {
+        "matchType": "CONTAINS",
+        "terms": [
+          "풀업바"
+        ],
+        "excludeTerms": [],
+        "optionInclude": [
+          "풀업바"
+        ],
+        "optionExclude": [],
+        "nameField": "product_name"
+      },
+      "reason": "기존 기준 제품명·옵션 조건을 통합 판매 범위로 적용; 광고성 [유튜브] 라벨 제외는 제거해 Cafe24판매110행/수량111을 한번 집계",
+      "requiresCreatedProductId": true
+    },
+    {
+      "canonicalProductName": "풀업바",
+      "kind": "NAME",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "validFrom": "2026-07-01",
+      "validTo": null,
+      "active": true,
+      "payload": {
+        "matchType": "CONTAINS",
+        "terms": [
+          "풀업바"
+        ],
+        "excludeTerms": [],
+        "nameField": "adset_name"
+      },
+      "reason": "기존 Meta CONTAINS 규칙 이관; 운영 10/28 21행 일치·추가후보0 확인",
+      "requiresCreatedProductId": true,
+      "notNeededUntilMetaPartitionSelected": true
+    }
+  ],
+  "existingCafe24UnitBasis": {
+    "newSaleUnitRuleRequiredForCompleteInitialProfit": true,
+    "reason": "기존 일반 Cafe24 unit은 [유튜브] 제외이며 GoogleSALE 매핑4override가전부null이라 YT10행은현재reader에서유효단위없음. NAME만추가하면비용null정상진단; 동일옵션의검토된명시SALE_UNIT 또는검증된fallback수정필요.",
+    "legacyGeneralUnit": {
+      "saleUnitName": "풀업바",
+      "quantityBasis": "SALE_UNIT_TOTAL",
+      "salePriceKrw": "34900.00",
+      "productCostKrw": "10000.00",
+      "shippingKrw": "0.00",
+      "otherKrw": "0.00"
+    },
+    "sameObservedOption": "⭐옵션⭐=풀업바(72~97cm)",
+    "googleSaleMapping": {
+      "kind": "SALE",
+      "optionScope": "PRODUCT",
+      "saleUnitLabel": null,
+      "salePriceOverride": null,
+      "productCostOverride": null,
+      "shippingOverride": null,
+      "otherOverride": null
+    },
+    "allCafeSales": {
+      "rows": 110,
+      "orderedQuantity": "111.0000",
+      "knownCollectedListGross": "3873900.000000",
+      "couponAndProfit": "Compute with actual source signals and registered unit/cost; gross is not net revenue."
+    }
+  },
+  "sourceEvidence": [
+    "11-data-readiness.json",
+    "11-data-bootstrap-readiness.json",
+    "11-data-bootstrap-match.json",
+    "11-data-pullup-all-sales.json"
+  ],
+  "constraints": [
+    "Catalog canonical match alone does not classify source names: representative exact-name rows=0.",
+    "Only product one is registered initially; other source products remain unmatched and complete totals may remain null.",
+    "productName hint does not restrict rebuild: all323 Cafe24 rows and coupon context of this source-day are read.",
+    "No automatic ID fallback, priority-based conflict winner or source name guessing is introduced.",
+    "History expansion7/30days requires day-specific source policy/coverage recheck.",
+    "The first100 rows in prior legacy-match evidence are only general-label sales; the integrated scope also includes10YouTube-label rows."
+  ],
+  "scheduleObservation": {
+    "existingCron": "daily-data-sync-prod-tick",
+    "cronUtc": "* 17,18 * * *",
+    "nextWindowKst": "2026-10-30 02:00 through 03:59 Asia/Seoul",
+    "latestObservedCompletedKst": "2026-10-29 03:59",
+    "writes": 0
+  },
+  "revisedAt": "2026-10-29T04:27:05.404Z",
+  "revisionReason": "Include all Cafe24 sales including YouTube-labeled source rows; advertising media does not own sales.",
+  "additionalSaleUnitDraft": {
+    "reviewRequired": true,
+    "kind": "SALE_UNIT",
+    "platform": "CAFE24",
+    "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+    "canonicalProductName": "풀업바",
+    "validFrom": "2026-10-28",
+    "validTo": null,
+    "payload": {
+      "saleUnitName": "풀업바(72~97cm)",
+      "quantityBasis": "SALE_UNIT_TOTAL",
+      "unitsPerSaleUnit": "1",
+      "optionExact": "⭐옵션⭐=풀업바(72~97cm)",
+      "salePrice": "34900.00",
+      "productCost": "10000.00",
+      "shippingCost": "0.00",
+      "otherCost": "0.00"
+    },
+    "reason": "동일관측옵션에기존원가/가격명시복사검토안. 기존플랫폼원가/GoogleSALE설정변경없음;향후원가변경시통합단위별도개정필요",
+    "requiresCreatedProductId": true
+  }
+}

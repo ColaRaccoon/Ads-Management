@@ -1,0 +1,134 @@
+{
+  "stage": 11,
+  "at": "2026-10-29T05:06:07.125Z",
+  "origin": "https://patimagroup-work.com",
+  "remoteWrites": 0,
+  "authenticated": false,
+  "samples": [
+    {
+      "path": "/backend-api/health/live",
+      "status": 200,
+      "elapsedMs": 298.39590000000004,
+      "bodyBytes": 17,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "private, no-store",
+        "x-release-id": null,
+        "x-runtime-config-fingerprint": null,
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "location": null
+      },
+      "safeJson": {
+        "status": "live"
+      }
+    },
+    {
+      "path": "/backend-api/health/ready",
+      "status": 403,
+      "elapsedMs": 232.8558,
+      "bodyBytes": 148,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "private, no-store",
+        "x-release-id": null,
+        "x-runtime-config-fingerprint": null,
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "location": null
+      },
+      "safeJson": {
+        "code": "INTERNAL_PROBE_FORBIDDEN"
+      }
+    },
+    {
+      "path": "/backend-api/auth/me",
+      "status": 401,
+      "elapsedMs": 185.22270000000003,
+      "bodyBytes": 140,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "private, no-store",
+        "x-release-id": null,
+        "x-runtime-config-fingerprint": null,
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "location": null
+      },
+      "safeJson": {
+        "code": "AUTHENTICATION_REQUIRED"
+      }
+    },
+    {
+      "path": "/backend-api/unified-performance/options",
+      "status": 401,
+      "elapsedMs": 176.47580000000005,
+      "bodyBytes": 140,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "private, no-store",
+        "x-release-id": null,
+        "x-runtime-config-fingerprint": null,
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "location": null
+      },
+      "safeJson": {
+        "code": "AUTHENTICATION_REQUIRED"
+      }
+    },
+    {
+      "path": "/products/performance",
+      "status": 200,
+      "elapsedMs": 95.46079999999995,
+      "bodyBytes": 8641,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "s-maxage=31536000",
+        "x-release-id": null,
+        "x-runtime-config-fingerprint": null,
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "strict-transport-security": "max-age=300",
+        "location": null
+      }
+    },
+    {
+      "path": "/storefront",
+      "status": 200,
+      "elapsedMs": 94.19860000000006,
+      "bodyBytes": 7787,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "s-maxage=31536000",
+        "x-release-id": null,
+        "x-runtime-config-fingerprint": null,
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "strict-transport-security": "max-age=300",
+        "location": null
+      }
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "elapsedMs": 110.6110000000001,
+      "bodyBytes": 8295,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "s-maxage=31536000",
+        "x-release-id": null,
+        "x-runtime-config-fingerprint": null,
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "strict-transport-security": "max-age=300",
+        "location": null
+      }
+    }
+  ],
+  "limitation": "Public routing/liveness and unauthenticated denial only; not report totals or runtime-role proof."
+}

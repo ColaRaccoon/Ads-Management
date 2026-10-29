@@ -1,0 +1,17 @@
+{
+  "remoteWrites": 0,
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "rows": {
+    "current_user": "supabase_read_only_user",
+    "postgres_is_app_member": true,
+    "postgres_inherits_app": false,
+    "postgres_appuser_references": false,
+    "postgres_schema_create": true,
+    "postgres_extensions_usage": true,
+    "postgres_super": false,
+    "btree_gist_schema": "extensions"
+  },
+  "observedAt": "2026-10-29T04:16:59.3358241Z",
+  "stage": 11
+}

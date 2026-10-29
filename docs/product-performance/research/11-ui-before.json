@@ -1,0 +1,47 @@
+{
+  "stage": 11,
+  "observedOn": "2026-10-29 KST",
+  "period": [
+    "2026-10-28",
+    "2026-10-28"
+  ],
+  "source": "Authenticated browser DOM before release e80f7d1",
+  "ordersOrSessionExported": false,
+  "metaSale": {
+    "quantity": "367",
+    "revenue": "11352700",
+    "coupon": "20000",
+    "adSpend": "4754158",
+    "estimatedProfit": "2250672",
+    "pullup": {
+      "quantity": "101",
+      "revenue": "3524900",
+      "coupon": "9251",
+      "adSpend": "1637947",
+      "estimatedProfit": "515212"
+    }
+  },
+  "google": {
+    "quantity": "14",
+    "revenue": "508200",
+    "coupon": "1000",
+    "adSpend": "279468",
+    "estimatedProfit": "15712",
+    "state": "COMPLETE",
+    "pullup": {
+      "quantity": "10",
+      "revenue": "349000",
+      "adSpend": "100217",
+      "estimatedProfit": "113883"
+    }
+  },
+  "coupang": {
+    "normalQuantity": "268",
+    "normalRevenue": "8434030",
+    "fakeQuantity": "10",
+    "fakeRevenue": "158000",
+    "fakeExpense": "31820",
+    "adSpend": "2059072",
+    "estimatedProfit": "1541731"
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "rows": [
+    {
+      "parent": "anon",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "authenticated",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "authenticator",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "marketing_site_runtime",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "parent": "meta_ads_app",
+      "member": "meta_ads_prod_migration",
+      "admin_option": false,
+      "inherit_option": false,
+      "set_option": true
+    },
+    {
+      "parent": "meta_ads_app",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "parent": "meta_ads_prod_backup",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "parent": "meta_ads_prod_migration",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "parent": "meta_ads_prod_runtime",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "parent": "patima_app",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "parent": "pg_create_subscription",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "pg_monitor",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "pg_read_all_data",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "pg_signal_backend",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "service_role",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": true,
+      "set_option": true
+    },
+    {
+      "parent": "storage_app",
+      "member": "postgres",
+      "admin_option": true,
+      "inherit_option": false,
+      "set_option": false
+    },
+    {
+      "parent": "supabase_privileged_role",
+      "member": "postgres",
+      "admin_option": false,
+      "inherit_option": true,
+      "set_option": true
+    }
+  ],
+  "operation": "MANAGEMENT_READ_ONLY",
+  "remoteWrites": 0,
+  "observedAt": "2026-10-29T04:24:09.3667543Z",
+  "stage": 11,
+  "projectRef": "iygjmosbelbosfxidqxv"
+}

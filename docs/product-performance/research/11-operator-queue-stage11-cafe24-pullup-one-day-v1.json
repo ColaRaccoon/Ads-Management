@@ -1,0 +1,45 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:50:20.817Z",
+  "operation": "queue",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "request": {
+    "from": "2026-10-28",
+    "to": "2026-10-28",
+    "platforms": [
+      "CAFE24"
+    ],
+    "scopeKeys": [
+      "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+    ],
+    "productNames": [
+      "풀업바"
+    ]
+  },
+  "result": {
+    "contractVersion": "product-performance-v1.1.0",
+    "status": "QUEUED",
+    "execution": "ASYNC_WORKER",
+    "executionScope": "FULL_SOURCE_DAY",
+    "requestedProductNames": [
+      "풀업바"
+    ],
+    "jobs": [
+      {
+        "jobId": "9f71c8bb-b34d-4c0f-adcf-fc74aa1d2f3c",
+        "platform": "CAFE24",
+        "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "date": "2026-10-28",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T04:50:21.225Z",
+        "completedAt": null
+      }
+    ]
+  },
+  "status": "PASS"
+}

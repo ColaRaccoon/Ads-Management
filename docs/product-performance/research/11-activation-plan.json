@@ -1,0 +1,16 @@
+{
+  "stage": 11,
+  "plannedAt": "2026-10-29T05:01:24.302Z",
+  "release": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "exposureWindow": "Begin after exact-release readiness; validate live UI immediately; keep enabled only if financial, selection, permission and legacy checks pass",
+  "verifiedFinancialScope": "CAFE24 / representative pullup / 2026-10-28 only",
+  "historicalScope": "30 diagnostic publications; historical price/cost validity NOT verified; earlier dates remain unclassified/partial",
+  "gateEvidence": [
+    "11-runtime-role-check.json",
+    "11-app-ready-off.json",
+    "11-reconcile-cafe24-one-day.json"
+  ],
+  "automaticAggregationSchedule": false,
+  "existingSourceSchedulesChanged": false,
+  "rollback": "Stop new queue/worker, feature OFF, restore previous release identity and pinned source; retain additive DB/audits/publications"
+}

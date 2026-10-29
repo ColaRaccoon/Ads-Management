@@ -1,0 +1,25 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T05:07:00.856Z",
+  "auth": "existing browser-verified SUPER_ADMIN; no credentials extracted",
+  "release": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "cases": {
+    "offNotice": "PASS",
+    "onPartialKnownMetrics": "PASS",
+    "naverOffThenOn": "PASS",
+    "naverOffReloadPreserved": "PASS",
+    "emptySelectionNoZero": "PASS"
+  },
+  "representative": {
+    "product": "풀업바",
+    "from": "2026-10-28",
+    "to": "2026-10-28",
+    "knownRevenue": "3727300",
+    "knownProfitBeforeAds": "2283870",
+    "completeTotals": null
+  },
+  "limitations": [
+    "Only representative Cafe24 partition is financially verified",
+    "Different business role sessions have not been browser-tested"
+  ]
+}

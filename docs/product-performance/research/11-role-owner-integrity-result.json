@@ -1,0 +1,12 @@
+{
+  "sqlSha256": "c20096c00d82316f579f8c7d931886084a7140c06be83d2ec7278f78ad162cfc",
+  "ownerPoliciesAdded": 0,
+  "stage": 11,
+  "status": "APPLIED",
+  "runtimePrivilegesChanged": false,
+  "httpStatus": 201,
+  "sourceWrites": 0,
+  "operation": "NEW_TABLE_OWNER_FK_COLUMN_PRIVILEGES",
+  "observedAt": "2026-10-29T04:49:45.2837050Z",
+  "membershipRestoredByTransactionGuard": true
+}

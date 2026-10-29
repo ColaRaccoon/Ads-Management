@@ -1,0 +1,15 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:40:33.445Z",
+  "operation": "bootstrap",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "phase": "NAME save",
+  "status": "FAIL",
+  "errorCode": "OPERATOR_FAILED",
+  "databaseCode": null,
+  "errorClass": "PrismaClientUnknownRequestError",
+  "permissionDenied": true,
+  "permissionObject": "unified_products"
+}

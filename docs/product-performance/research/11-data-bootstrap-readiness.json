@@ -1,0 +1,174 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T04:14:09.2432775Z",
+  "operation": "MANAGEMENT_READ_ONLY",
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "remoteWrites": 0,
+  "rows": {
+    "bootstrap_readiness": {
+      "lineage": {
+        "META": {
+          "all_links": 200,
+          "linked_rows": 200,
+          "valid_links": 200,
+          "current_rows": 200
+        },
+        "CAFE24": {
+          "linked_rows": 323,
+          "current_rows": 323,
+          "valid_api_versions": 323,
+          "valid_mapping_rows": 323,
+          "valid_version_links": 323
+        },
+        "GOOGLE": {
+          "all_links": 5,
+          "valid_links": 5,
+          "current_rows": 5
+        }
+      },
+      "privacy": "No order identifier, customer field, raw payload, cron command or credential field returned.",
+      "businessDate": "2026-10-28",
+      "cronMetadata": [
+        {
+          "jobId": 1,
+          "active": true,
+          "jobName": "storage-renewal-daily",
+          "database": "postgres",
+          "schedule": "0 19 * * *",
+          "username": "postgres"
+        },
+        {
+          "jobId": 2,
+          "active": true,
+          "jobName": "storage-renewal-verify",
+          "database": "postgres",
+          "schedule": "15 19 * * *",
+          "username": "postgres"
+        },
+        {
+          "jobId": 3,
+          "active": true,
+          "jobName": "storage-renewal-audit",
+          "database": "postgres",
+          "schedule": "20 19 * * *",
+          "username": "postgres"
+        },
+        {
+          "jobId": 4,
+          "active": true,
+          "jobName": "daily-data-sync-prod-tick",
+          "database": "postgres",
+          "schedule": "* 17,18 * * *",
+          "username": "postgres"
+        }
+      ],
+      "cronRecentRuns": [
+        {
+          "runs": 240,
+          "status": "succeeded",
+          "jobname": "daily-data-sync-prod-tick",
+          "latest_end_time": "2026-10-29T03:59:00.078634+09:00",
+          "latest_start_time": "2026-10-29T03:59:00.061084+09:00"
+        },
+        {
+          "runs": 2,
+          "status": "succeeded",
+          "jobname": "storage-renewal-audit",
+          "latest_end_time": "2026-10-29T04:20:00.319574+09:00",
+          "latest_start_time": "2026-10-29T04:20:00.260084+09:00"
+        },
+        {
+          "runs": 2,
+          "status": "succeeded",
+          "jobname": "storage-renewal-daily",
+          "latest_end_time": "2026-10-29T04:00:18.166157+09:00",
+          "latest_start_time": "2026-10-29T04:00:00.0446+09:00"
+        },
+        {
+          "runs": 2,
+          "status": "succeeded",
+          "jobname": "storage-renewal-verify",
+          "latest_end_time": "2026-10-29T04:15:13.045727+09:00",
+          "latest_start_time": "2026-10-29T04:15:00.198128+09:00"
+        }
+      ],
+      "metaLegacyRules": [
+        {
+          "pattern": "풀업바",
+          "priority": 100,
+          "valid_to": null,
+          "match_type": "CONTAINS",
+          "valid_from": "2026-07-01"
+        }
+      ],
+      "canonicalProduct": "풀업바",
+      "productCostRules": [
+        {
+          "effective_to": null,
+          "shipping_krw": "0.00",
+          "effective_from": "2026-07-01",
+          "extra_cost_krw": "0.00",
+          "sale_price_krw": "34900.00",
+          "product_cost_krw": "10000.00",
+          "fx_rate_krw_per_usd": "1475.6000"
+        }
+      ],
+      "cafe24CouponRules": [
+        {
+          "scope": "GLOBAL",
+          "priority": 100,
+          "valid_to": null,
+          "valid_from": "2026-07-01",
+          "discount_krw": "1000.00"
+        }
+      ],
+      "cafe24LegacyRules": [
+        {
+          "priority": 100,
+          "valid_to": null,
+          "valid_from": "2026-07-01",
+          "display_name": "풀업바",
+          "match_target": "SEPARATE",
+          "product_name_aliases": [],
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "option_exclude_keywords": [],
+          "option_include_keywords": [
+            "풀업바"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "product_name_exclude_keywords": [
+            "[유튜브]"
+          ],
+          "product_name_include_keywords": [
+            "풀업바"
+          ]
+        }
+      ],
+      "publishedDayReceipts": [
+        {
+          "data_kind": "GOOGLE_CAMPAIGN",
+          "row_count": 5,
+          "last_success_at": "2026-10-29T02:01:10.408+09:00",
+          "published_count": 5,
+          "succeeded_day_unit": true
+        },
+        {
+          "data_kind": "META_ADSET",
+          "row_count": 200,
+          "last_success_at": "2026-10-29T02:03:39.554+09:00",
+          "published_count": 765,
+          "succeeded_day_unit": true
+        },
+        {
+          "data_kind": "CAFE24_ORDER",
+          "row_count": 323,
+          "last_success_at": "2026-10-29T02:38:10.475+09:00",
+          "published_count": 323,
+          "succeeded_day_unit": true
+        }
+      ]
+    }
+  }
+}

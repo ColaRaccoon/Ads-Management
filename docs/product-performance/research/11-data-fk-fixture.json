@@ -1,0 +1,36 @@
+{
+  "stage": 11,
+  "kind": "OWNER_CONTEXT_FK_CONFIGURATION_PUBLICATION_REHEARSAL",
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "Actual restricted report service product INSERT and actor audit succeed",
+    "Actual report service NAME INSERT reproduces permission denied unified_products and rolls back",
+    "Owner SELECT alone is insufficient for RI FOR KEY SHARE row locking",
+    "Owner SELECT(id) plus UPDATE(id) on unified_products fixes actual NAME save/audit; broad SELECT/UPDATE remain absent",
+    "Actual worker stageAndPublish reproduces FK owner unified_aggregation_runs SELECT denial atomically",
+    "Owner SELECT(id)/UPDATE(id) alone cannot satisfy the composite publication FK; atomic rollback preserved",
+    "Minimal FK-key SELECT plus UPDATE(id) permits actual fact/coverage/match/READY/pointer/PUBLISHED transaction",
+    "FORCE RLS still hides direct owner rows; no broad owner UPDATE, new owner policy, runtime expansion or source grant was added"
+  ],
+  "ownerPrivileges": [
+    {
+      "relname": "unified_aggregation_runs",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner_table_select": false,
+      "owner_table_update": false,
+      "owner_id_select": true,
+      "owner_id_update": true
+    },
+    {
+      "relname": "unified_products",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner_table_select": false,
+      "owner_table_update": false,
+      "owner_id_select": true,
+      "owner_id_update": true
+    }
+  ]
+}

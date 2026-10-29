@@ -1,0 +1,21 @@
+{
+  "stage": 11,
+  "kind": "EXACT_RELEASE_READINESS",
+  "observedAt": "2026-10-29T05:03:12.127Z",
+  "remoteWrites": 0,
+  "endpoint": "https://patimagroup-work.com/backend-api/health/ready",
+  "expectedRelease": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "authentication": "internal probe token; memory only",
+  "status": "PASS",
+  "httpStatus": 200,
+  "releaseId": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "runtimeConfigFingerprint": "c6a8525597f2ab6ded4796b5d4ea453e1969ae0c58d11d863cfd62a74b0f61a4",
+  "checks": {
+    "httpOk": true,
+    "readyStatus": true,
+    "releaseFormat": true,
+    "releaseMatches": true,
+    "fingerprintFormat": true,
+    "exactPayloadKeys": true
+  }
+}
