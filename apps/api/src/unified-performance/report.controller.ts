@@ -2,7 +2,7 @@ import { Body, Controller, Get, Header, HttpCode, Param, Post, Query } from "@ne
 import type { AuthenticatedUser } from "../auth/auth.types";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { UnifiedReportService } from "./report.service";
-import { ReportQueryDto, RebuildInputDto } from "./report.dto";
+import { ReportQueryDto, RebuildInputDto, RelationshipQueryDto } from "./report.dto";
 
 @Controller("unified-performance")
 export class UnifiedReportController {
@@ -15,6 +15,8 @@ export class UnifiedReportController {
   timeseries(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("timeseries", { ...query }, actor); }
   @Get("diagnostics") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   diagnostics(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("diagnostics", { ...query }, actor); }
+  @Get("relationships") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  relationships(@Query() query: RelationshipQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("relationships", { ...query }, actor); }
   @Post("rebuild") @HttpCode(202) @Header("Cache-Control", "no-store") @RequirePermissions("operations.run")
   rebuild(@Body() input: RebuildInputDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.rebuild({ ...input }, actor); }
   @Get("rebuild/:jobId") @Header("Cache-Control", "no-store") @RequirePermissions("operations.run")

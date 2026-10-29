@@ -1,0 +1,3815 @@
+{
+  "status": "PASS_REAL_CAPTURE_SAMPLE_RECONCILIATION",
+  "stage": "09",
+  "sourceObservationDate": "2026-10-28",
+  "databaseAccess": false,
+  "sourceWrites": 0,
+  "providerCalls": 0,
+  "previousStageEvidenceUnchanged": true,
+  "partitions": 99,
+  "compactFacts": 4091,
+  "compactSha256": "b37c5a464d945cf2eb5188639aeead4250190d1ed19e269453524af1c7f6b209",
+  "from": "2026-09-27",
+  "to": "2026-10-26",
+  "lookbackFrom": "2026-09-13",
+  "checks": [
+    {
+      "platforms": [],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "NAVER"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 1,
+          "excludedDays": 29,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "CONSTANT_AD_SPEND",
+            "CONSTANT_OUTCOME",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "NAVER"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE",
+        "NAVER"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 1,
+          "excludedDays": 29,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "CONSTANT_AD_SPEND",
+            "CONSTANT_OUTCOME",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE",
+        "NAVER"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 30,
+          "excludedDays": 0,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 12,
+          "excludedDays": 18,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 29,
+          "excludedDays": 1,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 11,
+          "excludedDays": 19,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 27,
+          "excludedDays": 3,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 10,
+          "excludedDays": 20,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 23,
+          "excludedDays": 7,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 8,
+          "excludedDays": 22,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 16,
+          "excludedDays": 14,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 6,
+          "excludedDays": 24,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE",
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 5,
+          "excludedDays": 25,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 1,
+          "excludedDays": 29,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "CONSTANT_AD_SPEND",
+            "CONSTANT_OUTCOME",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 4,
+          "excludedDays": 26,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 3,
+          "excludedDays": 27,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE",
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "NAVER",
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 1,
+          "excludedDays": 29,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "CONSTANT_AD_SPEND",
+            "CONSTANT_OUTCOME",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "NAVER",
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE",
+        "NAVER",
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 1,
+          "excludedDays": 29,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "CONSTANT_AD_SPEND",
+            "CONSTANT_OUTCOME",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE",
+        "NAVER",
+        "COUPANG"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "NAVER",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "NAVER",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE",
+        "NAVER",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE",
+        "NAVER",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "NAVER",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "NAVER",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "GOOGLE",
+        "NAVER",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "META",
+        "GOOGLE",
+        "NAVER",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "lags": [
+        {
+          "metric": "revenue",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 0,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 1,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 3,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 7,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "revenue",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        },
+        {
+          "metric": "profitBeforeAds",
+          "lagDays": 14,
+          "usedDays": 0,
+          "excludedDays": 30,
+          "coefficient": null,
+          "reasons": [
+            "INSUFFICIENT_PAIRS",
+            "EXCESSIVE_MISSING"
+          ]
+        }
+      ]
+    }
+  ]
+}

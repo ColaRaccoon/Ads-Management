@@ -1,0 +1,40 @@
+{
+  "stage": "09",
+  "startedAt": "2026-10-29T01:58:20.700Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55454,
+    "database": "unified_stage09"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh fixed loopback PG17 identity checked; all migrations applied and second deploy empty",
+    "actual non-owner read-only viewer role; raw source, credentials and aggregate writes denied",
+    "real Nest HTTP permission guard, DTO validation, report repository/service and PostgreSQL reads; only authentication principal is a loopback fixture",
+    "32 platform selections, exact daily input reconciliation, lag direction and paired sample counts, omitted Naver dates and missing product costs exercised",
+    "relationship inputs and baseline KPI totals remain selection consistent; GET performs no aggregate writes"
+  ],
+  "deploymentRead": {
+    "checkedOn": "2026-10-29",
+    "projects": 2,
+    "services": 5,
+    "repository": "ColaRaccoon/Ads-Management",
+    "service": "grand-fascination",
+    "branch": "codex/sidebar-scroll",
+    "commit": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb",
+    "stagedChanges": false,
+    "otherServices": [
+      "other repository/main",
+      "no Git source",
+      "no Git source",
+      "Postgres image"
+    ],
+    "configWrites": 0
+  },
+  "testOutput": "▶ stage09 relationships real HTTP paired samples and read-only selected inputs\n  ✔ actual viewer role, guard/DTO/scope failures and no source privileges (224.2852ms)\n  ✔ all 32 platform selections: exact daily values, samples, estimates and baseline KPI hashes (6672.148ms)\n  ✔ known lag3 relationship, independent media choice, missing outcome cost and constant series (359.3818ms)\n✔ stage09 relationships real HTTP paired samples and read-only selected inputs (11132.666ms)\n✔ stage09 previously captured real inputs: sample dates reconciled without DB/provider calls (67438.4197ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 91607.651\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-29T02:00:06.187Z",
+  "localEvidence": "C:\\Users\\seong\\AppData\\Local\\UnifiedPerformanceStage02\\stage09-5223fb48-ebf6-4daf-baa4-441359b2183e"
+}

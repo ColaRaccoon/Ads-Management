@@ -24,3 +24,7 @@ export class RebuildInputDto {
   @IsString() @MaxLength(64) expectedContractVersion!: string;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(128) idempotencyKey?: string;
 }
+export class RelationshipQueryDto extends ReportQueryDto {
+  @IsOptional() @IsString() @MaxLength(2048) analysisMedia?: string;
+  @IsOptional() @IsDateOnly() changeDate?: string;
+}

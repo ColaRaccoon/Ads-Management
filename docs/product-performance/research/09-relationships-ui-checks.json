@@ -1,0 +1,23 @@
+{
+  "stage": "09",
+  "checkedOn": "2026-10-29",
+  "status": "PASS_LOCAL_SYNTHETIC_BROWSER",
+  "browser": "ChatGPT in-app browser",
+  "frontend": "http://127.0.0.1:3199/products/performance",
+  "api": "http://127.0.0.1:4199/api",
+  "database": "127.0.0.1:55454/unified_stage09",
+  "realBusinessData": false,
+  "from": "2026-07-01",
+  "to": "2026-09-28",
+  "checks": [
+    { "scenario": "Meta+Google+Cafe24 with Meta analysis and lag3", "revenuePairs": 90, "excludedDays": 0, "coefficient": "1", "revenueKpi": "2114681.110970", "adSpendKpi": "601529.111040" },
+    { "scenario": "Switch outcome to pre-ad profit at lag3", "usedPairs": 89, "excludedDays": 1, "coefficient": "1", "unchangedAdSpendKpi": "601529.111040" },
+    { "scenario": "Change-date native keyboard input 2026-09-15", "before7": "2026-09-08~2026-09-14", "after7": "2026-09-15~2026-09-21", "adMeanBefore7": "5185.8377417143", "adMeanAfter7": "8185.8377417143", "revenueMeanChange7": "4000", "otherAdMeanBeforeAndAfter": "100.2", "windows": [7, 14] },
+    { "scenario": "Include Naver platform", "lag0RevenuePairs": 88, "excludedDays": 2, "estimateMarker": true, "naverAnalysisCheckboxVisible": true },
+    { "scenario": "Exclude Naver platform again", "lag0RevenuePairs": 90, "excludedDays": 0, "naverWarningsRemain": false, "naverAnalysisCheckboxVisible": false },
+    { "scenario": "Google-only analysis is constant", "usedPairs": 90, "coefficient": null, "displayReason": "분석 광고비 변동 없음", "upperPlatformSelectionUnchanged": true },
+    { "scenario": "Uncheck every analysis medium", "display": "분석할 광고 매체를 선택하세요. 상단 플랫폼의 매출·총광고비·이익은 그대로 유지됩니다." }
+  ],
+  "screenshot": "09-relationships-screen.png",
+  "limitations": ["Browser fill of date input changed DOM value without React state; native keyboard input was used and its resulting date and comparison were verified.", "Calendar popup mouse selection, scatter hover in this browser, mobile layout and forced delayed-network browser scenarios were not exercised; exact tooltip/model/SSR behavior is covered separately."]
+}

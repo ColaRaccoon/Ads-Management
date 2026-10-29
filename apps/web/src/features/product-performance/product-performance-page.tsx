@@ -12,6 +12,7 @@ import { PerformanceKpis } from "./kpis";
 import { ComparisonTable } from "./comparison-table";
 import { PerformanceCharts } from "./charts";
 import { DiagnosticsPanel } from "./diagnostics";
+import { RelationshipPanel } from "./relationships";
 import { assertResponse, changeFilters, dashboardError, dashboardKey, defaultFilters, filterParams, loadDashboard, parseFilters, responseMatches, validateFilters } from "./model";
 import type { DashboardData, Diagnostic, Filters, Options, PageResult } from "./types";
 
@@ -90,6 +91,7 @@ function Performance({ identity }: { identity: string }) {
       {Object.values(data.summary.knownTotals).every(value => value === null) ? <div className="panel" role="status">선택 범위에 확인 가능한 발행 데이터가 없습니다. 아래 진단에서 미수집·미매핑과 적용 여부를 확인하세요.</div> : null}
       <PerformanceCharts data={data} />
       <ComparisonTable data={data.summary} />
+      <RelationshipPanel key={filterParams(filters).toString()} filters={filters} identity={identity} anchor={data.summary} onRefresh={refresh} />
       <DiagnosticsPanel data={data} />
       {data.diagnostics.nextCursor ? <div className="toolbar"><span>상세 진단 {data.diagnostics.items.length} / {data.diagnostics.total}개</span>
         <button type="button" className="button" disabled={paging} onClick={() => void moreDiagnostics()}>{paging ? "진단을 읽는 중…" : "다음 진단 100개"}</button></div> : null}

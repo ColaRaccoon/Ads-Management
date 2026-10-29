@@ -59,12 +59,12 @@ export class UnifiedReportRepository {
     });
   }
   /** All selected pointers, versions, compact facts and failure markers share one read-only RR snapshot. */
-  snapshot(query: ReportQuery) {
+  snapshot(query: ReportQuery, lookbackFrom?: string) {
     return this.management.read(async tx => {
       const catalog = await this.management.snapshot(tx);
       const scopes = selectReportScopes(await reportScopes(tx, query.platforms), query.scopeKeys);
       const partitions = scopes.map(s => ({ platform: s.platform, scopeKey: s.scopeKey }));
-      const dateWhere = { OR: [{ businessDate: { gte: at(query.from), lte: at(query.to) } }, { businessDate: { gte: at(query.compareFrom), lte: at(query.compareTo) } }] };
+      const dateWhere = { OR: [{ businessDate: { gte: at(lookbackFrom ?? query.from), lte: at(query.to) } }, { businessDate: { gte: at(query.compareFrom), lte: at(query.compareTo) } }] };
       const where: Prisma.UnifiedSourcePublicationWhereInput = { AND: [{ OR: partitions }, dateWhere] };
       const publications = scopes.length ? bounded(await tx.unifiedSourcePublication.findMany({ where, include: { run: true }, orderBy: [
         { platform: "asc" }, { scopeKey: "asc" }, { businessDate: "asc" }, { sourceSystem: "asc" }
@@ -99,7 +99,7 @@ export class UnifiedReportRepository {
           (publication.run.publishedAt ?? publication.run.startedAt).getTime();
         return stale ? { ...details, collectionState: "STALE", quality: { ...details.quality, issues: [...new Set([...details.quality.issues, "LATEST_REBUILD_FAILED", "STALE_PREVIOUS_PUBLICATION"])] } } : details;
       });
-      const dates = [...new Set([...datesIn(query.from, query.to), ...datesIn(query.compareFrom, query.compareTo)])].sort();
+      const dates = [...new Set([...datesIn(lookbackFrom ?? query.from, query.to), ...datesIn(query.compareFrom, query.compareTo)])].sort();
       if (dates.length * scopes.length > MAX_RUNS) throw new ServiceUnavailableException({ code: "UNIFIED_REPORT_TOO_LARGE", message: "조회 계정 또는 기간 범위를 줄여 주세요." });
       const coverageKeys = new Set(coverage.map(c => JSON.stringify([c.platform, c.scopeKey, c.date, c.component])));
       for (const scope of scopes) for (const date of dates) for (const expected of missingCoverage(scope, date)) {
@@ -107,9 +107,16 @@ export class UnifiedReportRepository {
       }
       const availableDateRanges = scopes.length ? await tx.unifiedSourcePublication.groupBy({ by: ["platform", "scopeKey"], where: { OR: partitions },
         _min: { businessDate: true }, _max: { businessDate: true } }) : [];
+      const inBase = (businessDate: Date) => {
+        const value = day(businessDate);
+        return value >= query.from && value <= query.to || value >= query.compareFrom && value <= query.compareTo;
+      };
+      const hashSnapshot = (base: boolean) => reportHash([
+        publications.filter(p => !base || inBase(p.businessDate)).map(p => [p.runId, p.revision]),
+        failures.filter(f => !base || inBase(f.businessDate)).map(f => [f.id, f.completedAt, f.leaseExpiresAt]), catalog.versions, scopes]);
       return { ...catalog, scopes, facts: reportFacts, coverage, publications, availableDateRanges: availableDateRanges.map(row => ({
         platform: row.platform, scopeKey: row.scopeKey, from: row._min.businessDate ? day(row._min.businessDate) : null, to: row._max.businessDate ? day(row._max.businessDate) : null })),
-        snapshotHash: reportHash([publications.map(p => [p.runId, p.revision]), failures.map(f => [f.id, f.completedAt, f.leaseExpiresAt]), catalog.versions, scopes]) };
+        snapshotHash: hashSnapshot(false), baseSnapshotHash: hashSnapshot(true) };
     });
   }
 }

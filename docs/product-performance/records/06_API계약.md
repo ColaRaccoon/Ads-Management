@@ -10,10 +10,11 @@
 | GET `/api/unified-performance/summary` | data.read | 선택 범위 합계·제품별 합계·동일 선택 전기 비교 |
 | GET `/api/unified-performance/timeseries` | data.read | 일/월요일 시작 주/달력 월별 합계와 부분기간 표시 |
 | GET `/api/unified-performance/diagnostics` | data.read | 구성요소별 미수집·미매핑·원가·환율·원천 대조 |
+| GET `/api/unified-performance/relationships` | data.read | 선택 광고비와 매출·광고 전 이익의 일별 관측 관계·시차·전후 비교 |
 | POST `/api/unified-performance/rebuild` | operations.run | HTTP 202, 영속 큐에 원천·계정·하루별 작업 등록 |
 | GET `/api/unified-performance/rebuild/:jobId` | operations.run | 해당 작업 상태·단계·시도 횟수·안전한 오류 코드 |
 
-라우트 guard와 서비스에서 권한을 검사한다. 현재 인증 체계는 workspace 전체 권한이며 새 사용자별 계정 ACL을 발명하지 않았다. 범위는 플랫폼/provider가 일치하는 SourceConnection 메타데이터, 확인된 쿠팡 단일 업로드, NAVER 서버 허용 목록으로 제한한다. 등록되지 않은 범위는 403이다. 웹 역할은 원천 판매/광고/네이버 JSONB에 접근할 필요가 없다. `relationships`는 09단계이며 추가하지 않았다.
+라우트 guard와 서비스에서 권한을 검사한다. 현재 인증 체계는 workspace 전체 권한이며 새 사용자별 계정 ACL을 발명하지 않았다. 범위는 플랫폼/provider가 일치하는 SourceConnection 메타데이터, 확인된 쿠팡 단일 업로드, NAVER 서버 허용 목록으로 제한한다. 등록되지 않은 범위는 403이다. 웹 역할은 원천 판매/광고/네이버 JSONB에 접근할 필요가 없다. `relationships`는 2026-10-29의 09단계에서 추가했다.
 
 모든 응답은 `Cache-Control: no-store`다. 서버/브라우저 캐시를 새로 도입하지 않았으며 정규화 조건의 `selectionHash`와 원자 스냅샷의 `snapshotHash`를 반환한다. 후속 UI 캐시는 두 값과 사용자 권한 범위를 보존해야 한다.
 
@@ -99,3 +100,21 @@ worker는 수동 CLI로만 실행한다. 전용 `UNIFIED_AGGREGATION_DATABASE_UR
 400: UNIFIED_QUERY_INVALID/UNIFIED_CURSOR_INVALID/UNIFIED_REBUILD_INVALID/UNIFIED_REBUILD_EMPTY 및 DTO 오류. 403: PERMISSION_DENIED/UNIFIED_SCOPE_FORBIDDEN. 404: UNIFIED_PRODUCT_NOT_FOUND/UNIFIED_JOB_NOT_FOUND. 409: UNIFIED_CURSOR_CHANGED/UNIFIED_CONTRACT_CHANGED/REBUILD_IDEMPOTENCY_CONFLICT 및 lease/CAS 충돌. 503: UNIFIED_PERFORMANCE_DISABLED/UNIFIED_REPORT_TOO_LARGE/UNIFIED_SCOPE_LIMIT/UNIFIED_REPORT_REBUILD_REQUIRED.
 
 웹/API 역할은 집계 SELECT와 제한된 STAGING 큐 INSERT만 필요하다. worker만 원천 SELECT·집계 쓰기·발행을 수행한다. 06의 실제 역할 검증은 새 로컬 PG17 fixture이며 운영 권한을 부여한 증거가 아니다. 운영 migration/최소 GRANT·RLS·예약·활성화·배포는 10~11에서 준비·적용한다.
+
+## 09 관계 분석 추가 계약
+
+`GET /api/unified-performance/relationships`는 같은 공통 조회 조건과 `analysisMedia`, `changeDate`를 받는다. `analysisMedia`는 JSON 문자열 배열이며 META/GOOGLE/NAVER_DA/COUPANG_ADS 중 포함 플랫폼에 속한 매체만 허용한다. 생략하면 포함된 광고 매체 전체, `[]`면 분석 대상 없음이다. 숨은 플랫폼 매체나 잘못된 날짜는 `UNIFIED_RELATIONSHIP_QUERY_INVALID` 400이다. `changeDate`는 선택 기간 안의 YYYY-MM-DD이며 선택 사항이다. cursor는 받지 않고 최대 366일의 분석을 한 응답으로 반환한다. grain은 공통 선택을 보존하지만 관계 계산 표본은 항상 원래 일별 값이다.
+
+공통 envelope의 당기·전기 금액과 selectionHash는 summary와 같고 analysisMedia/changeDate로 바뀌지 않는다. 저장된 집계의 from 이전 14일~to 및 비교기간을 동일한 읽기 전용 RR snapshot에서 읽는다. `snapshotHash`는 확장 범위 전체, `baseSnapshotHash`는 같은 snapshot에서 원래 당기·전기 포인터·실패·설정·범위를 선택한 해시로 summary.snapshotHash와 대조한다. 발행 버전·시각 메타데이터에는 lookback이 포함될 수 있다. 추가 범위에도 같은 계정 권한·제품 참여정책·발행 버전을 적용하며 원천 호출·재집계·DB 쓰기는 없다.
+
+`analysis` 추가 필드는 다음과 같다.
+
+- `analysisMedia`, `availableMedia`, `changeDate?`, `lookbackFrom`, `outcomeLabel`, `interpretation`, `events`: 분석 조건과 해석. 제품 지정+판매 플랫폼 3개 전체+전체 계정일 때만 제품 전체 매출로 표기한다. 명시적 계정 선택은 보수적으로 선택 판매처 합산 매출로 표시한다. 가격·행사·품절 기록은 UNAVAILABLE이며 지어내지 않는다.
+- `policy`: minimumPairs=60, maximumMissingFraction="0.2", lagDirection=AD_BEFORE_OUTCOME, movingAverageUse=VISUAL_ONLY. 60쌍은 확정된 표시 정책이며 통계적 보장이 아니다. 09에서 제외율 20% 초과도 계수를 숨기는 보수적 표시 정책을 추가했다.
+- `lags`: 시차 0/1/3/7/14일 × revenue/profitBeforeAds 10개. 결과일 t는 from~to, 광고일은 t−lag다. from/to, expectedDays, usedDays, excludedDays, excludedDates의 광고일/결과일/사유, pairs의 원금액과 나머지 매체 광고비·추정·품질, coefficient, reasons, volatility의 모집단 표준편차를 제공한다. 표준편차는 신뢰구간이 아니다.
+- `daily`: 조회 기간 안의 원래 일별 대상 광고비·나머지 광고비·매출·광고 전 이익, weekday(일=0), issues/isEstimate, 연속 7일 전부 완전할 때만 movingAverage7을 제공한다. 이동평균은 시각화 참고이며 표본수·계수에 넣지 않는다.
+- `beforeAfter`: changeDate 지정 시 전후7/14일. 변경일은 이후 구간에만 포함한다. 각 창은 from/to/expectedDays 및 지표별 usedDays/excludedDays/mean/complete, changes는 change/changePct/reason을 반환한다. 사용자 기간 밖·누락을 제외한 평균을 부분 창으로 표시하고, 어느 창이라도 불완전하면 전체 창의 변화는 null+INCOMPLETE_WINDOW다. 비양수 평균 기저는 증감률 null이다.
+
+금액 입력은 completeTotals의 수치적 완전성으로 판단한다. 실제 미수집·미분류·원가·환율 누락을 0으로 채우지 않고 매출과 광고 전 이익의 제외를 별도로 판정한다. 계정 선택 또는 제품 참여정책에서 해당 없는 매체는 합산 대상에서 제외하고, 적용 매체가 모두 없으면 분석 광고비 null이다. 나머지 매체 누락은 맥락 null로 남기되 정상 대상-결과 쌍을 제거하지 않는다. ESTIMATED 자체는 표본을 막지 않는다. 플랫폼 제외는 원천 금액·경고·시차·전후 입력에 동일하게 적용한다.
+
+Pearson은 Decimal 중심화로 계산하고 60쌍 미만, 광고비/결과 상수, 제외율20% 초과면 coefficient null과 이유를 반환한다. 원금액은 기존 문자열을 보존하고 통계량(계수·평균·평균 증감·표준편차)은 소수10자리다. 전후 변화는 표시 평균을 재계산하지 않고 원래 Decimal 평균에서 계산한다. 최대 시차 계수를 효과 발생일로 고르거나 인과효과·자동 예산 제안으로 사용하지 않는다.

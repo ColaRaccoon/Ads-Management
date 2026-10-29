@@ -5,12 +5,15 @@ import { UnifiedReportRepository, type ReportSnapshot } from "./report.repositor
 import { compareMedia, compareTotals, scopePolicyComponents, summarizeReport } from "./domain/report-calculation";
 import { PLATFORM_COMPONENTS, platformSelection } from "./domain/platform-selection";
 import { assertUnifiedEnabled } from "./management.service";
-import { datesIn, daysBetween, parseReportQuery, range, reportBuckets, reportHash, stringArray, type ReportQuery } from "./report-query";
+import { datesIn, daysBetween, parseReportQuery, range, reportBuckets, reportHash, shiftDate, stringArray, type ReportQuery } from "./report-query";
+import { parseRelationshipQuery } from "./relationship-query";
+import { relationshipDays } from "./relationship-input";
+import { calculateRelationships } from "./domain/relationship-calculation";
 import { CONTRACT_VERSION, PLATFORMS, type ComponentKind, type SourceCoverage } from "./types";
 import { REPORT_CALCULATION_VERSION } from "./report-contract";
 
 type Actor = Pick<AuthenticatedUser, "id" | "permissions">;
-type ViewKind = "summary" | "timeseries" | "diagnostics" | "options";
+type ViewKind = "summary" | "timeseries" | "diagnostics" | "options" | "relationships";
 const date = (value: Date) => value.toISOString().slice(0, 10);
 const safeIssues = (issues: readonly string[]) => [...new Set(issues.filter(issue => /^[A-Z][A-Z0-9_:.|/-]{0,159}$/.test(issue)))].sort();
 const safeCoverage = (coverage: SourceCoverage[]) => coverage.map(c => ({
@@ -75,7 +78,10 @@ export class UnifiedReportService {
   constructor(private readonly repository: UnifiedReportRepository, private readonly aggregation: UnifiedAggregationRepository) {}
   async read(kind: ViewKind, input: Record<string, unknown>, actor: Actor) {
     allowed(actor, "data.read");
-    const query = parseReportQuery(input), snapshot = await this.repository.snapshot(query);
+    const query = parseReportQuery(input);
+    const analysisSettings = kind === "relationships" ? parseRelationshipQuery(input, query) : undefined;
+    const lookbackFrom = analysisSettings ? shiftDate(query.from, -14) : undefined;
+    const snapshot = await this.repository.snapshot(query, lookbackFrom);
     const selection = platformSelection(query.platforms), current = period(snapshot, query, query.from, query.to, query.productName),
       previous = period(snapshot, query, query.compareFrom, query.compareTo, query.productName);
     const currentDays = daysBetween(query.from, query.to), previousDays = daysBetween(query.compareFrom, query.compareTo);
@@ -118,6 +124,15 @@ export class UnifiedReportService {
       coverage: safeCoverage(current.coverage), comparisonCoverage: safeCoverage(previous.coverage),
       warnings: safeIssues([...current.issues, ...previous.issues, ...(configurationChanged ? ["CONFIGURATION_CHANGED_REBUILD_RECOMMENDED"] : [])]),
       provisional: query.to >= new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10) };
+    if (analysisSettings && lookbackFrom) {
+      const scope = applicable(snapshot, query.productName);
+      const analysis = calculateRelationships(relationshipDays(scope, query, analysisSettings, lookbackFrom), { from: query.from, to: query.to, changeDate: analysisSettings.changeDate });
+      const allSales = ["CAFE24", "COUPANG", "NAVER"].every(p => query.platforms.includes(p as typeof query.platforms[number])) && query.scopeKeys === undefined;
+      return { ...envelope, baseSnapshotHash: snapshot.baseSnapshotHash, analysis: { ...analysis, ...analysisSettings, lookbackFrom,
+        outcomeLabel: query.productName && allSales ? "제품 전체 매출" : "선택 판매처 합산 매출",
+        events: { status: "UNAVAILABLE", message: "가격·행사·품절 이벤트 기록은 연결되지 않았습니다. 요일과 나머지 매체 광고비를 함께 확인하세요." },
+        interpretation: "광고비 증가 기간에 매출이 증가하는 등 관측된 동반 변화를 확인합니다. 인과효과나 효과 발생일을 뜻하지 않습니다. 순이익은 광고비를 직접 차감하므로 분석 결과값에서 제외합니다." } };
+    }
     const productNames = [...new Set([...snapshot.products.map(p => p.canonicalName), ...snapshot.facts.map(f => f.productName).filter((name): name is string => name !== null)])].sort();
     if (kind === "options") return { ...envelope, products: productNames.map(productName => ({ productName, active: snapshot.products.find(p => p.canonicalName === productName)?.active ?? false,
       historical: !snapshot.products.some(p => p.canonicalName === productName) })),

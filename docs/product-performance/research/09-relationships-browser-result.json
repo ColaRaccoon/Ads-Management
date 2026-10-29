@@ -1,0 +1,40 @@
+{
+  "stage": "09",
+  "startedAt": "2026-10-29T02:02:47.451Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55454,
+    "database": "unified_stage09"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh fixed loopback PG17 identity checked; all migrations applied and second deploy empty",
+    "actual non-owner read-only viewer role; raw source, credentials and aggregate writes denied",
+    "real Nest HTTP permission guard, DTO validation, report repository/service and PostgreSQL reads; only authentication principal is a loopback fixture",
+    "32 platform selections, exact daily input reconciliation, lag direction and paired sample counts, omitted Naver dates and missing product costs exercised",
+    "relationship inputs and baseline KPI totals remain selection consistent; GET performs no aggregate writes"
+  ],
+  "deploymentRead": {
+    "checkedOn": "2026-10-29",
+    "projects": 2,
+    "services": 5,
+    "repository": "ColaRaccoon/Ads-Management",
+    "service": "grand-fascination",
+    "branch": "codex/sidebar-scroll",
+    "commit": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb",
+    "stagedChanges": false,
+    "otherServices": [
+      "other repository/main",
+      "no Git source",
+      "no Git source",
+      "Postgres image"
+    ],
+    "configWrites": 0
+  },
+  "testOutput": "▶ stage09 relationships real HTTP paired samples and read-only selected inputs\n  ✔ actual viewer role, guard/DTO/scope failures and no source privileges (274.6189ms)\n  ✔ all 32 platform selections: exact daily values, samples, estimates and baseline KPI hashes (6590.6088ms)\nSTAGE09_BROWSER_READY http://127.0.0.1:4199/api synthetic-viewer read-only; POST /api/__stage09/stop to release HTTP and PG\n  ✔ known lag3 relationship, independent media choice, missing outcome cost and constant series (538.8086ms)\n✔ stage09 relationships real HTTP paired samples and read-only selected inputs (168061.5562ms)\n✔ stage09 previously captured real inputs: sample dates reconciled without DB/provider calls (61089.3352ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 230837.1035\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-29T02:06:48.135Z",
+  "localEvidence": "C:\\Users\\seong\\AppData\\Local\\UnifiedPerformanceStage02\\stage09-7334beb3-9046-48bf-b9d5-8b1bb6d159ef"
+}
