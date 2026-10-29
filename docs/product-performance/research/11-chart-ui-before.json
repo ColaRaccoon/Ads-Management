@@ -1,0 +1,27 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T07:21:34.790Z",
+  "kind": "PRODUCTION_DOM_BEFORE",
+  "charts": {
+    "광고비 구성 · 100%": {
+      "barPaths": 0,
+      "lines": 0,
+      "points": 0
+    },
+    "매체별 광고비 추이": {
+      "barPaths": 0,
+      "lines": 1,
+      "points": 0
+    },
+    "매출·이익 추이": {
+      "barPaths": 0,
+      "lines": 3,
+      "points": 0
+    },
+    "판매처 매출 구성": {
+      "barPaths": 3,
+      "lines": 0,
+      "points": 0
+    }
+  }
+}

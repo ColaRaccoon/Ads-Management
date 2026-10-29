@@ -5,17 +5,17 @@
   "reason": "Real scheduled source-to-publication cycle remains in the future",
   "source": {
     "repo": "ColaRaccoon/Ads-Management",
-    "branch": "codex/product-performance-stage11-frame-release",
-    "commitSha": "e37c6dee9faa55e085e199be7fad61874b02fe3b"
+    "branch": "codex/product-performance-stage11-chart-release",
+    "commitSha": "d9086a6c32fc2eba56288379ec642163f3ae3411"
   },
   "deployment": {
-    "id": "c849022c-5f8c-49f1-ac8c-6087ecebf178",
+    "id": "479b7d2b-ca55-44bc-b1bd-f39f7c951f6b",
     "status": "SUCCESS",
-    "commitHash": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
-    "branch": "codex/product-performance-stage11-frame-release"
+    "commitHash": "d9086a6c32fc2eba56288379ec642163f3ae3411",
+    "branch": "codex/product-performance-stage11-chart-release"
   },
   "featureEnabled": true,
-  "readinessEvidence": "11-app-ready-final.json",
+  "readinessEvidence": "11-app-ready-chart.json",
   "publishedRuns": 76,
   "audits": 4,
   "existingSourceSchedulesChanged": false,
@@ -48,5 +48,18 @@
     "11-reconcile-google-final.json",
     "11-reconcile-coupang-final.json"
   ],
-  "additionalPlatformUiEvidence": "11-ui-platforms-final.json"
+  "additionalPlatformUiEvidence": "11-ui-platforms-final.json",
+  "previousDeployment": {
+    "id": "c849022c-5f8c-49f1-ac8c-6087ecebf178",
+    "status": "SUCCESS",
+    "commitHash": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
+    "branch": "codex/product-performance-stage11-frame-release"
+  },
+  "chartCorrection": {
+    "evidence": "11-chart-ui-after.json",
+    "apiSharedDeploymentSourceDiff": 0,
+    "sourceWrites": 0,
+    "webTests": 111,
+    "guardTests": 10
+  }
 }
