@@ -29,6 +29,7 @@ const cafe24 = ['daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24
   'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js'];
 const preserved = ['metrics/metrics.service.js', 'sales/sales-metrics.service.js',
   'coupang/coupang.service.js', 'domain/margin-calculator.js'];
+const metaMappings = ['mappings/mappings.service.js', 'mappings/mappings.controller.js', 'mappings/dto/mappings-transport.dto.js'];
 
 async function fixture(run, profile = 'reporting') {
   const root = await mkdtemp(join(tmpdir(), 'google-c7-guard-'));
@@ -46,6 +47,9 @@ async function fixture(run, profile = 'reporting') {
       if (name !== 'daily-sync/cafe24-option-backfill.js') await put(baseline, name, 'old Cafe24 module\n');
       await put(compiled, name, 'reviewed Cafe24 option mapping module\n');
     }
+    if (profile === 'reporting') for (const name of metaMappings) {
+      await put(baseline, name, 'old mapping module\n'); await put(compiled, name, 'reviewed editable mapping module\n');
+    }
     for (const name of preserved) { await put(baseline, name, 'legacy\r\n'); await put(compiled, name, 'legacy\n'); }
     const verify = (selected = profile) => spawnSync(process.execPath,
       [verifier, baseline, compiled, ...(selected ? [selected] : [])], { encoding: 'utf8', windowsHide: true });
@@ -60,7 +64,7 @@ async function fixture(run, profile = 'reporting') {
 test('reporting accepts the complete reviewed Google and Cafe24 patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
   const result = verify(); assert.equal(result.status, 0, result.stderr);
   const proof = JSON.parse(result.stdout);
-  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length);
+  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + metaMappings.length);
   for (const name of ['meta', 'cafe24', 'coupang', 'margin']) {
     assert.equal(proof.protectedUnchanged[name].files, 1);
     assert.match(proof.protectedUnchanged[name].sha256, /^[a-f0-9]{64}$/);
