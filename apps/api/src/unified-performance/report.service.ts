@@ -44,8 +44,7 @@ function applicable(snapshot: ReportSnapshot, productName?: string) {
     f.component === "SHIPPING_INCOME" ? "COMMON_EXPENSE" : f.component as ComponentKind)),
   coverage: snapshot.coverage.map(c => components(c.platform, c.scopeKey, c.date).includes(c.component) ? c : { ...c, participation: "NOT_APPLICABLE" as const }) };
 }
-function period(snapshot: ReportSnapshot, query: ReportQuery, from: string, to: string, productName?: string) {
-  const scope = applicable(snapshot, productName);
+function period(scope: ReturnType<typeof applicable>, query: ReportQuery, from: string, to: string, productName?: string) {
   const facts = scope.facts.filter(f => f.date >= from && f.date <= to), coverage = scope.coverage.filter(c => c.date >= from && c.date <= to);
   return { ...summarizeReport(facts, coverage, { platforms: query.platforms, productName }), coverage };
 }
@@ -82,8 +81,15 @@ export class UnifiedReportService {
     const analysisSettings = kind === "relationships" ? parseRelationshipQuery(input, query) : undefined;
     const lookbackFrom = analysisSettings ? shiftDate(query.from, -14) : undefined;
     const snapshot = await this.repository.snapshot(query, lookbackFrom);
-    const selection = platformSelection(query.platforms), current = period(snapshot, query, query.from, query.to, query.productName),
-      previous = period(snapshot, query, query.compareFrom, query.compareTo, query.productName);
+    // Participation belongs to this immutable request snapshot, not each time bucket.
+    const scopes = new Map<string | undefined, ReturnType<typeof applicable>>();
+    const scopeFor = (productName?: string) => {
+      let scope = scopes.get(productName);
+      if (!scope) { scope = applicable(snapshot, productName); scopes.set(productName, scope); }
+      return scope;
+    };
+    const selection = platformSelection(query.platforms), current = period(scopeFor(query.productName), query, query.from, query.to, query.productName),
+      previous = period(scopeFor(query.productName), query, query.compareFrom, query.compareTo, query.productName);
     const currentDays = daysBetween(query.from, query.to), previousDays = daysBetween(query.compareFrom, query.compareTo);
     const comparison = { known: compareTotals(current.knownTotals, previous.knownTotals, currentDays, previousDays),
       complete: compareTotals(current.completeTotals, previous.completeTotals, currentDays, previousDays), byMedium: compareMedia(current, previous),
@@ -125,7 +131,7 @@ export class UnifiedReportService {
       warnings: safeIssues([...current.issues, ...previous.issues, ...(configurationChanged ? ["CONFIGURATION_CHANGED_REBUILD_RECOMMENDED"] : [])]),
       provisional: query.to >= new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10) };
     if (analysisSettings && lookbackFrom) {
-      const scope = applicable(snapshot, query.productName);
+      const scope = scopeFor(query.productName);
       const analysis = calculateRelationships(relationshipDays(scope, query, analysisSettings, lookbackFrom), { from: query.from, to: query.to, changeDate: analysisSettings.changeDate });
       const allSales = ["CAFE24", "COUPANG", "NAVER"].every(p => query.platforms.includes(p as typeof query.platforms[number])) && query.scopeKeys === undefined;
       return { ...envelope, baseSnapshotHash: snapshot.baseSnapshotHash, analysis: { ...analysis, ...analysisSettings, lookbackFrom,
@@ -140,11 +146,13 @@ export class UnifiedReportService {
         available: snapshot.scopes.some(s => s.platform === key) })), scopes: snapshot.scopes, availableDateRanges: snapshot.availableDateRanges,
       defaultSelection: { platforms: [...PLATFORMS], from: query.from, to: query.to } };
     if (kind === "timeseries") {
-      const buckets = reportBuckets(query.from, query.to, query.grain).map(bucket => {
-        const { coverage, ...result } = period(snapshot, query, bucket.bucketFrom, bucket.bucketTo, query.productName);
+      // Validate the cursor and select its page before computing per-bucket totals.
+      const buckets = page(reportBuckets(query.from, query.to, query.grain), query, snapshot.snapshotHash, kind);
+      const items = buckets.items.map(bucket => {
+        const { coverage, ...result } = period(scopeFor(query.productName), query, bucket.bucketFrom, bucket.bucketTo, query.productName);
         return { ...bucket, ...result, coverage: safeCoverage(coverage) };
       });
-      return { ...envelope, ...page(buckets, query, snapshot.snapshotHash, kind) };
+      return { ...envelope, ...buckets, items };
     }
     if (kind === "diagnostics") {
       const controls = new Map(snapshot.publications.map(p => [partitionKey(p.platform, p.scopeKey, date(p.businessDate)),
@@ -156,7 +164,8 @@ export class UnifiedReportService {
     const names = query.productName ? [query.productName] : productNames;
     const namesPage = page(names, query, snapshot.snapshotHash, kind);
     const rows = namesPage.items.map(productName => {
-      const now = period(snapshot, query, query.from, query.to, productName), before = period(snapshot, query, query.compareFrom, query.compareTo, productName);
+      const scope = scopeFor(productName);
+      const now = period(scope, query, query.from, query.to, productName), before = period(scope, query, query.compareFrom, query.compareTo, productName);
       return { productName, saleUnits: [...new Set(snapshot.facts.filter(f => f.productName === productName && f.saleUnitName).map(f => f.saleUnitName!))].sort(),
         knownTotals: now.knownTotals, completeTotals: now.completeTotals, productProfitSubtotal: now.productProfitSubtotal,
         metricAvailability: metricAvailability(now.coverage, query.platforms.length),

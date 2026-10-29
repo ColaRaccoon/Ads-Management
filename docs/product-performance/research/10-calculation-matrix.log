@@ -1,0 +1,78 @@
+{
+  "stage": 10,
+  "status": "PASS",
+  "databaseAccess": false,
+  "providerCalls": 0,
+  "remoteWrites": 0,
+  "sourceData": "synthetic integer-microwon ledger",
+  "periods": [
+    {
+      "days": 1,
+      "from": "2026-10-26",
+      "to": "2026-10-26",
+      "facts": 68,
+      "coverage": 26,
+      "selections": 32,
+      "accounts": 2,
+      "products": 2,
+      "saleUnits": 2,
+      "cases": 192,
+      "calculationP95Ms": 1.47,
+      "calculationMaxMs": 5.08
+    },
+    {
+      "days": 7,
+      "from": "2026-10-20",
+      "to": "2026-10-26",
+      "facts": 476,
+      "coverage": 182,
+      "selections": 32,
+      "accounts": 2,
+      "products": 2,
+      "saleUnits": 2,
+      "cases": 192,
+      "calculationP95Ms": 6.02,
+      "calculationMaxMs": 9.02
+    },
+    {
+      "days": 30,
+      "from": "2026-09-27",
+      "to": "2026-10-26",
+      "facts": 2040,
+      "coverage": 780,
+      "selections": 32,
+      "accounts": 2,
+      "products": 2,
+      "saleUnits": 2,
+      "cases": 192,
+      "calculationP95Ms": 25.22,
+      "calculationMaxMs": 31.8
+    },
+    {
+      "days": 366,
+      "from": "2025-10-26",
+      "to": "2026-10-26",
+      "facts": 24888,
+      "coverage": 9516,
+      "selections": 32,
+      "accounts": 2,
+      "products": 2,
+      "saleUnits": 2,
+      "cases": 192,
+      "calculationP95Ms": 364.82,
+      "calculationMaxMs": 502.66
+    }
+  ],
+  "cases": 768,
+  "elapsedMs": 33774,
+  "peakSampledRssBytes": 333082624,
+  "performanceScope": "In-process read-side calculation only, no database read/publication/worker or network; mixed platform/product/account scopes; full matrix time includes independent oracle assertions",
+  "checks": [
+    "Independent BigInt sums; no shared Decimal summation in expected values",
+    "Signed returns and six-decimal amounts",
+    "Product direct profit and unallocated common/shipping balance",
+    "Naver estimate acceptance",
+    "Empty/ad-only/sale-only and all platform combinations",
+    "Day/week/month calendar coverage conservation"
+  ]
+}

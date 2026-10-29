@@ -1,0 +1,22 @@
+{
+  "stage": "10-permissions",
+  "startedAt": "2026-10-29T03:10:42.743Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55452,
+    "database": "unified_stage07"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "actual config/viewer/worker metadata-column SELECT allowed; credential_ref and external_account_id SELECT denied",
+    "fresh fixed loopback PG17 identity checked; all migrations applied and second deploy empty",
+    "separate non-owner configuration, read-only viewer and publication worker roles; source and credential access denied",
+    "real Nest HTTP routes, production permission guard/DTO validation and actual restricted PostgreSQL logins exercised; fixture principals replace external authentication only"
+  ],
+  "testOutput": "▶ stage07 real HTTP management, restricted database roles, conflicts, preview, history recovery and queue publication\n  ✔ actual config/viewer/worker identities and source/write restrictions (161.8244ms)\n  ✔ real permission guard denies unauthenticated/read-only writes; canonical catalog loads (90.6638ms)\n  ✔ name preview is read-only, independent of external IDs, and shows ambiguous/unclassified reasons (52.3971ms)\n  ✔ CAS blocks stale preview/save and concurrent changes; audit restores a historical rule (113.7825ms)\n  ✔ sale unit costs preserve explicit zero/null and allocation validation rejects invalid weights (27.6068ms)\n  ✔ impact preview reads published selected scope without writing rules, allocations or jobs (80.8081ms)\n  ✔ changing rule platform and account previews and saves the union of old/new impact scopes (27.1624ms)\n  ✔ rebuild real HTTP submission is idempotent, permission checked, and exposes failed/published status (80.8689ms)\n✔ stage07 real HTTP management, restricted database roles, conflicts, preview, history recovery and queue publication (783.331ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2244.6263\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-29T03:10:55.055Z",
+  "localEvidence": "C:\\Users\\seong\\AppData\\Local\\UnifiedPerformanceStage02\\stage10-permissions-0ef8314e-d4da-4594-8aa2-85d979c3c8f2"
+}

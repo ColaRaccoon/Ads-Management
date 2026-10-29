@@ -122,3 +122,38 @@ test("catalog renames retain published historical product rows until an explicit
   const options = await f.service.read("options", query, actor) as any;
   assert.equal(options.products.find((row: any) => row.productName === "A").historical, true);
 }));
+
+test("long timeseries pages preserve every day, scope totals and cursor invalidation", async () => enabled(async () => {
+  const f = fixture(), input = { ...query, from: "2025-10-26", productName: "A", limit: 100 };
+  const rows: any[] = [];
+  let cursor: string | undefined;
+  do {
+    const result = await f.service.read("timeseries", { ...input, cursor }, actor) as any;
+    assert.equal(result.total, 366);
+    assert.equal(result.knownTotals.revenue, "200.000000");
+    rows.push(...result.items);
+    cursor = result.nextCursor ?? undefined;
+  } while (cursor);
+  assert.deepEqual(rows.map(row => row.date), datesIn(input.from, input.to));
+  assert.equal(rows.find(row => row.date === "2026-10-25").knownTotals.revenue, "100.000000");
+  assert.equal(rows.find(row => row.date === "2026-10-26").knownTotals.estimatedProfit, "60.000000");
+  const first = await f.service.read("timeseries", input, actor) as any;
+  f.snapshot.snapshotHash = "new-publication";
+  await assert.rejects(f.service.read("timeseries", { ...input, cursor: first.nextCursor }, actor), /발행 버전/);
+  assert.equal(f.enqueued.length, 0);
+}));
+
+test("request participation reuse preserves date policy bounds and refreshes after settings change", async () => enabled(async () => {
+  const f = fixture();
+  f.snapshot.rules.push({ id: randomUUID(), productId: "A", kind: "SCOPE_POLICY", platform: "CAFE24", scopeKey: "sale", active: true,
+    validFrom: new Date("2026-10-26"), validTo: null, payload: { components: ["SALE", "DIRECT_COST"] } } as any);
+  const input = { ...query, from: "2026-10-25", productName: "A" };
+  const output = await f.service.read("timeseries", input, actor) as any;
+  assert.equal(output.knownTotals.revenue, "100.000000");
+  assert.equal(output.items[0].knownTotals.revenue, null);
+  assert.equal(output.items[1].knownTotals.revenue, "100.000000");
+  f.snapshot.rules = [];
+  const refreshed = await f.service.read("timeseries", input, actor) as any;
+  assert.equal(refreshed.knownTotals.revenue, "200.000000");
+  assert.equal(refreshed.items[0].knownTotals.revenue, "100.000000");
+}));

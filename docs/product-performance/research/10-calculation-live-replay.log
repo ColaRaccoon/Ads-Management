@@ -1,0 +1,271 @@
+{
+  "status": "PASS_INTEGRATED_CAPTURE_REPLAY",
+  "partitionCount": 99,
+  "compactFacts": 4091,
+  "platforms": [
+    {
+      "platform": "META",
+      "scopes": 2,
+      "observedDays": 30,
+      "compactFacts": 263
+    },
+    {
+      "platform": "GOOGLE",
+      "scopes": 1,
+      "observedDays": 7,
+      "compactFacts": 5
+    },
+    {
+      "platform": "NAVER",
+      "scopes": 2,
+      "observedDays": 1,
+      "compactFacts": 58
+    },
+    {
+      "platform": "COUPANG",
+      "scopes": 1,
+      "observedDays": 30,
+      "compactFacts": 3665
+    },
+    {
+      "platform": "CAFE24",
+      "scopes": 2,
+      "observedDays": 30,
+      "compactFacts": 100
+    }
+  ],
+  "periods": [
+    {
+      "days": 1,
+      "from": "2026-10-26",
+      "to": "2026-10-26",
+      "previousFrom": "2026-10-25",
+      "previousTo": "2026-10-25",
+      "actualPartitionCount": 6,
+      "actualPreviousPartitionCount": 4,
+      "synthesizedMissingComponents": 4,
+      "actualNaverDays": 1,
+      "selectionChecks": 32,
+      "reconciliation": [
+        {
+          "measure": "OPERATING_REVENUE",
+          "sourceKnown": "33122880.000000",
+          "reportKnown": "33122880.000000",
+          "assigned": "23182480.000000",
+          "unassigned": "9940400.000000",
+          "unknownSourceRows": 12,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "PROFIT_BEFORE_ADS",
+          "sourceKnown": "13675838.746545",
+          "reportKnown": "13675838.746545",
+          "assigned": "12422290.746545",
+          "unassigned": "1253548.000000",
+          "unknownSourceRows": 212,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_KRW",
+          "sourceKnown": "11502831.553468",
+          "reportKnown": "11502831.553468",
+          "assigned": "8836390.520000",
+          "unassigned": "2666441.033468",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_USD",
+          "sourceKnown": "3836.400000",
+          "reportKnown": "3836.400000",
+          "assigned": "3836.400000",
+          "unassigned": "0.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_KRW",
+          "sourceKnown": "6422287.033468",
+          "reportKnown": "6422287.033468",
+          "assigned": "3755846.000000",
+          "unassigned": "2666441.033468",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_INCOME",
+          "sourceKnown": "861000.000000",
+          "reportKnown": "861000.000000",
+          "assigned": null,
+          "unassigned": "861000.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_COST",
+          "sourceKnown": "1115800.000000",
+          "reportKnown": "1115800.000000",
+          "assigned": null,
+          "unassigned": "1115800.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "days": 7,
+      "from": "2026-10-20",
+      "to": "2026-10-26",
+      "previousFrom": "2026-10-13",
+      "previousTo": "2026-10-19",
+      "actualPartitionCount": 30,
+      "actualPreviousPartitionCount": 21,
+      "synthesizedMissingComponents": 76,
+      "actualNaverDays": 1,
+      "selectionChecks": 32,
+      "reconciliation": [
+        {
+          "measure": "OPERATING_REVENUE",
+          "sourceKnown": "144227170.000000",
+          "reportKnown": "144227170.000000",
+          "assigned": "101780770.000000",
+          "unassigned": "42446400.000000",
+          "unknownSourceRows": 107,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "PROFIT_BEFORE_ADS",
+          "sourceKnown": "52165988.378185",
+          "reportKnown": "52165988.378185",
+          "assigned": "50912440.378185",
+          "unassigned": "1253548.000000",
+          "unknownSourceRows": 1171,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_KRW",
+          "sourceKnown": "50008710.820113",
+          "reportKnown": "50008710.820113",
+          "assigned": "45989396.262000",
+          "unassigned": "4019314.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_USD",
+          "sourceKnown": "22728.420000",
+          "reportKnown": "22728.420000",
+          "assigned": "22728.420000",
+          "unassigned": "0.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_KRW",
+          "sourceKnown": "19867230.558113",
+          "reportKnown": "19867230.558113",
+          "assigned": "15847916.000000",
+          "unassigned": "4019314.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_INCOME",
+          "sourceKnown": "861000.000000",
+          "reportKnown": "861000.000000",
+          "assigned": null,
+          "unassigned": "861000.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_COST",
+          "sourceKnown": "1115800.000000",
+          "reportKnown": "1115800.000000",
+          "assigned": null,
+          "unassigned": "1115800.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        }
+      ]
+    },
+    {
+      "days": 30,
+      "from": "2026-09-27",
+      "to": "2026-10-26",
+      "previousFrom": "2026-08-28",
+      "previousTo": "2026-09-26",
+      "actualPartitionCount": 99,
+      "actualPreviousPartitionCount": 0,
+      "synthesizedMissingComponents": 375,
+      "actualNaverDays": 1,
+      "selectionChecks": 32,
+      "reconciliation": [
+        {
+          "measure": "OPERATING_REVENUE",
+          "sourceKnown": "747560740.000000",
+          "reportKnown": "747560740.000000",
+          "assigned": "528303450.000000",
+          "unassigned": "219257290.000000",
+          "unknownSourceRows": 495,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "PROFIT_BEFORE_ADS",
+          "sourceKnown": "251042391.521465",
+          "reportKnown": "251042391.521465",
+          "assigned": "249788843.521465",
+          "unassigned": "1253548.000000",
+          "unknownSourceRows": 6278,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_KRW",
+          "sourceKnown": "256931049.310113",
+          "reportKnown": "256931049.310113",
+          "assigned": "251518852.752000",
+          "unassigned": "5412196.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_USD",
+          "sourceKnown": "125017.560000",
+          "reportKnown": "125017.560000",
+          "assigned": "125017.560000",
+          "unassigned": "0.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "AD_SPEND_ORIGINAL_KRW",
+          "sourceKnown": "88774566.558113",
+          "reportKnown": "88774566.558113",
+          "assigned": "83362370.000000",
+          "unassigned": "5412196.558113",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_INCOME",
+          "sourceKnown": "861000.000000",
+          "reportKnown": "861000.000000",
+          "assigned": null,
+          "unassigned": "861000.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        },
+        {
+          "measure": "SHIPPING_COST",
+          "sourceKnown": "1115800.000000",
+          "reportKnown": "1115800.000000",
+          "assigned": null,
+          "unassigned": "1115800.000000",
+          "unknownSourceRows": 0,
+          "difference": "0.000000"
+        }
+      ]
+    }
+  ],
+  "outputPath": "C:\\Users\\seong\\Desktop\\workspace\\Meta-Ads-Performance\\docs\\product-performance\\research\\10-calculation-live-replay.json"
+}

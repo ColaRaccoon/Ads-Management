@@ -1,0 +1,25 @@
+{
+  "stage": "10",
+  "startedAt": "2026-10-29T03:10:08.362Z",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55456,
+    "database": "unified_stage10perf"
+  },
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "status": "PASS",
+  "checks": [
+    "fresh fixed loopback PG17 identity checked; all migrations applied and second deploy empty",
+    "actual non-owner read-only viewer role; raw source, credentials and aggregate writes denied",
+    "real Nest HTTP permission guard, DTO validation, report repository/service and PostgreSQL reads; only authentication principal is a loopback fixture",
+    "32 platform selections, exact daily input reconciliation, lag direction and paired sample counts, omitted Naver dates and missing product costs exercised",
+    "366-day four-page cursor regression; performance subtest intentionally skipped"
+  ],
+  "purpose": "stage10 isolated HTTP performance; no operational URL",
+  "remoteConfigWrites": 0,
+  "testOutput": "\u25b6 stage10perf relationships real HTTP paired samples and read-only selected inputs\n  \u2714 actual viewer role, guard/DTO/scope failures and no source privileges (215.1773ms)\n  \u2714 all 32 platform selections: exact daily values, samples, estimates and baseline KPI hashes (5961.8972ms)\n  \u2714 known lag3 relationship, independent media choice, missing outcome cost and constant series (501.6298ms)\n  \u2714 stage10 366 daily buckets retain every cursor page after scoped pagination (289.8513ms)\n  \ufe63 stage10 HTTP p95, RSS, connection load, execution plans and timeout recovery (0.1068ms) # SKIP\n\u2714 stage10perf relationships real HTTP paired samples and read-only selected inputs (11094.0033ms)\n\u2139 tests 6\n\u2139 suites 0\n\u2139 pass 5\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 1\n\u2139 todo 0\n\u2139 duration_ms 12977.3806\n",
+  "stopExitCode": 0,
+  "finishedAt": "2026-10-29T03:10:31.132Z",
+  "localEvidence": "C:\\Users\\seong\\AppData\\Local\\UnifiedPerformanceStage02\\stage10perf-92e9d843-4fb0-4625-b6ae-7e234b6224a0"
+}

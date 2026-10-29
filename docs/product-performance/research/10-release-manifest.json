@@ -1,0 +1,959 @@
+{
+  "stage": "10",
+  "generatedAt": "2026-10-29T03:12:41.367Z",
+  "sourceCommit": "572c0c2cb1fc567bce5149e499e27cac3948e21b",
+  "sourceCommitMeaning": "Baseline HEAD at generation; file hashes include the stage10 working tree changes. Use the final stage10 Git commit for checkout.",
+  "contractVersion": "product-performance-v1.1.0",
+  "calculationVersion": "unified-report-v1",
+  "migrations": [
+    {
+      "path": "apps/api/prisma/migrations/20260529000000_init/migration.sql",
+      "sha256": "510fd80840a47b686bfd63cf9bc485574316ce3118229d589694afb48bd75955"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260529150000_add_exchange_rates/migration.sql",
+      "sha256": "8c1228869f5826c50ab804444da364fdeb7c61d3b9287efb97045db4892cefce"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260529153000_fix_exchange_rate_unique_index_name/migration.sql",
+      "sha256": "5c27fc487809327ca6924c0079d5b24457bd4aaffadc025e787485092e8fa846"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260529162500_remove_ad_cost_multiplier/migration.sql",
+      "sha256": "9cf0d49e25c2cb327a1f166ae9338d15778b2a745118d69febb6065a22913639"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260601000000_add_meta_ad_daily_metrics/migration.sql",
+      "sha256": "24611653bff91c5fd0e24bb970232aa6ac7227d2909ded5e09e40bd40438abcc"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260604000000_add_creative_change_logs/migration.sql",
+      "sha256": "0fe7d3008598e5735757449e520a814d6f36643e7606e7a0440943cf0b3772c7"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260608000000_cleanup_orphan_creatives/migration.sql",
+      "sha256": "7f38d473e968defafb60528e0c826ddf17ced72aa0f3edefefb1e8d196cb4280"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260610000000_add_product_change_logs/migration.sql",
+      "sha256": "f865cde4ad03def8b9323b946b5dd6a7735f39c823c3ac379d4c16376f57e049"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260611000000_add_cafe24_sales/migration.sql",
+      "sha256": "f57f0474b94b57aa9ec94fbb002e207e56c1439c7ced6a87852755302d2ab9e9"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260611001000_add_cafe24_order_line_current_versions/migration.sql",
+      "sha256": "587678bd6b3b90be988722754eeddb6f05d263fe744f442e899384657a4c7647"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260625000000_add_coupang_module_models/migration.sql",
+      "sha256": "f26876d18a9ef2fd90c7db6178c0f9d2c4882a15cb0f5495db952c784285f747"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260626000000_add_coupang_promotion_prices/migration.sql",
+      "sha256": "3bf48e4a12e2c922180b1d8d96d4caf3402fc4fa4f72d84b0a41ff0c955684d6"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260701000000_add_coupang_ad_metric_ad_name/migration.sql",
+      "sha256": "c8051d939321ed67a1044e19257afb5edbe51d0e7863ee09e746d9519b5e8850"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260703000000_add_coupang_product_groups/migration.sql",
+      "sha256": "ad63504845d2833f4ed58baee6e04a6bc14d7f6170a88efa217d8bc26551227a"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260709000000_add_coupang_manual_purchases/migration.sql",
+      "sha256": "bd2cfbf9ef170ee1926b75dd55c4c05b2f27f13c670cbb0a7ea5f0b48b66005d"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260710000000_add_coupang_manual_purchase_vat/migration.sql",
+      "sha256": "5a687637f6250369010a5914c4f4cd99e044ca1c94dee9cd24f94e335a43721b"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260721000000_add_coupang_manual_purchase_sales_amount/migration.sql",
+      "sha256": "81e17e2a9ece358ce0f3f97051cb74d0aa04adfc496a1dfd7c302889e46aac87"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260721173000_add_coupang_manual_purchase_product_cost/migration.sql",
+      "sha256": "d904e42e12989eeb08014ef9d9d57584bb7abd195929e8c1686be8f732720ef8"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260722000000_backfill_coupang_manual_purchase_sales_amount/migration.sql",
+      "sha256": "372c395900cb695be168e21200d5cf28ed7624618fbcf03288394b4a7b455299"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260722150000_split_coupang_shipping_fees/migration.sql",
+      "sha256": "a7ef0ded7ca0f674272da246ab2e7df376932d0e18a39939f51f920bf7699cdb"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260722200000_add_global_coupang_sales_fee_rules/migration.sql",
+      "sha256": "f6b6f9dd14097b472a5afbb1e255a420083e52c005b0e9b69a2d3c061418a989"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260723110000_normalize_coupang_cost_rule_history/migration.sql",
+      "sha256": "f6a550fff124ccb59b21acf2d3396aa18a2d775f5ee1601434dc40cae9d33797"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260724000000_normalize_manual_purchase_accounting/migration.sql",
+      "sha256": "54eaf82d7a1c79e59f11badd5a633698c2825d7dccf4d9a58d41a37834c223c4"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260724010000_remove_coupang_manual_purchase_vat/migration.sql",
+      "sha256": "efee917e524c0607fab1064a1b53c09d6626087f8493d4fa1e8cfa12d4c7ec32"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260724170000_add_coupang_daily_report_categories/migration.sql",
+      "sha256": "31a7afb9b25bb5ab24dbd5600c6b8f69d3d005f1ddf7dcdf3686652b379d5972"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260731000000_add_cafe24_coupon_rules/migration.sql",
+      "sha256": "c5cba6a94cb75e971e19430aaf54537cbcc1ca79c8a8b017167758a3ce3ac25c"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260810170000_add_meta_video_play_counts/migration.sql",
+      "sha256": "48c651230d0e47db09f35791f2404c6d90ffdbd6f1b762738bcdd3ac91596839"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260820090000_add_meta_add_to_cart_count/migration.sql",
+      "sha256": "8cb632da14c4b6cd5fc58417fc83c34532eb197bc83bb7ae83570851c55f0825"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260824110000_add_security_auth/migration.sql",
+      "sha256": "6b867f1d564a5c6c383a13aa6d45448bc872650d80af99c581b7f1cb731a1d9f"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260824140000_add_actor_attribution/migration.sql",
+      "sha256": "6fd63d3541ab1d023ca5beb8982e9009d84dc08571d6e6c139679c62c690e6fd"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825090000_add_user_lifecycle_audit/migration.sql",
+      "sha256": "780f8bb357263382698fb80058677f41159afe88b2f8db0ca4178f7e1693b21f"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825110000_protect_security_audit_truncate/migration.sql",
+      "sha256": "c378bab4bbd506f786434929661463bfa84318d3b95882e5796e3ec7d39c2d63"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825150000_add_distributed_rate_limits/migration.sql",
+      "sha256": "349c028706866d18a66a22edb81ec6cd1a463ba88870e327e689084af0456d5f"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825170000_minimize_cafe24_coupang_raw_rows/migration.sql",
+      "sha256": "476827c4c03aa04f765fd22ca7c080cc008407a61134d03e4c94f54684bd81eb"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825210000_add_storage_tombstones/migration.sql",
+      "sha256": "b27decf14c9d6dfae19621404b3258a4dc2f867950d9981e9607ae3385ffe4b0"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260826010000_add_local_native_auth/migration.sql",
+      "sha256": "0e4876a6c3fe0f3aa9637b7bbb9577b3acff8cd384ea681d50ed2621fcfed8ea"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260826020000_add_local_edge_request_nonces/migration.sql",
+      "sha256": "c154a5778e4768b9341ac4f8514815f8c214aef53aeed0eec821c1c2e0c3a94e"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260929090000_common_sync_foundation/migration.sql",
+      "sha256": "5ec6513bcfb8f9d5f314c7f3a1571e923ba8510fabd3a452e5da3c931afac7ff"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260929170000_canonical_import_origins/migration.sql",
+      "sha256": "5594e493b9431a9448b156a23f7bc2a2fd2b85a1b6425f5832d3753508254101"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930093000_meta_action_report_time/migration.sql",
+      "sha256": "eef3b216e5e522cd025669645db0970aa239ea885762b4f53b57a43575f6ae3a"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930130000_cafe24_oauth_attempts/migration.sql",
+      "sha256": "0a6795d8cbd9dc751f314e841caa177e3a265730d99bc4eb8b0bc3c689eead8c"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930131000_cafe24_requery_state/migration.sql",
+      "sha256": "ccbba4d4da6d467d7478fb5c2503ebb07a4fe748af00251f0f1b1ce25e53892b"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930160000_meta_nonadditive_reach/migration.sql",
+      "sha256": "96f152f138cc96cf06cecc7ba79e07f4d428bc1566b0fe1275dbb3754da73aa0"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261001135600_cafe24_observed_revisions/migration.sql",
+      "sha256": "0146f5e3e85e342888af6b1ecc9372e901e983fa4b0455177e9b2964279ef0ef"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261002110000_cafe24_day_snapshot_fingerprints/migration.sql",
+      "sha256": "9929e4b92efeb1fdb192cb64680598df851776e5de38718741a66f2f6425c9ac"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261006110000_cafe24_provider_payment_inputs/migration.sql",
+      "sha256": "dcb9ee4417231b7c0a80ac1af8035f84046f629c4d92a91f1bcb6dfad55a7ecd"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261007100000_cafe24_option_composition_514/migration.sql",
+      "sha256": "be2448028be981941c50fd2190a52282d8d6c6ba80f848f69612f42b476a8015"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261008143000_meta_conditional_metrics/migration.sql",
+      "sha256": "2ade3d4b1990605d75eb7a7f65b3b1716ce31ec27c10e7d2e7cbd24adbc2c32d"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261008170000_meta_current_metadata/migration.sql",
+      "sha256": "28f199e30bebc7c823555eb710868189060dbf13646ca69a1d2b4789f6b67cfd"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261012150000_meta_provider_purchase_value/migration.sql",
+      "sha256": "64b050d905a410c3495673032ccca9dc17334b5584f5dc76fec33b336ff48eae"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261012170000_scheduled_unit_checkpoints/migration.sql",
+      "sha256": "f707bbb34aa242e4f6b4f6970cde177a3ad9a92b93988242eef077a8535014de"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261020160000_cafe24_observation_epochs/migration.sql",
+      "sha256": "0242d0a231ffe93fa35f1a94c5effaedb0f671a29a8a8d66b7a3b7d7aae7ad99"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261024021144_meta_adset_legacy_external_scope/migration.sql",
+      "sha256": "8db94a055e76280bfb4f2b3a442551d88020d6fbca96b86a19054358d3c89f7b"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261026120000_google_performance_mappings/migration.sql",
+      "sha256": "d9626086807dde45b3d2b41c6c67478dd4c91191e8330361154dfdbb5bfcae66"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261026130000_google_sale_configuration/migration.sql",
+      "sha256": "77dbb5f691035b0b72761ecc239a9af4eb758f17fdcbc96808d1c7aefa342b11"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261027071504_unified_performance_foundation/migration.sql",
+      "sha256": "7aa3744d68228689f4eb15b3175603869e1adc12934f8a9ea861ba98c9cbdbcc"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261028003825_cafe24_separate_product_option/migration.sql",
+      "sha256": "a25f5f22dd711b132334816f8572baf77c64f38560add0b45804fd2d6214be8d"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261028080000_unified_report_publication/migration.sql",
+      "sha256": "12bf695091cbeb745ef2801e423da47b632913393c0541ee5d2a6d43e582cef4"
+    }
+  ],
+  "featureMigrations": [
+    "20261027071504_unified_performance_foundation",
+    "20261028003825_cafe24_separate_product_option",
+    "20261028080000_unified_report_publication"
+  ],
+  "defaults": {
+    "UNIFIED_PERFORMANCE_ENABLED": false,
+    "UNIFIED_NAVER_ALLOWED_STORE_IDS": "",
+    "UNIFIED_REPORT_LEGACY_PLATFORMS": "META,CAFE24",
+    "workerSchedule": "NONE; manual sequential CLI only"
+  },
+  "files": [
+    {
+      "path": "apps/api/package.json",
+      "sha256": "4043b540b0e2b270d4935d3f0c64fc07162f6be1ad24ee0f42b30852a2635acd"
+    },
+    {
+      "path": "apps/api/prisma/cafe24-live.schema.prisma",
+      "sha256": "125275a23af7daec6b5d2722371aa3ce6eb2d6d2be184d37f3e7cf39f47a8d47"
+    },
+    {
+      "path": "apps/api/prisma/cafe24-test.schema.prisma",
+      "sha256": "026e9c3d81db0fde55f4395d603ee2e70fd5e38a71457b7ac8188c8e4505e6b9"
+    },
+    {
+      "path": "apps/api/prisma/coupang-cost-rule-audit.sql",
+      "sha256": "413662ca6892e77ca99ca8ea6aa432a6ac53cb6251616d60865285453c5022b8"
+    },
+    {
+      "path": "apps/api/prisma/coupang-manual-purchase-accounting-audit.sql",
+      "sha256": "21b68b394ae0bd033b02d079d2a097b604643d8be2a306b6a498c6546e4f7681"
+    },
+    {
+      "path": "apps/api/prisma/meta-video-play-counts-audit.sql",
+      "sha256": "98a2283d4623c6c91b74dae1c61017ccc54a9e7672a150de3ce6ec6c6f97dd1a"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260529000000_init/migration.sql",
+      "sha256": "510fd80840a47b686bfd63cf9bc485574316ce3118229d589694afb48bd75955"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260529150000_add_exchange_rates/migration.sql",
+      "sha256": "8c1228869f5826c50ab804444da364fdeb7c61d3b9287efb97045db4892cefce"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260529153000_fix_exchange_rate_unique_index_name/migration.sql",
+      "sha256": "5c27fc487809327ca6924c0079d5b24457bd4aaffadc025e787485092e8fa846"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260529162500_remove_ad_cost_multiplier/migration.sql",
+      "sha256": "9cf0d49e25c2cb327a1f166ae9338d15778b2a745118d69febb6065a22913639"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260601000000_add_meta_ad_daily_metrics/migration.sql",
+      "sha256": "24611653bff91c5fd0e24bb970232aa6ac7227d2909ded5e09e40bd40438abcc"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260604000000_add_creative_change_logs/migration.sql",
+      "sha256": "0fe7d3008598e5735757449e520a814d6f36643e7606e7a0440943cf0b3772c7"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260608000000_cleanup_orphan_creatives/migration.sql",
+      "sha256": "7f38d473e968defafb60528e0c826ddf17ced72aa0f3edefefb1e8d196cb4280"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260610000000_add_product_change_logs/migration.sql",
+      "sha256": "f865cde4ad03def8b9323b946b5dd6a7735f39c823c3ac379d4c16376f57e049"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260611000000_add_cafe24_sales/migration.sql",
+      "sha256": "f57f0474b94b57aa9ec94fbb002e207e56c1439c7ced6a87852755302d2ab9e9"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260611001000_add_cafe24_order_line_current_versions/migration.sql",
+      "sha256": "587678bd6b3b90be988722754eeddb6f05d263fe744f442e899384657a4c7647"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260625000000_add_coupang_module_models/migration.sql",
+      "sha256": "f26876d18a9ef2fd90c7db6178c0f9d2c4882a15cb0f5495db952c784285f747"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260626000000_add_coupang_promotion_prices/migration.sql",
+      "sha256": "3bf48e4a12e2c922180b1d8d96d4caf3402fc4fa4f72d84b0a41ff0c955684d6"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260701000000_add_coupang_ad_metric_ad_name/migration.sql",
+      "sha256": "c8051d939321ed67a1044e19257afb5edbe51d0e7863ee09e746d9519b5e8850"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260703000000_add_coupang_product_groups/migration.sql",
+      "sha256": "ad63504845d2833f4ed58baee6e04a6bc14d7f6170a88efa217d8bc26551227a"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260709000000_add_coupang_manual_purchases/migration.sql",
+      "sha256": "bd2cfbf9ef170ee1926b75dd55c4c05b2f27f13c670cbb0a7ea5f0b48b66005d"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260710000000_add_coupang_manual_purchase_vat/migration.sql",
+      "sha256": "5a687637f6250369010a5914c4f4cd99e044ca1c94dee9cd24f94e335a43721b"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260721000000_add_coupang_manual_purchase_sales_amount/migration.sql",
+      "sha256": "81e17e2a9ece358ce0f3f97051cb74d0aa04adfc496a1dfd7c302889e46aac87"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260721173000_add_coupang_manual_purchase_product_cost/migration.sql",
+      "sha256": "d904e42e12989eeb08014ef9d9d57584bb7abd195929e8c1686be8f732720ef8"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260722000000_backfill_coupang_manual_purchase_sales_amount/migration.sql",
+      "sha256": "372c395900cb695be168e21200d5cf28ed7624618fbcf03288394b4a7b455299"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260722150000_split_coupang_shipping_fees/migration.sql",
+      "sha256": "a7ef0ded7ca0f674272da246ab2e7df376932d0e18a39939f51f920bf7699cdb"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260722200000_add_global_coupang_sales_fee_rules/migration.sql",
+      "sha256": "f6b6f9dd14097b472a5afbb1e255a420083e52c005b0e9b69a2d3c061418a989"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260723110000_normalize_coupang_cost_rule_history/migration.sql",
+      "sha256": "f6a550fff124ccb59b21acf2d3396aa18a2d775f5ee1601434dc40cae9d33797"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260724000000_normalize_manual_purchase_accounting/migration.sql",
+      "sha256": "54eaf82d7a1c79e59f11badd5a633698c2825d7dccf4d9a58d41a37834c223c4"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260724010000_remove_coupang_manual_purchase_vat/migration.sql",
+      "sha256": "efee917e524c0607fab1064a1b53c09d6626087f8493d4fa1e8cfa12d4c7ec32"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260724170000_add_coupang_daily_report_categories/migration.sql",
+      "sha256": "31a7afb9b25bb5ab24dbd5600c6b8f69d3d005f1ddf7dcdf3686652b379d5972"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260731000000_add_cafe24_coupon_rules/migration.sql",
+      "sha256": "c5cba6a94cb75e971e19430aaf54537cbcc1ca79c8a8b017167758a3ce3ac25c"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260810170000_add_meta_video_play_counts/migration.sql",
+      "sha256": "48c651230d0e47db09f35791f2404c6d90ffdbd6f1b762738bcdd3ac91596839"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260820090000_add_meta_add_to_cart_count/migration.sql",
+      "sha256": "8cb632da14c4b6cd5fc58417fc83c34532eb197bc83bb7ae83570851c55f0825"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260824110000_add_security_auth/migration.sql",
+      "sha256": "6b867f1d564a5c6c383a13aa6d45448bc872650d80af99c581b7f1cb731a1d9f"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260824140000_add_actor_attribution/migration.sql",
+      "sha256": "6fd63d3541ab1d023ca5beb8982e9009d84dc08571d6e6c139679c62c690e6fd"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825090000_add_user_lifecycle_audit/migration.sql",
+      "sha256": "780f8bb357263382698fb80058677f41159afe88b2f8db0ca4178f7e1693b21f"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825110000_protect_security_audit_truncate/migration.sql",
+      "sha256": "c378bab4bbd506f786434929661463bfa84318d3b95882e5796e3ec7d39c2d63"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825150000_add_distributed_rate_limits/migration.sql",
+      "sha256": "349c028706866d18a66a22edb81ec6cd1a463ba88870e327e689084af0456d5f"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825170000_minimize_cafe24_coupang_raw_rows/migration.sql",
+      "sha256": "476827c4c03aa04f765fd22ca7c080cc008407a61134d03e4c94f54684bd81eb"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260825210000_add_storage_tombstones/migration.sql",
+      "sha256": "b27decf14c9d6dfae19621404b3258a4dc2f867950d9981e9607ae3385ffe4b0"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260826010000_add_local_native_auth/migration.sql",
+      "sha256": "0e4876a6c3fe0f3aa9637b7bbb9577b3acff8cd384ea681d50ed2621fcfed8ea"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260826020000_add_local_edge_request_nonces/migration.sql",
+      "sha256": "c154a5778e4768b9341ac4f8514815f8c214aef53aeed0eec821c1c2e0c3a94e"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260929090000_common_sync_foundation/migration.sql",
+      "sha256": "5ec6513bcfb8f9d5f314c7f3a1571e923ba8510fabd3a452e5da3c931afac7ff"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260929170000_canonical_import_origins/migration.sql",
+      "sha256": "5594e493b9431a9448b156a23f7bc2a2fd2b85a1b6425f5832d3753508254101"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930093000_meta_action_report_time/migration.sql",
+      "sha256": "eef3b216e5e522cd025669645db0970aa239ea885762b4f53b57a43575f6ae3a"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930130000_cafe24_oauth_attempts/migration.sql",
+      "sha256": "0a6795d8cbd9dc751f314e841caa177e3a265730d99bc4eb8b0bc3c689eead8c"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930131000_cafe24_requery_state/migration.sql",
+      "sha256": "ccbba4d4da6d467d7478fb5c2503ebb07a4fe748af00251f0f1b1ce25e53892b"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260930160000_meta_nonadditive_reach/migration.sql",
+      "sha256": "96f152f138cc96cf06cecc7ba79e07f4d428bc1566b0fe1275dbb3754da73aa0"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261001135600_cafe24_observed_revisions/migration.sql",
+      "sha256": "0146f5e3e85e342888af6b1ecc9372e901e983fa4b0455177e9b2964279ef0ef"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261002110000_cafe24_day_snapshot_fingerprints/migration.sql",
+      "sha256": "9929e4b92efeb1fdb192cb64680598df851776e5de38718741a66f2f6425c9ac"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261006110000_cafe24_provider_payment_inputs/migration.sql",
+      "sha256": "dcb9ee4417231b7c0a80ac1af8035f84046f629c4d92a91f1bcb6dfad55a7ecd"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261007100000_cafe24_option_composition_514/migration.sql",
+      "sha256": "be2448028be981941c50fd2190a52282d8d6c6ba80f848f69612f42b476a8015"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261008143000_meta_conditional_metrics/migration.sql",
+      "sha256": "2ade3d4b1990605d75eb7a7f65b3b1716ce31ec27c10e7d2e7cbd24adbc2c32d"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261008170000_meta_current_metadata/migration.sql",
+      "sha256": "28f199e30bebc7c823555eb710868189060dbf13646ca69a1d2b4789f6b67cfd"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261012150000_meta_provider_purchase_value/migration.sql",
+      "sha256": "64b050d905a410c3495673032ccca9dc17334b5584f5dc76fec33b336ff48eae"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261012170000_scheduled_unit_checkpoints/migration.sql",
+      "sha256": "f707bbb34aa242e4f6b4f6970cde177a3ad9a92b93988242eef077a8535014de"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261020160000_cafe24_observation_epochs/migration.sql",
+      "sha256": "0242d0a231ffe93fa35f1a94c5effaedb0f671a29a8a8d66b7a3b7d7aae7ad99"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261024021144_meta_adset_legacy_external_scope/migration.sql",
+      "sha256": "8db94a055e76280bfb4f2b3a442551d88020d6fbca96b86a19054358d3c89f7b"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261026120000_google_performance_mappings/migration.sql",
+      "sha256": "d9626086807dde45b3d2b41c6c67478dd4c91191e8330361154dfdbb5bfcae66"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261026130000_google_sale_configuration/migration.sql",
+      "sha256": "77dbb5f691035b0b72761ecc239a9af4eb758f17fdcbc96808d1c7aefa342b11"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261027071504_unified_performance_foundation/migration.sql",
+      "sha256": "7aa3744d68228689f4eb15b3175603869e1adc12934f8a9ea861ba98c9cbdbcc"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261028003825_cafe24_separate_product_option/migration.sql",
+      "sha256": "a25f5f22dd711b132334816f8572baf77c64f38560add0b45804fd2d6214be8d"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20261028080000_unified_report_publication/migration.sql",
+      "sha256": "12bf695091cbeb745ef2801e423da47b632913393c0541ee5d2a6d43e582cef4"
+    },
+    {
+      "path": "apps/api/prisma/schema.prisma",
+      "sha256": "2315d962ea03aca9421556e1db12a7ac248ffe13ccd15fbe31c378f422f089a2"
+    },
+    {
+      "path": "apps/api/prisma/seed.ts",
+      "sha256": "1d2e67d9ca71b7b6c4717d65f035d287205f5274c6c7a10428461448fb33b121"
+    },
+    {
+      "path": "apps/api/src/app.module.ts",
+      "sha256": "58ba53e41b7e91747ea51c5c27808f5642e6389aebca618cb1d36af863947e15"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapter-contract.test.ts",
+      "sha256": "ea42350369c80e7e95ec8343c1e6da3fc9fba8717b4382c96e9841bd697c48fe"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapter-contract.ts",
+      "sha256": "4f2879f1cfb224be1756c11760a1f27d396c062aaaa57f1f61e1e0b4f4c5b715"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/ad-reader.test.ts",
+      "sha256": "20da92de67acc29aab400ba5dda976bf29e753ee5a4952b0141bfc5529c831ca"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/ad-reader.ts",
+      "sha256": "f3ebbdc41d1514197c32f364eea15bc48f58f7e247d876d9cb4a6939f8a3ef0d"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/ad-source.ts",
+      "sha256": "4210b3359080d31147f2ba361340b4a3ce68afe9995d652fd6d56523a46ed9d5"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/cafe24-coupon.ts",
+      "sha256": "35e4f4b6deb725e9cd019b22d6c951a169451ef3710fe43c5e98a303649c5917"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/cafe24.adapter.test.ts",
+      "sha256": "4dbac51128b55d28775bafe65ee86e1890e6c4822bd23b602efab0eb0c536962"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/cafe24.adapter.ts",
+      "sha256": "cf23af9486ae888421e2b77b906721dab074c2dc6d6d7fad80c01ecfcc482c74"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang-ads.test.ts",
+      "sha256": "5da1a73a7fa1fae9567a30f596e26db65babe152b8932d2363dc8e631e8953f6"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang-ads.ts",
+      "sha256": "8f841b0471c55b222745280bdd83ae0532a7c3a2e667f6d8847c0963e6bd5e38"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang-configuration.test.ts",
+      "sha256": "d1b91558a242343c93c6532280a04db00ae5616afca5d3d9af2fa2b8a3f5d9c8"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang-configuration.ts",
+      "sha256": "72e8abd13ca5196534d9dabf9e8d7f8a3006761fab4894a848b9423cf53fae09"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang-sales.test.ts",
+      "sha256": "07d95bdd4169cec34a78250edbb9be4b4024f22bd71d3516fed7fb114acf5cc0"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang-sales.ts",
+      "sha256": "90d06f91607b9594fa35cda9917595f7fe59b1b1171baa9329680a641bca8092"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang.adapter.test.ts",
+      "sha256": "3b0846256c2acfd328e37f66c39048dcef9b6ce607ed7836916df71ccbef10d0"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/coupang.adapter.ts",
+      "sha256": "c78025e8131e7546cd5f413a07c27100d7f1e41a03ad7f693622e2877c225df0"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/google.adapter.test.ts",
+      "sha256": "43eb9b4a84b85ab2ad3c75c34b47f79c9734e4208035705c6a3f446f6c9398ea"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/google.adapter.ts",
+      "sha256": "12dfc7fd2e34cdaf334662d82ba3a82d94fa54edbdbcf2122eb039b4717597aa"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/meta.adapter.test.ts",
+      "sha256": "abc845766a6ae65ff850e9f89652748f2786ea866e4764fd2b0d0669df0707c5"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/meta.adapter.ts",
+      "sha256": "fb150c624e969f6e451d76784cb73f50a523fb9543077aee006c3687021a55bc"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver-ads-common.test.ts",
+      "sha256": "7ae88af477bccf07282e7a5909dfd6a2e2349514f58d9b35510766b5b9810113"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver-ads-common.ts",
+      "sha256": "bc24e8906ee5eb0e0784cc210e51eb02d29bfdb385bba5b350a7102158e906e0"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver-configuration.ts",
+      "sha256": "bb83d168870d8fff605532281633800393cf0f384df98cc300d715952183ba85"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver-reader.ts",
+      "sha256": "bca92ac493822b40e09a67ffb199efbbb7cd34aa9db75568aa688fa669bbeb7b"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver-sales.test.ts",
+      "sha256": "ae797697c5bf21f6d614c3f478d30ece36d8be4d1332593e346fe71b92d75453"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver-sales.ts",
+      "sha256": "27f09a4b43ef32efa797cc159c039037244ed8f26ee0246a6bb7a13d4b085987"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver.adapter.test.ts",
+      "sha256": "d4e751f3d464e65503442db22d2d67d50fe716aa81972b83a0bb7d0cd2877f95"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/naver.adapter.ts",
+      "sha256": "2daa727efed306558eee12fccfeefea3cbbaa15952eef06cdfcce31fa1e72e20"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/storefront-adapters.service.test.ts",
+      "sha256": "b884f2e6edda57fb87b3770c4bbc6f198bff1232608b7b9131d8917505d7dd26"
+    },
+    {
+      "path": "apps/api/src/unified-performance/adapters/storefront-adapters.service.ts",
+      "sha256": "42e7d86c3821e668c67d9557e085f4eaee270d61271be2472d6aca124e92d51b"
+    },
+    {
+      "path": "apps/api/src/unified-performance/aggregation.repository.ts",
+      "sha256": "8d44bffd7ccb4ebca7ac7d53988864f25d7dacdb6861feda9491af6f694e5356"
+    },
+    {
+      "path": "apps/api/src/unified-performance/aggregation.worker.test.ts",
+      "sha256": "b1d02485c5f3cf1c3263304197da75bc4046c6526517a8e429d3fbc540eff049"
+    },
+    {
+      "path": "apps/api/src/unified-performance/aggregation.worker.ts",
+      "sha256": "07570f92b538a1a79889c38c07ee326a34fc9fd318de5b5c16d4ed9b86686a39"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/decimal.ts",
+      "sha256": "b7bd0a1f9ea48416a475fcaec9a93b8d44b0c203cfd80fa2610a188997c12ed1"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/legacy-name-migration.test.ts",
+      "sha256": "437457306459714fbbbdddf222dc2eb3cceea043fe87335883c5bc2fde714ed2"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/legacy-name-migration.ts",
+      "sha256": "ebecbb8b8f37f57a970673b77aad858b223af43835eb3ea496b639b52ebec08b"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/platform-selection.test.ts",
+      "sha256": "ff7d062615c90c92fe2b20716b84d3f414e9c6e99906b636b9fc92db55725166"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/platform-selection.ts",
+      "sha256": "f099e86c5e889fb020dc3fc6e5999853cc85ef681c229b9afd1d9b435aaa3155"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/product-name-resolver.test.ts",
+      "sha256": "3e17e38895eb85cc19ce42c73d6c500f15579e66dec33e49d4796674f6900ebd"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/product-name-resolver.ts",
+      "sha256": "9966bcfef6432a8ab5370ebaf936397dc762830d597d9ea8fdb20b10732b257e"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/relationship-calculation.test.ts",
+      "sha256": "af974ef477960598c43bb539b5531b14f981dd777a88391463b9e235d236e8e3"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/relationship-calculation.ts",
+      "sha256": "f9aad64982c878dc8088fb3311cdeb85ab53dad12b23ee95f7c517919cf04ec2"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/report-allocation.ts",
+      "sha256": "5b063725de95380099d7d2a84b622af0cd4cc346406c78d58d8ec967840da3e0"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/report-calculation.test.ts",
+      "sha256": "59b449958703dccd4bb2b4722db02a545baa7419afa4321569da9744d0cbd5b2"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/report-calculation.ts",
+      "sha256": "c2c8261e326b11b6592a853a1100cdfbe4ffc404b17aa0b39c297215074ae6c1"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/sale-unit-validation.test.ts",
+      "sha256": "be6adba55e3259472ff69d21ba403c3d7d817ebc7b067938fb176652e73db992"
+    },
+    {
+      "path": "apps/api/src/unified-performance/domain/sale-unit-validation.ts",
+      "sha256": "48d83c7e84fdbf22ca99e1e7f569f5a38e3edd378e6d1d219d2e55b40d106179"
+    },
+    {
+      "path": "apps/api/src/unified-performance/management-impact.test.ts",
+      "sha256": "9bfde9bc4f5180b8f674bb2e32fa8d1ac8227194c9445c490a0b5e4dcc89811e"
+    },
+    {
+      "path": "apps/api/src/unified-performance/management-impact.ts",
+      "sha256": "6dc2257d53058f01679bf126fbf90855153ab5246aa2a70817c4dade1436a256"
+    },
+    {
+      "path": "apps/api/src/unified-performance/management.controller.ts",
+      "sha256": "9f395a3e76cd75b0e56feff3ca5acef512bec24f6b56b955c4bdc9aa25774c37"
+    },
+    {
+      "path": "apps/api/src/unified-performance/management.dto.ts",
+      "sha256": "70ef561a25e9f50a40022c9ae8cd2554a4ab228b7196f98c6e2518407851b4f0"
+    },
+    {
+      "path": "apps/api/src/unified-performance/management.repository.ts",
+      "sha256": "cf2e3cf287a69bdf81042bc0fee9c0d93ea5199bb9d91f8dcbf0c0bcc17b7247"
+    },
+    {
+      "path": "apps/api/src/unified-performance/management.service.test.ts",
+      "sha256": "a0080d49712879b9bcc6f0b51317e4f875254a011b4185a8af3d1dee9a35d487"
+    },
+    {
+      "path": "apps/api/src/unified-performance/management.service.ts",
+      "sha256": "17da39c01a2e8e873620292f5b1cdf9ce11460d2eb3ad01393919d86812afdc7"
+    },
+    {
+      "path": "apps/api/src/unified-performance/relationship-input.test.ts",
+      "sha256": "fe1d85408ff376b8d9d03bba05c9d8c7dcf74c7a648ed3b2003d6d362ba1d25e"
+    },
+    {
+      "path": "apps/api/src/unified-performance/relationship-input.ts",
+      "sha256": "dede0884beff5bcfb2194b234950558c0218f5a8de7a957afcbfbdc39ea94147"
+    },
+    {
+      "path": "apps/api/src/unified-performance/relationship-query.ts",
+      "sha256": "4aac90b78b50c8ee57b0c21672ccbd24c0f9c3e0ab075e01e5d3867b45db3df7"
+    },
+    {
+      "path": "apps/api/src/unified-performance/report-contract.ts",
+      "sha256": "10780b5fab8bc02be9f19bcc899efacefd108cb0f619e1f912c1ea5ad41e182b"
+    },
+    {
+      "path": "apps/api/src/unified-performance/report-query.ts",
+      "sha256": "278bad8f7c44b22b127b9c379d89292fb363fcc480cf53b70b0e12070d38f673"
+    },
+    {
+      "path": "apps/api/src/unified-performance/report.controller.ts",
+      "sha256": "bb305444723e53a32a8289a4f6eed395e7d437ab0b0206a35452bb1c2c71436f"
+    },
+    {
+      "path": "apps/api/src/unified-performance/report.dto.ts",
+      "sha256": "1406fbff0476cf1701901c5559f8efdac67465aa8005a9aa77b0c0c08eb8cdef"
+    },
+    {
+      "path": "apps/api/src/unified-performance/report.repository.ts",
+      "sha256": "cbbeba7839be77808832076693fa19b1b0a40e5ab9c902410effc8dee2dd63a1"
+    },
+    {
+      "path": "apps/api/src/unified-performance/report.service.test.ts",
+      "sha256": "32fa6c42c58148f063997db5a3ae499b31fa355ca52c9d4bde3a018b91be36b2"
+    },
+    {
+      "path": "apps/api/src/unified-performance/report.service.ts",
+      "sha256": "acfff3b24522778a31d70e1b9b0f15c5ad71f960a9ad6b50992464db906f6053"
+    },
+    {
+      "path": "apps/api/src/unified-performance/types.ts",
+      "sha256": "6e8da4cd1620d9628f6a1ac1683e3112a94d78535d47b2c7949153240616e73b"
+    },
+    {
+      "path": "apps/api/src/unified-performance/unified-performance.module.ts",
+      "sha256": "0a1ca3e8de4cacb5b37b8317602234b182c1180a8e2e699f48db4e898d40d74c"
+    },
+    {
+      "path": "apps/web/package.json",
+      "sha256": "ce9355ce501b25906e1b4901477dd221df5fd531ad68176d4a65e1a70dca33a0"
+    },
+    {
+      "path": "apps/web/src/app/products/mappings/page.tsx",
+      "sha256": "36b6f8a2af9e2688c7e1ec188d3463a0139f5f82c7cab0df6ca2c29414ebab86"
+    },
+    {
+      "path": "apps/web/src/app/products/performance/page.tsx",
+      "sha256": "41af0d96017343d80dc4f8ccfcde92587bc954de09ae298c15446a2c0950eb7b"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/allocation-fields.tsx",
+      "sha256": "2693ca29d7ae178083ddb99301531afaf63176fe788c12363767d8b84869ab9a"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/legacy-name-rules.tsx",
+      "sha256": "dcecdbd96c5ce99d33dad96ac714fd091bf33f48aac8e4fa07eba326bf2ce18c"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/model.test.ts",
+      "sha256": "daedbbdfa25043f9d68413ae1c6c247efad7cf395646a5c7d391f002f311dbc3"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/model.ts",
+      "sha256": "37cb83bb85fd5ea58e7869f7383aef7d8bc7339d9c71cc7c974595bae9ff95a7"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/name-preview.tsx",
+      "sha256": "07d9704e663a27f8f703d10bf151e88e885a38efeba2dc459d279398607719b4"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/name-rule-fields.tsx",
+      "sha256": "dd509a58c6b618596080c2524d46af35fa8373df7a234bada7b688826b5cdd15"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/product-mappings-fields.test.tsx",
+      "sha256": "01b300d25abf0650a6c4ea807b5f95290f190eeb1a125b387a7c7c543c3d02f8"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/product-mappings-page.test.tsx",
+      "sha256": "cac814e96237c616cab40e23aa1eb1ffc3e4d783a0b780c15cb2f0b196a3a1a7"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/product-mappings-page.tsx",
+      "sha256": "94a5a83da75ac792f6193b2940cda98aecb555c6d60551aad87b67688aa6e299"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/sale-unit-fields.tsx",
+      "sha256": "66f773fc33fb57b10f7b30e1a20ae92c8d6a5cfdfdfd89742b88d33f8759c86b"
+    },
+    {
+      "path": "apps/web/src/features/product-mappings/types.ts",
+      "sha256": "ceeacb1c75d7c2f0b3d9d2e72672f5ef12c3fec394e7588bcbba3f4f922b87c1"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/chart-model.test.ts",
+      "sha256": "768e0fa751045cd5e84576af21921370bac997b8b5771c8b2439183751858485"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/chart-model.ts",
+      "sha256": "79d335a5d1c5613580e0c4cf0b608684294290535c8b6f442714c2dfb85601ca"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/charts.tsx",
+      "sha256": "7e1e6aff69d0ece9d184ce79340b2253571efd6094290dd51eaa414f7b14fe7b"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/comparison-table.tsx",
+      "sha256": "de24f3b32e8f7b93f3141e48c8627c8377aa9e8086ebe5a27ed6e2515af74259"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/diagnostics.test.tsx",
+      "sha256": "6e09c9fbf39e5c7c9bb57910aac5cb4a6cc5da89aa499ae4a19538ef0cd1c8af"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/diagnostics.tsx",
+      "sha256": "b1cc62287446d1b1afa7db4b510b3a388205ba8867a70a5db26827dd30df5347"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/filters.tsx",
+      "sha256": "c3f8fa9703f1d70b4e3fa41e7c40eff3224699d1f5e6a78838b62642b1484ebf"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/kpis.test.tsx",
+      "sha256": "e8797cec410e9636bf2006ec6b24d83d9b115970307160c9e4f3387cdcc9b4de"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/kpis.tsx",
+      "sha256": "0883d76dcd93ec3824e6e7b803c4d54e80142b0975a687c4ebb109e33ce33f79"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/model.test.ts",
+      "sha256": "1efa5267b07c7cd09e56f19204afca94f179453ecd6c206d05c4644a7404dea2"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/model.ts",
+      "sha256": "a257c8a80cd32650ec5edc3a9a1b70c3170ac9b7ff021bba6927727691f0cda5"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/product-performance-page.test.tsx",
+      "sha256": "9544c15ef36fed931dd9e065d0212b4fc4f04f4896f87e399da175b5a930771e"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/product-performance-page.tsx",
+      "sha256": "d5a5530052947b0659f37d90712bdb7ab5f9bb1fe32663e3de4f5adc755cac92"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/relationships-model.ts",
+      "sha256": "74a67c3895e0b27d3921a141e106043e5d24a9b78aa063ec8afeb998c26bc953"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/relationships.test.tsx",
+      "sha256": "d58cf60c249c084edfe0ae0678c40b2a69dfbe51b1978911f60a3aeff2e5a2d3"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/relationships.tsx",
+      "sha256": "160e8fdee46799eedafe046d9067b91220901e5bac914ec3ae9dadb0bc655c7e"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/test-fixture.ts",
+      "sha256": "710aabff646f5bcb52b3bfd6f1b2bce4a45bffed668d63836d5b0a2310e5f9cf"
+    },
+    {
+      "path": "apps/web/src/features/product-performance/types.ts",
+      "sha256": "c885eb74a8025d8782e91357d6ae96ecc39fe6c6a0160c0b083990ecd9c010a4"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "ffa12bf66524977e8670a078e1dddfd54ce5f382b9969613958df70e70dce16f"
+    },
+    {
+      "path": "package.json",
+      "sha256": "a943b452c8a8891135ac0e139721bac5aec39683d11830c75caedfb1fb01bd05"
+    },
+    {
+      "path": "scripts/unified-aggregation-worker.ts",
+      "sha256": "c62a816e16f1a149358121d715d4f849610756bba5641658885d8f42a5b8d0b3"
+    },
+    {
+      "path": "scripts/unified-stage10-calculation.ts",
+      "sha256": "f37626e95ccb516245994f662fbc17194b64abce88c6d9d683c66817a9d8c764"
+    },
+    {
+      "path": "scripts/unified-stage10-checks.mjs",
+      "sha256": "cf585651b21cea812d72d28f393ee373b836292a3cd61c5e99bfff8d6fefd739"
+    },
+    {
+      "path": "scripts/unified-stage10-manifest.mjs",
+      "sha256": "d072347b083d56d4c75bf548938e06bd00df8eb3294102eaf905bb20da2d6967"
+    },
+    {
+      "path": "scripts/unified-stage10-performance-http.test.ts",
+      "sha256": "4415a121d033eea2f6882cb187ed9bf0e7886606127978620c0ed0a7ccc54e8f"
+    },
+    {
+      "path": "scripts/unified-stage10-performance-postgres.mjs",
+      "sha256": "e6fdee652edba32f6b75b4cf38c3e95d2de3a0eb3bc10c5c81dc222ffe1cec38"
+    },
+    {
+      "path": "scripts/unified-stage10-permissions.mjs",
+      "sha256": "59b1b5d48c4ad5a370661f2ee97d6931a84ed6a1f49c3a97ab4cc4add47a1237"
+    },
+    {
+      "path": "scripts/unified-stage10-permissions.sql",
+      "sha256": "f4ce48400a556d1fec12f4da7da68be6ed076f949552741de18da57df391c3ff"
+    },
+    {
+      "path": "scripts/unified-stage10-recovery.mjs",
+      "sha256": "781dd6a80dd83470d04879024f5a2161fc7a64332e2908d94128b5403d290f6c"
+    }
+  ]
+}

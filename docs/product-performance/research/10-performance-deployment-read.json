@@ -1,0 +1,102 @@
+{
+  "checkedOn": "2026-10-29",
+  "operations": "read-only Railway list_projects/list_services/get_service_config",
+  "configWrites": 0,
+  "services": [
+    {
+      "target": [
+        "d72f4256-8632-437a-9dae-9b5d96736fc7",
+        "4b30daa8-9333-46b7-ad89-cfd64ff5266c"
+      ],
+      "status": "fulfilled",
+      "service": {
+        "id": "4b30daa8-9333-46b7-ad89-cfd64ff5266c",
+        "name": "phase08-daily-data-sync"
+      },
+      "environment": {
+        "id": "d261a432-a6a4-4031-b8ea-c619ac263cc3",
+        "name": "production"
+      },
+      "source": null,
+      "staged": null
+    },
+    {
+      "target": [
+        "d72f4256-8632-437a-9dae-9b5d96736fc7",
+        "deaaeaf9-ee5c-42fa-b32f-600c7a90befc"
+      ],
+      "status": "fulfilled",
+      "service": {
+        "id": "deaaeaf9-ee5c-42fa-b32f-600c7a90befc",
+        "name": "cafe24-callback-test"
+      },
+      "environment": {
+        "id": "d261a432-a6a4-4031-b8ea-c619ac263cc3",
+        "name": "production"
+      },
+      "source": null,
+      "staged": null
+    },
+    {
+      "target": [
+        "d72f4256-8632-437a-9dae-9b5d96736fc7",
+        "ef46528f-4b59-4ee6-9d9c-b0852b5a9274"
+      ],
+      "status": "fulfilled",
+      "service": {
+        "id": "ef46528f-4b59-4ee6-9d9c-b0852b5a9274",
+        "name": "Postgres"
+      },
+      "environment": {
+        "id": "d261a432-a6a4-4031-b8ea-c619ac263cc3",
+        "name": "production"
+      },
+      "source": {
+        "image": "ghcr.io/railwayapp-templates/postgres-ssl:18"
+      },
+      "staged": null
+    },
+    {
+      "target": [
+        "6fe72710-1fc8-445a-a77f-da2da8fee200",
+        "d541d726-7785-42da-974a-06bbae702183"
+      ],
+      "status": "fulfilled",
+      "service": {
+        "id": "d541d726-7785-42da-974a-06bbae702183",
+        "name": "patima-marketing"
+      },
+      "environment": {
+        "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+        "name": "staging"
+      },
+      "source": {
+        "repo": "ColaRaccoon/patima-marketing",
+        "branch": "main",
+        "checkSuites": true
+      },
+      "staged": null
+    },
+    {
+      "target": [
+        "6fe72710-1fc8-445a-a77f-da2da8fee200",
+        "b0835b08-7799-4c1c-8bcd-90746b9d4248"
+      ],
+      "status": "fulfilled",
+      "service": {
+        "id": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+        "name": "grand-fascination"
+      },
+      "environment": {
+        "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+        "name": "staging"
+      },
+      "source": {
+        "repo": "ColaRaccoon/Ads-Management",
+        "branch": "codex/sidebar-scroll",
+        "commitSha": "e80f7d1f3f6c574caebe16a962c74aca4cf24dfb"
+      },
+      "staged": null
+    }
+  ]
+}
