@@ -1,0 +1,32 @@
+{
+  "stage": 11,
+  "scope": "30-day pullup/Cafe24 same explicit account; initial load plus twenty reloads",
+  "kind": "browser navigation + authentication + API + render, distinct from server API time",
+  "valuesMs": [
+    2428,
+    1839,
+    1736,
+    1892,
+    1658,
+    1936,
+    1934,
+    2004,
+    2101,
+    2019,
+    1855,
+    2142,
+    1851,
+    1821,
+    1773,
+    1732,
+    1953,
+    1714,
+    2145,
+    1706,
+    1790
+  ],
+  "n": 21,
+  "p95Ms": 2145,
+  "maxMs": 2428,
+  "knownAmountsUnchangedInEveryCompletedLoad": true
+}

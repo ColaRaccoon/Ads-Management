@@ -13,8 +13,12 @@ import { CONTRACT_VERSION } from '../apps/api/src/unified-performance/types';
 
 async function main(){
  const args=Object.fromEntries(process.argv.slice(2).map(arg=>{const m=/^--([a-z-]+)=(.+)$/.exec(arg);if(!m)throw Error('OPERATOR_ARGUMENT_INVALID');return [m[1],m[2]];}));
- if(Object.keys(args).some(key=>!['action','from','to','key'].includes(key))||!['bootstrap','queue','inspect'].includes(args.action))throw Error('OPERATOR_ACTION_REQUIRED');
+ if(Object.keys(args).some(key=>!['action','from','to','key','scope'].includes(key))||!['bootstrap','queue','inspect','queue-naver','inspect-naver'].includes(args.action))throw Error('OPERATOR_ACTION_REQUIRED');
  if(args.key&&!/^[a-z0-9-]{1,96}$/i.test(args.key))throw Error('SAFE_REQUEST_KEY_REQUIRED');
+ const naver=args.action.endsWith('-naver');
+ if(naver){assert(['5ba1d3cf-7aee-4cd1-aecd-d44352f665dd','78f8cb08-ffe3-481a-94d7-be87ae93ed79'].includes(args.scope));assert.equal(args.from,'2026-10-26');assert.equal(args.to,'2026-10-26');}
+ else assert.equal(args.scope,undefined,'Cafe24 maintenance scope is fixed');
+ const platform=naver?'NAVER':'CAFE24',scopeKey=naver?args.scope:'be140e7e-3994-406e-94ff-b50dfc7ac7b2';
  assert.equal(JSON.parse(readFileSync('docs/product-performance/research/11-runtime-role-check.json','utf8')).status,'PASS','Actual restricted-role checks must pass first');
  const operator=JSON.parse(readFileSync('docs/product-performance/research/11-operator-identity.json','utf8')).rows;
  assert(!Array.isArray(operator)&&operator.is_active&&operator.role==='SUPER_ADMIN');
@@ -42,16 +46,16 @@ async function main(){
    const saved=[];
    for(const input of rules){const existing=before.rules.find(rule=>rule.kind===input.kind);if(existing){const expected=configurationRule(input,'풀업바');for(const key of ['kind','productId','platform','scopeKey','identityKey','active'] as const)assert.equal(existing[key],expected[key]);assert.deepEqual(existing.payload,expected.payload);assert.equal(existing.validFrom.toISOString(),expected.validFrom.toISOString());assert.equal(existing.validTo,null);assert.equal(existing.version,1);const audits=await client.unifiedMappingAudit.findMany({where:{entityId:existing.id}});assert(audits.length===1&&audits[0].actorUserId===actor.id&&audits[0].action==='CREATE'&&audits[0].reason===input.reason);continue;}evidence.phase=`${input.kind} preview`;const preview=await configuration.previewRule(input);assert(preview.canSave);evidence.phase=`${input.kind} save`;saved.push(await configuration.saveRule({...input,expectedConfigurationVersion:preview.versions.configurationVersion},actor));}
    const after=await management.snapshot();evidence.product={id:product.id,canonicalName:product.canonicalName};evidence.rules=after.rules.map(rule=>({id:rule.id,kind:rule.kind,validFrom:rule.validFrom,payload:rule.payload}));evidence.versions=after.versions;evidence.auditCount=await client.unifiedMappingAudit.count();
-  }else if(args.action==='queue'){
+  }else if(args.action==='queue'||args.action==='queue-naver'){
    if(!args.from||!args.to||!args.key)throw Error('EXPLICIT_QUEUE_RANGE_KEY_REQUIRED');
-   evidence.request={from:args.from,to:args.to,platforms:['CAFE24'],scopeKeys:['be140e7e-3994-406e-94ff-b50dfc7ac7b2'],productNames:['풀업바']};
-   evidence.result=await reports.rebuild({...evidence.request as object,reason:'11단계 대표 계정/기간의 제한 백필 및 원천 대조',expectedContractVersion:CONTRACT_VERSION,idempotencyKey:args.key},actor);
+   evidence.request={from:args.from,to:args.to,platforms:[platform],scopeKeys:[scopeKey],productNames:naver?[]:['풀업바']};
+   evidence.result=await reports.rebuild({...evidence.request as object,reason:naver?'11단계 허용 스토어 저장 추정 입력과 선택 합계 검증; 원천·수집 설정 변경 없음':'11단계 대표 계정/기간의 제한 백필 및 원천 대조',expectedContractVersion:CONTRACT_VERSION,idempotencyKey:args.key},actor);
   }else{
    const from=args.from??'2026-10-28',to=args.to??from;
-   const input={from,to,compareFrom:from,compareTo:to,platforms:['CAFE24'],scopeKeys:['be140e7e-3994-406e-94ff-b50dfc7ac7b2'],productName:'풀업바'};
+   const input={from,to,compareFrom:from,compareTo:to,platforms:[platform],scopeKeys:[scopeKey],...(naver?{}:{productName:'풀업바'})};
    const report=await reports.read('summary',input,actor) as any;
    evidence.summary={selection:report.selection,knownTotals:report.knownTotals,completeTotals:report.completeTotals,scopeBalances:report.scopeBalances,coverage:report.coverage,warnings:report.warnings,items:report.items,publishedRunIdsBySource:report.publishedRunIdsBySource};
-   evidence.jobs=await client.unifiedAggregationRun.findMany({where:{platform:'CAFE24',scopeKey:'be140e7e-3994-406e-94ff-b50dfc7ac7b2',businessDate:{gte:new Date(from+'T00:00:00Z'),lte:new Date(to+'T00:00:00Z')}},select:{id:true,platform:true,businessDate:true,status:true,attempts:true,issues:true,publishedAt:true},orderBy:{startedAt:'desc'},take:100});
+   evidence.jobs=await client.unifiedAggregationRun.findMany({where:{platform,scopeKey,businessDate:{gte:new Date(from+'T00:00:00Z'),lte:new Date(to+'T00:00:00Z')}},select:{id:true,platform:true,businessDate:true,status:true,attempts:true,issues:true,publishedAt:true},orderBy:{startedAt:'desc'},take:100});
   }
   evidence.status='PASS';
  }catch(error){evidence.status='FAIL';evidence.errorCode=(error as any).code??'OPERATOR_FAILED';evidence.databaseCode=(error as any).meta?.code??null;const response=(error as any).getResponse?.();if(response)evidence.applicationError=response;const message=String((error as any).message??'');evidence.errorClass=(error as any).constructor?.name;evidence.permissionDenied=/permission denied/i.test(message);evidence.permissionObject=message.match(/permission denied for (?:schema|table|function) ["']?([a-z0-9_]+)/i)?.[1]??null;process.exitCode=1;}

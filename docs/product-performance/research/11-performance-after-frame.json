@@ -1,0 +1,458 @@
+{
+  "stage": 11,
+  "release": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
+  "deploymentId": "c849022c-5f8c-49f1-ac8c-6087ecebf178",
+  "windowStart": "2026-10-29T06:02:13.341Z",
+  "windowEnd": "2026-10-29T06:03:23.145Z",
+  "source": "Production HttpRequest durationMs, initial normal dashboard and twenty reloads; frozen source/config/publications",
+  "samples": [
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1643
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1636
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1639
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 2688
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1048
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1138
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1137
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1137
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 972
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 971
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 972
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1139
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1062
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1061
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1061
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1133
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 969
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 968
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 967
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1062
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1145
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1153
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1154
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1152
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1052
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1156
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1150
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1156
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1058
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1151
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1152
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1151
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1200
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1199
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1196
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1220
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1217
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1217
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1216
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1221
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1066
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1065
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1062
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1133
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1055
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1055
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1053
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1136
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1086
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1086
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1088
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1162
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1141
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1139
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1138
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1303
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 969
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 968
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 967
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1048
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 966
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 965
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 965
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1054
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1045
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1132
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1133
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1129
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 986
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 982
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 981
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1154
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1224
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1222
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1223
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1296
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 967
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 966
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 966
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 1136
+    },
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 970
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 1058
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 1059
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 1057
+    }
+  ],
+  "byRoute": {
+    "/api/unified-performance/summary": {
+      "n": 21,
+      "p95Ms": 1222,
+      "maxMs": 1643,
+      "minMs": 965
+    },
+    "/api/unified-performance/timeseries": {
+      "n": 21,
+      "p95Ms": 1223,
+      "maxMs": 1636,
+      "minMs": 965
+    },
+    "/api/unified-performance/diagnostics": {
+      "n": 21,
+      "p95Ms": 1224,
+      "maxMs": 1639,
+      "minMs": 966
+    },
+    "/api/unified-performance/options": {
+      "n": 21,
+      "p95Ms": 1303,
+      "maxMs": 2688,
+      "minMs": 970
+    }
+  },
+  "status": "PASS_BOUNDED_WORKLOAD",
+  "limitation": "Representative account/product only; not a long-term production SLO. Idle case recorded separately."
+}

@@ -1,0 +1,30 @@
+{
+  "stage": 11,
+  "window": "Last one hour at final check; contains several rollout versions, not isolated to one release",
+  "service": {
+    "id": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+    "name": "grand-fascination"
+  },
+  "environment": {
+    "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+    "name": "staging"
+  },
+  "metrics": [
+    {
+      "measurement": "CPU_USAGE",
+      "current": 0,
+      "average": 0.008933457024793385,
+      "min": 0,
+      "max": 0.15873179999999998,
+      "sampleCount": 121
+    },
+    {
+      "measurement": "MEMORY_USAGE_GB",
+      "current": 0.209317888,
+      "average": 0.20657157077685964,
+      "min": 0.148226048,
+      "max": 0.352206848,
+      "sampleCount": 121
+    }
+  ]
+}

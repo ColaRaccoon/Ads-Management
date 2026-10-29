@@ -1,0 +1,30 @@
+{
+  "stage": 11,
+  "release": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
+  "kind": "One report request batch after at least 245321ms without this agent's app requests",
+  "idleGapMs": 245321,
+  "status": "PASS_RESPONSE_WITH_COLD_LATENCY_LIMIT",
+  "samples": [
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 2603
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 2165
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 2162
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 2162
+    }
+  ],
+  "limitation": "Single idle case, not cold p95; this agent did not control other users' app traffic. UI selector exceeded its 3-second observation deadline; API log is authoritative."
+}

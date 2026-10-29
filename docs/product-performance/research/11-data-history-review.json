@@ -1,0 +1,49 @@
+{
+  "stage": 11,
+  "status": "PARTIAL_HISTORY_NOT_VERIFIED",
+  "kind": "READ_ONLY_HISTORICAL_CONFIGURATION_LIMIT_REVIEW",
+  "requestedPeriod": { "from": "2026-09-29", "through": "2026-10-27", "days": 29 },
+  "canonicalProduct": "풀업바",
+  "observedOption": "풀업바(72~97cm)",
+  "currentStoredLegacyDefaultCost": {
+    "effectiveFrom": "2026-07-01",
+    "effectiveTo": null,
+    "salePriceKrw": "34900",
+    "productCostKrw": "10000",
+    "vatKrw": "3490",
+    "shippingKrw": "0",
+    "otherCostKrw": "0",
+    "createdAtEqualsUpdatedAt": true,
+    "storedCreatedAndUpdatedTimestampWithoutTimezone": "2026-07-23T01:14:03.193",
+    "requestedDaysWithExactlyOneMatchingCostRule": 29,
+    "missingOrAmbiguousRequestedDays": 0,
+    "scope": "PRODUCT_DEFAULT_NOT_IMMUTABLE_OPTION_SNAPSHOT"
+  },
+  "historicalSourcePriceObservation": {
+    "connectionBoundCurrentApiDateFrom": "2026-10-23",
+    "connectionBoundCurrentApiDateThrough": "2026-10-27",
+    "rows": 608,
+    "allObservedRowsHaveTargetOption": true,
+    "minimumUnitPriceKrw": "34900",
+    "maximumUnitPriceKrw": "34900",
+    "csvRowsExcludedFromApiSum": 104,
+    "earlierConnectionBoundCurrentRowsInRequestedRange": 0,
+    "provesProductCost": false,
+    "provesCouponAdjustedRevenue": false
+  },
+  "auditLimits": {
+    "relatedCafeMappingAuditEvents": 3,
+    "legacyCostRuleAuditEvents": 0,
+    "productChangeNotes": 0,
+    "customAuditTriggersOnThreeLegacySettingsTables": 0,
+    "relatedCafeAuditContainsCostOverridesOrEffectiveDates": false,
+    "auditAbsenceProvesNoHistoricalMutation": false
+  },
+  "verifiedClaim": "The currently stored dated product-default cost rule declares 34900/10000 for every requested date; its ordinary creation/update timestamps predate the requested period and are equal.",
+  "unverifiedClaim": "An immutable same-option historical rule, absence of all past overrides or unlogged edits, and a complete historical revenue/profit publication have not been established.",
+  "unifiedNameAndSaleUnitValidFrom": "2026-10-28",
+  "configurationChanged": false,
+  "historicalRevenueOrProfitRecomputed": false,
+  "databaseWrites": 0,
+  "evidence": "11-data-history-evidence.json"
+}

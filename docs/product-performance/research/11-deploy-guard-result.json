@@ -1,7 +1,7 @@
 {
   "stage": 11,
   "kind": "local build-guard review",
-  "timestamp": "2026-10-29T05:27:32.576Z",
+  "timestamp": "2026-10-29T06:31:31.800Z",
   "remoteWrites": 0,
   "profile": "reporting",
   "reviewedModules": 68,
@@ -254,7 +254,7 @@
     },
     {
       "path": "unified-performance/report.repository.js",
-      "sha256": "000bbfa69cfee8564c53140cececf4326da7943aa6a61976f4c6dfae896ea789"
+      "sha256": "5af3472ecef99b64eaecf2039cfd410b613b031a94820c9b5c8d3228e9888111"
     },
     {
       "path": "unified-performance/report.service.js",
@@ -262,7 +262,7 @@
     },
     {
       "path": "unified-performance/report.service.test.js",
-      "sha256": "dc1cab6783ef00df5c9631813b782d32814cf53e1a329f9696cc299384d68d14"
+      "sha256": "6a7fec82feb8fef971c0e57e3853c9d4495f87b3e369c5f63a9596c148687914"
     },
     {
       "path": "unified-performance/runtime-prisma.js",
@@ -310,5 +310,11 @@
     "guardTests": 10,
     "guardPass": 10,
     "exactClosureStill68": true
+  },
+  "hashesAsOfSourceCommit": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
+  "finalReportFrame": {
+    "guardTests": 10,
+    "guardPass": 10,
+    "compiledModules": 68
   }
 }

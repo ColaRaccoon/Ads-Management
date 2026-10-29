@@ -1,0 +1,9 @@
+{
+  "stage": 11,
+  "businessDate": "2026-10-26",
+  "input": "Two permitted stores stored estimates, not settlement truth",
+  "knownRevenueDelta": "13595670",
+  "knownAdSpendDelta": "4067547",
+  "sourcePublicationReplayBoth": "PASS",
+  "sourceWrites": 0
+}

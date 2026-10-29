@@ -1,0 +1,27 @@
+{
+  "stage": 11,
+  "status": "DEPLOYED_AND_CHECKED_CURRENT_WINDOW",
+  "stageStatus": "IN_PROGRESS",
+  "reason": "Real scheduled source-to-publication cycle remains in the future",
+  "source": {
+    "repo": "ColaRaccoon/Ads-Management",
+    "branch": "codex/product-performance-stage11-frame-release",
+    "commitSha": "e37c6dee9faa55e085e199be7fad61874b02fe3b"
+  },
+  "deployment": {
+    "id": "c849022c-5f8c-49f1-ac8c-6087ecebf178",
+    "status": "SUCCESS",
+    "commitHash": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
+    "branch": "codex/product-performance-stage11-frame-release"
+  },
+  "featureEnabled": true,
+  "readinessEvidence": "11-app-ready-final.json",
+  "publishedRuns": 73,
+  "audits": 4,
+  "existingSourceSchedulesChanged": false,
+  "sourceWrites": 0,
+  "nextObservationKst": "2026-10-30 02:00–03:59",
+  "coldLatencyLimitation": "One idle batch 2162–2603ms; distinct from consecutive-query p95",
+  "developmentBranch": "codex/product-performance-stage11",
+  "releaseBranchIsNotUpdatedByEvidencePush": true
+}

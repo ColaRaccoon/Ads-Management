@@ -1,0 +1,257 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "PASS",
+  "observedAt": "2026-10-29T06:22:34.293Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "NAVER",
+    "scopeKeyHash": "eed01d95b2389dfbf2cfc726a9d04754f9e0d193aa9a4ddae676f29859564af5",
+    "date": "2026-10-26",
+    "productName": null
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 20,
+  "publishedFacts": 20,
+  "sourceHash": "d279d2491e5dbdc9936d9b9293a0b1b6ed9b041b231218ac21803eee8811d430",
+  "publishedHash": "d279d2491e5dbdc9936d9b9293a0b1b6ed9b041b231218ac21803eee8811d430",
+  "publication": [
+    {
+      "runId": "643a04d4-183f-496f-aa28-826847532540",
+      "revision": 2,
+      "publishedAt": "2026-10-29T06:19:34.849Z",
+      "versions": {
+        "fxVersion": "stored-daily-fx-v1",
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+        "calculationVersion": "unified-report-v1",
+        "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+        "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "participationOverrides": {}
+      }
+    }
+  ],
+  "versions": {
+    "configurationVersion": "43f1f92ca4ea00025c75aa5c8df2d983160d212326eff2e204a303ac87380479",
+    "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "OPERATING_REVENUE",
+      "currency": "KRW",
+      "selectedRows": 247,
+      "selectedAmount": "6947990.000000",
+      "assignedAmount": "5973390.000000",
+      "unmatchedAmount": "974600.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PRODUCT_COST",
+      "currency": "KRW",
+      "selectedRows": 247,
+      "selectedAmount": "1871400.000000",
+      "assignedAmount": "1597400.000000",
+      "unmatchedAmount": "274000.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PLATFORM_FEE",
+      "currency": "KRW",
+      "selectedRows": 247,
+      "selectedAmount": "400316.000000",
+      "assignedAmount": "350327.000000",
+      "unmatchedAmount": "49989.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "OTHER_DIRECT_COST",
+      "currency": "KRW",
+      "selectedRows": 247,
+      "selectedAmount": "0.000000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "VAT_EXPENSE",
+      "currency": "KRW",
+      "selectedRows": 247,
+      "selectedAmount": "694799.000000",
+      "assignedAmount": "597339.000000",
+      "unmatchedAmount": "97460.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "AD_SPEND",
+      "currency": "KRW",
+      "selectedRows": 43,
+      "selectedAmount": "1790594.000000",
+      "assignedAmount": "915892.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "874702.000000",
+      "difference": "0.000000"
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": "6947990.000000",
+      "adSpend": "1790594.000000",
+      "profitBeforeAds": "3981475.000000",
+      "estimatedProfit": "2272081.000000",
+      "mer": "3.8802710162"
+    },
+    "completeTotals": {
+      "revenue": "6947990.000000",
+      "adSpend": "1790594.000000",
+      "profitBeforeAds": "3981475.000000",
+      "estimatedProfit": "2272081.000000",
+      "mer": "3.8802710162"
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "874702.000000",
+      "unallocatedExpense": "492800.000000",
+      "shippingIncome": "574000.000000",
+      "unallocatedShippingIncome": "574000.000000",
+      "unclassifiedRevenue": "974600.000000",
+      "unclassifiedProfitBeforeAds": "553151.000000"
+    },
+    "issues": [
+      "NAME_UNMATCHED",
+      "NAVER_ESTIMATED_SOURCE",
+      "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+      "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+      "NAVER_ORDER_SYNC_STATE_MISSING",
+      "NAVER_SALE_UNIT_NAME_RESTORED",
+      "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+      "NAVER_SOURCE_ESTIMATE",
+      "NAVER_STORED_FINGERPRINT_MISSING",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": "6947990.000000",
+      "adSpend": "1790594.000000",
+      "profitBeforeAds": "3981475.000000",
+      "estimatedProfit": "2272081.000000",
+      "mer": "3.8802710162"
+    },
+    "completeTotals": {
+      "revenue": "6947990.000000",
+      "adSpend": "1790594.000000",
+      "profitBeforeAds": "3981475.000000",
+      "estimatedProfit": "2272081.000000",
+      "mer": "3.8802710162"
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "874702.000000",
+      "unallocatedExpense": "492800.000000",
+      "shippingIncome": "574000.000000",
+      "unallocatedShippingIncome": "574000.000000",
+      "unclassifiedRevenue": "974600.000000",
+      "unclassifiedProfitBeforeAds": "553151.000000"
+    },
+    "issues": [
+      "NAME_UNMATCHED",
+      "NAVER_ESTIMATED_SOURCE",
+      "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+      "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+      "NAVER_ORDER_SYNC_STATE_MISSING",
+      "NAVER_SALE_UNIT_NAME_RESTORED",
+      "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+      "NAVER_SOURCE_ESTIMATE",
+      "NAVER_STORED_FINGERPRINT_MISSING",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "quality": [
+    {
+      "component": "SALE",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 264,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAME_UNMATCHED",
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+        "NAVER_ORDER_SYNC_STATE_MISSING",
+        "NAVER_SALE_UNIT_NAME_RESTORED",
+        "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+        "NAVER_SOURCE_ESTIMATE",
+        "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+        "NAVER_STORED_FINGERPRINT_MISSING"
+      ],
+      "sourceAsOf": "2026-10-27T00:09:46.583Z"
+    },
+    {
+      "component": "AD_SPEND",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 43,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAME_UNMATCHED",
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED"
+      ],
+      "sourceAsOf": "2026-10-27T00:52:54.508Z"
+    },
+    {
+      "component": "COMMON_EXPENSE",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 2,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+        "NAVER_ORDER_SYNC_STATE_MISSING",
+        "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+        "NAVER_STORED_FINGERPRINT_MISSING"
+      ],
+      "sourceAsOf": "2026-10-27T00:54:50.549Z"
+    },
+    {
+      "component": "DIRECT_COST",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 264,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAME_UNMATCHED",
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+        "NAVER_ORDER_SYNC_STATE_MISSING",
+        "NAVER_SALE_UNIT_NAME_RESTORED",
+        "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+        "NAVER_SOURCE_ESTIMATE",
+        "NAVER_STORED_CALCULATION_VERSION:profit-v2",
+        "NAVER_STORED_FINGERPRINT_MISSING"
+      ],
+      "sourceAsOf": "2026-10-27T00:09:46.583Z"
+    }
+  ]
+}

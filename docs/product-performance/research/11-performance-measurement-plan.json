@@ -1,0 +1,13 @@
+{
+  "stage":11,
+  "status":"PLANNED_BEFORE_MEASUREMENT",
+  "release":"e37c6dee9faa55e085e199be7fad61874b02fe3b",
+  "scope":{"from":"2026-09-29","to":"2026-10-28","compareFrom":"2026-08-30","compareTo":"2026-09-28","platforms":["CAFE24"],"scopeKeys":["be140e7e-3994-406e-94ff-b50dfc7ac7b2"],"productName":"풀업바"},
+  "workload":"Normal authenticated dashboard navigation and 20 consecutive reloads; summary/timeseries/diagnostics arrive concurrently; options retains its broader metadata selection",
+  "authoritativeTiming":"Production HttpRequest durationMs; browser navigation time is separate and includes client work",
+  "percentile":"Nearest-rank ceil(n*0.95), with n and maximum retained",
+  "idleCase":"Separately observe one request after at least 65 seconds without app requests; do not present one cold request as a cold p95",
+  "targetMs":2000,
+  "frozenDuringRun":["source","configuration","publication pointers"],
+  "limitation":"A bounded representative workload does not establish a long-term production SLO or traffic-wide capacity. Keep cold and continuous-request results distinguishable."
+}

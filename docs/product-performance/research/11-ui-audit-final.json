@@ -1,0 +1,30 @@
+{
+  "operation": "MANAGEMENT_READ_ONLY",
+  "stage": 11,
+  "rows": {
+    "audit": {
+      "auditCount": 4,
+      "uiRuleUpdate": {
+        "action": "UPDATE",
+        "entityId": "06b05f8c-ea1a-4803-b38c-a4538ac38cfd",
+        "createdAt": "2026-10-29T15:12:59.802+09:00",
+        "entityType": "RULE",
+        "actorUserId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+        "afterVersion": 2,
+        "beforeVersion": 1,
+        "sameBusinessConfiguration": true
+      },
+      "runStatusCounts": [
+        {
+          "count": 73,
+          "status": "PUBLISHED",
+          "maximum_attempts": 1,
+          "minimum_attempts": 1
+        }
+      ]
+    }
+  },
+  "observedAt": "2026-10-29T06:26:42.4412670Z",
+  "remoteWrites": 0,
+  "projectRef": "iygjmosbelbosfxidqxv"
+}

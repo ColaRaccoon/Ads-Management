@@ -1,6 +1,6 @@
 {
   "stage": 11,
-  "at": "2026-10-29T05:06:07.125Z",
+  "at": "2026-10-29T06:26:58.010Z",
   "origin": "https://patimagroup-work.com",
   "remoteWrites": 0,
   "authenticated": false,
@@ -8,7 +8,7 @@
     {
       "path": "/backend-api/health/live",
       "status": 200,
-      "elapsedMs": 298.39590000000004,
+      "elapsedMs": 396.91690000000006,
       "bodyBytes": 17,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -27,7 +27,7 @@
     {
       "path": "/backend-api/health/ready",
       "status": 403,
-      "elapsedMs": 232.8558,
+      "elapsedMs": 235.73420000000004,
       "bodyBytes": 148,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -46,7 +46,7 @@
     {
       "path": "/backend-api/auth/me",
       "status": 401,
-      "elapsedMs": 185.22270000000003,
+      "elapsedMs": 933.0499,
       "bodyBytes": 140,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -65,7 +65,7 @@
     {
       "path": "/backend-api/unified-performance/options",
       "status": 401,
-      "elapsedMs": 176.47580000000005,
+      "elapsedMs": 173.7947999999999,
       "bodyBytes": 140,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -84,7 +84,7 @@
     {
       "path": "/products/performance",
       "status": 200,
-      "elapsedMs": 95.46079999999995,
+      "elapsedMs": 87.59660000000008,
       "bodyBytes": 8641,
       "headers": {
         "content-type": "text/html; charset=utf-8",
@@ -100,7 +100,7 @@
     {
       "path": "/storefront",
       "status": 200,
-      "elapsedMs": 94.19860000000006,
+      "elapsedMs": 80.63789999999995,
       "bodyBytes": 7787,
       "headers": {
         "content-type": "text/html; charset=utf-8",
@@ -116,7 +116,7 @@
     {
       "path": "/login",
       "status": 200,
-      "elapsedMs": 110.6110000000001,
+      "elapsedMs": 93.50340000000006,
       "bodyBytes": 8295,
       "headers": {
         "content-type": "text/html; charset=utf-8",

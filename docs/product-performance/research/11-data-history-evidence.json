@@ -1,0 +1,261 @@
+{
+  "stage": 11,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "operation": "MANAGEMENT_READ_ONLY",
+  "observedAt": "2026-10-29T05:45:42.1959399Z",
+  "remoteWrites": 0,
+  "rows": {
+    "history_evidence": {
+      "privacy": "No order identifiers, customer fields, free-text notes, actor identity, credential or raw audit payload returned; audit JSON is explicit business-field projection only.",
+      "limitation": "Current dated configuration and mutable record timestamps are not by themselves immutable evidence of which value was stored or applied on each historical transaction day. No historical revenue/profit is recomputed.",
+      "legacyProducts": [
+        {
+          "id": "5d716ce2-2aa3-452e-8f32-3c30eac1d9f0",
+          "name": "풀업바",
+          "is_active": true,
+          "created_at": "2026-07-23T01:12:37.814",
+          "updated_at": "2026-07-23T01:12:37.814",
+          "display_name": "풀업바"
+        }
+      ],
+      "requestedRange": {
+        "from": "2026-09-29",
+        "through": "2026-10-27"
+      },
+      "productNotesMetadata": [],
+      "relatedSecurityAudit": [
+        {
+          "action": "CAFE24_MAPPING_RULE_UPDATED",
+          "result": "SUCCESS",
+          "created_at": "2026-10-24T02:38:54.616",
+          "target_type": "CAFE24_PRODUCT_RULE",
+          "after_selected": {
+            "isActive": true,
+            "effectiveTo": null,
+            "salePriceKrw": null,
+            "effectiveFrom": null,
+            "productCostKrw": null,
+            "optionIncludeKeywords": null,
+            "productNameExcludeKeywords": null
+          },
+          "before_selected": {
+            "isActive": true,
+            "effectiveTo": null,
+            "salePriceKrw": null,
+            "effectiveFrom": null,
+            "productCostKrw": null,
+            "optionIncludeKeywords": null,
+            "productNameExcludeKeywords": null
+          },
+          "after_field_names": [
+            "id",
+            "isActive",
+            "priority",
+            "productId"
+          ],
+          "before_field_names": [
+            "id",
+            "isActive",
+            "priority",
+            "productId"
+          ]
+        },
+        {
+          "action": "CAFE24_MAPPING_RULE_SEPARATED",
+          "result": "SUCCESS",
+          "created_at": "2026-10-28T01:28:01.288",
+          "target_type": "CAFE24_PRODUCT_RULE",
+          "after_selected": {
+            "isActive": null,
+            "effectiveTo": null,
+            "salePriceKrw": null,
+            "effectiveFrom": null,
+            "productCostKrw": null,
+            "optionIncludeKeywords": [
+              "풀업바"
+            ],
+            "productNameExcludeKeywords": []
+          },
+          "before_selected": {
+            "isActive": null,
+            "effectiveTo": null,
+            "salePriceKrw": null,
+            "effectiveFrom": null,
+            "productCostKrw": null,
+            "optionIncludeKeywords": [
+              "풀업바"
+            ],
+            "productNameExcludeKeywords": []
+          },
+          "after_field_names": [
+            "matchTarget",
+            "optionExcludeKeywords",
+            "optionIncludeKeywords",
+            "productNameAliases",
+            "productNameExcludeKeywords",
+            "productNameIncludeKeywords"
+          ],
+          "before_field_names": [
+            "matchTarget",
+            "optionExcludeKeywords",
+            "optionIncludeKeywords",
+            "productNameAliases",
+            "productNameExcludeKeywords",
+            "productNameIncludeKeywords"
+          ]
+        },
+        {
+          "action": "CAFE24_YOUTUBE_CHANNEL_SEPARATED",
+          "result": "SUCCESS",
+          "created_at": "2026-10-29T01:43:50.438",
+          "target_type": "CAFE24_PRODUCT_RULE",
+          "after_selected": {
+            "isActive": null,
+            "effectiveTo": null,
+            "salePriceKrw": null,
+            "effectiveFrom": null,
+            "productCostKrw": null,
+            "optionIncludeKeywords": null,
+            "productNameExcludeKeywords": [
+              "[유튜브]"
+            ]
+          },
+          "before_selected": {
+            "isActive": null,
+            "effectiveTo": null,
+            "salePriceKrw": null,
+            "effectiveFrom": null,
+            "productCostKrw": null,
+            "optionIncludeKeywords": null,
+            "productNameExcludeKeywords": []
+          },
+          "after_field_names": [
+            "productNameExcludeKeywords",
+            "productNumbers"
+          ],
+          "before_field_names": [
+            "productNameExcludeKeywords",
+            "productNumbers"
+          ]
+        }
+      ],
+      "sourceOptionEvidence": [
+        {
+          "source": "API",
+          "order_date": "2026-10-23",
+          "product_name_rows": 104,
+          "youtube_label_rows": 2,
+          "latest_row_created_at": "2026-10-24T01:42:50.2",
+          "earliest_row_created_at": "2026-10-24T01:42:50.2",
+          "exact_target_option_rows": 104,
+          "maximum_stored_source_unit_price": "34900.00",
+          "minimum_stored_source_unit_price": "34900.00"
+        },
+        {
+          "source": "CSV",
+          "order_date": "2026-10-23",
+          "product_name_rows": 104,
+          "youtube_label_rows": 2,
+          "latest_row_created_at": "2026-10-24T02:54:44.988",
+          "earliest_row_created_at": "2026-10-24T02:54:44.136",
+          "exact_target_option_rows": 104,
+          "maximum_stored_source_unit_price": "34900.00",
+          "minimum_stored_source_unit_price": "34900.00"
+        },
+        {
+          "source": "API",
+          "order_date": "2026-10-24",
+          "product_name_rows": 124,
+          "youtube_label_rows": 5,
+          "latest_row_created_at": "2026-10-25T01:41:02.607",
+          "earliest_row_created_at": "2026-10-25T01:41:01.801",
+          "exact_target_option_rows": 124,
+          "maximum_stored_source_unit_price": "34900.00",
+          "minimum_stored_source_unit_price": "34900.00"
+        },
+        {
+          "source": "API",
+          "order_date": "2026-10-25",
+          "product_name_rows": 146,
+          "youtube_label_rows": 1,
+          "latest_row_created_at": "2026-10-25T17:44:15.298",
+          "earliest_row_created_at": "2026-10-25T17:44:14.424",
+          "exact_target_option_rows": 146,
+          "maximum_stored_source_unit_price": "34900.00",
+          "minimum_stored_source_unit_price": "34900.00"
+        },
+        {
+          "source": "API",
+          "order_date": "2026-10-26",
+          "product_name_rows": 116,
+          "youtube_label_rows": 3,
+          "latest_row_created_at": "2026-10-26T17:38:19.523",
+          "earliest_row_created_at": "2026-10-26T17:38:18.459",
+          "exact_target_option_rows": 116,
+          "maximum_stored_source_unit_price": "34900.00",
+          "minimum_stored_source_unit_price": "34900.00"
+        },
+        {
+          "source": "API",
+          "order_date": "2026-10-27",
+          "product_name_rows": 118,
+          "youtube_label_rows": 6,
+          "latest_row_created_at": "2026-10-27T17:38:21.769",
+          "earliest_row_created_at": "2026-10-27T17:38:20.836",
+          "exact_target_option_rows": 118,
+          "maximum_stored_source_unit_price": "34900.00",
+          "minimum_stored_source_unit_price": "34900.00"
+        }
+      ],
+      "sourceRuleAuditTriggers": [],
+      "allStoredLegacyCafeRules": [
+        {
+          "id": "0da829ad-8cf5-416c-90b2-5f3769c8fcf5",
+          "valid_to": null,
+          "is_active": true,
+          "created_at": "2026-07-23T01:15:18.561",
+          "product_id": "5d716ce2-2aa3-452e-8f32-3c30eac1d9f0",
+          "updated_at": "2026-10-29T01:43:50.347",
+          "valid_from": "2026-07-01",
+          "match_target": "SEPARATE",
+          "shipping_krw_override": null,
+          "extra_cost_krw_override": null,
+          "option_exclude_keywords": [],
+          "option_include_keywords": [
+            "풀업바"
+          ],
+          "sale_price_krw_override": null,
+          "product_cost_krw_override": null,
+          "product_name_exclude_keywords": [
+            "[유튜브]"
+          ],
+          "product_name_include_keywords": [
+            "풀업바"
+          ]
+        }
+      ],
+      "allStoredLegacyCostRules": [
+        {
+          "id": "d08b7d0f-81f1-4153-96be-512883869e31",
+          "vat_krw": "3490.00",
+          "created_at": "2026-07-23T01:14:03.193",
+          "product_id": "5d716ce2-2aa3-452e-8f32-3c30eac1d9f0",
+          "updated_at": "2026-07-23T01:14:03.193",
+          "effective_to": null,
+          "shipping_krw": "0.00",
+          "effective_from": "2026-07-01",
+          "extra_cost_krw": "0.00",
+          "sale_price_krw": "34900.00",
+          "product_cost_krw": "10000.00"
+        }
+      ],
+      "currentDatedConfigurationCoverage": {
+        "days": 29,
+        "lastDay": "2026-10-27",
+        "firstDay": "2026-09-29",
+        "missingOrAmbiguousDays": 0,
+        "exactlyOne34900_10000RuleDays": 29
+      }
+    }
+  }
+}

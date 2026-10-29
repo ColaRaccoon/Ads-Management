@@ -1,0 +1,31 @@
+{
+  "stage": 11,
+  "status": "FAIL_COLD_TARGET",
+  "release": "2d856d8fec1b52b002832e1e8c28ad1f8a064488",
+  "deploymentId": "1d56762c-468c-401b-b121-df8ed5ee615a",
+  "kind": "First cold live 30-day dashboard, selected Cafe24 account and pullup product",
+  "samples": [
+    {
+      "path": "/api/unified-performance/options",
+      "status": 200,
+      "durationMs": 3366
+    },
+    {
+      "path": "/api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 3812
+    },
+    {
+      "path": "/api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 3816
+    },
+    {
+      "path": "/api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 3814
+    }
+  ],
+  "interpretation": "Identical concurrent report durations are consistent with shared work; cold request time still exceeds 2000ms. No claim of a completed performance fix.",
+  "action": "Feature OFF; preserve source/audits/publications and examine DB round trips"
+}

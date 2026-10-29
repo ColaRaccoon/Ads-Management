@@ -1,0 +1,269 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "PASS",
+  "observedAt": "2026-10-29T06:21:54.364Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "CAFE24",
+    "scopeKeyHash": "f6598d86c4cded7804e5900a7d7d6272b4c9f1518b839bb3d6e35ca8d8084334",
+    "date": "2026-10-28",
+    "productName": "풀업바"
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 2,
+  "publishedFacts": 2,
+  "sourceHash": "ec06d32974f5c8006fb063afe865aef4751aa3c892569b2fe151992c8d0baee0",
+  "publishedHash": "ec06d32974f5c8006fb063afe865aef4751aa3c892569b2fe151992c8d0baee0",
+  "publication": [
+    {
+      "runId": "c49bd68c-fb4b-46cc-a576-541cd1379a54",
+      "revision": 5,
+      "publishedAt": "2026-10-29T06:19:28.515Z",
+      "versions": {
+        "fxVersion": "stored-daily-fx-v1",
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+        "calculationVersion": "unified-report-v1",
+        "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+        "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "participationOverrides": {}
+      }
+    }
+  ],
+  "versions": {
+    "configurationVersion": "43f1f92ca4ea00025c75aa5c8df2d983160d212326eff2e204a303ac87380479",
+    "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "OPERATING_REVENUE",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": null,
+      "assignedAmount": "3727300.000000",
+      "unmatchedAmount": "7161400.000000",
+      "unallocatedAmount": "0",
+      "difference": null
+    },
+    {
+      "measure": "REGISTERED_GROSS",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": null,
+      "assignedAmount": "3873900.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0",
+      "difference": null
+    },
+    {
+      "measure": "SOURCE_LIST_PRICE_GROSS",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": "11791600.000000",
+      "assignedAmount": "3873900.000000",
+      "unmatchedAmount": "7917700.000000",
+      "unallocatedAmount": "0",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PRODUCT_COST",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": null,
+      "assignedAmount": "1110000.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0",
+      "difference": null
+    },
+    {
+      "measure": "DIRECT_SHIPPING_COST",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": null,
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0",
+      "difference": null
+    },
+    {
+      "measure": "OTHER_DIRECT_COST",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": null,
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0",
+      "difference": null
+    },
+    {
+      "measure": "VAT_EXPENSE",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": null,
+      "assignedAmount": "387390.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0",
+      "difference": null
+    },
+    {
+      "measure": "COUPON",
+      "currency": "KRW",
+      "selectedRows": 323,
+      "selectedAmount": null,
+      "assignedAmount": "7000.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0",
+      "difference": null
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": "3727300.000000",
+      "adSpend": null,
+      "profitBeforeAds": "2283870.000000",
+      "estimatedProfit": "2283870.000000",
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": null,
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": "7161400.000000",
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+      "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+      "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+      "COST_INPUT_MISSING",
+      "COUPON_IGNORED_RESIDUAL",
+      "COUPON_ORDER_CONTEXT_INCOMPLETE",
+      "COUPON_UNRESOLVED",
+      "INCOMPLETE_COVERAGE",
+      "NAME_UNMATCHED",
+      "PARTIAL_TOTAL",
+      "REVENUE_INPUT_MISSING",
+      "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+      "SALE_UNIT_RULE_MISSING",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": "3727300.000000",
+      "adSpend": null,
+      "profitBeforeAds": "2283870.000000",
+      "estimatedProfit": "2283870.000000",
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": null,
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": "7161400.000000",
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+      "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+      "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+      "COST_INPUT_MISSING",
+      "COUPON_IGNORED_RESIDUAL",
+      "COUPON_ORDER_CONTEXT_INCOMPLETE",
+      "COUPON_UNRESOLVED",
+      "INCOMPLETE_COVERAGE",
+      "NAME_UNMATCHED",
+      "PARTIAL_TOTAL",
+      "REVENUE_INPUT_MISSING",
+      "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+      "SALE_UNIT_RULE_MISSING",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "quality": [
+    {
+      "component": "SALE",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 323,
+      "missingCostRows": 217,
+      "isEstimate": true,
+      "issues": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+        "NAME_UNMATCHED",
+        "SALE_UNIT_RULE_MISSING",
+        "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+        "COST_INPUT_MISSING",
+        "COUPON_ORDER_CONTEXT_INCOMPLETE",
+        "COUPON_UNRESOLVED",
+        "REVENUE_INPUT_MISSING",
+        "COUPON_IGNORED_RESIDUAL"
+      ],
+      "sourceAsOf": "2026-10-28T17:38:10.475Z"
+    },
+    {
+      "component": "DIRECT_COST",
+      "participation": "INCLUDED",
+      "collectionState": "PARTIAL",
+      "rowsPresent": 323,
+      "missingCostRows": 217,
+      "isEstimate": true,
+      "issues": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+        "NAME_UNMATCHED",
+        "SALE_UNIT_RULE_MISSING",
+        "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+        "COST_INPUT_MISSING",
+        "COUPON_ORDER_CONTEXT_INCOMPLETE",
+        "COUPON_UNRESOLVED",
+        "REVENUE_INPUT_MISSING",
+        "COUPON_IGNORED_RESIDUAL"
+      ],
+      "sourceAsOf": "2026-10-28T17:38:10.475Z"
+    },
+    {
+      "component": "COMMON_EXPENSE",
+      "participation": "NOT_APPLICABLE",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 0,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "COMMON_COSTS_INCLUDED_IN_DIRECT_LEDGER"
+      ],
+      "sourceAsOf": "2026-10-28T17:38:10.475Z"
+    }
+  ]
+}

@@ -1,21 +1,12 @@
 {
   "stage": 11,
-  "observedAt": "2026-10-29T05:27:32.576Z",
+  "observedAt": "2026-10-29T06:31:31.800Z",
   "status": "PASS",
   "api": {
     "tests": 299,
     "pass": 299,
     "fail": 0,
-    "groups": [
-      {
-        "tests": 280,
-        "scope": "unified plus google-performance calculation"
-      },
-      {
-        "tests": 19,
-        "scope": "Google campaign matcher and service"
-      }
-    ]
+    "source": "Unified and all Google tests in one final run"
   },
   "web": {
     "tests": 77,
@@ -26,7 +17,8 @@
     "api": "PASS",
     "web": "PASS",
     "pages": 38,
-    "apiAfterSnapshotDedup": "PASS"
+    "apiAfterSnapshotDedup": "PASS",
+    "apiAfterSingleReportFrame": "PASS"
   },
   "guard": {
     "tests": 10,
@@ -38,6 +30,15 @@
     "11-api-tests.log": "40f9f2f637803a2b77366e8bc856455d03f599f34354a6b533e7339b361b4150",
     "11-web-tests.log": "c4816b3f5b0733ae0e3b0f173ec4561b58062e7fb950f32dba40d19f0fd1058d",
     "11-api-tests-after-perf.log": "a6e0e6597bb17891a4ceb571ecb49ff937801574e267454285ff08b7e5aa2ae3",
-    "11-google-regression-after-perf.log": "e3954f93247b72db6a0198d1e017204a44e1a42d883cf0b00c3419e517100a0b"
+    "11-google-regression-after-perf.log": "e3954f93247b72db6a0198d1e017204a44e1a42d883cf0b00c3419e517100a0b",
+    "11-api-tests-after-frame.log": "0ee858aefbb345eecb85e00ecca2f5ef79aa395a667ef56522630f4ac116b8b5",
+    "11-guard-after-frame.log": "70c746c9a5fa5a25d83b02b68f22d867bb61ea84b398ade5a5fd9bd475170d8c"
+  },
+  "operatorTypeCheck": "PASS including fixed Naver maintenance modes",
+  "actualRestrictedPGFrame": {
+    "tests": 7,
+    "pass": 7,
+    "oldNewCases": 192,
+    "timeZone": "Asia/Seoul"
   }
 }

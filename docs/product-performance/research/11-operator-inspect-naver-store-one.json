@@ -1,0 +1,1041 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T06:05:56.320Z",
+  "operation": "inspect-naver",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "summary": {
+    "selection": {
+      "selectedPlatforms": [
+        "NAVER"
+      ],
+      "excludedPlatforms": [
+        "META",
+        "GOOGLE",
+        "COUPANG",
+        "CAFE24"
+      ],
+      "scopeKeys": [
+        "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd"
+      ],
+      "productName": null,
+      "from": "2026-10-26",
+      "to": "2026-10-26",
+      "compareFrom": "2026-10-26",
+      "compareTo": "2026-10-26",
+      "grain": "day",
+      "selectionHash": "88bf7241782e4ce0f5dd81edf0b026257f2d4fae4714dfeec4615877f6000340"
+    },
+    "knownTotals": {
+      "revenue": "6947990.000000",
+      "adSpend": "1790594.000000",
+      "profitBeforeAds": "3981475.000000",
+      "estimatedProfit": "2272081.000000",
+      "mer": "3.8802710162"
+    },
+    "completeTotals": {
+      "revenue": "6947990.000000",
+      "adSpend": "1790594.000000",
+      "profitBeforeAds": "3981475.000000",
+      "estimatedProfit": "2272081.000000",
+      "mer": "3.8802710162"
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "874702.000000",
+      "unallocatedExpense": "492800.000000",
+      "shippingIncome": "574000.000000",
+      "unallocatedShippingIncome": "574000.000000",
+      "unclassifiedRevenue": "974600.000000",
+      "unclassifiedProfitBeforeAds": "553151.000000"
+    },
+    "coverage": [
+      {
+        "sourceSystem": "NAVER_DA",
+        "platform": "NAVER",
+        "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+        "date": "2026-10-26",
+        "component": "AD_SPEND",
+        "participation": "INCLUDED",
+        "collectionState": "COMPLETE",
+        "rowsPresent": 43,
+        "zeroConfirmed": false,
+        "sourceAsOf": "2026-10-27T00:52:54.508Z",
+        "calculatedAt": null,
+        "lastSuccessAt": "2026-10-27T00:52:54.508Z",
+        "mappedRows": 30,
+        "unmappedRows": 13,
+        "unmatchedAmount": "874702.000000",
+        "missingCostRows": 0,
+        "missingFxAmount": "0.000000",
+        "unallocatedAmount": "874702.000000",
+        "isEstimate": true,
+        "issues": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED"
+        ]
+      },
+      {
+        "sourceSystem": "NAVER_SMARTSTORE",
+        "platform": "NAVER",
+        "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+        "date": "2026-10-26",
+        "component": "COMMON_EXPENSE",
+        "participation": "INCLUDED",
+        "collectionState": "COMPLETE",
+        "rowsPresent": 2,
+        "zeroConfirmed": false,
+        "sourceAsOf": "2026-10-27T00:54:50.549Z",
+        "calculatedAt": "2026-10-27T00:54:50.549Z",
+        "lastSuccessAt": null,
+        "mappedRows": 0,
+        "unmappedRows": 0,
+        "unmatchedAmount": null,
+        "missingCostRows": 0,
+        "missingFxAmount": "0.000000",
+        "unallocatedAmount": "1066800.000000",
+        "isEstimate": true,
+        "issues": [
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_STORED_FINGERPRINT_MISSING"
+        ]
+      },
+      {
+        "sourceSystem": "NAVER_SMARTSTORE",
+        "platform": "NAVER",
+        "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+        "date": "2026-10-26",
+        "component": "DIRECT_COST",
+        "participation": "INCLUDED",
+        "collectionState": "COMPLETE",
+        "rowsPresent": 264,
+        "zeroConfirmed": false,
+        "sourceAsOf": "2026-10-27T00:09:46.583Z",
+        "calculatedAt": "2026-10-29T06:05:11.383Z",
+        "lastSuccessAt": "2026-10-27T00:09:46.583Z",
+        "mappedRows": 172,
+        "unmappedRows": 75,
+        "unmatchedAmount": "974600.000000",
+        "missingCostRows": 0,
+        "missingFxAmount": "0.000000",
+        "unallocatedAmount": "0.000000",
+        "isEstimate": true,
+        "issues": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING"
+        ]
+      },
+      {
+        "sourceSystem": "NAVER_SMARTSTORE",
+        "platform": "NAVER",
+        "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+        "date": "2026-10-26",
+        "component": "SALE",
+        "participation": "INCLUDED",
+        "collectionState": "COMPLETE",
+        "rowsPresent": 264,
+        "zeroConfirmed": false,
+        "sourceAsOf": "2026-10-27T00:09:46.583Z",
+        "calculatedAt": "2026-10-29T06:05:11.383Z",
+        "lastSuccessAt": "2026-10-27T00:09:46.583Z",
+        "mappedRows": 172,
+        "unmappedRows": 75,
+        "unmatchedAmount": "974600.000000",
+        "missingCostRows": 0,
+        "missingFxAmount": "0.000000",
+        "unallocatedAmount": "0.000000",
+        "isEstimate": true,
+        "issues": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING"
+        ]
+      }
+    ],
+    "warnings": [
+      "NAME_UNMATCHED",
+      "NAVER_ESTIMATED_SOURCE",
+      "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+      "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+      "NAVER_ORDER_SYNC_STATE_MISSING",
+      "NAVER_SALE_UNIT_NAME_RESTORED",
+      "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+      "NAVER_SOURCE_ESTIMATE",
+      "NAVER_STORED_FINGERPRINT_MISSING",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ],
+    "items": [
+      {
+        "productName": "두줄무릎보호대",
+        "saleUnits": [
+          "두줄보호대 1+1",
+          "두줄보호대 단품"
+        ],
+        "knownTotals": {
+          "revenue": "4710690.000000",
+          "adSpend": "802246.000000",
+          "profitBeforeAds": "2610419.000000",
+          "estimatedProfit": "1808173.000000",
+          "mer": "5.8718772047"
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": "1808173.000000",
+        "metricAvailability": {
+          "state": "SALE_AND_AD",
+          "revenue": true,
+          "adSpend": true,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": true
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "4710690.000000"
+          }
+        ],
+        "byMedium": [
+          {
+            "medium": "NAVER_DA",
+            "adSpend": "802246.000000",
+            "share": "100.0000000000"
+          }
+        ],
+        "isEstimate": true,
+        "quality": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING",
+          "PARTIAL_TOTAL",
+          "UNALLOCATED_BALANCE",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "UNALLOCATED",
+        "comparison": {
+          "revenue": {
+            "current": "4710690.000000",
+            "previous": "4710690.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "4710690.000000",
+            "previousDailyAverage": "4710690.000000"
+          },
+          "adSpend": {
+            "current": "802246.000000",
+            "previous": "802246.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "802246.000000",
+            "previousDailyAverage": "802246.000000"
+          },
+          "profitBeforeAds": {
+            "current": "2610419.000000",
+            "previous": "2610419.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "2610419.000000",
+            "previousDailyAverage": "2610419.000000"
+          },
+          "estimatedProfit": {
+            "current": "1808173.000000",
+            "previous": "1808173.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "1808173.000000",
+            "previousDailyAverage": "1808173.000000"
+          },
+          "mer": {
+            "current": "5.8718772047",
+            "previous": "5.8718772047",
+            "change": "0.0000000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "NAVER_DA",
+            "current": "802246.000000",
+            "previous": "802246.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "share": "100.0000000000",
+            "previousShare": "100.0000000000",
+            "shareChangePp": "0.0000000000",
+            "spendChangeContributionPp": "0.0000000000",
+            "reason": null
+          }
+        ]
+      },
+      {
+        "productName": "러닝양말",
+        "saleUnits": [
+          "러닝양말"
+        ],
+        "knownTotals": {
+          "revenue": "266000.000000",
+          "adSpend": "53194.000000",
+          "profitBeforeAds": "165510.000000",
+          "estimatedProfit": "112316.000000",
+          "mer": "5.0005639734"
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": "112316.000000",
+        "metricAvailability": {
+          "state": "SALE_AND_AD",
+          "revenue": true,
+          "adSpend": true,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": true
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "266000.000000"
+          }
+        ],
+        "byMedium": [
+          {
+            "medium": "NAVER_DA",
+            "adSpend": "53194.000000",
+            "share": "100.0000000000"
+          }
+        ],
+        "isEstimate": true,
+        "quality": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING",
+          "PARTIAL_TOTAL",
+          "UNALLOCATED_BALANCE",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "UNALLOCATED",
+        "comparison": {
+          "revenue": {
+            "current": "266000.000000",
+            "previous": "266000.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "266000.000000",
+            "previousDailyAverage": "266000.000000"
+          },
+          "adSpend": {
+            "current": "53194.000000",
+            "previous": "53194.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "53194.000000",
+            "previousDailyAverage": "53194.000000"
+          },
+          "profitBeforeAds": {
+            "current": "165510.000000",
+            "previous": "165510.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "165510.000000",
+            "previousDailyAverage": "165510.000000"
+          },
+          "estimatedProfit": {
+            "current": "112316.000000",
+            "previous": "112316.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "112316.000000",
+            "previousDailyAverage": "112316.000000"
+          },
+          "mer": {
+            "current": "5.0005639734",
+            "previous": "5.0005639734",
+            "change": "0.0000000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "NAVER_DA",
+            "current": "53194.000000",
+            "previous": "53194.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "share": "100.0000000000",
+            "previousShare": "100.0000000000",
+            "shareChangePp": "0.0000000000",
+            "spendChangeContributionPp": "0.0000000000",
+            "reason": null
+          }
+        ]
+      },
+      {
+        "productName": "러닝장갑",
+        "saleUnits": [
+          "러닝장갑"
+        ],
+        "knownTotals": {
+          "revenue": "56200.000000",
+          "adSpend": "7958.000000",
+          "profitBeforeAds": "31479.000000",
+          "estimatedProfit": "23521.000000",
+          "mer": "7.0620758985"
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": "23521.000000",
+        "metricAvailability": {
+          "state": "SALE_AND_AD",
+          "revenue": true,
+          "adSpend": true,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": true
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "56200.000000"
+          }
+        ],
+        "byMedium": [
+          {
+            "medium": "NAVER_DA",
+            "adSpend": "7958.000000",
+            "share": "100.0000000000"
+          }
+        ],
+        "isEstimate": true,
+        "quality": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING",
+          "PARTIAL_TOTAL",
+          "UNALLOCATED_BALANCE",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "UNALLOCATED",
+        "comparison": {
+          "revenue": {
+            "current": "56200.000000",
+            "previous": "56200.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "56200.000000",
+            "previousDailyAverage": "56200.000000"
+          },
+          "adSpend": {
+            "current": "7958.000000",
+            "previous": "7958.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "7958.000000",
+            "previousDailyAverage": "7958.000000"
+          },
+          "profitBeforeAds": {
+            "current": "31479.000000",
+            "previous": "31479.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "31479.000000",
+            "previousDailyAverage": "31479.000000"
+          },
+          "estimatedProfit": {
+            "current": "23521.000000",
+            "previous": "23521.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "23521.000000",
+            "previousDailyAverage": "23521.000000"
+          },
+          "mer": {
+            "current": "7.0620758985",
+            "previous": "7.0620758985",
+            "change": "0.0000000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "NAVER_DA",
+            "current": "7958.000000",
+            "previous": "7958.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "share": "100.0000000000",
+            "previousShare": "100.0000000000",
+            "shareChangePp": "0.0000000000",
+            "spendChangeContributionPp": "0.0000000000",
+            "reason": null
+          }
+        ]
+      },
+      {
+        "productName": "베놈 무릎보호대",
+        "saleUnits": [
+          "베놈 무릎보호대 1+1",
+          "베놈 무릎보호대 단품",
+          "베놈 무릎보호대(여성용) 1+1"
+        ],
+        "knownTotals": {
+          "revenue": "556100.000000",
+          "adSpend": "52494.000000",
+          "profitBeforeAds": "357204.000000",
+          "estimatedProfit": "304710.000000",
+          "mer": "10.5935916486"
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": "304710.000000",
+        "metricAvailability": {
+          "state": "SALE_AND_AD",
+          "revenue": true,
+          "adSpend": true,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": true
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "556100.000000"
+          }
+        ],
+        "byMedium": [
+          {
+            "medium": "NAVER_DA",
+            "adSpend": "52494.000000",
+            "share": "100.0000000000"
+          }
+        ],
+        "isEstimate": true,
+        "quality": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING",
+          "PARTIAL_TOTAL",
+          "UNALLOCATED_BALANCE",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "UNALLOCATED",
+        "comparison": {
+          "revenue": {
+            "current": "556100.000000",
+            "previous": "556100.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "556100.000000",
+            "previousDailyAverage": "556100.000000"
+          },
+          "adSpend": {
+            "current": "52494.000000",
+            "previous": "52494.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "52494.000000",
+            "previousDailyAverage": "52494.000000"
+          },
+          "profitBeforeAds": {
+            "current": "357204.000000",
+            "previous": "357204.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "357204.000000",
+            "previousDailyAverage": "357204.000000"
+          },
+          "estimatedProfit": {
+            "current": "304710.000000",
+            "previous": "304710.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "304710.000000",
+            "previousDailyAverage": "304710.000000"
+          },
+          "mer": {
+            "current": "10.5935916486",
+            "previous": "10.5935916486",
+            "change": "0.0000000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "NAVER_DA",
+            "current": "52494.000000",
+            "previous": "52494.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "share": "100.0000000000",
+            "previousShare": "100.0000000000",
+            "shareChangePp": "0.0000000000",
+            "spendChangeContributionPp": "0.0000000000",
+            "reason": null
+          }
+        ]
+      },
+      {
+        "productName": "카프슬리브",
+        "saleUnits": [
+          "카프슬리브"
+        ],
+        "knownTotals": {
+          "revenue": "34100.000000",
+          "adSpend": null,
+          "profitBeforeAds": "21930.000000",
+          "estimatedProfit": "21930.000000",
+          "mer": null
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": "21930.000000",
+        "metricAvailability": {
+          "state": "SALE_AND_AD",
+          "revenue": true,
+          "adSpend": true,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": true
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "34100.000000"
+          }
+        ],
+        "byMedium": [
+          {
+            "medium": "NAVER_DA",
+            "adSpend": null,
+            "share": null
+          }
+        ],
+        "isEstimate": true,
+        "quality": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING",
+          "PARTIAL_TOTAL",
+          "UNALLOCATED_BALANCE",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "UNALLOCATED",
+        "comparison": {
+          "revenue": {
+            "current": "34100.000000",
+            "previous": "34100.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "34100.000000",
+            "previousDailyAverage": "34100.000000"
+          },
+          "adSpend": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "profitBeforeAds": {
+            "current": "21930.000000",
+            "previous": "21930.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "21930.000000",
+            "previousDailyAverage": "21930.000000"
+          },
+          "estimatedProfit": {
+            "current": "21930.000000",
+            "previous": "21930.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "21930.000000",
+            "previousDailyAverage": "21930.000000"
+          },
+          "mer": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "NAVER_DA",
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "share": null,
+            "previousShare": null,
+            "shareChangePp": null,
+            "spendChangeContributionPp": null,
+            "reason": "MISSING_INPUT"
+          }
+        ]
+      },
+      {
+        "productName": "풀업바",
+        "saleUnits": [],
+        "knownTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": null,
+        "metricAvailability": {
+          "state": "SALE_AND_AD",
+          "revenue": true,
+          "adSpend": true,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": true
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": null
+          }
+        ],
+        "byMedium": [
+          {
+            "medium": "NAVER_DA",
+            "adSpend": null,
+            "share": null
+          }
+        ],
+        "isEstimate": true,
+        "quality": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING",
+          "UNALLOCATED_BALANCE",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "UNALLOCATED",
+        "comparison": {
+          "revenue": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "adSpend": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "profitBeforeAds": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "estimatedProfit": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "mer": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "NAVER_DA",
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "share": null,
+            "previousShare": null,
+            "shareChangePp": null,
+            "spendChangeContributionPp": null,
+            "reason": "MISSING_INPUT"
+          }
+        ]
+      },
+      {
+        "productName": "한줄보호대",
+        "saleUnits": [
+          "한줄보호대 1+1",
+          "한줄보호대 단품"
+        ],
+        "knownTotals": {
+          "revenue": "350300.000000",
+          "adSpend": null,
+          "profitBeforeAds": "241782.000000",
+          "estimatedProfit": "241782.000000",
+          "mer": null
+        },
+        "completeTotals": {
+          "revenue": null,
+          "adSpend": null,
+          "profitBeforeAds": null,
+          "estimatedProfit": null,
+          "mer": null
+        },
+        "productProfitSubtotal": "241782.000000",
+        "metricAvailability": {
+          "state": "SALE_AND_AD",
+          "revenue": true,
+          "adSpend": true,
+          "profitBeforeAds": true,
+          "estimatedProfit": true,
+          "mer": true
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "350300.000000"
+          }
+        ],
+        "byMedium": [
+          {
+            "medium": "NAVER_DA",
+            "adSpend": null,
+            "share": null
+          }
+        ],
+        "isEstimate": true,
+        "quality": [
+          "NAME_UNMATCHED",
+          "NAVER_ESTIMATED_SOURCE",
+          "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+          "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+          "NAVER_ORDER_SYNC_STATE_MISSING",
+          "NAVER_SALE_UNIT_NAME_RESTORED",
+          "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+          "NAVER_SOURCE_ESTIMATE",
+          "NAVER_STORED_FINGERPRINT_MISSING",
+          "PARTIAL_TOTAL",
+          "UNALLOCATED_BALANCE",
+          "UNCLASSIFIED_SALES"
+        ],
+        "commonExpenseAllocationStatus": "UNALLOCATED",
+        "comparison": {
+          "revenue": {
+            "current": "350300.000000",
+            "previous": "350300.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "350300.000000",
+            "previousDailyAverage": "350300.000000"
+          },
+          "adSpend": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          },
+          "profitBeforeAds": {
+            "current": "241782.000000",
+            "previous": "241782.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "241782.000000",
+            "previousDailyAverage": "241782.000000"
+          },
+          "estimatedProfit": {
+            "current": "241782.000000",
+            "previous": "241782.000000",
+            "change": "0.000000",
+            "changePct": "0.0000000000",
+            "reason": null,
+            "currentDailyAverage": "241782.000000",
+            "previousDailyAverage": "241782.000000"
+          },
+          "mer": {
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "reason": "MISSING_INPUT",
+            "currentDailyAverage": null,
+            "previousDailyAverage": null
+          }
+        },
+        "mediumComparison": [
+          {
+            "medium": "NAVER_DA",
+            "current": null,
+            "previous": null,
+            "change": null,
+            "changePct": null,
+            "share": null,
+            "previousShare": null,
+            "shareChangePp": null,
+            "spendChangeContributionPp": null,
+            "reason": "MISSING_INPUT"
+          }
+        ]
+      }
+    ],
+    "publishedRunIdsBySource": [
+      {
+        "sourceSystem": "NAVER",
+        "platform": "NAVER",
+        "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+        "date": "2026-10-26",
+        "runId": "c3756f63-f5dd-47ea-a6f9-bb9d93abf329",
+        "revision": 1
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": "c3756f63-f5dd-47ea-a6f9-bb9d93abf329",
+      "platform": "NAVER",
+      "businessDate": "2026-10-26T00:00:00.000Z",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "publishedAt": "2026-10-29T06:05:12.726Z"
+    }
+  ],
+  "status": "PASS"
+}

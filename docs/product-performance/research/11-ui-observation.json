@@ -1,14 +1,23 @@
 {
   "stage": 11,
-  "observedAt": "2026-10-29T05:07:00.856Z",
+  "observedAt": "2026-10-29T06:32:03.661Z",
   "auth": "existing browser-verified SUPER_ADMIN; no credentials extracted",
-  "release": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "release": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
   "cases": {
     "offNotice": "PASS",
     "onPartialKnownMetrics": "PASS",
     "naverOffThenOn": "PASS",
     "naverOffReloadPreserved": "PASS",
-    "emptySelectionNoZero": "PASS"
+    "emptySelectionNoZero": "PASS",
+    "adOnlyNotApplicableSales": "PASS",
+    "saleOnlyNotApplicableAds": "PASS",
+    "naverStoredEstimateInputs": "PASS",
+    "naverActualNonzeroSelectionRestoration": "PASS",
+    "authenticatedRulePreviewSaveAudit": "PASS",
+    "unchangedBusinessConfigurationVerified": "PASS",
+    "duplicateRebuildOneJob": "PASS",
+    "uiPublishedStatusRefresh": "PASS",
+    "postRebuildFinancialReplay": "PASS"
   },
   "representative": {
     "product": "풀업바",
@@ -21,5 +30,28 @@
   "limitations": [
     "Only representative Cafe24 partition is financially verified",
     "Different business role sessions have not been browser-tested"
-  ]
+  ],
+  "naver": {
+    "businessDate": "2026-10-26",
+    "onKnownRevenue": "24809070",
+    "offKnownRevenue": "11213400",
+    "revenueDelta": "13595670",
+    "knownNaverAdSpend": "4067547",
+    "offKnownAdSpend": null,
+    "onRestoreExact": true,
+    "interpretation": "Stored estimates match source/publication; not settlement truth. Missing other ads remain unknown."
+  },
+  "initialRelease": "242bfd9ad1b89956b3b68d195c0aefdcafb090b1",
+  "settingsAudit": {
+    "beforeVersion": 1,
+    "afterVersion": 2,
+    "auditCount": 4,
+    "businessConfigurationUnchanged": true
+  },
+  "rebuild": {
+    "uiJob": "0c3a5d8e-33cf-4d80-a446-148b79ee88a7",
+    "status": "PUBLISHED",
+    "attempts": 1,
+    "finalPublishedRuns": 73
+  }
 }

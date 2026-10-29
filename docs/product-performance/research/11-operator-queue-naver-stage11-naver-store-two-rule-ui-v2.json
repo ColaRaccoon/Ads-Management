@@ -1,0 +1,41 @@
+{
+  "stage": 11,
+  "observedAt": "2026-10-29T06:18:57.117Z",
+  "operation": "queue-naver",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of the current browser-verified active administrator; not an HTTP authentication test",
+  "actorId": "3fc80049-10b7-44f9-ad5c-d93fbfc3f0f8",
+  "request": {
+    "from": "2026-10-26",
+    "to": "2026-10-26",
+    "platforms": [
+      "NAVER"
+    ],
+    "scopeKeys": [
+      "78f8cb08-ffe3-481a-94d7-be87ae93ed79"
+    ],
+    "productNames": []
+  },
+  "result": {
+    "contractVersion": "product-performance-v1.1.0",
+    "status": "QUEUED",
+    "execution": "ASYNC_WORKER",
+    "executionScope": "FULL_SOURCE_DAY",
+    "requestedProductNames": [],
+    "jobs": [
+      {
+        "jobId": "c41e27fb-fdc1-4eb5-aaeb-d427ce0db3f0",
+        "platform": "NAVER",
+        "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+        "date": "2026-10-26",
+        "status": "STAGING",
+        "attempts": 0,
+        "issues": [],
+        "phase": "QUEUED",
+        "startedAt": "2026-10-29T06:18:57.398Z",
+        "completedAt": null
+      }
+    ]
+  },
+  "status": "PASS"
+}
