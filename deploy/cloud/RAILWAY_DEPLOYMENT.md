@@ -220,6 +220,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Deployment scope test failed' }
 
 ## 다른 세션에 전달할 요청 예시
 
+최신 운영 배포(2026-10-29)는 메타 광고 규칙 수정·비활성화 기능의 `41729e397a0a224f419c0219a86302d51c050986` (`codex/sidebar-scroll`)이다. 배포 ID `8b6f5c38-96ca-46e5-8649-8b2a2f027b44`, 준비 상태 및 케겔 10월 28일 광고비 반영 확인. 다음 배포는 이 변경을 보존한 소스를 사용한다. 상세는 [규칙 관리 문서](../../docs/meta-ad-rule-editing.md)를 확인한다.
+
 ### 이후 사이드바 배포 기록 (2026-10-28)
 
 - 운영 소스는 `codex/sidebar-scroll` 브랜치의 `672f69501f1c11b4ad4b07d4ea5d5f02904e6822`로 고정됐다. 위 `codex/google-daily-d1-d7` 명령 예시는 이전 배포 당시 값이므로, 다음 배포에서는 실제 소스 브랜치와 배포할 커밋을 먼저 조회한다.

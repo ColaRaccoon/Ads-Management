@@ -41,6 +41,7 @@ test('dated application moves both ad and adset cost attribution without changin
  const previous=process.env.DAILY_SYNC_FEATURE_ENABLED;process.env.DAILY_SYNC_FEATURE_ENABLED='false';
  try{const f=fixture();f.rule.productId='new';const result=await f.service.applyProductRule('rule',{from:'2026-10-28',to:'2026-10-28'},'actor');
   assert.equal(result.changedAdsets,1);assert.equal(result.changedAds,1);assert.equal(f.ads[0].productId,'new');assert.equal(f.sets[0].productId,'new');assert.equal(f.currentProduct,'new');assert.equal(f.ads[0].spendUsd,'19.23');assert.equal(f.sets[0].spendUsd,'19.23');assert.equal(f.audits[0].action,'META_MAPPING_RULE_APPLIED');
+  const again=await f.service.applyProductRule('rule',{from:'2026-10-28',to:'2026-10-28'},'actor');assert.equal(again.changedAdsets,0);assert.equal(again.changedAds,0);
  }finally{if(previous===undefined)delete process.env.DAILY_SYNC_FEATURE_ENABLED;else process.env.DAILY_SYNC_FEATURE_ENABLED=previous;}
 });
 test('disabled rules release old attribution, and another effective rule can take over',async()=>{
