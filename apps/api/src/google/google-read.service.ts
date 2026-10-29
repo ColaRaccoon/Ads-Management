@@ -20,6 +20,13 @@ function grouped<T>(rows: T[], key: (row: T) => string) {
   for (const row of rows) { const id = key(row); const bucket = result.get(id) ?? []; bucket.push(row); result.set(id, bucket); }
   return result;
 }
+/** Only already source-selected legacy CSV may use the sole configured shop.
+ * Query filters must never turn a multi-shop installation into a guessed owner. */
+export function legacyGoogleSaleConnection(line: { connectionId: string | null; source: string },
+  allCafe24Connections: readonly { id: string }[]) {
+  return line.connectionId ?? (line.source === "CSV" && allCafe24Connections.length === 1
+    ? allCafe24Connections[0].id : null);
+}
 export function googleRange(query: GoogleQuery) {
   if (!!query.from !== !!query.to) throw new BadRequestException("시작일과 종료일을 함께 지정해 주세요.");
   const yesterday = new Date(Date.now() + 9 * 3_600_000 - 86_400_000);
@@ -182,10 +189,13 @@ export class GoogleReadService {
     const ratesByDay = new Map(rates.map(r => [`${day(r.rateDate)}:${r.baseCurrency}`, r]));
     const effective = (kind: string, connectionId: string | null, identityKey: string, date: string) =>
       (mappingsByKey.get(`${kind}:${connectionId}:${identityKey}`) ?? []).find(m => day(m.startDate) <= date && (!m.endDate || day(m.endDate) >= date));
+    const legacyShops = contextLines.some(line => line.source === "CSV" && !line.connectionId)
+      ? await tx.sourceConnection.findMany({ where: { provider: "CAFE24" }, select: { id: true }, take: 2 }) : [];
     const salesLines: GoogleSaleLine[] = contextLines.map(line => {
       const date = line.orderDate ? day(line.orderDate) : activeDays[0].date;
-      const exactMapping = line.productName.includes("[유튜브]") ? effective("SALE", line.connectionId, mappingIdentity("SALE", null, line.productNo, line.optionName), date) : undefined;
-      const productMapping = line.productName.includes("[유튜브]") ? effective("SALE", line.connectionId, mappingIdentity("SALE", null, line.productNo, "", "PRODUCT"), date) : undefined;
+      const mappingConnection = legacyGoogleSaleConnection(line, legacyShops);
+      const exactMapping = line.productName.includes("[유튜브]") ? effective("SALE", mappingConnection, mappingIdentity("SALE", null, line.productNo, line.optionName), date) : undefined;
+      const productMapping = line.productName.includes("[유튜브]") ? effective("SALE", mappingConnection, mappingIdentity("SALE", null, line.productNo, "", "PRODUCT"), date) : undefined;
       if (exactMapping && productMapping) throw new ConflictException({ code: "GOOGLE_MAPPING_OVERLAP", message: "상품 전체와 옵션 매핑 기간이 겹칩니다." });
       const mapping = productMapping ?? exactMapping;
       const mapped = mapping ? mapping.productId : line.productId;
