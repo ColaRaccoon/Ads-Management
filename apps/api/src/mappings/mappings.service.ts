@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
   AdStage,
   MatchSource,
@@ -29,11 +29,15 @@ export class MappingsService {
     });
   }
 
-  async createProductRule(body: Record<string, unknown>, actorId: string) {
+  async createProductRule(body: Record<string, unknown>, actorId?: string) {
     const productId = requiredString(body.productId, "productId");
     const matchType = parseMatchType(body.matchType);
     const pattern = requiredString(body.pattern, "pattern");
+    validateMetaPattern(matchType, pattern);
     await this.ensureProduct(productId);
+    const validFrom = body.validFrom ? asDateOnly(String(body.validFrom)) : asDateOnly(formatDateOnly(new Date()));
+    const validTo = body.validTo ? asDateOnly(String(body.validTo)) : null;
+    if (validTo && validTo < validFrom) throw new BadRequestException("종료일은 시작일 이후여야 합니다.");
     return this.prisma.$transaction(async (tx) => {
       const created = await tx.productMatchRule.create({ data: {
         productId,
@@ -42,8 +46,8 @@ export class MappingsService {
         patternKey: matchType === MatchType.REGEX ? null : AdsetNameNormalizer.toKey(pattern),
         priority: numberOrDefault(body.priority, 100),
         isActive: body.isActive === undefined ? true : Boolean(body.isActive),
-        validFrom: body.validFrom ? asDateOnly(String(body.validFrom)) : asDateOnly(formatDateOnly(new Date())),
-        validTo: body.validTo ? asDateOnly(String(body.validTo)) : null,
+        validFrom,
+        validTo,
         note: optionalString(body.note),
         createdBy: actorId
       },
@@ -51,7 +55,7 @@ export class MappingsService {
       });
       await writeSecurityAudit(tx, {
         actorUserId: actorId,
-        actorType: SecurityAuditActorType.USER,
+        actorType: actorId ? SecurityAuditActorType.USER : SecurityAuditActorType.SYSTEM,
         action: "META_MAPPING_RULE_CREATED",
         targetType: "PRODUCT_MATCH_RULE",
         targetId: created.id,
@@ -60,6 +64,128 @@ export class MappingsService {
       });
       return created;
     });
+  }
+
+  async updateProductRule(id: string, body: Record<string, unknown>, actorId: string) {
+    return this.prisma.$transaction(async tx => {
+      const before = await tx.productMatchRule.findUnique({ where: { id } });
+      if (!before) throw new NotFoundException("광고 매핑 규칙을 찾을 수 없습니다.");
+      if (before.updatedAt.toISOString() !== body.expectedUpdatedAt)
+        throw new ConflictException({ code: "META_MAPPING_RULE_CHANGED", message: "다른 작업에서 규칙이 변경됐습니다. 새로고침 후 다시 수정해 주세요." });
+      const productId = requiredString(body.productId, "productId");
+      const matchType = parseMatchType(body.matchType), pattern = requiredString(body.pattern, "pattern");
+      validateMetaPattern(matchType, pattern);
+      const isActive = body.isActive === undefined ? before.isActive : Boolean(body.isActive);
+      if (isActive) await this.ensureProduct(productId, tx);
+      const validFrom = body.validFrom === undefined ? before.validFrom : asDateOnly(String(body.validFrom));
+      const validTo = body.validTo === undefined ? before.validTo : body.validTo === null ? null : asDateOnly(String(body.validTo));
+      if (validTo && validTo < validFrom) throw new BadRequestException("종료일은 시작일 이후여야 합니다.");
+      const changed = await tx.productMatchRule.updateMany({ where: { id, updatedAt: before.updatedAt }, data: {
+        productId, matchType, pattern, patternKey: matchType === MatchType.REGEX ? null : AdsetNameNormalizer.toKey(pattern),
+        priority: body.priority === undefined ? before.priority : numberOrDefault(body.priority, 100),
+        isActive, validFrom, validTo, note: body.note === undefined ? before.note : optionalString(body.note) ?? null
+      } });
+      if (changed.count !== 1) throw new ConflictException({ code: "META_MAPPING_RULE_CHANGED", message: "규칙이 변경됐습니다. 새로고침해 주세요." });
+      const after = await tx.productMatchRule.findUniqueOrThrow({ where: { id }, include: { product: true } });
+      await writeSecurityAudit(tx, { actorUserId: actorId, actorType: SecurityAuditActorType.USER,
+        action: isActive ? "META_MAPPING_RULE_UPDATED" : "META_MAPPING_RULE_DEACTIVATED", targetType: "PRODUCT_MATCH_RULE",
+        targetId: id, result: SecurityAuditResult.SUCCESS, beforeJson: metaRuleAuditSnapshot(before), afterJson: metaRuleAuditSnapshot(after) });
+      return after;
+    });
+  }
+
+  /** Explicit historical application: only this rule's assignments and unmatched
+   * facts are reconsidered. Manual facts/history and other rules are retained. */
+  async applyProductRule(id: string, body: Record<string, unknown>, actorId?: string) {
+    const range = dateRangeFromBody(body);
+    if (!range || range.toDate.getTime() - range.fromDate.getTime() > 91 * 86_400_000)
+      throw new BadRequestException("다시 적용할 기간을 92일 이내로 선택해 주세요.");
+    if (!await this.prisma.productMatchRule.findUnique({ where: { id }, select: { id: true } }))
+      throw new NotFoundException("광고 매핑 규칙을 찾을 수 없습니다.");
+    const scope = { isCurrent: true, metricDate: { gte: range.fromDate, lte: range.toDate },
+      OR: [{ productMatchRuleId: id }, { productId: null }] };
+    const [sets, ads] = await Promise.all([
+      this.prisma.metaAdsetDailyMetric.findMany({ where: scope, take: 10001,
+        select: { metaAdsetId: true, metricDate: true, source: true, connectionId: true } }),
+      this.prisma.metaAdDailyMetric.findMany({ where: scope, take: 10001,
+        select: { metaAdsetRefId: true, metricDate: true, source: true, connectionId: true } })
+    ]);
+    if (sets.length > 10000 || ads.length > 10000) throw new BadRequestException("대상이 많습니다. 조회 기간을 줄여 주세요.");
+    const [visibleSets, visibleAds] = await Promise.all([
+      selectRematchRows(this.prisma, SourceDataKind.META_ADSET, sets),
+      selectRematchRows(this.prisma, SourceDataKind.META_AD, ads)
+    ]);
+    const groups = new Map<string, { metaAdsetId: string; metricDate: Date; source: SourceKind; connectionId: string | null }>();
+    for (const row of [...visibleSets, ...visibleAds.map(a => ({ ...a, metaAdsetId: a.metaAdsetRefId }))])
+      groups.set(adsetDateKey(row.metaAdsetId, row.metricDate, row.source, row.connectionId), row);
+    const totals = { scannedGroups: groups.size, changedAdsets: 0, changedAds: 0, unmatchedAds: 0, manualPreserved: 0 };
+    for (const group of groups.values()) {
+      const outcome = await this.prisma.$transaction(async tx => {
+        await acquireMetaAdsetMappingFences(tx, [group.metaAdsetId]);
+        const where = { isCurrent: true, metricDate: group.metricDate, source: group.source, connectionId: group.connectionId };
+        const [setCandidates, adCandidates] = await Promise.all([
+          tx.metaAdsetDailyMetric.findMany({ where: { ...where, metaAdsetId: group.metaAdsetId } }),
+          tx.metaAdDailyMetric.findMany({ where: { ...where, metaAdsetRefId: group.metaAdsetId } })
+        ]);
+        const [currentSets, currentAds] = await Promise.all([
+          selectRematchRows(tx, SourceDataKind.META_ADSET, setCandidates),
+          selectRematchRows(tx, SourceDataKind.META_AD, adCandidates)
+        ]);
+        const count = { changedAdsets: 0, changedAds: 0, unmatchedAds: 0, manualPreserved: 0 };
+        const { matcher, histories, rules } = await this.freshProductMatchInputs(tx, group.metaAdsetId);
+        const date = formatDateOnly(group.metricDate);
+        const manualHistory = histories.some(h => date >= h.effectiveFrom && (!h.effectiveTo || date <= h.effectiveTo));
+        const sourceMatches: RematchSourceProduct[] = [];
+        const changed = (row: { productId: string | null; productMatchSource: MatchSource; productMatchRuleId: string | null },
+          data: { productId: string | null; productMatchSource: MatchSource; productMatchRuleId: string | null }) =>
+          row.productId !== data.productId || row.productMatchSource !== data.productMatchSource || row.productMatchRuleId !== data.productMatchRuleId;
+        const retainedManualSet = currentSets.some(s => s.productMatchSource === MatchSource.MANUAL);
+        if (retainedManualSet) return { ...count, manualPreserved: 1 };
+        for (const ad of currentAds) {
+          const relevant = ad.productId === null || ad.productMatchRuleId === id;
+          let data = { productId: ad.productId, productMatchSource: ad.productMatchSource, productMatchRuleId: ad.productMatchRuleId };
+          if (ad.productMatchSource === MatchSource.MANUAL) count.manualPreserved++;
+          else if (relevant) {
+            const result = matcher.match(sourceRowMatchText(ad), date, histories, rules);
+            data = { productId: result.productId, productMatchSource: result.source as MatchSource, productMatchRuleId: result.matchRuleId };
+            if (changed(ad, data)) {
+              await tx.metaAdDailyMetric.update({ where: { id: ad.id }, data });
+              if (ad.uploadRowId) await tx.uploadRow.update({ where: { id: ad.uploadRowId }, data: {
+                ...data, validationStatus: data.productId ? RowValidationStatus.VALID : RowValidationStatus.UNMATCHED
+              } });
+              count.changedAds++;
+            }
+          }
+          if (!data.productId) count.unmatchedAds++;
+          sourceMatches.push({ productId: data.productId,
+            source: data.productMatchSource, matchRuleId: data.productMatchRuleId });
+        }
+        const aggregate = currentAds.length ? aggregateSourceProductMatch(sourceMatches) : null;
+        for (const set of currentSets) {
+          if (set.productId && set.productMatchRuleId !== id && !count.changedAds) continue;
+          const match = currentAds.length ? aggregate : matcher.match(set.adsetName, date, histories, rules);
+          const data = { productId: match?.productId ?? null,
+            productMatchSource: (match?.source ?? MatchSource.UNMATCHED) as MatchSource,
+            productMatchRuleId: match?.matchRuleId ?? null };
+          if (changed(set, data)) {
+            await tx.metaAdsetDailyMetric.update({ where: { id: set.id }, data });
+            if (set.uploadRowId) await tx.uploadRow.update({ where: { id: set.uploadRowId }, data: {
+              ...data, validationStatus: data.productId ? RowValidationStatus.VALID : RowValidationStatus.UNMATCHED
+            } });
+            count.changedAdsets++;
+          }
+        }
+        if (count.changedAds || count.changedAdsets) {
+          await this.refreshCurrentAdsetProduct(tx, group.metaAdsetId);
+          await writeSecurityAudit(tx, { actorUserId: actorId, actorType: actorId ? SecurityAuditActorType.USER : SecurityAuditActorType.SYSTEM,
+            action: "META_MAPPING_RULE_APPLIED", targetType: "PRODUCT_MATCH_RULE", targetId: id, result: SecurityAuditResult.SUCCESS,
+            afterJson: { date, ...count, manualHistoryPresent: manualHistory } });
+        }
+        return count;
+      }, { timeout: 20000 });
+      for (const key of ["changedAdsets", "changedAds", "unmatchedAds", "manualPreserved"] as const) totals[key] += outcome[key];
+    }
+    return { ...totals, range: { from: range.from, to: range.to } };
   }
 
   async rematchCurrentMetrics(body: Record<string, unknown> = {}, actorId?: string) {
@@ -625,8 +751,7 @@ export class MappingsService {
       select: { productId: true, metricDate: true, source: true, connectionId: true }
     });
     const latest = (await selectRematchRows(tx, SourceDataKind.META_ADSET, candidates))[0];
-    if (!latest?.productId) return;
-    await tx.metaAdset.update({ where: { id: metaAdsetId }, data: { currentProductId: latest.productId } });
+    await tx.metaAdset.update({ where: { id: metaAdsetId }, data: { currentProductId: latest?.productId ?? null } });
     if (actorId) {
       await writeSecurityAudit(tx, {
         actorUserId: actorId,
@@ -635,7 +760,7 @@ export class MappingsService {
         targetType: "META_ADSET",
         targetId: metaAdsetId,
         result: SecurityAuditResult.SUCCESS,
-        afterJson: { productId: latest.productId }
+        afterJson: { productId: latest?.productId ?? null }
       });
     }
   }
@@ -842,14 +967,29 @@ function metaRuleAuditSnapshot(rule: {
   matchType: MatchType;
   priority: number;
   isActive: boolean;
+  pattern: string;
+  validFrom: Date;
+  validTo: Date | null;
+  note: string | null;
 }) {
   return {
     id: rule.id,
     productId: rule.productId,
     matchType: rule.matchType,
     priority: rule.priority,
-    isActive: rule.isActive
+    isActive: rule.isActive,
+    pattern: rule.pattern,
+    validFrom: formatDateOnly(rule.validFrom),
+    validTo: rule.validTo ? formatDateOnly(rule.validTo) : null,
+    note: rule.note
   } satisfies Prisma.InputJsonObject;
+}
+
+function validateMetaPattern(matchType: MatchType, pattern: string) {
+  if (matchType === MatchType.REGEX) {
+    try { new RegExp(pattern, "i"); }
+    catch { throw new BadRequestException("올바른 정규식을 입력해 주세요."); }
+  }
 }
 
 function sourceRowMatchText(row: { adNameSnapshot: string; adsetNameSnapshot: string; campaignNameSnapshot: string }) {

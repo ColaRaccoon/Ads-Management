@@ -7,7 +7,7 @@ import { REQUIRED_PERMISSIONS, AUTH_ROUTE_ACCESS, PERMISSION_ROUTE } from "../au
 import { GoogleController } from "./google.controller";
 import { GoogleMappingInput, GoogleQuery } from "./google.dto";
 import { GoogleMappingsService, mappingConfiguration, mappingIdentity } from "./google-mappings.service";
-import { GoogleReadService, googleRange } from "./google-read.service";
+import { GoogleReadService, googleRange, legacyGoogleSaleConnection } from "./google-read.service";
 import { PrismaService } from "../common/prisma.service";
 import { GooglePerformanceMapping, Prisma } from "@prisma/client";
 import { resolveGoogleSaleConfiguration } from "./google-sale-configuration";
@@ -19,6 +19,43 @@ test("all Google routes require read or mapping permission; preview cannot bypas
     assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, handler),
       [["preview", "create", "update"].includes(name) ? "mappings.manage" : "data.read"]);
   }
+});
+
+test("legacy sale lookup never infers an API owner or chooses between shops", () => {
+  assert.equal(legacyGoogleSaleConnection({source:"API",connectionId:"bound"},[{id:"other"}]),"bound");
+  assert.equal(legacyGoogleSaleConnection({source:"API",connectionId:null},[{id:"shop"}]),null);
+  assert.equal(legacyGoogleSaleConnection({source:"CSV",connectionId:null},[]),null);
+  assert.equal(legacyGoogleSaleConnection({source:"CSV",connectionId:null},[{id:"shop"},{id:"other"}]),null);
+  assert.equal(legacyGoogleSaleConnection({source:"CSV",connectionId:null},[{id:"shop"}]),"shop");
+});
+
+test("separated legacy CSV retains Google sales through a dated explicit mapping without changing source records", async () => {
+  const previous={google:process.env.GOOGLE_PERFORMANCE_ENABLED,daily:process.env.DAILY_SYNC_FEATURE_ENABLED};
+  process.env.GOOGLE_PERFORMANCE_ENABLED="true";process.env.DAILY_SYNC_FEATURE_ENABLED="false";
+  const d=(v:number)=>new Prisma.Decimal(v),date=new Date("2026-10-19Z");
+  const line={id:"legacy",connectionId:null,source:"CSV",uploadBatchId:"batch",orderNo:"order",productNo:"180",
+    optionName:"option",productName:"[유튜브] 풀업바",quantity:d(1),salePriceKrw:d(34900),orderDate:date,
+    productId:null,matchRule:null,totalOrderKrw:d(34900),totalPaidKrw:d(34900),validationStatus:"UNMATCHED"};
+  const snapshot=JSON.stringify(line);let shops=[{id:"shop"}],startDate=date;
+  const tx={
+    sourceConnection:{findMany:async({where}:any)=>where.provider?shops:[{id:"shop",provider:"CAFE24",currencyCode:"KRW",timeZone:"Asia/Seoul"}],findUnique:async()=>({id:"shop",provider:"CAFE24"})},
+    sourceCoverage:{findMany:async()=>[]},sourcePolicy:{findMany:async()=>[]},googleCampaignDailyCost:{findMany:async()=>[]},
+    cafe24UploadBatch:{findMany:async()=>[{id:"batch",rowCount:1,_count:{rows:1}}]},exchangeRate:{findMany:async()=>[]},
+    productCostRule:{findMany:async()=>[{id:"cost",productId:"product",effectiveFrom:date,effectiveTo:null,salePriceKrw:d(34900),vatKrw:d(3490),productCostKrw:d(10000),shippingKrw:d(0),extraCostKrw:d(0)}]},
+    cafe24CouponRule:{findMany:async()=>[]},cafe24OrderLine:{findMany:async()=>[line]},
+    googlePerformanceMapping:{findMany:async()=>[{kind:"SALE",connectionId:"shop",identityKey:mappingIdentity("SALE",null,"180","","PRODUCT"),productId:"product",startDate,endDate:null}]},
+    product:{findMany:async()=>[{id:"product",name:"풀업바",displayName:"풀업바"}]}
+  };
+  const db={$transaction:async(fn:any)=>fn(tx)} as unknown as PrismaService;
+  try{
+    const read=()=>new GoogleReadService(db).report({from:"2026-10-19",to:"2026-10-19",cafe24ConnectionId:"shop"});
+    let report=await read();assert.equal(report.summary.unmappedSalesCount,0);assert.equal(report.summary.quantity,1);
+    assert.equal(report.summary.revenueKrw,34900);assert.equal(report.summary.grossCostKrw,13490);
+    shops=[{id:"shop"},{id:"other"}];report=await read();assert.equal(report.summary.unmappedSalesCount,1,"a filtered shop must not hide global ownership ambiguity");
+    shops=[{id:"shop"}];startDate=new Date("2026-10-20Z");report=await read();assert.equal(report.summary.unmappedSalesCount,1,"future rules must not rewrite older sales");
+    startDate=date;line.productName="일반 풀업바";report=await read();assert.equal(report.summary.quantity,0,"regular sales stay outside Google");
+    line.productName="[유튜브] 풀업바";assert.equal(JSON.stringify(line),snapshot);
+  }finally{for(const [key,value]of [["GOOGLE_PERFORMANCE_ENABLED",previous.google],["DAILY_SYNC_FEATURE_ENABLED",previous.daily]] as const){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });
 
 test("sale configuration rejects incomplete, imprecise, invalid amounts and unit labels without a configuration", () => {

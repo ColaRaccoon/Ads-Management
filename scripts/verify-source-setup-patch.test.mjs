@@ -48,6 +48,7 @@ const unified = [
 ].map(name => `unified-performance/${name}.js`);
 const preserved = ['metrics/metrics.service.js', 'sales/sales-metrics.service.js',
   'coupang/coupang.service.js', 'domain/margin-calculator.js'];
+const metaMappings = ['mappings/mappings.service.js', 'mappings/mappings.controller.js', 'mappings/dto/mappings-transport.dto.js'];
 
 async function fixture(run, profile = 'reporting') {
   const root = await mkdtemp(join(tmpdir(), 'google-c7-guard-'));
@@ -66,6 +67,9 @@ async function fixture(run, profile = 'reporting') {
       await put(compiled, name, 'reviewed Cafe24 option mapping module\n');
     }
     if (profile === 'reporting') for (const name of unified) await put(compiled, name, 'reviewed unified module\n');
+    if (profile === 'reporting') for (const name of metaMappings) {
+      await put(baseline, name, 'old mapping module\n'); await put(compiled, name, 'reviewed editable mapping module\n');
+    }
     for (const name of preserved) { await put(baseline, name, 'legacy\r\n'); await put(compiled, name, 'legacy\n'); }
     const verify = (selected = profile) => spawnSync(process.execPath,
       [verifier, baseline, compiled, ...(selected ? [selected] : [])], { encoding: 'utf8', windowsHide: true });
@@ -80,7 +84,7 @@ async function fixture(run, profile = 'reporting') {
 test('reporting accepts the complete reviewed Google, Cafe24 and unified patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
   const result = verify(); assert.equal(result.status, 0, result.stderr);
   const proof = JSON.parse(result.stdout);
-  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + unified.length);
+  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + metaMappings.length + unified.length);
   for (const name of ['meta', 'cafe24', 'coupang', 'margin']) {
     assert.equal(proof.protectedUnchanged[name].files, 1);
     assert.match(proof.protectedUnchanged[name].sha256, /^[a-f0-9]{64}$/);
@@ -104,10 +108,16 @@ test('unified closure rejects unknown additions and missing reviewed modules', a
   });
 });
 
-test('unified additions do not authorize changes to existing mappings routes', () => fixture(async ({ compiled, put, verify }) => {
-  await put(compiled, 'mappings/mappings.controller.js', 'removed existing endpoints');
+test('unified additions do not authorize unknown mappings helpers', () => fixture(async ({ compiled, put, verify }) => {
+  await put(compiled, 'mappings/unreviewed-helper.js', 'unreviewed mapping helper');
   const result = verify(); assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /Unreviewed C7 API change: mappings\/mappings.controller.js/);
+  assert.match(result.stderr, /Unreviewed C7 API change: mappings\/unreviewed-helper.js/);
+}));
+
+test('reviewed operating mappings modules cannot disappear in the combined release', () => fixture(async ({ compiled, verify }) => {
+  await rm(join(compiled, 'mappings/mappings.controller.js'));
+  const result = verify(); assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Removed C7 API module: mappings\/mappings.controller.js/);
 }));
 
 test('another Google module cannot bypass the exact allowlist', () => fixture(async ({ compiled, put, verify }) => {

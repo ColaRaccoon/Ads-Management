@@ -14,6 +14,10 @@ expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled, profile] = process.argv.slice(2);
 if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch profile');
 if (profile === 'reporting') {
+  // Rule editing, dated reapplication and transport authorization are reviewed
+  // together. Other mapping modules and all financial calculators remain fixed.
+  for (const name of ['mappings/mappings.service.js', 'mappings/mappings.controller.js',
+    'mappings/dto/mappings-transport.dto.js']) expected.add(name);
   // Cafe24 now retains provider option_value separately and applies explicit
   // product/option predicates. Keep the reviewed scope exact; financial
   // calculators, coupons, other sources and deleted modules stay protected.
@@ -38,7 +42,7 @@ if (profile === 'reporting') {
   // Product performance is additive and opt-in. Keep the compiled closure exact:
   // a new adapter/controller/helper still requires review, including test modules
   // emitted by the existing tsconfig (as with Google above). Existing platform
-  // calculators and mappings modules remain outside the reviewed change set.
+  // calculators and mapping modules beyond the three reviewed above stay fixed.
   for (const name of [
     'adapter-contract.js', 'adapter-contract.test.js',
     'adapters/ad-reader.js', 'adapters/ad-reader.test.js', 'adapters/ad-source.js',

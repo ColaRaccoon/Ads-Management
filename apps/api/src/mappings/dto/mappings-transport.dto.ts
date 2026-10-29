@@ -8,7 +8,8 @@ import {
   Max,
   MaxLength,
   Min,
-  MinLength
+  MinLength,
+  Matches
 } from "class-validator";
 import { IsDateOnly, IsOnOrAfter, IsOptionalUndefined, IsUuidV4 } from "../../validation/transport-validation";
 
@@ -62,6 +63,26 @@ export class RematchMetricsDto {
   @IsDateOnly()
   @IsOnOrAfter("from")
   to?: string;
+}
+
+export class ProductMappingRuleIdDto {
+  @IsUuidV4()
+  id!: string;
+}
+
+export class UpdateProductMappingRuleDto extends CreateProductMappingRuleDto {
+  @IsString()
+  @Matches(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/)
+  expectedUpdatedAt!: string;
+}
+
+export class ApplyProductMappingRuleDto {
+  [key: string]: unknown;
+  @IsDateOnly()
+  from!: string;
+  @IsDateOnly()
+  @IsOnOrAfter("from")
+  to!: string;
 }
 
 class ManualMappingTargetDto {

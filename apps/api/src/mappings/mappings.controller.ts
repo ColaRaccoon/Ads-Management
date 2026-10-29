@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
 import { MappingsService } from "./mappings.service";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
@@ -6,7 +6,10 @@ import {
   CreateManualProductMappingDto,
   CreateManualStageMappingDto,
   CreateProductMappingRuleDto,
-  RematchMetricsDto
+  RematchMetricsDto,
+  ProductMappingRuleIdDto,
+  UpdateProductMappingRuleDto,
+  ApplyProductMappingRuleDto
 } from "./dto/mappings-transport.dto";
 
 @Controller("mappings")
@@ -23,6 +26,20 @@ export class MappingsController {
   @RequirePermissions("mappings.manage")
   createProductRule(@Body() body: CreateProductMappingRuleDto, @CurrentUser() actor: AuthenticatedUser) {
     return this.mappingsService.createProductRule(body, actor.id);
+  }
+
+  @Patch("product-rules/:id")
+  @RequirePermissions("mappings.manage")
+  updateProductRule(@Param() params: ProductMappingRuleIdDto, @Body() body: UpdateProductMappingRuleDto,
+    @CurrentUser() actor: AuthenticatedUser) {
+    return this.mappingsService.updateProductRule(params.id, body, actor.id);
+  }
+
+  @Post("product-rules/:id/apply")
+  @RequirePermissions("mappings.manage")
+  applyProductRule(@Param() params: ProductMappingRuleIdDto, @Body() body: ApplyProductMappingRuleDto,
+    @CurrentUser() actor: AuthenticatedUser) {
+    return this.mappingsService.applyProductRule(params.id, body, actor.id);
   }
 
   @Post("rematch")

@@ -9,6 +9,7 @@ import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
 import { useCan } from "@/features/auth/use-auth";
+import { MetaMappingRuleForm, MetaMappingRules, type MetaMappingRule } from "@/components/meta-mapping-rules";
 
 export default function MappingsPage() {
   const canManageMappings = useCan("mappings.manage");
@@ -19,7 +20,7 @@ export default function MappingsPage() {
     queryFn: () => apiGet<Array<Record<string, any>>>(`/metrics/unmatched?${rangeQuery(range)}`)
   });
   const products = useQuery({ queryKey: ["products"], queryFn: () => apiGet<Array<Record<string, any>>>("/products") });
-  const rules = useQuery({ queryKey: ["product-rules"], queryFn: () => apiGet<Array<Record<string, any>>>("/mappings/product-rules") });
+  const rules = useQuery({ queryKey: ["product-rules"], queryFn: () => apiGet<MetaMappingRule[]>("/mappings/product-rules") });
   const cafe24Rules = useQuery({
     queryKey: ["cafe24-rules"],
     queryFn: () => apiGet<Array<Record<string, any>>>("/sales/cafe24/rules?includeInactive=true")
@@ -27,6 +28,14 @@ export default function MappingsPage() {
   const createRule = useMutation({
     mutationFn: (body: unknown) => apiPost("/mappings/product-rules", body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-rules"] })
+  });
+  const updateRule = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: unknown }) => apiPatch(`/mappings/product-rules/${id}`, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-rules"] })
+  });
+  const applyRule = useMutation({
+    mutationFn: (id: string) => apiPost<{ changedAdsets: number; changedAds: number; unmatchedAds: number }>(`/mappings/product-rules/${id}/apply`, range),
+    onSuccess: () => queryClient.invalidateQueries()
   });
   const createCafe24Rule = useMutation({
     mutationFn: (body: unknown) => apiPost("/sales/cafe24/rules", body),
@@ -46,18 +55,6 @@ export default function MappingsPage() {
     mutationFn: () => apiPost<{ scannedCount: number; rematchedCount: number; stillUnmatchedCount: number }>("/mappings/rematch", range),
     onSuccess: () => queryClient.invalidateQueries()
   });
-
-  const submitRule = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    createRule.mutate({
-      productId: form.get("productId"),
-      matchType: form.get("matchType"),
-      pattern: form.get("pattern"),
-      priority: Number(form.get("priority") ?? 100),
-      validFrom: form.get("validFrom")
-    });
-  };
 
   return (
     <section className="page">
@@ -84,26 +81,8 @@ export default function MappingsPage() {
         <div className="warning-strip"><span>{"\uC790\uB3D9\uB9E4\uD551 \uACC4\uC0B0 \uC2E4\uD328"}: {String(rematch.error.message)}</span></div>
       ) : null}
       {canManageMappings ? <div className="grid two">
-        <form className="panel" onSubmit={submitRule}>
-          <h2>제품 자동 매핑 규칙</h2>
-          <div className="form-grid">
-            <select className="select" name="productId" required>
-              <option value="">제품 선택</option>
-              {(products.data ?? []).map((product) => (
-                <option key={product.id} value={product.id}>{product.displayName}</option>
-              ))}
-            </select>
-            <select className="select" name="matchType" defaultValue="CONTAINS">
-              <option value="CONTAINS">포함</option>
-              <option value="EXACT">정확히 일치</option>
-              <option value="REGEX">정규식</option>
-            </select>
-            <input className="input" name="pattern" placeholder="광고세트명 패턴" required />
-            <input className="input" name="priority" type="number" defaultValue={100} />
-            <input className="input" defaultValue={koreaYesterdayDateInput()} name="validFrom" type="date" required />
-            <button className="button primary" type="submit"><Save size={16} />저장</button>
-          </div>
-        </form>
+        <MetaMappingRuleForm products={(products.data ?? []) as Array<{ id: string; displayName: string }>}
+          busy={createRule.isPending} onSave={body => createRule.mutate(body)} />
         <div className="panel">
           <h2>수동 매핑</h2>
           <ManualForm products={products.data ?? []} onProduct={(body) => manualProduct.mutate(body)} onStage={(body) => manualStage.mutate(body)} />
@@ -111,6 +90,14 @@ export default function MappingsPage() {
       </div> : (
         <div className="warning-strip"><span>읽기 전용 계정입니다. 매핑 규칙과 미매칭 결과는 계속 확인할 수 있습니다.</span></div>
       )}
+      {rules.error || createRule.error || updateRule.error || applyRule.error ? <p className="warning-strip" role="alert">
+        {String((rules.error ?? createRule.error ?? updateRule.error ?? applyRule.error)?.message)}
+      </p> : null}
+      {updateRule.isSuccess || createRule.isSuccess ? <p role="status">메타 광고 규칙을 저장했습니다. 기존 광고에 반영하려면 선택 기간 다시 적용을 실행해 주세요.</p> : null}
+      {applyRule.data ? <p role="status">선택 기간 반영: 광고세트 {applyRule.data.changedAdsets}행, 광고 {applyRule.data.changedAds}행 변경 · 미매칭 광고 {applyRule.data.unmatchedAds}행</p> : null}
+      <MetaMappingRules rules={rules.data ?? []} products={(products.data ?? []) as Array<{ id: string; displayName: string }>}
+        canManage={canManageMappings} busy={updateRule.isPending || applyRule.isPending} from={range.from} to={range.to}
+        onUpdate={(id, body) => updateRule.mutate({ id, body })} onApply={id => applyRule.mutate(id)} />
       <div className="panel" style={{ marginTop: 12 }}>
         <h2>카페24 상품/옵션 매핑</h2>
         <Cafe24MappingRules
@@ -133,16 +120,6 @@ export default function MappingsPage() {
           { key: "externalAdsetId", header: "Meta 광고세트 ID", render: (row) => row.metaAdset?.externalAdsetId ?? "-" },
           { key: "stage", header: "단계", render: (row) => row.stage },
           { key: "spend", header: "광고비 USD", render: (row) => row.spendUsd }
-        ]} />
-      </div>
-      <div className="panel" style={{ marginTop: 12 }}>
-        <h2>매칭 규칙</h2>
-        <DataTable rows={rules.data ?? []} columns={[
-          { key: "product", header: "제품", render: (row) => row.product?.displayName },
-          { key: "type", header: "유형", render: (row) => matchTypeLabel(row.matchType) },
-          { key: "pattern", header: "패턴", render: (row) => row.pattern },
-          { key: "priority", header: "우선순위", render: (row) => row.priority },
-          { key: "active", header: "활성", render: (row) => String(row.isActive) }
         ]} />
       </div>
     </section>
@@ -411,7 +388,7 @@ function Cafe24RuleForm({
       <Field label="ROAS 그룹" help="선택 입력용 보고 그룹">
         <input className="input" defaultValue={inputText(rule?.roasGroup)} name="roasGroup" placeholder="그룹명" />
       </Field>
-      <Field label="광고비 기준 제품" help="이 규칙의 광고비를 귀속할 제품을 선택 입력">
+      <Field label="광고비 기준 제품 (참고값)" help="저장용 참고값입니다. 메타 광고 연결은 위의 메타 광고 매핑 규칙에서 설정합니다.">
         <Cafe24ProductSelect
           defaultValue={inputText(rule?.adCostSourceProductId)}
           fallbackLabel={productLabel(rule?.adCostSourceProduct)}
