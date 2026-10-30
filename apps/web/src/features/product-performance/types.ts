@@ -17,8 +17,9 @@ export type Coverage = { sourceSystem: string; platform: Platform; scopeKey: str
   calculatedAt: string | null; lastSuccessAt: string | null; mappedRows: number; unmappedRows: number; unmatchedAmount: string | null;
   missingCostRows: number; missingFxAmount: string | null; unallocatedAmount: string | null; isEstimate: boolean; issues: string[] };
 export type BalanceRow = { platform: Platform; scopeKey: string; date: string; amount: string | null; medium?: string | null; kind?: string | null };
+export type DisplayAmount = { value: string | null; state: "COMPLETE" | "PARTIAL" | "UNAVAILABLE"; availableSources: Platform[]; missingSources: Platform[] };
 export type Aggregate = { knownTotals: Totals; completeTotals: Totals; productProfitSubtotal: string | null;
-  byMarketplace: { marketplace: string; revenue: string | null; completeRevenue?: string | null; profitBeforeAds?: string | null; estimatedProfit?: string | null; adSpend?: string | null; profitUnavailableReason?: string | null }[]; byMedium: { medium: string; adSpend: string | null; completeAdSpend?: string | null; share: string | null }[];
+  byMarketplace: { marketplace: string; revenue: string | null; completeRevenue?: string | null; profitBeforeAds?: string | null; estimatedProfit?: string | null; adSpend?: string | null; profitUnavailableReason?: string | null; display?: { revenue: DisplayAmount; estimatedProfit: DisplayAmount; adSpend: DisplayAmount } }[]; byMedium: { medium: string; adSpend: string | null; completeAdSpend?: string | null; displayAdSpend?: DisplayAmount; share: string | null }[];
   unallocatedExpenses: BalanceRow[]; unallocatedAdSpends: BalanceRow[]; unclassifiedSales: BalanceRow[];
   scopeBalances: { unallocatedAdSpend: string | null; unallocatedExpense: string | null; shippingIncome: string | null;
     unallocatedShippingIncome: string | null; unclassifiedRevenue: string | null; unclassifiedProfitBeforeAds: string | null };

@@ -33,6 +33,52 @@ const rule = (platform: Platform, component: string, method: string, targets: Ar
   active: true, validFrom: new Date("2026-01-01"), validTo: null, identityKey: "test", version: 1,
   createdAt: new Date("2026-01-01"), updatedAt: new Date("2026-01-01"), ...extra } as UnifiedRule);
 
+test("missing Google excludes that independent source from known storefront display instead of hiding Cafe24 and Meta", () => {
+  const facts = [...publish("CAFE24", batch([sale("100", "60")])), ...publish("META", batch([], [ad("20")]))];
+  const coverage = [cov("CAFE24", "SALE"), cov("CAFE24", "DIRECT_COST"), cov("META", "AD_SPEND"),
+    cov("GOOGLE", "AD_SPEND", { rowsPresent: 0, collectionState: "NOT_COLLECTED", zeroConfirmed: false })];
+  const result = summarizeReport(facts, coverage, { platforms: ["CAFE24", "META", "GOOGLE"] });
+  const store = result.byMarketplace[0];
+  assert.equal(store.estimatedProfit, null); // backward-compatible strict field
+  assert.deepEqual(store.display!.estimatedProfit, { value: q("40"), state: "PARTIAL", availableSources: ["META", "CAFE24"], missingSources: ["GOOGLE"] });
+  assert.equal(store.display!.revenue.value, q("100"));
+  assert.equal(store.display!.revenue.state, "COMPLETE");
+  assert.equal(result.byMedium.find(row => row.medium === "META")!.displayAdSpend!.value, q("20"));
+  assert.deepEqual(result.byMedium.find(row => row.medium === "GOOGLE")!.displayAdSpend, { value: null, state: "UNAVAILABLE", availableSources: [], missingSources: ["GOOGLE"] });
+  const excluded = summarizeReport(facts, coverage, { platforms: ["CAFE24", "META"] }).byMarketplace[0].display!;
+  assert.equal(excluded.estimatedProfit.value, q("40"));
+  assert.equal(excluded.estimatedProfit.state, "COMPLETE");
+  assert.deepEqual(excluded.estimatedProfit.missingSources, []);
+});
+
+test("published numeric rows remain partial when an alternate source is missing, while a fully empty day stays unavailable", () => {
+  const facts = publish("CAFE24", batch([sale("100", "60")]));
+  const coverage = [cov("CAFE24", "SALE"), cov("CAFE24", "DIRECT_COST"),
+    cov("CAFE24", "SALE", { scopeKey: "legacy", rowsPresent: 0, collectionState: "NOT_COLLECTED" })];
+  const store = summarizeReport(facts, coverage, { platforms: ["CAFE24"] }).byMarketplace[0];
+  assert.equal(store.completeRevenue, null);
+  assert.deepEqual(store.display!.revenue, { value: q("100"), state: "PARTIAL", availableSources: ["CAFE24"], missingSources: ["CAFE24"] });
+  assert.equal(store.display!.estimatedProfit.value, q("60"));
+  const empty = summarizeReport([], coverage.map(c => ({ ...c, rowsPresent: 0, zeroConfirmed: false, collectionState: "NOT_COLLECTED" })), { platforms: ["CAFE24"] }).byMarketplace[0];
+  assert.equal(empty.display!.revenue.value, null);
+  assert.equal(empty.display!.estimatedProfit.value, null);
+  assert.equal(empty.display!.estimatedProfit.state, "UNAVAILABLE");
+});
+
+test("display net profit never fabricates a missing cost or ignores known storefront spend", () => {
+  const coverage = [cov("CAFE24", "SALE"), cov("CAFE24", "DIRECT_COST"), cov("META", "AD_SPEND"), cov("GOOGLE", "AD_SPEND")];
+  const facts = [...publish("CAFE24", batch([sale("100", null)])), ...publish("META", batch([], [ad("20")])),
+    ...publish("GOOGLE", batch([], [ad("10", "A", { medium: "GOOGLE" })]))];
+  const missingCost = summarizeReport(facts, coverage, { platforms: ["CAFE24", "META", "GOOGLE"] }).byMarketplace[0];
+  assert.equal(missingCost.display!.estimatedProfit.value, null);
+  assert.equal(missingCost.display!.estimatedProfit.state, "UNAVAILABLE");
+  const completeFacts = [...publish("CAFE24", batch([sale("100", "60")])), ...facts.filter(row => row.platform !== "CAFE24")];
+  const complete = summarizeReport(completeFacts, coverage, { platforms: ["CAFE24", "META", "GOOGLE"] }).byMarketplace[0];
+  assert.equal(complete.display!.estimatedProfit.value, q("30"));
+  assert.equal(complete.display!.estimatedProfit.state, "COMPLETE");
+  assert.deepEqual(complete.display!.estimatedProfit.missingSources, []);
+});
+
 test("marketplace complete metrics retain source costs and withhold unknown cross-market ad allocation", () => {
   const facts = [...publish("CAFE24", batch([sale("100", "60")])),
     ...publish("NAVER", batch([sale("200", "120", "A", { marketplace: "NAVER_SMARTSTORE" })], [ad("10", "A", { medium: "NAVER_DA" })])),

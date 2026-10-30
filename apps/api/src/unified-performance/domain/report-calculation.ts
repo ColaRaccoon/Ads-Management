@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { UnifiedRule } from "@prisma/client";
 import type { AdapterBatch, AdapterRequest, ComponentKind, Platform, Quality, SourceCoverage } from "../types";
-import type { PublishedReportFact, ReportFact, ReportSummary, ReportTotals } from "../report-contract";
+import type { DisplayAmount, PublishedReportFact, ReportFact, ReportSummary, ReportTotals } from "../report-contract";
 import { ExactDecimal as D, money, quantizeMoney } from "./decimal";
 import { normalizePlatforms, platformSelection } from "./platform-selection";
 import { allocateReportAmount } from "./report-allocation";
@@ -141,6 +141,18 @@ export function summarizeReport(facts: readonly PublishedReportFact[], coverage:
     mappedExpenses = expenses.filter(row => row.productName !== null), mappedIncome = income.filter(row => row.productName !== null);
   const mediumFor: Partial<Record<Platform, string>> = { META: "META", GOOGLE: "GOOGLE", NAVER: "NAVER_DA", COUPANG: "COUPANG_ADS" };
   const marketFor: Partial<Record<Platform, string>> = { CAFE24: "CAFE24", NAVER: "NAVER_SMARTSTORE", COUPANG: "COUPANG" };
+  const sourceSummary = new Map<Platform, ReportSummary>();
+  const sourceResult = (platform: Platform) => {
+    let result = sourceSummary.get(platform);
+    if (!result) { result = summarizeReport(facts, coverage, { ...options, platforms: [platform], omitMarketplaceMetrics: true }); sourceSummary.set(platform, result); }
+    return result;
+  };
+  const displayAmount = (known: string | null, complete: string | null, members: readonly Platform[], kind: "revenue" | "estimatedProfit" | "adSpend"): DisplayAmount => {
+    const memberMetric = (platform: Platform) => kind === "estimatedProfit" && (platform === "META" || platform === "GOOGLE") ? "adSpend" : kind;
+    return { value: complete ?? known, state: complete !== null ? "COMPLETE" : known !== null ? "PARTIAL" : "UNAVAILABLE",
+      availableSources: members.filter(platform => sourceResult(platform).knownTotals[memberMetric(platform)] !== null),
+      missingSources: members.filter(platform => sourceResult(platform).completeTotals[memberMetric(platform)] === null) };
+  };
   const byMarketplace = uniq([...sales.map(row => row.marketplace!), ...scopedCoverage.filter(row => row.component === "SALE").map(row => marketFor[row.platform]!)].filter(Boolean))
     .map(marketplace => {
       const ownCoverage = scopedCoverage.filter(row => marketFor[row.platform] === marketplace), ownSales = sales.filter(row => row.marketplace === marketplace);
@@ -155,10 +167,20 @@ export function summarizeReport(facts: readonly PublishedReportFact[], coverage:
         (row.completeAmountKrw === null || !money(row.completeAmountKrw).isZero())) ||
         scopedCoverage.some(row => (row.platform === "META" || row.platform === "GOOGLE") && row.component === "AD_SPEND" && !numericallyAvailableCoverage(row));
       const allocationUnknown = marketplace === "CAFE24" && crossMarketAds;
+      // The established storefront groups Cafe24 sales and Meta/Google spend
+      // (storefront-read.service.ts knownSpendKrw; storefront-adapters.service.ts).
+      // Keep the legacy strict fields intact; the display amount explicitly omits
+      // unavailable independent sources and preserves their quality metadata.
+      const displayPlatforms = marketplace === "CAFE24" ? platforms.filter(platform => ["CAFE24", "META", "GOOGLE"].includes(platform)) : ownPlatforms;
+      const displaySummary = marketplace === "CAFE24" ? summarizeReport(facts, coverage, { ...options, platforms: displayPlatforms, omitMarketplaceMetrics: true }) : own;
+      const adPlatforms = displayPlatforms.filter(platform => platform !== "CAFE24");
       return { marketplace, revenue, completeRevenue: own.completeTotals.revenue,
         profitBeforeAds: own.completeTotals.profitBeforeAds, adSpend: own.completeTotals.adSpend,
         estimatedProfit: allocationUnknown ? null : own.completeTotals.estimatedProfit,
-        profitUnavailableReason: allocationUnknown ? "CROSS_MARKET_AD_ALLOCATION_UNKNOWN" : own.completeTotals.estimatedProfit === null ? "MISSING_INPUT" : null };
+        profitUnavailableReason: allocationUnknown ? "CROSS_MARKET_AD_ALLOCATION_UNKNOWN" : own.completeTotals.estimatedProfit === null ? "MISSING_INPUT" : null,
+        display: { revenue: displayAmount(own.knownTotals.revenue, own.completeTotals.revenue, ownPlatforms, "revenue"),
+          estimatedProfit: displayAmount(displaySummary.knownTotals.estimatedProfit, displaySummary.completeTotals.estimatedProfit, displayPlatforms, "estimatedProfit"),
+          adSpend: displayAmount(displaySummary.knownTotals.adSpend, displaySummary.completeTotals.adSpend, adPlatforms, "adSpend") } };
     });
   const byMedium = uniq([...ads.map(row => row.medium!), ...scopedCoverage.filter(row => row.component === "AD_SPEND").map(row => mediumFor[row.platform]!)].filter(Boolean)).map(medium => {
     const ownCoverage = scopedCoverage.filter(row => mediumFor[row.platform] === medium), ownAds = ads.filter(row => row.medium === medium);
@@ -166,7 +188,9 @@ export function summarizeReport(facts: readonly PublishedReportFact[], coverage:
       metric(ownAds, ownCoverage, ["AD_SPEND"], row => row.amountKrw, row => row.completeAmountKrw).known;
     const unresolved = options.productName !== undefined && unresolvedAds.some(row => row.medium === medium);
     const completeAdSpend = unresolved ? null : metric(ownAds, ownCoverage, ["AD_SPEND"], row => row.amountKrw, row => row.completeAmountKrw).complete;
-    return { medium, adSpend: amount, completeAdSpend, share: ratio(amount, adSpend.known, "100") };
+    return { medium, adSpend: amount, completeAdSpend,
+      ...(!options.omitMarketplaceMetrics ? { displayAdSpend: displayAmount(amount, completeAdSpend, platforms.filter(platform => mediumFor[platform] === medium), "adSpend") } : {}),
+      share: ratio(amount, adSpend.known, "100") };
   });
   const issues = uniq([...selected.flatMap(row => row.quality.issues), ...scopedCoverage.flatMap(row => row.quality.issues).filter(safeIssue),
     ...((Object.keys(knownTotals) as Array<keyof ReportTotals>).some(key => knownTotals[key] !== null && completeTotals[key] === null) ? ["PARTIAL_TOTAL"] : []),

@@ -52,3 +52,39 @@ test("weekly aggregates and duplicate daily dates never count as independent dai
   assert.equal(result.series[0].adSpend, null);
   assert.throws(() => analyzeChanges(rows, { ...options, changeDate: "2026-02-30" }));
 });
+
+test("missing Google dates exclude only Google while other known display amounts survive", () => {
+  const changed = rows.map((r, i) => ({ ...r,
+    byMedium: r.byMedium.map(m => m.medium === "GOOGLE" && i < 7 ? { ...m, completeAdSpend: null, displayAdSpend: { value: null, state: "UNAVAILABLE" as const, availableSources: [], missingSources: ["GOOGLE" as const] } } : m),
+    byMarketplace: r.byMarketplace.map(m => ({ ...m, estimatedProfit: null, profitUnavailableReason: "CROSS_MARKET_AD_ALLOCATION_UNKNOWN", display: {
+      revenue: { value: i < 7 ? "100" : "120", state: "COMPLETE" as const, availableSources: ["CAFE24" as const], missingSources: [] },
+      estimatedProfit: { value: i < 7 ? "25" : "35", state: "PARTIAL" as const, availableSources: ["CAFE24" as const, "META" as const], missingSources: ["GOOGLE" as const] },
+      adSpend: { value: "10", state: "PARTIAL" as const, availableSources: ["META" as const], missingSources: ["GOOGLE" as const] },
+    } })),
+  }));
+  const meta = analyzeChanges(changed, options), google = analyzeChanges(changed, { ...options, medium: "GOOGLE" });
+  assert.equal(meta.spend.before, 10); assert.equal(meta.spend.beforeDays, 7);
+  assert.equal(google.spend.before, null); assert.equal(google.spend.beforeDays, 0);
+  assert.equal(meta.marketplaces[0].revenue.changePct, 20);
+  assert.equal(meta.marketplaces[0].estimatedProfit.before, 25);
+  assert.equal(meta.marketplaces[0].estimatedProfit.after, 35);
+  assert.equal(meta.marketplaces[0].estimatedProfit.beforePartialDays, 7);
+  assert.deepEqual(meta.marketplaces[0].estimatedProfit.missingSources, ["GOOGLE"]);
+  assert.deepEqual(meta.marketplaces, google.marketplaces);
+  assert.equal(meta.series[0].marketplaces[0].estimatedProfit, 25);
+});
+
+test("explicit unavailable display is not replaced by an old complete field or an invented zero", () => {
+  const changed = rows.map(r => ({ ...r, byMedium: [{ ...r.byMedium[0], displayAdSpend: { value: null, state: "UNAVAILABLE" as const, availableSources: [], missingSources: ["META" as const] } }] }));
+  const result = analyzeChanges(changed, options);
+  assert.equal(result.spend.before, null); assert.equal(result.spend.after, null);
+  assert.equal(result.spend.beforeDays, 0);
+  assert.equal(result.series[0].adSpend, null);
+});
+
+test("partial known zero counts as an observed day without declaring the source complete", () => {
+  const changed = rows.map(r => ({ ...r, byMedium: [{ ...r.byMedium[0], completeAdSpend: null, displayAdSpend: { value: "0", state: "PARTIAL" as const, availableSources: ["META" as const], missingSources: ["META" as const] } }] }));
+  const result = analyzeChanges(changed, options);
+  assert.equal(result.spend.before, 0); assert.equal(result.spend.beforeDays, 7);
+  assert.equal(result.spend.beforePartialDays, 7); assert.equal(result.spend.changePct, null);
+});
