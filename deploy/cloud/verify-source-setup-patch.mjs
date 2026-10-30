@@ -35,7 +35,7 @@ if (profile === 'reporting') {
   for (const name of ['app.module.js',
     'google/google-access.js', 'google/google-mappings.service.js', 'google/google-campaign-matcher.js',
     'google/google-performance.js', 'google/google-read.service.js',
-    'google/google-sale-configuration.js', 'google/google.controller.js',
+    'google/google-sale-configuration.js', 'google/google-sale-matcher.js', 'google/google-sale-matcher.test.js', 'google/google.controller.js',
     'google/google.dto.js', 'google/google.module.js',
     // The existing build excludes *.spec.ts, but emits these *.test.ts files.
     'google/google-performance.test.js', 'google/google.service.test.js', 'google/google-campaign-matcher.test.js']) expected.add(name);

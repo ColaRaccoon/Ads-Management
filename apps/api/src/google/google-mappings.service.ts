@@ -155,5 +155,7 @@ export class GoogleMappingsService {
   private assertSaleMapping(input: GoogleMappingInput) {
     if (input.kind === "CAMPAIGN") throw new BadRequestException({ code: "GOOGLE_CAMPAIGN_NAME_MAPPING_ONLY",
       message: "Google 캠페인은 캠페인명에 포함된 상품명으로 자동 연결합니다. 캠페인 ID 연결은 조회 이력만 제공합니다." });
+    throw new BadRequestException({ code: "GOOGLE_SHARED_SALE_SETTINGS_ONLY",
+      message: "유튜브 판매는 공통 카페24 상품·옵션 매핑과 판매가·원가 설정을 사용합니다. 공통 매핑 화면에서 수정해 주세요." });
   }
 }
