@@ -1,0 +1,244 @@
+{
+  "stage": 11,
+  "operation": "products-rules-preview",
+  "planSha256": "da31470ae3b9b9af493a3257cf74cd16fc4b6c0959b090359ddaf93d869fa71a",
+  "observedAt": "2026-10-30T05:20:53.484Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "rules": [
+    {
+      "platform": "CAFE24",
+      "productName": "플로우라이트",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "버닝웨이브바",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "버닝 슬라이드",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "뷰티레그보드",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "아이언볼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "자이로볼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "쿨토시",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "스포츠양말",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "다이어트양말",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "방한마스크",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "스카이스텝",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "풀업밴드",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "두줄무릎보호대",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "러닝장갑",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "바라클라바",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "베놈무릎보호대",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "에어스텝퍼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "CAFE24",
+      "productName": "케겔",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "GOOGLE",
+      "productName": "다이어트양말",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "GOOGLE",
+      "productName": "두줄무릎보호대",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "GOOGLE",
+      "productName": "에어스텝퍼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "GOOGLE",
+      "productName": "자이로볼 아이언",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "GOOGLE",
+      "productName": "케겔",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "GOOGLE",
+      "productName": "플로우라이트",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "버닝웨이브바",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "플로우라이트",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "버닝 슬라이드",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "유쉴드마스크",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "에어스텝퍼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "퍼펙트슬라이드",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "두줄무릎보호대",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "자이로볼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "스카이스텝",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "한줄보호대",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "퍼펙트스케이트",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "노필수면안대",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "뷰티레그보드",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "러닝양말",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "베놈무릎보호대",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "풀업밴드",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "아이언볼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "다이어트양말",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "러닝조끼",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "방한마스크",
+      "action": "PREVIEW_ONLY"
+    },
+    {
+      "platform": "META",
+      "productName": "케겔",
+      "action": "PREVIEW_ONLY"
+    }
+  ],
+  "literalTitleReview": {
+    "existingMatchesPreserved": 25,
+    "newLiteralTitleNames": 294,
+    "ambiguousKept": 0,
+    "naverOrCoupangRuleChanges": 0
+  },
+  "naverOrCoupangRulesCreated": 0,
+  "saleUnitOrCostChanges": 0
+}

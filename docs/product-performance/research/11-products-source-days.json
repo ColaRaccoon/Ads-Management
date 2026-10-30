@@ -1,0 +1,4851 @@
+{
+  "observedAt": "2026-10-30T04:17:55.1191557Z",
+  "rows": {
+    "inventory": {
+      "days": [
+        {
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "source_rows": 457,
+          "business_date": "2026-10-23"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "source_rows": 279,
+          "business_date": "2026-10-24"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "source_rows": 395,
+          "business_date": "2026-10-25"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "source_rows": 320,
+          "business_date": "2026-10-26"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "source_rows": 312,
+          "business_date": "2026-10-27"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "source_rows": 323,
+          "business_date": "2026-10-28"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "source_rows": 250,
+          "business_date": "2026-10-29"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 195,
+          "business_date": "2026-06-11"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 150,
+          "business_date": "2026-06-14"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 108,
+          "business_date": "2026-06-15"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 51,
+          "business_date": "2026-06-16"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 58,
+          "business_date": "2026-06-17"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 31,
+          "business_date": "2026-06-18"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-06-19"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-06-20"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 17,
+          "business_date": "2026-06-21"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 25,
+          "business_date": "2026-06-22"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 77,
+          "business_date": "2026-06-23"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 49,
+          "business_date": "2026-06-24"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 55,
+          "business_date": "2026-06-25"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 52,
+          "business_date": "2026-06-26"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 50,
+          "business_date": "2026-06-27"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 87,
+          "business_date": "2026-06-28"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 71,
+          "business_date": "2026-06-29"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 111,
+          "business_date": "2026-06-30"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 123,
+          "business_date": "2026-07-01"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 117,
+          "business_date": "2026-07-02"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 134,
+          "business_date": "2026-07-03"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 115,
+          "business_date": "2026-07-04"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 127,
+          "business_date": "2026-07-05"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 178,
+          "business_date": "2026-07-06"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 167,
+          "business_date": "2026-07-07"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 150,
+          "business_date": "2026-07-08"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 142,
+          "business_date": "2026-07-09"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 149,
+          "business_date": "2026-07-10"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 132,
+          "business_date": "2026-07-11"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 212,
+          "business_date": "2026-07-12"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 167,
+          "business_date": "2026-07-13"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 163,
+          "business_date": "2026-07-14"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 141,
+          "business_date": "2026-07-15"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 144,
+          "business_date": "2026-07-16"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 157,
+          "business_date": "2026-07-17"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 149,
+          "business_date": "2026-07-18"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 136,
+          "business_date": "2026-07-19"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 209,
+          "business_date": "2026-07-20"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 265,
+          "business_date": "2026-07-21"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 198,
+          "business_date": "2026-07-22"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 175,
+          "business_date": "2026-07-23"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 170,
+          "business_date": "2026-07-24"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 225,
+          "business_date": "2026-07-25"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 225,
+          "business_date": "2026-07-26"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 161,
+          "business_date": "2026-07-27"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 167,
+          "business_date": "2026-07-28"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 195,
+          "business_date": "2026-07-29"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 214,
+          "business_date": "2026-07-30"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 207,
+          "business_date": "2026-07-31"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 244,
+          "business_date": "2026-08-01"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 257,
+          "business_date": "2026-08-02"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 332,
+          "business_date": "2026-08-03"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 291,
+          "business_date": "2026-08-04"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 353,
+          "business_date": "2026-08-05"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 377,
+          "business_date": "2026-08-06"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 366,
+          "business_date": "2026-08-07"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 395,
+          "business_date": "2026-08-08"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 499,
+          "business_date": "2026-08-09"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 476,
+          "business_date": "2026-08-10"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 447,
+          "business_date": "2026-08-11"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 467,
+          "business_date": "2026-08-12"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 454,
+          "business_date": "2026-08-13"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 498,
+          "business_date": "2026-08-14"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 464,
+          "business_date": "2026-08-15"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 433,
+          "business_date": "2026-08-16"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 477,
+          "business_date": "2026-08-17"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 344,
+          "business_date": "2026-08-18"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 374,
+          "business_date": "2026-08-19"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 392,
+          "business_date": "2026-08-20"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 423,
+          "business_date": "2026-08-21"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 431,
+          "business_date": "2026-08-22"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 317,
+          "business_date": "2026-08-23"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 331,
+          "business_date": "2026-08-24"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 346,
+          "business_date": "2026-08-25"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 289,
+          "business_date": "2026-08-26"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 253,
+          "business_date": "2026-08-27"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 243,
+          "business_date": "2026-08-28"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 240,
+          "business_date": "2026-08-29"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 218,
+          "business_date": "2026-08-30"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 196,
+          "business_date": "2026-08-31"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 343,
+          "business_date": "2026-09-01"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 410,
+          "business_date": "2026-09-02"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 477,
+          "business_date": "2026-09-03"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 433,
+          "business_date": "2026-09-04"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 419,
+          "business_date": "2026-09-05"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 528,
+          "business_date": "2026-09-06"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 406,
+          "business_date": "2026-09-07"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 438,
+          "business_date": "2026-09-08"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 400,
+          "business_date": "2026-09-09"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 403,
+          "business_date": "2026-09-10"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 408,
+          "business_date": "2026-09-11"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 425,
+          "business_date": "2026-09-12"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 449,
+          "business_date": "2026-09-13"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 396,
+          "business_date": "2026-09-14"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 327,
+          "business_date": "2026-09-15"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 294,
+          "business_date": "2026-09-16"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 360,
+          "business_date": "2026-09-17"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 353,
+          "business_date": "2026-09-18"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 326,
+          "business_date": "2026-09-19"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 354,
+          "business_date": "2026-09-20"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 317,
+          "business_date": "2026-09-21"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 291,
+          "business_date": "2026-09-22"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 202,
+          "business_date": "2026-09-23"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 229,
+          "business_date": "2026-09-24"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 231,
+          "business_date": "2026-09-25"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 247,
+          "business_date": "2026-09-26"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 300,
+          "business_date": "2026-09-27"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 376,
+          "business_date": "2026-09-28"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 371,
+          "business_date": "2026-09-29"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 373,
+          "business_date": "2026-09-30"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 474,
+          "business_date": "2026-10-01"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 457,
+          "business_date": "2026-10-02"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 451,
+          "business_date": "2026-10-03"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 424,
+          "business_date": "2026-10-04"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 432,
+          "business_date": "2026-10-05"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 402,
+          "business_date": "2026-10-06"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 365,
+          "business_date": "2026-10-07"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 321,
+          "business_date": "2026-10-08"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 299,
+          "business_date": "2026-10-09"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 254,
+          "business_date": "2026-10-10"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 349,
+          "business_date": "2026-10-11"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 337,
+          "business_date": "2026-10-12"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 300,
+          "business_date": "2026-10-13"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 310,
+          "business_date": "2026-10-14"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 376,
+          "business_date": "2026-10-15"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 305,
+          "business_date": "2026-10-16"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 303,
+          "business_date": "2026-10-17"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 301,
+          "business_date": "2026-10-18"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 268,
+          "business_date": "2026-10-19"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 255,
+          "business_date": "2026-10-20"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 247,
+          "business_date": "2026-10-21"
+        },
+        {
+          "platform": "CAFE24",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 233,
+          "business_date": "2026-10-22"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1070,
+          "business_date": "2026-07-01"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1066,
+          "business_date": "2026-07-02"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1077,
+          "business_date": "2026-07-03"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1091,
+          "business_date": "2026-07-04"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1101,
+          "business_date": "2026-07-05"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1084,
+          "business_date": "2026-07-06"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1077,
+          "business_date": "2026-07-07"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1079,
+          "business_date": "2026-07-08"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1145,
+          "business_date": "2026-07-09"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1111,
+          "business_date": "2026-07-10"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1072,
+          "business_date": "2026-07-11"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1130,
+          "business_date": "2026-07-12"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1100,
+          "business_date": "2026-07-13"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1065,
+          "business_date": "2026-07-14"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1088,
+          "business_date": "2026-07-15"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1063,
+          "business_date": "2026-07-16"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1032,
+          "business_date": "2026-07-17"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1048,
+          "business_date": "2026-07-18"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1050,
+          "business_date": "2026-07-19"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1076,
+          "business_date": "2026-07-20"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1082,
+          "business_date": "2026-07-21"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1041,
+          "business_date": "2026-07-22"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1071,
+          "business_date": "2026-07-23"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1040,
+          "business_date": "2026-07-24"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1027,
+          "business_date": "2026-07-25"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1052,
+          "business_date": "2026-07-26"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1056,
+          "business_date": "2026-07-27"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 765,
+          "business_date": "2026-07-28"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1048,
+          "business_date": "2026-07-29"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1003,
+          "business_date": "2026-07-30"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 1021,
+          "business_date": "2026-07-31"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 951,
+          "business_date": "2026-08-01"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 946,
+          "business_date": "2026-08-02"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 929,
+          "business_date": "2026-08-03"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 879,
+          "business_date": "2026-08-04"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 855,
+          "business_date": "2026-08-05"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 885,
+          "business_date": "2026-08-06"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 859,
+          "business_date": "2026-08-07"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 792,
+          "business_date": "2026-08-08"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 779,
+          "business_date": "2026-08-09"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 836,
+          "business_date": "2026-08-10"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 571,
+          "business_date": "2026-08-11"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 519,
+          "business_date": "2026-08-12"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 742,
+          "business_date": "2026-08-13"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 712,
+          "business_date": "2026-08-14"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 716,
+          "business_date": "2026-08-15"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 715,
+          "business_date": "2026-08-16"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 738,
+          "business_date": "2026-08-17"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 755,
+          "business_date": "2026-08-18"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 532,
+          "business_date": "2026-08-19"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 747,
+          "business_date": "2026-08-20"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 719,
+          "business_date": "2026-08-21"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 654,
+          "business_date": "2026-08-22"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 664,
+          "business_date": "2026-08-23"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 707,
+          "business_date": "2026-08-24"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 669,
+          "business_date": "2026-08-25"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 623,
+          "business_date": "2026-08-26"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 589,
+          "business_date": "2026-08-27"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 556,
+          "business_date": "2026-08-28"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 543,
+          "business_date": "2026-08-29"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 400,
+          "business_date": "2026-08-30"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 557,
+          "business_date": "2026-08-31"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 406,
+          "business_date": "2026-09-01"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 582,
+          "business_date": "2026-09-02"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 388,
+          "business_date": "2026-09-03"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 544,
+          "business_date": "2026-09-04"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 575,
+          "business_date": "2026-09-05"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 575,
+          "business_date": "2026-09-06"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 483,
+          "business_date": "2026-09-07"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 324,
+          "business_date": "2026-09-08"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 322,
+          "business_date": "2026-09-09"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 339,
+          "business_date": "2026-09-10"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 552,
+          "business_date": "2026-09-11"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 609,
+          "business_date": "2026-09-12"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 605,
+          "business_date": "2026-09-13"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 366,
+          "business_date": "2026-09-14"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 615,
+          "business_date": "2026-09-15"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 643,
+          "business_date": "2026-09-16"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 382,
+          "business_date": "2026-09-17"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 548,
+          "business_date": "2026-09-18"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 532,
+          "business_date": "2026-09-19"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 373,
+          "business_date": "2026-09-20"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 524,
+          "business_date": "2026-09-21"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 537,
+          "business_date": "2026-09-22"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 536,
+          "business_date": "2026-09-23"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 518,
+          "business_date": "2026-09-24"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 532,
+          "business_date": "2026-09-25"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 519,
+          "business_date": "2026-09-26"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 352,
+          "business_date": "2026-09-27"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 365,
+          "business_date": "2026-09-28"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 567,
+          "business_date": "2026-09-29"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 392,
+          "business_date": "2026-09-30"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 669,
+          "business_date": "2026-10-01"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 620,
+          "business_date": "2026-10-02"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 686,
+          "business_date": "2026-10-03"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 647,
+          "business_date": "2026-10-04"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 419,
+          "business_date": "2026-10-05"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 401,
+          "business_date": "2026-10-06"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 424,
+          "business_date": "2026-10-07"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 695,
+          "business_date": "2026-10-08"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 701,
+          "business_date": "2026-10-09"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 718,
+          "business_date": "2026-10-10"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 694,
+          "business_date": "2026-10-11"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 675,
+          "business_date": "2026-10-12"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 721,
+          "business_date": "2026-10-13"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 711,
+          "business_date": "2026-10-14"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 690,
+          "business_date": "2026-10-15"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 640,
+          "business_date": "2026-10-16"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 642,
+          "business_date": "2026-10-17"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 636,
+          "business_date": "2026-10-18"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 654,
+          "business_date": "2026-10-19"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 617,
+          "business_date": "2026-10-20"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 596,
+          "business_date": "2026-10-21"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 581,
+          "business_date": "2026-10-22"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 574,
+          "business_date": "2026-10-23"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 582,
+          "business_date": "2026-10-24"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 551,
+          "business_date": "2026-10-25"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 582,
+          "business_date": "2026-10-26"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 598,
+          "business_date": "2026-10-27"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 653,
+          "business_date": "2026-10-28"
+        },
+        {
+          "platform": "COUPANG",
+          "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+          "source_rows": 650,
+          "business_date": "2026-10-29"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 5,
+          "business_date": "2026-10-20"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 7,
+          "business_date": "2026-10-21"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 4,
+          "business_date": "2026-10-22"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 5,
+          "business_date": "2026-10-23"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 5,
+          "business_date": "2026-10-25"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 5,
+          "business_date": "2026-10-26"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 7,
+          "business_date": "2026-10-27"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 5,
+          "business_date": "2026-10-28"
+        },
+        {
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "source_rows": 6,
+          "business_date": "2026-10-29"
+        },
+        {
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "source_rows": 200,
+          "business_date": "2026-10-23"
+        },
+        {
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "source_rows": 200,
+          "business_date": "2026-10-24"
+        },
+        {
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "source_rows": 200,
+          "business_date": "2026-10-25"
+        },
+        {
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "source_rows": 200,
+          "business_date": "2026-10-26"
+        },
+        {
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "source_rows": 200,
+          "business_date": "2026-10-27"
+        },
+        {
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "source_rows": 200,
+          "business_date": "2026-10-28"
+        },
+        {
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "source_rows": 200,
+          "business_date": "2026-10-29"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 35,
+          "business_date": "2026-06-01"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 38,
+          "business_date": "2026-06-02"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 38,
+          "business_date": "2026-06-03"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 46,
+          "business_date": "2026-06-04"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 46,
+          "business_date": "2026-06-05"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 48,
+          "business_date": "2026-06-06"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 48,
+          "business_date": "2026-06-07"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-06-08"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 15,
+          "business_date": "2026-06-09"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 18,
+          "business_date": "2026-06-10"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-06-11"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 27,
+          "business_date": "2026-06-12"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 29,
+          "business_date": "2026-06-13"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 30,
+          "business_date": "2026-06-14"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 34,
+          "business_date": "2026-06-15"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 30,
+          "business_date": "2026-06-16"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 33,
+          "business_date": "2026-06-17"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 37,
+          "business_date": "2026-06-18"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 25,
+          "business_date": "2026-06-19"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 25,
+          "business_date": "2026-06-20"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 25,
+          "business_date": "2026-06-21"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 28,
+          "business_date": "2026-06-22"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 28,
+          "business_date": "2026-06-23"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-06-24"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-06-25"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-06-26"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-06-27"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-06-28"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-06-29"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 25,
+          "business_date": "2026-06-30"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 32,
+          "business_date": "2026-07-01"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 31,
+          "business_date": "2026-07-02"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 32,
+          "business_date": "2026-07-03"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 32,
+          "business_date": "2026-07-04"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 73,
+          "business_date": "2026-07-05"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 33,
+          "business_date": "2026-07-06"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 80,
+          "business_date": "2026-07-07"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 47,
+          "business_date": "2026-07-08"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 47,
+          "business_date": "2026-07-09"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 49,
+          "business_date": "2026-07-10"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 18,
+          "business_date": "2026-07-11"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 72,
+          "business_date": "2026-07-12"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 75,
+          "business_date": "2026-07-13"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 73,
+          "business_date": "2026-07-14"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 70,
+          "business_date": "2026-07-15"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-07-16"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-07-17"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-07-18"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 57,
+          "business_date": "2026-07-19"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-07-20"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 69,
+          "business_date": "2026-07-21"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 25,
+          "business_date": "2026-07-22"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 68,
+          "business_date": "2026-07-23"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 26,
+          "business_date": "2026-07-24"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 31,
+          "business_date": "2026-07-25"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 31,
+          "business_date": "2026-07-26"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 31,
+          "business_date": "2026-07-27"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 32,
+          "business_date": "2026-07-28"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 34,
+          "business_date": "2026-07-29"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-07-30"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-07-31"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-08-01"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 24,
+          "business_date": "2026-08-02"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 86,
+          "business_date": "2026-08-03"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 91,
+          "business_date": "2026-08-04"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 33,
+          "business_date": "2026-08-05"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 93,
+          "business_date": "2026-08-06"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-08-07"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-08-08"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-08-09"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-08-10"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-08-11"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-08-12"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 75,
+          "business_date": "2026-08-13"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 23,
+          "business_date": "2026-08-14"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 22,
+          "business_date": "2026-08-15"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-08-16"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-08-17"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 71,
+          "business_date": "2026-08-18"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 36,
+          "business_date": "2026-08-19"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 76,
+          "business_date": "2026-08-20"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 48,
+          "business_date": "2026-08-21"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 45,
+          "business_date": "2026-08-22"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 77,
+          "business_date": "2026-08-23"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 27,
+          "business_date": "2026-08-24"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 77,
+          "business_date": "2026-08-25"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 76,
+          "business_date": "2026-08-26"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 74,
+          "business_date": "2026-08-27"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 30,
+          "business_date": "2026-08-28"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 26,
+          "business_date": "2026-08-29"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 9,
+          "business_date": "2026-08-30"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 11,
+          "business_date": "2026-08-31"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 78,
+          "business_date": "2026-09-01"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 81,
+          "business_date": "2026-09-02"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-09-03"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-09-04"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-09-05"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 67,
+          "business_date": "2026-09-06"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 23,
+          "business_date": "2026-09-07"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 17,
+          "business_date": "2026-09-08"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-09-09"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 17,
+          "business_date": "2026-09-10"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-09-11"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-09-12"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-09-13"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-09-14"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-09-15"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 17,
+          "business_date": "2026-09-16"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-09-17"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-09-18"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-09-19"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-09-20"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-09-21"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 58,
+          "business_date": "2026-09-22"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 23,
+          "business_date": "2026-09-23"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 11,
+          "business_date": "2026-09-24"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 11,
+          "business_date": "2026-09-25"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 11,
+          "business_date": "2026-09-26"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 11,
+          "business_date": "2026-09-27"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-09-28"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 20,
+          "business_date": "2026-09-29"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 21,
+          "business_date": "2026-09-30"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 19,
+          "business_date": "2026-10-01"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-10-02"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 16,
+          "business_date": "2026-10-03"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-10-04"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 13,
+          "business_date": "2026-10-05"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-10-06"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-10-07"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 13,
+          "business_date": "2026-10-08"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 12,
+          "business_date": "2026-10-09"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 12,
+          "business_date": "2026-10-10"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 11,
+          "business_date": "2026-10-11"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 12,
+          "business_date": "2026-10-12"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 12,
+          "business_date": "2026-10-13"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-10-14"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 15,
+          "business_date": "2026-10-15"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-10-16"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 13,
+          "business_date": "2026-10-17"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 10,
+          "business_date": "2026-10-18"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 11,
+          "business_date": "2026-10-19"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 12,
+          "business_date": "2026-10-20"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 13,
+          "business_date": "2026-10-21"
+        },
+        {
+          "platform": "META",
+          "scope_key": "LEGACY_UNBOUND",
+          "source_rows": 14,
+          "business_date": "2026-10-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 1,
+          "business_date": "2026-02-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 610,
+          "business_date": "2026-03-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 1,
+          "business_date": "2026-03-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 1,
+          "business_date": "2026-03-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 2,
+          "business_date": "2026-03-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 2,
+          "business_date": "2026-03-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 2,
+          "business_date": "2026-03-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 7,
+          "business_date": "2026-03-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 38,
+          "business_date": "2026-03-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 205,
+          "business_date": "2026-03-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 261,
+          "business_date": "2026-03-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 290,
+          "business_date": "2026-03-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 273,
+          "business_date": "2026-03-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 221,
+          "business_date": "2026-03-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 199,
+          "business_date": "2026-03-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 93,
+          "business_date": "2026-03-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 128,
+          "business_date": "2026-03-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 148,
+          "business_date": "2026-03-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 207,
+          "business_date": "2026-03-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 544,
+          "business_date": "2026-03-31"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 642,
+          "business_date": "2026-04-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 426,
+          "business_date": "2026-04-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 306,
+          "business_date": "2026-04-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 220,
+          "business_date": "2026-04-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 184,
+          "business_date": "2026-04-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 314,
+          "business_date": "2026-04-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 202,
+          "business_date": "2026-04-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 131,
+          "business_date": "2026-04-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 190,
+          "business_date": "2026-04-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 327,
+          "business_date": "2026-04-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 269,
+          "business_date": "2026-04-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 343,
+          "business_date": "2026-04-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 478,
+          "business_date": "2026-04-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 361,
+          "business_date": "2026-04-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 421,
+          "business_date": "2026-04-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 386,
+          "business_date": "2026-04-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 388,
+          "business_date": "2026-04-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 366,
+          "business_date": "2026-04-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 369,
+          "business_date": "2026-04-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 400,
+          "business_date": "2026-04-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 408,
+          "business_date": "2026-04-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 473,
+          "business_date": "2026-04-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 315,
+          "business_date": "2026-04-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 384,
+          "business_date": "2026-04-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 338,
+          "business_date": "2026-04-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 470,
+          "business_date": "2026-04-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 340,
+          "business_date": "2026-04-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 379,
+          "business_date": "2026-04-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 351,
+          "business_date": "2026-04-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 376,
+          "business_date": "2026-04-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 442,
+          "business_date": "2026-05-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 491,
+          "business_date": "2026-05-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 470,
+          "business_date": "2026-05-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 505,
+          "business_date": "2026-05-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 544,
+          "business_date": "2026-05-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 524,
+          "business_date": "2026-05-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 506,
+          "business_date": "2026-05-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 477,
+          "business_date": "2026-05-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 572,
+          "business_date": "2026-05-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 593,
+          "business_date": "2026-05-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 631,
+          "business_date": "2026-05-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 630,
+          "business_date": "2026-05-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 477,
+          "business_date": "2026-05-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 554,
+          "business_date": "2026-05-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 448,
+          "business_date": "2026-05-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 343,
+          "business_date": "2026-05-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 367,
+          "business_date": "2026-05-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 458,
+          "business_date": "2026-05-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 361,
+          "business_date": "2026-05-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 350,
+          "business_date": "2026-05-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 362,
+          "business_date": "2026-05-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 555,
+          "business_date": "2026-05-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 287,
+          "business_date": "2026-05-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 335,
+          "business_date": "2026-05-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 367,
+          "business_date": "2026-05-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 461,
+          "business_date": "2026-05-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 400,
+          "business_date": "2026-05-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 465,
+          "business_date": "2026-05-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 465,
+          "business_date": "2026-05-31"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 453,
+          "business_date": "2026-06-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 521,
+          "business_date": "2026-06-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 471,
+          "business_date": "2026-06-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 377,
+          "business_date": "2026-06-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 447,
+          "business_date": "2026-06-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 402,
+          "business_date": "2026-06-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 368,
+          "business_date": "2026-06-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 381,
+          "business_date": "2026-06-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 336,
+          "business_date": "2026-06-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 379,
+          "business_date": "2026-06-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 450,
+          "business_date": "2026-06-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 314,
+          "business_date": "2026-06-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 374,
+          "business_date": "2026-06-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 254,
+          "business_date": "2026-06-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 328,
+          "business_date": "2026-06-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 314,
+          "business_date": "2026-06-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 352,
+          "business_date": "2026-06-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 340,
+          "business_date": "2026-06-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 319,
+          "business_date": "2026-06-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 266,
+          "business_date": "2026-06-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 226,
+          "business_date": "2026-06-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 309,
+          "business_date": "2026-06-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 341,
+          "business_date": "2026-06-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 288,
+          "business_date": "2026-06-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 347,
+          "business_date": "2026-07-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 351,
+          "business_date": "2026-07-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 383,
+          "business_date": "2026-07-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 268,
+          "business_date": "2026-07-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 379,
+          "business_date": "2026-07-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 409,
+          "business_date": "2026-07-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 422,
+          "business_date": "2026-07-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 419,
+          "business_date": "2026-07-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 421,
+          "business_date": "2026-07-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 324,
+          "business_date": "2026-07-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 249,
+          "business_date": "2026-07-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 287,
+          "business_date": "2026-07-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 364,
+          "business_date": "2026-07-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 318,
+          "business_date": "2026-07-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 263,
+          "business_date": "2026-07-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 288,
+          "business_date": "2026-07-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 243,
+          "business_date": "2026-07-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 269,
+          "business_date": "2026-07-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 244,
+          "business_date": "2026-07-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 284,
+          "business_date": "2026-07-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 306,
+          "business_date": "2026-07-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 284,
+          "business_date": "2026-07-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 242,
+          "business_date": "2026-07-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 230,
+          "business_date": "2026-07-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 263,
+          "business_date": "2026-07-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 225,
+          "business_date": "2026-07-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 304,
+          "business_date": "2026-07-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 251,
+          "business_date": "2026-07-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 244,
+          "business_date": "2026-07-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 245,
+          "business_date": "2026-07-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 220,
+          "business_date": "2026-07-31"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 242,
+          "business_date": "2026-08-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 255,
+          "business_date": "2026-08-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 239,
+          "business_date": "2026-08-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 284,
+          "business_date": "2026-08-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 306,
+          "business_date": "2026-08-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 244,
+          "business_date": "2026-08-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 269,
+          "business_date": "2026-08-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 218,
+          "business_date": "2026-08-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 272,
+          "business_date": "2026-08-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 289,
+          "business_date": "2026-08-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 300,
+          "business_date": "2026-08-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 328,
+          "business_date": "2026-08-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 336,
+          "business_date": "2026-08-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 249,
+          "business_date": "2026-08-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 262,
+          "business_date": "2026-08-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 305,
+          "business_date": "2026-08-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 303,
+          "business_date": "2026-08-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 358,
+          "business_date": "2026-08-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 301,
+          "business_date": "2026-08-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 326,
+          "business_date": "2026-08-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 313,
+          "business_date": "2026-08-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 255,
+          "business_date": "2026-08-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 311,
+          "business_date": "2026-08-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 332,
+          "business_date": "2026-08-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 340,
+          "business_date": "2026-08-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 355,
+          "business_date": "2026-08-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 367,
+          "business_date": "2026-08-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 310,
+          "business_date": "2026-08-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 276,
+          "business_date": "2026-08-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 267,
+          "business_date": "2026-08-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 307,
+          "business_date": "2026-08-31"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 333,
+          "business_date": "2026-09-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 355,
+          "business_date": "2026-09-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 371,
+          "business_date": "2026-09-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 327,
+          "business_date": "2026-09-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 254,
+          "business_date": "2026-09-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 320,
+          "business_date": "2026-09-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 368,
+          "business_date": "2026-09-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 349,
+          "business_date": "2026-09-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 341,
+          "business_date": "2026-09-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 297,
+          "business_date": "2026-09-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 368,
+          "business_date": "2026-09-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 273,
+          "business_date": "2026-09-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 346,
+          "business_date": "2026-09-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 406,
+          "business_date": "2026-09-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 332,
+          "business_date": "2026-09-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 322,
+          "business_date": "2026-09-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 299,
+          "business_date": "2026-09-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 320,
+          "business_date": "2026-09-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 230,
+          "business_date": "2026-09-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 290,
+          "business_date": "2026-09-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 309,
+          "business_date": "2026-09-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 276,
+          "business_date": "2026-09-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 226,
+          "business_date": "2026-09-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 180,
+          "business_date": "2026-09-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 197,
+          "business_date": "2026-09-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 235,
+          "business_date": "2026-09-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 355,
+          "business_date": "2026-09-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 501,
+          "business_date": "2026-09-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 447,
+          "business_date": "2026-09-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 392,
+          "business_date": "2026-09-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 504,
+          "business_date": "2026-10-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 347,
+          "business_date": "2026-10-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 382,
+          "business_date": "2026-10-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 441,
+          "business_date": "2026-10-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 456,
+          "business_date": "2026-10-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 472,
+          "business_date": "2026-10-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 488,
+          "business_date": "2026-10-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 343,
+          "business_date": "2026-10-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 302,
+          "business_date": "2026-10-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 248,
+          "business_date": "2026-10-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 259,
+          "business_date": "2026-10-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 336,
+          "business_date": "2026-10-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 388,
+          "business_date": "2026-10-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 349,
+          "business_date": "2026-10-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 357,
+          "business_date": "2026-10-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 360,
+          "business_date": "2026-10-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 375,
+          "business_date": "2026-10-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 550,
+          "business_date": "2026-10-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 433,
+          "business_date": "2026-10-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 486,
+          "business_date": "2026-10-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 525,
+          "business_date": "2026-10-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 562,
+          "business_date": "2026-10-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 299,
+          "business_date": "2026-10-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 501,
+          "business_date": "2026-10-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 350,
+          "business_date": "2026-10-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 307,
+          "business_date": "2026-10-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 335,
+          "business_date": "2026-10-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 328,
+          "business_date": "2026-10-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+          "source_rows": 269,
+          "business_date": "2026-10-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 458,
+          "business_date": "2026-05-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 545,
+          "business_date": "2026-05-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 433,
+          "business_date": "2026-05-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 384,
+          "business_date": "2026-05-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 397,
+          "business_date": "2026-05-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 499,
+          "business_date": "2026-05-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 480,
+          "business_date": "2026-05-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 572,
+          "business_date": "2026-05-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 584,
+          "business_date": "2026-05-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 506,
+          "business_date": "2026-05-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 397,
+          "business_date": "2026-05-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 402,
+          "business_date": "2026-05-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 499,
+          "business_date": "2026-05-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 536,
+          "business_date": "2026-05-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 544,
+          "business_date": "2026-05-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 498,
+          "business_date": "2026-05-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 472,
+          "business_date": "2026-05-31"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 610,
+          "business_date": "2026-06-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 527,
+          "business_date": "2026-06-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 546,
+          "business_date": "2026-06-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 456,
+          "business_date": "2026-06-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 566,
+          "business_date": "2026-06-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 616,
+          "business_date": "2026-06-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 591,
+          "business_date": "2026-06-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 601,
+          "business_date": "2026-06-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 530,
+          "business_date": "2026-06-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 609,
+          "business_date": "2026-06-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 606,
+          "business_date": "2026-06-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 560,
+          "business_date": "2026-06-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 466,
+          "business_date": "2026-06-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 423,
+          "business_date": "2026-06-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 484,
+          "business_date": "2026-06-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 489,
+          "business_date": "2026-06-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 474,
+          "business_date": "2026-06-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 501,
+          "business_date": "2026-06-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 411,
+          "business_date": "2026-06-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 407,
+          "business_date": "2026-06-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 377,
+          "business_date": "2026-06-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 399,
+          "business_date": "2026-06-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 411,
+          "business_date": "2026-06-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 467,
+          "business_date": "2026-06-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 539,
+          "business_date": "2026-07-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 441,
+          "business_date": "2026-07-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 444,
+          "business_date": "2026-07-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 421,
+          "business_date": "2026-07-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 509,
+          "business_date": "2026-07-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 509,
+          "business_date": "2026-07-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 505,
+          "business_date": "2026-07-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 444,
+          "business_date": "2026-07-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 415,
+          "business_date": "2026-07-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 409,
+          "business_date": "2026-07-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 317,
+          "business_date": "2026-07-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 451,
+          "business_date": "2026-07-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 498,
+          "business_date": "2026-07-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 428,
+          "business_date": "2026-07-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 382,
+          "business_date": "2026-07-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 354,
+          "business_date": "2026-07-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 360,
+          "business_date": "2026-07-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 411,
+          "business_date": "2026-07-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 419,
+          "business_date": "2026-07-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 461,
+          "business_date": "2026-07-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 476,
+          "business_date": "2026-07-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 456,
+          "business_date": "2026-07-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 452,
+          "business_date": "2026-07-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 361,
+          "business_date": "2026-07-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 336,
+          "business_date": "2026-07-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 429,
+          "business_date": "2026-07-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 445,
+          "business_date": "2026-07-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 388,
+          "business_date": "2026-07-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 376,
+          "business_date": "2026-07-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 407,
+          "business_date": "2026-07-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 386,
+          "business_date": "2026-07-31"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 410,
+          "business_date": "2026-08-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 455,
+          "business_date": "2026-08-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 455,
+          "business_date": "2026-08-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 538,
+          "business_date": "2026-08-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 534,
+          "business_date": "2026-08-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 501,
+          "business_date": "2026-08-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 423,
+          "business_date": "2026-08-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 385,
+          "business_date": "2026-08-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 399,
+          "business_date": "2026-08-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 509,
+          "business_date": "2026-08-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 397,
+          "business_date": "2026-08-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 428,
+          "business_date": "2026-08-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 458,
+          "business_date": "2026-08-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 392,
+          "business_date": "2026-08-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 339,
+          "business_date": "2026-08-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 462,
+          "business_date": "2026-08-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 432,
+          "business_date": "2026-08-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 488,
+          "business_date": "2026-08-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 477,
+          "business_date": "2026-08-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 433,
+          "business_date": "2026-08-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 376,
+          "business_date": "2026-08-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 298,
+          "business_date": "2026-08-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 343,
+          "business_date": "2026-08-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 406,
+          "business_date": "2026-08-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 435,
+          "business_date": "2026-08-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 425,
+          "business_date": "2026-08-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 362,
+          "business_date": "2026-08-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 365,
+          "business_date": "2026-08-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 277,
+          "business_date": "2026-08-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 395,
+          "business_date": "2026-08-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 380,
+          "business_date": "2026-08-31"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 472,
+          "business_date": "2026-09-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 417,
+          "business_date": "2026-09-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 395,
+          "business_date": "2026-09-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 351,
+          "business_date": "2026-09-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 289,
+          "business_date": "2026-09-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 383,
+          "business_date": "2026-09-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 407,
+          "business_date": "2026-09-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 362,
+          "business_date": "2026-09-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 363,
+          "business_date": "2026-09-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 331,
+          "business_date": "2026-09-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 309,
+          "business_date": "2026-09-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 243,
+          "business_date": "2026-09-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 329,
+          "business_date": "2026-09-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 396,
+          "business_date": "2026-09-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 1289,
+          "business_date": "2026-09-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 321,
+          "business_date": "2026-09-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 324,
+          "business_date": "2026-09-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 243,
+          "business_date": "2026-09-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 221,
+          "business_date": "2026-09-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 293,
+          "business_date": "2026-09-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 315,
+          "business_date": "2026-09-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 265,
+          "business_date": "2026-09-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 221,
+          "business_date": "2026-09-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 191,
+          "business_date": "2026-09-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 222,
+          "business_date": "2026-09-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 222,
+          "business_date": "2026-09-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 284,
+          "business_date": "2026-09-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 328,
+          "business_date": "2026-09-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 304,
+          "business_date": "2026-09-29"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 306,
+          "business_date": "2026-09-30"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 300,
+          "business_date": "2026-10-01"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 259,
+          "business_date": "2026-10-02"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 211,
+          "business_date": "2026-10-03"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 263,
+          "business_date": "2026-10-04"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 281,
+          "business_date": "2026-10-05"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 1236,
+          "business_date": "2026-10-06"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 259,
+          "business_date": "2026-10-07"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 214,
+          "business_date": "2026-10-08"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 217,
+          "business_date": "2026-10-09"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 227,
+          "business_date": "2026-10-10"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 226,
+          "business_date": "2026-10-11"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 284,
+          "business_date": "2026-10-12"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 245,
+          "business_date": "2026-10-13"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 272,
+          "business_date": "2026-10-14"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 276,
+          "business_date": "2026-10-15"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 273,
+          "business_date": "2026-10-16"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 202,
+          "business_date": "2026-10-17"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 263,
+          "business_date": "2026-10-18"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 294,
+          "business_date": "2026-10-19"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 294,
+          "business_date": "2026-10-20"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 249,
+          "business_date": "2026-10-21"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 215,
+          "business_date": "2026-10-22"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 246,
+          "business_date": "2026-10-23"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 206,
+          "business_date": "2026-10-24"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 223,
+          "business_date": "2026-10-25"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 270,
+          "business_date": "2026-10-26"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 246,
+          "business_date": "2026-10-27"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 228,
+          "business_date": "2026-10-28"
+        },
+        {
+          "platform": "NAVER",
+          "scope_key": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+          "source_rows": 236,
+          "business_date": "2026-10-29"
+        }
+      ],
+      "privacy": "Scope/day counts only, no customer fields",
+      "observedAt": "2026-10-30T13:17:36.162213+09:00"
+    }
+  },
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "remoteWrites": 0,
+  "stage": 11,
+  "operation": "MANAGEMENT_READ_ONLY"
+}

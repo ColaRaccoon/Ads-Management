@@ -1,0 +1,166 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "da31470ae3b9b9af493a3257cf74cd16fc4b6c0959b090359ddaf93d869fa71a",
+  "observedAt": "2026-10-30T05:29:03.981Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "FAIL",
+  "offset": 150,
+  "outcomes": [
+    {
+      "id": "e30d502f-96a7-4a29-aa80-4eeee6db4b93",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-08",
+      "claimed": true
+    },
+    {
+      "id": "e60ede06-5746-4117-a017-55fc9a0c108e",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-07",
+      "claimed": true
+    },
+    {
+      "id": "e6c7c3b6-7f08-4c1e-aeff-35fcb12cb59f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-06",
+      "claimed": true
+    },
+    {
+      "id": "e80ac2e4-1e21-492d-a521-6d79b28dc1bd",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-22",
+      "claimed": true
+    },
+    {
+      "id": "ea5c7a6e-7d42-43c4-ac63-84067de26108",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-03",
+      "claimed": true
+    },
+    {
+      "id": "f2922e23-633d-4735-a8b1-0ab24eb9d031",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-16",
+      "claimed": true
+    },
+    {
+      "id": "3cb94496-a12d-47d5-a5e9-981083293a03",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-19",
+      "claimed": true
+    },
+    {
+      "id": "6e69e6e3-ac05-4b83-af67-e31e21f203ed",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-21",
+      "claimed": true
+    },
+    {
+      "id": "b16cacff-7582-489e-abac-43d6d0328881",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-18",
+      "claimed": true
+    },
+    {
+      "id": "b362c840-eeab-4c56-a1de-3a38f42f6be0",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-20",
+      "claimed": true
+    },
+    {
+      "id": "cfac7df6-b481-4331-a200-c343984abfe3",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-17",
+      "claimed": true
+    },
+    {
+      "id": "e3a6b64b-a348-47b1-a172-7f0738046ebe",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-16",
+      "claimed": true
+    },
+    {
+      "id": "e897f472-3eae-4880-ad7c-d186a6a0abb6",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-22",
+      "claimed": true
+    },
+    {
+      "id": "0053edf5-c453-4a8a-a779-2c09ad6d0462",
+      "status": "FAILED",
+      "attempts": 1,
+      "issues": [
+        "SOURCE_EXECUTION_FAILED"
+      ],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-22",
+      "claimed": true
+    }
+  ],
+  "sourceFailure": {
+    "platform": "COUPANG",
+    "errorClass": "PrismaClientKnownRequestError",
+    "prismaCode": "P2028",
+    "databaseCode": null,
+    "transactionExpired": true,
+    "conservationFailure": false
+  },
+  "errorClass": "AssertionError",
+  "errorCode": null,
+  "transactionExpired": false,
+  "failedJobId": "0053edf5-c453-4a8a-a779-2c09ad6d0462"
+}

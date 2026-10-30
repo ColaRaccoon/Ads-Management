@@ -1,0 +1,1216 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "rows": {
+    "verification": {
+      "facts": 90363,
+      "rules": [
+        {
+          "id": "7502dd56-c8fb-4d43-894e-d6d2468149ef",
+          "kind": "SALE_UNIT",
+          "payload": {
+            "otherCost": "0",
+            "salePrice": "34900",
+            "optionExact": null,
+            "productCost": "10000",
+            "saleUnitName": "풀업바 단품",
+            "shippingCost": "0",
+            "optionInclude": [
+              "풀업바(72~97cm)"
+            ],
+            "quantityBasis": "SALE_UNIT_TOTAL",
+            "unitsPerSaleUnit": "1"
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "validFrom": "2026-10-28"
+        },
+        {
+          "id": "bdcaec02-cdb9-487c-b547-7a5addc5f5a3",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "스카이스텝"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "스카이스텝 2개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "06b05f8c-ea1a-4803-b38c-a4538ac38cfd",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "풀업바"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 3,
+          "platform": null,
+          "scopeKey": null,
+          "validFrom": "2026-05-13"
+        },
+        {
+          "id": "a8df3182-bcc1-437e-9b89-a940eb5bca95",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "플로우라이트"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "18bde6c6-2f01-4748-a6ed-bcc4fd50f751",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "버닝웨이브바"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "071f2a2b-7ff7-4f3d-b5e4-64f27be2e0f3",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "버닝 슬라이드"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "43f90643-b6a4-4272-b366-0c4afda8ee4c",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "뷰티레그보드"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "f6dbe6c4-6912-418e-9235-14440bba44f7",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "아이언볼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "418840a5-c7ee-4704-a5e7-b38e2b98e4a0",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "자이로볼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "자이로볼 메딕",
+              "자이로볼 메딕메탈",
+              "자이로볼 메탈",
+              "자이로볼 아이언",
+              "자이로볼 챌린지",
+              "자이로볼 챌린지메탈",
+              "자이로볼 호크아이",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "c93ee2be-dc3d-4878-9f91-eab1e351a58c",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "쿨토시"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "a0a85a36-1b69-48ee-a924-002c4d1ed4c2",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "스포츠양말"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "스포츠양말 10개입",
+              "스포츠양말 3개입",
+              "스포츠양말 5개입",
+              "스포츠양말 7개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "4d6f03da-411a-4e43-9e04-bd253a863ea0",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "다이어트양말"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "다이어트양말 10개입",
+              "다이어트양말 3개입",
+              "다이어트양말 5개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "32e1ea41-e69c-4cfc-866c-3865104f62f5",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "방한마스크"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "방한마스크 2개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "cde09a32-db04-464f-8d79-406e31ad1745",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "풀업밴드"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바",
+              "풀업밴드 그린",
+              "풀업밴드 레드",
+              "풀업밴드 블랙",
+              "풀업밴드 세트",
+              "풀업밴드 퍼플"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "45fc5afb-efa8-40a8-8be3-499d8d2ee231",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "두줄무릎보호대"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "29fa1977-2f0b-4f9a-ad88-053f6f762b25",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "러닝장갑"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "러닝장갑 2개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "7965e16d-c3fe-4b5f-967e-43f891f89d01",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "바라클라바"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "바라클라바 베이직",
+              "바라클라바 베이직 2개입",
+              "바라클라바 프로",
+              "바라클라바 프로 2개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "facfe817-7eeb-4b1b-980e-f84b5d6e6613",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "베놈무릎보호대"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "04fcbdb6-4682-4c42-8864-54fa1059134c",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "에어스텝퍼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "e5fc60a8-c04e-45db-8776-829c390682d1",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "케겔"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "뷰티케겔",
+              "케겔 맥스",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "3e5ef661-cd68-4f68-8b81-6e4b191facfd",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "다이어트양말"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "다이어트양말 10개입",
+              "다이어트양말 3개입",
+              "다이어트양말 5개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "GOOGLE",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "552b23ad-c968-4749-884a-5b9d62f38daf",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "두줄무릎보호대"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "GOOGLE",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "12d21773-cffe-4345-801f-bbfca7c10997",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "에어스텝퍼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "GOOGLE",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "0ba39410-5a20-4ce7-aadc-e355ff3a84a8",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "자이로볼 아이언"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "GOOGLE",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "ebddddb7-bbf4-4c45-8fe8-e697a05c66fa",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "케겔"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "뷰티케겔",
+              "케겔 맥스",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "GOOGLE",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "077be0c8-2122-4036-b151-6097481cacf8",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "플로우라이트"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "GOOGLE",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "e30f4b34-efda-4339-97ca-34fc0db944ee",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "버닝웨이브바"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "5c78c527-05ba-42b7-a4ae-ed7f4f58dfd9",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "플로우라이트"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "7bd4c259-c7d6-4cef-b70a-930080fc23be",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "버닝슬라이드"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "212c2b8b-b9fb-4062-bb85-6c5643856eba",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "유쉴드마스크"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "b5bd68f6-91f5-4781-8385-91bb6615eb09",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "에어스텝퍼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "9f187142-6bb8-49f4-a0e9-45b500e73db9",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "퍼펙트슬라이드"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "퍼펙트슬라이드 프로",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "e8024a27-25a4-426e-a000-70fb45d93e48",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "두줄무릎보호대"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "5d5692da-9ea2-48c3-9d35-a23dfbec59ee",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "자이로볼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "자이로볼 메딕",
+              "자이로볼 메딕메탈",
+              "자이로볼 메탈",
+              "자이로볼 아이언",
+              "자이로볼 챌린지",
+              "자이로볼 챌린지메탈",
+              "자이로볼 호크아이",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "bb8cf06d-4b70-4580-99a7-d68affda93b8",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "스카이스텝"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "스카이스텝 2개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "1a950f75-6b25-4e99-9132-f6eca652d1de",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "한줄보호대"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "73f5ad0d-8865-4dea-9509-eb7272c0519a",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "퍼펙트스케이트"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "1bb8ae9c-0abd-43a1-a154-5418ecfd209b",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "노필수면안대"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "8768edeb-59d0-4a48-a343-5b1e1acd3a31",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "뷰티레그보드"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "faee136e-3a40-4d89-878e-370a9aed005c",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "러닝양말"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "54e74ab2-2a6c-4368-ba61-b08cf81833d5",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "베놈무릎보호대"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "9ebc9d04-6f23-42d3-b6c7-528f7980366c",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "풀업밴드"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바",
+              "풀업밴드 그린",
+              "풀업밴드 레드",
+              "풀업밴드 블랙",
+              "풀업밴드 세트",
+              "풀업밴드 퍼플"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "a87af703-3409-4fb0-b159-cf89183ee3a7",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "아이언볼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "15346931-2c91-4604-8e93-698d68349886",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "다이어트양말"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "다이어트양말 10개입",
+              "다이어트양말 3개입",
+              "다이어트양말 5개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "93cf7530-9958-4b90-b8dc-888fb51a0463",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "러닝조끼"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "러닝모자+러닝조끼",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "2dc23593-91df-462a-9f1f-fcd70ab593e3",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "방한마스크"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "방한마스크 2개입",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "54609a00-8d66-4fc6-8540-6f8f19db19f8",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "케겔"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [
+              "뷰티케겔",
+              "케겔 맥스",
+              "풀업바"
+            ],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "META",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        },
+        {
+          "id": "73d2034b-14a1-4bf1-9853-7e9b674f72d5",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "[인피니티 러닝조끼] 스포츠 러닝 조끼 자사몰 단독 러닝양말 무료 증정",
+              "[인피니티 러닝조끼] 스포츠 러닝 조끼 🧦자사몰 단독 러닝양말 무료 증정 🧦"
+            ],
+            "matchType": "EXACT",
+            "nameField": "product_name",
+            "optionExact": null,
+            "excludeTerms": [],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": null,
+          "validFrom": "2026-02-26"
+        }
+      ],
+      "audits": 174,
+      "staging": 0,
+      "coverage": 8526,
+      "expected": 830,
+      "products": 124,
+      "published": 830,
+      "runCounts": {
+        "FAILED": 475,
+        "PUBLISHED": 2627
+      },
+      "observedAt": "2026-10-30T15:08:02.547687+09:00",
+      "rulesCount": 48,
+      "superseded": 459,
+      "perPlatform": [
+        {
+          "count": 151,
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-01"
+        },
+        {
+          "count": 163,
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-11"
+        },
+        {
+          "count": 9,
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-20"
+        },
+        {
+          "count": 121,
+          "platform": "COUPANG",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01"
+        },
+        {
+          "count": 386,
+          "platform": "NAVER",
+          "last_date": "2026-10-29",
+          "first_date": "2026-02-26"
+        }
+      ],
+      "activeProducts": 124,
+      "databaseWrites": 0,
+      "currentPointers": 830
+    }
+  },
+  "operation": "MANAGEMENT_READ_ONLY",
+  "remoteWrites": 0,
+  "observedAt": "2026-10-30T06:08:03.6293754Z",
+  "stage": 11
+}

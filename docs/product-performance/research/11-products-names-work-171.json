@@ -1,0 +1,23 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "da31470ae3b9b9af493a3257cf74cd16fc4b6c0959b090359ddaf93d869fa71a",
+  "observedAt": "2026-10-30T05:30:55.087Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "FAIL",
+  "offset": 171,
+  "outcomes": [],
+  "sourceFailure": {
+    "platform": "COUPANG",
+    "errorClass": "PrismaClientKnownRequestError",
+    "prismaCode": "P2028",
+    "databaseCode": null,
+    "transactionExpired": true,
+    "conservationFailure": false
+  },
+  "errorClass": "PrismaClientKnownRequestError",
+  "errorCode": "P2037",
+  "transactionExpired": false,
+  "failedJobId": null
+}

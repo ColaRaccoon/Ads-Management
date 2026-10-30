@@ -1,0 +1,5 @@
+WITH names AS (
+ SELECT 'META' platform,adset_name source_name,min(metric_date)::text first_date,max(metric_date)::text last_date,count(*) source_rows FROM meta_ads.meta_adset_daily_metrics WHERE is_current AND metric_date<=DATE '2026-10-29' GROUP BY adset_name
+ UNION ALL SELECT 'GOOGLE',campaign_name,min(metric_date)::text,max(metric_date)::text,count(*) FROM meta_ads.google_campaign_daily_costs WHERE is_current AND metric_date<=DATE '2026-10-29' GROUP BY campaign_name
+ UNION ALL SELECT 'CAFE24',product_name,min(order_date)::text,max(order_date)::text,count(*) FROM meta_ads.cafe24_order_lines WHERE is_current AND order_date<=DATE '2026-10-29' GROUP BY product_name
+) SELECT jsonb_build_object('names',(SELECT jsonb_agg(to_jsonb(n) ORDER BY platform,source_name) FROM names n),'privacy','Business product/ad titles and counts only; no customer fields','products',(SELECT jsonb_agg(jsonb_build_object('id',id,'canonicalName',canonical_name,'active',active,'version',version)) FROM meta_ads.unified_products WHERE active)) inventory;

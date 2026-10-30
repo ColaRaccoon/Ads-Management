@@ -1,0 +1,46 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "f9c2014b3a48342a9399bcb7df43111a8e5050ce4b7cee1590c6463ebbff22d4",
+  "observedAt": "2026-10-30T04:39:03.553Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "FAIL",
+  "offset": 163,
+  "outcomes": [
+    {
+      "id": "8f4961f0-bb63-4e4e-ab94-bd80b2e88d9a",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-10",
+      "claimed": true
+    },
+    {
+      "id": "048a0c25-d269-459c-a879-b25910675df1",
+      "status": "FAILED",
+      "attempts": 1,
+      "issues": [
+        "SOURCE_EXECUTION_FAILED"
+      ],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-03",
+      "claimed": true
+    }
+  ],
+  "sourceFailure": {
+    "platform": "COUPANG",
+    "errorClass": "PrismaClientKnownRequestError",
+    "prismaCode": "P2028",
+    "databaseCode": null,
+    "transactionExpired": true,
+    "conservationFailure": false
+  },
+  "errorClass": "AssertionError",
+  "errorCode": null,
+  "transactionExpired": false,
+  "failedJobId": "048a0c25-d269-459c-a879-b25910675df1"
+}

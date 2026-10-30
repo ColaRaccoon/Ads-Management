@@ -1,0 +1,158 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "f9c2014b3a48342a9399bcb7df43111a8e5050ce4b7cee1590c6463ebbff22d4",
+  "observedAt": "2026-10-30T04:35:32.330Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "FAIL",
+  "offset": 150,
+  "outcomes": [
+    {
+      "id": "d3f53e8c-3c89-4f9c-ae83-a6b9560e4551",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-18",
+      "claimed": true
+    },
+    {
+      "id": "db634134-2ef6-4ec3-a50b-2b55df950994",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-04",
+      "claimed": true
+    },
+    {
+      "id": "dca8936c-1268-4710-ac66-79ce355669f0",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-29",
+      "claimed": true
+    },
+    {
+      "id": "e6712071-386f-4ad6-a8e2-a47821cac9d5",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-15",
+      "claimed": true
+    },
+    {
+      "id": "f1401b0e-1e3f-481b-a342-b8f4c3d55377",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-28",
+      "claimed": true
+    },
+    {
+      "id": "fd43f672-a8dc-4aef-a9cd-7f2aa9f27e73",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-30",
+      "claimed": true
+    },
+    {
+      "id": "04c9f9d2-1a8e-4a12-ad78-f7ca54409576",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-19",
+      "claimed": true
+    },
+    {
+      "id": "1ff4518a-0a88-4449-a338-c60ad6a2890a",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-22",
+      "claimed": true
+    },
+    {
+      "id": "332d7873-62c1-46c0-ac02-500714fc2c54",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-20",
+      "claimed": true
+    },
+    {
+      "id": "7b4ae519-cb78-4286-a7d6-fb58a92e5f0e",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-17",
+      "claimed": true
+    },
+    {
+      "id": "8d53996e-c688-4d10-abcc-9640f13fe95d",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-16",
+      "claimed": true
+    },
+    {
+      "id": "97abddaa-d2d6-45ed-a0a4-12835b1cebbf",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-21",
+      "claimed": true
+    },
+    {
+      "id": "bc450fa8-9c53-4d8d-adbb-394b9ced0ce7",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-18",
+      "claimed": true
+    },
+    {
+      "id": "01205c53-97bd-4e82-ad9f-e632396b3c80",
+      "status": "FAILED",
+      "attempts": 1,
+      "issues": [
+        "SOURCE_EXECUTION_FAILED"
+      ],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-10",
+      "claimed": true
+    }
+  ],
+  "errorClass": "AssertionError",
+  "errorCode": null,
+  "transactionExpired": false,
+  "failedJobId": "01205c53-97bd-4e82-ad9f-e632396b3c80"
+}

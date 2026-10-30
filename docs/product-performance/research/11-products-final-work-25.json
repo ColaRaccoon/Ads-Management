@@ -1,0 +1,262 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "68f5a3a6d356b7a4b5ea7b9d9ef55cc42b8753201a0469723b3d19107ddf700f",
+  "observedAt": "2026-10-30T05:44:03.547Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "offset": 25,
+  "outcomes": [
+    {
+      "id": "c3b17525-387c-4604-a1eb-ace7ad7b187e",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-09-30",
+      "claimed": true
+    },
+    {
+      "id": "c905c204-446f-4e55-a733-ca64812eafbc",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-09-29",
+      "claimed": true
+    },
+    {
+      "id": "cb534b6e-e475-4f3e-a182-0165aa6d7a78",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-28",
+      "claimed": true
+    },
+    {
+      "id": "df20eb66-3581-4d26-a593-a1812cc54106",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-11",
+      "claimed": true
+    },
+    {
+      "id": "f04b719d-15a0-4ae3-a6cb-472363b997ac",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-18",
+      "claimed": true
+    },
+    {
+      "id": "f4491ac7-74db-41a3-a121-a49144c640f2",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-19",
+      "claimed": true
+    },
+    {
+      "id": "a902cc78-65a1-4335-a605-af14e2f94e13",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-11",
+      "claimed": true
+    },
+    {
+      "id": "1286984a-2aa2-44b7-a305-61406f639b9a",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-15",
+      "claimed": true
+    },
+    {
+      "id": "14715003-bdaf-46d6-a205-7beac98b3f85",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-28",
+      "claimed": true
+    },
+    {
+      "id": "23744f0c-6319-48f9-addf-ed4c71edf815",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-04",
+      "claimed": true
+    },
+    {
+      "id": "3966a5fa-9290-493c-ab5e-99ebe8f92909",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-14",
+      "claimed": true
+    },
+    {
+      "id": "40401049-2d3b-4c86-a457-4fdb29146d39",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-05",
+      "claimed": true
+    },
+    {
+      "id": "454ae60f-372c-4fc4-aed6-1df7bbe4b9f9",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-19",
+      "claimed": true
+    },
+    {
+      "id": "577f7a0e-5b35-4548-a5a5-e5a17e37ad7e",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-23",
+      "claimed": true
+    },
+    {
+      "id": "58cf2c26-6fbd-480b-a461-3e42360678ae",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-21",
+      "claimed": true
+    },
+    {
+      "id": "5cb23a88-6582-47b0-af6d-ad99b87ec80c",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-14",
+      "claimed": true
+    },
+    {
+      "id": "5eed9cd2-f060-4729-ae6a-9656cc5c52be",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-16",
+      "claimed": true
+    },
+    {
+      "id": "5fce3731-8dd1-4225-a455-5da151f598ca",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-08",
+      "claimed": true
+    },
+    {
+      "id": "6376d746-9804-4f3a-aacc-59dd4f32f554",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-03",
+      "claimed": true
+    },
+    {
+      "id": "6c68235d-7e3d-4293-a24f-62005c4ce64c",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-12",
+      "claimed": true
+    },
+    {
+      "id": "773165bf-3b6f-4d94-a137-fb702adcc764",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-06",
+      "claimed": true
+    },
+    {
+      "id": "7a5fd157-f38e-4744-adfd-b57e521bce64",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-13",
+      "claimed": true
+    },
+    {
+      "id": "88a12939-152a-4f09-adf6-8fa4ddc01baa",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-07",
+      "claimed": true
+    },
+    {
+      "id": "89633dde-cc85-455a-aab5-e705b15a9f42",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-02",
+      "claimed": true
+    },
+    {
+      "id": "a05feb4f-6d69-463c-a018-41d89296fa16",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-18",
+      "claimed": true
+    }
+  ]
+}

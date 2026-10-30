@@ -1,0 +1,102 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "remoteWrites": 0,
+  "operation": "MANAGEMENT_READ_ONLY",
+  "rows": {
+    "verification": {
+      "facts": 51883,
+      "rules": [
+        {
+          "id": "7502dd56-c8fb-4d43-894e-d6d2468149ef",
+          "kind": "SALE_UNIT",
+          "payload": {
+            "otherCost": "0",
+            "salePrice": "34900",
+            "optionExact": null,
+            "productCost": "10000",
+            "saleUnitName": "풀업바 단품",
+            "shippingCost": "0",
+            "optionInclude": [
+              "풀업바(72~97cm)"
+            ],
+            "quantityBasis": "SALE_UNIT_TOTAL",
+            "unitsPerSaleUnit": "1"
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "validFrom": "2026-10-28"
+        },
+        {
+          "id": "06b05f8c-ea1a-4803-b38c-a4538ac38cfd",
+          "kind": "NAME",
+          "payload": {
+            "terms": [
+              "풀업바"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 3,
+          "platform": null,
+          "scopeKey": null,
+          "validFrom": "2026-05-13"
+        }
+      ],
+      "audits": 128,
+      "coverage": 4528,
+      "expected": 830,
+      "products": 124,
+      "published": 830,
+      "runCounts": {
+        "FAILED": 9,
+        "PUBLISHED": 1426
+      },
+      "observedAt": "2026-10-30T14:08:02.526828+09:00",
+      "perPlatform": [
+        {
+          "count": 151,
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-01"
+        },
+        {
+          "count": 163,
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-11"
+        },
+        {
+          "count": 9,
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-20"
+        },
+        {
+          "count": 121,
+          "platform": "COUPANG",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01"
+        },
+        {
+          "count": 386,
+          "platform": "NAVER",
+          "last_date": "2026-10-29",
+          "first_date": "2026-02-26"
+        }
+      ],
+      "activeProducts": 124,
+      "databaseWrites": 0,
+      "currentPointers": 830
+    }
+  },
+  "observedAt": "2026-10-30T05:08:02.9329313Z",
+  "stage": 11
+}

@@ -1,0 +1,884 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "observedAt": "2026-10-30T06:08:02.6189638Z",
+  "rows": {
+    "coverage": {
+      "privacy": "Product names and date counts only; current published runs, no customer fields",
+      "products": [
+        {
+          "last_date": "2026-10-23",
+          "first_date": "2026-07-01",
+          "source_days": 60,
+          "canonical_name": "nbr요가매트",
+          "published_days": 60
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 103,
+          "canonical_name": "tpe요가매트",
+          "published_days": 103
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-30",
+          "source_days": 63,
+          "canonical_name": "노필수면안대",
+          "published_days": 63
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 143,
+          "canonical_name": "다이어트양말",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 108,
+          "canonical_name": "다이어트양말 10개입",
+          "published_days": 108
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 119,
+          "canonical_name": "다이어트양말 3개입",
+          "published_days": 119
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "다이어트양말 5개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 95,
+          "canonical_name": "데일리 깔창",
+          "published_days": 95
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 85,
+          "canonical_name": "데일리 깔창 2개입",
+          "published_days": 85
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-03-03",
+          "source_days": 496,
+          "canonical_name": "두줄무릎보호대",
+          "published_days": 219
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "두줄보호대 2개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-03-03",
+          "source_days": 211,
+          "canonical_name": "러닝모자",
+          "published_days": 160
+        },
+        {
+          "last_date": "2026-08-04",
+          "first_date": "2026-07-01",
+          "source_days": 35,
+          "canonical_name": "러닝모자+러닝조끼",
+          "published_days": 35
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-03-03",
+          "source_days": 268,
+          "canonical_name": "러닝양말",
+          "published_days": 217
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-04-02",
+          "source_days": 81,
+          "canonical_name": "러닝장갑",
+          "published_days": 45
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-28",
+          "source_days": 32,
+          "canonical_name": "러닝장갑 2개입",
+          "published_days": 32
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-03-03",
+          "source_days": 347,
+          "canonical_name": "러닝조끼",
+          "published_days": 213
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 33,
+          "canonical_name": "레그워머",
+          "published_days": 33
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 37,
+          "canonical_name": "레그워머 2개입",
+          "published_days": 37
+        },
+        {
+          "last_date": null,
+          "first_date": null,
+          "source_days": 1,
+          "canonical_name": "리프팅밴드",
+          "published_days": 0
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 57,
+          "canonical_name": "마사지양말",
+          "published_days": 57
+        },
+        {
+          "last_date": "2026-10-25",
+          "first_date": "2026-07-01",
+          "source_days": 65,
+          "canonical_name": "마사지양말 3개",
+          "published_days": 65
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 33,
+          "canonical_name": "목도리",
+          "published_days": 33
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 33,
+          "canonical_name": "목도리 2개입",
+          "published_days": 33
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 118,
+          "canonical_name": "무릎키퍼_1개입",
+          "published_days": 118
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 119,
+          "canonical_name": "무릎키퍼_2개입",
+          "published_days": 119
+        },
+        {
+          "last_date": "2026-10-28",
+          "first_date": "2026-10-07",
+          "source_days": 7,
+          "canonical_name": "바라클라바",
+          "published_days": 7
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 61,
+          "canonical_name": "바라클라바 베이직",
+          "published_days": 61
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 60,
+          "canonical_name": "바라클라바 베이직 2개입",
+          "published_days": 60
+        },
+        {
+          "last_date": "2026-07-06",
+          "first_date": "2026-07-06",
+          "source_days": 1,
+          "canonical_name": "바라클라바 프로",
+          "published_days": 1
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-30",
+          "source_days": 26,
+          "canonical_name": "바라클라바 프로 2개입",
+          "published_days": 26
+        },
+        {
+          "last_date": "2026-10-28",
+          "first_date": "2026-07-01",
+          "source_days": 112,
+          "canonical_name": "발목보호대데일리",
+          "published_days": 112
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 120,
+          "canonical_name": "발목보호대데일리 2개입",
+          "published_days": 120
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-02",
+          "source_days": 55,
+          "canonical_name": "방한마스크",
+          "published_days": 45
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 63,
+          "canonical_name": "방한마스크 2개입",
+          "published_days": 63
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-14",
+          "source_days": 337,
+          "canonical_name": "버닝 슬라이드",
+          "published_days": 167
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-13",
+          "source_days": 448,
+          "canonical_name": "버닝웨이브바",
+          "published_days": 167
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "베놈공용",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "베놈공용 2개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-17",
+          "source_days": 58,
+          "canonical_name": "베놈무릎보호대",
+          "published_days": 36
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 115,
+          "canonical_name": "베놈여성",
+          "published_days": 115
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 119,
+          "canonical_name": "베놈여성 2개입",
+          "published_days": 119
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-31",
+          "source_days": 57,
+          "canonical_name": "뷰티레그보드",
+          "published_days": 38
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 119,
+          "canonical_name": "뷰티케겔",
+          "published_days": 119
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 36,
+          "canonical_name": "비니",
+          "published_days": 36
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 36,
+          "canonical_name": "비니 2개입",
+          "published_days": 36
+        },
+        {
+          "last_date": null,
+          "first_date": null,
+          "source_days": 1,
+          "canonical_name": "삼대장",
+          "published_days": 0
+        },
+        {
+          "last_date": null,
+          "first_date": null,
+          "source_days": 1,
+          "canonical_name": "소프트물병",
+          "published_days": 0
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 120,
+          "canonical_name": "손목보호대",
+          "published_days": 120
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "손목보호대 2개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-24",
+          "first_date": "2026-07-01",
+          "source_days": 74,
+          "canonical_name": "손목보호대프로",
+          "published_days": 74
+        },
+        {
+          "last_date": "2026-10-24",
+          "first_date": "2026-07-01",
+          "source_days": 74,
+          "canonical_name": "손목보호대프로 2개입",
+          "published_days": 74
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 148,
+          "canonical_name": "스카이스텝",
+          "published_days": 119
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 116,
+          "canonical_name": "스카이스텝 2개입",
+          "published_days": 116
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 81,
+          "canonical_name": "스탭마스터",
+          "published_days": 81
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 115,
+          "canonical_name": "스트레칭보드",
+          "published_days": 115
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 185,
+          "canonical_name": "스포츠양말",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "스포츠양말 10개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 119,
+          "canonical_name": "스포츠양말 3개입",
+          "published_days": 119
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 117,
+          "canonical_name": "스포츠양말 5개입",
+          "published_days": 117
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-02",
+          "source_days": 75,
+          "canonical_name": "스포츠양말 7개입",
+          "published_days": 75
+        },
+        {
+          "last_date": "2026-08-02",
+          "first_date": "2026-07-01",
+          "source_days": 33,
+          "canonical_name": "신규폼롤러 소프트45",
+          "published_days": 33
+        },
+        {
+          "last_date": "2026-08-02",
+          "first_date": "2026-07-01",
+          "source_days": 33,
+          "canonical_name": "신규폼롤러 소프트60",
+          "published_days": 33
+        },
+        {
+          "last_date": "2026-10-28",
+          "first_date": "2026-07-01",
+          "source_days": 52,
+          "canonical_name": "신규폼롤러 하드",
+          "published_days": 52
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "실리콘리프팅밴드",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-27",
+          "first_date": "2026-07-02",
+          "source_days": 60,
+          "canonical_name": "실리콘리프팅밴드 2개입",
+          "published_days": 60
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "실크안대",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "실크안대 2개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 106,
+          "canonical_name": "싸커발목보호대",
+          "published_days": 106
+        },
+        {
+          "last_date": "2026-10-28",
+          "first_date": "2026-07-01",
+          "source_days": 104,
+          "canonical_name": "싸커발목보호대 2개입",
+          "published_days": 104
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-20",
+          "source_days": 15,
+          "canonical_name": "아이언볼",
+          "published_days": 10
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-14",
+          "source_days": 334,
+          "canonical_name": "에어스텝퍼",
+          "published_days": 164
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-04",
+          "source_days": 56,
+          "canonical_name": "유쉴드마스크",
+          "published_days": 56
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 73,
+          "canonical_name": "이지드림안대 3d",
+          "published_days": 73
+        },
+        {
+          "last_date": "2026-10-24",
+          "first_date": "2026-07-01",
+          "source_days": 21,
+          "canonical_name": "이지드림안대 3d+3d",
+          "published_days": 21
+        },
+        {
+          "last_date": "2026-10-24",
+          "first_date": "2026-07-01",
+          "source_days": 41,
+          "canonical_name": "이지드림안대 3d+양면",
+          "published_days": 41
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 88,
+          "canonical_name": "이지드림안대 양면",
+          "published_days": 88
+        },
+        {
+          "last_date": "2026-10-21",
+          "first_date": "2026-07-01",
+          "source_days": 29,
+          "canonical_name": "이지드림안대 양면+양면",
+          "published_days": 29
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-03-03",
+          "source_days": 270,
+          "canonical_name": "자외선마스크",
+          "published_days": 201
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-13",
+          "source_days": 277,
+          "canonical_name": "자이로볼",
+          "published_days": 163
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "자이로볼 메딕",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-19",
+          "first_date": "2026-07-01",
+          "source_days": 102,
+          "canonical_name": "자이로볼 메딕메탈",
+          "published_days": 102
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "자이로볼 메탈",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 124,
+          "canonical_name": "자이로볼 아이언",
+          "published_days": 120
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "자이로볼 챌린지",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-19",
+          "first_date": "2026-07-01",
+          "source_days": 105,
+          "canonical_name": "자이로볼 챌린지메탈",
+          "published_days": 105
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 113,
+          "canonical_name": "자이로볼 호크아이",
+          "published_days": 113
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "축구양말_장목_1개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "축구양말_장목_3개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "축구양말_중목_1개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "축구양말_중목_3개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-03-03",
+          "source_days": 202,
+          "canonical_name": "카프슬리브",
+          "published_days": 163
+        },
+        {
+          "last_date": "2026-10-28",
+          "first_date": "2026-07-01",
+          "source_days": 93,
+          "canonical_name": "카프슬리브 2개입",
+          "published_days": 93
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-13",
+          "source_days": 316,
+          "canonical_name": "케겔",
+          "published_days": 162
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "케겔 맥스",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-15",
+          "source_days": 137,
+          "canonical_name": "코어브릿지",
+          "published_days": 117
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-02",
+          "source_days": 89,
+          "canonical_name": "코어브릿지 프로",
+          "published_days": 89
+        },
+        {
+          "last_date": "2026-10-22",
+          "first_date": "2026-03-29",
+          "source_days": 180,
+          "canonical_name": "쿨토시",
+          "published_days": 137
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 109,
+          "canonical_name": "퍼슬2",
+          "published_days": 109
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 126,
+          "canonical_name": "퍼펙트스케이트",
+          "published_days": 105
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-13",
+          "source_days": 262,
+          "canonical_name": "퍼펙트슬라이드",
+          "published_days": 159
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "퍼펙트슬라이드 프로",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "페이스&바디롤러",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 114,
+          "canonical_name": "포론깔창",
+          "published_days": 114
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "포론깔창 2개입",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 102,
+          "canonical_name": "폼롤러",
+          "published_days": 102
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 118,
+          "canonical_name": "푸샵바",
+          "published_days": 118
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-13",
+          "source_days": 497,
+          "canonical_name": "풀업바",
+          "published_days": 162
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-13",
+          "source_days": 268,
+          "canonical_name": "풀업밴드",
+          "published_days": 162
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 120,
+          "canonical_name": "풀업밴드 그린",
+          "published_days": 120
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 112,
+          "canonical_name": "풀업밴드 레드",
+          "published_days": 112
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 116,
+          "canonical_name": "풀업밴드 블랙",
+          "published_days": 116
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 121,
+          "canonical_name": "풀업밴드 세트",
+          "published_days": 121
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 119,
+          "canonical_name": "풀업밴드 퍼플",
+          "published_days": 119
+        },
+        {
+          "last_date": "2026-10-27",
+          "first_date": "2026-07-01",
+          "source_days": 88,
+          "canonical_name": "풀업세트",
+          "published_days": 88
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 108,
+          "canonical_name": "풋파일",
+          "published_days": 108
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 120,
+          "canonical_name": "플레시 ab슬라이드",
+          "published_days": 120
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-05-13",
+          "source_days": 350,
+          "canonical_name": "플로우라이트",
+          "published_days": 146
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-02-26",
+          "source_days": 371,
+          "canonical_name": "한줄보호대",
+          "published_days": 219
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 33,
+          "canonical_name": "핸드워머",
+          "published_days": 33
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-02",
+          "source_days": 8,
+          "canonical_name": "핸드워머 2개입",
+          "published_days": 8
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-04-02",
+          "source_days": 17,
+          "canonical_name": "히트체인지",
+          "published_days": 17
+        },
+        {
+          "last_date": null,
+          "first_date": null,
+          "source_days": 1,
+          "canonical_name": "히트체인지 2개입",
+          "published_days": 0
+        },
+        {
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_days": 111,
+          "canonical_name": "힙업밴드",
+          "published_days": 111
+        }
+      ],
+      "activeProducts": 124,
+      "withPublishedFacts": 120
+    }
+  },
+  "operation": "MANAGEMENT_READ_ONLY",
+  "remoteWrites": 0,
+  "stage": 11
+}

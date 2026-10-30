@@ -1,0 +1,15 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "remoteWrites": 0,
+  "operation": "MANAGEMENT_READ_ONLY",
+  "stage": 11,
+  "rows": {
+    "id": "677f6de0-ae01-4355-ac61-bfef498beb6d",
+    "platform": "COUPANG",
+    "scope_key": "LEGACY_COUPANG_SINGLE_UPLOAD",
+    "business_date": "2026-07-15",
+    "attempts": 1,
+    "lease_expires_at": "2026-10-30 05:35:55.576+00"
+  },
+  "observedAt": "2026-10-30T05:39:47.3968824Z"
+}

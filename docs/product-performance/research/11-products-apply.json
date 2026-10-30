@@ -1,0 +1,895 @@
+{
+  "stage": 11,
+  "operation": "products-apply",
+  "planSha256": "f9c2014b3a48342a9399bcb7df43111a8e5050ce4b7cee1590c6463ebbff22d4",
+  "observedAt": "2026-10-30T04:30:16.094Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "products": [
+    {
+      "name": "노필수면안대",
+      "id": "902b9627-0130-4959-99f1-7d5236a30e01",
+      "action": "CREATED"
+    },
+    {
+      "name": "다이어트양말",
+      "id": "f80e866d-9af1-4aeb-af31-7671ec209b9c",
+      "action": "CREATED"
+    },
+    {
+      "name": "다이어트양말 10개입",
+      "id": "d52d8bad-686e-4bce-8b54-e0fa63d34cb9",
+      "action": "CREATED"
+    },
+    {
+      "name": "다이어트양말 3개입",
+      "id": "a9273ee8-89d5-4ae4-a549-ea43e18a9562",
+      "action": "CREATED"
+    },
+    {
+      "name": "다이어트양말 5개입",
+      "id": "567269f6-64ba-44de-9013-4d32a3563ea2",
+      "action": "CREATED"
+    },
+    {
+      "name": "데일리 깔창",
+      "id": "f4e3c070-57fb-49e9-93bf-492cfd0b5b5a",
+      "action": "CREATED"
+    },
+    {
+      "name": "데일리 깔창 2개입",
+      "id": "f1136a7b-046c-4eec-ae4d-73873d2ed042",
+      "action": "CREATED"
+    },
+    {
+      "name": "두줄무릎보호대",
+      "id": "4966f182-7a49-414f-a6a0-f7162a47f944",
+      "action": "CREATED"
+    },
+    {
+      "name": "두줄보호대 2개입",
+      "id": "2f9f5875-f3d3-4d7c-a936-4fc2bdbd9f2b",
+      "action": "CREATED"
+    },
+    {
+      "name": "러닝모자",
+      "id": "6b01f5a2-5ab3-4c5c-a5c0-0a9f4682c0fc",
+      "action": "CREATED"
+    },
+    {
+      "name": "러닝모자+러닝조끼",
+      "id": "4d7eef03-4144-47d1-b3c5-f3d8c39b27ae",
+      "action": "CREATED"
+    },
+    {
+      "name": "러닝양말",
+      "id": "4d1ab2e9-a8eb-4aec-80fb-7773402a0ccb",
+      "action": "CREATED"
+    },
+    {
+      "name": "러닝장갑",
+      "id": "17c7195e-d965-4867-926d-b82f3d1c4ecd",
+      "action": "CREATED"
+    },
+    {
+      "name": "러닝장갑 2개입",
+      "id": "d221f6b5-43fa-4635-a601-5350a6793c25",
+      "action": "CREATED"
+    },
+    {
+      "name": "러닝조끼",
+      "id": "e3f4f9be-3b52-45e6-af7a-f98740ece334",
+      "action": "CREATED"
+    },
+    {
+      "name": "레그워머",
+      "id": "d4daafae-fb65-4573-bd37-e4ae26c8f29f",
+      "action": "CREATED"
+    },
+    {
+      "name": "레그워머 2개입",
+      "id": "94f7e46a-65f5-40d3-8b67-2b55a1d59503",
+      "action": "CREATED"
+    },
+    {
+      "name": "리프팅밴드",
+      "id": "e8e369cb-73b6-4905-b3a3-6b1788f9669c",
+      "action": "CREATED"
+    },
+    {
+      "name": "마사지양말",
+      "id": "1d77f695-41fc-40bc-ac0c-1fb8ad41ccc5",
+      "action": "CREATED"
+    },
+    {
+      "name": "마사지양말 3개",
+      "id": "5cf16a3c-3c57-4805-bfe2-cd31a37938eb",
+      "action": "CREATED"
+    },
+    {
+      "name": "목도리",
+      "id": "74c60d33-78ca-42ee-a9e2-2a8425261bdc",
+      "action": "CREATED"
+    },
+    {
+      "name": "목도리 2개입",
+      "id": "d1285e3b-5eda-41dc-aba2-25e8b207ed8c",
+      "action": "CREATED"
+    },
+    {
+      "name": "무릎키퍼_1개입",
+      "id": "d5a8367f-1ecb-4563-b6b7-48ed2c49e447",
+      "action": "CREATED"
+    },
+    {
+      "name": "무릎키퍼_2개입",
+      "id": "0b4c6f9b-2c9e-4167-b751-5fbb2cfa3154",
+      "action": "CREATED"
+    },
+    {
+      "name": "바라클라바",
+      "id": "20a754f8-8a97-4a06-a7b5-ae2c87d0fa04",
+      "action": "CREATED"
+    },
+    {
+      "name": "바라클라바 베이직",
+      "id": "c644ba04-77cb-454a-b685-fb99513abdb6",
+      "action": "CREATED"
+    },
+    {
+      "name": "바라클라바 베이직 2개입",
+      "id": "9b8933f4-5fa2-4882-ba08-830183d9a6d1",
+      "action": "CREATED"
+    },
+    {
+      "name": "바라클라바 프로",
+      "id": "1a54e6e6-0ad1-496f-ab68-2841606259c2",
+      "action": "CREATED"
+    },
+    {
+      "name": "바라클라바 프로 2개입",
+      "id": "3c2b0c5c-d162-4980-b8c0-4191d400728f",
+      "action": "CREATED"
+    },
+    {
+      "name": "발목보호대데일리",
+      "id": "707096c9-e290-41f8-a2a3-9c9d8545ba91",
+      "action": "CREATED"
+    },
+    {
+      "name": "발목보호대데일리 2개입",
+      "id": "0a696877-4b63-4032-a15f-09b6f7daa4c4",
+      "action": "CREATED"
+    },
+    {
+      "name": "방한마스크",
+      "id": "700a1b22-f8e2-40e9-974e-cb24f67cf161",
+      "action": "CREATED"
+    },
+    {
+      "name": "방한마스크 2개입",
+      "id": "e24ea3f0-a80a-438f-b6b1-99927a4fdebb",
+      "action": "CREATED"
+    },
+    {
+      "name": "버닝 슬라이드",
+      "id": "8ff536bd-ad9a-4189-b035-14f5af040736",
+      "action": "CREATED"
+    },
+    {
+      "name": "버닝웨이브바",
+      "id": "a1269605-db0d-4480-8e06-d5032c8ca923",
+      "action": "CREATED"
+    },
+    {
+      "name": "베놈공용",
+      "id": "e56a6d4f-8c04-495f-bd8d-89dab45c2261",
+      "action": "CREATED"
+    },
+    {
+      "name": "베놈공용 2개입",
+      "id": "3c739742-de28-4156-a429-03b20eed051e",
+      "action": "CREATED"
+    },
+    {
+      "name": "베놈무릎보호대",
+      "id": "ec3ec591-ee9c-498e-8ae8-d495c9a8a96d",
+      "action": "CREATED"
+    },
+    {
+      "name": "베놈여성",
+      "id": "d178f691-da2b-4b4c-a62d-4f65e0174a86",
+      "action": "CREATED"
+    },
+    {
+      "name": "베놈여성 2개입",
+      "id": "971f756a-066e-4cb0-9d62-451a6d8cebdb",
+      "action": "CREATED"
+    },
+    {
+      "name": "뷰티레그보드",
+      "id": "59c66fea-2b81-4f4b-85ec-c68ec34bd434",
+      "action": "CREATED"
+    },
+    {
+      "name": "뷰티케겔",
+      "id": "f108a64a-e4a6-452b-a2ea-ade0100b3f43",
+      "action": "CREATED"
+    },
+    {
+      "name": "비니",
+      "id": "666f68a9-2c7e-4115-9407-4534d8d857a1",
+      "action": "CREATED"
+    },
+    {
+      "name": "비니 2개입",
+      "id": "712a2ed4-e94a-4817-a3b9-0ba53da02740",
+      "action": "CREATED"
+    },
+    {
+      "name": "삼대장",
+      "id": "ecf89b29-1e4a-49cf-962f-047b14ce9238",
+      "action": "CREATED"
+    },
+    {
+      "name": "소프트물병",
+      "id": "91b18164-26f1-4d64-96aa-1eb8bde5e910",
+      "action": "CREATED"
+    },
+    {
+      "name": "손목보호대",
+      "id": "5c5e9106-463b-4499-a239-5523e5975a0b",
+      "action": "CREATED"
+    },
+    {
+      "name": "손목보호대 2개입",
+      "id": "e374c246-d039-49b8-b6db-d8246e7e9de0",
+      "action": "CREATED"
+    },
+    {
+      "name": "손목보호대프로",
+      "id": "8e4690b7-c545-48db-8ada-a25e9a2a2a22",
+      "action": "CREATED"
+    },
+    {
+      "name": "손목보호대프로 2개입",
+      "id": "6ff793a6-a448-4d85-9638-49274078a9e5",
+      "action": "CREATED"
+    },
+    {
+      "name": "스카이스텝",
+      "id": "bccc4954-f83b-42bf-b8dd-d4330435b00e",
+      "action": "CREATED"
+    },
+    {
+      "name": "스카이스텝 2개입",
+      "id": "4a5e7de1-218a-43bd-88e6-9cc7e7176541",
+      "action": "CREATED"
+    },
+    {
+      "name": "스탭마스터",
+      "id": "0faf268d-768a-485d-9bc9-3b92f9248f1c",
+      "action": "CREATED"
+    },
+    {
+      "name": "스트레칭보드",
+      "id": "9cc6ad31-a3f2-4c2c-a8ab-50e6829c13e9",
+      "action": "CREATED"
+    },
+    {
+      "name": "스포츠양말",
+      "id": "408dcf2c-d693-47a3-990a-42228dd8f319",
+      "action": "CREATED"
+    },
+    {
+      "name": "스포츠양말 10개입",
+      "id": "7abdc01f-7e0b-45f4-a8c7-958a5671bb4a",
+      "action": "CREATED"
+    },
+    {
+      "name": "스포츠양말 3개입",
+      "id": "ffe8747e-9d59-46bf-b141-99866bc39ecf",
+      "action": "CREATED"
+    },
+    {
+      "name": "스포츠양말 5개입",
+      "id": "5145706a-cd10-4f18-9159-d80b09aa9509",
+      "action": "CREATED"
+    },
+    {
+      "name": "스포츠양말 7개입",
+      "id": "a03272f1-18e6-4c9b-ba1a-d93443eb14aa",
+      "action": "CREATED"
+    },
+    {
+      "name": "신규폼롤러 소프트45",
+      "id": "1f5e1357-eb0a-474b-9dd7-a3a9eb787c31",
+      "action": "CREATED"
+    },
+    {
+      "name": "신규폼롤러 소프트60",
+      "id": "754d631c-a707-40d3-a105-fc343418a5a1",
+      "action": "CREATED"
+    },
+    {
+      "name": "신규폼롤러 하드",
+      "id": "23674152-6505-40e5-8dc3-d2ee0c8ffeae",
+      "action": "CREATED"
+    },
+    {
+      "name": "실리콘리프팅밴드",
+      "id": "114a2ccf-9da6-4fc4-85c8-9b4644fb55fd",
+      "action": "CREATED"
+    },
+    {
+      "name": "실리콘리프팅밴드 2개입",
+      "id": "0396db49-c351-4957-a6f4-f89fdc17e248",
+      "action": "CREATED"
+    },
+    {
+      "name": "실크안대",
+      "id": "c1e4e5a8-3c20-4262-b750-eef181f7ebdd",
+      "action": "CREATED"
+    },
+    {
+      "name": "실크안대 2개입",
+      "id": "5c554fd8-e3f6-4726-a149-4b5b2c3e536d",
+      "action": "CREATED"
+    },
+    {
+      "name": "싸커발목보호대",
+      "id": "cb09c376-e071-430f-9862-2be03cbf21cf",
+      "action": "CREATED"
+    },
+    {
+      "name": "싸커발목보호대 2개입",
+      "id": "ed108e7b-a6db-464f-aa91-92935e2d2196",
+      "action": "CREATED"
+    },
+    {
+      "name": "아이언볼",
+      "id": "e02dcf62-ef7e-4f49-9034-e96aa4004895",
+      "action": "CREATED"
+    },
+    {
+      "name": "에어스텝퍼",
+      "id": "fef41b83-029d-4213-b2e9-6d56587b9771",
+      "action": "CREATED"
+    },
+    {
+      "name": "유쉴드마스크",
+      "id": "b677d1ac-7bf9-4ddd-aa65-72315523a1a6",
+      "action": "CREATED"
+    },
+    {
+      "name": "이지드림안대 3d",
+      "id": "66a988c5-f384-4736-a839-51f606708eaa",
+      "action": "CREATED"
+    },
+    {
+      "name": "이지드림안대 3d+3d",
+      "id": "e02555ad-1372-445f-9ffd-252612a21f77",
+      "action": "CREATED"
+    },
+    {
+      "name": "이지드림안대 3d+양면",
+      "id": "d837230f-7e6a-4d61-a633-d63422ef5b1a",
+      "action": "CREATED"
+    },
+    {
+      "name": "이지드림안대 양면",
+      "id": "85df7890-300e-42f9-a001-1edaae39dc70",
+      "action": "CREATED"
+    },
+    {
+      "name": "이지드림안대 양면+양면",
+      "id": "5843e5a8-a70a-47d9-9067-3a3f67ce3273",
+      "action": "CREATED"
+    },
+    {
+      "name": "자외선마스크",
+      "id": "56bc23b4-4926-48f0-abe7-f6d560aa2fc6",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼",
+      "id": "3357bbee-1d86-4785-a477-23c3341f6477",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼 메딕",
+      "id": "09158251-a62e-49bd-98c7-78107f26e0d1",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼 메딕메탈",
+      "id": "ff14d41a-0372-4592-803e-9c8f7793a62f",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼 메탈",
+      "id": "e1b6e56d-f1ce-45c3-adb2-3561bed8ffb5",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼 아이언",
+      "id": "b2e3c758-d892-49fe-ab0d-313ca878a7c2",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼 챌린지",
+      "id": "344f0566-2aaa-4c44-9786-78c1e13c4928",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼 챌린지메탈",
+      "id": "930399db-972b-4d35-b20a-4eaea12d9eaa",
+      "action": "CREATED"
+    },
+    {
+      "name": "자이로볼 호크아이",
+      "id": "7bf02e14-ef62-401f-9553-4cc18a8b003c",
+      "action": "CREATED"
+    },
+    {
+      "name": "축구양말_장목_1개입",
+      "id": "d966785e-563a-4c5b-8374-75490f20bfc8",
+      "action": "CREATED"
+    },
+    {
+      "name": "축구양말_장목_3개입",
+      "id": "04911508-878d-45c0-9113-69a3cabef31e",
+      "action": "CREATED"
+    },
+    {
+      "name": "축구양말_중목_1개입",
+      "id": "eea08bbb-ea83-403d-bb6b-67d46a6c0f77",
+      "action": "CREATED"
+    },
+    {
+      "name": "축구양말_중목_3개입",
+      "id": "e5319b5c-e66f-4eae-b427-722627bfc35c",
+      "action": "CREATED"
+    },
+    {
+      "name": "카프슬리브",
+      "id": "d777340d-af4d-4c90-b565-03a54fca2ff7",
+      "action": "CREATED"
+    },
+    {
+      "name": "카프슬리브 2개입",
+      "id": "bf4de84a-b763-46d6-8f3d-78a6b388bdd7",
+      "action": "CREATED"
+    },
+    {
+      "name": "케겔",
+      "id": "a025282d-f82c-4a09-8b95-83bf039496a0",
+      "action": "CREATED"
+    },
+    {
+      "name": "케겔 맥스",
+      "id": "127adf44-8242-49b4-b840-5f1e9fbfb745",
+      "action": "CREATED"
+    },
+    {
+      "name": "코어브릿지",
+      "id": "2cd5fef5-c05f-44cf-bb5b-a9e4ba74e4bc",
+      "action": "CREATED"
+    },
+    {
+      "name": "코어브릿지 프로",
+      "id": "c441de9a-1d0c-4c42-a723-d3ae44ad5c9c",
+      "action": "CREATED"
+    },
+    {
+      "name": "쿨토시",
+      "id": "130ba53d-ce23-45bc-9b2c-2299e063669e",
+      "action": "CREATED"
+    },
+    {
+      "name": "퍼슬2",
+      "id": "cb7b148e-379f-455d-aa4d-656a5eae39b6",
+      "action": "CREATED"
+    },
+    {
+      "name": "퍼펙트스케이트",
+      "id": "1dd4863b-dc86-4702-a36a-a32189b92e75",
+      "action": "CREATED"
+    },
+    {
+      "name": "퍼펙트슬라이드",
+      "id": "5cd77070-2882-4447-8aed-fca8be320c67",
+      "action": "CREATED"
+    },
+    {
+      "name": "퍼펙트슬라이드 프로",
+      "id": "041cc8d2-d50a-40da-8602-e7ded222148a",
+      "action": "CREATED"
+    },
+    {
+      "name": "페이스&바디롤러",
+      "id": "b947a333-3b21-4c10-8898-c508301fa4a0",
+      "action": "CREATED"
+    },
+    {
+      "name": "포론깔창",
+      "id": "c075cf6a-9ed2-4eed-9a13-d8d55fd36770",
+      "action": "CREATED"
+    },
+    {
+      "name": "포론깔창 2개입",
+      "id": "bd6c4789-94b0-4fb9-938a-74d755ced5ca",
+      "action": "CREATED"
+    },
+    {
+      "name": "폼롤러",
+      "id": "3cac5dd1-f156-4e75-9897-c88b7115d211",
+      "action": "CREATED"
+    },
+    {
+      "name": "푸샵바",
+      "id": "1ee5b408-888e-48e0-837a-45e8912275ca",
+      "action": "CREATED"
+    },
+    {
+      "name": "풀업바",
+      "id": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+      "action": "UNCHANGED"
+    },
+    {
+      "name": "풀업밴드",
+      "id": "c8572f7e-b919-468d-bb5e-f62b2b4ed257",
+      "action": "CREATED"
+    },
+    {
+      "name": "풀업밴드 그린",
+      "id": "cd940a81-acef-4721-b539-14c309dfbf43",
+      "action": "CREATED"
+    },
+    {
+      "name": "풀업밴드 레드",
+      "id": "f89b1f4a-c898-47ae-9a6c-c4ea76962136",
+      "action": "CREATED"
+    },
+    {
+      "name": "풀업밴드 블랙",
+      "id": "3f88615d-37ec-456d-ac1d-7dbfb3b57a09",
+      "action": "CREATED"
+    },
+    {
+      "name": "풀업밴드 세트",
+      "id": "d4d82ebb-9c0d-4a89-acc1-08789217d7bf",
+      "action": "CREATED"
+    },
+    {
+      "name": "풀업밴드 퍼플",
+      "id": "43f7b398-d91d-41f6-8adc-86374c6440eb",
+      "action": "CREATED"
+    },
+    {
+      "name": "풀업세트",
+      "id": "b3333ec0-c42c-4469-af81-6f8ee4dd7bf9",
+      "action": "CREATED"
+    },
+    {
+      "name": "풋파일",
+      "id": "f4d94ed0-8139-4f08-bdc4-785cca61ea11",
+      "action": "CREATED"
+    },
+    {
+      "name": "플레시 ab슬라이드",
+      "id": "b15e9c2b-ca9f-494f-a396-b479ce70d3ae",
+      "action": "CREATED"
+    },
+    {
+      "name": "플로우라이트",
+      "id": "5cb57132-0f5c-4d86-9e45-aba0c02f4ecb",
+      "action": "CREATED"
+    },
+    {
+      "name": "한줄보호대",
+      "id": "6fd8b1df-6fe2-4fb9-9b57-c07e636583be",
+      "action": "CREATED"
+    },
+    {
+      "name": "핸드워머",
+      "id": "77ec5c3e-d1c1-412d-a7e6-2cf8b9474590",
+      "action": "CREATED"
+    },
+    {
+      "name": "핸드워머 2개입",
+      "id": "616e2702-59ab-4b4d-a244-3591b79e78b4",
+      "action": "CREATED"
+    },
+    {
+      "name": "히트체인지",
+      "id": "8ff21f7d-6b04-4b89-91b0-acc93d141cb2",
+      "action": "CREATED"
+    },
+    {
+      "name": "히트체인지 2개입",
+      "id": "07fc7930-7024-45cd-a64d-75d4a80efe65",
+      "action": "CREATED"
+    },
+    {
+      "name": "힙업밴드",
+      "id": "d4a6a866-06d1-4c4e-8e80-710214299eb6",
+      "action": "CREATED"
+    },
+    {
+      "name": "nbr요가매트",
+      "id": "9595ae09-77d1-4b3b-b4ea-263bd47ce180",
+      "action": "CREATED"
+    },
+    {
+      "name": "tpe요가매트",
+      "id": "5df831cc-590d-4002-b972-c988b898341c",
+      "action": "CREATED"
+    }
+  ],
+  "exactChecks": 620,
+  "naverExclusions": [
+    {
+      "sourceName": "다이어트 양말",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝깔창 PORON 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝깔창 PORON 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝깔창 데일리 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝깔창 데일리 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝장갑 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "무릎키퍼",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "발목보호대 데일리",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "발목보호대 싸커",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대 1+1",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대 단품",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대(여성용) 1+1",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대(여성용) 단품",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 기본형 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 기본형 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 프로 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 프로 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스카이깔창",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스텝마스터",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스토어 전체 광고",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스포츠 양말",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "식별 불가능",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "실리콘리프팅+페이스롤러",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "실리콘리프팅1+1",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "카프슬리브 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "퍼펙트 스케이트",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "퍼펙트스케이트+퍼펙트슬라이드2",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "퍼펙트슬라이드2",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러 1+1",
+      "parentName": "페이스 롤러",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러 2+1",
+      "parentName": "페이스 롤러",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러 단품",
+      "parentName": "페이스 롤러",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "푸쉬업바",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "히트체인지 넥워머",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "히트체인지 넥워머 1+1",
+      "parentName": "히트체인지 넥워머",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "히트체인지 넥워머 단품",
+      "parentName": "히트체인지 넥워머",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    }
+  ],
+  "implicitExactNameMatching": true,
+  "saleUnitOrCostChanges": 0
+}

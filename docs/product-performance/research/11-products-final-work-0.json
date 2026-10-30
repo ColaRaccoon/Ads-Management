@@ -1,0 +1,262 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "68f5a3a6d356b7a4b5ea7b9d9ef55cc42b8753201a0469723b3d19107ddf700f",
+  "observedAt": "2026-10-30T05:43:34.891Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "offset": 0,
+  "outcomes": [
+    {
+      "id": "02f3709c-af6c-4122-a039-e80adfed2c50",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-07",
+      "claimed": true
+    },
+    {
+      "id": "11cd3235-1769-454b-ac8b-6dfe806d2731",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-27",
+      "claimed": true
+    },
+    {
+      "id": "199b30a3-696c-41a5-a215-2880eb0fa2f2",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-04",
+      "claimed": true
+    },
+    {
+      "id": "1a34d2d3-9447-4adc-aece-afe2a9a8758f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-14",
+      "claimed": true
+    },
+    {
+      "id": "21d645ed-6f35-4ce1-af69-6ae5d7f27bbf",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-23",
+      "claimed": true
+    },
+    {
+      "id": "225a551b-a8ed-4117-acb3-1aca57d66f6d",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-20",
+      "claimed": true
+    },
+    {
+      "id": "259d8be9-a3b2-47a8-a8b6-020bce789bb6",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-09",
+      "claimed": true
+    },
+    {
+      "id": "2c551c32-fe7d-49cd-af23-1bad1f7549cf",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-24",
+      "claimed": true
+    },
+    {
+      "id": "2cd5a67c-e4b1-4d1a-a106-55a3535ae46e",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-08",
+      "claimed": true
+    },
+    {
+      "id": "3316d8c7-0ea6-4541-abda-f83f572aab38",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-29",
+      "claimed": true
+    },
+    {
+      "id": "41abe699-9838-4842-a734-4c54f4f9abb1",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-25",
+      "claimed": true
+    },
+    {
+      "id": "43a490ba-9247-4eb8-acbb-2dda2e34070f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-13",
+      "claimed": true
+    },
+    {
+      "id": "5164cca1-2f22-4fe9-a4e1-9dcbf718ca0a",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-21",
+      "claimed": true
+    },
+    {
+      "id": "59a42c02-a9c8-48d3-a114-d80cfb997c35",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-22",
+      "claimed": true
+    },
+    {
+      "id": "6286f42d-0181-46b5-a20c-b1fca3031ef0",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-12",
+      "claimed": true
+    },
+    {
+      "id": "740c2b4b-e450-4d48-a80d-91ead76b61f7",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-06",
+      "claimed": true
+    },
+    {
+      "id": "74edf126-17ba-46d8-a80b-89877a0cd0e4",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-03",
+      "claimed": true
+    },
+    {
+      "id": "75b62117-156d-4013-a32e-77afe28a55d1",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-16",
+      "claimed": true
+    },
+    {
+      "id": "75d5e416-05f3-4247-af30-e941daade611",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-05",
+      "claimed": true
+    },
+    {
+      "id": "7c481a5f-584c-476c-a117-b7531a723021",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-17",
+      "claimed": true
+    },
+    {
+      "id": "944a6f8b-bcff-4a55-a4f7-1f5d3131b5a3",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-26",
+      "claimed": true
+    },
+    {
+      "id": "a50d76e3-390c-4b8c-a383-684ecbee42a7",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-01",
+      "claimed": true
+    },
+    {
+      "id": "a683de49-49a6-4d64-aab5-f77dd56a9184",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-15",
+      "claimed": true
+    },
+    {
+      "id": "ab49cee9-c1ab-4797-a105-6a60885a395a",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-10",
+      "claimed": true
+    },
+    {
+      "id": "be47c02b-d0f6-4a78-a9e8-e59da77beaa6",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-02",
+      "claimed": true
+    }
+  ]
+}

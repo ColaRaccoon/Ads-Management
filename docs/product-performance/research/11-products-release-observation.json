@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "releaseId": "44cd2a54ccbb351c92d3ece9fd6722481a80ae66",
+  "deploymentId": "45c56fc3-7fe2-45b4-a1ff-b735ad3d3504",
+  "deploymentStatus": "SUCCESS",
+  "configuration": [
+    {
+      "path": ".config.source.repo",
+      "value": "ColaRaccoon/Ads-Management"
+    },
+    {
+      "path": ".config.source.branch",
+      "value": "codex/product-performance-stage11-history-options-release"
+    },
+    {
+      "path": ".config.build.dockerfilePath",
+      "value": "deploy/cloud/production-reporting.Dockerfile"
+    },
+    {
+      "path": ".config.deploy.startCommand",
+      "value": "setpriv --no-new-privs node deploy/cloud/production-source-launch.mjs"
+    },
+    {
+      "path": ".config.deploy.multiRegionConfig.asia-southeast1-eqsg3a.numReplicas",
+      "value": 1
+    }
+  ],
+  "productionDeploymentPerformed": false,
+  "developmentBranch": "codex/product-performance-stage11",
+  "remoteWrites": 0
+}

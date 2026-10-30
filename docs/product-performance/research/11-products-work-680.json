@@ -1,0 +1,262 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "f9c2014b3a48342a9399bcb7df43111a8e5050ce4b7cee1590c6463ebbff22d4",
+  "observedAt": "2026-10-30T05:05:19.679Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "offset": 680,
+  "outcomes": [
+    {
+      "id": "5dac520e-f318-4419-abe8-ae1c82277b6f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-21",
+      "claimed": true
+    },
+    {
+      "id": "9f86fe27-b9d3-405d-a9e7-f5d1aeebb2c5",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-27",
+      "claimed": true
+    },
+    {
+      "id": "a0e7cac6-3261-4b9c-ad29-e3be350c7eea",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-28",
+      "claimed": true
+    },
+    {
+      "id": "dda2611b-eb69-4fe2-a142-3e95fb9cdcd8",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-23",
+      "claimed": true
+    },
+    {
+      "id": "45c7964e-a08d-448b-a760-f5e77bfdea3b",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-01",
+      "claimed": true
+    },
+    {
+      "id": "bb6ede3f-700e-46b6-a626-f5c4b55ec13c",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-31",
+      "claimed": true
+    },
+    {
+      "id": "25a0db53-2b5d-4b50-a9bc-31112f224540",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-04",
+      "claimed": true
+    },
+    {
+      "id": "6528f6e7-6ec4-46c3-a0d0-50f7ad99e2a2",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-03",
+      "claimed": true
+    },
+    {
+      "id": "294c8f8f-fdc2-433a-a345-21ff7c86b2c6",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-07",
+      "claimed": true
+    },
+    {
+      "id": "308595ee-33d7-4afe-a8c9-79b964faa4fa",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-11",
+      "claimed": true
+    },
+    {
+      "id": "40461b03-a45c-4780-ad7c-665d163f5f9f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-09",
+      "claimed": true
+    },
+    {
+      "id": "835690e3-8d00-4329-a3ce-8d9ad5fd520d",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-08",
+      "claimed": true
+    },
+    {
+      "id": "e99bed20-fd2e-4f30-aa0d-54219a1aacb7",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-10",
+      "claimed": true
+    },
+    {
+      "id": "2c71ca97-1f52-4e7b-a8b6-5f89c42580e5",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-18",
+      "claimed": true
+    },
+    {
+      "id": "432a7786-d7d3-4f3c-aed0-c7567a3ab719",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-15",
+      "claimed": true
+    },
+    {
+      "id": "43e3d2ca-097f-4dc0-a9d4-c7648b8a0fb0",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-17",
+      "claimed": true
+    },
+    {
+      "id": "8eab6b75-bf93-47e4-aebb-0ce4a629f169",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-16",
+      "claimed": true
+    },
+    {
+      "id": "d5ff8f2a-c4d0-438a-a0f3-b596a07f580f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-14",
+      "claimed": true
+    },
+    {
+      "id": "043dd6d3-ca29-4ad8-a331-dc8b3c67cb24",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-14",
+      "claimed": true
+    },
+    {
+      "id": "0dd71d0f-0510-4fdf-af91-a03afbd2b423",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-30",
+      "claimed": true
+    },
+    {
+      "id": "17530c6e-a071-40de-af31-a749c213d504",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-10",
+      "claimed": true
+    },
+    {
+      "id": "1f51835b-3039-4f05-a080-dfdca27407b8",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-20",
+      "claimed": true
+    },
+    {
+      "id": "1f51fd28-8914-4a48-a921-f02477aa7348",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-04",
+      "claimed": true
+    },
+    {
+      "id": "444d0b4c-ce8d-4888-ae9e-c3bd428d7e09",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-27",
+      "claimed": true
+    },
+    {
+      "id": "55b99c45-6a83-454f-ad6a-bc61b6743874",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-23",
+      "claimed": true
+    }
+  ]
+}

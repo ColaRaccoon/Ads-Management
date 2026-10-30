@@ -1,0 +1,26 @@
+{
+  "observedAt": "2026-10-30T06:23:19.3357871Z",
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "stage": 11,
+  "rows": {
+    "delta": {
+      "rows": 3609,
+      "privacy": "Aggregates only; no source keys or customer fields returned",
+      "newlyKnownRows": 54,
+      "newKnownRevenue": 126725851,
+      "oldKnownRevenue": 124838700,
+      "newlyKnownProfit": 1124429,
+      "newlyKnownRevenue": 1887151,
+      "changedSourcePayload": 0,
+      "newlyKnownProfitRows": 53,
+      "identityAddedOrRemoved": 0,
+      "changedProductAssignment": 0,
+      "previousKnownProfitDelta": 0,
+      "previousKnownRevenueDelta": 0,
+      "previousKnownProfitChangedRows": 0,
+      "previousKnownRevenueChangedRows": 0
+    }
+  },
+  "remoteWrites": 0,
+  "operation": "MANAGEMENT_READ_ONLY"
+}

@@ -1,0 +1,6028 @@
+{
+  "kind": "EXACT_NATIVE_PRODUCTS_ALL_HISTORY",
+  "stage": 11,
+  "from": "2026-02-26",
+  "to": "2026-10-29",
+  "baselineProducts": [
+    {
+      "id": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+      "active": true,
+      "version": 1,
+      "canonicalName": "풀업바"
+    }
+  ],
+  "baselineRules": [
+    {
+      "id": "7502dd56-c8fb-4d43-894e-d6d2468149ef",
+      "kind": "SALE_UNIT",
+      "active": true,
+      "payload": {
+        "otherCost": "0",
+        "salePrice": "34900",
+        "optionExact": null,
+        "productCost": "10000",
+        "saleUnitName": "풀업바 단품",
+        "shippingCost": "0",
+        "optionInclude": [
+          "풀업바(72~97cm)"
+        ],
+        "quantityBasis": "SALE_UNIT_TOTAL",
+        "unitsPerSaleUnit": "1"
+      },
+      "validTo": null,
+      "version": 1,
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "productId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+      "validFrom": "2026-10-28"
+    },
+    {
+      "id": "06b05f8c-ea1a-4803-b38c-a4538ac38cfd",
+      "kind": "NAME",
+      "active": true,
+      "payload": {
+        "terms": [
+          "풀업바"
+        ],
+        "matchType": "CONTAINS",
+        "nameField": null,
+        "optionExact": null,
+        "excludeTerms": [],
+        "saleUnitName": null,
+        "optionExclude": [],
+        "optionInclude": []
+      },
+      "validTo": null,
+      "version": 3,
+      "platform": null,
+      "scopeKey": null,
+      "productId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+      "validFrom": "2026-05-13"
+    }
+  ],
+  "products": [
+    {
+      "canonicalName": "노필수면안대",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "다이어트양말",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "다이어트양말 10개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "다이어트양말 3개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "다이어트양말 5개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "데일리 깔창",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "데일리 깔창 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "두줄무릎보호대",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "두줄보호대 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "러닝모자",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "러닝모자+러닝조끼",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "러닝양말",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "러닝장갑",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "러닝장갑 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "러닝조끼",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "레그워머",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "레그워머 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "리프팅밴드",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "마사지양말",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "마사지양말 3개",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "목도리",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "목도리 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "무릎키퍼_1개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "무릎키퍼_2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "바라클라바",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "바라클라바 베이직",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "바라클라바 베이직 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "바라클라바 프로",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "바라클라바 프로 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "발목보호대데일리",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "발목보호대데일리 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "방한마스크",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "방한마스크 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "버닝 슬라이드",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "버닝웨이브바",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "베놈공용",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "베놈공용 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "베놈무릎보호대",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "베놈여성",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "베놈여성 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "뷰티레그보드",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "뷰티케겔",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "비니",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "비니 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "삼대장",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "소프트물병",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "손목보호대",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "손목보호대 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "손목보호대프로",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "손목보호대프로 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스카이스텝",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스카이스텝 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스탭마스터",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스트레칭보드",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스포츠양말",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스포츠양말 10개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스포츠양말 3개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스포츠양말 5개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "스포츠양말 7개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "신규폼롤러 소프트45",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "신규폼롤러 소프트60",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "신규폼롤러 하드",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "실리콘리프팅밴드",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "실리콘리프팅밴드 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "실크안대",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "실크안대 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "싸커발목보호대",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "싸커발목보호대 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "아이언볼",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "에어스텝퍼",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "유쉴드마스크",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "이지드림안대 3d",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "이지드림안대 3d+3d",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "이지드림안대 3d+양면",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "이지드림안대 양면",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "이지드림안대 양면+양면",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자외선마스크",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼 메딕",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼 메딕메탈",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼 메탈",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼 아이언",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼 챌린지",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼 챌린지메탈",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "자이로볼 호크아이",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "축구양말_장목_1개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "축구양말_장목_3개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "축구양말_중목_1개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "축구양말_중목_3개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "카프슬리브",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "카프슬리브 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "케겔",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "케겔 맥스",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "코어브릿지",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "코어브릿지 프로",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "쿨토시",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "퍼슬2",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "퍼펙트스케이트",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "퍼펙트슬라이드",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "퍼펙트슬라이드 프로",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "페이스&바디롤러",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "포론깔창",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "포론깔창 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "폼롤러",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "푸샵바",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "풀업바",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ],
+      "existingId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f"
+    },
+    {
+      "canonicalName": "풀업밴드",
+      "origins": [
+        "META_CAFE24"
+      ]
+    },
+    {
+      "canonicalName": "풀업밴드 그린",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "풀업밴드 레드",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "풀업밴드 블랙",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "풀업밴드 세트",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "풀업밴드 퍼플",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "풀업세트",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "풋파일",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "플레시 ab슬라이드",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "플로우라이트",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "한줄보호대",
+      "origins": [
+        "META_CAFE24",
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "핸드워머",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "핸드워머 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "히트체인지",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "히트체인지 2개입",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "힙업밴드",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "nbr요가매트",
+      "origins": [
+        "COUPANG"
+      ]
+    },
+    {
+      "canonicalName": "tpe요가매트",
+      "origins": [
+        "COUPANG"
+      ]
+    }
+  ],
+  "excludedNative": [
+    {
+      "platform": "COUPANG",
+      "sourceName": "버닝슬라이드",
+      "reason": "Different name; registering it would shadow an existing approved Naver alias",
+      "existingCanonical": "버닝 슬라이드"
+    }
+  ],
+  "naverDecisions": [
+    {
+      "sourceName": "NBR요가매트",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "nbr요가매트"
+    },
+    {
+      "sourceName": "다이어트 양말",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "두줄보호대",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "두줄무릎보호대"
+    },
+    {
+      "sourceName": "두줄보호대 1+1",
+      "parentName": "두줄보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "두줄무릎보호대"
+    },
+    {
+      "sourceName": "두줄보호대 단품",
+      "parentName": "두줄보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "두줄무릎보호대"
+    },
+    {
+      "sourceName": "러닝깔창 PORON 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝깔창 PORON 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝깔창 데일리 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝깔창 데일리 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝모자",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "러닝모자"
+    },
+    {
+      "sourceName": "러닝양말",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "러닝양말"
+    },
+    {
+      "sourceName": "러닝장갑",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "러닝장갑"
+    },
+    {
+      "sourceName": "러닝장갑 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "러닝조끼",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "러닝조끼"
+    },
+    {
+      "sourceName": "무릎키퍼",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "바라클라바",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "바라클라바"
+    },
+    {
+      "sourceName": "바라클라바 베이직 1+1",
+      "parentName": "바라클라바",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "바라클라바"
+    },
+    {
+      "sourceName": "바라클라바 베이직 단품",
+      "parentName": "바라클라바",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "바라클라바"
+    },
+    {
+      "sourceName": "바라클라바 프로 1+1",
+      "parentName": "바라클라바",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "바라클라바"
+    },
+    {
+      "sourceName": "바라클라바 프로 단품",
+      "parentName": "바라클라바",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "바라클라바"
+    },
+    {
+      "sourceName": "발목보호대 데일리",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "발목보호대 싸커",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "버닝슬라이드",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "버닝 슬라이드"
+    },
+    {
+      "sourceName": "버닝슬라이드 1+1",
+      "parentName": "버닝슬라이드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "버닝 슬라이드"
+    },
+    {
+      "sourceName": "버닝슬라이드 단품",
+      "parentName": "버닝슬라이드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "버닝 슬라이드"
+    },
+    {
+      "sourceName": "버닝웨이브",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "버닝웨이브바"
+    },
+    {
+      "sourceName": "버닝웨이브바",
+      "parentName": "버닝웨이브",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "버닝웨이브바"
+    },
+    {
+      "sourceName": "버닝웨이브바 1+1",
+      "parentName": "버닝웨이브",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "PREEXISTING_APPROVED_ALIAS",
+      "canonicalName": "버닝웨이브바"
+    },
+    {
+      "sourceName": "베놈 무릎보호대",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대 1+1",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대 단품",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대(여성용) 1+1",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "베놈 무릎보호대(여성용) 단품",
+      "parentName": "베놈 무릎보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 기본형 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 기본형 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 프로 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "손목보호대 프로 단품",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스카이깔창",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스텝마스터",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스토어 전체 광고",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "스포츠 양말",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "식별 불가능",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "실리콘리프팅+페이스롤러",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "실리콘리프팅1+1",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "실리콘리프팅밴드",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "실리콘리프팅밴드"
+    },
+    {
+      "sourceName": "에어스텝퍼",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "에어스텝퍼"
+    },
+    {
+      "sourceName": "에어스텝퍼 1+1",
+      "parentName": "에어스텝퍼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "에어스텝퍼"
+    },
+    {
+      "sourceName": "에어스텝퍼 단품",
+      "parentName": "에어스텝퍼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "에어스텝퍼"
+    },
+    {
+      "sourceName": "자외선마스크",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "자외선마스크"
+    },
+    {
+      "sourceName": "자이로볼",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "자이로볼"
+    },
+    {
+      "sourceName": "자이로볼 2+1(메탈)",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "자이로볼"
+    },
+    {
+      "sourceName": "자이로볼 3+1 메딕",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "자이로볼"
+    },
+    {
+      "sourceName": "자이로볼 3+1 챌린지",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "자이로볼"
+    },
+    {
+      "sourceName": "자이로볼 메딕",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "자이로볼 메딕"
+    },
+    {
+      "sourceName": "자이로볼 메딕+메탈",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "자이로볼"
+    },
+    {
+      "sourceName": "자이로볼 메탈",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "자이로볼 메탈"
+    },
+    {
+      "sourceName": "자이로볼 챌린지",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "자이로볼 챌린지"
+    },
+    {
+      "sourceName": "자이로볼 챌린지+메탈",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "자이로볼"
+    },
+    {
+      "sourceName": "자이로볼 풀메탈",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "자이로볼"
+    },
+    {
+      "sourceName": "자이로볼 호크아이",
+      "parentName": "자이로볼",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "자이로볼 호크아이"
+    },
+    {
+      "sourceName": "카프슬리브",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "카프슬리브"
+    },
+    {
+      "sourceName": "카프슬리브 1+1",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "케겔",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "케겔"
+    },
+    {
+      "sourceName": "케겔 기본형",
+      "parentName": "케겔",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "케겔"
+    },
+    {
+      "sourceName": "케겔 프로형",
+      "parentName": "케겔",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "케겔"
+    },
+    {
+      "sourceName": "코어브릿지",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "코어브릿지"
+    },
+    {
+      "sourceName": "코어브릿지 기본형",
+      "parentName": "코어브릿지",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "코어브릿지"
+    },
+    {
+      "sourceName": "코어브릿지 프로형",
+      "parentName": "코어브릿지",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "코어브릿지"
+    },
+    {
+      "sourceName": "쿨토시",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "쿨토시"
+    },
+    {
+      "sourceName": "퍼펙트 스케이트",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "퍼펙트 슬라이드 기본형",
+      "parentName": "퍼펙트슬라이드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "퍼펙트슬라이드"
+    },
+    {
+      "sourceName": "퍼펙트 슬라이드 프로형",
+      "parentName": "퍼펙트슬라이드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "퍼펙트슬라이드"
+    },
+    {
+      "sourceName": "퍼펙트스케이트+퍼펙트슬라이드2",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "퍼펙트슬라이드",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "퍼펙트슬라이드"
+    },
+    {
+      "sourceName": "퍼펙트슬라이드2",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러 1+1",
+      "parentName": "페이스 롤러",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러 2+1",
+      "parentName": "페이스 롤러",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "페이스 롤러 단품",
+      "parentName": "페이스 롤러",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "푸쉬업바",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "풀업바",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "풀업바"
+    },
+    {
+      "sourceName": "풀업밴드",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "풀업밴드"
+    },
+    {
+      "sourceName": "풀업밴드 그린",
+      "parentName": "풀업밴드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "풀업밴드 그린"
+    },
+    {
+      "sourceName": "풀업밴드 레드",
+      "parentName": "풀업밴드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "풀업밴드 레드"
+    },
+    {
+      "sourceName": "풀업밴드 보라",
+      "parentName": "풀업밴드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "풀업밴드"
+    },
+    {
+      "sourceName": "풀업밴드 블랙",
+      "parentName": "풀업밴드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "풀업밴드 블랙"
+    },
+    {
+      "sourceName": "풀업밴드 세트",
+      "parentName": "풀업밴드",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "풀업밴드 세트"
+    },
+    {
+      "sourceName": "플로우라이트",
+      "parentName": "플로우라이트",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "플로우라이트"
+    },
+    {
+      "sourceName": "플로우라이트",
+      "parentName": null,
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXACT_NAME",
+      "canonicalName": "플로우라이트"
+    },
+    {
+      "sourceName": "플로우라이트1+1",
+      "parentName": "플로우라이트",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "플로우라이트"
+    },
+    {
+      "sourceName": "한줄보호대",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXACT_NAME",
+      "canonicalName": "한줄보호대"
+    },
+    {
+      "sourceName": "한줄보호대 1+1",
+      "parentName": "한줄보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "한줄보호대"
+    },
+    {
+      "sourceName": "한줄보호대 단품",
+      "parentName": "한줄보호대",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXISTING_PARENT_NAME",
+      "canonicalName": "한줄보호대"
+    },
+    {
+      "sourceName": "히트체인지 넥워머",
+      "parentName": null,
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "히트체인지 넥워머 1+1",
+      "parentName": "히트체인지 넥워머",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    },
+    {
+      "sourceName": "히트체인지 넥워머 단품",
+      "parentName": "히트체인지 넥워머",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "decision": "EXCLUDED_DIFFERENT_NAME",
+      "canonicalName": null
+    }
+  ],
+  "partitions": [
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-09-29"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-09-30"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-01"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-02"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-03"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-04"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-05"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-06"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-07"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-08"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-09"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-10"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-11"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-12"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-13"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-14"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-15"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-16"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-17"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-18"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-19"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-20"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-21"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-22"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-23"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-24"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-25"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-26"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-27"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-28"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-29"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-11"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-14"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-15"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-16"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-17"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-18"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-19"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-20"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-21"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-22"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-23"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-24"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-25"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-26"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-27"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-28"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-29"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-30"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-01"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-02"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-03"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-04"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-05"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-06"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-07"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-08"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-09"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-10"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-11"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-12"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-13"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-14"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-15"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-16"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-17"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-18"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-19"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-20"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-21"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-22"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-23"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-24"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-25"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-26"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-27"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-28"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-29"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-30"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-31"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-01"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-02"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-03"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-04"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-05"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-06"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-07"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-08"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-09"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-10"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-11"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-12"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-13"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-14"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-15"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-16"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-17"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-18"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-19"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-20"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-21"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-22"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-23"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-24"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-25"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-26"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-27"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-28"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-29"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-30"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-31"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-01"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-02"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-03"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-04"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-05"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-06"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-07"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-08"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-09"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-10"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-11"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-12"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-13"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-14"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-15"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-16"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-17"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-18"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-19"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-20"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-21"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-22"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-23"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-24"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-25"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-26"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-27"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-28"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-29"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-30"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-01"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-02"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-03"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-04"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-05"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-06"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-07"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-08"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-09"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-10"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-11"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-12"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-13"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-14"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-15"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-16"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-17"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-18"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-19"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-20"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-21"
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-22"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-01"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-02"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-03"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-04"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-05"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-06"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-07"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-08"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-09"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-10"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-11"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-12"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-13"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-14"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-15"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-16"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-17"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-18"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-19"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-20"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-21"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-22"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-23"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-24"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-25"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-26"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-27"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-28"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-29"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-30"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-31"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-01"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-02"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-03"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-04"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-05"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-06"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-07"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-08"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-09"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-10"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-11"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-12"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-13"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-14"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-15"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-16"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-17"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-18"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-19"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-20"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-21"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-22"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-23"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-24"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-25"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-26"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-27"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-28"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-29"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-30"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-31"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-01"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-02"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-03"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-04"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-05"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-06"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-07"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-08"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-09"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-10"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-11"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-12"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-13"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-14"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-15"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-16"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-17"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-18"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-19"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-20"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-21"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-22"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-23"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-24"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-25"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-26"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-27"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-28"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-29"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-30"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-01"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-02"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-03"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-04"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-05"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-06"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-07"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-08"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-09"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-10"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-11"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-12"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-13"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-14"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-15"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-16"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-17"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-18"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-19"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-20"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-21"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-22"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-23"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-24"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-25"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-26"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-27"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-28"
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-29"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-20"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-21"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-22"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-23"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-25"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-26"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-27"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-28"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-29"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-23"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-24"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-25"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-26"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-27"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-28"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-29"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-01"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-02"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-03"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-04"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-05"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-06"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-07"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-08"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-09"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-10"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-11"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-12"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-13"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-14"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-15"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-16"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-17"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-18"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-19"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-20"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-21"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-22"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-23"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-24"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-25"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-26"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-27"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-28"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-29"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-30"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-01"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-02"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-03"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-04"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-05"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-06"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-07"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-08"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-09"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-10"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-11"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-12"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-13"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-14"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-15"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-16"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-17"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-18"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-19"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-20"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-21"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-22"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-23"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-24"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-25"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-26"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-27"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-28"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-29"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-30"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-31"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-01"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-02"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-03"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-04"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-05"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-06"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-07"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-08"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-09"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-10"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-11"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-12"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-13"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-14"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-15"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-16"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-17"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-18"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-19"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-20"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-21"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-22"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-23"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-24"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-25"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-26"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-27"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-28"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-29"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-30"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-31"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-01"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-02"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-03"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-04"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-05"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-06"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-07"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-08"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-09"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-10"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-11"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-12"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-13"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-14"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-15"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-16"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-17"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-18"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-19"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-20"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-21"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-22"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-23"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-24"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-25"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-26"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-27"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-28"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-29"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-30"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-01"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-02"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-03"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-04"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-05"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-06"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-07"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-08"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-09"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-10"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-11"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-12"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-13"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-14"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-15"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-16"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-17"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-18"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-19"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-20"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-21"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-02-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-31"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-31"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-31"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-31"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-31"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-31"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-31"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-29"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-30"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-01"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-02"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-03"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-04"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-05"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-06"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-07"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-08"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-09"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-10"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-11"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-12"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-13"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-14"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-15"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-16"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-17"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-18"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-19"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-20"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-21"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-22"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-23"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-24"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-25"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-26"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-27"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-28"
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-29"
+    }
+  ],
+  "ranges": [
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-09-29",
+      "from": "2026-09-29",
+      "to": "2026-10-29",
+      "days": 31
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-11",
+      "from": "2026-06-11",
+      "to": "2026-06-11",
+      "days": 1
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-14",
+      "from": "2026-06-14",
+      "to": "2026-07-14",
+      "days": 31
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-15",
+      "from": "2026-07-15",
+      "to": "2026-08-14",
+      "days": 31
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-15",
+      "from": "2026-08-15",
+      "to": "2026-09-14",
+      "days": 31
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-15",
+      "from": "2026-09-15",
+      "to": "2026-10-15",
+      "days": 31
+    },
+    {
+      "platform": "CAFE24",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-16",
+      "from": "2026-10-16",
+      "to": "2026-10-22",
+      "days": 7
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-07-01",
+      "from": "2026-07-01",
+      "to": "2026-07-31",
+      "days": 31
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-08-01",
+      "from": "2026-08-01",
+      "to": "2026-08-31",
+      "days": 31
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-01",
+      "from": "2026-09-01",
+      "to": "2026-10-01",
+      "days": 31
+    },
+    {
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-02",
+      "from": "2026-10-02",
+      "to": "2026-10-29",
+      "days": 28
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-20",
+      "from": "2026-10-20",
+      "to": "2026-10-23",
+      "days": 4
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-25",
+      "from": "2026-10-25",
+      "to": "2026-10-29",
+      "days": 5
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-23",
+      "from": "2026-10-23",
+      "to": "2026-10-29",
+      "days": 7
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-06-01",
+      "from": "2026-06-01",
+      "to": "2026-07-01",
+      "days": 31
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-02",
+      "from": "2026-07-02",
+      "to": "2026-08-01",
+      "days": 31
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-02",
+      "from": "2026-08-02",
+      "to": "2026-09-01",
+      "days": 31
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-09-02",
+      "from": "2026-09-02",
+      "to": "2026-10-02",
+      "days": 31
+    },
+    {
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-10-03",
+      "from": "2026-10-03",
+      "to": "2026-10-22",
+      "days": 20
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-02-26",
+      "from": "2026-02-26",
+      "to": "2026-02-26",
+      "days": 1
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-03",
+      "from": "2026-03-03",
+      "to": "2026-03-03",
+      "days": 1
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-06",
+      "from": "2026-03-06",
+      "to": "2026-03-06",
+      "days": 1
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-11",
+      "from": "2026-03-11",
+      "to": "2026-03-11",
+      "days": 1
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-15",
+      "from": "2026-03-15",
+      "to": "2026-03-16",
+      "days": 2
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-03-18",
+      "from": "2026-03-18",
+      "to": "2026-04-17",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-04-18",
+      "from": "2026-04-18",
+      "to": "2026-05-18",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-19",
+      "from": "2026-05-19",
+      "to": "2026-05-28",
+      "days": 10
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-05-31",
+      "from": "2026-05-31",
+      "to": "2026-06-01",
+      "days": 2
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-03",
+      "from": "2026-06-03",
+      "to": "2026-06-04",
+      "days": 2
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-07",
+      "from": "2026-06-07",
+      "to": "2026-06-11",
+      "days": 5
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-14",
+      "from": "2026-06-14",
+      "to": "2026-06-18",
+      "days": 5
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-06-20",
+      "from": "2026-06-20",
+      "to": "2026-07-20",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-07-21",
+      "from": "2026-07-21",
+      "to": "2026-08-20",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-08-21",
+      "from": "2026-08-21",
+      "to": "2026-09-20",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-09-21",
+      "from": "2026-09-21",
+      "to": "2026-10-21",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd",
+      "date": "2026-10-22",
+      "from": "2026-10-22",
+      "to": "2026-10-29",
+      "days": 8
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-13",
+      "from": "2026-05-13",
+      "to": "2026-05-28",
+      "days": 16
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-31",
+      "from": "2026-05-31",
+      "to": "2026-06-01",
+      "days": 2
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-03",
+      "from": "2026-06-03",
+      "to": "2026-06-04",
+      "days": 2
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-07",
+      "from": "2026-06-07",
+      "to": "2026-06-11",
+      "days": 5
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-14",
+      "from": "2026-06-14",
+      "to": "2026-06-18",
+      "days": 5
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-06-20",
+      "from": "2026-06-20",
+      "to": "2026-07-20",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-07-21",
+      "from": "2026-07-21",
+      "to": "2026-08-20",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-08-21",
+      "from": "2026-08-21",
+      "to": "2026-09-20",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-09-21",
+      "from": "2026-09-21",
+      "to": "2026-10-21",
+      "days": 31
+    },
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-10-22",
+      "from": "2026-10-22",
+      "to": "2026-10-29",
+      "days": 8
+    }
+  ],
+  "policy": "Register existing Meta/Cafe24 and Coupang native canonical names; exact names only across platforms. Preserve native units and prior approved aliases; do not infer new Naver aliases, strip pack counts, copy costs or mutate sources."
+}

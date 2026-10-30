@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import {runProductsMaintenance} from './unified-stage11-products-operator';
 import assert from 'node:assert/strict';
 import { readFileSync,writeFileSync } from 'node:fs';
 import { UnifiedRuntimePrisma } from '../apps/api/src/unified-performance/runtime-prisma';
@@ -14,6 +15,7 @@ import {runHistoricalMaintenance} from './unified-stage11-history-operator';
 
 async function main(){
  const args=Object.fromEntries(process.argv.slice(2).map(arg=>{const m=/^--([a-z-]+)=(.+)$/.exec(arg);if(!m)throw Error('OPERATOR_ARGUMENT_INVALID');return [m[1],m[2]];}));
+ if(args.action?.startsWith('products-')){await runProductsMaintenance(args);return;}
  if(args.action?.startsWith('history-')){await runHistoricalMaintenance(args);return;}
  if(Object.keys(args).some(key=>!['action','from','to','key','scope','platform'].includes(key))||!['bootstrap','queue','inspect','queue-naver','inspect-naver','queue-platform','inspect-platform'].includes(args.action))throw Error('OPERATOR_ACTION_REQUIRED');
  if(args.key&&!/^[a-z0-9-]{1,96}$/i.test(args.key))throw Error('SAFE_REQUEST_KEY_REQUIRED');

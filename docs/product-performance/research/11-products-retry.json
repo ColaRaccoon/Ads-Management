@@ -1,0 +1,16 @@
+{
+  "stage": 11,
+  "operation": "products-retry",
+  "planSha256": "f9c2014b3a48342a9399bcb7df43111a8e5050ce4b7cee1590c6463ebbff22d4",
+  "observedAt": "2026-10-30T05:05:14.943Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "replacement": {
+    "oldJobId": "9b5696cc-054e-49de-ad16-97f41db89c3c",
+    "newJobId": "5dac520e-f318-4419-abe8-ae1c82277b6f",
+    "platform": "NAVER",
+    "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+    "date": "2026-05-21"
+  }
+}

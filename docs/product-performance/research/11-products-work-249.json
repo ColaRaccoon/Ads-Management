@@ -1,0 +1,262 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "f9c2014b3a48342a9399bcb7df43111a8e5050ce4b7cee1590c6463ebbff22d4",
+  "observedAt": "2026-10-30T04:48:11.662Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "offset": 249,
+  "outcomes": [
+    {
+      "id": "b4d931b4-1fb3-4776-a898-683406f4aca1",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-05",
+      "claimed": true
+    },
+    {
+      "id": "bcf2c0aa-5ce4-4661-ad42-25eea3ad43bd",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-21",
+      "claimed": true
+    },
+    {
+      "id": "cc081420-9a1e-4a12-a230-0db347d7506d",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-08",
+      "claimed": true
+    },
+    {
+      "id": "d647bdb8-d2c2-4f24-a734-da99f70c8a83",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-25",
+      "claimed": true
+    },
+    {
+      "id": "ea053e46-270c-4473-acbe-d3d586e4da69",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-27",
+      "claimed": true
+    },
+    {
+      "id": "f4143503-3442-48a6-a2db-e0817943aa3c",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-28",
+      "claimed": true
+    },
+    {
+      "id": "f7ed2720-cebc-489d-a99b-c7d658e80001",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-09-13",
+      "claimed": true
+    },
+    {
+      "id": "0c72b801-e38b-4bb2-a3d8-c96a52b72b6b",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-18",
+      "claimed": true
+    },
+    {
+      "id": "14685de9-0b46-4bd7-a427-3d509fcda863",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-09",
+      "claimed": true
+    },
+    {
+      "id": "2b665501-8f41-4c55-a99e-a4a5809a14e2",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-29",
+      "claimed": true
+    },
+    {
+      "id": "2ccdd13f-de24-48e5-a406-33416b3046d5",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-28",
+      "claimed": true
+    },
+    {
+      "id": "36c7eed2-b5cc-4e90-a368-2558066bf645",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-26",
+      "claimed": true
+    },
+    {
+      "id": "3b05425f-9387-45b6-a8e7-2d4ae0d24f3d",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-22",
+      "claimed": true
+    },
+    {
+      "id": "3c12f339-dc62-43b7-a9ed-f355b0e62a5c",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-10",
+      "claimed": true
+    },
+    {
+      "id": "4e0dbea2-0a02-4c33-ac17-2ca23e705433",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-23",
+      "claimed": true
+    },
+    {
+      "id": "4e85b7a0-99d2-45e9-a7e0-94c8d6766488",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-14",
+      "claimed": true
+    },
+    {
+      "id": "4f399438-152c-43dd-aeb3-2c46d16d5ae4",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-06",
+      "claimed": true
+    },
+    {
+      "id": "508bc1da-faf5-4227-abdb-17e27a6fa21f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-15",
+      "claimed": true
+    },
+    {
+      "id": "53954450-4786-4df8-ab5f-34bdfd152dfa",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-12",
+      "claimed": true
+    },
+    {
+      "id": "6730e735-fb9e-45e3-a522-18c07d17bb07",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-11",
+      "claimed": true
+    },
+    {
+      "id": "6e798e0b-8d67-4e92-aeb9-15f7c6119c14",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-04",
+      "claimed": true
+    },
+    {
+      "id": "7c578a7d-ccba-4cd7-a1c4-5707e6911e58",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-20",
+      "claimed": true
+    },
+    {
+      "id": "7e02343c-6771-4d85-aa2a-6626efd74539",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-16",
+      "claimed": true
+    },
+    {
+      "id": "80d84889-a551-43bf-a262-e77c75f9f202",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-02",
+      "claimed": true
+    },
+    {
+      "id": "84cfaff7-17bd-46a7-a63c-0d8618d9e67d",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "date": "2026-10-25",
+      "claimed": true
+    }
+  ]
+}

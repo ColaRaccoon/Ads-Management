@@ -1,0 +1,3392 @@
+{
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "observedAt": "2026-10-30T05:17:35.2287244Z",
+  "remoteWrites": 0,
+  "operation": "MANAGEMENT_READ_ONLY",
+  "rows": {
+    "inventory": {
+      "names": [
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-13",
+          "first_date": "2026-09-13",
+          "source_name": "[ElliE X 파티마그룹] 플로우라이트 하체 지압 계단오르기 실내 걷기 가정용 홈트 유산소 운동 조이 에어 스텝퍼",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-15",
+          "first_date": "2026-10-12",
+          "source_name": "[enerell_e님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 24
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-07-24",
+          "first_date": "2026-07-20",
+          "source_name": "[강가영X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 12
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-07",
+          "first_date": "2026-08-04",
+          "source_name": "[권승아X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 6
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-29",
+          "source_name": "[김원주님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 5
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-25",
+          "first_date": "2026-10-10",
+          "source_name": "[노필 수면안대] 수면안대 🌙자사몰 단독 1+1 역대급 특가 찬스🌙",
+          "source_rows": 9
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-27",
+          "first_date": "2026-10-27",
+          "source_name": "[노필 수면안대] 수면안대 자사몰 단독 1+1 역대급 특가 찬스",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-05",
+          "first_date": "2026-07-29",
+          "source_name": "[러브율홈X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 4
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-08",
+          "source_name": "[버닝 웨이브바] 버닝웨이브바 ✨안전 스트랩 + 전용 보관케이스 더블 무료 증정 혜택✨",
+          "source_rows": 259
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-15",
+          "first_date": "2026-10-08",
+          "source_name": "[버닝슬라이드] 버닝 슬라이드 매트 🔥전용 덧신 + 보관 케이스 무조건 무료 증정🔥",
+          "source_rows": 4
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-15",
+          "first_date": "2026-10-14",
+          "source_name": "[뷰티레그보드] 뷰티 스트레칭 레그보드 🌸1+1 구매 시 파격적인 추가 할인 혜택🌸",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-29",
+          "source_name": "[뷰티레그보드] 뷰티 스트레칭 레그보드 1+1 구매 시 파격적인 추가 할인 혜택",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-03",
+          "first_date": "2026-08-31",
+          "source_name": "[뷰티레그보드] 종아리 스트레칭 보드",
+          "source_rows": 78
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-14",
+          "first_date": "2026-08-11",
+          "source_name": "[세연X3차공구] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 22
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-06-11",
+          "first_date": "2026-06-11",
+          "source_name": "[세연X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 8
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-22",
+          "first_date": "2026-10-19",
+          "source_name": "[스텝퍼타는세연님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 13
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-02",
+          "first_date": "2026-06-23",
+          "source_name": "[아영X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 181
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-27",
+          "first_date": "2026-10-23",
+          "source_name": "[아이언볼] 아이언볼 🎁고급 전용 케이스 + 안전 스트랩 무료증정🎁",
+          "source_rows": 5
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-20",
+          "first_date": "2026-10-20",
+          "source_name": "[아이언볼] 아이언볼 🎁전용 케이스 + 안전 스트랩 무료증정🎁",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-26",
+          "first_date": "2026-10-24",
+          "source_name": "[아이언볼] 아이언볼 고급 전용 케이스 + 안전 스트랩 무료증정",
+          "source_rows": 5
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-10",
+          "first_date": "2026-09-07",
+          "source_name": "[오뚝이X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 17
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-15",
+          "first_date": "2026-09-15",
+          "source_name": "[웨이트연구소덕코치님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-17",
+          "first_date": "2026-06-19",
+          "source_name": "[유남x비밀링크] 4세대 자이로볼 손목 전완근 운동기구",
+          "source_rows": 7
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-18",
+          "first_date": "2026-06-20",
+          "source_name": "[유남x비밀링크] 인피니티 풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+          "source_rows": 7
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-23",
+          "first_date": "2026-09-22",
+          "source_name": "[유니스맘 마켓] 파티마 스텝 마스터 천국의 계단 스텝밀 스텝퍼 가정용 계단 오르기 유산소 운동기구",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-18",
+          "first_date": "2026-10-18",
+          "source_name": "[유쉴드 마스크] 스포츠 유쉴드 마스크 🛡️놓칠 수 없는 자사몰 단독 50% 할인 혜택🛡️",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-29",
+          "first_date": "2026-06-16",
+          "source_name": "[유쉴드] 유쉴드 손등 쿨토시 심리스 팔토시 UV 자외선차단 손등형 무봉제 골프 자전거 러닝 암슬리브",
+          "source_rows": 3
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-07-27",
+          "first_date": "2026-06-11",
+          "source_name": "[유쉴드] 자외선차단 스포츠 마스크 쿨 여름 안면 얼굴 햇빛가리개 골프마스크 자전거",
+          "source_rows": 147
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-29",
+          "source_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스",
+          "source_rows": 19
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-19",
+          "source_name": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+          "source_rows": 42
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-26",
+          "first_date": "2026-10-19",
+          "source_name": "[유튜브] 버닝 웨이브 바 배틀로프 로프운동 홈트 밧줄 근력운동 크로스핏기구 무선 배틀로프",
+          "source_rows": 7
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-21",
+          "first_date": "2026-10-21",
+          "source_name": "[유튜브] 플로우라이트 하체 지압 계단오르기 실내 걷기 가정용 홈트 유산소 운동 조이 에어 스텝퍼",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-27",
+          "first_date": "2026-10-27",
+          "source_name": "[유튜브][버닝 웨이브바] 버닝웨이브바 ✨안전 스트랩 + 전용 보관케이스 더블 무료 증정 혜택✨",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-20",
+          "first_date": "2026-10-20",
+          "source_name": "[유튜브][인피니티 러닝 양말] 스포츠양말 🎁5개 선택시 같은 색상 사이즈로 5개 더🎁",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-28",
+          "first_date": "2026-10-28",
+          "source_name": "[유튜브][코벨 다이어트양말] 다이어트 양말 🎁3켤레 구매 시 2켤레 증정 이벤트🎁",
+          "source_rows": 3
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-28",
+          "source_name": "[유튜브][코벨 다이어트양말] 다이어트 양말 3켤레 구매 시 2켤레 증정 이벤트",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-29",
+          "source_name": "[유튜브][파티마 방한마스크] 3D 방한 마스크 ❄️1+1 구성 5,000원 특별 할인 적용❄️",
+          "source_rows": 3
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-04",
+          "first_date": "2026-09-04",
+          "source_name": "[이다슬X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-18",
+          "first_date": "2026-09-16",
+          "source_name": "[이케밥 X 파티마그룹] 플로우라이트 하체 지압 계단오르기 실내 걷기 가정용 홈트 유산소 운동 조이 에어 스텝퍼",
+          "source_rows": 3
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-07",
+          "first_date": "2026-06-26",
+          "source_name": "[인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스",
+          "source_rows": 4632
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-07",
+          "first_date": "2026-09-03",
+          "source_name": "[인피니티 가드] 베놈 무릎보호대  1+1 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 132
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-07-27",
+          "first_date": "2026-07-07",
+          "source_name": "[인피니티 가드] 스카이스텝 구름 깔창 족저근막염 푹신쫀쫀",
+          "source_rows": 12
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-22",
+          "first_date": "2026-07-18",
+          "source_name": "[인피니티 가드] 스포츠양말 러닝 헬스 기능성 🎁오직 자사몰 단독 5+5 이벤트🎁",
+          "source_rows": 11
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-07",
+          "first_date": "2026-07-23",
+          "source_name": "[인피니티 가드] 풀업밴드 운동 고무 요가 튜빙 헬스 스트레칭 밴드 그린 초급자",
+          "source_rows": 2161
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-07-27",
+          "first_date": "2026-07-08",
+          "source_name": "[인피니티 가드] 한줄 무릎보호대 러닝 무릎",
+          "source_rows": 13
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-07-04",
+          "first_date": "2026-07-03",
+          "source_name": "[인피니티 가드] 한줄 무릎보호대 러닝 무릎 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-07",
+          "first_date": "2026-07-21",
+          "source_name": "[인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+          "source_rows": 8919
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-08",
+          "source_name": "[인피니티 두줄무릎보호대] 무릎 두줄 보호대 🎁놓치면 후회할 1+1 런칭 특가 찬스🎁",
+          "source_rows": 999
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[인피니티 두줄무릎보호대] 무릎 두줄 보호대 놓치면 후회할 1+1 런칭 특가 찬스",
+          "source_rows": 207
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-02",
+          "source_name": "[인피니티 러닝 양말] 스포츠양말 🎁5개 선택시 같은 색상 사이즈로 5개 더🎁",
+          "source_rows": 1284
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[인피니티 러닝 양말] 스포츠양말 5개 선택시 같은 색상 사이즈로 5개 더",
+          "source_rows": 33
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-26",
+          "first_date": "2026-10-16",
+          "source_name": "[인피니티 러닝장갑] 러닝 장갑 🔥1+1 구성 구매 시 무조건 적용! 5,000원 추가 할인🔥",
+          "source_rows": 4
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-28",
+          "first_date": "2026-10-25",
+          "source_name": "[인피니티 러닝장갑] 러닝 장갑 1+1 구성 구매 시 무조건 적용! 5,000원 추가 할인",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-15",
+          "source_name": "[인피니티 러닝조끼] 스포츠 러닝 조끼 🧦자사몰 단독 러닝양말 무료 증정 🧦",
+          "source_rows": 22
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[인피니티 러닝조끼] 스포츠 러닝 조끼 자사몰 단독 러닝양말 무료 증정",
+          "source_rows": 21
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-28",
+          "first_date": "2026-10-25",
+          "source_name": "[인피니티 바라클라바] 겨울 바라클라바 ❄️자사몰 단독 1+1 추가 만원 할인 혜택❄️",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-08",
+          "source_name": "[인피니티 베놈무릎보호대] 베놈 무릎보호대  1+1 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 683
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[인피니티 베놈무릎보호대] 베놈 무릎보호대  1+1 오직 자사몰 단독 무료배송 이벤트",
+          "source_rows": 126
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-08",
+          "source_name": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+          "source_rows": 1873
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+          "source_rows": 530
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-13",
+          "first_date": "2026-10-08",
+          "source_name": "[인피니티 풀업밴드] 풀업 밴드 🚀SET 구성 패키지 특가 & 추가 할인 혜택 적용🚀",
+          "source_rows": 169
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-14",
+          "source_name": "[인피니티 풀업밴드] 풀업 밴드 🚀세트 구성 패키지 특가 & 추가 할인 혜택 적용🚀",
+          "source_rows": 277
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[인피니티 풀업밴드] 풀업 밴드 세트 구성 패키지 특가 & 추가 할인 혜택 적용",
+          "source_rows": 120
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-27",
+          "first_date": "2026-10-14",
+          "source_name": "[인피니티 한줄 무릎보호대] 무릎 한줄 보호대 1+1⚡역대급 50% 반값 할인 적용⚡",
+          "source_rows": 5
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-11",
+          "first_date": "2026-08-11",
+          "source_name": "[정임언니X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 6
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-29",
+          "first_date": "2026-08-20",
+          "source_name": "[제인맘X4차공구] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 73
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-06-18",
+          "first_date": "2026-06-11",
+          "source_name": "[제인맘X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 124
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-12",
+          "first_date": "2026-09-12",
+          "source_name": "[친절마켓X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-16",
+          "source_name": "[코벨 다이어트양말] 다이어트 양말 🎁3켤레 구매 시 2켤레 증정 이벤트🎁",
+          "source_rows": 66
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[코벨 다이어트양말] 다이어트 양말 3켤레 구매 시 2켤레 증정 이벤트",
+          "source_rows": 168
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-25",
+          "first_date": "2026-10-25",
+          "source_name": "[코벨 요가매트] 코벨 TPE 요가 매트 💚🧘매트 전용 스트랩 무료 증정🧘💚",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-05",
+          "first_date": "2026-10-03",
+          "source_name": "[코벨] 다이어트 양말 🎁3켤레 구매 시 2켤레 증정 이벤트🎁",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-11",
+          "first_date": "2026-10-04",
+          "source_name": "[티거짐X공동구매] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스",
+          "source_rows": 7
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-12",
+          "source_name": "[파티마 방한마스크] 3D 방한 마스크 ❄️1+1 구성 5,000원 특별 할인 적용❄️",
+          "source_rows": 40
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-08",
+          "first_date": "2026-10-08",
+          "source_name": "[파티마 스텝마스터] 스텝마스터 가정용 스텝퍼 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-20",
+          "first_date": "2026-10-08",
+          "source_name": "[파티마 에어스텝퍼] 에어 스텝퍼 🎁오직 자사몰 단독 할인 이벤트🎁",
+          "source_rows": 100
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-28",
+          "source_name": "[파티마 에어스텝퍼] 에어 스텝퍼 가정용 클라이머 하체 운동 🎁오직 자사몰 단독 할인 이벤트🎁",
+          "source_rows": 3
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-28",
+          "source_name": "[파티마 케겔] 케겔 운동기구 오직 자사몰 단독 무료배송 이벤트",
+          "source_rows": 3
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-18",
+          "first_date": "2026-06-11",
+          "source_name": "[파티마] 스텝마스터 천국의계단 가정용 스탭퍼 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 8
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-02",
+          "first_date": "2026-06-11",
+          "source_name": "[파티마] 에어 스텝퍼 가정용 클라이머 하체 운동 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 479
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-07",
+          "first_date": "2026-08-03",
+          "source_name": "[파티마] 에어 스텝퍼 가정용 클라이머 하체 운동 🎁오직 자사몰 단독 할인 이벤트🎁",
+          "source_rows": 833
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-01",
+          "first_date": "2026-06-11",
+          "source_name": "[파티마] 케겔 허벅지 코어 내전근 운동기구 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 44
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-22",
+          "source_name": "[퍼펙트 슬라이드] 퍼펙트 슬라이드 프로🔥고급 무릎패드 100% 무료 증정🔥",
+          "source_rows": 39
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[퍼펙트 슬라이드] 퍼펙트 슬라이드 프로고급 무릎패드 100% 무료 증정",
+          "source_rows": 53
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-05",
+          "first_date": "2026-06-11",
+          "source_name": "[플레쉬] 4세대 자이로볼 손목 전완근 운동기구 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 168
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-08",
+          "first_date": "2026-10-08",
+          "source_name": "[플레시 자이로볼] 4세대 자이로볼 🎁오직 자사몰 단독 무료배송 이벤트🎁",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-14",
+          "source_name": "[플로우라이트] 플로우라이트 스텝퍼 💖지금 사면 무조건 ! 공기주입 에어펌프 무료 증정💖",
+          "source_rows": 160
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-13",
+          "first_date": "2026-10-08",
+          "source_name": "[플로우라이트] 플로우라이트 스텝퍼 💖지금 사면 무조건 증정! 공기주입 에어펌프 무료 지급💖",
+          "source_rows": 116
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "[플로우라이트] 플로우라이트 스텝퍼 지금 사면 무조건 ! 공기주입 에어펌프 무료 증정",
+          "source_rows": 53
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-07-10",
+          "first_date": "2026-06-30",
+          "source_name": "[필라테스무어X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 121
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-22",
+          "first_date": "2026-06-11",
+          "source_name": "[하영쌤X비밀링크] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 21
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-04",
+          "first_date": "2026-09-01",
+          "source_name": "[후고라이프X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기",
+          "source_rows": 12
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-07-25",
+          "first_date": "2026-06-15",
+          "source_name": "⭐️추가 구성 상품⭐️유쉴드 손등 쿨토시 심리스 팔토시 UV 자외선차단 손등형 무봉제 골프 자전거 러닝 암슬리브",
+          "source_rows": 5
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-06",
+          "first_date": "2026-07-30",
+          "source_name": "1+1 파티마 노필 수면안대 프리미엄형 실크 암막 숙면 눈가리개",
+          "source_rows": 1096
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-06",
+          "first_date": "2026-06-11",
+          "source_name": "버닝 슬라이드 매트 슬라이딩 스케이팅 슬라이드보드 패드 운동기구 1.8m",
+          "source_rows": 709
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-08-30",
+          "first_date": "2026-06-11",
+          "source_name": "버닝 웨이브 바 배틀로프 로프운동 홈트 밧줄 근력운동 크로스핏기구",
+          "source_rows": 8535
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-07",
+          "first_date": "2026-08-31",
+          "source_name": "버닝 웨이브 바 배틀로프 로프운동 홈트 밧줄 근력운동 크로스핏기구 무선 배틀로프",
+          "source_rows": 1610
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-23",
+          "first_date": "2026-10-21",
+          "source_name": "비밀링크 [파티마 ] 에어 스텝퍼 🎁오직 자사몰 단독 할인 이벤트🎁",
+          "source_rows": 7
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-23",
+          "first_date": "2026-10-23",
+          "source_name": "비밀링크 [파티마 ] 에어 스텝퍼 오직 자사몰 단독 할인 이벤트",
+          "source_rows": 2
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-06",
+          "first_date": "2026-08-07",
+          "source_name": "인피니티 한줄 무릎보호대 1+1 러닝 슬개골 연골 관절 배드민턴 등산 마라톤 테니스",
+          "source_rows": 14
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-06-15",
+          "first_date": "2026-06-15",
+          "source_name": "임현영님 개인결제창",
+          "source_rows": 1
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-01",
+          "first_date": "2026-06-17",
+          "source_name": "퍼펙트 AB슬라이드 복근 코어 홈트 운동기구",
+          "source_rows": 57
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-09-11",
+          "first_date": "2026-07-25",
+          "source_name": "퍼펙트 스케이트 허벅지 내전근 다리 홈트레이닝 운동기구",
+          "source_rows": 4
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-10-07",
+          "first_date": "2026-08-02",
+          "source_name": "플로우라이트 하체 지압 계단오르기 실내 걷기 가정용 홈트 유산소 운동 조이 에어 스텝퍼",
+          "source_rows": 455
+        },
+        {
+          "platform": "CAFE24",
+          "last_date": "2026-06-20",
+          "first_date": "2026-06-20",
+          "source_name": "플로우라이트 하체순환기구 계단오르기 실내 걷기 가정용 홈트 유산소 운동 조이 에어 스텝퍼",
+          "source_rows": 1
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-27",
+          "source_name": "다이어트양말 - 2026-10-27",
+          "source_rows": 3
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-21",
+          "source_name": "두줄무릎보호대 - 2026-10-21",
+          "source_rows": 8
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-21",
+          "first_date": "2026-10-20",
+          "source_name": "러닝 양말 - 2026-10-20",
+          "source_rows": 2
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-29",
+          "source_name": "방한 마스크 - 2026-10-29",
+          "source_rows": 1
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-27",
+          "first_date": "2026-10-20",
+          "source_name": "버닝 웨이브바 - 2026-10-19",
+          "source_rows": 7
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-27",
+          "source_name": "베놈 - 2026-10-27",
+          "source_rows": 3
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-21",
+          "first_date": "2026-10-20",
+          "source_name": "에어스텝퍼_ 2026-10-19",
+          "source_rows": 2
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-27",
+          "first_date": "2026-10-23",
+          "source_name": "자이로볼 아이언- 2026-10-23",
+          "source_rows": 4
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-28",
+          "source_name": "케겔 - 2026-10-28",
+          "source_rows": 2
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-20",
+          "source_name": "풀업바_2026-10-19",
+          "source_rows": 9
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-21",
+          "first_date": "2026-10-21",
+          "source_name": "풀업바- 2026-10-21",
+          "source_rows": 1
+        },
+        {
+          "platform": "GOOGLE",
+          "last_date": "2026-10-27",
+          "first_date": "2026-10-20",
+          "source_name": "플로우라이트- 2026-10-20",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-09-06",
+          "first_date": "2026-06-01",
+          "source_name": "260602_버닝웨이브바_04",
+          "source_rows": 84
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-14",
+          "first_date": "2026-06-01",
+          "source_name": "260602_버닝웨이브바_소재_02",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-01",
+          "source_name": "260602_버닝웨이브바_소재_03",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-02",
+          "source_name": "260602_플로우라이트_소재_0018",
+          "source_rows": 8
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-02",
+          "source_name": "260602_플로우라이트_소재_16",
+          "source_rows": 8
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-02",
+          "source_name": "260602_플로우라이트_소재_9",
+          "source_rows": 6
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-04",
+          "source_name": "260604_플로우라이트_I0001",
+          "source_rows": 6
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-05",
+          "first_date": "2026-06-04",
+          "source_name": "260604_플로우라이트_I0009",
+          "source_rows": 5
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-04",
+          "source_name": "260605_버닝슬라이드_인플연동_0001",
+          "source_rows": 25
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-21",
+          "first_date": "2026-06-04",
+          "source_name": "260605_유쉴드마스크_0001",
+          "source_rows": 23
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-04",
+          "source_name": "260605_유쉴드마스크_0002",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-05",
+          "first_date": "2026-06-04",
+          "source_name": "260605_유쉴드마스크_0003",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-12",
+          "source_name": "260605_플로우라이트_0010_인플연동",
+          "source_rows": 6
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-12",
+          "source_name": "260605_플로우라이트_0011_인플연동",
+          "source_rows": 6
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-04",
+          "source_name": "260605_플로우라이트_인플연동_0010",
+          "source_rows": 4
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-04",
+          "source_name": "260605_플로우라이트_인플연동_0011",
+          "source_rows": 4
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-09-06",
+          "first_date": "2026-06-06",
+          "source_name": "260606_버닝웨이브바_02",
+          "source_rows": 79
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-10",
+          "first_date": "2026-06-06",
+          "source_name": "260606_버닝웨이브바_03",
+          "source_rows": 29
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-08",
+          "source_name": "260608_유쉴드마스크_0004",
+          "source_rows": 13
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-08",
+          "source_name": "260608_유쉴드마스크_0005",
+          "source_rows": 13
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-12",
+          "source_name": "260608_플로우라이트_I0012_인플연동",
+          "source_rows": 6
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-13",
+          "first_date": "2026-06-09",
+          "source_name": "260609_버닝슬라이드_0005",
+          "source_rows": 9
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-10",
+          "first_date": "2026-06-10",
+          "source_name": "260610_에어스텝퍼_0001",
+          "source_rows": 31
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-12",
+          "first_date": "2026-06-10",
+          "source_name": "260610_에어스텝퍼_0002",
+          "source_rows": 32
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-10",
+          "first_date": "2026-06-10",
+          "source_name": "260610_에어스텝퍼_0003",
+          "source_rows": 31
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-11",
+          "source_name": "260610_유쉴드마스크_0006",
+          "source_rows": 10
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-13",
+          "first_date": "2026-06-11",
+          "source_name": "260610_유쉴드마스크_0007",
+          "source_rows": 12
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-15",
+          "first_date": "2026-06-12",
+          "source_name": "260612_버닝슬라이드_I0002",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-27",
+          "first_date": "2026-06-12",
+          "source_name": "260612_에어스텝퍼_0004",
+          "source_rows": 35
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-12",
+          "source_name": "260612_에어스텝퍼_0005",
+          "source_rows": 46
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-12",
+          "source_name": "260612_유쉴드마스크_IMG0001",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-26",
+          "first_date": "2026-06-12",
+          "source_name": "260612_플로우라이트_I0013",
+          "source_rows": 12
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-13",
+          "source_name": "260614_에어스텝퍼_0006",
+          "source_rows": 39
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-13",
+          "source_name": "260614_에어스텝퍼_0007",
+          "source_rows": 45
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-15",
+          "source_name": "260615_에어스텝퍼_0011",
+          "source_rows": 36
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-15",
+          "source_name": "260615_에어스텝퍼_0014",
+          "source_rows": 36
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-15",
+          "source_name": "260615_유쉴드마스크_IMG0002",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-15",
+          "source_name": "260615_유쉴드마스크_IMG0003",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_에어스텝퍼_0005",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_에어스텝퍼_0007",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_에어스텝퍼_0010",
+          "source_rows": 36
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_에어스텝퍼_0015",
+          "source_rows": 36
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_유쉴드마스크_0001",
+          "source_rows": 44
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_퍼펙트슬라이드_0001",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_퍼펙트슬라이드_0002",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_퍼펙트슬라이드_0003",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_퍼펙트슬라이드_0004",
+          "source_rows": 23
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_퍼펙트슬라이드_0005",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-16",
+          "source_name": "260616_퍼펙트슬라이드_0006",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-17",
+          "source_name": "260616_퍼펙트슬라이드_0007",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-17",
+          "source_name": "260616_퍼펙트슬라이드_0008",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-17",
+          "source_name": "260616_퍼펙트슬라이드_0009",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-18",
+          "source_name": "260618_버닝슬라이드_I0003",
+          "source_rows": 28
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-18",
+          "source_name": "260618_에어스텝퍼_I0001",
+          "source_rows": 40
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-26",
+          "source_name": "260624_버닝웨이브바_IMG",
+          "source_rows": 72
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-25",
+          "first_date": "2026-06-24",
+          "source_name": "260624_버닝웨이브바_IMG0001",
+          "source_rows": 2
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-26",
+          "source_name": "260625_두줄무릎보호대_0001",
+          "source_rows": 75
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-26",
+          "source_name": "260626_두줄무릎보호대_0002",
+          "source_rows": 75
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-26",
+          "source_name": "260626_두줄무릎보호대_0003",
+          "source_rows": 43
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-30",
+          "source_name": "260626_자이로볼_IMG",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-29",
+          "first_date": "2026-06-26",
+          "source_name": "260626_자이로볼_IMG0001",
+          "source_rows": 4
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-30",
+          "source_name": "260630_자이로볼_0001",
+          "source_rows": 25
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-30",
+          "source_name": "260630_자이로볼_0001_수빈",
+          "source_rows": 25
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-30",
+          "source_name": "260630_자이로볼_0002",
+          "source_rows": 25
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-06-30",
+          "source_name": "260630_자이로볼_0002_수빈",
+          "source_rows": 25
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_name": "260701_두줄무릎보호대_0001",
+          "source_rows": 28
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_name": "260701_두줄무릎보호대_0002",
+          "source_rows": 28
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_name": "260701_두줄무릎보호대_IMG",
+          "source_rows": 28
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_name": "260701_에어스텝퍼_0005",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_name": "260701_에어스텝퍼_0007",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-01",
+          "first_date": "2026-07-01",
+          "source_name": "260701_에어스텝퍼_I0001",
+          "source_rows": 1
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-01",
+          "source_name": "260701_에어스텝퍼_IMG",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-02",
+          "source_name": "260701_에어스텝퍼_인플0001",
+          "source_rows": 26
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-03",
+          "source_name": "260703_에어스텝퍼_인플0002",
+          "source_rows": 25
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-06",
+          "first_date": "2026-07-07",
+          "source_name": "260707_스카이스텝_0001_상세페이지소재",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-06",
+          "first_date": "2026-07-07",
+          "source_name": "260707_스카이스텝_0002_상세페이지소재",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-06",
+          "first_date": "2026-07-07",
+          "source_name": "260707_스카이스텝_0003_상세페이지소재",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-06",
+          "first_date": "2026-07-07",
+          "source_name": "260707_스카이스텝_0004_상세페이지소재",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-06",
+          "first_date": "2026-07-07",
+          "source_name": "260707_스카이스텝_IMG",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-07",
+          "source_name": "260707_자이로볼_0003",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-07",
+          "source_name": "260707_자이로볼_0004",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-07",
+          "source_name": "260707_자이로볼_0005",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-07",
+          "source_name": "260707_한줄보호대_0001",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-07",
+          "source_name": "260707_한줄보호대_0002",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-08",
+          "source_name": "260707_한줄보호대_0003",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-08",
+          "source_name": "260707_한줄보호대_0004",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-07",
+          "source_name": "260707_한줄보호대_IMG",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-08",
+          "source_name": "260708_두줄무릎보호대_0004",
+          "source_rows": 35
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-08",
+          "source_name": "260708_두줄무릎보호대_0005",
+          "source_rows": 34
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-10",
+          "source_name": "260710_버닝웨이브바_0005",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-13",
+          "source_name": "260710_버닝웨이브바_0006",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-13",
+          "source_name": "260710_버닝웨이브바_0007",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-10",
+          "source_name": "260710_에어스텝퍼",
+          "source_rows": 32
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-12",
+          "source_name": "260712_버닝웨이브바_0005",
+          "source_rows": 56
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-14",
+          "source_name": "260712_버닝웨이브바_0006",
+          "source_rows": 54
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-12",
+          "source_name": "260712_버닝웨이브바_학습테스트",
+          "source_rows": 42
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-13",
+          "source_name": "260713_버닝슬라이드_0008",
+          "source_rows": 23
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-13",
+          "source_name": "260713_버닝슬라이드_0009",
+          "source_rows": 24
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-13",
+          "source_name": "260713_버닝슬라이드_0010",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-13",
+          "first_date": "2026-07-13",
+          "source_name": "260713_스카이스텝_0001_수빈",
+          "source_rows": 1
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-14",
+          "source_name": "260714_스카이스텝_0001_수빈",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-15",
+          "source_name": "260715_두줄무릎보호대",
+          "source_rows": 39
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-16",
+          "source_name": "260715_버닝슬라이드",
+          "source_rows": 60
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-16",
+          "source_name": "260716_버닝슬라이드_0011",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-16",
+          "source_name": "260716_버닝웨이브바_0008",
+          "source_rows": 52
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-16",
+          "source_name": "260716_버닝웨이브바_0009",
+          "source_rows": 47
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-20",
+          "source_name": "260720_버닝웨이브_리타게팅",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-20",
+          "source_name": "260720_버닝웨이브바_0010",
+          "source_rows": 48
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-20",
+          "source_name": "260720_버닝웨이브바_0011",
+          "source_rows": 43
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-29",
+          "source_name": "260720_버닝웨이브바_0011-2",
+          "source_rows": 39
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-20",
+          "source_name": "260720_자이로볼",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_자이로볼_반반0001",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_자이로볼_반반0002",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_자이로볼_반반0003",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_자이로볼_반반0004",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_자이로볼_반반0005",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_자이로볼_반반0006",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_자이로볼_반반0007",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-21",
+          "source_name": "260721_풀업바_0001",
+          "source_rows": 29
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-23",
+          "source_name": "260723_풀업바",
+          "source_rows": 118
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-24",
+          "source_name": "260724_자이로볼_아이언0001",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-24",
+          "source_name": "260724_자이로볼_아이언0002",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-24",
+          "source_name": "260724_자이로볼_아이언0003",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-25",
+          "source_name": "260725_퍼펙트스케이트_0001",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-25",
+          "source_name": "260725_퍼펙트스케이트_0002",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-25",
+          "source_name": "260725_퍼펙트스케이트_0003",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-25",
+          "source_name": "260725_퍼펙트스케이트_0004",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-25",
+          "source_name": "260725_퍼펙트스케이트_0005",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-28",
+          "source_name": "260725_퍼펙트스케이트_0006",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-28",
+          "source_name": "260725_퍼펙트스케이트_0007",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-28",
+          "source_name": "260728_에어스텝퍼",
+          "source_rows": 36
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-28",
+          "source_name": "260728_자이로볼",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-30",
+          "source_name": "260729_버닝웨이브_댓글참여",
+          "source_rows": 26
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-06",
+          "first_date": "2026-07-29",
+          "source_name": "260729_버닝웨이브바_0008-2",
+          "source_rows": 9
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-30",
+          "source_name": "260730_노필수면안대_0001",
+          "source_rows": 28
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-31",
+          "source_name": "260730_노필수면안대_0002",
+          "source_rows": 29
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-31",
+          "source_name": "260730_노필수면안대_0003",
+          "source_rows": 29
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-31",
+          "source_name": "260730_노필수면안대_0004",
+          "source_rows": 29
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-31",
+          "source_name": "260730_노필수면안대_0005",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-30",
+          "source_name": "260730_노필수면안대_수빈0001",
+          "source_rows": 30
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-07-31",
+          "source_name": "260730_노필수면안대_수빈0002",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-05",
+          "source_name": "260730_노필수면안대_수빈0004",
+          "source_rows": 24
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-05",
+          "source_name": "260730_노필수면안대_수빈0005",
+          "source_rows": 24
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-03",
+          "source_name": "260803_노필수면안대",
+          "source_rows": 53
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-03",
+          "source_name": "260803_버닝웨이브바_목표CPA설정",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-04",
+          "source_name": "260804_풀업바_0002",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-04",
+          "source_name": "260804_풀업바_0003",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-04",
+          "source_name": "260804_풀업바_0004",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-04",
+          "source_name": "260804_풀업바_0005",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-04",
+          "source_name": "260804_풀업바_0007",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-05",
+          "source_name": "260805_두줄무릎보호대",
+          "source_rows": 54
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-07",
+          "source_name": "260807_버닝웨이브바_0012",
+          "source_rows": 30
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-13",
+          "source_name": "260807_버닝웨이브바_인플",
+          "source_rows": 80
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-12",
+          "first_date": "2026-08-07",
+          "source_name": "260807_버닝웨이브바_인플0001",
+          "source_rows": 6
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-07",
+          "source_name": "260807_풀업바_댓글참여",
+          "source_rows": 21
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-10",
+          "source_name": "260810_버닝웨이브바_0013",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-10",
+          "source_name": "260810_버닝웨이브바_리타게팅",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-12",
+          "source_name": "260812_버닝웨이브바_0014",
+          "source_rows": 25
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-13",
+          "source_name": "260813_버닝웨이브바_0015",
+          "source_rows": 24
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-13",
+          "source_name": "260813_버닝웨이브바_0016-1",
+          "source_rows": 24
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-13",
+          "source_name": "260813_버닝웨이브바_캠페인0001",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-13",
+          "source_name": "260813_버닝웨이브바_통합버전",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-18",
+          "source_name": "260818_버닝웨이브바_경빈0001(비보잉)",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-19",
+          "source_name": "260819_노필수면안대_수빈0006",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-19",
+          "source_name": "260819_버닝웨이브바_0017-2",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-19",
+          "source_name": "260819_버닝웨이브바_0018",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-19",
+          "source_name": "260819_버닝웨이브바_0019",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-19",
+          "source_name": "260819_버닝웨이브바_경빈0001(비보잉)",
+          "source_rows": 19
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260819_에어스텝퍼",
+          "source_rows": 38
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-08-20",
+          "first_date": "2026-08-19",
+          "source_name": "260819_에어스텝퍼_경빈0001",
+          "source_rows": 2
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-20",
+          "source_name": "260820_버닝웨이브바_경빈0002",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-20",
+          "source_name": "260820_버닝웨이브바_스케일",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-20",
+          "source_name": "260820_버닝웨이브바_테스트",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-20",
+          "source_name": "260820_한줄보호대",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260821_노필수면안대_수빈0007",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260821_버닝웨이브바_0020",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260821_버닝웨이브바_0021",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260821_버닝웨이브바_0022",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260821_버닝웨이브바_경빈0003",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260821_버닝웨이브바_경빈0004",
+          "source_rows": 17
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "260821_버닝웨이브바_테스트2",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-22",
+          "source_name": "260822_버닝웨이브바_스케일1",
+          "source_rows": 35
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-24",
+          "source_name": "260824_버닝웨이브바",
+          "source_rows": 26
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-24",
+          "source_name": "260824_플로우라이트_인플0001",
+          "source_rows": 26
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-24",
+          "source_name": "260824_플로우라이트_인플0006",
+          "source_rows": 26
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-24",
+          "source_name": "260824_플로우라이트_인플0008",
+          "source_rows": 26
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-25",
+          "source_name": "260825_노필수면안대_수빈0008",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-25",
+          "source_name": "260825_에어스텝퍼_0016",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-25",
+          "source_name": "260825_에어스텝퍼_0017",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-25",
+          "source_name": "260825_에어스텝퍼_경빈0001",
+          "source_rows": 16
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-26",
+          "source_name": "260826_플로우라이트_경빈0001",
+          "source_rows": 24
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-27",
+          "source_name": "260827_두줄무릎보호대_0007",
+          "source_rows": 43
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-31",
+          "source_name": "260831_뷰티레그보드",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-01",
+          "source_name": "260901_풀업바_0012",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-01",
+          "source_name": "260901_풀업바_0013",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-01",
+          "source_name": "260901_풀업바_0014",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-01",
+          "source_name": "260901_풀업바_0015",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-01",
+          "source_name": "260901_풀업바_0016",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-01",
+          "source_name": "260901_풀업바_경빈0001",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-03",
+          "source_name": "260902_두줄무릎보호대_인플",
+          "source_rows": 36
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-17",
+          "source_name": "260902_두줄무릎보호대_인플2",
+          "source_rows": 43
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-09-02",
+          "first_date": "2026-09-02",
+          "source_name": "260902_두줄무릎보호대_혜민0001",
+          "source_rows": 1
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-02",
+          "source_name": "260902_러닝양말",
+          "source_rows": 52
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-02",
+          "source_name": "260902_풀업바",
+          "source_rows": 58
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-07",
+          "source_name": "260907_노필수면안대",
+          "source_rows": 24
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-07",
+          "source_name": "260907_에어스텝퍼",
+          "source_rows": 41
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-08",
+          "source_name": "260908_뷰티레그보드",
+          "source_rows": 22
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-10",
+          "source_name": "260910_풀업바",
+          "source_rows": 46
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-16",
+          "source_name": "260916_에어스텝퍼",
+          "source_rows": 44
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-17",
+          "source_name": "260917_베놈무릎보호대",
+          "source_rows": 36
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-17",
+          "source_name": "260917_에어스텝퍼",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-18",
+          "source_name": "260918_버닝웨이브바_인플",
+          "source_rows": 12
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-18",
+          "source_name": "260918_풀업바",
+          "source_rows": 23
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-18",
+          "source_name": "260918_플로우라이트",
+          "source_rows": 42
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-21",
+          "source_name": "260921_두줄무릎보호대",
+          "source_rows": 39
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-21",
+          "source_name": "260921_러닝양말",
+          "source_rows": 32
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-22",
+          "source_name": "260922_풀업밴드",
+          "source_rows": 9
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-28",
+          "source_name": "260928_두줄무릎보호대_인플3",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-28",
+          "source_name": "260928_버닝웨이브바_스케일1",
+          "source_rows": 27
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-09-29",
+          "source_name": "260929_풀업바",
+          "source_rows": 31
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-08",
+          "source_name": "261007_베놈무릎보호대",
+          "source_rows": 10
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-20",
+          "source_name": "261020_퍼펙트슬라이드",
+          "source_rows": 10
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-21",
+          "source_name": "261021_아이언볼",
+          "source_rows": 9
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-22",
+          "source_name": "261022_다이어트양말",
+          "source_rows": 8
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-23",
+          "source_name": "261023_러닝조끼",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-27",
+          "source_name": "261027_방한마스크",
+          "source_rows": 3
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-10-28",
+          "source_name": "261028_케겔",
+          "source_rows": 2
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-10-29",
+          "first_date": "2026-08-21",
+          "source_name": "SC_버닝웨이브바_260821",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_0515_관심사",
+          "source_rows": 9
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_0518_관심사",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_0519_관심사",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_0519_관심사_이미지",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-05",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_0521_관심사_소재분리",
+          "source_rows": 8
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_0528_어드밴티지",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_1번소재_FB",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_1번소재_IG릴스스토리",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_2번소재_FB",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_2번소재_IG릴스스토리",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_6번소재_IG+FB",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "버닝슬라이드_7번소재_IG+FB",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-15",
+          "first_date": "2026-06-01",
+          "source_name": "버닝웨이브바_0518_관심사",
+          "source_rows": 15
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-14",
+          "first_date": "2026-06-01",
+          "source_name": "버닝웨이브바_0520_관심사",
+          "source_rows": 20
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-12",
+          "first_date": "2026-06-01",
+          "source_name": "버닝웨이브바_0526_관심사_소재분리",
+          "source_rows": 18
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0515_관심사",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0518_관심사",
+          "source_rows": 14
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0519_관심사1",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0519_관심사2",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0520_관심사",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0520_관심사_이미지",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0521_관심사",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-07-05",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0527_관심사",
+          "source_rows": 8
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_0528_어드밴티지",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_10번소재_IG+FB",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_1번소재_FB",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_1번소재_IG릴스스토리",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_1번소재_IG릴스스토리(2)",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_2번소재_FB",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_2번소재_IG릴스스토리",
+          "source_rows": 7
+        },
+        {
+          "platform": "META",
+          "last_date": "2026-06-07",
+          "first_date": "2026-06-01",
+          "source_name": "플로우라이트_9번소재_IG+FB",
+          "source_rows": 7
+        }
+      ],
+      "privacy": "Business product/ad titles and counts only; no customer fields",
+      "products": [
+        {
+          "id": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업바"
+        },
+        {
+          "id": "902b9627-0130-4959-99f1-7d5236a30e01",
+          "active": true,
+          "version": 1,
+          "canonicalName": "노필수면안대"
+        },
+        {
+          "id": "f80e866d-9af1-4aeb-af31-7671ec209b9c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "다이어트양말"
+        },
+        {
+          "id": "d52d8bad-686e-4bce-8b54-e0fa63d34cb9",
+          "active": true,
+          "version": 1,
+          "canonicalName": "다이어트양말 10개입"
+        },
+        {
+          "id": "a9273ee8-89d5-4ae4-a549-ea43e18a9562",
+          "active": true,
+          "version": 1,
+          "canonicalName": "다이어트양말 3개입"
+        },
+        {
+          "id": "567269f6-64ba-44de-9013-4d32a3563ea2",
+          "active": true,
+          "version": 1,
+          "canonicalName": "다이어트양말 5개입"
+        },
+        {
+          "id": "f4e3c070-57fb-49e9-93bf-492cfd0b5b5a",
+          "active": true,
+          "version": 1,
+          "canonicalName": "데일리 깔창"
+        },
+        {
+          "id": "f1136a7b-046c-4eec-ae4d-73873d2ed042",
+          "active": true,
+          "version": 1,
+          "canonicalName": "데일리 깔창 2개입"
+        },
+        {
+          "id": "4966f182-7a49-414f-a6a0-f7162a47f944",
+          "active": true,
+          "version": 1,
+          "canonicalName": "두줄무릎보호대"
+        },
+        {
+          "id": "2f9f5875-f3d3-4d7c-a936-4fc2bdbd9f2b",
+          "active": true,
+          "version": 1,
+          "canonicalName": "두줄보호대 2개입"
+        },
+        {
+          "id": "6b01f5a2-5ab3-4c5c-a5c0-0a9f4682c0fc",
+          "active": true,
+          "version": 1,
+          "canonicalName": "러닝모자"
+        },
+        {
+          "id": "4d7eef03-4144-47d1-b3c5-f3d8c39b27ae",
+          "active": true,
+          "version": 1,
+          "canonicalName": "러닝모자+러닝조끼"
+        },
+        {
+          "id": "4d1ab2e9-a8eb-4aec-80fb-7773402a0ccb",
+          "active": true,
+          "version": 1,
+          "canonicalName": "러닝양말"
+        },
+        {
+          "id": "17c7195e-d965-4867-926d-b82f3d1c4ecd",
+          "active": true,
+          "version": 1,
+          "canonicalName": "러닝장갑"
+        },
+        {
+          "id": "d221f6b5-43fa-4635-a601-5350a6793c25",
+          "active": true,
+          "version": 1,
+          "canonicalName": "러닝장갑 2개입"
+        },
+        {
+          "id": "e3f4f9be-3b52-45e6-af7a-f98740ece334",
+          "active": true,
+          "version": 1,
+          "canonicalName": "러닝조끼"
+        },
+        {
+          "id": "d4daafae-fb65-4573-bd37-e4ae26c8f29f",
+          "active": true,
+          "version": 1,
+          "canonicalName": "레그워머"
+        },
+        {
+          "id": "94f7e46a-65f5-40d3-8b67-2b55a1d59503",
+          "active": true,
+          "version": 1,
+          "canonicalName": "레그워머 2개입"
+        },
+        {
+          "id": "e8e369cb-73b6-4905-b3a3-6b1788f9669c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "리프팅밴드"
+        },
+        {
+          "id": "1d77f695-41fc-40bc-ac0c-1fb8ad41ccc5",
+          "active": true,
+          "version": 1,
+          "canonicalName": "마사지양말"
+        },
+        {
+          "id": "5cf16a3c-3c57-4805-bfe2-cd31a37938eb",
+          "active": true,
+          "version": 1,
+          "canonicalName": "마사지양말 3개"
+        },
+        {
+          "id": "74c60d33-78ca-42ee-a9e2-2a8425261bdc",
+          "active": true,
+          "version": 1,
+          "canonicalName": "목도리"
+        },
+        {
+          "id": "d1285e3b-5eda-41dc-aba2-25e8b207ed8c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "목도리 2개입"
+        },
+        {
+          "id": "d5a8367f-1ecb-4563-b6b7-48ed2c49e447",
+          "active": true,
+          "version": 1,
+          "canonicalName": "무릎키퍼_1개입"
+        },
+        {
+          "id": "0b4c6f9b-2c9e-4167-b751-5fbb2cfa3154",
+          "active": true,
+          "version": 1,
+          "canonicalName": "무릎키퍼_2개입"
+        },
+        {
+          "id": "20a754f8-8a97-4a06-a7b5-ae2c87d0fa04",
+          "active": true,
+          "version": 1,
+          "canonicalName": "바라클라바"
+        },
+        {
+          "id": "c644ba04-77cb-454a-b685-fb99513abdb6",
+          "active": true,
+          "version": 1,
+          "canonicalName": "바라클라바 베이직"
+        },
+        {
+          "id": "9b8933f4-5fa2-4882-ba08-830183d9a6d1",
+          "active": true,
+          "version": 1,
+          "canonicalName": "바라클라바 베이직 2개입"
+        },
+        {
+          "id": "1a54e6e6-0ad1-496f-ab68-2841606259c2",
+          "active": true,
+          "version": 1,
+          "canonicalName": "바라클라바 프로"
+        },
+        {
+          "id": "3c2b0c5c-d162-4980-b8c0-4191d400728f",
+          "active": true,
+          "version": 1,
+          "canonicalName": "바라클라바 프로 2개입"
+        },
+        {
+          "id": "707096c9-e290-41f8-a2a3-9c9d8545ba91",
+          "active": true,
+          "version": 1,
+          "canonicalName": "발목보호대데일리"
+        },
+        {
+          "id": "0a696877-4b63-4032-a15f-09b6f7daa4c4",
+          "active": true,
+          "version": 1,
+          "canonicalName": "발목보호대데일리 2개입"
+        },
+        {
+          "id": "700a1b22-f8e2-40e9-974e-cb24f67cf161",
+          "active": true,
+          "version": 1,
+          "canonicalName": "방한마스크"
+        },
+        {
+          "id": "e24ea3f0-a80a-438f-b6b1-99927a4fdebb",
+          "active": true,
+          "version": 1,
+          "canonicalName": "방한마스크 2개입"
+        },
+        {
+          "id": "8ff536bd-ad9a-4189-b035-14f5af040736",
+          "active": true,
+          "version": 1,
+          "canonicalName": "버닝 슬라이드"
+        },
+        {
+          "id": "a1269605-db0d-4480-8e06-d5032c8ca923",
+          "active": true,
+          "version": 1,
+          "canonicalName": "버닝웨이브바"
+        },
+        {
+          "id": "e56a6d4f-8c04-495f-bd8d-89dab45c2261",
+          "active": true,
+          "version": 1,
+          "canonicalName": "베놈공용"
+        },
+        {
+          "id": "3c739742-de28-4156-a429-03b20eed051e",
+          "active": true,
+          "version": 1,
+          "canonicalName": "베놈공용 2개입"
+        },
+        {
+          "id": "ec3ec591-ee9c-498e-8ae8-d495c9a8a96d",
+          "active": true,
+          "version": 1,
+          "canonicalName": "베놈무릎보호대"
+        },
+        {
+          "id": "d178f691-da2b-4b4c-a62d-4f65e0174a86",
+          "active": true,
+          "version": 1,
+          "canonicalName": "베놈여성"
+        },
+        {
+          "id": "971f756a-066e-4cb0-9d62-451a6d8cebdb",
+          "active": true,
+          "version": 1,
+          "canonicalName": "베놈여성 2개입"
+        },
+        {
+          "id": "59c66fea-2b81-4f4b-85ec-c68ec34bd434",
+          "active": true,
+          "version": 1,
+          "canonicalName": "뷰티레그보드"
+        },
+        {
+          "id": "f108a64a-e4a6-452b-a2ea-ade0100b3f43",
+          "active": true,
+          "version": 1,
+          "canonicalName": "뷰티케겔"
+        },
+        {
+          "id": "666f68a9-2c7e-4115-9407-4534d8d857a1",
+          "active": true,
+          "version": 1,
+          "canonicalName": "비니"
+        },
+        {
+          "id": "712a2ed4-e94a-4817-a3b9-0ba53da02740",
+          "active": true,
+          "version": 1,
+          "canonicalName": "비니 2개입"
+        },
+        {
+          "id": "ecf89b29-1e4a-49cf-962f-047b14ce9238",
+          "active": true,
+          "version": 1,
+          "canonicalName": "삼대장"
+        },
+        {
+          "id": "91b18164-26f1-4d64-96aa-1eb8bde5e910",
+          "active": true,
+          "version": 1,
+          "canonicalName": "소프트물병"
+        },
+        {
+          "id": "5c5e9106-463b-4499-a239-5523e5975a0b",
+          "active": true,
+          "version": 1,
+          "canonicalName": "손목보호대"
+        },
+        {
+          "id": "e374c246-d039-49b8-b6db-d8246e7e9de0",
+          "active": true,
+          "version": 1,
+          "canonicalName": "손목보호대 2개입"
+        },
+        {
+          "id": "8e4690b7-c545-48db-8ada-a25e9a2a2a22",
+          "active": true,
+          "version": 1,
+          "canonicalName": "손목보호대프로"
+        },
+        {
+          "id": "6ff793a6-a448-4d85-9638-49274078a9e5",
+          "active": true,
+          "version": 1,
+          "canonicalName": "손목보호대프로 2개입"
+        },
+        {
+          "id": "bccc4954-f83b-42bf-b8dd-d4330435b00e",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스카이스텝"
+        },
+        {
+          "id": "4a5e7de1-218a-43bd-88e6-9cc7e7176541",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스카이스텝 2개입"
+        },
+        {
+          "id": "0faf268d-768a-485d-9bc9-3b92f9248f1c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스탭마스터"
+        },
+        {
+          "id": "9cc6ad31-a3f2-4c2c-a8ab-50e6829c13e9",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스트레칭보드"
+        },
+        {
+          "id": "408dcf2c-d693-47a3-990a-42228dd8f319",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스포츠양말"
+        },
+        {
+          "id": "7abdc01f-7e0b-45f4-a8c7-958a5671bb4a",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스포츠양말 10개입"
+        },
+        {
+          "id": "ffe8747e-9d59-46bf-b141-99866bc39ecf",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스포츠양말 3개입"
+        },
+        {
+          "id": "5145706a-cd10-4f18-9159-d80b09aa9509",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스포츠양말 5개입"
+        },
+        {
+          "id": "a03272f1-18e6-4c9b-ba1a-d93443eb14aa",
+          "active": true,
+          "version": 1,
+          "canonicalName": "스포츠양말 7개입"
+        },
+        {
+          "id": "1f5e1357-eb0a-474b-9dd7-a3a9eb787c31",
+          "active": true,
+          "version": 1,
+          "canonicalName": "신규폼롤러 소프트45"
+        },
+        {
+          "id": "754d631c-a707-40d3-a105-fc343418a5a1",
+          "active": true,
+          "version": 1,
+          "canonicalName": "신규폼롤러 소프트60"
+        },
+        {
+          "id": "23674152-6505-40e5-8dc3-d2ee0c8ffeae",
+          "active": true,
+          "version": 1,
+          "canonicalName": "신규폼롤러 하드"
+        },
+        {
+          "id": "114a2ccf-9da6-4fc4-85c8-9b4644fb55fd",
+          "active": true,
+          "version": 1,
+          "canonicalName": "실리콘리프팅밴드"
+        },
+        {
+          "id": "0396db49-c351-4957-a6f4-f89fdc17e248",
+          "active": true,
+          "version": 1,
+          "canonicalName": "실리콘리프팅밴드 2개입"
+        },
+        {
+          "id": "c1e4e5a8-3c20-4262-b750-eef181f7ebdd",
+          "active": true,
+          "version": 1,
+          "canonicalName": "실크안대"
+        },
+        {
+          "id": "5c554fd8-e3f6-4726-a149-4b5b2c3e536d",
+          "active": true,
+          "version": 1,
+          "canonicalName": "실크안대 2개입"
+        },
+        {
+          "id": "cb09c376-e071-430f-9862-2be03cbf21cf",
+          "active": true,
+          "version": 1,
+          "canonicalName": "싸커발목보호대"
+        },
+        {
+          "id": "ed108e7b-a6db-464f-aa91-92935e2d2196",
+          "active": true,
+          "version": 1,
+          "canonicalName": "싸커발목보호대 2개입"
+        },
+        {
+          "id": "e02dcf62-ef7e-4f49-9034-e96aa4004895",
+          "active": true,
+          "version": 1,
+          "canonicalName": "아이언볼"
+        },
+        {
+          "id": "fef41b83-029d-4213-b2e9-6d56587b9771",
+          "active": true,
+          "version": 1,
+          "canonicalName": "에어스텝퍼"
+        },
+        {
+          "id": "b677d1ac-7bf9-4ddd-aa65-72315523a1a6",
+          "active": true,
+          "version": 1,
+          "canonicalName": "유쉴드마스크"
+        },
+        {
+          "id": "66a988c5-f384-4736-a839-51f606708eaa",
+          "active": true,
+          "version": 1,
+          "canonicalName": "이지드림안대 3d"
+        },
+        {
+          "id": "e02555ad-1372-445f-9ffd-252612a21f77",
+          "active": true,
+          "version": 1,
+          "canonicalName": "이지드림안대 3d+3d"
+        },
+        {
+          "id": "d837230f-7e6a-4d61-a633-d63422ef5b1a",
+          "active": true,
+          "version": 1,
+          "canonicalName": "이지드림안대 3d+양면"
+        },
+        {
+          "id": "85df7890-300e-42f9-a001-1edaae39dc70",
+          "active": true,
+          "version": 1,
+          "canonicalName": "이지드림안대 양면"
+        },
+        {
+          "id": "5843e5a8-a70a-47d9-9067-3a3f67ce3273",
+          "active": true,
+          "version": 1,
+          "canonicalName": "이지드림안대 양면+양면"
+        },
+        {
+          "id": "56bc23b4-4926-48f0-abe7-f6d560aa2fc6",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자외선마스크"
+        },
+        {
+          "id": "3357bbee-1d86-4785-a477-23c3341f6477",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼"
+        },
+        {
+          "id": "09158251-a62e-49bd-98c7-78107f26e0d1",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼 메딕"
+        },
+        {
+          "id": "ff14d41a-0372-4592-803e-9c8f7793a62f",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼 메딕메탈"
+        },
+        {
+          "id": "e1b6e56d-f1ce-45c3-adb2-3561bed8ffb5",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼 메탈"
+        },
+        {
+          "id": "b2e3c758-d892-49fe-ab0d-313ca878a7c2",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼 아이언"
+        },
+        {
+          "id": "344f0566-2aaa-4c44-9786-78c1e13c4928",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼 챌린지"
+        },
+        {
+          "id": "930399db-972b-4d35-b20a-4eaea12d9eaa",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼 챌린지메탈"
+        },
+        {
+          "id": "7bf02e14-ef62-401f-9553-4cc18a8b003c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "자이로볼 호크아이"
+        },
+        {
+          "id": "d966785e-563a-4c5b-8374-75490f20bfc8",
+          "active": true,
+          "version": 1,
+          "canonicalName": "축구양말_장목_1개입"
+        },
+        {
+          "id": "04911508-878d-45c0-9113-69a3cabef31e",
+          "active": true,
+          "version": 1,
+          "canonicalName": "축구양말_장목_3개입"
+        },
+        {
+          "id": "eea08bbb-ea83-403d-bb6b-67d46a6c0f77",
+          "active": true,
+          "version": 1,
+          "canonicalName": "축구양말_중목_1개입"
+        },
+        {
+          "id": "e5319b5c-e66f-4eae-b427-722627bfc35c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "축구양말_중목_3개입"
+        },
+        {
+          "id": "d777340d-af4d-4c90-b565-03a54fca2ff7",
+          "active": true,
+          "version": 1,
+          "canonicalName": "카프슬리브"
+        },
+        {
+          "id": "bf4de84a-b763-46d6-8f3d-78a6b388bdd7",
+          "active": true,
+          "version": 1,
+          "canonicalName": "카프슬리브 2개입"
+        },
+        {
+          "id": "a025282d-f82c-4a09-8b95-83bf039496a0",
+          "active": true,
+          "version": 1,
+          "canonicalName": "케겔"
+        },
+        {
+          "id": "127adf44-8242-49b4-b840-5f1e9fbfb745",
+          "active": true,
+          "version": 1,
+          "canonicalName": "케겔 맥스"
+        },
+        {
+          "id": "2cd5fef5-c05f-44cf-bb5b-a9e4ba74e4bc",
+          "active": true,
+          "version": 1,
+          "canonicalName": "코어브릿지"
+        },
+        {
+          "id": "c441de9a-1d0c-4c42-a723-d3ae44ad5c9c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "코어브릿지 프로"
+        },
+        {
+          "id": "130ba53d-ce23-45bc-9b2c-2299e063669e",
+          "active": true,
+          "version": 1,
+          "canonicalName": "쿨토시"
+        },
+        {
+          "id": "cb7b148e-379f-455d-aa4d-656a5eae39b6",
+          "active": true,
+          "version": 1,
+          "canonicalName": "퍼슬2"
+        },
+        {
+          "id": "1dd4863b-dc86-4702-a36a-a32189b92e75",
+          "active": true,
+          "version": 1,
+          "canonicalName": "퍼펙트스케이트"
+        },
+        {
+          "id": "5cd77070-2882-4447-8aed-fca8be320c67",
+          "active": true,
+          "version": 1,
+          "canonicalName": "퍼펙트슬라이드"
+        },
+        {
+          "id": "041cc8d2-d50a-40da-8602-e7ded222148a",
+          "active": true,
+          "version": 1,
+          "canonicalName": "퍼펙트슬라이드 프로"
+        },
+        {
+          "id": "b947a333-3b21-4c10-8898-c508301fa4a0",
+          "active": true,
+          "version": 1,
+          "canonicalName": "페이스&바디롤러"
+        },
+        {
+          "id": "c075cf6a-9ed2-4eed-9a13-d8d55fd36770",
+          "active": true,
+          "version": 1,
+          "canonicalName": "포론깔창"
+        },
+        {
+          "id": "bd6c4789-94b0-4fb9-938a-74d755ced5ca",
+          "active": true,
+          "version": 1,
+          "canonicalName": "포론깔창 2개입"
+        },
+        {
+          "id": "3cac5dd1-f156-4e75-9897-c88b7115d211",
+          "active": true,
+          "version": 1,
+          "canonicalName": "폼롤러"
+        },
+        {
+          "id": "1ee5b408-888e-48e0-837a-45e8912275ca",
+          "active": true,
+          "version": 1,
+          "canonicalName": "푸샵바"
+        },
+        {
+          "id": "c8572f7e-b919-468d-bb5e-f62b2b4ed257",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업밴드"
+        },
+        {
+          "id": "cd940a81-acef-4721-b539-14c309dfbf43",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업밴드 그린"
+        },
+        {
+          "id": "f89b1f4a-c898-47ae-9a6c-c4ea76962136",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업밴드 레드"
+        },
+        {
+          "id": "3f88615d-37ec-456d-ac1d-7dbfb3b57a09",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업밴드 블랙"
+        },
+        {
+          "id": "d4d82ebb-9c0d-4a89-acc1-08789217d7bf",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업밴드 세트"
+        },
+        {
+          "id": "43f7b398-d91d-41f6-8adc-86374c6440eb",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업밴드 퍼플"
+        },
+        {
+          "id": "b3333ec0-c42c-4469-af81-6f8ee4dd7bf9",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풀업세트"
+        },
+        {
+          "id": "f4d94ed0-8139-4f08-bdc4-785cca61ea11",
+          "active": true,
+          "version": 1,
+          "canonicalName": "풋파일"
+        },
+        {
+          "id": "b15e9c2b-ca9f-494f-a396-b479ce70d3ae",
+          "active": true,
+          "version": 1,
+          "canonicalName": "플레시 ab슬라이드"
+        },
+        {
+          "id": "5cb57132-0f5c-4d86-9e45-aba0c02f4ecb",
+          "active": true,
+          "version": 1,
+          "canonicalName": "플로우라이트"
+        },
+        {
+          "id": "6fd8b1df-6fe2-4fb9-9b57-c07e636583be",
+          "active": true,
+          "version": 1,
+          "canonicalName": "한줄보호대"
+        },
+        {
+          "id": "77ec5c3e-d1c1-412d-a7e6-2cf8b9474590",
+          "active": true,
+          "version": 1,
+          "canonicalName": "핸드워머"
+        },
+        {
+          "id": "616e2702-59ab-4b4d-a244-3591b79e78b4",
+          "active": true,
+          "version": 1,
+          "canonicalName": "핸드워머 2개입"
+        },
+        {
+          "id": "8ff21f7d-6b04-4b89-91b0-acc93d141cb2",
+          "active": true,
+          "version": 1,
+          "canonicalName": "히트체인지"
+        },
+        {
+          "id": "07fc7930-7024-45cd-a64d-75d4a80efe65",
+          "active": true,
+          "version": 1,
+          "canonicalName": "히트체인지 2개입"
+        },
+        {
+          "id": "d4a6a866-06d1-4c4e-8e80-710214299eb6",
+          "active": true,
+          "version": 1,
+          "canonicalName": "힙업밴드"
+        },
+        {
+          "id": "9595ae09-77d1-4b3b-b4ea-263bd47ce180",
+          "active": true,
+          "version": 1,
+          "canonicalName": "nbr요가매트"
+        },
+        {
+          "id": "5df831cc-590d-4002-b972-c988b898341c",
+          "active": true,
+          "version": 1,
+          "canonicalName": "tpe요가매트"
+        }
+      ]
+    }
+  },
+  "stage": 11
+}

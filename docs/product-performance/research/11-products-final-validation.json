@@ -1,0 +1,72 @@
+{
+  "status": "PASS",
+  "published": 830,
+  "currentPointers": 830,
+  "staging": 0,
+  "activeProducts": 124,
+  "rules": 48,
+  "audits": 174,
+  "pullup": {
+    "existingKnownRevenueAndProfitUnchanged": true,
+    "adSpendUnchanged": true,
+    "sourcePayloadAndAssignmentUnchanged": true,
+    "newlyKnownRevenueRows": 54,
+    "newlyKnownRevenue": 1887151,
+    "newlyKnownProfitRows": 53,
+    "newlyKnownProfit": 1124429,
+    "knownTotals": {
+      "revenue": "182756631.000000",
+      "adSpend": "70836977.449395",
+      "profitBeforeAds": "105772150.787636",
+      "estimatedProfit": "34935173.338241",
+      "mer": "2.5799608846"
+    }
+  },
+  "running": {
+    "knownTotals": {
+      "revenue": "10220830.000000",
+      "adSpend": "2790238.426000",
+      "profitBeforeAds": "4827221.640000",
+      "estimatedProfit": "2036983.214000",
+      "mer": "3.6630668923"
+    },
+    "marketplaces": [
+      {
+        "marketplace": "CAFE24",
+        "revenue": "1757190.000000"
+      },
+      {
+        "marketplace": "COUPANG",
+        "revenue": "4842200.000000"
+      },
+      {
+        "marketplace": "NAVER_SMARTSTORE",
+        "revenue": "3621440.000000"
+      }
+    ],
+    "media": [
+      {
+        "medium": "COUPANG_ADS",
+        "adSpend": "1893935.000000",
+        "share": "67.8771743071"
+      },
+      {
+        "medium": "GOOGLE",
+        "adSpend": null,
+        "share": null
+      },
+      {
+        "medium": "META",
+        "adSpend": "807853.426000",
+        "share": "28.9528456949"
+      },
+      {
+        "medium": "NAVER_DA",
+        "adSpend": "88450.000000",
+        "share": "3.1699799980"
+      }
+    ]
+  },
+  "ui": "Actual authenticated production browser; 30 day points / 90 income-profit points / 3 marketplaces; no configuration drift",
+  "sourceDml": 0
+}

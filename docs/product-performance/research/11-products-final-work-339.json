@@ -1,0 +1,262 @@
+{
+  "stage": 11,
+  "operation": "products-work",
+  "planSha256": "68f5a3a6d356b7a4b5ea7b9d9ef55cc42b8753201a0469723b3d19107ddf700f",
+  "observedAt": "2026-10-30T05:57:08.641Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "offset": 339,
+  "outcomes": [
+    {
+      "id": "3b973655-80a7-47ca-a242-14f0dc3e97eb",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-21",
+      "claimed": true
+    },
+    {
+      "id": "57786198-9e77-4c59-aa2a-6d171a6d446d",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-27",
+      "claimed": true
+    },
+    {
+      "id": "68e41c0a-33fd-4586-ac71-99b94c31baab",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-28",
+      "claimed": true
+    },
+    {
+      "id": "7a731a32-029c-4e15-a89b-2e95ed60dbbd",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-15",
+      "claimed": true
+    },
+    {
+      "id": "80511bb7-e77d-455f-ad05-04e46408a883",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-14",
+      "claimed": true
+    },
+    {
+      "id": "8e4e858c-51f6-48ed-a76f-401f44f76ba7",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-29",
+      "claimed": true
+    },
+    {
+      "id": "91ae1410-6ce9-40f5-a211-067dca9c0ba1",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-07",
+      "claimed": true
+    },
+    {
+      "id": "94ccf15f-f1b4-447d-a989-74bc718e4734",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-17",
+      "claimed": true
+    },
+    {
+      "id": "967e6f8e-33a4-470d-a4fe-76119b0c6192",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-04",
+      "claimed": true
+    },
+    {
+      "id": "a75a44df-2477-4de1-ac25-3b6c66bce911",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-13",
+      "claimed": true
+    },
+    {
+      "id": "aa18394c-453d-4d37-a2c6-b1aef6d9e66a",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-01",
+      "claimed": true
+    },
+    {
+      "id": "ac576904-aa63-4703-ae52-34297166f450",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-22",
+      "claimed": true
+    },
+    {
+      "id": "b14c92c5-d4fb-497c-a203-d11c388c4408",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-08",
+      "claimed": true
+    },
+    {
+      "id": "b58be6f5-72e2-4829-ac88-9dbef078dff1",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-12",
+      "claimed": true
+    },
+    {
+      "id": "bb07e239-bd36-4e2d-af0d-6cdb348488b2",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-18",
+      "claimed": true
+    },
+    {
+      "id": "c32fcbd7-acc7-4820-a05b-e30b2f09dbf5",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-16",
+      "claimed": true
+    },
+    {
+      "id": "e44f4bf3-202f-4273-aafc-fb42c71cfeef",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-31",
+      "claimed": true
+    },
+    {
+      "id": "ed85b10d-65f6-4176-a330-9e0b6a8feee6",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-23",
+      "claimed": true
+    },
+    {
+      "id": "f10913cc-ffce-4351-ac67-fc5ce1b30d60",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-24",
+      "claimed": true
+    },
+    {
+      "id": "f4273c90-d2bd-4bfd-a648-d559975b8c3c",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-25",
+      "claimed": true
+    },
+    {
+      "id": "f742b5d2-97ef-40b5-a296-2777202bdf2c",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-11",
+      "claimed": true
+    },
+    {
+      "id": "f7c064fd-daf5-43db-a822-a89f8dc02caf",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-20",
+      "claimed": true
+    },
+    {
+      "id": "facc91e6-5362-4d30-a2e5-73f10c8f1724",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-07-30",
+      "claimed": true
+    },
+    {
+      "id": "1bf44ca7-5992-420f-a39a-407554311aff",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-02",
+      "claimed": true
+    },
+    {
+      "id": "1c3d22e6-3784-4987-a991-5cabe49be45f",
+      "status": "PUBLISHED",
+      "attempts": 1,
+      "issues": [],
+      "platform": "META",
+      "scopeKey": "LEGACY_UNBOUND",
+      "date": "2026-08-13",
+      "claimed": true
+    }
+  ]
+}

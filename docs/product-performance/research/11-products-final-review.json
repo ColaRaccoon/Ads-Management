@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "exactChecks": 620,
+  "unchangedCoupangNaverNameChecks": 430,
+  "actualTitleDateChecks": 752,
+  "existingMatchesPreserved": 25,
+  "newLiteralTitleNames": 294,
+  "ambiguousKept": 0,
+  "naverOrCoupangRuleChanges": 0,
+  "newExactPrimaryTitles": 2,
+  "primaryTitleBasis": "Both exact observed Cafe24 titles explicitly name [인피니티 러닝조끼] as the main product and 러닝양말 as a free gift; no generic mixed-title inference.",
+  "sourceWrites": 0,
+  "saleUnitOrCostChanges": 0
+}

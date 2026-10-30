@@ -1,0 +1,16 @@
+{
+  "stage": 11,
+  "operation": "products-retry",
+  "planSha256": "da31470ae3b9b9af493a3257cf74cd16fc4b6c0959b090359ddaf93d869fa71a",
+  "observedAt": "2026-10-30T05:30:51.131Z",
+  "sourceWrites": 0,
+  "scope": "CLI maintenance for the browser-verified active administrator, not an HTTP authentication proof",
+  "status": "PASS",
+  "replacement": {
+    "oldJobId": "21eccf2d-e1d1-46fd-ae8f-a868ec6bfd1a",
+    "newJobId": "677f6de0-ae01-4355-ac61-bfef498beb6d",
+    "platform": "COUPANG",
+    "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+    "date": "2026-07-15"
+  }
+}

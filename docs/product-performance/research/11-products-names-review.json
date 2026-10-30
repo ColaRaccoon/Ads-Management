@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "exactChecks": 620,
+  "unchangedCoupangNaverNameChecks": 430,
+  "actualTitleDateChecks": 752,
+  "existingMatchesPreserved": 25,
+  "newLiteralTitleNames": 294,
+  "ambiguousKept": 0,
+  "naverOrCoupangRuleChanges": 0,
+  "sourceWrites": 0,
+  "saleUnitOrCostChanges": 0
+}
