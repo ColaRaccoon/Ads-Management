@@ -1,0 +1,1058 @@
+{
+  "verifiedAt": "2026-10-30T10:56:20.466177+00:00",
+  "recordedAt": "2026-10-30T10:58:53.594Z",
+  "observationDayKst": "2026-10-30",
+  "state": "SCHEDULED_COLLECTIONS_HEALTHY_WEEKLY_PENDING",
+  "previousReceipt": "12_정시검증_20261029.json",
+  "consecutiveScheduledSuccess": {
+    "cafe24Daily": 5,
+    "cafe24Required": 3,
+    "metaDaily": 5,
+    "metaDailyRequired": 3,
+    "dailyGateComplete": true,
+    "dailyGateFirstCompletedOn": "2026-10-28",
+    "metaWeekly": 0,
+    "metaWeeklyRequired": 2,
+    "googleDailyObserved": 4,
+    "googleD7Observed": 4,
+    "googleFinalRequired": "Latest approved Google acceptance record; remains unconfirmed, not inferred from obsolete weekly schedule"
+  },
+  "evidence": {
+    "fx": [
+      {
+        "date": "2026-10-29",
+        "rate": 1336.3,
+        "fallback": "EXACT",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "cron": [
+      {
+        "fires": 1,
+        "jobid": 1,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "storage-renewal-daily",
+        "schedule": "0 19 * * *",
+        "last_fire": "2026-10-29T19:00:00.046409+00:00",
+        "first_fire": "2026-10-29T19:00:00.046409+00:00"
+      },
+      {
+        "fires": 1,
+        "jobid": 2,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "storage-renewal-verify",
+        "schedule": "15 19 * * *",
+        "last_fire": "2026-10-29T19:15:00.21323+00:00",
+        "first_fire": "2026-10-29T19:15:00.21323+00:00"
+      },
+      {
+        "fires": 1,
+        "jobid": 3,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "storage-renewal-audit",
+        "schedule": "20 19 * * *",
+        "last_fire": "2026-10-29T19:20:00.236504+00:00",
+        "first_fire": "2026-10-29T19:20:00.236504+00:00"
+      },
+      {
+        "fires": 120,
+        "jobid": 4,
+        "active": true,
+        "status": "succeeded",
+        "jobname": "daily-data-sync-prod-tick",
+        "schedule": "* 17,18 * * *",
+        "last_fire": "2026-10-29T18:59:00.050642+00:00",
+        "first_fire": "2026-10-29T17:00:00.256004+00:00"
+      }
+    ],
+    "runs": [
+      {
+        "id": "e73f9dad-0709-426d-a167-3ed622696e8e",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-29",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-29",
+        "started_at": "2026-10-29T17:00:13.067+00:00",
+        "finished_at": "2026-10-29T17:32:15.622+00:00",
+        "request_key": "schedule:prod-cafe24:338ca53c724794c50c8b4dc532f5c5f6aa5e24e9b40b42d61a7139c30426f79c",
+        "rows_fetched": 250,
+        "attempt_count": 30,
+        "connection_id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "rows_published": 250,
+        "safe_error_code": null
+      },
+      {
+        "id": "323cafe6-7e1d-4444-b67a-f1f5d2cf0b0d",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-29",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-29",
+        "started_at": "2026-10-29T17:01:02.654+00:00",
+        "finished_at": "2026-10-29T17:01:26.48+00:00",
+        "request_key": "schedule:prod-google-daily:6c8bff43432acf73f7cd2d60831c090950e7e5f1693f981c2383321289f21a13",
+        "rows_fetched": 6,
+        "attempt_count": 1,
+        "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "rows_published": 6,
+        "safe_error_code": null
+      },
+      {
+        "id": "3d089a83-2b61-4190-a5e5-65d3dced8922",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-29",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-29",
+        "started_at": "2026-10-29T17:03:06.101+00:00",
+        "finished_at": "2026-10-29T17:03:44.036+00:00",
+        "request_key": "schedule:prod-meta-daily:e3a05ca82f83159be8a19e7e226de9e874b193759513d387f5094972cb79e661",
+        "rows_fetched": 767,
+        "attempt_count": 1,
+        "connection_id": "2155a401-bd86-4111-9280-3c95ed207546",
+        "rows_published": 767,
+        "safe_error_code": null
+      },
+      {
+        "id": "7ec74c91-c921-4b71-9668-04475fd87015",
+        "status": "SUCCEEDED",
+        "to_date": "2026-10-23",
+        "trigger": "SCHEDULED",
+        "from_date": "2026-10-23",
+        "started_at": "2026-10-29T17:04:03.441+00:00",
+        "finished_at": "2026-10-29T17:04:10.204+00:00",
+        "request_key": "schedule:prod-google-recheck-d7:6baf675b728edcac4f30d2f726544279e8092d26e9ef122ede4e9a4f72f3d273",
+        "rows_fetched": 5,
+        "attempt_count": 1,
+        "connection_id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "rows_published": 5,
+        "safe_error_code": null
+      }
+    ],
+    "units": [
+      {
+        "key": "2026-10-29",
+        "runId": "3d089a83-2b61-4190-a5e5-65d3dced8922",
+        "status": "SUCCEEDED",
+        "fetched": 767,
+        "attempts": 1,
+        "published": 767,
+        "completedAt": "2026-10-29T17:03:42.75+00:00"
+      },
+      {
+        "key": "2026-10-23",
+        "runId": "7ec74c91-c921-4b71-9668-04475fd87015",
+        "status": "SUCCEEDED",
+        "fetched": 5,
+        "attempts": 1,
+        "published": 5,
+        "completedAt": "2026-10-29T17:04:09.082+00:00"
+      },
+      {
+        "key": "2026-10-29",
+        "runId": "e73f9dad-0709-426d-a167-3ed622696e8e",
+        "status": "SUCCEEDED",
+        "fetched": 250,
+        "attempts": 1,
+        "published": 250,
+        "completedAt": "2026-10-29T17:32:13.818+00:00"
+      },
+      {
+        "key": "2026-10-29",
+        "runId": "323cafe6-7e1d-4444-b67a-f1f5d2cf0b0d",
+        "status": "SUCCEEDED",
+        "fetched": 6,
+        "attempts": 1,
+        "published": 6,
+        "completedAt": "2026-10-29T17:01:25.106+00:00"
+      }
+    ],
+    "leases": 0,
+    "history": [
+      {
+        "ids": [
+          "a0b6a5eb-7c5c-47e0-a885-e10166d4407a",
+          "246d83c9-1996-429f-856e-b11f7b237e86",
+          "fa8633b5-2cc1-4ab1-a4d8-6a50c7f3cb25",
+          "5b2fb6ee-c9e5-4df9-ad0a-2aeba968a092",
+          "e73f9dad-0709-426d-a167-3ed622696e8e"
+        ],
+        "runs": 5,
+        "dates": [
+          "2026-10-25",
+          "2026-10-26",
+          "2026-10-27",
+          "2026-10-28",
+          "2026-10-29"
+        ],
+        "succeeded": 5,
+        "schedule_key": "prod-cafe24"
+      },
+      {
+        "ids": [
+          "f9214457-2c08-4e40-a3cd-b27a4f864a49",
+          "53f4a4ff-a389-4ec7-ae86-2ca91bf12341",
+          "47153e7d-4ef2-485a-b3c0-ec3229552571",
+          "323cafe6-7e1d-4444-b67a-f1f5d2cf0b0d"
+        ],
+        "runs": 4,
+        "dates": [
+          "2026-10-26",
+          "2026-10-27",
+          "2026-10-28",
+          "2026-10-29"
+        ],
+        "succeeded": 4,
+        "schedule_key": "prod-google-daily"
+      },
+      {
+        "ids": [
+          "4e78fa21-8821-4a9a-944b-94dcb84351cd",
+          "21deffa8-30b7-4567-b569-fe9ec3f431ca",
+          "c457b2e3-d8de-41b3-ac03-df6c24709b00",
+          "7ec74c91-c921-4b71-9668-04475fd87015"
+        ],
+        "runs": 4,
+        "dates": [
+          "2026-10-20",
+          "2026-10-21",
+          "2026-10-22",
+          "2026-10-23"
+        ],
+        "succeeded": 4,
+        "schedule_key": "prod-google-recheck-d7"
+      },
+      {
+        "ids": [
+          "47cba532-4ef5-4795-a589-46c4c63bdb79",
+          "5ec1d1d8-9c73-40f3-a332-ceddea1be0b9",
+          "99199271-6b57-4665-b29d-1d2bc9c07ab6",
+          "3c59314d-24e0-42a6-a4fb-9f2a77f57e8c",
+          "3d089a83-2b61-4190-a5e5-65d3dced8922"
+        ],
+        "runs": 5,
+        "dates": [
+          "2026-10-25",
+          "2026-10-26",
+          "2026-10-27",
+          "2026-10-28",
+          "2026-10-29"
+        ],
+        "succeeded": 5,
+        "schedule_key": "prod-meta-daily"
+      }
+    ],
+    "stopped": false,
+    "storage": [
+      {
+        "at": "2026-10-29T19:00:00.046431+00:00",
+        "http": 200,
+        "mode": "renew",
+        "state": "DEPLOYMENT_REQUESTED",
+        "readinessVerified": "false"
+      },
+      {
+        "at": "2026-10-29T19:15:00.21325+00:00",
+        "http": 200,
+        "mode": "check",
+        "state": "HEALTHY",
+        "readinessVerified": "true"
+      }
+    ],
+    "attempts": [
+      {
+        "status": "PARTIAL",
+        "requests": 29,
+        "safe_code": "APP_INCOMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-29T17:32:00.264077+00:00",
+        "last_attempt": "2026-10-29T17:31:00.09785+00:00",
+        "schedule_key": "prod-cafe24",
+        "first_attempt": "2026-10-29T17:00:00.500291+00:00",
+        "scheduled_for": "2026-10-29T17:00:00+00:00",
+        "completed_units": 0
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-29T17:33:00.120761+00:00",
+        "last_attempt": "2026-10-29T17:32:00.331814+00:00",
+        "schedule_key": "prod-cafe24",
+        "first_attempt": "2026-10-29T17:32:00.331814+00:00",
+        "scheduled_for": "2026-10-29T17:00:00+00:00",
+        "completed_units": 1
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-29T17:02:00.102496+00:00",
+        "last_attempt": "2026-10-29T17:01:00.122562+00:00",
+        "schedule_key": "prod-google-daily",
+        "first_attempt": "2026-10-29T17:01:00.122562+00:00",
+        "scheduled_for": "2026-10-29T17:01:00+00:00",
+        "completed_units": 1
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-29T17:05:00.282095+00:00",
+        "last_attempt": "2026-10-29T17:04:00.490983+00:00",
+        "schedule_key": "prod-google-recheck-d7",
+        "first_attempt": "2026-10-29T17:04:00.490983+00:00",
+        "scheduled_for": "2026-10-29T17:04:00+00:00",
+        "completed_units": 1
+      },
+      {
+        "status": "SUCCEEDED",
+        "requests": 1,
+        "safe_code": "COMPLETE",
+        "http_status": 200,
+        "total_units": 1,
+        "completed_at": "2026-10-29T17:04:00.411417+00:00",
+        "last_attempt": "2026-10-29T17:03:00.107755+00:00",
+        "schedule_key": "prod-meta-daily",
+        "first_attempt": "2026-10-29T17:03:00.107755+00:00",
+        "scheduled_for": "2026-10-29T17:03:00+00:00",
+        "completed_units": 1
+      }
+    ],
+    "coverage": [
+      {
+        "date": "2026-10-23",
+        "kind": "GOOGLE_CAMPAIGN",
+        "rows": 5,
+        "state": "COMPLETE_NONZERO",
+        "amount": 227367.047541,
+        "lastRun": "7ec74c91-c921-4b71-9668-04475fd87015",
+        "warnings": [],
+        "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "lastSuccessAt": "2026-10-29T17:04:09.176+00:00"
+      },
+      {
+        "date": "2026-10-23",
+        "kind": "CAFE24_ORDER",
+        "rows": 229,
+        "state": "COMPLETE_NONZERO",
+        "amount": 6684558,
+        "lastRun": "e05cd60c-38ca-4969-9839-b4cf4411da4d",
+        "warnings": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ],
+        "connectionId": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "lastSuccessAt": "2026-10-24T01:42:51.627+00:00"
+      },
+      {
+        "date": "2026-10-23",
+        "kind": "META_AD",
+        "rows": 553,
+        "state": "COMPLETE_NONZERO",
+        "amount": 2772.43,
+        "lastRun": "98dadd45-e937-44d1-8356-751d2bda3b40",
+        "warnings": [],
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "lastSuccessAt": "2026-10-24T02:21:05.598+00:00"
+      },
+      {
+        "date": "2026-10-23",
+        "kind": "META_ADSET",
+        "rows": 200,
+        "state": "COMPLETE_NONZERO",
+        "amount": 2772.43,
+        "lastRun": "98dadd45-e937-44d1-8356-751d2bda3b40",
+        "warnings": [],
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "lastSuccessAt": "2026-10-24T02:21:05.598+00:00"
+      },
+      {
+        "date": "2026-10-29",
+        "kind": "GOOGLE_CAMPAIGN",
+        "rows": 6,
+        "state": "COMPLETE_NONZERO",
+        "amount": 358010.22133,
+        "lastRun": "323cafe6-7e1d-4444-b67a-f1f5d2cf0b0d",
+        "warnings": [],
+        "connectionId": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "lastSuccessAt": "2026-10-29T17:01:25.289+00:00"
+      },
+      {
+        "date": "2026-10-29",
+        "kind": "META_AD",
+        "rows": 567,
+        "state": "COMPLETE_NONZERO",
+        "amount": 3813.06,
+        "lastRun": "3d089a83-2b61-4190-a5e5-65d3dced8922",
+        "warnings": [],
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "lastSuccessAt": "2026-10-29T17:03:42.842+00:00"
+      },
+      {
+        "date": "2026-10-29",
+        "kind": "META_ADSET",
+        "rows": 200,
+        "state": "COMPLETE_NONZERO",
+        "amount": 3813.06,
+        "lastRun": "3d089a83-2b61-4190-a5e5-65d3dced8922",
+        "warnings": [],
+        "connectionId": "2155a401-bd86-4111-9280-3c95ed207546",
+        "lastSuccessAt": "2026-10-29T17:03:42.842+00:00"
+      },
+      {
+        "date": "2026-10-29",
+        "kind": "CAFE24_ORDER",
+        "rows": 250,
+        "state": "COMPLETE_NONZERO",
+        "amount": 7665813,
+        "lastRun": "e73f9dad-0709-426d-a167-3ed622696e8e",
+        "warnings": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ],
+        "connectionId": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "lastSuccessAt": "2026-10-29T17:32:13.818+00:00"
+      }
+    ],
+    "policies": [
+      {
+        "to": null,
+        "date": "2026-10-29",
+        "from": "2026-10-23",
+        "kind": "GOOGLE_CAMPAIGN",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": null,
+        "date": "2026-10-23",
+        "from": "2026-10-23",
+        "kind": "GOOGLE_CAMPAIGN",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": null,
+        "date": "2026-10-29",
+        "from": "2026-10-23",
+        "kind": "META_AD",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": null,
+        "date": "2026-10-23",
+        "from": "2026-10-23",
+        "kind": "META_AD",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": null,
+        "date": "2026-10-29",
+        "from": "2026-10-23",
+        "kind": "META_ADSET",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": null,
+        "date": "2026-10-23",
+        "from": "2026-10-23",
+        "kind": "META_ADSET",
+        "primary": "API",
+        "version": 1
+      },
+      {
+        "to": "2026-10-24",
+        "date": "2026-10-23",
+        "from": "2026-10-23",
+        "kind": "CAFE24_ORDER",
+        "primary": "API",
+        "version": 2
+      },
+      {
+        "to": "2026-10-30",
+        "date": "2026-10-29",
+        "from": "2026-10-29",
+        "kind": "CAFE24_ORDER",
+        "primary": "API",
+        "version": 14
+      }
+    ],
+    "metaByRun": [
+      {
+        "usd": 3813.06,
+        "kind": "ADSET",
+        "rows": 200,
+        "sync_run_id": "3d089a83-2b61-4190-a5e5-65d3dced8922",
+        "current_rows": 200
+      },
+      {
+        "usd": 3813.06,
+        "kind": "AD",
+        "rows": 567,
+        "sync_run_id": "3d089a83-2b61-4190-a5e5-65d3dced8922",
+        "current_rows": 567
+      }
+    ],
+    "schedules": [
+      {
+        "key": "prod-cafe24",
+        "anchor": "2026-10-24T17:00:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 110,
+        "cadence": 1
+      },
+      {
+        "key": "prod-google",
+        "anchor": "2026-10-30T17:01:00+00:00",
+        "offset": 1,
+        "paused": true,
+        "window": 90,
+        "cadence": 7
+      },
+      {
+        "key": "prod-google-daily",
+        "anchor": "2026-10-26T17:01:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 90,
+        "cadence": 1
+      },
+      {
+        "key": "prod-google-recheck-d7",
+        "anchor": "2026-10-26T17:04:00+00:00",
+        "offset": 7,
+        "paused": false,
+        "window": 90,
+        "cadence": 1
+      },
+      {
+        "key": "prod-meta",
+        "anchor": "2026-10-30T17:02:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 90,
+        "cadence": 7
+      },
+      {
+        "key": "prod-meta-daily",
+        "anchor": "2026-10-25T17:03:00+00:00",
+        "offset": 1,
+        "paused": false,
+        "window": 100,
+        "cadence": 1
+      }
+    ],
+    "verifiedAt": "2026-10-30T10:56:20.466177+00:00",
+    "cafeCurrent": {
+      "keys": 250,
+      "rows": 250,
+      "orders": 226,
+      "unmapped": 17
+    },
+    "connections": [
+      {
+        "id": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+        "state": "READY",
+        "enabled": true,
+        "provider": "GOOGLE"
+      },
+      {
+        "id": "2155a401-bd86-4111-9280-3c95ed207546",
+        "state": "READY",
+        "enabled": true,
+        "provider": "META"
+      },
+      {
+        "id": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+        "state": "READY",
+        "enabled": true,
+        "provider": "CAFE24"
+      }
+    ],
+    "googleCurrent": [
+      {
+        "cost": 227367.047541,
+        "rows": 5,
+        "metric_date": "2026-10-23",
+        "campaign_keys": 5
+      },
+      {
+        "cost": 358010.22133,
+        "rows": 6,
+        "metric_date": "2026-10-29",
+        "campaign_keys": 6
+      }
+    ],
+    "duplicateGroups": 0,
+    "unmappedCafeProducts": [
+      {
+        "rows": 10,
+        "order_date": "2026-10-28",
+        "product_no": "180"
+      },
+      {
+        "rows": 2,
+        "order_date": "2026-10-28",
+        "product_no": "199"
+      },
+      {
+        "rows": 1,
+        "order_date": "2026-10-28",
+        "product_no": "203"
+      },
+      {
+        "rows": 4,
+        "order_date": "2026-10-28",
+        "product_no": "220"
+      },
+      {
+        "rows": 2,
+        "order_date": "2026-10-29",
+        "product_no": "180"
+      },
+      {
+        "rows": 4,
+        "order_date": "2026-10-29",
+        "product_no": "181"
+      },
+      {
+        "rows": 1,
+        "order_date": "2026-10-29",
+        "product_no": "199"
+      },
+      {
+        "rows": 1,
+        "order_date": "2026-10-29",
+        "product_no": "220"
+      },
+      {
+        "rows": 1,
+        "order_date": "2026-10-29",
+        "product_no": "222"
+      },
+      {
+        "rows": 5,
+        "order_date": "2026-10-29",
+        "product_no": "223"
+      },
+      {
+        "rows": 3,
+        "order_date": "2026-10-29",
+        "product_no": "230"
+      }
+    ]
+  },
+  "mappingExceptions": {
+    "unmapped": [
+      {
+        "rows": 2,
+        "product_no": "180",
+        "option_name": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문(⭐옵션⭐=풀업바(72~97cm))",
+        "product_name": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문"
+      },
+      {
+        "rows": 1,
+        "product_no": "181",
+        "option_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스(⭐옵션⭐=모던그레이1+1(여성용)⭐추천⭐)",
+        "product_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스"
+      },
+      {
+        "rows": 1,
+        "product_no": "181",
+        "option_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스(⭐옵션⭐=모던그레이1+1⭐런칭할인⭐)",
+        "product_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스"
+      },
+      {
+        "rows": 2,
+        "product_no": "181",
+        "option_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스(⭐옵션⭐=모던블랙1+1⭐런칭할인⭐)",
+        "product_name": "[유튜브] [인피니티 가드] 두줄 무릎보호대 러닝 무릎 슬개골 연골 관절 배드민턴 등산 마라톤 테니스"
+      },
+      {
+        "rows": 1,
+        "product_no": "199",
+        "option_name": "[파티마 에어스텝퍼] 에어 스텝퍼 가정용 클라이머 하체 운동 🎁오직 자사몰 단독 할인 이벤트🎁(⭐옵션⭐=옵션2. [50% OFF] 밀키바이올렛(퍼플))",
+        "product_name": "[파티마 에어스텝퍼] 에어 스텝퍼 가정용 클라이머 하체 운동 🎁오직 자사몰 단독 할인 이벤트🎁"
+      },
+      {
+        "rows": 1,
+        "product_no": "220",
+        "option_name": "[유튜브][코벨 다이어트양말] 다이어트 양말 3켤레 구매 시 2켤레 증정 이벤트(⭐옵션선택1⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택2⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택3⭐=여성용( 220-250 ) / 아이보리, ⭐옵션선택4⭐=남성용 ( 250-280 ) / 화이트, ⭐옵션선택5⭐=남성용 ( 250-280 ) / 화이트)",
+        "product_name": "[유튜브][코벨 다이어트양말] 다이어트 양말 3켤레 구매 시 2켤레 증정 이벤트"
+      },
+      {
+        "rows": 1,
+        "product_no": "222",
+        "option_name": "[인피니티 두줄무릎보호대] 무릎 두줄 보호대 🎁놓치면 후회할 1+1 런칭 특가 찬스🎁(⭐옵션선택⭐=옵션3.모던그레이1+1⭐런칭할인⭐)",
+        "product_name": "[인피니티 두줄무릎보호대] 무릎 두줄 보호대 🎁놓치면 후회할 1+1 런칭 특가 찬스🎁"
+      },
+      {
+        "rows": 1,
+        "product_no": "223",
+        "option_name": "[김원주님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기(⭐옵션⭐=[55% OFF]허니피치(핑크))",
+        "product_name": "[김원주님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기"
+      },
+      {
+        "rows": 4,
+        "product_no": "223",
+        "option_name": "[김원주님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기(⭐옵션⭐=[55%OFF] 밀키바이올렛(퍼플))",
+        "product_name": "[김원주님X공동구매] 파티마 에어 스텝퍼 천국의 계단 스텝밀 스텝퍼 클라이머 가정용 하체 운동 기구 오르기"
+      },
+      {
+        "rows": 2,
+        "product_no": "230",
+        "option_name": "[유튜브][파티마 방한마스크] 3D 방한 마스크 ❄️1+1 구성 5,000원 특별 할인 적용❄️(⭐색상선택⭐=⭐추천⭐옵션3.블랙1+1)",
+        "product_name": "[유튜브][파티마 방한마스크] 3D 방한 마스크 ❄️1+1 구성 5,000원 특별 할인 적용❄️"
+      },
+      {
+        "rows": 1,
+        "product_no": "230",
+        "option_name": "[유튜브][파티마 방한마스크] 3D 방한 마스크 ❄️1+1 구성 5,000원 특별 할인 적용❄️(⭐색상선택⭐=옵션1.블랙 단품)",
+        "product_name": "[유튜브][파티마 방한마스크] 3D 방한 마스크 ❄️1+1 구성 5,000원 특별 할인 적용❄️"
+      }
+    ],
+    "numberRules": null
+  },
+  "runtime": {
+    "window": {
+      "from": "2026-10-29T16:40:00Z",
+      "to": "2026-10-29T18:00:00Z"
+    },
+    "logRows": 301,
+    "errors": [
+      {
+        "time": "2026-10-29T17:00:07.566205304Z",
+        "message": "[Nest] 12  - 10/29/2026, 5:00:06 PM   ERROR [ApiExceptionFilter] {\"requestId\":\"9e195a9f-4206-47f1-8409-84533209b124\",\"status\":503,\"code\":\"SERVICE_NOT_READY\",\"errorType\":\"ServiceUnavailableException\"}"
+      }
+    ],
+    "ready": [
+      {
+        "time": "2026-10-29T17:00:08.025963017Z",
+        "code": "BUNDLE_READY",
+        "releaseGitSha": "d9086a6c32fc2eba56288379ec642163f3ae3411"
+      }
+    ],
+    "scheduledHttp": {
+      "count": 33,
+      "all200": true,
+      "responses": [
+        {
+          "time": "2026-10-29T17:00:23.601424945Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 22235,
+          "upstreamErrors": "[{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":1032},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":2},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":0},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":0},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":1},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":1},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":0},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":0},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":0},{\"deploymentInstanceID\":\"05ffabad-bad5-4c39-b62a-1355828d7a7b\",\"error\":\"connection refused\",\"duration\":0}]"
+        },
+        {
+          "time": "2026-10-29T17:01:27.393637477Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 27223,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:02:07.590907404Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 7429,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:03:44.862167270Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 44710,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:04:11.047244775Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 10452,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:05:08.331606179Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 7907,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:06:20.190383764Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20067,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:07:18.871280662Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 18747,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:08:19.214497434Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19081,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:09:18.978089573Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 18837,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:10:21.179951542Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21062,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:11:20.796552555Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20664,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:12:19.938735583Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19789,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:13:19.669481676Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19516,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:14:19.836260928Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19722,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:15:21.733705749Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21295,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:16:20.350526132Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20219,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:17:09.067176778Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 8966,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:18:06.101294701Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 5967,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:19:06.202412390Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 6072,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:20:06.325019993Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 6181,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:21:22.081821791Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21962,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:22:19.666464924Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19541,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:23:19.632145125Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19281,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:24:20.043489516Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19887,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:25:19.720557828Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19596,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:26:22.642245162Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 22528,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:27:20.833204414Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20711,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:28:20.000156395Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19876,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:29:20.397419981Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20242,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:30:20.054322565Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 19923,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:31:21.714970631Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21576,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-29T17:32:23.669689669Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 23274,
+          "upstreamErrors": ""
+        }
+      ]
+    },
+    "usage": {
+      "windowHours": 24,
+      "sampleSeconds": 300,
+      "metrics": [
+        {
+          "measurement": "CPU_USAGE",
+          "current": 0,
+          "average": 0.006721467658592849,
+          "min": 0,
+          "max": 0.13553125666666666,
+          "sampleCount": 289
+        },
+        {
+          "measurement": "MEMORY_USAGE_GB",
+          "current": 0.147356672,
+          "average": 0.21511881277556957,
+          "min": 0.1347104182857143,
+          "max": 0.7153731291428571,
+          "sampleCount": 289
+        },
+        {
+          "measurement": "MEMORY_LIMIT_GB",
+          "current": 0.99999744,
+          "average": 0.9999974399999965,
+          "min": 0.99999744,
+          "max": 0.99999744,
+          "sampleCount": 289
+        }
+      ],
+      "note": "Mixed scheduled and interactive traffic across releases; not a cost/billing estimate."
+    },
+    "latestDeployment": {
+      "id": "fd9d4bae-f5a4-4120-b3f1-47c0f211bc93",
+      "status": "SLEEPING",
+      "createdAt": "2026-10-30T08:15:29.111Z",
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix: retain known platform performance when other sources are missing",
+        "commitHash": "68efe3e63852698aba891b41e3314bd0d9ec733d",
+        "branch": "codex/product-performance-ui-release"
+      }
+    }
+  },
+  "interpretation": {
+    "scheduledRelease": "d9086a6c32fc2eba56288379ec642163f3ae3411",
+    "latestDeploymentMetadataRelease": "68efe3e63852698aba891b41e3314bd0d9ec733d",
+    "readiness": "One SERVICE_NOT_READY503 before BUNDLE_READY; all33 final scheduledHTTP200 and all4 SCHEDULED runs succeeded",
+    "storage": "04:00 renew DEPLOYMENT_REQUESTED/HTTP200 then04:15 check HEALTHY/readinessVerified=true and04:20 audit succeeded; intermediate deployment request is not failure",
+    "cafeSteps": "30 resumable chunks:29PARTIAL then1COMPLETE; unit attempts1; not30 failed attempts",
+    "costs": "Meta AD and ADSET each USD3813.06; use once. Google D1 KRW358010.221330/D7 KRW227367.047541.",
+    "mapping": "10/29 has17 unmapped rows. Previously notified product numbers180/181/199/220 account for8; newly observed222(two-line knee support)1,223(group-buy air stepper)5,230(YouTube winter mask)3 account for9. No explicit-number rules for222/223/230. Aliases/options/existing product relationships remain unverified. No code-defect or missing-cost conclusion; no mapping writes. Prior10/28 remains17.",
+    "resourceUsage": "24-hour samples include interactive traffic and later deployments; no billing estimate or isolated scheduled resource estimate",
+    "dailyGate": "Already completed and notified10/28. Routine healthy daily successes do not warrant another gate notification."
+  },
+  "nextExpected": {
+    "on": "2026-10-31",
+    "cafe24AndMetaDataDay": "2026-10-30",
+    "googleD1DataDay": "2026-10-30",
+    "googleD7DataDay": "2026-10-24",
+    "metaWeeklyFirst": "2026-10-31 02:02KST /2026-10-24 through2026-10-30 /7units",
+    "metaWeeklySecond": "2026-11-07 02:02KST /2026-10-31 through2026-11-06 /7units"
+  },
+  "changesThisHeartbeat": {
+    "productionWrites": 0,
+    "providerRequests": 0,
+    "credentialOperations": 0,
+    "deployments": 0,
+    "scheduleWrites": 0,
+    "existingFollowupPromptUpdated": true
+  },
+  "overallComplete": false
+}
