@@ -93,7 +93,7 @@ const subtotal = (before: string | null, ads: string | null, common: string | nu
 
 /** Input coverage must include expected source/day gaps synthesized from the authorized scope policy. */
 export function summarizeReport(facts: readonly PublishedReportFact[], coverage: readonly SourceCoverage[],
-  options: { platforms: readonly Platform[]; productName?: string }): ReportSummary {
+  options: { platforms: readonly Platform[]; productName?: string; omitMarketplaceMetrics?: boolean }): ReportSummary {
   const platforms = normalizePlatforms(options.platforms), platformAvailability = platformSelection(platforms).metricAvailability;
   const scopeFacts = facts.filter(row => platforms.includes(row.platform));
   const scopedCoverage = coverage.filter(row => platforms.includes(row.platform) && row.participation === "INCLUDED");
@@ -144,14 +144,29 @@ export function summarizeReport(facts: readonly PublishedReportFact[], coverage:
   const byMarketplace = uniq([...sales.map(row => row.marketplace!), ...scopedCoverage.filter(row => row.component === "SALE").map(row => marketFor[row.platform]!)].filter(Boolean))
     .map(marketplace => {
       const ownCoverage = scopedCoverage.filter(row => marketFor[row.platform] === marketplace), ownSales = sales.filter(row => row.marketplace === marketplace);
-      return { marketplace, revenue: options.productName !== undefined && !ownSales.length && unresolvedSales.some(row => row.marketplace === marketplace) ? null :
-        metric(ownSales, ownCoverage, ["SALE"], row => row.amountKrw, row => row.completeAmountKrw).known };
+      const revenue = options.productName !== undefined && !ownSales.length && unresolvedSales.some(row => row.marketplace === marketplace) ? null :
+        metric(ownSales, ownCoverage, ["SALE"], row => row.amountKrw, row => row.completeAmountKrw).known;
+      if (options.omitMarketplaceMetrics) return { marketplace, revenue };
+      // Facts have source ownership, but no cross-market ad allocation. Never invent a
+      // sales-weighted allocation of Meta/Google spend to a particular marketplace.
+      const ownPlatforms = platforms.filter(platform => marketFor[platform] === marketplace);
+      const own = summarizeReport(facts, coverage, { ...options, platforms: ownPlatforms, omitMarketplaceMetrics: true });
+      const crossMarketAds = [...ads, ...unresolvedAds].some(row => (row.platform === "META" || row.platform === "GOOGLE") &&
+        (row.completeAmountKrw === null || !money(row.completeAmountKrw).isZero())) ||
+        scopedCoverage.some(row => (row.platform === "META" || row.platform === "GOOGLE") && row.component === "AD_SPEND" && !numericallyAvailableCoverage(row));
+      const allocationUnknown = marketplace === "CAFE24" && crossMarketAds;
+      return { marketplace, revenue, completeRevenue: own.completeTotals.revenue,
+        profitBeforeAds: own.completeTotals.profitBeforeAds, adSpend: own.completeTotals.adSpend,
+        estimatedProfit: allocationUnknown ? null : own.completeTotals.estimatedProfit,
+        profitUnavailableReason: allocationUnknown ? "CROSS_MARKET_AD_ALLOCATION_UNKNOWN" : own.completeTotals.estimatedProfit === null ? "MISSING_INPUT" : null };
     });
   const byMedium = uniq([...ads.map(row => row.medium!), ...scopedCoverage.filter(row => row.component === "AD_SPEND").map(row => mediumFor[row.platform]!)].filter(Boolean)).map(medium => {
     const ownCoverage = scopedCoverage.filter(row => mediumFor[row.platform] === medium), ownAds = ads.filter(row => row.medium === medium);
     const amount = options.productName !== undefined && !ownAds.length && unresolvedAds.some(row => row.medium === medium) ? null :
       metric(ownAds, ownCoverage, ["AD_SPEND"], row => row.amountKrw, row => row.completeAmountKrw).known;
-    return { medium, adSpend: amount, share: ratio(amount, adSpend.known, "100") };
+    const unresolved = options.productName !== undefined && unresolvedAds.some(row => row.medium === medium);
+    const completeAdSpend = unresolved ? null : metric(ownAds, ownCoverage, ["AD_SPEND"], row => row.amountKrw, row => row.completeAmountKrw).complete;
+    return { medium, adSpend: amount, completeAdSpend, share: ratio(amount, adSpend.known, "100") };
   });
   const issues = uniq([...selected.flatMap(row => row.quality.issues), ...scopedCoverage.flatMap(row => row.quality.issues).filter(safeIssue),
     ...((Object.keys(knownTotals) as Array<keyof ReportTotals>).some(key => knownTotals[key] !== null && completeTotals[key] === null) ? ["PARTIAL_TOTAL"] : []),

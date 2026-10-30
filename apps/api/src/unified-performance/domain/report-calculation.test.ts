@@ -33,6 +33,41 @@ const rule = (platform: Platform, component: string, method: string, targets: Ar
   active: true, validFrom: new Date("2026-01-01"), validTo: null, identityKey: "test", version: 1,
   createdAt: new Date("2026-01-01"), updatedAt: new Date("2026-01-01"), ...extra } as UnifiedRule);
 
+test("marketplace complete metrics retain source costs and withhold unknown cross-market ad allocation", () => {
+  const facts = [...publish("CAFE24", batch([sale("100", "60")])),
+    ...publish("NAVER", batch([sale("200", "120", "A", { marketplace: "NAVER_SMARTSTORE" })], [ad("10", "A", { medium: "NAVER_DA" })])),
+    ...publish("META", batch([], [ad("20")]))];
+  const coverage = [cov("CAFE24", "SALE"), cov("CAFE24", "DIRECT_COST"), cov("NAVER", "SALE"), cov("NAVER", "DIRECT_COST"), cov("NAVER", "AD_SPEND"), cov("META", "AD_SPEND")];
+  const result = summarizeReport(facts, coverage, { platforms: ["CAFE24", "NAVER", "META"] });
+  const store = result.byMarketplace.find(row => row.marketplace === "CAFE24")!;
+  assert.equal(store.completeRevenue, q("100"));
+  assert.equal(store.profitBeforeAds, q("60"));
+  assert.equal(store.estimatedProfit, null);
+  assert.equal(store.profitUnavailableReason, "CROSS_MARKET_AD_ALLOCATION_UNKNOWN");
+  assert.equal(result.byMarketplace.find(row => row.marketplace === "NAVER_SMARTSTORE")!.estimatedProfit, q("110"));
+  assert.equal(result.completeTotals.estimatedProfit, q("150"));
+  const excluded = summarizeReport(facts, coverage, { platforms: ["CAFE24", "NAVER"] });
+  assert.equal(excluded.byMarketplace.find(row => row.marketplace === "CAFE24")!.estimatedProfit, q("60"));
+  assert.equal(excluded.completeTotals.estimatedProfit, q("170"));
+});
+
+test("unallocated Meta product spend cannot produce a complete Cafe24 net profit", () => {
+  const facts = [...publish("CAFE24", batch([sale("100", "60")])), ...publish("META", batch([], [ad("20", null)]))];
+  const result = summarizeReport(facts, [cov("CAFE24", "SALE"), cov("CAFE24", "DIRECT_COST"), cov("META", "AD_SPEND")], { platforms: ["CAFE24", "META"], productName: "A" });
+  assert.equal(result.byMarketplace[0].estimatedProfit, null);
+  assert.equal(result.byMarketplace[0].profitUnavailableReason, "CROSS_MARKET_AD_ALLOCATION_UNKNOWN");
+  assert.equal(result.byMedium[0].completeAdSpend, null);
+});
+
+test("partial marketplace revenue and missing costs stay unavailable to before-after comparisons", () => {
+  const facts = publish("CAFE24", batch([sale("100", "60"), sale(null, null)]));
+  const result = summarizeReport(facts, [cov("CAFE24", "SALE"), cov("CAFE24", "DIRECT_COST")], { platforms: ["CAFE24"] });
+  assert.equal(result.byMarketplace[0].revenue, q("100"));
+  assert.equal(result.byMarketplace[0].completeRevenue, null);
+  assert.equal(result.byMarketplace[0].estimatedProfit, null);
+  assert.equal(result.byMarketplace[0].profitUnavailableReason, "MISSING_INPUT");
+});
+
 test("sales and media aggregate independently; repeated same-name orders survive compact grouping", () => {
   const sales = batch([sale("100", "60"), sale("100", "60")]);
   const ads = batch([], [ad("3"), ad("5")]);

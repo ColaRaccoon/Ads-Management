@@ -37,9 +37,10 @@ function render(f = testFilters(), state: "ready" | "loading" | "error" | "none"
   const html = renderToStaticMarkup(<AppRouterContext.Provider value={{} as AppRouterInstance}><PathnameContext.Provider value="/products/performance"><SearchParamsContext.Provider value={params ?? filterParams(f, true)}><QueryClientProvider client={client}><AuthContext.Provider value={auth}><ProductPerformancePage /></AuthContext.Provider></QueryClientProvider></SearchParamsContext.Provider></PathnameContext.Provider></AppRouterContext.Provider>);
   client.clear(); return html;
 }
-test("production page composes real query keys, exact cards, tables and diagnostics for a read-only user", () => {
+test("production page prioritizes change analysis and folds advanced diagnostics for a read-only user", () => {
   const html = render();
-  assert.match(html, /1,234.123456 원/); assert.match(html, /기간 변화 비교/); assert.match(html, /데이터 진단과 계산 기준/);
+  assert.match(html, /판매처별/); assert.match(html, /조회 범위 설정/); assert.match(html, /원천 데이터 상세 진단/);
+  assert.doesNotMatch(html, /1,234.123456 원|발행 계산 버전|진단 자료|산점도|운영매출/);
   assert.match(html, /제품 &lt;A&gt;/); assert.match(html, /추정 데이터 포함/);
   assert.doesNotMatch(html, /제품 저장|규칙 저장|재집계 등록/);
   const nav = visibleNavGroups(() => true).flatMap(g => g.items);
