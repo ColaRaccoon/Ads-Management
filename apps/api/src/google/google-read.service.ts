@@ -7,9 +7,10 @@ import { findEffectiveRuleForDate } from "../domain/effective-rule";
 import { assertGoogleEnabled, googleBound, googleConnection } from "./google-access";
 import { GoogleQuery } from "./google.dto";
 import { calculateGooglePerformance, GoogleSaleLine } from "./google-performance";
-import { mappingIdentity } from "./google-mappings.service";
 import { resolveGoogleSaleConfiguration } from "./google-sale-configuration";
 import { createGoogleCampaignMatcher } from "./google-campaign-matcher";
+import { toCafe24MatcherRules } from "../daily-sync/cafe24-rule-loader";
+import { createGoogleSaleMatcher } from "./google-sale-matcher";
 
 const day = (value: Date) => value.toISOString().slice(0, 10);
 const number = (value: Prisma.Decimal | null | undefined) => value == null ? null : value.toNumber();
@@ -76,7 +77,7 @@ export class GoogleReadService {
     googleBound(connections, 100);
     const ids = connections.map(c => c.id), googleIds = connections.filter(c => c.provider === "GOOGLE").map(c => c.id);
     const dateWhere = { gte: range.fromDate, lte: range.toDate };
-    const [coverageRows, policies, adCandidates, batches, rates, costs, mappings, products, couponRules] = await Promise.all([
+    const [coverageRows, policies, adCandidates, batches, rates, costs, saleRules, products, couponRules] = await Promise.all([
       tx.sourceCoverage.findMany({ where: { connectionId: { in: ids }, metricDate: dateWhere }, take: MAX + 1 }),
       // Keep all policies in the context: unbound legacy CSV rows must not evade another account's primary source.
       tx.sourcePolicy.findMany({ where: { dataKind: { in: ["GOOGLE_CAMPAIGN", "CAFE24_ORDER"] }, fromDate: { lte: range.toDate },
@@ -89,14 +90,15 @@ export class GoogleReadService {
       tx.exchangeRate.findMany({ where: { rateDate: dateWhere, quoteCurrency: "KRW", provider: "KOREA_EXIM" }, take: MAX + 1 }),
       tx.productCostRule.findMany({ where: { effectiveFrom: { lte: range.toDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: range.fromDate } }] },
         orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }], take: 10_001 }),
-      tx.googlePerformanceMapping.findMany({ where: { kind: "SALE", connectionId: { in: ids }, startDate: { lte: range.toDate },
-        OR: [{ endDate: null }, { endDate: { gte: range.fromDate } }] }, take: 10_001 }),
+      tx.cafe24ProductRule.findMany({ where: { isActive: true, product: { is: { isActive: true } }, validFrom: { lte: range.toDate },
+        OR: [{ validTo: null }, { validTo: { gte: range.fromDate } }] },
+        orderBy: [{ priority: "asc" }, { createdAt: "asc" }], take: 10_001 }),
       tx.product.findMany({ where: { isActive: true }, select: { id: true, displayName: true, name: true }, take: 10_001 }),
       tx.cafe24CouponRule.findMany({ where: { isActive: true, validFrom: { lte: range.toDate }, OR: [{ validTo: null }, { validTo: { gte: range.fromDate } }] },
         orderBy: [{ priority: "asc" }, { validFrom: "desc" }, { createdAt: "desc" }], take: 10_001 })
     ]);
     [coverageRows, adCandidates, rates].forEach(r => googleBound(r));
-    [policies, batches, costs, mappings, products, couponRules].forEach(r => googleBound(r, 10_000));
+    [policies, batches, costs, saleRules, products, couponRules].forEach(r => googleBound(r, 10_000));
     const cafeCandidates = await tx.cafe24OrderLine.findMany({ where: { isCurrent: true, orderDate: dateWhere,
       ...(query.cafe24ConnectionId ? { connectionId: query.cafe24ConnectionId } : {}), validationStatus: { not: "ERROR" },
       OR: [{ source: "CSV", uploadBatchId: { in: batches.filter(b => b.rowCount === b._count.rows).map(b => b.id) } },
@@ -183,27 +185,22 @@ export class GoogleReadService {
     const selectedOrders = new Set(selectedCafe.map(orderKey));
     const contextLines = [...selectedCafe, ...siblings.filter(r => !selectedIds.has(r.id) && selectedOrders.has(orderKey(r)))];
     const activeProducts = new Map(products.map(p => [p.id, p.displayName]));
-    const mappingsByKey = grouped(mappings, m => `${m.kind}:${m.connectionId}:${m.identityKey}`);
+    const matchSale = createGoogleSaleMatcher(toCafe24MatcherRules(saleRules), products);
+    const saleRulesById = new Map(saleRules.map(rule => [rule.id, rule]));
     const costsByProduct = grouped(costs, c => c.productId);
     const connectionsById = new Map(connections.map(c => [c.id, c]));
     const ratesByDay = new Map(rates.map(r => [`${day(r.rateDate)}:${r.baseCurrency}`, r]));
-    const effective = (kind: string, connectionId: string | null, identityKey: string, date: string) =>
-      (mappingsByKey.get(`${kind}:${connectionId}:${identityKey}`) ?? []).find(m => day(m.startDate) <= date && (!m.endDate || day(m.endDate) >= date));
-    const legacyShops = contextLines.some(line => line.source === "CSV" && !line.connectionId)
-      ? await tx.sourceConnection.findMany({ where: { provider: "CAFE24" }, select: { id: true }, take: 2 }) : [];
     const salesLines: GoogleSaleLine[] = contextLines.map(line => {
       const date = line.orderDate ? day(line.orderDate) : activeDays[0].date;
-      const mappingConnection = legacyGoogleSaleConnection(line, legacyShops);
-      const exactMapping = line.productName.includes("[유튜브]") ? effective("SALE", mappingConnection, mappingIdentity("SALE", null, line.productNo, line.optionName), date) : undefined;
-      const productMapping = line.productName.includes("[유튜브]") ? effective("SALE", mappingConnection, mappingIdentity("SALE", null, line.productNo, "", "PRODUCT"), date) : undefined;
-      if (exactMapping && productMapping) throw new ConflictException({ code: "GOOGLE_MAPPING_OVERLAP", message: "상품 전체와 옵션 매핑 기간이 겹칩니다." });
-      const mapping = productMapping ?? exactMapping;
-      const mapped = mapping ? mapping.productId : line.productId;
+      // Resolve at read time so existing unmatched sales and later common-setting edits
+      // take effect without rewriting source facts or creating Google-only overrides.
+      const sharedMatch = line.productName.includes("[유튜브]") ? matchSale(line) : null;
+      const mapped = sharedMatch ? sharedMatch.productId : line.productId;
       const productId = mapped && activeProducts.has(mapped) ? mapped : null;
       const rule = productId ? findEffectiveRuleForDate(costsByProduct.get(productId) ?? [], new Date(date)) : null;
-      // A shared override is meaningful only for the same original product.
-      const match = productId === line.productId ? line.matchRule : null;
-      const configuration = resolveGoogleSaleConfiguration(line.quantity.toNumber(), productId ? mapping : undefined, rule, match);
+      const match = sharedMatch ? saleRulesById.get(sharedMatch.matchRuleId ?? "") ?? null
+        : productId === line.productId ? line.matchRule : null;
+      const configuration = resolveGoogleSaleConfiguration(line.quantity.toNumber(), rule, match);
       const ps = (policiesByKind.get(`${line.connectionId}:CAFE24_ORDER`) ?? []).filter(p => p.primarySource === "API" && day(p.fromDate) <= date && (!p.toDate || date < day(p.toDate)));
       const apiBasis = ps.length === 1 && ps[0].couponInputSource === "API_ACTUAL_PRODUCT_PLUS_SHIPPING";
       return { id: line.id, orderNo: `${line.source}:${line.connectionId ?? "legacy"}:${line.orderNo}`, connectionId: line.connectionId, date, productId, productName: line.productName,

@@ -10,7 +10,7 @@ import type { GoogleView } from "./google-performance-page";
 const originalChannel = globalThis.BroadcastChannel;
 Object.defineProperty(globalThis, "BroadcastChannel", { value: undefined, configurable: true, writable: true });
 const { GoogleReport } = await import("./google-report");
-const { GoogleMappingEditor, GoogleSaleConfigurationFields } = await import("./google-mapping-editor");
+const { GoogleMappingEditor } = await import("./google-mapping-editor");
 const { GoogleMappingDiagnostics } = await import("./google-mapping-diagnostics");
 const { AuthContext } = await import("../features/auth/auth-context");
 const { visibleNavGroups } = await import("./app-shell");
@@ -223,13 +223,15 @@ test("zero and negative product profits remain numeric while missing costs keep 
   }
 });
 
-test("mapping editor renders mutations only with mappings.manage and preserves read-only list", () => {
-  const reader = renderMapping(false);
-  assert.ok(reader.includes("캠페인명 자동 연결"));
-  assert.ok(reader.includes("연결을 수정할 권한이 없습니다"));
-  assert.ok(!reader.includes("<form"));
-  assert.ok(!reader.includes("변경 영향 미리보기"));
-  assert.ok(renderMapping(true).includes("변경 영향 미리보기"));
+test("Google sale settings direct readers and managers to shared product/option settings", () => {
+  for (const canManage of [false, true]) {
+    const html = renderMapping(canManage);
+    assert.match(html, /캠페인명 자동 연결/);
+    assert.match(html, /유튜브 판매 공통 설정/);
+    assert.match(html, /href="\/mappings"/);
+    assert.match(html, /상품번호가 달라도/);
+    assert.doesNotMatch(html, /<form|변경 영향 미리보기|Google 전용 판매 구성/);
+  }
 });
 
 test("campaign name mappings show multiple campaigns for one product and explain unresolved names", () => {
@@ -251,7 +253,7 @@ test("campaign name mappings show multiple campaigns for one product and explain
   assert.doesNotMatch(html, /<form/);
 });
 
-test("mapping diagnostics retain aliases, legacy IDs and audits with read permission while only sales remain editable", () => {
+test("mapping diagnostics retain aliases, legacy IDs and audits with read permission while sales use shared settings", () => {
   const common = { productId: "product-1", productName: "상품A", startDate: "2026-10-25", endDate: null, updatedAt: "2026-10-26T01:00:00Z" };
   const mappings: GoogleMappings = {
     campaignMappingMode: "CAMPAIGN_NAME", nameAutomaticProducts: [{ id: "product-1", displayName: "상품A", name: "원본 상품A" }],
@@ -261,14 +263,8 @@ test("mapping diagnostics retain aliases, legacy IDs and audits with read permis
   };
   const html = renderMapping(true, mappings, fixture);
   assert.doesNotMatch(html, /legacy-campaign|원본 상품A|audit-user|이전 \/ 변경 값/);
-  const form = html.match(/<form.*?<\/form>/s)?.[0];
-  assert.ok(form);
-  assert.match(form, /카페24 상품번호/);
-  assert.match(form, /Google 전용 판매 구성/);
-  assert.doesNotMatch(form, /캠페인 ID|value="CAMPAIGN"/);
-  assert.match(html, /<h2>저장된 유튜브 판매 연결<\/h2>/);
-  assert.equal((html.match(/수정 \/ 연결 해제/g) ?? []).length, 1);
-  assert.match(html, /1\+1 세트/);
+  assert.doesNotMatch(html, /<form|수정 \/ 연결 해제|저장된 유튜브 판매 연결/);
+  assert.match(html, /유튜브 판매 공통 설정/);
   const query = "from=2026-10-25&to=2026-10-25&productId=product-1";
   const diagnostics = renderMapping(false, mappings, undefined, { diagnostics: true, query });
   for (const value of ["legacy-campaign", "상품A / 원본 상품A", "audit-user", "이전 / 변경 값", "2026-10-25"]) assert.ok(diagnostics.includes(value), value);
@@ -287,15 +283,6 @@ test("Google navigation respects data.read while keeping legacy Meta and Coupang
   assert.ok(groups.find((group) => group.label === "Google")?.items.some((item) => item.href === "/google/diagnostics" && item.requiredPermission === "data.read"));
   assert.ok(groups.some((group) => group.items.some((item) => item.href === "/dashboard")));
   assert.ok(groups.some((group) => group.items.some((item) => item.href === "/coupang/dashboard")));
-});
-
-test("Google sale configuration fields use completed-set amounts with all four fields required", () => {
-  const html = renderToStaticMarkup(<GoogleSaleConfigurationFields draft={{ kind: "SALE", connectionId: "cafe24-account", productId: "product-1", productNo: "product-number", optionScope: "PRODUCT", optionName: "", startDate: "2026-10-01", endDate: null, saleUnitLabel: "1+1 세트", salePriceKrwOverride: 21900, productCostKrwOverride: 8000, shippingKrwOverride: 3000, extraCostKrwOverride: 0 }} update={() => undefined} busy={false} />);
-  for (const label of ["구성 판매가", "구성 상품원가", "구성 배송비", "구성 추가비용", "기존 공용 상품 설정은 변경하지 않습니다", "다시 2배 하지 않습니다"]) assert.ok(html.includes(label), label);
-  assert.ok(html.includes('value="21900"'));
-  assert.ok(html.includes('value="0"'));
-  assert.ok(!html.includes('value="43800"'));
-  assert.equal((html.match(/required=""/g) ?? []).length, 4);
 });
 
 test("profit table displays one complete set with the unchanged server revenue", () => {

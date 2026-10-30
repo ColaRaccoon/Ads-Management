@@ -9,7 +9,7 @@ import { GoogleMappingInput, GoogleQuery } from "./google.dto";
 import { GoogleMappingsService, mappingConfiguration, mappingIdentity } from "./google-mappings.service";
 import { GoogleReadService, googleRange, legacyGoogleSaleConnection } from "./google-read.service";
 import { PrismaService } from "../common/prisma.service";
-import { GooglePerformanceMapping, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { resolveGoogleSaleConfiguration } from "./google-sale-configuration";
 
 test("all Google routes require read or mapping permission; preview cannot bypass write permission", () => {
@@ -27,35 +27,6 @@ test("legacy sale lookup never infers an API owner or chooses between shops", ()
   assert.equal(legacyGoogleSaleConnection({source:"CSV",connectionId:null},[]),null);
   assert.equal(legacyGoogleSaleConnection({source:"CSV",connectionId:null},[{id:"shop"},{id:"other"}]),null);
   assert.equal(legacyGoogleSaleConnection({source:"CSV",connectionId:null},[{id:"shop"}]),"shop");
-});
-
-test("separated legacy CSV retains Google sales through a dated explicit mapping without changing source records", async () => {
-  const previous={google:process.env.GOOGLE_PERFORMANCE_ENABLED,daily:process.env.DAILY_SYNC_FEATURE_ENABLED};
-  process.env.GOOGLE_PERFORMANCE_ENABLED="true";process.env.DAILY_SYNC_FEATURE_ENABLED="false";
-  const d=(v:number)=>new Prisma.Decimal(v),date=new Date("2026-10-19Z");
-  const line={id:"legacy",connectionId:null,source:"CSV",uploadBatchId:"batch",orderNo:"order",productNo:"180",
-    optionName:"option",productName:"[유튜브] 풀업바",quantity:d(1),salePriceKrw:d(34900),orderDate:date,
-    productId:null,matchRule:null,totalOrderKrw:d(34900),totalPaidKrw:d(34900),validationStatus:"UNMATCHED"};
-  const snapshot=JSON.stringify(line);let shops=[{id:"shop"}],startDate=date;
-  const tx={
-    sourceConnection:{findMany:async({where}:any)=>where.provider?shops:[{id:"shop",provider:"CAFE24",currencyCode:"KRW",timeZone:"Asia/Seoul"}],findUnique:async()=>({id:"shop",provider:"CAFE24"})},
-    sourceCoverage:{findMany:async()=>[]},sourcePolicy:{findMany:async()=>[]},googleCampaignDailyCost:{findMany:async()=>[]},
-    cafe24UploadBatch:{findMany:async()=>[{id:"batch",rowCount:1,_count:{rows:1}}]},exchangeRate:{findMany:async()=>[]},
-    productCostRule:{findMany:async()=>[{id:"cost",productId:"product",effectiveFrom:date,effectiveTo:null,salePriceKrw:d(34900),vatKrw:d(3490),productCostKrw:d(10000),shippingKrw:d(0),extraCostKrw:d(0)}]},
-    cafe24CouponRule:{findMany:async()=>[]},cafe24OrderLine:{findMany:async()=>[line]},
-    googlePerformanceMapping:{findMany:async()=>[{kind:"SALE",connectionId:"shop",identityKey:mappingIdentity("SALE",null,"180","","PRODUCT"),productId:"product",startDate,endDate:null}]},
-    product:{findMany:async()=>[{id:"product",name:"풀업바",displayName:"풀업바"}]}
-  };
-  const db={$transaction:async(fn:any)=>fn(tx)} as unknown as PrismaService;
-  try{
-    const read=()=>new GoogleReadService(db).report({from:"2026-10-19",to:"2026-10-19",cafe24ConnectionId:"shop"});
-    let report=await read();assert.equal(report.summary.unmappedSalesCount,0);assert.equal(report.summary.quantity,1);
-    assert.equal(report.summary.revenueKrw,34900);assert.equal(report.summary.grossCostKrw,13490);
-    shops=[{id:"shop"},{id:"other"}];report=await read();assert.equal(report.summary.unmappedSalesCount,1,"a filtered shop must not hide global ownership ambiguity");
-    shops=[{id:"shop"}];startDate=new Date("2026-10-20Z");report=await read();assert.equal(report.summary.unmappedSalesCount,1,"future rules must not rewrite older sales");
-    startDate=date;line.productName="일반 풀업바";report=await read();assert.equal(report.summary.quantity,0,"regular sales stay outside Google");
-    line.productName="[유튜브] 풀업바";assert.equal(JSON.stringify(line),snapshot);
-  }finally{for(const [key,value]of [["GOOGLE_PERFORMANCE_ENABLED",previous.google],["DAILY_SYNC_FEATURE_ENABLED",previous.daily]] as const){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });
 
 test("sale configuration rejects incomplete, imprecise, invalid amounts and unit labels without a configuration", () => {
@@ -77,28 +48,20 @@ test("product-wide mapping identity differs from every exact scope marker while 
   assert.notEqual(mappingIdentity("SALE", null, "181", "", "PRODUCT"), mappingIdentity("SALE", null, "181", ""));
 });
 
-test("Google complete sale configuration uses three collected sets without legacy bundle doubling or shared cost fallback", () => {
-  const d = (v: number) => new Prisma.Decimal(v);
-  const mapping = { salePriceKrwOverride: d(34900), productCostKrwOverride: d(9000), shippingKrwOverride: d(0), extraCostKrwOverride: d(0),
-    saleUnitLabel: "1+1 세트" };
-  const match = { displayName: "1+1", optionIncludeKeywords: ["+"], productNameAliases: [],
-    salePriceKrwOverride: d(14900), productCostKrwOverride: d(4500), shippingKrwOverride: null, extraCostKrwOverride: null };
-  const before = JSON.stringify({ mapping, match });
-  const configured = resolveGoogleSaleConfiguration(3, mapping, null, match);
-  assert.equal(configured.quantity, 3);
-  assert.equal(configured.calculationQuantity, 3);
-  assert.equal(configured.saleUnitLabel, "1+1 세트");
-  assert.equal(configured.cost?.salePriceKrw, 34900);
-  assert.equal(configured.cost?.productCostKrw, 9000);
-  assert.equal(configured.cost?.vatKrw, 3490);
-  assert.equal(JSON.stringify({ mapping, match }), before);
-  const rule = { salePriceKrw: d(14900), vatKrw: d(1490), productCostKrw: d(4500), shippingKrw: d(0), extraCostKrw: d(0) };
-  const legacy = resolveGoogleSaleConfiguration(3, undefined, rule, match);
-  assert.equal(legacy.quantity, 6);
-  assert.equal(legacy.calculationQuantity, 3);
-  assert.equal(legacy.cost?.salePriceKrw, 14900);
-  assert.equal(legacy.saleUnitLabel, null);
-  assert.equal(resolveGoogleSaleConfiguration(3, { saleUnitLabel: "1+1 세트" } as GooglePerformanceMapping, rule, match).saleUnitLabel, null);
+test("Google shares Cafe24 option overrides, VAT and bundle quantity calculations", () => {
+  const d = (value: number) => new Prisma.Decimal(value);
+  const rule = { salePriceKrw: d(14800), vatKrw: d(1480), productCostKrw: d(2700), shippingKrw: d(0), extraCostKrw: d(0) };
+  const match = { displayName: "방한마스크 1+1", optionIncludeKeywords: ["+"], productNameAliases: [],
+    salePriceKrwOverride: d(24600), productCostKrwOverride: d(5400), shippingKrwOverride: null, extraCostKrwOverride: null };
+  const result = resolveGoogleSaleConfiguration(2, rule, match);
+  assert.equal(result.quantity, 4);
+  assert.equal(result.calculationQuantity, 2);
+  assert.equal(result.collectedQuantity, 2);
+  assert.equal(result.cost?.salePriceKrw, 24600);
+  assert.equal(result.cost?.productCostKrw, 5400);
+  assert.equal(result.cost?.vatKrw, 2460);
+  assert.equal(resolveGoogleSaleConfiguration(1, rule, null).cost?.salePriceKrw, 14800);
+  assert.equal(resolveGoogleSaleConfiguration(1, null, match).cost, null);
 });
 
 test("disabled feature never reaches DB for reads, mappings, or mutation", async () => {
@@ -135,50 +98,20 @@ test("campaign ID preview and saves are rejected before any database access, inc
   } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
 });
 
-test("SALE empty identifiers still normalize before preview, persistence and audit after campaign writes are disabled", async () => {
-  const old = process.env.GOOGLE_PERFORMANCE_ENABLED;
+test("Google-only sale previews and saves direct callers to common settings before DB access", async () => {
+  const previous = process.env.GOOGLE_PERFORMANCE_ENABLED;
   process.env.GOOGLE_PERFORMANCE_ENABLED = "true";
-  const written: Record<string, unknown>[] = [], audits: Record<string, unknown>[] = [];
   try {
-    const tx = {
-      $queryRaw: async () => [],
-      sourceConnection: { findUnique: async ({ where }: { where: { id: string } }) => ({ id: where.id, provider: where.id === "google" ? "GOOGLE" : "CAFE24" }) },
-      product: { findFirst: async () => ({ id: "product" }) },
-      cafe24OrderLine: { findFirst: async () => ({ id: "sale" }) },
-      googleCampaignDailyCost: { findFirst: async () => ({ id: "campaign" }) },
-      googlePerformanceMapping: {
-        findMany: async () => [],
-        create: async ({ data }: { data: Record<string, unknown> }) => {
-          // Mirror the database's existing identifier CHECK; do not relax it.
-          if (data.kind === "SALE") { assert.equal(data.campaignId, null); assert.equal(data.productNo, "181"); }
-          else { assert.equal(data.productNo, null); assert.equal(data.campaignId, "123"); assert.equal(data.optionName, ""); }
-          written.push(data);
-          return { ...data, id: `mapping-${written.length}`, createdAt: new Date("2026-10-26"), updatedAt: new Date("2026-10-26"),
-            ...Object.fromEntries(["salePriceKrwOverride", "productCostKrwOverride", "shippingKrwOverride", "extraCostKrwOverride"]
-              .map(key => [key, data[key] == null ? null : new Prisma.Decimal(data[key] as number)])) };
-        }
-      },
-      googleMappingAudit: { create: async ({ data }: { data: Record<string, unknown> }) => { audits.push(data); return data; } }
-    };
-    const db = { $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx) } as unknown as PrismaService;
+    const db = new Proxy({}, { get() { throw Error("database must not be reached"); } }) as PrismaService;
     const service = new GoogleMappingsService(db);
-    const sale: GoogleMappingInput = { kind: "SALE", connectionId: "cafe", campaignId: "", productNo: "181", optionName: "",
-      optionScope: "PRODUCT", productId: "product", startDate: "2026-10-23", endDate: null,
-      salePriceKrwOverride: 34900, productCostKrwOverride: 9000, shippingKrwOverride: 0, extraCostKrwOverride: 0, saleUnitLabel: "1+1 세트" };
-    const preview = await service.preview(sale);
-    assert.equal(preview.after.campaignId, null);
-    assert.equal(preview.after.optionName, "");
-    const result = await service.save(sale, "actor");
-    assert.equal(result.mapping.campaignId, null);
-    assert.equal(written[0].salePriceKrwOverride, 34900);
-    assert.equal((audits[0].after as Record<string, unknown>).campaignId, null);
-    assert.equal(sale.campaignId, "");
-    await assert.rejects(service.save({ kind: "CAMPAIGN", connectionId: "google", campaignId: "123", productNo: "", optionName: "",
-      productId: "product", startDate: "2026-10-23" }, "actor"), /캠페인명/);
-    assert.equal(written.length, 1);
-    assert.equal(audits.length, 1);
-    await assert.rejects(service.preview({ ...sale, campaignId: "unexpected" }), /상품번호/);
-  } finally { if (old === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = old; }
+    const sale: GoogleMappingInput = { kind: "SALE", connectionId: "shop", productNo: "230", productId: "mask", startDate: "2026-10-29" };
+    await assert.rejects(service.preview(sale), /공통/);
+    await assert.rejects(service.save(sale, "actor"), /공통/);
+    await assert.rejects(service.save({ ...sale, id: "legacy" }, "actor", "legacy"), /공통/);
+  } finally {
+    if (previous === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED;
+    else process.env.GOOGLE_PERFORMANCE_ENABLED = previous;
+  }
 });
 
 test("mapping list exposes bounded active name candidates while preserving legacy campaign history", async () => {
@@ -224,7 +157,7 @@ test("reader uses each dated campaign name and ignores conflicting legacy ID map
     sourcePolicy: { findMany: async () => [{ connectionId: "g", dataKind: "GOOGLE_CAMPAIGN", primarySource: "API", fromDate: dates[0], toDate: null }] },
     googleCampaignDailyCost: { findMany: async () => ads },
     cafe24UploadBatch: { findMany: async () => [] }, exchangeRate: { findMany: async () => [] },
-    productCostRule: { findMany: async () => [] }, cafe24CouponRule: { findMany: async () => [] }, cafe24OrderLine: { findMany: async () => [] },
+    cafe24ProductRule: { findMany: async () => [] }, productCostRule: { findMany: async () => [] }, cafe24CouponRule: { findMany: async () => [] }, cafe24OrderLine: { findMany: async () => [] },
     googlePerformanceMapping: { findMany: async ({ where }: { where: { kind: string } }) => {
       assert.equal(where.kind, "SALE", "legacy campaign rows are not requested by the report reader");
       // Even a stray legacy result must not override the name or provide a fallback.
