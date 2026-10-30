@@ -61,7 +61,7 @@ function scopesFromConnections(connections: ConnectionMetadata[], platforms: Pla
 }
 
 /** One parameterized statement, one MVCC frame, no raw source/credential table reads. */
-function snapshotStatement(query: ReportQuery, lookbackFrom: string | undefined, policy: ReportScopePolicy) {
+export function snapshotStatement(query: ReportQuery, lookbackFrom: string | undefined, policy: ReportScopePolicy) {
   const fixedScopes = scopesFromConnections([], query.platforms, policy);
   const selected = query.scopeKeys === undefined ? Prisma.sql`TRUE` :
     Prisma.sql`s.scope_key IN (SELECT jsonb_array_elements_text(${JSON.stringify(query.scopeKeys)}::jsonb))`;
@@ -160,7 +160,10 @@ export class UnifiedReportRepository {
   private loadSnapshot(query: ReportQuery, lookbackFrom: string | undefined, policy: ReportScopePolicy) {
     return this.management.read(async tx => {
       const [result] = await tx.$queryRaw<Array<{ frame: RawFrame }>>(snapshotStatement(query,lookbackFrom,policy));
-      const frame = result.frame;
+      return result.frame;
+    }).then(frame => {
+      // The single statement already captured the complete MVCC frame. Pure
+      // hydration and missing-day expansion must not keep a DB transaction open.
       const products = frame.products.map(row => hydrate<UnifiedProduct>(row)), rules = frame.rules.map(row => hydrate<UnifiedRule>(row));
       if (products.length > 10000 || rules.length > 10000) throw new BadRequestException({ code: "UNIFIED_CONFIGURATION_TOO_LARGE", message: "설정 범위를 나누어 주세요." });
       const catalog = { products, rules, versions: managementVersions(products,rules) };

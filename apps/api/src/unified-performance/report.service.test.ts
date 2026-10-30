@@ -159,8 +159,9 @@ test("request participation reuse preserves date policy bounds and refreshes aft
   assert.equal(refreshed.items[0].knownTotals.revenue, "100.000000");
 }));
 
-function inFlightFixture() {
+function inFlightFixture(checkClosed = false) {
   let reads = 0, gate = Promise.resolve(), release: (() => void) | undefined, fail = false;
+  let inRead = false;
   const scopeKey = "LEGACY_COUPANG_SINGLE_UPLOAD";
   const state = { revision: 1, configurationVersion: "config-1", amount: "100.000000" };
   const tx = {
@@ -170,7 +171,7 @@ function inFlightFixture() {
       const requested = typeof statement.values[scopeIndex+1] === "string" && statement.values[scopeIndex+1].startsWith("[") ? JSON.parse(statement.values[scopeIndex+1]) : undefined;
       const included = fixed.some((scope: any) => scope.platform === "COUPANG") && (requested === undefined || requested.includes(scopeKey));
       return [{ frame: {
-        products: [{id:"A",canonical_name:"A",normalized_name:"a",active:true,version:Number(state.configurationVersion.split("-")[1]),created_at:"2026-10-01T00:00:00Z",updated_at:"2026-10-01T00:00:00Z"}],
+        get products() { if(checkClosed) assert.equal(inRead,false,"frame hydration must follow transaction release"); return [{id:"A",canonical_name:"A",normalized_name:"a",active:true,version:Number(state.configurationVersion.split("-")[1]),created_at:"2026-10-01T00:00:00Z",updated_at:"2026-10-01T00:00:00Z"}]; },
         rules: [], connections: [], publications: included ? [{
           publication:{source_system:"COUPANG",platform:"COUPANG",scope_key:scopeKey,business_date:"2026-10-26",run_id:`run-${state.revision}`,revision:state.revision,updated_at:"2026-10-27T00:00:00Z"},
           run:{versions:{},control_totals:[],published_at:"2026-10-27T00:00:00Z",started_at:"2026-10-27T00:00:00Z"}
@@ -184,7 +185,8 @@ function inFlightFixture() {
     read: async (work: (tx: unknown) => Promise<unknown>) => {
       reads++; const barrier = gate; await barrier;
       if (fail) { fail = false; throw Error("SYNTHETIC_SNAPSHOT_FAILURE"); }
-      return work(tx);
+      inRead=true;
+      try { return await work(tx); } finally { inRead=false; }
     },
     snapshot: async () => ({ products: [{ id: "A", canonicalName: "A", active: true }], rules: [],
       versions: { configurationVersion: state.configurationVersion } })
@@ -194,6 +196,14 @@ function inFlightFixture() {
     reads: () => reads, hold: () => { gate = new Promise<void>(resolve => { release = resolve; }); },
     resume: () => { release?.(); gate = Promise.resolve(); }, failNext: () => { fail = true; } };
 }
+
+test("historical frame hydration and missing-day expansion run after releasing the read transaction", async () => {
+  const f=inFlightFixture(true);
+  const snapshot=await f.repository.snapshot({...f.query,from:"2026-05-13",to:"2026-10-28"});
+  assert.equal(snapshot.facts[0].amountKrw,"100.000000");
+  assert(snapshot.coverage.some(c=>c.date==="2026-05-13"&&c.collectionState==="NOT_COLLECTED"));
+  assert.equal(f.reads(),1);
+});
 
 test("concurrent effective report reads share one RR load while pagination and grain stay response-local", async () => {
   const f = inFlightFixture(); f.hold();
