@@ -159,7 +159,7 @@ test("request participation reuse preserves date policy bounds and refreshes aft
   assert.equal(refreshed.items[0].knownTotals.revenue, "100.000000");
 }));
 
-function inFlightFixture(checkClosed = false) {
+function inFlightFixture(checkClosed = false, textFrame = false) {
   let reads = 0, gate = Promise.resolve(), release: (() => void) | undefined, fail = false;
   let inRead = false;
   const scopeKey = "LEGACY_COUPANG_SINGLE_UPLOAD";
@@ -170,15 +170,16 @@ function inFlightFixture(checkClosed = false) {
       const fixed = scopeIndex >= 0 ? JSON.parse(statement.values[scopeIndex]) : [];
       const requested = typeof statement.values[scopeIndex+1] === "string" && statement.values[scopeIndex+1].startsWith("[") ? JSON.parse(statement.values[scopeIndex+1]) : undefined;
       const included = fixed.some((scope: any) => scope.platform === "COUPANG") && (requested === undefined || requested.includes(scopeKey));
-      return [{ frame: {
+      if(textFrame) assert.match(statement.sql,/\)\:\:text AS frame$/);
+      const frame = {
         get products() { if(checkClosed) assert.equal(inRead,false,"frame hydration must follow transaction release"); return [{id:"A",canonical_name:"A",normalized_name:"a",active:true,version:Number(state.configurationVersion.split("-")[1]),created_at:"2026-10-01T00:00:00Z",updated_at:"2026-10-01T00:00:00Z"}]; },
-        rules: [], connections: [], publications: included ? [{
+        rules: [], connections: [], productNames:included?["A","과거 다른 제품"]:[], publications: included ? [{
           publication:{source_system:"COUPANG",platform:"COUPANG",scope_key:scopeKey,business_date:"2026-10-26",run_id:`run-${state.revision}`,revision:state.revision,updated_at:"2026-10-27T00:00:00Z"},
           run:{versions:{},control_totals:[],published_at:"2026-10-27T00:00:00Z",started_at:"2026-10-27T00:00:00Z"}
         }] : [],
         facts: included ? [{run_id:`run-${state.revision}`,payload:{...fixture().snapshot.facts[0],marketplace:"COUPANG",amountKrw:state.amount,completeAmountKrw:state.amount}}] : [],
         coverage: [], failures: [], ranges: []
-      }}];
+      };return [{frame:textFrame?JSON.stringify(frame):frame}];
     }
   };
   const management = {
@@ -197,6 +198,21 @@ function inFlightFixture(checkClosed = false) {
     reads: () => reads, hold: () => { gate = new Promise<void>(resolve => { release = resolve; }); },
     resume: () => { release?.(); gate = Promise.resolve(); }, failNext: () => { fail = true; } };
 }
+
+test("text transport decodes to the same immutable frame without rounding exact decimal strings", async()=>{
+  const a=inFlightFixture(),b=inFlightFixture(false,true);
+  a.state.amount=b.state.amount="9007199254740993.123456";
+  const [objectFrame,textFrame]=await Promise.all([a.repository.snapshot(a.query),b.repository.snapshot(b.query)]);
+  assert.deepEqual(textFrame,objectFrame);assert.equal(textFrame.facts[0].amountKrw,"9007199254740993.123456");
+});
+
+test("filtered options retain alternative historical names without loading their financial facts",async()=>enabled(async()=>{
+  const f=inFlightFixture(false,true),service=new UnifiedReportService(f.repository,{} as UnifiedAggregationRepository);
+  const options:any=await service.read("options",{from:f.query.from,to:f.query.to,platforms:["COUPANG"],productName:"A"},actor);
+  assert.equal(options.selection.productName,"A");
+  assert(options.products.some((p:any)=>p.productName==="과거 다른 제품"&&p.historical));
+  const frame=await f.repository.snapshot(f.query);assert(!frame.facts.some(f=>f.productName==="과거 다른 제품"));
+}));
 
 test("historical frame hydration and missing-day expansion run after releasing the read transaction", async () => {
   const f=inFlightFixture(true);

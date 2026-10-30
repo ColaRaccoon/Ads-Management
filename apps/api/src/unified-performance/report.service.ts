@@ -139,7 +139,7 @@ export class UnifiedReportService {
         events: { status: "UNAVAILABLE", message: "가격·행사·품절 이벤트 기록은 연결되지 않았습니다. 요일과 나머지 매체 광고비를 함께 확인하세요." },
         interpretation: "광고비 증가 기간에 매출이 증가하는 등 관측된 동반 변화를 확인합니다. 인과효과나 효과 발생일을 뜻하지 않습니다. 순이익은 광고비를 직접 차감하므로 분석 결과값에서 제외합니다." } };
     }
-    const productNames = [...new Set([...snapshot.products.map(p => p.canonicalName), ...snapshot.facts.map(f => f.productName).filter((name): name is string => name !== null)])].sort();
+    const productNames = [...new Set([...snapshot.products.map(p => p.canonicalName), ...(snapshot.availableProductNames??[]), ...snapshot.facts.map(f => f.productName).filter((name): name is string => name !== null)])].sort();
     if (kind === "options") return { ...envelope, products: productNames.map(productName => ({ productName, active: snapshot.products.find(p => p.canonicalName === productName)?.active ?? false,
       historical: !snapshot.products.some(p => p.canonicalName === productName) })),
       platformOptions: PLATFORMS.map(key => ({ key, components: PLATFORM_COMPONENTS[key], defaultIncluded: true,

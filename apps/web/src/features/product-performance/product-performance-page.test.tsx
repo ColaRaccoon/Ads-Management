@@ -18,7 +18,7 @@ after(() => (authCoordinator as unknown as { channel: BroadcastChannel | null })
 function render(f = testFilters(), state: "ready" | "loading" | "error" | "none" | "stale-selection" = "ready", error?: ApiError, can = true, params?: URLSearchParams) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, retryOnMount: false } } });
   const identity = "user:data.read", key = dashboardKey(identity, f);
-  const optionsQuery = filterParams({ ...f, productName: "", scopeKeys: undefined }).toString();
+  const optionsQuery = filterParams({ ...f, scopeKeys: undefined }).toString();
   // Keep the seeded SSR cache fresh; production staleTime=0 otherwise optimistically refetches on mount.
   const fresh = { updatedAt: Date.now() + 60000 };
   client.setQueryData(["product-performance-options", identity, optionsQuery], testOptions(f), fresh);

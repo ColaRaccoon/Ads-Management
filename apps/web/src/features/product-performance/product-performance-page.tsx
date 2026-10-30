@@ -33,8 +33,10 @@ function Performance({ identity }: { identity: string }) {
   }, [search]);
   const invalid = urlError ?? validateFilters(filters);
   const empty = filters.platforms.length === 0 || filters.scopeKeys?.length === 0;
-  // Options are metadata for the selected platforms. An explicit account selection must not hide alternative accounts.
-  const optionFilters = { ...filters, productName: "", scopeKeys: undefined };
+  // The server projects alternative product names separately from financial
+  // payloads. Keep the chosen product so options do not load every product's money.
+  // An explicit account selection must still expose alternative accounts.
+  const optionFilters = { ...filters, scopeKeys: undefined };
   const optionQuery = filterParams(optionFilters).toString();
   const options = useQuery({ ...QUERY_OPTIONS, queryKey: ["product-performance-options", identity, optionQuery], enabled: !invalid,
     queryFn: () => apiGet<Options>(`/unified-performance/options?${optionQuery}`) });

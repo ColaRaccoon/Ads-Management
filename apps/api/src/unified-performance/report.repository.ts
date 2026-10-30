@@ -18,6 +18,7 @@ const day = (date: Date) => date.toISOString().slice(0, 10);
 type ConnectionMetadata = { id: string; provider: string; displayName: string };
 type RawRow = Record<string, unknown>;
 type RawFrame = { products: RawRow[]; rules: RawRow[]; connections: ConnectionMetadata[];
+  productNames?: string[];
   publications: Array<{ publication: RawRow; run: RawRow | null }>;
   facts: Array<{ run_id: string; payload: Prisma.JsonValue }>; coverage: Array<{ run_id: string; details: Prisma.JsonValue }>;
   failures: RawRow[]; ranges: Array<{ platform: string; scope_key: string; first_date: string | null; last_date: string | null }> };
@@ -88,6 +89,8 @@ export function snapshotStatement(query: ReportQuery, lookbackFrom: string | und
       LEFT JOIN meta_ads.unified_aggregation_runs r ON r.id=p.run_id
       WHERE EXISTS (SELECT 1 FROM selected_scopes s WHERE s.platform=p.platform AND s.scope_key=p.scope_key) AND ${dateFilter("p")}
       ORDER BY p.platform,p.scope_key,p.business_date,p.source_system LIMIT 20001),
+    product_names AS MATERIALIZED (SELECT DISTINCT f.product_name AS name FROM meta_ads.unified_daily_facts f
+      WHERE f.run_id IN (SELECT run_id FROM publications) AND f.product_name IS NOT NULL ORDER BY f.product_name LIMIT 10001),
     facts AS MATERIALIZED (SELECT f.run_id,f.payload FROM meta_ads.unified_daily_facts f
       WHERE f.run_id IN (SELECT run_id FROM publications) AND ${product} LIMIT 100001),
     coverage AS MATERIALIZED (SELECT c.run_id,c.details FROM meta_ads.unified_source_coverage c
@@ -105,11 +108,12 @@ export function snapshotStatement(query: ReportQuery, lookbackFrom: string | und
       'products',COALESCE((SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM products p),'[]'::jsonb),
       'rules',COALESCE((SELECT jsonb_agg(to_jsonb(r) ORDER BY r.id) FROM rules r),'[]'::jsonb),
       'connections',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'provider',c.provider,'displayName',c.display_name) ORDER BY c.id) FROM connections c),'[]'::jsonb),
+      'productNames',COALESCE((SELECT jsonb_agg(n.name ORDER BY n.name) FROM product_names n),'[]'::jsonb),
       'publications',COALESCE((SELECT jsonb_agg(jsonb_build_object('publication',to_jsonb(p)-'run','run',p.run) ORDER BY p.platform,p.scope_key,p.business_date,p.source_system) FROM publications p),'[]'::jsonb),
       'facts',COALESCE((SELECT jsonb_agg(to_jsonb(f)) FROM facts f),'[]'::jsonb),
       'coverage',COALESCE((SELECT jsonb_agg(to_jsonb(c)) FROM coverage c),'[]'::jsonb),
       'failures',COALESCE((SELECT jsonb_agg(to_jsonb(r) ORDER BY r.started_at DESC) FROM failures r),'[]'::jsonb),
-      'ranges',COALESCE((SELECT jsonb_agg(to_jsonb(r) ORDER BY r.platform,r.scope_key) FROM ranges r),'[]'::jsonb)) AS frame`;
+      'ranges',COALESCE((SELECT jsonb_agg(to_jsonb(r) ORDER BY r.platform,r.scope_key) FROM ranges r),'[]'::jsonb))::text AS frame`;
 }
 export function selectReportScopes(scopes: ReportScope[], requested?: string[]) {
   if (requested?.some(key => !scopes.some(scope => scope.scopeKey === key))) throw new ForbiddenException({ code: "UNIFIED_SCOPE_FORBIDDEN", message: "허용되지 않은 원천 범위입니다." });
@@ -160,14 +164,16 @@ export class UnifiedReportRepository {
   }
   private loadSnapshot(query: ReportQuery, lookbackFrom: string | undefined, policy: ReportScopePolicy) {
     return this.management.read(async tx => {
-      const [result] = await tx.$queryRaw<Array<{ frame: RawFrame }>>(snapshotStatement(query,lookbackFrom,policy));
+      const [result] = await tx.$queryRaw<Array<{ frame: RawFrame | string }>>(snapshotStatement(query,lookbackFrom,policy));
       return result.frame;
     }, {timeoutMs:20000}).catch(error=>{
       const code=typeof error?.code==='string'&&/^P\d{4}$/.test(error.code)?error.code:'UNKNOWN';
       this.logger.warn(JSON.stringify({event:'UNIFIED_FRAME_READ_FAILED',code}));throw error;
-    }).then(frame => {
+    }).then(encoded => {
       // The single statement already captured the complete MVCC frame. Pure
-      // hydration and missing-day expansion must not keep a DB transaction open.
+      // JSON decoding, hydration and missing-day expansion follow DB release.
+      // Text avoids Prisma's nested JSON materialization while the lease is live.
+      const frame: RawFrame = typeof encoded === 'string' ? JSON.parse(encoded) : encoded;
       const products = frame.products.map(row => hydrate<UnifiedProduct>(row)), rules = frame.rules.map(row => hydrate<UnifiedRule>(row));
       if (products.length > 10000 || rules.length > 10000) throw new BadRequestException({ code: "UNIFIED_CONFIGURATION_TOO_LARGE", message: "설정 범위를 나누어 주세요." });
       const catalog = { products, rules, versions: managementVersions(products,rules) };
@@ -218,7 +224,7 @@ export class UnifiedReportRepository {
       const hashSnapshot = (base: boolean) => reportHash([
         publications.filter(p => !base || inBase(p.businessDate)).map(p => [p.runId, p.revision]),
         failures.filter(f => !base || inBase(f.businessDate)).map(f => [f.id, f.completedAt, f.leaseExpiresAt]), catalog.versions, scopes]);
-      return { ...catalog, scopes, facts: reportFacts, coverage, publications, availableDateRanges: frame.ranges.map(row => ({
+      return { ...catalog, scopes, facts: reportFacts, coverage, publications, availableProductNames:bounded(frame.productNames??[],10000), availableDateRanges: frame.ranges.map(row => ({
         platform: row.platform, scopeKey: row.scope_key, from: row.first_date, to: row.last_date })),
         snapshotHash: hashSnapshot(false), baseSnapshotHash: hashSnapshot(true) };
     });
