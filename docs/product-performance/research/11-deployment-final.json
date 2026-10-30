@@ -1,32 +1,31 @@
 {
   "stage": 11,
-  "status": "DEPLOYED_AND_CHECKED_CURRENT_WINDOW",
-  "stageStatus": "IN_PROGRESS",
-  "reason": "Real scheduled source-to-publication cycle remains in the future",
+  "status": "DEPLOYED_AND_VERIFIED_FOR_PULLUP_HISTORY",
+  "stageStatus": "DONE",
+  "reason": "Scheduled source cycle, 520 current publications, full-history product charts, options and relationships verified",
   "source": {
     "repo": "ColaRaccoon/Ads-Management",
-    "branch": "codex/product-performance-stage11-chart-release",
-    "commitSha": "d9086a6c32fc2eba56288379ec642163f3ae3411"
+    "branch": "codex/product-performance-stage11-history-options-release",
+    "commitSha": "44cd2a54ccbb351c92d3ece9fd6722481a80ae66"
   },
   "deployment": {
-    "id": "479b7d2b-ca55-44bc-b1bd-f39f7c951f6b",
+    "id": "45c56fc3-7fe2-45b4-a1ff-b735ad3d3504",
     "status": "SUCCESS",
-    "commitHash": "d9086a6c32fc2eba56288379ec642163f3ae3411",
-    "branch": "codex/product-performance-stage11-chart-release"
+    "commitHash": "44cd2a54ccbb351c92d3ece9fd6722481a80ae66",
+    "branch": "codex/product-performance-stage11-history-options-release"
   },
   "featureEnabled": true,
-  "readinessEvidence": "11-app-ready-chart.json",
-  "publishedRuns": 76,
-  "audits": 4,
+  "readinessEvidence": "11-app-ready-history.json",
+  "publishedRuns": 596,
+  "audits": 5,
   "existingSourceSchedulesChanged": false,
   "sourceWrites": 0,
-  "nextObservationKst": "2026-10-30 02:00–03:59",
-  "coldLatencyLimitation": "One idle batch 2162–2603ms; distinct from consecutive-query p95",
+  "coldLatencyLimitation": "Full-range selected-product sample 2.843–6.380s; no new p95 or long-term load claim",
   "developmentBranch": "codex/product-performance-stage11",
   "releaseBranchIsNotUpdatedByEvidencePush": true,
-  "failedHistoricalRuns": 2,
+  "failedHistoricalRuns": 5,
   "stagingRuns": 0,
-  "totalRuns": 78,
+  "totalRuns": 601,
   "currentPublicationPlatforms": [
     "CAFE24",
     "NAVER",
@@ -50,10 +49,10 @@
   ],
   "additionalPlatformUiEvidence": "11-ui-platforms-final.json",
   "previousDeployment": {
-    "id": "c849022c-5f8c-49f1-ac8c-6087ecebf178",
+    "id": "44cf3829-0d1d-4fa1-bd58-05e4e24ad53b",
     "status": "SUCCESS",
-    "commitHash": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
-    "branch": "codex/product-performance-stage11-frame-release"
+    "commitHash": "9d606a96908c4d17af67c94cf9906739179d1ef8",
+    "branch": "codex/product-performance-stage11-history-final-release"
   },
   "chartCorrection": {
     "evidence": "11-chart-ui-after.json",
@@ -61,5 +60,57 @@
     "sourceWrites": 0,
     "webTests": 111,
     "guardTests": 10
-  }
+  },
+  "chartDeployment": {
+    "id": "479b7d2b-ca55-44bc-b1bd-f39f7c951f6b",
+    "status": "SUCCESS",
+    "commitHash": "d9086a6c32fc2eba56288379ec642163f3ae3411",
+    "branch": "codex/product-performance-stage11-chart-release"
+  },
+  "initialFrameDeployment": {
+    "id": "c849022c-5f8c-49f1-ac8c-6087ecebf178",
+    "status": "SUCCESS",
+    "commitHash": "e37c6dee9faa55e085e199be7fad61874b02fe3b",
+    "branch": "codex/product-performance-stage11-frame-release"
+  },
+  "currentHistoryPartitions": 520,
+  "historyCurrentPointers": 520,
+  "globalNameVersion": 3,
+  "nameValidFrom": "2026-05-13",
+  "saleUnitVersionUnchanged": 1,
+  "sourceCycleObserved": true,
+  "sourceCycleEvidence": "11-source-cycle-history-final.json",
+  "aggregationPolicy": "Existing scheduled source collection followed by separately invoked explicit unified worker; no new automatic aggregation schedule",
+  "fullHistoryUiEvidence": "11-history-ui-full.json",
+  "knownLongRangeLimitation": {
+    "unfilteredAllProducts": "Earlier optional all-products profile exceeded read budget; not the selected-product acceptance scope",
+    "evidence": "11-history-all-products-profile-before.json"
+  },
+  "historyVerification": "11-history-final-database.json",
+  "resolvedHistoryErrors": {
+    "baseChartsHttpMs": [
+      6457,
+      6459,
+      6486,
+      10874
+    ],
+    "relationshipStatus": 500,
+    "relationshipMs": 37960,
+    "relationshipDatabaseCode": "P2028",
+    "evidence": "11-history-http-before-options.json"
+  },
+  "fullHistoryHttp": {
+    "summaryMs": 6252,
+    "optionsMs": 6270,
+    "diagnosticsMs": 6276,
+    "timeseriesMs": [
+      6380,
+      3534
+    ],
+    "relationshipsMs": 2843,
+    "allStatuses": 200,
+    "observedFrameFailures": 0,
+    "evidence": "11-history-http-final.json"
+  },
+  "finalLocalVerification": "11-history-local-verification.json"
 }

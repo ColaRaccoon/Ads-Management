@@ -28,6 +28,7 @@ function stable(value: unknown): unknown {
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(stable(value))).digest("hex");
 const orderedFacts = (facts: readonly ReportFact[]) => [...facts].sort((a,b)=>`${a.component}/${a.factKey}`.localeCompare(`${b.component}/${b.factKey}`));
 
+const queryTimings:Array<{verb:string;table:string|null;ms:number}>=[];
 async function main() {
   const args = Object.fromEntries(process.argv.slice(2).map(arg => {
     const match = /^--([a-z-]+)=(.+)$/.exec(arg); if (!match) throw new Error("INVALID_ARGUMENT");
@@ -41,7 +42,8 @@ async function main() {
   if (!configured) throw new Error("RECONCILE_URL_REQUIRED");
   const target = new URL(configured);
   if (!["postgres:","postgresql:"].includes(target.protocol) || target.hostname !== args["expected-host"]) throw new Error("TARGET_HOST_MISMATCH");
-  const client = new PrismaClient({ datasourceUrl: configured });
+  const client = new PrismaClient({ datasourceUrl: configured, log:[{emit:'event',level:'query'}] });
+  client.$on('query',event=>{if(queryTimings.length<150)queryTimings.push({verb:event.query.trim().split(/\s+/)[0],table:event.query.match(/(?:FROM|JOIN)\s+"?public"?\."?([a-z_]+)"?/i)?.[1]??null,ms:event.duration});});
   try {
     const [identity] = await client.$queryRaw<Array<{ database: string; role: string; superuser: boolean; bypassrls: boolean; owns: bigint }>>`
       SELECT current_database() AS database,current_user AS role,r.rolsuper AS superuser,r.rolbypassrls AS bypassrls,
@@ -83,7 +85,7 @@ async function main() {
       versions:configuration.versions, sourceControls:controls,
       source:{knownTotals:source.knownTotals,completeTotals:source.completeTotals,scopeBalances:source.scopeBalances,issues:source.issues},
       published:{knownTotals:stored.knownTotals,completeTotals:stored.completeTotals,scopeBalances:stored.scopeBalances,issues:stored.issues},
-      quality:batch.coverage.map(c=>({component:c.component,participation:c.participation,collectionState:c.collectionState,rowsPresent:c.rowsPresent,
+      queryTimings,quality:batch.coverage.map(c=>({component:c.component,participation:c.participation,collectionState:c.collectionState,rowsPresent:c.rowsPresent,
         missingCostRows:c.missingCostRows,isEstimate:c.quality.isEstimate,issues:c.quality.issues,sourceAsOf:c.sourceAsOf})) };
     const output = args.output ?? "docs/product-performance/research/11-data-reconciliation.json";
     writeFileSync(output,JSON.stringify(evidence,null,2)+"\n");
@@ -93,7 +95,7 @@ async function main() {
 }
 main().catch(error => {
   const message=String(error?.message??'');
-  const evidence={stage:11,status:'FAIL_EXCEPTION',databaseWrites:0,providerCalls:0,
+  const evidence={stage:11,status:'FAIL_EXCEPTION',databaseWrites:0,providerCalls:0,queryTimings,
     errorClass:error?.constructor?.name??'Error',prismaCode:/^P\d{4}$/.test(error?.code??'')?error.code:null,
     databaseCode:/^[0-9A-Z]{5}$/.test(error?.meta?.code??'')?error.meta.code:null,
     permissionObject:message.match(/permission denied for (?:schema|table|function) ["']?([a-z0-9_]+)/i)?.[1]??null,

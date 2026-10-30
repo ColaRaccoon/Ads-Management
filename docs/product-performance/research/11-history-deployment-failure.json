@@ -1,0 +1,12 @@
+{
+  "stage": 11,
+  "deploymentId": "e86cb69a-0d14-4a1c-9510-e24d73457c67",
+  "sourceCommit": "c954b03eeabbe3819808de7b8ae2faf5342f389d",
+  "status": "FAILED_DURING_BUILD",
+  "reason": "C7 guard rejected new compiled management.repository.test.js outside its fixed reviewed path list",
+  "resolution": "Move the same regression test into the existing reviewed management.service.test.ts; remove only the newly created test file",
+  "guardRelaxed": false,
+  "sourceWrites": 0,
+  "productionDatabaseChangedByFailedBuild": false,
+  "replacementSourceCommit": "9d606a96908c4d17af67c94cf9906739179d1ef8"
+}

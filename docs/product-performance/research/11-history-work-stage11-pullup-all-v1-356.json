@@ -1,0 +1,30 @@
+{
+  "stage": 11,
+  "operation": "history-work",
+  "key": "stage11-pullup-all-v1",
+  "planSha256": "b49caaa04e71c3c13221d636df452cfc9df6d37733f14f3993fe30c37e29c487",
+  "observedAt": "2026-10-30T00:02:00.695Z",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of browser-verified active administrator; not an HTTP authentication test",
+  "status": "FAIL",
+  "offset": 356,
+  "outcomes": [
+    {
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "date": "2026-05-21",
+      "id": "96cbd402-3060-434c-a50c-5fb7ea5c2e2f",
+      "status": "FAILED",
+      "attempts": 1,
+      "issues": [
+        "SOURCE_EXECUTION_FAILED"
+      ],
+      "claimed": true
+    }
+  ],
+  "errorClass": "AssertionError",
+  "errorCode": "ERR_ASSERTION",
+  "failedJobId": "96cbd402-3060-434c-a50c-5fb7ea5c2e2f",
+  "permissionObject": null,
+  "transactionExpired": false
+}

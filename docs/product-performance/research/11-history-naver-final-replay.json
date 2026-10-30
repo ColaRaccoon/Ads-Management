@@ -1,0 +1,482 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "PASS",
+  "observedAt": "2026-10-30T00:24:48.745Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "NAVER",
+    "scopeKeyHash": "794144372a6aab7422c44e692ff87b5aa0b26dbb4d0865407eb6bcd6f5f005ed",
+    "date": "2026-05-21",
+    "productName": "풀업바"
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 46,
+  "publishedFacts": 46,
+  "sourceHash": "61a7c888e8a46f9b5138d35661b0e8d066a0c52794e0db847ace4e3e9cf4f34f",
+  "publishedHash": "61a7c888e8a46f9b5138d35661b0e8d066a0c52794e0db847ace4e3e9cf4f34f",
+  "publication": [
+    {
+      "runId": "37ef2c79-968e-4626-a8a5-ad008e8987c3",
+      "revision": 1,
+      "publishedAt": "2026-10-30T00:16:29.651Z",
+      "versions": {
+        "fxVersion": "stored-daily-fx-v1",
+        "nameRuleVersion": "694cae25cf25dc3db0e02b1ec6c3d2186e54a5dc34edcc2c15aaa0938e4e2a78",
+        "calculationVersion": "unified-report-v1",
+        "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+        "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "participationOverrides": {}
+      }
+    }
+  ],
+  "versions": {
+    "configurationVersion": "4890f6398f6e4a399e1a620f9a34a5ab349d0cb1367832a4d8a04cfaf5ac6893",
+    "nameRuleVersion": "694cae25cf25dc3db0e02b1ec6c3d2186e54a5dc34edcc2c15aaa0938e4e2a78",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "OPERATING_REVENUE",
+      "currency": "KRW",
+      "selectedRows": 485,
+      "selectedAmount": "14966870.000000",
+      "assignedAmount": "10563760.000000",
+      "unmatchedAmount": "4403110.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PRODUCT_COST",
+      "currency": "KRW",
+      "selectedRows": 485,
+      "selectedAmount": null,
+      "assignedAmount": "2557300.000000",
+      "unmatchedAmount": "1465500.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": null
+    },
+    {
+      "measure": "PLATFORM_FEE",
+      "currency": "KRW",
+      "selectedRows": 485,
+      "selectedAmount": "932066.000000",
+      "assignedAmount": "653556.000000",
+      "unmatchedAmount": "278510.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "OTHER_DIRECT_COST",
+      "currency": "KRW",
+      "selectedRows": 485,
+      "selectedAmount": null,
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": null
+    },
+    {
+      "measure": "VAT_EXPENSE",
+      "currency": "KRW",
+      "selectedRows": 485,
+      "selectedAmount": "1496687.000000",
+      "assignedAmount": "1056376.000000",
+      "unmatchedAmount": "440311.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "AD_SPEND",
+      "currency": "KRW",
+      "selectedRows": 69,
+      "selectedAmount": "5333719.000000",
+      "assignedAmount": "1547952.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "3785767.000000",
+      "difference": "0.000000"
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": "380400.000000",
+      "adSpend": null,
+      "profitBeforeAds": "189800.000000",
+      "estimatedProfit": "189800.000000",
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "3785767.000000",
+      "unallocatedExpense": "1540000.000000",
+      "shippingIncome": "392000.000000",
+      "unallocatedShippingIncome": "392000.000000",
+      "unclassifiedRevenue": "4403110.000000",
+      "unclassifiedProfitBeforeAds": "2218789.000000"
+    },
+    "issues": [
+      "COST_VALUES_INCOMPLETE",
+      "NAME_UNMATCHED",
+      "NAVER_ESTIMATED_SOURCE",
+      "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+      "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+      "NAVER_ORDER_SYNC_STATE_MISSING",
+      "NAVER_PAYMENT_DATE_COMPLETION_UNPROVEN",
+      "NAVER_SALE_UNIT_NAME_RESTORED",
+      "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+      "NAVER_SOURCE_ESTIMATE",
+      "NAVER_STORED_CALCULATION_VERSION_OLD",
+      "NAVER_STORED_FINGERPRINT_MISSING",
+      "NAVER_STORED_RESULT_PREDATES_SOURCE",
+      "PARTIAL_TOTAL",
+      "SALE_UNIT_NAME_UNRESOLVED",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": "380400.000000",
+      "adSpend": null,
+      "profitBeforeAds": "189800.000000",
+      "estimatedProfit": "189800.000000",
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "3785767.000000",
+      "unallocatedExpense": "1540000.000000",
+      "shippingIncome": "392000.000000",
+      "unallocatedShippingIncome": "392000.000000",
+      "unclassifiedRevenue": "4403110.000000",
+      "unclassifiedProfitBeforeAds": "2218789.000000"
+    },
+    "issues": [
+      "COST_VALUES_INCOMPLETE",
+      "NAME_UNMATCHED",
+      "NAVER_ESTIMATED_SOURCE",
+      "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+      "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED",
+      "NAVER_ORDER_SYNC_STATE_MISSING",
+      "NAVER_PAYMENT_DATE_COMPLETION_UNPROVEN",
+      "NAVER_SALE_UNIT_NAME_RESTORED",
+      "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+      "NAVER_SOURCE_ESTIMATE",
+      "NAVER_STORED_CALCULATION_VERSION_OLD",
+      "NAVER_STORED_FINGERPRINT_MISSING",
+      "NAVER_STORED_RESULT_PREDATES_SOURCE",
+      "PARTIAL_TOTAL",
+      "SALE_UNIT_NAME_UNRESOLVED",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "queryTimings": [
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 80
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 13
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 24
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 54
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 37
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 25
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SAVEPOINT",
+      "table": null,
+      "ms": 23
+    },
+    {
+      "verb": "SELECT",
+      "table": "stores",
+      "ms": 45
+    },
+    {
+      "verb": "SELECT",
+      "table": "order_items",
+      "ms": 751
+    },
+    {
+      "verb": "SELECT",
+      "table": "order_source_signatures",
+      "ms": 117
+    },
+    {
+      "verb": "SELECT",
+      "table": "products",
+      "ms": 39
+    },
+    {
+      "verb": "SELECT",
+      "table": "canonical_sales_units",
+      "ms": 52
+    },
+    {
+      "verb": "SELECT",
+      "table": "sales_unit_cost_settings",
+      "ms": 29
+    },
+    {
+      "verb": "SELECT",
+      "table": "sales_unit_cost_snapshots",
+      "ms": 30
+    },
+    {
+      "verb": "SELECT",
+      "table": "sales_unit_cost_snapshot_entries",
+      "ms": 42
+    },
+    {
+      "verb": "SELECT",
+      "table": "ad_excel_uploads",
+      "ms": 137
+    },
+    {
+      "verb": "SELECT",
+      "table": "ad_campaign_daily_costs",
+      "ms": 130
+    },
+    {
+      "verb": "SELECT",
+      "table": "daily_fake_purchases",
+      "ms": 31
+    },
+    {
+      "verb": "SELECT",
+      "table": "daily_store_summaries",
+      "ms": 35
+    },
+    {
+      "verb": "SELECT",
+      "table": "daily_sales_unit_profits",
+      "ms": 47
+    },
+    {
+      "verb": "SELECT",
+      "table": "order_sync_states",
+      "ms": 30
+    },
+    {
+      "verb": "SELECT",
+      "table": "order_sync_batch_items",
+      "ms": 61
+    },
+    {
+      "verb": "RELEASE",
+      "table": null,
+      "ms": 23
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 15
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 11
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "WITH",
+      "table": null,
+      "ms": 204
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 12
+    }
+  ],
+  "quality": [
+    {
+      "component": "SALE",
+      "participation": "INCLUDED",
+      "collectionState": "PARTIAL",
+      "rowsPresent": 515,
+      "missingCostRows": 1,
+      "isEstimate": true,
+      "issues": [
+        "COST_VALUES_INCOMPLETE",
+        "NAME_UNMATCHED",
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+        "NAVER_ORDER_SYNC_STATE_MISSING",
+        "NAVER_PAYMENT_DATE_COMPLETION_UNPROVEN",
+        "NAVER_SALE_UNIT_NAME_RESTORED",
+        "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+        "NAVER_SOURCE_ESTIMATE",
+        "NAVER_STORED_CALCULATION_VERSION:profit-v1",
+        "NAVER_STORED_CALCULATION_VERSION_OLD",
+        "NAVER_STORED_FINGERPRINT_MISSING",
+        "NAVER_STORED_RESULT_PREDATES_SOURCE",
+        "SALE_UNIT_NAME_UNRESOLVED"
+      ],
+      "sourceAsOf": "2026-09-18T02:54:31.571Z"
+    },
+    {
+      "component": "AD_SPEND",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 69,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAME_UNMATCHED",
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_MULTIPLE_ACTIVE_UPLOADS_ACCEPTED"
+      ],
+      "sourceAsOf": "2026-05-22T01:08:12.805Z"
+    },
+    {
+      "component": "COMMON_EXPENSE",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 2,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+        "NAVER_ORDER_SYNC_STATE_MISSING",
+        "NAVER_STORED_CALCULATION_VERSION:profit-v1",
+        "NAVER_STORED_CALCULATION_VERSION_OLD",
+        "NAVER_STORED_FINGERPRINT_MISSING"
+      ],
+      "sourceAsOf": "2026-06-23T00:57:20.387Z"
+    },
+    {
+      "component": "DIRECT_COST",
+      "participation": "INCLUDED",
+      "collectionState": "PARTIAL",
+      "rowsPresent": 515,
+      "missingCostRows": 1,
+      "isEstimate": true,
+      "issues": [
+        "COST_VALUES_INCOMPLETE",
+        "NAME_UNMATCHED",
+        "NAVER_ESTIMATED_SOURCE",
+        "NAVER_HISTORICAL_RETURNS_NOT_GUARANTEED",
+        "NAVER_ORDER_SYNC_STATE_MISSING",
+        "NAVER_PAYMENT_DATE_COMPLETION_UNPROVEN",
+        "NAVER_SALE_UNIT_NAME_RESTORED",
+        "NAVER_SOURCE_COST_UNIT_RESTORED_PRODUCT_UNCLASSIFIED",
+        "NAVER_SOURCE_ESTIMATE",
+        "NAVER_STORED_CALCULATION_VERSION:profit-v1",
+        "NAVER_STORED_CALCULATION_VERSION_OLD",
+        "NAVER_STORED_FINGERPRINT_MISSING",
+        "NAVER_STORED_RESULT_PREDATES_SOURCE",
+        "SALE_UNIT_NAME_UNRESOLVED"
+      ],
+      "sourceAsOf": "2026-09-18T02:54:31.571Z"
+    }
+  ]
+}

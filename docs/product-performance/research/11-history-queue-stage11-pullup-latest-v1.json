@@ -1,0 +1,74 @@
+{
+  "stage": 11,
+  "operation": "history-queue",
+  "key": "stage11-pullup-latest-v1",
+  "planSha256": "e5ad2b88a2d73cb947e8a274d873bf40d82e59b78366c77d64780fc77b706440",
+  "observedAt": "2026-10-29T23:57:52.207Z",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of browser-verified active administrator; not an HTTP authentication test",
+  "status": "PASS",
+  "requests": [
+    {
+      "index": 0,
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "from": "2026-10-29",
+      "to": "2026-10-29",
+      "jobs": 1
+    },
+    {
+      "index": 1,
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "from": "2026-10-29",
+      "to": "2026-10-29",
+      "jobs": 1
+    },
+    {
+      "index": 2,
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "from": "2026-10-29",
+      "to": "2026-10-29",
+      "jobs": 1
+    }
+  ],
+  "jobs": [
+    {
+      "jobId": "fec93ad7-c7d3-4071-af43-156408ca835d",
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-29",
+      "status": "STAGING",
+      "attempts": 0,
+      "issues": [],
+      "phase": "QUEUED",
+      "startedAt": "2026-10-29T23:57:52.735Z",
+      "completedAt": null
+    },
+    {
+      "jobId": "d24aaee2-aa1e-48b9-ab6e-596cfe356c09",
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-29",
+      "status": "STAGING",
+      "attempts": 0,
+      "issues": [],
+      "phase": "QUEUED",
+      "startedAt": "2026-10-29T23:57:52.927Z",
+      "completedAt": null
+    },
+    {
+      "jobId": "fc46f924-6699-4cb8-a39c-7ebd2df7086a",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-29",
+      "status": "STAGING",
+      "attempts": 0,
+      "issues": [],
+      "phase": "QUEUED",
+      "startedAt": "2026-10-29T23:57:53.076Z",
+      "completedAt": null
+    }
+  ]
+}

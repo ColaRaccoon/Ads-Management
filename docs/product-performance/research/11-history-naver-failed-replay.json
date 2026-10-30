@@ -1,0 +1,11 @@
+{
+  "stage": 11,
+  "status": "FAIL_EXCEPTION",
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "errorClass": "PrismaClientKnownRequestError",
+  "prismaCode": "P2028",
+  "databaseCode": null,
+  "permissionObject": null,
+  "transactionExpired": true
+}

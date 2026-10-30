@@ -1,0 +1,290 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "PASS",
+  "observedAt": "2026-10-30T01:16:46.548Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "GOOGLE",
+    "scopeKeyHash": "d067c0479de19414ba46400c64ae115bf6f7bf612dd7b256a34c8fc9a2a5ac90",
+    "date": "2026-10-29",
+    "productName": "풀업바"
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 2,
+  "publishedFacts": 2,
+  "sourceHash": "f1e3de99e3422ef76d95654974f0ec7fa52f9b315e5069450ca4ea34c94af463",
+  "publishedHash": "f1e3de99e3422ef76d95654974f0ec7fa52f9b315e5069450ca4ea34c94af463",
+  "publication": [
+    {
+      "runId": "d24aaee2-aa1e-48b9-ab6e-596cfe356c09",
+      "revision": 1,
+      "publishedAt": "2026-10-30T00:23:02.132Z",
+      "versions": {
+        "fxVersion": "stored-daily-fx-v1",
+        "nameRuleVersion": "694cae25cf25dc3db0e02b1ec6c3d2186e54a5dc34edcc2c15aaa0938e4e2a78",
+        "calculationVersion": "unified-report-v1",
+        "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+        "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "participationOverrides": {}
+      }
+    }
+  ],
+  "versions": {
+    "configurationVersion": "4890f6398f6e4a399e1a620f9a34a5ab349d0cb1367832a4d8a04cfaf5ac6893",
+    "nameRuleVersion": "694cae25cf25dc3db0e02b1ec6c3d2186e54a5dc34edcc2c15aaa0938e4e2a78",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "AD_SPEND",
+      "currency": "KRW",
+      "selectedRows": 6,
+      "selectedAmount": "358010.221330",
+      "assignedAmount": "103405.811265",
+      "unmatchedAmount": "254604.410065",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": "103405.811265",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "254604.410065",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "NAME_UNMATCHED",
+      "PARTIAL_TOTAL",
+      "UNALLOCATED_BALANCE"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": "103405.811265",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "254604.410065",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "NAME_UNMATCHED",
+      "PARTIAL_TOTAL",
+      "UNALLOCATED_BALANCE"
+    ]
+  },
+  "queryTimings": [
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 27
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 14
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 13
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 26
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 26
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 28
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 28
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 25
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 13
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 13
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 28
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 27
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 25
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 24
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 35
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 32
+    },
+    {
+      "verb": "SELECT",
+      "table": null,
+      "ms": 26
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 14
+    },
+    {
+      "verb": "BEGIN",
+      "table": null,
+      "ms": 14
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "SET",
+      "table": null,
+      "ms": 12
+    },
+    {
+      "verb": "WITH",
+      "table": null,
+      "ms": 35
+    },
+    {
+      "verb": "COMMIT",
+      "table": null,
+      "ms": 12
+    }
+  ],
+  "quality": [
+    {
+      "component": "AD_SPEND",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 6,
+      "missingCostRows": 0,
+      "isEstimate": false,
+      "issues": [
+        "NAME_UNMATCHED"
+      ],
+      "sourceAsOf": "2026-10-29T17:01:25.289Z"
+    }
+  ]
+}

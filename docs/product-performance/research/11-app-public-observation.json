@@ -1,6 +1,6 @@
 {
   "stage": 11,
-  "at": "2026-10-29T06:26:58.010Z",
+  "at": "2026-10-30T01:17:09.055Z",
   "origin": "https://patimagroup-work.com",
   "remoteWrites": 0,
   "authenticated": false,
@@ -8,7 +8,7 @@
     {
       "path": "/backend-api/health/live",
       "status": 200,
-      "elapsedMs": 396.91690000000006,
+      "elapsedMs": 429.1995,
       "bodyBytes": 17,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -27,7 +27,7 @@
     {
       "path": "/backend-api/health/ready",
       "status": 403,
-      "elapsedMs": 235.73420000000004,
+      "elapsedMs": 223.74339999999995,
       "bodyBytes": 148,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -46,7 +46,7 @@
     {
       "path": "/backend-api/auth/me",
       "status": 401,
-      "elapsedMs": 933.0499,
+      "elapsedMs": 882.5132,
       "bodyBytes": 140,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -65,7 +65,7 @@
     {
       "path": "/backend-api/unified-performance/options",
       "status": 401,
-      "elapsedMs": 173.7947999999999,
+      "elapsedMs": 160.5121999999999,
       "bodyBytes": 140,
       "headers": {
         "content-type": "application/json; charset=utf-8",
@@ -84,7 +84,7 @@
     {
       "path": "/products/performance",
       "status": 200,
-      "elapsedMs": 87.59660000000008,
+      "elapsedMs": 81.89709999999991,
       "bodyBytes": 8641,
       "headers": {
         "content-type": "text/html; charset=utf-8",
@@ -100,7 +100,7 @@
     {
       "path": "/storefront",
       "status": 200,
-      "elapsedMs": 80.63789999999995,
+      "elapsedMs": 78.37979999999993,
       "bodyBytes": 7787,
       "headers": {
         "content-type": "text/html; charset=utf-8",
@@ -116,7 +116,7 @@
     {
       "path": "/login",
       "status": 200,
-      "elapsedMs": 93.50340000000006,
+      "elapsedMs": 90.72499999999991,
       "bodyBytes": 8295,
       "headers": {
         "content-type": "text/html; charset=utf-8",

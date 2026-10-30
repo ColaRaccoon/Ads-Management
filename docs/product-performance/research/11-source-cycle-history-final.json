@@ -1,0 +1,119 @@
+{
+  "remoteWrites": 0,
+  "stage": 11,
+  "observedAt": "2026-10-30T00:32:20.4813514Z",
+  "rows": {
+    "observation": {
+      "limitation": "Cron tick success alone is not source success. Verify scheduled collector completion, source lineage, then the separately executed unified publication; do not describe a manual collector as the scheduled cycle.",
+      "observedAt": "2026-10-30T09:32:20.199168+09:00",
+      "businessDate": "2026-10-29",
+      "cronSettings": [
+        {
+          "jobId": 4,
+          "active": true,
+          "jobName": "daily-data-sync-prod-tick",
+          "schedule": "* 17,18 * * *"
+        }
+      ],
+      "databaseWrites": 0,
+      "scheduledTicks": [
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:59:00.064432+09:00",
+          "start_time": "2026-10-30T03:59:00.050642+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:58:00.121898+09:00",
+          "start_time": "2026-10-30T03:58:00.100637+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:57:00.115765+09:00",
+          "start_time": "2026-10-30T03:57:00.084298+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:56:00.102407+09:00",
+          "start_time": "2026-10-30T03:56:00.084088+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:55:00.088846+09:00",
+          "start_time": "2026-10-30T03:55:00.064666+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:54:00.137988+09:00",
+          "start_time": "2026-10-30T03:54:00.112479+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:53:00.03445+09:00",
+          "start_time": "2026-10-30T03:53:00.021251+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:52:00.067065+09:00",
+          "start_time": "2026-10-30T03:52:00.04412+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:51:00.537244+09:00",
+          "start_time": "2026-10-30T03:51:00.382191+09:00"
+        },
+        {
+          "jobid": 4,
+          "status": "succeeded",
+          "end_time": "2026-10-30T03:50:00.077808+09:00",
+          "start_time": "2026-10-30T03:50:00.052962+09:00"
+        }
+      ],
+      "windowFinished": true,
+      "storedSourceDay": {
+        "current_rows": 250,
+        "source_as_of": "2026-10-30T02:32:12.257+09:00",
+        "nonerror_rows": 250,
+        "source_list_gross": "9449000.000000"
+      },
+      "expectedWindowEnd": "2026-10-30T04:00:00+09:00",
+      "unifiedPublication": [
+        {
+          "run_id": "fec93ad7-c7d3-4071-af43-156408ca835d",
+          "status": "PUBLISHED",
+          "revision": 1,
+          "published_at": "2026-10-30T09:23:01.231+09:00",
+          "source_as_of": "2026-10-29T17:32:13.818Z"
+        }
+      ],
+      "expectedWindowStart": "2026-10-30T02:00:00+09:00",
+      "futureWindowPending": false,
+      "scheduledCafe24Runs": [
+        {
+          "id": "e73f9dad-0709-426d-a167-3ed622696e8e",
+          "status": "SUCCEEDED",
+          "to_date": "2026-10-29",
+          "trigger": "SCHEDULED",
+          "from_date": "2026-10-29",
+          "started_at": "2026-10-30T02:00:13.067+09:00",
+          "finished_at": "2026-10-30T02:32:15.622+09:00",
+          "rows_fetched": 250,
+          "rows_published": 250,
+          "safe_error_code": null
+        }
+      ],
+      "collectorWasInvokedByThisQuery": false
+    }
+  },
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "operation": "MANAGEMENT_READ_ONLY"
+}

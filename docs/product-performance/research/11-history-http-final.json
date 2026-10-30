@@ -1,0 +1,43 @@
+{
+  "stage": 11,
+  "deploymentId": "45c56fc3-7fe2-45b4-a1ff-b735ad3d3504",
+  "frameFailures": [],
+  "http": [
+    {
+      "time": "2026-10-30T01:10:48.855505033Z",
+      "path": "/backend-api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 6252
+    },
+    {
+      "time": "2026-10-30T01:10:48.855798969Z",
+      "path": "/backend-api/unified-performance/options",
+      "status": 200,
+      "durationMs": 6270
+    },
+    {
+      "time": "2026-10-30T01:10:48.858412355Z",
+      "path": "/backend-api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 6276
+    },
+    {
+      "time": "2026-10-30T01:10:48.962014689Z",
+      "path": "/backend-api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 6380
+    },
+    {
+      "time": "2026-10-30T01:10:52.948980503Z",
+      "path": "/backend-api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 3534
+    },
+    {
+      "time": "2026-10-30T01:10:56.535703777Z",
+      "path": "/backend-api/unified-performance/relationships",
+      "status": 200,
+      "durationMs": 2843
+    }
+  ]
+}

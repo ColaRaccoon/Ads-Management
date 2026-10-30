@@ -1,0 +1,251 @@
+{
+  "stage": "11",
+  "kind": "READ_ONLY_SOURCE_PUBLICATION_RECONCILIATION",
+  "status": "REVIEW_REQUIRED",
+  "observedAt": "2026-10-29T23:48:20.116Z",
+  "target": {
+    "database": "postgres",
+    "role": "meta_ads_unified_worker",
+    "hostSha256": "33fa58605f9a47d2e80d4304fbd939405198c3be83a78743d878dd1d665041b5"
+  },
+  "partition": {
+    "platform": "COUPANG",
+    "scopeKeyHash": "2ba401c512698c8ab1ee217d48ac45f8714eb56f5472715828cbf7d93f00cf0c",
+    "date": "2026-07-26",
+    "productName": null
+  },
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "snapshots": "Source/configuration and report are separate read-only snapshots; a concurrent source/configuration change can require replay.",
+  "executionSucceeded": true,
+  "knownControlDifferencesZero": true,
+  "sourceFacts": 184,
+  "publishedFacts": 0,
+  "sourceHash": "1485162036823cb000aa0244e4b22d8e5ee8f3a8c63d28620ed2adc162222a5c",
+  "publishedHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "publication": [],
+  "versions": {
+    "configurationVersion": "4890f6398f6e4a399e1a620f9a34a5ab349d0cb1367832a4d8a04cfaf5ac6893",
+    "nameRuleVersion": "694cae25cf25dc3db0e02b1ec6c3d2186e54a5dc34edcc2c15aaa0938e4e2a78",
+    "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+    "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "sourceControls": [
+    {
+      "measure": "OPERATING_REVENUE",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "24275110.000000",
+      "assignedAmount": "24178710.000000",
+      "unmatchedAmount": "96400.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PRODUCT_COST",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "6253200.000000",
+      "assignedAmount": "6253200.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "DIRECT_SHIPPING_COST",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "3009274.000000",
+      "assignedAmount": "3009274.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "OTHER_DIRECT_COST",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "0.000000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "VAT_EXPENSE",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "2206828.181816",
+      "assignedAmount": "2198064.545452",
+      "unmatchedAmount": "8763.636364",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "PLATFORM_FEE",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "2883883.068000",
+      "assignedAmount": "2872430.748000",
+      "unmatchedAmount": "11452.320000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "RETURN_COST",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "0.000000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "MANUAL_VENDOR_FEE",
+      "currency": "KRW",
+      "selectedRows": 438,
+      "selectedAmount": "0.000000",
+      "assignedAmount": "0.000000",
+      "unmatchedAmount": "0.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    },
+    {
+      "measure": "AD_SPEND",
+      "currency": "KRW",
+      "selectedRows": 614,
+      "selectedAmount": "7891408.000000",
+      "assignedAmount": "7859381.000000",
+      "unmatchedAmount": "32027.000000",
+      "unallocatedAmount": "0.000000",
+      "difference": "0.000000"
+    }
+  ],
+  "source": {
+    "knownTotals": {
+      "revenue": "24275110.000000",
+      "adSpend": "7891408.000000",
+      "profitBeforeAds": "9845740.706548",
+      "estimatedProfit": "1954332.706548",
+      "mer": "3.0761443332"
+    },
+    "completeTotals": {
+      "revenue": "24275110.000000",
+      "adSpend": "7891408.000000",
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": "3.0761443332"
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": "32027.000000",
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": "96400.000000",
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "NAME_AMBIGUOUS",
+      "NAME_NAME_MISSING",
+      "NORMAL_COST_RULE_MISSING",
+      "OTHER_DIRECT_COST_MISSING",
+      "PARTIAL_TOTAL",
+      "PRODUCT_COST_MISSING",
+      "RETURN_COST_MISSING",
+      "SELLER_SHIPPING_FEE_MISSING",
+      "UNALLOCATED_BALANCE",
+      "UNCLASSIFIED_SALES"
+    ]
+  },
+  "published": {
+    "knownTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "scopeBalances": {
+      "unallocatedAdSpend": null,
+      "unallocatedExpense": null,
+      "shippingIncome": null,
+      "unallocatedShippingIncome": null,
+      "unclassifiedRevenue": null,
+      "unclassifiedProfitBeforeAds": null
+    },
+    "issues": [
+      "INCOMPLETE_COVERAGE",
+      "NOT_COLLECTED"
+    ]
+  },
+  "quality": [
+    {
+      "component": "SALE",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 438,
+      "missingCostRows": 1,
+      "isEstimate": true,
+      "issues": [
+        "NAME_AMBIGUOUS",
+        "NORMAL_COST_RULE_MISSING",
+        "OTHER_DIRECT_COST_MISSING",
+        "PRODUCT_COST_MISSING",
+        "RETURN_COST_MISSING",
+        "SELLER_SHIPPING_FEE_MISSING"
+      ],
+      "sourceAsOf": "2026-07-27T00:58:13.732Z"
+    },
+    {
+      "component": "DIRECT_COST",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 438,
+      "missingCostRows": 1,
+      "isEstimate": true,
+      "issues": [
+        "NAME_AMBIGUOUS",
+        "NORMAL_COST_RULE_MISSING",
+        "OTHER_DIRECT_COST_MISSING",
+        "PRODUCT_COST_MISSING",
+        "RETURN_COST_MISSING",
+        "SELLER_SHIPPING_FEE_MISSING"
+      ],
+      "sourceAsOf": "2026-07-27T00:58:13.732Z"
+    },
+    {
+      "component": "AD_SPEND",
+      "participation": "INCLUDED",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 614,
+      "missingCostRows": 0,
+      "isEstimate": false,
+      "issues": [
+        "NAME_AMBIGUOUS",
+        "NAME_NAME_MISSING"
+      ],
+      "sourceAsOf": "2026-07-27T01:11:02.962Z"
+    },
+    {
+      "component": "COMMON_EXPENSE",
+      "participation": "NOT_APPLICABLE",
+      "collectionState": "COMPLETE",
+      "rowsPresent": 0,
+      "missingCostRows": 0,
+      "isEstimate": true,
+      "issues": [
+        "COMMON_COSTS_INCLUDED_IN_DIRECT_LEDGER"
+      ],
+      "sourceAsOf": "2026-07-27T00:58:13.732Z"
+    }
+  ]
+}

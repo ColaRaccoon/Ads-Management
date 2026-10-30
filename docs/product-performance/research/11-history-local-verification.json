@@ -1,0 +1,39 @@
+{
+  "stage": 11,
+  "status": "PASS",
+  "apiTests": {
+    "tests": 304,
+    "passed": 304,
+    "failed": 0,
+    "logSha256": "fbcde6fd6100760f64529d1cba81ae72bade5850ad589647c6ac617df46aad84"
+  },
+  "apiBuild": "PASS",
+  "sourceSetupGuards": {
+    "passed": 10,
+    "failed": 0
+  },
+  "operatorSemanticTypecheck": {
+    "errors": 0
+  },
+  "naverPostgresFixture": "11-naver-read-boundary-fixture.json",
+  "sourceCommits": [
+    "50859a1dfdb9aae25ed8005d58e261d1d867a18e",
+    "653e1d81b3a11fade0c2ae9f803adab58135b39b",
+    "c954b03eeabbe3819808de7b8ae2faf5342f389d",
+    "9d606a96908c4d17af67c94cf9906739179d1ef8",
+    "44cd2a54ccbb351c92d3ece9fd6722481a80ae66"
+  ],
+  "productionBuildGuard": "PASS_ON_FINAL_DEPLOYMENT",
+  "failedBuildEvidence": "11-history-deployment-failure.json",
+  "webTests": {
+    "passed": 111,
+    "failed": 0,
+    "logSha256": "c6c78670267e6727da97ab75277202ef9198e0665ac7af15446a0f7ab765c8ad"
+  },
+  "webBuild": {
+    "status": "PASS",
+    "pages": 38,
+    "logSha256": "02b5541916d7bc098e29be2286e6a52478fd916b20b4cb6a186fdf85b64cbf56"
+  },
+  "textObjectDatabaseEquivalence": "PASS"
+}

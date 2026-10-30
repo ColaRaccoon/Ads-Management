@@ -1,0 +1,1110 @@
+{
+  "stage": 11,
+  "operation": "history-profile",
+  "key": "stage11-pullup-all-v1",
+  "planSha256": "b49caaa04e71c3c13221d636df452cfc9df6d37733f14f3993fe30c37e29c487",
+  "observedAt": "2026-10-30T01:00:42.239Z",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of browser-verified active administrator; not an HTTP authentication test",
+  "status": "FAIL",
+  "profiles": [
+    {
+      "input": {
+        "from": "2026-09-29",
+        "to": "2026-10-28"
+      },
+      "executionMs": 1962.414,
+      "planningMs": 85.39,
+      "transferMs": 334,
+      "frameBytes": 3547070,
+      "fieldBytes": {
+        "facts": 894900,
+        "rules": 1221,
+        "ranges": 936,
+        "coverage": 970250,
+        "failures": 523,
+        "products": 222,
+        "connections": 272,
+        "publications": 1180541
+      },
+      "textObjectEquivalent": true,
+      "nodes": [
+        {
+          "type": "Result",
+          "rows": 1,
+          "loops": 1,
+          "time": 1956.163,
+          "cost": 2731.4
+        },
+        {
+          "type": "Limit",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.062,
+          "cost": 13.02
+        },
+        {
+          "type": "Sort",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.061,
+          "cost": 13.02
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_products",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.048,
+          "cost": 10.7
+        },
+        {
+          "type": "Limit",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.085,
+          "cost": 14.05
+        },
+        {
+          "type": "Sort",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.07,
+          "cost": 14.05
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_rules",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.048,
+          "cost": 10.9
+        },
+        {
+          "type": "Limit",
+          "rows": 3,
+          "loops": 1,
+          "time": 4.107,
+          "cost": 13.37
+        },
+        {
+          "type": "Sort",
+          "rows": 3,
+          "loops": 1,
+          "time": 4.104,
+          "cost": 13.37
+        },
+        {
+          "type": "Hash Join",
+          "rows": 3,
+          "loops": 1,
+          "time": 4.085,
+          "cost": 12.56
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "source_connections",
+          "rows": 3,
+          "loops": 1,
+          "time": 1.385,
+          "cost": 10.3
+        },
+        {
+          "type": "Hash",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.035,
+          "cost": 0.52
+        },
+        {
+          "type": "ProjectSet",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.029,
+          "cost": 0.52
+        },
+        {
+          "type": "Result",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.001,
+          "cost": 0.01
+        },
+        {
+          "type": "Append",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.043,
+          "cost": 3.05
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "connections",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.012,
+          "cost": 0.9
+        },
+        {
+          "type": "Function Scan",
+          "rows": 5,
+          "loops": 1,
+          "time": 0.014,
+          "cost": 1.5
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "allowed_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.038,
+          "cost": 2.6
+        },
+        {
+          "type": "Limit",
+          "rows": 273,
+          "loops": 1,
+          "time": 218.698,
+          "cost": 218.88
+        },
+        {
+          "type": "Sort",
+          "rows": 273,
+          "loops": 1,
+          "time": 218.659,
+          "cost": 218.88
+        },
+        {
+          "type": "Hash Join",
+          "rows": 273,
+          "loops": 1,
+          "time": 216.79,
+          "cost": 209.23
+        },
+        {
+          "type": "Hash Join",
+          "rows": 273,
+          "loops": 1,
+          "time": 208.148,
+          "cost": 200.06
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_aggregation_runs",
+          "rows": 601,
+          "loops": 1,
+          "time": 198.628,
+          "cost": 164.01
+        },
+        {
+          "type": "Hash",
+          "rows": 273,
+          "loops": 1,
+          "time": 8.982,
+          "cost": 28.6
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_source_publications",
+          "rows": 273,
+          "loops": 1,
+          "time": 8.873,
+          "cost": 28.6
+        },
+        {
+          "type": "Hash",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.039,
+          "cost": 2.6
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "selected_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.026,
+          "cost": 2.6
+        },
+        {
+          "type": "Limit",
+          "rows": 1223,
+          "loops": 1,
+          "time": 1121.278,
+          "cost": 1988.2
+        },
+        {
+          "type": "Hash Join",
+          "rows": 1223,
+          "loops": 1,
+          "time": 1121.032,
+          "cost": 1988.2
+        },
+        {
+          "type": "Bitmap Heap Scan",
+          "relation": "unified_daily_facts",
+          "rows": 3060,
+          "loops": 1,
+          "time": 1118.461,
+          "cost": 1958.71
+        },
+        {
+          "type": "BitmapOr",
+          "rows": 0,
+          "loops": 1,
+          "time": 29.164,
+          "cost": 53.38
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_daily_facts_product_name_run_id_component_idx",
+          "rows": 699,
+          "loops": 1,
+          "time": 13.587,
+          "cost": 13.15
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_daily_facts_product_name_run_id_component_idx",
+          "rows": 2361,
+          "loops": 1,
+          "time": 15.573,
+          "cost": 38.83
+        },
+        {
+          "type": "Hash",
+          "rows": 273,
+          "loops": 1,
+          "time": 0.239,
+          "cost": 4.62
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "publications",
+          "rows": 273,
+          "loops": 1,
+          "time": 0.185,
+          "cost": 4.62
+        },
+        {
+          "type": "Limit",
+          "rows": 804,
+          "loops": 1,
+          "time": 390.802,
+          "cost": 368.99
+        },
+        {
+          "type": "Hash Join",
+          "rows": 804,
+          "loops": 1,
+          "time": 390.645,
+          "cost": 368.99
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_source_coverage",
+          "rows": 1851,
+          "loops": 1,
+          "time": 265.945,
+          "cost": 348.68
+        },
+        {
+          "type": "Hash",
+          "rows": 273,
+          "loops": 1,
+          "time": 0.237,
+          "cost": 4.62
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "publications",
+          "rows": 273,
+          "loops": 1,
+          "time": 0.185,
+          "cost": 4.62
+        },
+        {
+          "type": "Limit",
+          "rows": 2,
+          "loops": 1,
+          "time": 1.394,
+          "cost": 13.09
+        },
+        {
+          "type": "Sort",
+          "rows": 2,
+          "loops": 1,
+          "time": 1.392,
+          "cost": 13.09
+        },
+        {
+          "type": "Hash Join",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.718,
+          "cost": 13.06
+        },
+        {
+          "type": "Bitmap Heap Scan",
+          "relation": "unified_aggregation_runs",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.693,
+          "cost": 8.46
+        },
+        {
+          "type": "BitmapOr",
+          "rows": 0,
+          "loops": 1,
+          "time": 0.659,
+          "cost": 2.8
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_aggregation_runs_status_lease_expires_at_started_at_idx",
+          "rows": 5,
+          "loops": 1,
+          "time": 0.651,
+          "cost": 1.41
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_aggregation_runs_status_lease_expires_at_started_at_idx",
+          "rows": 0,
+          "loops": 1,
+          "time": 0.005,
+          "cost": 1.39
+        },
+        {
+          "type": "Hash",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.01,
+          "cost": 2.6
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "selected_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.003,
+          "cost": 2.6
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 1.91,
+          "cost": 1.76
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "products",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.041,
+          "cost": 1.4
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.133,
+          "cost": 2.26
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "rules",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.069,
+          "cost": 1.8
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 4.102,
+          "cost": 0.76
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "connections",
+          "rows": 3,
+          "loops": 1,
+          "time": 4.052,
+          "cost": 0.6
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 260.983,
+          "cost": 6.94
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "publications",
+          "rows": 273,
+          "loops": 1,
+          "time": 219.942,
+          "cost": 4.62
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 1190.226,
+          "cost": 32.89
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "facts",
+          "rows": 1223,
+          "loops": 1,
+          "time": 1147.449,
+          "cost": 26.3
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 413.202,
+          "cost": 17.76
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "coverage",
+          "rows": 804,
+          "loops": 1,
+          "time": 393.305,
+          "cost": 14.2
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 1.444,
+          "cost": 0.09
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "failures",
+          "rows": 2,
+          "loops": 1,
+          "time": 1.401,
+          "cost": 0.06
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 4.059,
+          "cost": 33.67
+        },
+        {
+          "type": "Sort",
+          "rows": 8,
+          "loops": 1,
+          "time": 4.011,
+          "cost": 33.49
+        },
+        {
+          "type": "Subquery Scan",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.534,
+          "cost": 32.5
+        },
+        {
+          "type": "Aggregate",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.525,
+          "cost": 32.15
+        },
+        {
+          "type": "Hash Join",
+          "rows": 520,
+          "loops": 1,
+          "time": 0.317,
+          "cost": 26.4
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_source_publications",
+          "rows": 520,
+          "loops": 1,
+          "time": 0.064,
+          "cost": 12.4
+        },
+        {
+          "type": "Hash",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.009,
+          "cost": 2.6
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "selected_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.002,
+          "cost": 2.6
+        }
+      ]
+    },
+    {
+      "input": {
+        "from": "2026-05-13",
+        "to": "2026-10-28"
+      },
+      "executionMs": 628.42,
+      "planningMs": 17.52,
+      "transferMs": 1180,
+      "frameBytes": 7676056,
+      "fieldBytes": {
+        "facts": 2329012,
+        "rules": 1221,
+        "ranges": 936,
+        "coverage": 2008437,
+        "failures": 1300,
+        "products": 222,
+        "connections": 272,
+        "publications": 2270127
+      },
+      "nodes": [
+        {
+          "type": "Result",
+          "rows": 1,
+          "loops": 1,
+          "time": 532.018,
+          "cost": 2872.69
+        },
+        {
+          "type": "Limit",
+          "rows": 1,
+          "loops": 1,
+          "time": 1.061,
+          "cost": 13.02
+        },
+        {
+          "type": "Sort",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.578,
+          "cost": 13.02
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_products",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.555,
+          "cost": 10.7
+        },
+        {
+          "type": "Limit",
+          "rows": 2,
+          "loops": 1,
+          "time": 1.545,
+          "cost": 14.05
+        },
+        {
+          "type": "Sort",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.533,
+          "cost": 14.05
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_rules",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.045,
+          "cost": 10.9
+        },
+        {
+          "type": "Limit",
+          "rows": 3,
+          "loops": 1,
+          "time": 3.718,
+          "cost": 13.37
+        },
+        {
+          "type": "Sort",
+          "rows": 3,
+          "loops": 1,
+          "time": 3.052,
+          "cost": 13.37
+        },
+        {
+          "type": "Hash Join",
+          "rows": 3,
+          "loops": 1,
+          "time": 2.462,
+          "cost": 12.56
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "source_connections",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.558,
+          "cost": 10.3
+        },
+        {
+          "type": "Hash",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.632,
+          "cost": 0.52
+        },
+        {
+          "type": "ProjectSet",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.597,
+          "cost": 0.52
+        },
+        {
+          "type": "Result",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.001,
+          "cost": 0.01
+        },
+        {
+          "type": "Append",
+          "rows": 8,
+          "loops": 1,
+          "time": 1.621,
+          "cost": 3.05
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "connections",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.003,
+          "cost": 0.9
+        },
+        {
+          "type": "Function Scan",
+          "rows": 5,
+          "loops": 1,
+          "time": 0.562,
+          "cost": 1.5
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "allowed_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.581,
+          "cost": 2.6
+        },
+        {
+          "type": "Limit",
+          "rows": 517,
+          "loops": 1,
+          "time": 29.997,
+          "cost": 242.76
+        },
+        {
+          "type": "Sort",
+          "rows": 517,
+          "loops": 1,
+          "time": 29.179,
+          "cost": 242.76
+        },
+        {
+          "type": "Hash Join",
+          "rows": 517,
+          "loops": 1,
+          "time": 22.302,
+          "cost": 216.9
+        },
+        {
+          "type": "Hash Join",
+          "rows": 517,
+          "loops": 1,
+          "time": 6.518,
+          "cost": 201.55
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_source_publications",
+          "rows": 517,
+          "loops": 1,
+          "time": 1.192,
+          "cost": 28.6
+        },
+        {
+          "type": "Hash",
+          "rows": 601,
+          "loops": 1,
+          "time": 3.942,
+          "cost": 164.01
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_aggregation_runs",
+          "rows": 601,
+          "loops": 1,
+          "time": 3.188,
+          "cost": 164.01
+        },
+        {
+          "type": "Hash",
+          "rows": 8,
+          "loops": 1,
+          "time": 1.176,
+          "cost": 2.6
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "selected_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.022,
+          "cost": 2.6
+        },
+        {
+          "type": "Limit",
+          "rows": 2989,
+          "loops": 1,
+          "time": 13.413,
+          "cost": 2014.76
+        },
+        {
+          "type": "Hash Join",
+          "rows": 2989,
+          "loops": 1,
+          "time": 12.507,
+          "cost": 2014.76
+        },
+        {
+          "type": "Bitmap Heap Scan",
+          "relation": "unified_daily_facts",
+          "rows": 3060,
+          "loops": 1,
+          "time": 9.119,
+          "cost": 1958.71
+        },
+        {
+          "type": "BitmapOr",
+          "rows": 0,
+          "loops": 1,
+          "time": 3.22,
+          "cost": 53.38
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_daily_facts_product_name_run_id_component_idx",
+          "rows": 699,
+          "loops": 1,
+          "time": 3.061,
+          "cost": 13.15
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_daily_facts_product_name_run_id_component_idx",
+          "rows": 2361,
+          "loops": 1,
+          "time": 0.155,
+          "cost": 38.83
+        },
+        {
+          "type": "Hash",
+          "rows": 517,
+          "loops": 1,
+          "time": 0.817,
+          "cost": 10.8
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "publications",
+          "rows": 517,
+          "loops": 1,
+          "time": 0.712,
+          "cost": 10.8
+        },
+        {
+          "type": "Limit",
+          "rows": 1617,
+          "loops": 1,
+          "time": 8.647,
+          "cost": 389.59
+        },
+        {
+          "type": "Hash Join",
+          "rows": 1617,
+          "loops": 1,
+          "time": 8.456,
+          "cost": 389.59
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_source_coverage",
+          "rows": 1851,
+          "loops": 1,
+          "time": 4.121,
+          "cost": 348.68
+        },
+        {
+          "type": "Hash",
+          "rows": 517,
+          "loops": 1,
+          "time": 2.035,
+          "cost": 10.8
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "publications",
+          "rows": 517,
+          "loops": 1,
+          "time": 0.657,
+          "cost": 10.8
+        },
+        {
+          "type": "Limit",
+          "rows": 5,
+          "loops": 1,
+          "time": 5.166,
+          "cost": 13.17
+        },
+        {
+          "type": "Sort",
+          "rows": 5,
+          "loops": 1,
+          "time": 4.448,
+          "cost": 13.17
+        },
+        {
+          "type": "Hash Join",
+          "rows": 5,
+          "loops": 1,
+          "time": 3.763,
+          "cost": 13.1
+        },
+        {
+          "type": "Bitmap Heap Scan",
+          "relation": "unified_aggregation_runs",
+          "rows": 5,
+          "loops": 1,
+          "time": 1.95,
+          "cost": 8.46
+        },
+        {
+          "type": "BitmapOr",
+          "rows": 0,
+          "loops": 1,
+          "time": 0.725,
+          "cost": 2.8
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_aggregation_runs_status_lease_expires_at_started_at_idx",
+          "rows": 5,
+          "loops": 1,
+          "time": 0.071,
+          "cost": 1.41
+        },
+        {
+          "type": "Bitmap Index Scan",
+          "index": "unified_aggregation_runs_status_lease_expires_at_started_at_idx",
+          "rows": 0,
+          "loops": 1,
+          "time": 0.004,
+          "cost": 1.39
+        },
+        {
+          "type": "Hash",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.501,
+          "cost": 2.6
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "selected_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.004,
+          "cost": 2.6
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 3.068,
+          "cost": 1.76
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "products",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.714,
+          "cost": 1.4
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 1.465,
+          "cost": 2.26
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "rules",
+          "rows": 2,
+          "loops": 1,
+          "time": 0.735,
+          "cost": 1.8
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 1.416,
+          "cost": 0.76
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "connections",
+          "rows": 3,
+          "loops": 1,
+          "time": 0.77,
+          "cost": 0.6
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 83.037,
+          "cost": 16.21
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "publications",
+          "rows": 517,
+          "loops": 1,
+          "time": 29.883,
+          "cost": 10.8
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 102.743,
+          "cost": 70.01
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "facts",
+          "rows": 2989,
+          "loops": 1,
+          "time": 51.786,
+          "cost": 56
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 43.912,
+          "cost": 41.49
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "coverage",
+          "rows": 1617,
+          "loops": 1,
+          "time": 10.69,
+          "cost": 33.18
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 0.206,
+          "cost": 0.14
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "failures",
+          "rows": 5,
+          "loops": 1,
+          "time": 0.159,
+          "cost": 0.1
+        },
+        {
+          "type": "Aggregate",
+          "rows": 1,
+          "loops": 1,
+          "time": 6.944,
+          "cost": 33.67
+        },
+        {
+          "type": "Sort",
+          "rows": 8,
+          "loops": 1,
+          "time": 6.903,
+          "cost": 33.49
+        },
+        {
+          "type": "Subquery Scan",
+          "rows": 8,
+          "loops": 1,
+          "time": 3.368,
+          "cost": 32.5
+        },
+        {
+          "type": "Aggregate",
+          "rows": 8,
+          "loops": 1,
+          "time": 2.066,
+          "cost": 32.15
+        },
+        {
+          "type": "Hash Join",
+          "rows": 520,
+          "loops": 1,
+          "time": 0.83,
+          "cost": 26.4
+        },
+        {
+          "type": "Seq Scan",
+          "relation": "unified_source_publications",
+          "rows": 520,
+          "loops": 1,
+          "time": 0.062,
+          "cost": 12.4
+        },
+        {
+          "type": "Hash",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.018,
+          "cost": 2.6
+        },
+        {
+          "type": "CTE Scan",
+          "cte": "selected_scopes",
+          "rows": 8,
+          "loops": 1,
+          "time": 0.002,
+          "cost": 2.6
+        }
+      ]
+    }
+  ],
+  "errorClass": "PrismaClientKnownRequestError",
+  "errorCode": "P2028",
+  "failedJobId": null,
+  "permissionObject": null,
+  "transactionExpired": true
+}

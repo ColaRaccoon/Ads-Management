@@ -1,0 +1,297 @@
+{
+  "stage": 11,
+  "kind": "ALL_STORED_PULLUP_HISTORY",
+  "sourceInventorySha256": "20fb18d1aea0358d8ff7491f24231e98e4ab04e59e75497caf2e14cb00d4dffe",
+  "canonicalProduct": "풀업바",
+  "baselineRules": {
+    "name": {
+      "id": "06b05f8c-ea1a-4803-b38c-a4538ac38cfd",
+      "kind": "NAME",
+      "active": true,
+      "payload": {
+        "terms": [
+          "풀업바"
+        ],
+        "matchType": "CONTAINS",
+        "nameField": null,
+        "optionExact": null,
+        "excludeTerms": [],
+        "saleUnitName": null,
+        "optionExclude": [],
+        "optionInclude": []
+      },
+      "validTo": null,
+      "version": 3,
+      "platform": null,
+      "scopeKey": null,
+      "productId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+      "validFrom": "2026-05-13"
+    },
+    "unit": {
+      "id": "7502dd56-c8fb-4d43-894e-d6d2468149ef",
+      "kind": "SALE_UNIT",
+      "active": true,
+      "payload": {
+        "otherCost": "0",
+        "salePrice": "34900",
+        "optionExact": null,
+        "productCost": "10000",
+        "saleUnitName": "풀업바 단품",
+        "shippingCost": "0",
+        "optionInclude": [
+          "풀업바(72~97cm)"
+        ],
+        "quantityBasis": "SALE_UNIT_TOTAL",
+        "unitsPerSaleUnit": "1"
+      },
+      "validTo": null,
+      "version": 1,
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "productId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+      "validFrom": "2026-10-28"
+    }
+  },
+  "proposedNameRule": {
+    "kind": "NAME",
+    "productId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+    "platform": null,
+    "scopeKey": null,
+    "validFrom": "2026-05-13",
+    "validTo": null,
+    "active": true,
+    "payload": {
+      "matchType": "CONTAINS",
+      "terms": [
+        "풀업바"
+      ],
+      "excludeTerms": [],
+      "optionInclude": [],
+      "optionExclude": [],
+      "nameField": null,
+      "saleUnitName": null
+    }
+  },
+  "sourceWrites": 0,
+  "legacyCostRulesUnchanged": true,
+  "partitions": [
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-29"
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-29"
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-29"
+    }
+  ],
+  "ranges": [
+    {
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "date": "2026-10-29",
+      "from": "2026-10-29",
+      "to": "2026-10-29",
+      "days": 1
+    },
+    {
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "date": "2026-10-29",
+      "from": "2026-10-29",
+      "to": "2026-10-29",
+      "days": 1
+    },
+    {
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "date": "2026-10-29",
+      "from": "2026-10-29",
+      "to": "2026-10-29",
+      "days": 1
+    }
+  ],
+  "samples": [
+    {
+      "originalName": "[유남x비밀링크] 인피니티 풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "businessDate": "2026-05-13",
+      "nameField": "product_name"
+    },
+    {
+      "originalName": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "businessDate": "2026-05-13",
+      "nameField": "product_name"
+    },
+    {
+      "originalName": "[인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "businessDate": "2026-05-13",
+      "nameField": "product_name"
+    },
+    {
+      "originalName": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "businessDate": "2026-05-13",
+      "nameField": "product_name"
+    },
+    {
+      "originalName": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+      "platform": "CAFE24",
+      "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+      "businessDate": "2026-05-13",
+      "nameField": "product_name"
+    },
+    {
+      "originalName": "풀업바_2026-10-19",
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "businessDate": "2026-05-13",
+      "nameField": "campaign_name"
+    },
+    {
+      "originalName": "풀업바- 2026-10-21",
+      "platform": "GOOGLE",
+      "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+      "businessDate": "2026-05-13",
+      "nameField": "campaign_name"
+    },
+    {
+      "originalName": "260721_풀업바_0001",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260723_풀업바",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260804_풀업바_0002",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260804_풀업바_0003",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260804_풀업바_0004",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260804_풀업바_0005",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260804_풀업바_0007",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260807_풀업바_댓글참여",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260901_풀업바_0012",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260901_풀업바_0013",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260901_풀업바_0014",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260901_풀업바_0015",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260901_풀업바_0016",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260901_풀업바_경빈0001",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260902_풀업바",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260910_풀업바",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260918_풀업바",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    },
+    {
+      "originalName": "260929_풀업바",
+      "platform": "META",
+      "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546",
+      "businessDate": "2026-05-13",
+      "nameField": "adset_name"
+    }
+  ]
+}

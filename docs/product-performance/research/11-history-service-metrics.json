@@ -1,0 +1,30 @@
+{
+  "stage": 11,
+  "window": "Last hour across several rollouts; not one-release or long-term load proof",
+  "service": {
+    "id": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+    "name": "grand-fascination"
+  },
+  "environment": {
+    "id": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+    "name": "staging"
+  },
+  "metrics": [
+    {
+      "measurement": "CPU_USAGE",
+      "current": 0.007462166666666667,
+      "average": 0.014117483195592292,
+      "min": 0,
+      "max": 0.23417626666666666,
+      "sampleCount": 121
+    },
+    {
+      "measurement": "MEMORY_USAGE_GB",
+      "current": 0.25028608,
+      "average": 0.1835763898181818,
+      "min": 0,
+      "max": 0.292859904,
+      "sampleCount": 121
+    }
+  ]
+}

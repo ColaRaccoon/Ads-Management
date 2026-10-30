@@ -1,0 +1,1781 @@
+{
+  "remoteWrites": 0,
+  "rows": {
+    "history": {
+      "privacy": "Aggregate dates/counts and product rule/name projections only; no customer identifiers, source payloads, authentication or credential values.",
+      "policies": [
+        {
+          "to": null,
+          "from": "2026-10-23",
+          "kind": "GOOGLE_CAMPAIGN",
+          "source": "API",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "to": null,
+          "from": "2026-10-23",
+          "kind": "META_AD",
+          "source": "API",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "to": null,
+          "from": "2026-10-23",
+          "kind": "META_ADSET",
+          "source": "API",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "to": "2026-10-24",
+          "from": "2026-10-23",
+          "kind": "CAFE24_ORDER",
+          "source": "API",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "to": "2026-10-25",
+          "from": "2026-10-24",
+          "kind": "CAFE24_ORDER",
+          "source": "API",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "to": "2026-10-26",
+          "from": "2026-10-25",
+          "kind": "CAFE24_ORDER",
+          "source": "API",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "to": "2026-10-23",
+          "from": "2026-10-20",
+          "kind": "GOOGLE_CAMPAIGN",
+          "source": "API",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "to": "2026-10-27",
+          "from": "2026-10-26",
+          "kind": "CAFE24_ORDER",
+          "source": "API",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "to": "2026-10-28",
+          "from": "2026-10-27",
+          "kind": "CAFE24_ORDER",
+          "source": "API",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "to": "2026-10-29",
+          "from": "2026-10-28",
+          "kind": "CAFE24_ORDER",
+          "source": "API",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "to": "2026-10-30",
+          "from": "2026-10-29",
+          "kind": "CAFE24_ORDER",
+          "source": "API",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "to": null,
+          "from": "2026-10-30",
+          "kind": "CAFE24_ORDER",
+          "source": "CSV",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        }
+      ],
+      "observedAt": "2026-10-30T08:57:13.466814+09:00",
+      "sourceDays": [
+        {
+          "rows": 250,
+          "source": "API",
+          "platform": "CAFE24",
+          "scope_key": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "named_rows": 80,
+          "business_date": "2026-10-29",
+          "legacy_assigned_rows": 78
+        },
+        {
+          "rows": 6,
+          "source": "API",
+          "platform": "GOOGLE",
+          "scope_key": "21b811a6-b9d7-44f5-8167-ce40198947b5",
+          "named_rows": 1,
+          "business_date": "2026-10-29",
+          "legacy_assigned_rows": 0
+        },
+        {
+          "rows": 200,
+          "source": "API",
+          "platform": "META",
+          "scope_key": "2155a401-bd86-4111-9280-3c95ed207546",
+          "named_rows": 21,
+          "business_date": "2026-10-29",
+          "legacy_assigned_rows": 21
+        }
+      ],
+      "fxDateRange": {
+        "to": "2026-10-29",
+        "days": 152,
+        "from": "2026-05-27"
+      },
+      "productNames": [
+        {
+          "rows": 2,
+          "platform": "CAFE24",
+          "original_name": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+          "legacy_assigned_rows": 0
+        },
+        {
+          "rows": 21,
+          "platform": "CAFE24",
+          "original_name": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+          "legacy_assigned_rows": 21
+        },
+        {
+          "rows": 57,
+          "platform": "CAFE24",
+          "original_name": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+          "legacy_assigned_rows": 57
+        },
+        {
+          "rows": 1,
+          "platform": "GOOGLE",
+          "original_name": "풀업바_2026-10-19",
+          "legacy_assigned_rows": 0
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260721_풀업바_0001",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 3,
+          "platform": "META",
+          "original_name": "260723_풀업바",
+          "legacy_assigned_rows": 3
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260804_풀업바_0002",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260804_풀업바_0003",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260804_풀업바_0004",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260804_풀업바_0005",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260804_풀업바_0007",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260807_풀업바_댓글참여",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260901_풀업바_0012",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260901_풀업바_0013",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260901_풀업바_0014",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260901_풀업바_0015",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260901_풀업바_0016",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260901_풀업바_경빈0001",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260902_풀업바",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 2,
+          "platform": "META",
+          "original_name": "260910_풀업바",
+          "legacy_assigned_rows": 2
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260918_풀업바",
+          "legacy_assigned_rows": 1
+        },
+        {
+          "rows": 1,
+          "platform": "META",
+          "original_name": "260929_풀업바",
+          "legacy_assigned_rows": 1
+        }
+      ],
+      "unifiedRules": [
+        {
+          "id": "7502dd56-c8fb-4d43-894e-d6d2468149ef",
+          "kind": "SALE_UNIT",
+          "active": true,
+          "payload": {
+            "otherCost": "0",
+            "salePrice": "34900",
+            "optionExact": null,
+            "productCost": "10000",
+            "saleUnitName": "풀업바 단품",
+            "shippingCost": "0",
+            "optionInclude": [
+              "풀업바(72~97cm)"
+            ],
+            "quantityBasis": "SALE_UNIT_TOTAL",
+            "unitsPerSaleUnit": "1"
+          },
+          "validTo": null,
+          "version": 1,
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2",
+          "productId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+          "validFrom": "2026-10-28"
+        },
+        {
+          "id": "06b05f8c-ea1a-4803-b38c-a4538ac38cfd",
+          "kind": "NAME",
+          "active": true,
+          "payload": {
+            "terms": [
+              "풀업바"
+            ],
+            "matchType": "CONTAINS",
+            "nameField": null,
+            "optionExact": null,
+            "excludeTerms": [],
+            "saleUnitName": null,
+            "optionExclude": [],
+            "optionInclude": []
+          },
+          "validTo": null,
+          "version": 3,
+          "platform": null,
+          "scopeKey": null,
+          "productId": "db50b04e-db3c-4d7f-9f01-9c3dba83c28f",
+          "validFrom": "2026-05-13"
+        }
+      ],
+      "legacyCostHistory": [
+        {
+          "fx": 1475.6,
+          "to": null,
+          "vat": 3490,
+          "from": "2026-07-01",
+          "shipping": 0,
+          "otherCost": 0,
+          "salePrice": 34900,
+          "productCost": 10000
+        }
+      ],
+      "publishedPartitions": [
+        {
+          "date": "2026-07-24",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-22",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-08-11",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-11",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-01",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-08-08",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-05",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-26",
+          "platform": "NAVER",
+          "scopeKey": "5ba1d3cf-7aee-4cd1-aecd-d44352f665dd"
+        },
+        {
+          "date": "2026-10-04",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-07-29",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-14",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-02",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-17",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-08-14",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-13",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-03",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-08-01",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-19",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-18",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-13",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-07-25",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-09",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-06-20",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-06-21",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-06",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-04",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-21",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-10",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-31",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-27",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-18",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-17",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-26",
+          "platform": "NAVER",
+          "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79"
+        },
+        {
+          "date": "2026-10-27",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-28",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-09-30",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-21",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-25",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-07",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-05",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-23",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-20",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-24",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-15",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-26",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-08",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-06",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-09",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-09-29",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-12",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-10",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-10-16",
+          "platform": "CAFE24",
+          "scopeKey": "be140e7e-3994-406e-94ff-b50dfc7ac7b2"
+        },
+        {
+          "date": "2026-07-23",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-07",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-04",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-26",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-16",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-20",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-19",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-03",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-22",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-12",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-15",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-02",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-30",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-28",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-08",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-11",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-30",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-06",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-22",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-27",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-31",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-25",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-13",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-28",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-28",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "date": "2026-08-29",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-24",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-03",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-15",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-20",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-17",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-05",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-26",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-14",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-04",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-16",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-21",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-07",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-18",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-19",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-23",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-02",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-01",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-09",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-12",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-10",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-28",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-15",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-28",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-19",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-05",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-22",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-24",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-01",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-30",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-09",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-12",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-18",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-08",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-27",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-14",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-20",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-04",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-16",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-29",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-03",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-11",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-10",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-23",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-17",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-13",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-02",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-25",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-26",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-09-21",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-07",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-21",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-06",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-10-22",
+          "platform": "CAFE24",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-16",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-11",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-27",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-15",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-28",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-17",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-13",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-25",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-19",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-31",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-03",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-09",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-12",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-24",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-08",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-10",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-01",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-14",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-05",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-21",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-29",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-22",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-20",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-07",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-04",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-18",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-30",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-02",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-23",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-26",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-07-06",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-26",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-02",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-12",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-17",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-25",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-04",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-24",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-30",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-14",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-13",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-19",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-18",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-23",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-07",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-27",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-21",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-09",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-29",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-05",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-08",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-11",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-28",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-16",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-06",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-20",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-03",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-15",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-22",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-01",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-10",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-08-31",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-17",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-05",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-02",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-12",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-06",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-16",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-20",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-03",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-19",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-23",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-13",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-22",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-08",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-30",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-07",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-15",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-28",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-11",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-18",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-21",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-24",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-14",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-09",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-01",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-04",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-29",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-27",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-26",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-25",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-01",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-09-10",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-20",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-17",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-24",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-18",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-05",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-09",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-27",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-12",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-10",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-25",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-21",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-08",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-04",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-15",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-16",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-14",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-28",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-19",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-06",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-02",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-11",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-07",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-13",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-26",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-03",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-23",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-22",
+          "platform": "COUPANG",
+          "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD"
+        },
+        {
+          "date": "2026-10-21",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-20",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-22",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-23",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-25",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-26",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-27",
+          "platform": "GOOGLE",
+          "scopeKey": "21b811a6-b9d7-44f5-8167-ce40198947b5"
+        },
+        {
+          "date": "2026-10-27",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "date": "2026-10-25",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "date": "2026-10-26",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "date": "2026-10-24",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "date": "2026-10-23",
+          "platform": "META",
+          "scopeKey": "2155a401-bd86-4111-9280-3c95ed207546"
+        },
+        {
+          "date": "2026-07-25",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-26",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-03",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-04",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-20",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-02",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-06",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-31",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-05",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-29",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-22",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-28",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-21",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-18",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-30",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-08",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-10",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-17",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-13",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-07-27",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-11",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-16",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        },
+        {
+          "date": "2026-08-01",
+          "platform": "META",
+          "scopeKey": "LEGACY_UNBOUND"
+        }
+      ],
+      "existingMetaNameRules": [
+        {
+          "active": true,
+          "pattern": "풀업바",
+          "validTo": null,
+          "matchType": "CONTAINS",
+          "validFrom": "2026-07-01"
+        }
+      ]
+    }
+  },
+  "operation": "MANAGEMENT_READ_ONLY",
+  "stage": 11,
+  "projectRef": "iygjmosbelbosfxidqxv",
+  "observedAt": "2026-10-29T23:57:14.1151420Z"
+}

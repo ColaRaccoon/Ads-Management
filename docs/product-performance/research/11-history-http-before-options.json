@@ -1,0 +1,42 @@
+{
+  "stage": 11,
+  "deploymentId": "44cf3829-0d1d-4fa1-bd58-05e4e24ad53b",
+  "frameFailures": [
+    {
+      "time": "2026-10-30T00:52:44.611344400Z",
+      "message": "\u001b[33m[Nest] 12  - \u001b[39m10/30/2026, 12:52:44 AM \u001b[33m   WARN\u001b[39m \u001b[38;5;3m[UnifiedReportRepository] \u001b[39m\u001b[33m{\"event\":\"UNIFIED_FRAME_READ_FAILED\",\"code\":\"P2028\"}\u001b[39m"
+    }
+  ],
+  "http": [
+    {
+      "time": "2026-10-30T00:51:55.394432122Z",
+      "path": "/backend-api/unified-performance/summary",
+      "status": 200,
+      "durationMs": 6457
+    },
+    {
+      "time": "2026-10-30T00:51:55.398265109Z",
+      "path": "/backend-api/unified-performance/diagnostics",
+      "status": 200,
+      "durationMs": 6459
+    },
+    {
+      "time": "2026-10-30T00:51:55.424414515Z",
+      "path": "/backend-api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 6486
+    },
+    {
+      "time": "2026-10-30T00:52:06.397418976Z",
+      "path": "/backend-api/unified-performance/timeseries",
+      "status": 200,
+      "durationMs": 10874
+    },
+    {
+      "time": "2026-10-30T00:52:44.579007961Z",
+      "path": "/backend-api/unified-performance/relationships",
+      "status": 500,
+      "durationMs": 37960
+    }
+  ]
+}

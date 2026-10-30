@@ -1,0 +1,1256 @@
+{
+  "stage": 11,
+  "operation": "history-preview",
+  "key": "stage11-pullup-all-v1",
+  "planSha256": "b49caaa04e71c3c13221d636df452cfc9df6d37733f14f3993fe30c37e29c487",
+  "observedAt": "2026-10-29T07:57:01.385Z",
+  "sourceWrites": 0,
+  "authBoundary": "CLI maintenance on behalf of browser-verified active administrator; not an HTTP authentication test",
+  "status": "PASS",
+  "preview": {
+    "canSave": true,
+    "affectedRange": {
+      "from": "2026-05-13",
+      "to": null
+    },
+    "samples": [
+      {
+        "originalName": "[유남x비밀링크] 인피니티 풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+        "originalOption": "",
+        "nameField": "product_name",
+        "restorationPath": null,
+        "normalizedName": "[유남x비밀링크] 인피니티 풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "8711252103e02e8895bf8a27593c103d4ce59e07d1770ec83ec133463d25b006",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+        "originalOption": "",
+        "nameField": "product_name",
+        "restorationPath": null,
+        "normalizedName": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "def0ae4812fa15eea24ba97c9088ce3acb51e747bfa7eedc1ac3069d0244dedc",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "[인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+        "originalOption": "",
+        "nameField": "product_name",
+        "restorationPath": null,
+        "normalizedName": "[인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "722b0e6d5c8b13e9d0c0ba528de80a0c6924c541c86789778d0905d9412c80b6",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+        "originalOption": "",
+        "nameField": "product_name",
+        "restorationPath": null,
+        "normalizedName": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "0f078fda36918d8e7bf466fdbbdb09223645801d65b6cbc3d2937305a166141b",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+        "originalOption": "",
+        "nameField": "product_name",
+        "restorationPath": null,
+        "normalizedName": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "ee49cacf8045c2ee6ca4097ba6b18198b4f0fea3e43186c451669683d927dda5",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "풀업바_2026-10-19",
+        "originalOption": "",
+        "nameField": "campaign_name",
+        "restorationPath": null,
+        "normalizedName": "풀업바_2026-10-19",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "7fa895d718bc42307e798a0c149d8a565b53c2a86b2170cdaa70457f9278ceb9",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "풀업바- 2026-10-21",
+        "originalOption": "",
+        "nameField": "campaign_name",
+        "restorationPath": null,
+        "normalizedName": "풀업바- 2026-10-21",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "34d5820b03ab1de3297b38ba11ded931010ae4117400aaed18866d5e6d1035a9",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260721_풀업바_0001",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260721_풀업바_0001",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "ecd1b82c04800baf55a71ac18a0c99854d61d404dad435cd15b133d545b6b5b4",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260723_풀업바",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260723_풀업바",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "24e9edc074092b315717c155bc67a3e9eacb3e21e46987d244d07d98b25a6aa3",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260804_풀업바_0002",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260804_풀업바_0002",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "2275274b107cfde9c9d11b6cd51a46388de41bae2ba7a0911533da5770b0ca42",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260804_풀업바_0003",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260804_풀업바_0003",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "5e0841b8b36f30668ab9afc7c96bae823033c3122add7b628fea6ed1e6ebaa70",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260804_풀업바_0004",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260804_풀업바_0004",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "79f4550bcf7879fb2183c759b427e1fdde4094ef981f8a648f36399ff2659144",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260804_풀업바_0005",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260804_풀업바_0005",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "24a85da69346272cb7b846bebe31e30d75d6ee6c00fbc3d76faa8538229f151a",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260804_풀업바_0007",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260804_풀업바_0007",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "2e3aa0a36673a6bee981e6a50f4f07c6ff0e78783eb108e12d821a6b7b997d14",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260807_풀업바_댓글참여",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260807_풀업바_댓글참여",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "f3c38288acdf2d9cbbb3b8f49d3211c5dc5de60ce1f645a43ce2c84e7ee75f44",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260901_풀업바_0012",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260901_풀업바_0012",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "51198834df7e8f4bf0f12c802eb1e6ae2ed1fe40a17c2b74ebadd18872926c6d",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260901_풀업바_0013",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260901_풀업바_0013",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "32f8742a64e6bf859eace67535549b028bb84a530b371648cb5e6da9be10e3a4",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260901_풀업바_0014",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260901_풀업바_0014",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "d7168d6c198723399144fc352ede05705cb1efd2af3c8a9fbe26467685b7338d",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260901_풀업바_0015",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260901_풀업바_0015",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "b21051f03ca06177aa6408dc33ab6dea89477abbf51b04a3ecb2f6348f2c8397",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260901_풀업바_0016",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260901_풀업바_0016",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "36f3de46edc099328dfec389be5872aaa43b0177dceb8e0e4b8745accded237a",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260901_풀업바_경빈0001",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260901_풀업바_경빈0001",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "41fa16ae5b2488dc6c2530e25aac14f6f78fc3ffe75553b577b530fe52a68cb1",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260902_풀업바",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260902_풀업바",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "b7f1055bb9291b2a58ec77c7a76651cbfb94f87323c8ea92a277d8de5d376cba",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260910_풀업바",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260910_풀업바",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "f7b2a47e75de34fb629877db7b90a927175185ddd121002663702ca05d632d16",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260918_풀업바",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260918_풀업바",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "ed823ad94e91b91dbd4f8cebf7166c5099d015064d6dbfe8b790eebd9d171a9b",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      },
+      {
+        "originalName": "260929_풀업바",
+        "originalOption": "",
+        "nameField": "adset_name",
+        "restorationPath": null,
+        "normalizedName": "260929_풀업바",
+        "normalizedOption": "",
+        "canonicalProductName": "풀업바",
+        "saleUnitName": null,
+        "candidateNames": [
+          "풀업바"
+        ],
+        "ruleIds": [
+          "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+        ],
+        "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe:preview:11771659a22b2ccfb0b9ae095d16e2d3de11d9f0fea5f73bf47602f9775b7b58",
+        "nameInputHash": "6cf6c5a25810a68b74720fad3d0c6e51a7be5baee4d324a3126a711e8e554a77",
+        "matchStatus": "UNIT_REQUIRED",
+        "reasons": [
+          "ALL_NAME_CONDITIONS_MATCHED"
+        ],
+        "unitPreview": {
+          "status": "UNIT_REQUIRED",
+          "candidates": [],
+          "reason": "SALE_UNIT_UNRESOLVED"
+        }
+      }
+    ],
+    "versions": {
+      "configurationVersion": "43f1f92ca4ea00025c75aa5c8df2d983160d212326eff2e204a303ac87380479",
+      "nameRuleVersion": "007bde81406b6d968e805801e2a256118e12be4e11a88ebd3294dd72bbd0aefe",
+      "saleUnitRuleVersion": "999585e7c609c505eba4c9a47f79d7379931efba29290954cbbae0952f385251",
+      "allocationRuleVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "scopePolicyVersion": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "nameOnlySamples": [
+    {
+      "originalName": "[유남x비밀링크] 인피니티 풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "originalOption": "",
+      "nameField": "product_name",
+      "restorationPath": null,
+      "normalizedName": "[유남x비밀링크] 인피니티 풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "94db0c10f968da936de5e2fd00885a8f27953ccb26a407ae0874d65d0896c084",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "originalOption": "",
+      "nameField": "product_name",
+      "restorationPath": null,
+      "normalizedName": "[유튜브] [인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "219768af7a617879318dcb9a4b4a18c453ef5a2a61f50eb27918f4b3a0c9ab25",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "[인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "originalOption": "",
+      "nameField": "product_name",
+      "restorationPath": null,
+      "normalizedName": "[인피니티 가드]풀업바 철봉 가정용 문틀 풀업바 턱걸이 실내 운동 기구 홈 방문",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "ff888f9bd8207e229cf6e960255d239bf08950a5fb59e8d8c84747118683e7cc",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+      "originalOption": "",
+      "nameField": "product_name",
+      "restorationPath": null,
+      "normalizedName": "[인피니티 풀업바] 풀업바🔥안전 그립패드 + 전용 수평계 무조건 증정🔥",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "a3a549627bceae9c9c1359cee29a0b9ab48821c732812158eb07c64451c9b1ea",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+      "originalOption": "",
+      "nameField": "product_name",
+      "restorationPath": null,
+      "normalizedName": "[인피니티 풀업바] 풀업바안전 그립패드 + 전용 수평계 무조건 증정",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "8d278af7771c642dabaa3dfb7799e15f36c7ce8248dcd452c8b85853c1e61a3a",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "풀업바_2026-10-19",
+      "originalOption": "",
+      "nameField": "campaign_name",
+      "restorationPath": null,
+      "normalizedName": "풀업바_2026-10-19",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "04e02ad635d365141cc78062d45f57cf1ef63e216ecf0fe4e8d62a830a3aabb8",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "풀업바- 2026-10-21",
+      "originalOption": "",
+      "nameField": "campaign_name",
+      "restorationPath": null,
+      "normalizedName": "풀업바- 2026-10-21",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "a993cfea9f34e74a8f5855e65b04c8f25cf7875ad7c4a977aa75542778c5add0",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260721_풀업바_0001",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260721_풀업바_0001",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "6b17b68930913810d65694439084912a17892539beee302fdee854a180774d1b",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260723_풀업바",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260723_풀업바",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "ad4dad637e2da4a3b9d12980d0373fb465c0e8efe7f42ea1ea3451f0059efb53",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260804_풀업바_0002",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260804_풀업바_0002",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "e06c396acadf68df2839f5ea78146a7e7a4318275c50fe967c5d92a304da442b",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260804_풀업바_0003",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260804_풀업바_0003",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "b0d8a6ec38cdecb52bcf73130df743842ed3a4673211675ca697de6b1ce2f7be",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260804_풀업바_0004",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260804_풀업바_0004",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "11b53c02af23cdf242d211bd42a0be68a32e14afbdaad8688a3c826d60e8a116",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260804_풀업바_0005",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260804_풀업바_0005",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "eebbd3827348216e82a91a45c7735782d37806a7b5f0e5c669178b67f6652868",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260804_풀업바_0007",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260804_풀업바_0007",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "e9dbb36c2490fe1a95e2e772b0e76ae46b2a1adfd8ba2cea637459eb4dbfb458",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260807_풀업바_댓글참여",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260807_풀업바_댓글참여",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "b4db36144ff15eb80be37c890b39bb1342fc911139707fffaf5b84afd015145d",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260901_풀업바_0012",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260901_풀업바_0012",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "88a7522da7ed175dbf791dee2c5bcc2752d361ac79439197bfaef58269835237",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260901_풀업바_0013",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260901_풀업바_0013",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "02bc46618df52dac159dfdda0ed760e9dfd46be14f2d815ee9db2f9fb87dddb0",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260901_풀업바_0014",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260901_풀업바_0014",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "5f40850699eb534257360f40bb234bb6ca9426a71514f502f517fdac23d19678",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260901_풀업바_0015",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260901_풀업바_0015",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "e1a061c74f99bf5bddeb45f452d6a5287cd68ae964a78eaee4ad4eb181cfe4b8",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260901_풀업바_0016",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260901_풀업바_0016",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "cf56ae4b56210ec0278fda8989abe9b19e209c550b2d02e32b75959b03469c8d",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260901_풀업바_경빈0001",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260901_풀업바_경빈0001",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "174b1607cf8359e052967141b5d10fb78bafbb6cd42f5a0498a3765c3e3c0d66",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260902_풀업바",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260902_풀업바",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "49d79abc9a47604f53b7edca4b6d1f092cc08efba31f6b270b49e4745673845f",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260910_풀업바",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260910_풀업바",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "2d5ef511c5cc0b0279d0a3c4c36a0ee20278407435e86e68ef11f7fcfc72b4e1",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260918_풀업바",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260918_풀업바",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "9731bca454175e210c66bdfc0f5af9655c5776211ff8916da392827ff207749c",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    },
+    {
+      "originalName": "260929_풀업바",
+      "originalOption": "",
+      "nameField": "adset_name",
+      "restorationPath": null,
+      "normalizedName": "260929_풀업바",
+      "normalizedOption": "",
+      "canonicalProductName": "풀업바",
+      "saleUnitName": null,
+      "candidateNames": [
+        "풀업바"
+      ],
+      "ruleIds": [
+        "06b05f8c-ea1a-4803-b38c-a4538ac38cfd"
+      ],
+      "nameRuleVersion": "HISTORICAL_NAME_PREVIEW",
+      "nameInputHash": "1feef3f8a552480c43924718cfc0a39bded1e41d3a69bfa601ecbe7f2a5f8823",
+      "matchStatus": "MATCHED",
+      "reasons": [
+        "ALL_NAME_CONDITIONS_MATCHED"
+      ]
+    }
+  ],
+  "unitPreviewScope": "Unified-only unit preview; actual platform legacy dated units are verified by worker/source replay",
+  "alreadyApplied": false,
+  "saleUnitAndLegacyCostsUnchanged": true
+}
