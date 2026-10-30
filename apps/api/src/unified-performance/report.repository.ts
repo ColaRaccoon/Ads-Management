@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { Prisma, type UnifiedAggregationRun, type UnifiedProduct, type UnifiedRule } from "@prisma/client";
 import { managementVersions, UnifiedManagementRepository } from "./management.repository";
 import type { ReportQuery } from "./report-query";
@@ -126,6 +126,7 @@ export function missingCoverage(scope: ReportScope, date: string): SourceCoverag
 
 @Injectable()
 export class UnifiedReportRepository {
+  private readonly logger = new Logger(UnifiedReportRepository.name);
   // Instance-local to this fixed runtime DB role. Retain only unsettled reads, never report results.
   private readonly inFlight = new Map<string, ReturnType<UnifiedReportRepository["loadSnapshot"]>>();
   constructor(private readonly management: UnifiedManagementRepository) {}
@@ -161,6 +162,9 @@ export class UnifiedReportRepository {
     return this.management.read(async tx => {
       const [result] = await tx.$queryRaw<Array<{ frame: RawFrame }>>(snapshotStatement(query,lookbackFrom,policy));
       return result.frame;
+    }, {timeoutMs:20000}).catch(error=>{
+      const code=typeof error?.code==='string'&&/^P\d{4}$/.test(error.code)?error.code:'UNKNOWN';
+      this.logger.warn(JSON.stringify({event:'UNIFIED_FRAME_READ_FAILED',code}));throw error;
     }).then(frame => {
       // The single statement already captured the complete MVCC frame. Pure
       // hydration and missing-day expansion must not keep a DB transaction open.

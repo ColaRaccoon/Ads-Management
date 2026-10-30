@@ -182,7 +182,8 @@ function inFlightFixture(checkClosed = false) {
     }
   };
   const management = {
-    read: async (work: (tx: unknown) => Promise<unknown>) => {
+    read: async (work: (tx: unknown) => Promise<unknown>, options?:{timeoutMs:number}) => {
+      if(checkClosed) assert.equal(options?.timeoutMs,20000,"large report frames use a bounded read budget");
       reads++; const barrier = gate; await barrier;
       if (fail) { fail = false; throw Error("SYNTHETIC_SNAPSHOT_FAILURE"); }
       inRead=true;

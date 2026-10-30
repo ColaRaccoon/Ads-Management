@@ -26,11 +26,12 @@ export function managementVersions(products: UnifiedProduct[], rules: UnifiedRul
 export class UnifiedManagementRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  read<T>(work: (tx: ManagementTransaction) => Promise<T>): Promise<T> {
+  read<T>(work: (tx: ManagementTransaction) => Promise<T>, options?: { timeoutMs: number }): Promise<T> {
+    if(options && (!Number.isInteger(options.timeoutMs) || options.timeoutMs<1 || options.timeoutMs>20000)) throw new Error("UNIFIED_READ_TIMEOUT_INVALID");
     return this.prisma.$transaction(async tx => {
       await tx.$executeRaw(Prisma.sql`SET TRANSACTION READ ONLY`);
       return work(tx);
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, ...(options?{timeout:options.timeoutMs}:{}) });
   }
   /** Snapshot boundary for adapters: never read catalog and revisions separately. */
   snapshot(tx?: ManagementTransaction) {
