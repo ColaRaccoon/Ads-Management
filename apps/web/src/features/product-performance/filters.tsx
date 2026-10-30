@@ -2,8 +2,8 @@
 
 import { PLATFORMS, PLATFORM_LABELS, type ComparisonMode, type Filters, type Grain, type Options } from "./types";
 
-export function PerformanceFilters({ value, options, onChange }: {
-  value: Filters; options: Options | undefined; onChange: (next: Filters) => void;
+export function PerformanceFilters({ value, options, onChange, showProduct = true, showGrain = true }: {
+  value: Filters; options: Options | undefined; onChange: (next: Filters) => void; showProduct?: boolean; showGrain?: boolean;
 }) {
   const change = (next: Partial<Filters>) => onChange({ ...value, ...next });
   const scopes = options?.scopes.filter(scope => value.platforms.includes(scope.platform)) ?? [];
@@ -29,18 +29,18 @@ export function PerformanceFilters({ value, options, onChange }: {
       <p className="field-help">포함: {value.platforms.map(platform => PLATFORM_LABELS[platform]).join(", ") || "없음"} / 제외: {PLATFORMS.filter(platform => !value.platforms.includes(platform)).map(platform => PLATFORM_LABELS[platform]).join(", ") || "없음"}</p>
     </fieldset>
     <div className="form-grid" style={{ marginTop: 16 }}>
-      <label className="field">고정 제품명
+      {showProduct ? <label className="field">고정 제품명
         <select className="select" value={value.productName} onChange={event => change({ productName: event.target.value })}>
           <option value="">전체 제품</option>
           {value.productName && !options?.products.some(product => product.productName === value.productName) ? <option value={value.productName}>{value.productName}</option> : null}
           {options?.products.map(product => <option key={product.productName} value={product.productName}>{product.productName}{product.historical ? " (과거 발행)" : product.active ? "" : " (비활성)"}</option>)}
         </select>
-      </label>
+      </label> : null}
       <label className="field">시작일 (한국시간)<input className="input" type="date" value={value.from} onChange={event => change({ from: event.target.value })} /></label>
       <label className="field">종료일 (한국시간)<input className="input" type="date" value={value.to} onChange={event => change({ to: event.target.value })} /></label>
-      <label className="field">집계 간격<select className="select" value={value.grain} onChange={event => change({ grain: event.target.value as Grain })}>
+      {showGrain ? <label className="field">집계 간격<select className="select" value={value.grain} onChange={event => change({ grain: event.target.value as Grain })}>
         <option value="day">일</option><option value="week">주 (월요일 시작)</option><option value="month">월</option>
-      </select></label>
+      </select></label> : null}
       <label className="field">비교기간<select className="select" value={value.compareMode} onChange={event => change({ compareMode: event.target.value as ComparisonMode })}>
         <option value="previous">직전 동일 일수</option><option value="week">전주 동일 요일 (7일 전)</option><option value="custom">직접 지정</option>
       </select></label>

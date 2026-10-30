@@ -33,8 +33,8 @@ export interface ReportSummary {
   knownTotals: ReportTotals;
   completeTotals: ReportTotals;
   productProfitSubtotal: string | null;
-  byMarketplace: Array<{ marketplace: string; revenue: string | null }>;
-  byMedium: Array<{ medium: string; adSpend: string | null; share: string | null }>;
+  byMarketplace: Array<{ marketplace: string; revenue: string | null; completeRevenue?: string | null; profitBeforeAds?: string | null; estimatedProfit?: string | null; adSpend?: string | null; profitUnavailableReason?: string | null }>;
+  byMedium: Array<{ medium: string; adSpend: string | null; completeAdSpend?: string | null; share: string | null }>;
   unallocatedExpenses: Array<{ platform: Platform; scopeKey: string; date: string; kind: string | null; amount: string | null }>;
   unallocatedAdSpends: Array<{ platform: Platform; scopeKey: string; date: string; medium: string | null; amount: string | null }>;
   unclassifiedSales: Array<{ platform: Platform; scopeKey: string; date: string; amount: string | null }>;

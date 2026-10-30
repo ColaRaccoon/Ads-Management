@@ -8,11 +8,8 @@ import { PermissionPage } from "@/components/permission-page";
 import { useAuth } from "@/features/auth/use-auth";
 import { apiGet } from "@/lib/api";
 import { PerformanceFilters } from "./filters";
-import { PerformanceKpis } from "./kpis";
-import { ComparisonTable } from "./comparison-table";
-import { PerformanceCharts } from "./charts";
 import { DiagnosticsPanel } from "./diagnostics";
-import { RelationshipPanel } from "./relationships";
+import { ChangeAnalysis } from "./change-analysis";
 import { assertResponse, changeFilters, dashboardError, dashboardKey, defaultFilters, filterParams, loadDashboard, parseFilters, responseMatches, validateFilters } from "./model";
 import type { DashboardData, Diagnostic, Filters, Options, PageResult } from "./types";
 
@@ -28,7 +25,7 @@ function Performance({ identity }: { identity: string }) {
   const searchParams = useSearchParams(), pathname = usePathname(), client = useQueryClient();
   const search = searchParams.toString();
   const { filters, urlError } = useMemo(() => {
-    try { return { filters: parseFilters(new URLSearchParams(search)), urlError: null }; }
+    try { return { filters: { ...parseFilters(new URLSearchParams(search)), grain: "day" as const }, urlError: null }; }
     catch { return { filters: defaultFilters(), urlError: "URL의 조회 조건이 올바르지 않습니다. 필터를 다시 선택해 주세요." }; }
   }, [search]);
   const invalid = urlError ?? validateFilters(filters);
@@ -48,6 +45,7 @@ function Performance({ identity }: { identity: string }) {
   const optionData = !options.isError && !options.isFetching ? options.data : undefined;
   const [pageError, setPageError] = useState("");
   const [paging, setPaging] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const lock = useRef(false);
   const activeSearch = useRef(search);
   activeSearch.current = search;
@@ -75,30 +73,39 @@ function Performance({ identity }: { identity: string }) {
     } finally { lock.current = false; setPaging(false); }
   };
   return <section className="page" style={{ display: "grid", gap: 16 }}>
-    <div className="page-heading"><div><h1>제품 통합 성과</h1><p>고정 제품명의 판매·광고비·추정이익을 같은 범위로 확인합니다.</p></div>
-      <div className="toolbar" style={{ flexWrap: "wrap" }}><button type="button" className="button" disabled={query.isFetching || options.isFetching || Boolean(invalid)} onClick={refresh}>다시 조회</button>
-        <Link className="button" href="/products/mappings">제품명과 배분 설정</Link></div></div>
-    <PerformanceFilters value={filters} options={optionData} onChange={change} />
+    <div className="page-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}><div><h1>제품 통합 성과</h1><p>광고비가 바뀐 뒤, 어디에서 매출과 이익이 달라졌는지 확인하세요.</p></div>
+      <div className="toolbar" style={{ flexWrap: "wrap" }}>
+        <label className="field" style={{ minWidth: 180 }}>분석 제품
+          <select className="select" value={filters.productName} onChange={event => change({ ...filters, productName: event.target.value })}>
+            <option value="">전체 제품</option>
+            {filters.productName && !optionData?.products.some(product => product.productName === filters.productName) ? <option value={filters.productName}>{filters.productName}</option> : null}
+            {optionData?.products.map(product => <option key={product.productName} value={product.productName}>{product.productName}{product.historical ? " (과거 발행)" : product.active ? "" : " (비활성)"}</option>)}
+          </select>
+        </label>
+        <button type="button" className="button" disabled={query.isFetching || options.isFetching || Boolean(invalid)} onClick={refresh}>다시 조회</button>
+      </div></div>
+    <details className="panel" open={Boolean(invalid) || empty}>
+      <summary style={{ cursor: "pointer", color: "#61766d", fontSize: 13 }}>조회 범위 설정 · {filters.from} ~ {filters.to} · {filters.platforms.length}개 플랫폼</summary>
+      <div style={{ marginTop: 12 }}><PerformanceFilters value={filters} options={optionData} onChange={change} showProduct={false} showGrain={false} /></div>
+    </details>
     {invalid ? <div className="panel" role="alert">{invalid}</div> : null}
     {!invalid && options.isError ? <div className="panel" role="alert">조회 조건 목록: {dashboardError(options.error)}</div> : null}
     {!invalid && empty ? <div className="panel" role="status">{filters.platforms.length === 0 ? "플랫폼을 선택하세요." : "계정·스토어를 선택하세요."} 선택하지 않은 범위는 0원으로 표시하지 않습니다.</div> : null}
     {!invalid && !empty && query.isFetching ? <div className="panel" role="status" aria-busy="true">선택한 범위의 성과와 발행 버전을 확인하고 있습니다.</div> : null}
     {!invalid && !empty && query.isError ? <div className="panel" role="alert">{dashboardError(query.error)}</div> : null}
     {data ? <>
-      <div className="warning-strip" role="status"><span>{data.summary.selectedPlatforms.length === 5 ? "전체 플랫폼 기준" : "선택 플랫폼 기준"}</span>
-        {data.summary.selectedPlatforms.includes("NAVER") ? <span>추정 데이터 포함 · 네이버는 기존 저장 결과 기준입니다.</span> : null}
-        {data.summary.provisional ? <span>당일 이후가 포함된 잠정 자료</span> : null}
-        <span>기간 {data.summary.selection.from} ~ {data.summary.selection.to} · 한국시간</span></div>
-      <PerformanceKpis data={data.summary} />
-      {Object.values(data.summary.knownTotals).every(value => value === null) ? <div className="panel" role="status">선택 범위에 확인 가능한 발행 데이터가 없습니다. 아래 진단에서 미수집·미매핑과 적용 여부를 확인하세요.</div> : null}
-      <PerformanceCharts data={data} />
-      <ComparisonTable data={data.summary} />
-      <RelationshipPanel key={filterParams(filters).toString()} filters={filters} identity={identity} anchor={data.summary} onRefresh={refresh} />
-      <DiagnosticsPanel data={data} />
+      {Object.values(data.summary.knownTotals).every(value => value === null) ? <div className="panel" role="status">선택 범위에 확인 가능한 발행 데이터가 없습니다. 아래 데이터 확인에서 미수집·미매핑과 적용 여부를 확인하세요.</div> : null}
+      <ChangeAnalysis key={filterParams(filters).toString()} data={data} filters={filters} />
+      <details className="panel" onToggle={event => setShowDiagnostics(event.currentTarget.open)}>
+        <summary style={{ cursor: "pointer", color: "#61766d", fontSize: 13 }}>원천 데이터 상세 진단{data.summary.provisional ? " · 잠정 자료" : ""}{data.summary.isEstimate ? " · 추정 데이터 포함" : ""}</summary>
+        {showDiagnostics ? <>
+          <DiagnosticsPanel data={data} />
       {data.diagnostics.nextCursor ? <div className="toolbar"><span>상세 진단 {data.diagnostics.items.length} / {data.diagnostics.total}개</span>
         <button type="button" className="button" disabled={paging} onClick={() => void moreDiagnostics()}>{paging ? "진단을 읽는 중…" : "다음 진단 100개"}</button></div> : null}
+        </> : null}
+      </details>
       {pageError ? <div className="panel" role="alert">{pageError}</div> : null}
-      <p className="muted">선택 변경은 저장된 원천별 배분을 유지한 조회입니다. 제외 비용을 남은 플랫폼에 재배분하지 않으며, 광고 중단 후 매출·이익을 예측하는 값이 아닙니다.</p>
+      <p className="muted" style={{ fontSize: 12 }}>선택 매체와 다른 매체의 광고비, 행사·가격·품절이 함께 변할 수 있습니다. 관측된 전후 변화이며 선택 매체만의 광고 효과를 뜻하지 않습니다. <Link href="/products/mappings">제품명과 배분 설정</Link></p>
     </> : null}
   </section>;
 }
