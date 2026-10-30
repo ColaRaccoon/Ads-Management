@@ -46,6 +46,24 @@ test("Naver SQL binds scope/day and projects no customer payload or credentials"
   }
   assert(queries.order_items.values.includes(scope)); assert(queries.order_items.values.includes(date));
   assert(queries.order_items.sql.includes("t.payload->>'paymentDate'"));
+  const id="source-id' OR TRUE --",linked=naverQueries(scope,date,{signatureIds:[id],productIds:[]});
+  assert(!linked.order_source_signatures.sql.includes(id));assert(linked.order_source_signatures.values.includes(id));
+  assert(linked.products.sql.includes('FALSE'));assert(!queries.order_items.sql.includes('__linkedReferencesTyped'));
+});
+
+test("Naver normalizes captured inputs after releasing its read-only database snapshot", async () => {
+  const previousEnabled=process.env.UNIFIED_PERFORMANCE_ENABLED,previousStores=process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS;
+  process.env.UNIFIED_PERFORMANCE_ENABLED='true';process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS=scope;
+  let inside=false,normalizationInputs=0;
+  const tx={$executeRawUnsafe:async()=>{assert(inside);return 0;},$queryRaw:async(sql:{sql:string})=>{
+    assert(inside);return sql.sql.includes('FROM public.stores ')?[row(scope,{platformType:'NAVER_SMARTSTORE',deliveryUnitCost:'0'})]:[];
+  }};
+  const management={snapshot:async()=>({products:[{canonicalName:'풀업바',active:true}],rules:[],versions:{scopePolicyVersion:'scope',nameRuleVersion:'names',saleUnitRuleVersion:'units',allocationRuleVersion:'allocation'}}),
+    read:async(work:(tx:unknown)=>Promise<any>)=>{inside=true;const captured=await work(tx);inside=false;
+      return new Proxy(captured,{get(target,key){if(key==='raw'||key==='errors'||key==='unified'){assert(!inside);normalizationInputs++;}return Reflect.get(target,key);}});}};
+  try{const batch=await new NaverPerformanceAdapter(management as unknown as UnifiedManagementRepository).read(request());assert(batch.coverage.length>0);assert.equal(normalizationInputs,3);}
+  finally{if(previousEnabled===undefined)delete process.env.UNIFIED_PERFORMANCE_ENABLED;else process.env.UNIFIED_PERFORMANCE_ENABLED=previousEnabled;
+    if(previousStores===undefined)delete process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS;else process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS=previousStores;}
 });
 
 test("Naver valid numeric estimates survive missing or malformed optional sync/stored metadata", () => {

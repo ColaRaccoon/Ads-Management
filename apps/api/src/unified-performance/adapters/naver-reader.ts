@@ -46,16 +46,24 @@ export function naverPageDate(request: AdapterRequest): string {
   return date;
 }
 /** Parameters remain bound, including store/day. JSON expressions match source-owned indexes. */
-export function naverQueries(scope: string, date: string): Record<NaverTable | "receipts", Prisma.Sql> {
-  const select = (table: NaverTable, where: Prisma.Sql, order = "t.id") => Prisma.sql`SELECT ${fragment(columns(table))} FROM public.${fragment(table)} t WHERE ${where} ORDER BY ${fragment(order)} LIMIT ${MAX_ROWS + 1}`;
+export function naverQueries(scope: string, date: string, links?: { signatureIds: string[]; productIds: string[] }, captureReferenceTypes = false): Record<NaverTable | "receipts", Prisma.Sql> {
+  const select = (table: NaverTable, where: Prisma.Sql, order = "t.id") => {
+    const referenceTypes = table === 'order_items' && captureReferenceTypes
+      ? `,coalesce(jsonb_typeof(t.payload->'orderSourceSignatureId') IN ('string','null'),true) AND coalesce(jsonb_typeof(t.payload->'productId') IN ('string','null'),true) AS "__linkedReferencesTyped"` : '';
+    return Prisma.sql`SELECT ${fragment(columns(table)+referenceTypes)} FROM public.${fragment(table)} t WHERE ${where} ORDER BY ${fragment(order)} LIMIT ${MAX_ROWS + 1}`;
+  };
   const store = Prisma.sql`t.payload->>'storeId'=${scope}`;
   const daily = (key: "date" | "reportDate" | "paymentDate") => Prisma.sql`${store} AND ${fragment(`t.payload->>'${key}'`)}=${date}`;
   const snapshot = Prisma.sql`SELECT s.id FROM public.sales_unit_cost_snapshots s WHERE s.payload->>'storeId'=${scope} AND s.payload->>'effectiveFrom'=(SELECT max(h.payload->>'effectiveFrom') FROM public.sales_unit_cost_snapshots h WHERE h.payload->>'storeId'=${scope} AND h.payload->>'effectiveFrom'<=${date})`;
   return {
     stores: select("stores", Prisma.sql`t.id=${scope}`),
     order_items: select("order_items", daily("paymentDate")),
-    order_source_signatures: select("order_source_signatures", Prisma.sql`${store} AND t.id IN (SELECT o.payload->>'orderSourceSignatureId' FROM public.order_items o WHERE o.payload->>'storeId'=${scope} AND o.payload->>'paymentDate'=${date})`),
-    products: select("products", Prisma.sql`${store} AND t.id IN (SELECT o.payload->>'productId' FROM public.order_items o WHERE o.payload->>'storeId'=${scope} AND o.payload->>'paymentDate'=${date})`),
+    order_source_signatures: select("order_source_signatures", links
+      ? Prisma.sql`${store} AND ${links.signatureIds.length ? Prisma.sql`t.id IN (${Prisma.join(links.signatureIds)})` : Prisma.sql`FALSE`}`
+      : Prisma.sql`${store} AND t.id IN (SELECT o.payload->>'orderSourceSignatureId' FROM public.order_items o WHERE o.payload->>'storeId'=${scope} AND o.payload->>'paymentDate'=${date})`),
+    products: select("products", links
+      ? Prisma.sql`${store} AND ${links.productIds.length ? Prisma.sql`t.id IN (${Prisma.join(links.productIds)})` : Prisma.sql`FALSE`}`
+      : Prisma.sql`${store} AND t.id IN (SELECT o.payload->>'productId' FROM public.order_items o WHERE o.payload->>'storeId'=${scope} AND o.payload->>'paymentDate'=${date})`),
     canonical_sales_units: select("canonical_sales_units", store),
     sales_unit_cost_settings: select("sales_unit_cost_settings", Prisma.sql`${store} AND t.payload->>'effectiveFrom'<=${date}`),
     sales_unit_cost_snapshots: select("sales_unit_cost_snapshots", Prisma.sql`${store} AND t.id IN (${snapshot})`),
@@ -82,17 +90,42 @@ export function naverTimestamp(value: unknown): string | null {
   return new Date(value).toISOString();
 }
 /** A failed SELECT is rolled back to its savepoint so independent components remain readable. */
-export async function readNaverProjection(tx: Prisma.TransactionClient, query: Prisma.Sql, key: string, issues: string[]): Promise<NaverProjectedRow[]> {
-  await tx.$executeRawUnsafe("SAVEPOINT naver_component_read");
+export async function readNaverProjection(tx: Prisma.TransactionClient, query: Prisma.Sql, key: string, issues: string[], sharedReadBoundary = false): Promise<NaverProjectedRow[]> {
+  if (!sharedReadBoundary) await tx.$executeRawUnsafe("SAVEPOINT naver_component_read");
   try {
     const rows = await tx.$queryRaw<Array<Record<string, unknown>>>(query);
     if (rows.length > MAX_ROWS) throw new Error("NAVER_SOURCE_TOO_LARGE");
     const projected = rows.map(row => ({ ...row, id: String(row.id), updatedAt: naverTimestamp(row.updatedAt) ?? naverTimestamp(row.rowUpdatedAt) ?? "1970-01-01T00:00:00.000Z" }));
-    await tx.$executeRawUnsafe("RELEASE SAVEPOINT naver_component_read");
+    if (!sharedReadBoundary) await tx.$executeRawUnsafe("RELEASE SAVEPOINT naver_component_read");
     return projected;
   } catch {
-    await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT naver_component_read");
-    await tx.$executeRawUnsafe("RELEASE SAVEPOINT naver_component_read");
+    await tx.$executeRawUnsafe(sharedReadBoundary ? "ROLLBACK TO SAVEPOINT naver_day_read" : "ROLLBACK TO SAVEPOINT naver_component_read");
+    if (!sharedReadBoundary) await tx.$executeRawUnsafe("RELEASE SAVEPOINT naver_component_read");
     issues.push(`NAVER_${key.toUpperCase()}_READ_FAILED`); return [];
   }
+}
+
+/** All statements are SELECTs in one READ ONLY/RR snapshot. Rewinding the shared
+ * savepoint recovers a failed component without changing already read values.
+ * Keep each projection, its row bound and per-component error handling intact. */
+export async function readNaverDayProjections(tx: Prisma.TransactionClient, queries: ReturnType<typeof naverQueries>, context?: { scope: string; date: string }) {
+  const raw = {} as Record<NaverTable | 'receipts', NaverProjectedRow[]>;
+  const errors = {} as Record<NaverTable | 'receipts', string[]>;
+  await tx.$executeRawUnsafe('SAVEPOINT naver_day_read');
+  for (const key of Object.keys(queries) as Array<keyof typeof queries>) {
+    let query=queries[key];
+    // These IDs only restore source names. Read the same bounded order references
+    // in this RR snapshot, then use bound primary-key lookups instead of rescanning
+    // every stored signature/product payload to evaluate the IN subquery.
+    if(context&&['order_source_signatures','products'].includes(key)&&raw.order_items&&!errors.order_items.length&&raw.order_items.every(row=>row.__linkedReferencesTyped===true)){
+      const ids=(field:string)=>[...new Set(raw.order_items.map(row=>row[field]).filter((value):value is string=>typeof value==='string'&&value.length>0))];
+      const signatureIds=ids('orderSourceSignatureId'),productIds=ids('productId');
+      if([...signatureIds,...productIds].every(id=>id.length<=512))query=naverQueries(context.scope,context.date,{signatureIds,productIds})[key];
+    }
+    errors[key] = []; raw[key] = await readNaverProjection(tx, query, key, errors[key], true);
+  }
+  // The type guard is lookup metadata only; preserve the original projection and fingerprint input.
+  for(const row of raw.order_items)delete row.__linkedReferencesTyped;
+  await tx.$executeRawUnsafe('RELEASE SAVEPOINT naver_day_read');
+  return { raw, errors };
 }

@@ -12,7 +12,7 @@ import { naverConfiguration } from "./naver-configuration";
 import { normalizeNaverSalesDay, type NaverSalesDayInput, type NaverSalesUnit } from "./naver-sales";
 import { normalizeNaverAdsCommonDay, naverStoredDiagnostics, naverSyncDiagnostics, type NaverAdsCommonDayInput,
   type NaverDeliveryEvidence, type NaverStoredSummary, type NaverOrderSyncState } from "./naver-ads-common";
-import { naverPageDate, naverQueries, naverTimestamp, readNaverProjection, type NaverProjectedRow, type NaverTable } from "./naver-reader";
+import { naverPageDate, naverQueries, naverTimestamp, readNaverDayProjections, type NaverProjectedRow, type NaverTable } from "./naver-reader";
 
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const text = (value: unknown): string | null => typeof value === "string" ? value : null;
@@ -140,15 +140,16 @@ export function normalizeNaverDay(request: AdapterRequest, raw: RawDay, errors: 
 }
 
 /** Job-only read boundary. Caller scopes must already satisfy existing workspace authorization. */
-export async function readNaverDay(tx: Prisma.TransactionClient, management: UnifiedManagementRepository, request: AdapterRequest): Promise<AdapterBatch> {
-  const date = naverPageDate(request), queries = naverQueries(request.scopeKeys[0], date);
+async function captureNaverDay(tx: Prisma.TransactionClient, management: UnifiedManagementRepository, request: AdapterRequest) {
+  const date = naverPageDate(request), queries = naverQueries(request.scopeKeys[0], date, undefined, true);
   const unified = adConfiguration(await management.snapshot(tx), request);
-  const raw = {} as RawDay, errors = {} as ReadIssues;
-  for (const key of Object.keys(queries) as Array<keyof typeof queries>) {
-    errors[key] = []; raw[key] = await readNaverProjection(tx, queries[key], key, errors[key]);
-  }
+  const { raw, errors } = await readNaverDayProjections(tx, queries, { scope: request.scopeKeys[0], date });
   if (!errors.stores.length && (raw.stores.length !== 1 || raw.stores[0].platformType !== "NAVER_SMARTSTORE")) throw new Error("NAVER_STORE_NOT_FOUND");
-  return normalizeNaverDay(request, raw, errors, unified, new Date().toISOString());
+  return { raw, errors, unified, observedAt: new Date().toISOString() };
+}
+export async function readNaverDay(tx: Prisma.TransactionClient, management: UnifiedManagementRepository, request: AdapterRequest): Promise<AdapterBatch> {
+  const snapshot = await captureNaverDay(tx, management, request);
+  return normalizeNaverDay(request, snapshot.raw, snapshot.errors, snapshot.unified, snapshot.observedAt);
 }
 
 @Injectable()
@@ -157,6 +158,9 @@ export class NaverPerformanceAdapter implements SourceAdapter {
   constructor(private readonly management: UnifiedManagementRepository) {}
   read(request: AdapterRequest): Promise<AdapterBatch> {
     assertUnifiedEnabled(); naverPageDate(request); assertNaverAllowedScope(request.scopeKeys[0]);
-    return this.management.read(tx => readNaverDay(tx, this.management, request));
+    // Release the database snapshot before CPU-only name/cost normalization.
+    // Every input and configuration version was captured in the same READ ONLY/RR boundary.
+    return this.management.read(tx => captureNaverDay(tx, this.management, request))
+      .then(snapshot => normalizeNaverDay(request, snapshot.raw, snapshot.errors, snapshot.unified, snapshot.observedAt));
   }
 }

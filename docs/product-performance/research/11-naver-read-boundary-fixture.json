@@ -1,0 +1,51 @@
+{
+  "stage": 11,
+  "kind": "LOCAL_PG17_NAVER_READ_BOUNDARY_EQUIVALENCE",
+  "remoteWrites": 0,
+  "status": "PASS",
+  "cases": [
+    {
+      "label": "normal exact strings, booleans, timestamps and alias arrays",
+      "identical": true,
+      "oldStatements": 45,
+      "newStatements": 17,
+      "selectStatements": 15,
+      "errorComponents": [],
+      "projectionHash": "de341188a242be4f996040afd488ee887a52ef33d73a44d462cf92b1afc2b73d"
+    },
+    {
+      "label": "two SQL permission errors recover without losing readable sales",
+      "identical": true,
+      "oldStatements": 47,
+      "newStatements": 19,
+      "selectStatements": 15,
+      "errorComponents": [
+        "sales_unit_cost_snapshot_entries",
+        "ad_campaign_daily_costs"
+      ],
+      "projectionHash": "17a7f253c6ed995250c77ae32a7c82b70be0208fc1ff37e975ac97710d399deb"
+    },
+    {
+      "label": "malformed reference types retain original SQL lookup semantics without exposing payload values",
+      "identical": true,
+      "oldStatements": 45,
+      "newStatements": 17,
+      "selectStatements": 15,
+      "errorComponents": [],
+      "projectionHash": "d57c7898701f86b7a177a5916bbbb5dfbf72e7a916f653c617368423c2c268e8"
+    },
+    {
+      "label": "10001 rows retain the original component bound",
+      "identical": true,
+      "oldStatements": 46,
+      "newStatements": 18,
+      "selectStatements": 15,
+      "errorComponents": [
+        "order_items"
+      ],
+      "projectionHash": "987584bb6317c26607442b3de8564243a277912aa801a993737bfb124cb66a8f"
+    }
+  ],
+  "readOnlyEnforced": true,
+  "stopExit": 0
+}
