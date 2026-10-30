@@ -29,12 +29,16 @@ export interface ReportTotals {
   estimatedProfit: string | null;
   mer: string | null;
 }
+/** Known published amounts remain usable when an independent source has no data.
+ * A partially available source can appear in both arrays. Null is never confirmed zero. */
+export interface DisplayAmount { value: string | null; state: "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
+  availableSources: Platform[]; missingSources: Platform[] }
 export interface ReportSummary {
   knownTotals: ReportTotals;
   completeTotals: ReportTotals;
   productProfitSubtotal: string | null;
-  byMarketplace: Array<{ marketplace: string; revenue: string | null; completeRevenue?: string | null; profitBeforeAds?: string | null; estimatedProfit?: string | null; adSpend?: string | null; profitUnavailableReason?: string | null }>;
-  byMedium: Array<{ medium: string; adSpend: string | null; completeAdSpend?: string | null; share: string | null }>;
+  byMarketplace: Array<{ marketplace: string; revenue: string | null; completeRevenue?: string | null; profitBeforeAds?: string | null; estimatedProfit?: string | null; adSpend?: string | null; profitUnavailableReason?: string | null; display?: { revenue: DisplayAmount; estimatedProfit: DisplayAmount; adSpend: DisplayAmount } }>;
+  byMedium: Array<{ medium: string; adSpend: string | null; completeAdSpend?: string | null; displayAdSpend?: DisplayAmount; share: string | null }>;
   unallocatedExpenses: Array<{ platform: Platform; scopeKey: string; date: string; kind: string | null; amount: string | null }>;
   unallocatedAdSpends: Array<{ platform: Platform; scopeKey: string; date: string; medium: string | null; amount: string | null }>;
   unclassifiedSales: Array<{ platform: Platform; scopeKey: string; date: string; amount: string | null }>;
