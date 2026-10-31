@@ -1,0 +1,408 @@
+{
+  "observedAt": "2026-10-31T04:09:56.626Z",
+  "recordedAt": "2026-10-31T04:11:23.650Z",
+  "observationDayKst": "2026-10-31",
+  "state": "PARTIAL_OBSERVATION_PRODUCTION_DATABASE_UNAVAILABLE",
+  "previousReceipt": "12_정시검증_20261030.json",
+  "lastFullyVerifiedAt": "2026-10-30T10:56:20.466177+00:00",
+  "lastFullyVerifiedObservationDayKst": "2026-10-30",
+  "lastVerifiedCounters": {
+    "cafe24Daily": 5,
+    "cafe24Required": 3,
+    "metaDaily": 5,
+    "metaDailyRequired": 3,
+    "dailyGateComplete": true,
+    "dailyGateFirstCompletedOn": "2026-10-28",
+    "metaWeekly": 0,
+    "metaWeeklyRequired": 2,
+    "googleDailyObserved": 4,
+    "googleD7Observed": 4,
+    "googleFinalRequired": "Latest approved Google acceptance record; remains unconfirmed, not inferred from obsolete weekly schedule"
+  },
+  "expectedNotVerified": [
+    {
+      "schedule": "prod-cafe24",
+      "scheduledForKst": "2026-10-31 02:00",
+      "from": "2026-10-30",
+      "to": "2026-10-30",
+      "units": 1
+    },
+    {
+      "schedule": "prod-google-daily",
+      "scheduledForKst": "2026-10-31 02:01",
+      "from": "2026-10-30",
+      "to": "2026-10-30",
+      "units": 1
+    },
+    {
+      "schedule": "prod-meta",
+      "scheduledForKst": "2026-10-31 02:02",
+      "from": "2026-10-24",
+      "to": "2026-10-30",
+      "units": 7
+    },
+    {
+      "schedule": "prod-meta-daily",
+      "scheduledForKst": "2026-10-31 02:03",
+      "from": "2026-10-30",
+      "to": "2026-10-30",
+      "units": 1
+    },
+    {
+      "schedule": "prod-google-recheck-d7",
+      "scheduledForKst": "2026-10-31 02:04",
+      "from": "2026-10-24",
+      "to": "2026-10-24",
+      "units": 1
+    }
+  ],
+  "runtime": {
+    "observedAt": "2026-10-31T04:09:56.626Z",
+    "window": {
+      "from": "2026-10-30T16:55:00Z",
+      "to": "2026-10-30T19:00:00Z"
+    },
+    "queryPartitions": [
+      {
+        "from": "16:55",
+        "to": "17:10",
+        "rows": 272
+      },
+      {
+        "from": "17:10",
+        "to": "18:00",
+        "rows": 26
+      },
+      {
+        "from": "18:00",
+        "to": "19:00",
+        "rows": 266
+      }
+    ],
+    "initialBroadQueryCappedAndDiscarded": true,
+    "logRows": 564,
+    "errors": [],
+    "ready": [
+      {
+        "time": "2026-10-30T16:56:06.010480733Z",
+        "code": "BUNDLE_READY",
+        "releaseGitSha": "68efe3e63852698aba891b41e3314bd0d9ec733d"
+      },
+      {
+        "time": "2026-10-30T18:12:25.468341561Z",
+        "code": "BUNDLE_READY",
+        "releaseGitSha": "68efe3e63852698aba891b41e3314bd0d9ec733d"
+      }
+    ],
+    "scheduledHttp": {
+      "count": 32,
+      "all200": true,
+      "responses": [
+        {
+          "time": "2026-10-30T17:00:14.989021471Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 13749,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:01:12.111117924Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 11867,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:02:44.301184460Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 44072,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:03:42.469464713Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 41990,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:04:08.575045742Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 7940,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:05:08.859641344Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 8484,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:06:06.794774187Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 6482,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:07:20.805677810Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20661,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:08:21.487085847Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21160,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:09:20.670703213Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20535,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:10:23.189667618Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 23060,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:11:22.779107980Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 22212,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:12:21.629712524Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21362,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:13:24.004372553Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 23829,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:14:22.594785414Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 22325,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:15:21.081268421Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20932,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:16:21.236142612Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 20990,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:17:21.358827296Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21213,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:18:10.533813894Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 10251,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:19:08.892516776Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 8731,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:20:08.004819541Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 7683,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:21:21.377417301Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21217,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:22:21.717422487Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21431,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:23:23.418388757Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 23268,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:24:22.783036390Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 22501,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:25:21.347312483Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21206,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:26:21.461891410Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21207,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:27:21.819621421Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 21671,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:28:24.768345293Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 24506,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:29:23.190663283Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 23045,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:30:27.176933518Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 26946,
+          "upstreamErrors": ""
+        },
+        {
+          "time": "2026-10-30T17:31:35.252015961Z",
+          "path": "/backend-api/internal/daily-sync",
+          "status": 200,
+          "durationMs": 35094,
+          "upstreamErrors": ""
+        }
+      ],
+      "limitation": "Transport evidence only: response status does not verify run purpose, expected date range, unit completion, coverage or current uniqueness."
+    },
+    "usage": {
+      "windowHours": 24,
+      "sampleSeconds": 300,
+      "metrics": [
+        {
+          "measurement": "CPU_USAGE",
+          "current": 0.0016657333333333333,
+          "average": 0.005172543886966553,
+          "min": 0,
+          "max": 0.13553125666666666,
+          "sampleCount": 289
+        },
+        {
+          "measurement": "MEMORY_USAGE_GB",
+          "current": 0.17846763519999997,
+          "average": 0.19683598762990076,
+          "min": 0.12677666133333332,
+          "max": 0.7153731291428571,
+          "sampleCount": 289
+        },
+        {
+          "measurement": "MEMORY_LIMIT_GB",
+          "current": 0.99999744,
+          "average": 0.9999974399999965,
+          "min": 0.99999744,
+          "max": 0.99999744,
+          "sampleCount": 289
+        }
+      ],
+      "note": "Mixed user and scheduled traffic; not billing or isolated scheduled usage."
+    },
+    "latestDeployment": {
+      "id": "fd9d4bae-f5a4-4120-b3f1-47c0f211bc93",
+      "status": "SUCCESS",
+      "createdAt": "2026-10-30T08:15:29.111Z",
+      "meta": {
+        "reason": "deploy",
+        "commitMessage": "fix: retain known platform performance when other sources are missing",
+        "commitHash": "68efe3e63852698aba891b41e3314bd0d9ec733d",
+        "branch": "codex/product-performance-ui-release"
+      }
+    },
+    "productionDbObservation": {
+      "state": "UNAVAILABLE",
+      "reason": "No enabled browser surfaces; existing browserId2 and canonical iab unavailable; listBrowsers returned[]; open_in_codex query tab queued until this chat is shown. Supabase connector lists dev only.",
+      "sourceDataNotRead": true
+    }
+  },
+  "unavailableEvidence": [
+    "Supabase cron fire/Storage renew-check-audit records",
+    "scheduler attempts and schedule states",
+    "SCHEDULED run IDs, purpose, date range, status and units",
+    "weekly date-by-date coverage and original daily versions/links",
+    "current uniqueness and account leases",
+    "latest source data counts/dates, activation and primary policies",
+    "today product-mapping state"
+  ],
+  "interpretation": {
+    "transport": "32 final internal daily-sync HTTP responses were200; none establishes which schedule completed or whether seven weekly units were published.",
+    "collector": "No ERROR/FATAL in the complete three-part runtime window. This does not prove collection success or failure.",
+    "weekly": "First expected slot has passed; successful observations remain0/2 because application/DB evidence is inaccessible. Do not classify the collection as failed.",
+    "dailyGate": "10/28 three-day gate and prior valid history remain intact. Do not increment counters without DB evidence.",
+    "browser": "No enabled browser surfaces in this heartbeat. Canonical iab unavailable, and the app-panel query request was queued until this chat is shown. No login-expiry conclusion was made.",
+    "developmentConnector": "Only ehnfrrmbkvlsbpvqcvkr is listed; no production queries were sent to it.",
+    "metrics": "24-hour mixed user and scheduled samples, not billing or isolated weekly usage."
+  },
+  "requiredNextStep": "Restore the normal browser/Supabase read access; then read the original10/31 cron/attempt/run/unit/coverage/version/link history to verify the first weekly and daily executions. Do not rerun collection or scheduler SQL.",
+  "nextExpected": {
+    "metaWeeklySecond": "2026-11-07 02:02KST /2026-10-31 through2026-11-06 /7units",
+    "sellerDropdownRevalidationDue": "2026-11-01; prior validation remains2026-10-01 until actual verification"
+  },
+  "changesThisHeartbeat": {
+    "productionWrites": 0,
+    "providerRequests": 0,
+    "credentialOperations": 0,
+    "deployments": 0,
+    "scheduleWrites": 0,
+    "existingFollowupPromptUpdated": true
+  },
+  "overallComplete": false
+}
