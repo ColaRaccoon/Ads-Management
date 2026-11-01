@@ -164,19 +164,21 @@ export function assertCafe24AppVersionEvidence(env: NodeJS.ProcessEnv = process.
     syncError("PROVIDER_VERSION_UNVERIFIED");
 }
 
-/** Seller-defined dropdown evidence is time-bound; never infer it from a value's shape. */
+/** Seller-defined dropdown confirmation does not expire with age. Revoke it
+ * after a known option-setting change; provider option validation stays required.
+ * The date records the confirmation, never proof inferred from a value's shape. */
 export function assertCafe24SellerOptionsEvidence(env: NodeJS.ProcessEnv = process.env,
   now = new Date()) {
   const verifiedAt = env.DAILY_SYNC_CAFE24_SELLER_DROPDOWN_VERIFIED_AT;
+  const reviewRequired = env.DAILY_SYNC_CAFE24_SELLER_DROPDOWN_REVIEW_REQUIRED;
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul",
     year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
-  const oldest = new Date(`${today}T00:00:00.000Z`);
-  oldest.setUTCDate(oldest.getUTCDate() - 30);
-  if (env.DAILY_SYNC_CAFE24_SELLER_DROPDOWN !== "true" || !verifiedAt ||
+  if ((reviewRequired !== undefined && reviewRequired !== "false") ||
+      env.DAILY_SYNC_CAFE24_SELLER_DROPDOWN !== "true" || !verifiedAt ||
       !/^\d{4}-\d{2}-\d{2}$/.test(verifiedAt) ||
       Number.isNaN(Date.parse(`${verifiedAt}T00:00:00.000Z`)) ||
       new Date(`${verifiedAt}T00:00:00.000Z`).toISOString().slice(0, 10) !== verifiedAt ||
-      verifiedAt > today || verifiedAt < oldest.toISOString().slice(0, 10))
+      verifiedAt > today)
     syncError("FIELD_UNSUPPORTED");
 }
 
