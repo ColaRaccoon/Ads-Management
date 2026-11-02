@@ -13,7 +13,7 @@ COPY packages/shared packages/shared
 COPY apps/api/src apps/api/src
 COPY apps/api/scripts apps/api/scripts
 COPY apps/api/tsconfig.json apps/api/tsconfig.build.json apps/api/
-RUN npm --workspace @meta-ads-performance/shared run build && npm --workspace @meta-ads-performance/api run build
+RUN npm --workspace @meta-ads-performance/api run build
 RUN npm prune --omit=dev --legacy-peer-deps --workspace @meta-ads-performance/api --workspace @meta-ads-performance/shared --include-workspace-root
 
 FROM node:22.18.0-bookworm-slim@sha256:752ea8a2f758c34002a0461bd9f1cee4f9a3c36d48494586f60ffce1fc708e0e
