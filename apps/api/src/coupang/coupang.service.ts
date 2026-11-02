@@ -576,6 +576,29 @@ export class CoupangService {
     let dataEnd: Date | null = null;
 
     await this.prisma.$transaction(async (tx) => {
+      // Read history once per chunk and resolve rows in file order, including
+      // duplicate keys in this file. Remote per-row queries kept the single
+      // application connection occupied for over a minute for a daily report.
+      const keys = [...new Set(parsed.rows.map((row) => row.parsedRow
+        ? coupangSaleLineKey(row.parsedRow) : fallbackRowKey(row.rawRow)))];
+      type HistoryRow = { id: string; importVersion: number; isCurrent: boolean };
+      const history = new Map<string, HistoryRow[]>();
+      for (let offset = 0; offset < keys.length; offset += 500) {
+        const existing = await tx.coupangSaleLine.findMany({
+          where: { saleLineKey: { in: keys.slice(offset, offset + 500) } },
+          orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }],
+          select: { id: true, saleLineKey: true, importVersion: true, isCurrent: true }
+        });
+        for (const line of existing) {
+          const rows = history.get(line.saleLineKey) ?? [];
+          rows.push(line);
+          history.set(line.saleLineKey, rows);
+        }
+      }
+      const lines: Prisma.CoupangSaleLineCreateManyInput[] = [];
+      const pendingLines = new Map<string, Prisma.CoupangSaleLineCreateManyInput>();
+      const superseded = new Set<string>();
+      const rowErrors: Prisma.CoupangUploadRowErrorCreateManyInput[] = [];
       for (const row of parsed.rows) {
         const issues = row.issues.map((issue) => rowIssue(issue, "ERROR"));
         const warnings: RowIssue[] = [];
@@ -603,11 +626,7 @@ export class CoupangService {
         }
 
         const saleLineKey = parsedRow ? coupangSaleLineKey(parsedRow) : fallbackRowKey(row.rawRow);
-        const existingRows = await tx.coupangSaleLine.findMany({
-          where: { saleLineKey },
-          orderBy: [{ importVersion: "desc" }, { createdAt: "desc" }],
-          select: { id: true, importVersion: true, isCurrent: true }
-        });
+        const existingRows = history.get(saleLineKey) ?? [];
         const existingCurrentRows = existingRows.filter((line) => line.isCurrent);
         const decision = resolveCoupangRowImportDecision({
           conflictPolicy: batch.conflictPolicy,
@@ -627,20 +646,16 @@ export class CoupangService {
         }
         warningCount += warnings.length;
 
-        if (storedState.supersedeExisting && existingCurrentRows.length > 0) {
-          await tx.coupangSaleLine.updateMany({
-            where: { id: { in: existingCurrentRows.map((line) => line.id) } },
-            data: { isCurrent: false }
-          });
-        } else if (existingCurrentRows.length > 1) {
-          await tx.coupangSaleLine.updateMany({
-            where: { id: { in: existingCurrentRows.slice(1).map((line) => line.id) } },
-            data: { isCurrent: false }
-          });
+        const replaced = storedState.supersedeExisting ? existingCurrentRows : existingCurrentRows.slice(1);
+        for (const line of replaced) {
+          line.isCurrent = false;
+          const pending = pendingLines.get(line.id);
+          if (pending) pending.isCurrent = false;
+          else superseded.add(line.id);
         }
 
-        const saved = await tx.coupangSaleLine.create({
-          data: {
+        const saved: Prisma.CoupangSaleLineCreateManyInput = {
+            id: randomUUID(),
             uploadBatchId: batch.id,
             rowNumber: row.rowNumber,
             sourceRowHash: row.sourceRowHash,
@@ -669,12 +684,32 @@ export class CoupangService {
             importVersion: storedState.importVersion,
             isCurrent: storedState.isCurrent,
             rawRow: Prisma.DbNull
-          }
+        };
+        lines.push(saved);
+        pendingLines.set(saved.id!, saved);
+        // Later rows in this file must see the state of earlier rows even
+        // though the inserts are buffered until the end of the loop.
+        existingRows.unshift({ id: saved.id!, importVersion: storedState.importVersion, isCurrent: storedState.isCurrent });
+        existingRows.sort((a, b) => b.importVersion - a.importVersion);
+        history.set(saleLineKey, existingRows);
+        rowErrors.push(...[...issues, ...warnings].map((issue) => ({
+          uploadBatchId: batch.id, sourceType: CoupangUploadSourceType.SALES,
+          saleLineId: saved.id!, rowNumber: row.rowNumber, columnName: issue.columnName,
+          severity: issue.severity, errorCode: issue.errorCode, message: issue.message,
+          rawValue: issue.rawValue, candidates: issue.candidates ?? []
+        })));
+      }
+      const supersededIds = [...superseded];
+      for (let offset = 0; offset < supersededIds.length; offset += 500) {
+        await tx.coupangSaleLine.updateMany({
+          where: { id: { in: supersededIds.slice(offset, offset + 500) } }, data: { isCurrent: false }
         });
-        await this.createRowErrors(tx, batch.id, CoupangUploadSourceType.SALES, saved.id, null, row.rowNumber, [
-          ...issues,
-          ...warnings
-        ]);
+      }
+      for (let offset = 0; offset < lines.length; offset += 500) {
+        await tx.coupangSaleLine.createMany({ data: lines.slice(offset, offset + 500) });
+      }
+      for (let offset = 0; offset < rowErrors.length; offset += 500) {
+        await tx.coupangUploadRowError.createMany({ data: rowErrors.slice(offset, offset + 500) });
       }
 
       await this.finalizeCoupangReservation(tx, batch, {

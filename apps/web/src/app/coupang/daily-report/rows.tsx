@@ -131,6 +131,11 @@ function ProductName({ row }: { row: CoupangDailyReportRow }) {
   return (
     <div className="coupang-daily-product-name" title={rowCategoryTitle(row)}>
       <span>{row.productName}</span>
+      {row.warnings.some(warning => [
+        "MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED",
+        "MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED",
+        "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE"
+      ].includes(warning)) ? <small role="status" title={rowWarningTitle(row)}>⚠ 가구매 초과</small> : null}
     </div>
   );
 }

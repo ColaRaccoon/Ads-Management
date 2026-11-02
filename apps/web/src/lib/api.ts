@@ -2,6 +2,7 @@ import { ensureActivityAuthorization, userActivityAge } from "../features/auth/s
 import { DateRange } from "./date-range";
 import { authCoordinator } from "../features/auth/auth-coordination";
 import { MetaUploadBatch, recoverMetaUpload } from "./meta-upload-recovery";
+import { retryCoupangUpload } from "./coupang-upload-retry";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/backend-api";
 const AUTH_MUTATION_PATHS = new Set(["/auth/login", "/auth/refresh", "/auth/logout"]);
@@ -197,7 +198,16 @@ export async function uploadCoupangPromotionXlsx(file: File, options: { conflict
 }
 
 async function uploadFormData(path: string, formData: FormData): Promise<any> {
-  return apiRequest(path, { method: "POST", body: formData });
+  const requestEpoch = sessionEpoch;
+  const send = () => {
+    assertSessionEpoch(requestEpoch);
+    return apiRequest(path, { method: "POST", body: formData });
+  };
+  // Only these importers have the retry reservation protocol. Other policies
+  // deliberately allow multiple imports and must not be replayed automatically.
+  const retrySafe = formData.get("conflictPolicy") === "SKIP" &&
+    ["/coupang/uploads/sales", "/coupang/uploads/ads", "/coupang/uploads/margin"].includes(path);
+  return retrySafe ? retryCoupangUpload(send) : send();
 }
 
 async function request(path: string, options: ApiRequestOptions) {
