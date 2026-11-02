@@ -453,13 +453,12 @@ export function emptyReportedSalesFacts(productId: string, date: string, product
 }
 
 function hasBlockingManualSalesWarning(warnings: string[]) {
+  // Excess manual sales/quantity and negative adjusted revenue remain visible
+  // warnings, but known inputs still produce a profit (including a loss).
   return warnings.some((warning) => [
     "DUPLICATE_MANUAL_PURCHASE_ROWS",
     "MANUAL_PURCHASE_INVALID_QUANTITY",
     "MANUAL_PURCHASE_SALES_AMOUNT_MISSING",
-    "MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED",
-    "MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED",
-    "MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE",
     "MANUAL_PURCHASE_WITHOUT_REPORTED_SALES"
   ].includes(warning));
 }

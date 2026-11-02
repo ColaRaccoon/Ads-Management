@@ -14,6 +14,9 @@ expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled, profile] = process.argv.slice(2);
 if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch profile');
 if (profile === 'reporting') {
+  // Reviewed Coupang upload batching and non-blocking manual-sales excess.
+  for (const name of ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js',
+    'domain/coupang-profit-pipeline.test.js']) expected.add(name);
   // Rule editing, dated reapplication and transport authorization are reviewed
   // together. Other mapping modules and all financial calculators remain fixed.
   for (const name of ['mappings/mappings.service.js', 'mappings/mappings.controller.js',

@@ -45,6 +45,9 @@ export function formatCoupangIncompleteReasons(rows: CoupangProfitWarningRow[], 
 
 export function coupangProfitWarningLabel(reason: string) {
   return ({
+    MANUAL_PURCHASE_QUANTITY_EXCEEDS_REPORTED: "가구매 수량이 전체 판매수량을 초과합니다. 입력값을 기준으로 순이익을 계산했습니다",
+    MANUAL_PURCHASE_SALES_EXCEEDS_REPORTED: "가구매 매출이 전체 매출을 초과합니다. 입력값을 기준으로 순이익을 계산했습니다",
+    MANUAL_PURCHASE_ADJUSTED_NET_SALES_NEGATIVE: "가구매 차감 후 순매출이 음수입니다. 해당 금액으로 순이익을 계산했습니다",
     SELLER_SHIPPING_FEE_MISSING: "판매자 배송비가 설정되지 않았습니다",
     HANARO_SHIPPING_FEE_MISSING: "하나로 배송비가 설정되지 않았습니다",
     GROWTH_INBOUND_FEE_MISSING: "그로스 입출고비가 설정되지 않았습니다",
