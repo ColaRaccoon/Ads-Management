@@ -8,6 +8,50 @@ type Period = [string, string];
 export type ChangeMetric = { before: number | null; after: number | null; change: number | null; changePct: number | null;
   beforeDays: number; afterDays: number; expectedDays: number; beforePartialDays: number; afterPartialDays: number; missingSources: string[] };
 export type ChangeAnalysisOptions = { medium: AnalysisMedium; changeDate: string; windowDays: number; lagDays: number };
+/** Read the same numeric daily input for both analysis and date coverage recommendations. */
+function adAmount(bucket: Bucket, medium: AnalysisMedium): number | null {
+  const row = bucket.byMedium.find(item => item.medium === medium);
+  return chartNumber(row?.displayAdSpend ? row.displayAdSpend.state === "UNAVAILABLE" ? null : row.displayAdSpend.value : row?.completeAdSpend);
+}
+function uniqueDaily(buckets: Bucket[]) {
+  const daily = new Map<string, Bucket>(), duplicates = new Set<string>();
+  for (const bucket of buckets) {
+    if (bucket.bucketFrom !== bucket.bucketTo || bucket.date !== bucket.bucketFrom) continue;
+    if (daily.has(bucket.date)) duplicates.add(bucket.date);
+    daily.set(bucket.date, bucket);
+  }
+  for (const date of duplicates) daily.delete(date);
+  return daily;
+}
+export type DateRecommendation = { date: string; beforeDays: number; afterDays: number; fullWindow: boolean };
+/** Optimizes available-day coverage only, never the size or direction of a financial change. */
+export function recommendChangeDate(buckets: Bucket[], medium: AnalysisMedium, range: { from: string; to: string }, windowDays: number, reference: string, lagDays = 0): DateRecommendation | null {
+  const dates = [...uniqueDaily(buckets).values()].filter(row => row.date >= range.from && row.date <= range.to && adAmount(row, medium) !== null).map(row => row.date);
+  if (dates.length < 2) return null;
+  let best: DateRecommendation | null = null;
+  const score = (row: DateRecommendation) => [Number(row.fullWindow), Number(shift(row.date, lagDays - windowDays) >= range.from && shift(row.date, lagDays + windowDays - 1) <= range.to), Math.min(row.beforeDays, row.afterDays), row.beforeDays + row.afterDays, -Math.abs(Date.parse(row.date) - Date.parse(reference))];
+  for (let date = range.from; date <= range.to; date = shift(date, 1)) {
+    const beforeFrom = shift(date, -windowDays), afterTo = shift(date, windowDays - 1);
+    const candidate = { date, fullWindow: beforeFrom >= range.from && afterTo <= range.to, beforeDays: dates.filter(day => day >= beforeFrom && day < date).length, afterDays: dates.filter(day => day >= date && day <= afterTo).length };
+    if (!candidate.beforeDays || !candidate.afterDays) continue;
+    if (!best) { best = candidate; continue; }
+    const a = score(candidate), b = score(best), index = a.findIndex((value, i) => value !== b[i]);
+    if (index >= 0 && a[index] > b[index]) best = candidate;
+  }
+  return best;
+}
+/** A manually chosen date is never silently replaced. Short-range recommendations need explicit acceptance. */
+export function applyRecommendedDate(currentDate: string, current: Pick<ChangeMetric, "before" | "after">, recommendation: DateRecommendation | null, manuallySet: boolean) {
+  return !manuallySet && (current.before === null || current.after === null) && recommendation?.fullWindow ? recommendation.date : currentDate;
+}
+export function changeStatusLabel(value: ChangeMetric): string | null {
+  if (value.before === null && value.after === null) return "전후 자료 없음";
+  if (value.before === null) return "변경 전 자료 없음";
+  if (value.after === null) return "변경 후 자료 없음";
+  if (value.before < 0) return "음수 기준 · 증감액 확인";
+  if (value.before === 0) return value.after > 0 && value.beforeDays === value.expectedDays && value.beforePartialDays === 0 ? "0원에서 증가" : "기준 0원 · 증감액 확인";
+  return null;
+}
 export function analyzeChanges(buckets: Bucket[], options: ChangeAnalysisOptions) {
   const { medium, changeDate, windowDays, lagDays } = options;
   if (![7, 14].includes(windowDays) || ![0, 3, 7].includes(lagDays) ||
@@ -19,14 +63,7 @@ export function analyzeChanges(buckets: Bucket[], options: ChangeAnalysisOptions
     outcomeBefore: [shift(outcomeStart, -windowDays), shift(outcomeStart, -1)] as Period,
     outcomeAfter: [outcomeStart, shift(outcomeStart, windowDays - 1)] as Period };
   // Never reinterpret an aggregated week/month, duplicated date, or missing day as daily data.
-  const daily = new Map<string, Bucket>();
-  const duplicates = new Set<string>();
-  for (const bucket of buckets) {
-    if (bucket.bucketFrom !== bucket.bucketTo || bucket.date !== bucket.bucketFrom) continue;
-    if (daily.has(bucket.date)) duplicates.add(bucket.date);
-    daily.set(bucket.date, bucket);
-  }
-  for (const date of duplicates) daily.delete(date);
+  const daily = uniqueDaily(buckets);
   const marketplaces = [...new Set([...daily.values()].flatMap(row => row.byMarketplace.map(market => market.marketplace)))].sort();
   type Amount = { value: number | null; partial: boolean; missingSources: string[] };
   type Display = { value: string | null; state: string; missingSources: string[] };
