@@ -35,3 +35,13 @@
 - API 통합 모듈 전체 320개 테스트, 독립 관련 88개 테스트, API lint/production build, 배포 보호 guard 10개를 통과했다. 새 helper 두 파일만 보호 allowlist와 독립 fixture에 명시했다.
 - 실제 제한 worker 역할의 읽기 전용 새 adapter 진단에서 두 스토어 × 10/31·11/1 네 파티션이 모두 READY다. 금융 저장값 조회/정규화는 각 159~311ms, 전체 도구 내부 실행 1.233초였다. 화면 전체 속도 측정이나 반복 부하 측정으로 확대 해석하지 않는다.
 - 저장 순이익 null인 상품은 광고 전 이익도 null로 보존한다. 그런 날짜의 기존 known subtotal은 확인된 이익/비용 기준의 PARTIAL이며 원래 프로그램의 완전한 순이익이나 확인된 0원으로 표시하지 않는다. 11/1 검증 대상은 두 스토어 모두 COMPLETE다.
+
+## 운영 완료
+
+코드 `3a8e75b0350c385f0390f0029bc4898849cd9d02`를 원격 개발 브랜치에 올리고 웹 `51c926e8-99ea-427d-bcf2-8a3cb35874e2`, 비공개 worker `59296e1c-fb4a-467a-bdc8-1b0e839b85ce`로 배포했다. 두 배포 모두 SUCCESS이며 웹 release SHA도 같은 값이다. 기존 운영 환경/권한/예약은 유지했다. 원본 네이버 프로그램과 DB에는 쓰지 않았다.
+
+보호된 제한 worker로 10/31~11/1을 갱신했다. 38.853초, examined 12, unchanged 4, published 8, failed 0, discoveryFailures [], exhausted false다. 이후 원본 저장값과 통합 발행본을 다시 읽어 두 스토어의 순이익이 각각 1,000,657원·1,705,318원, completeTotals와 knownTotals 모두 동일하며 차액 0임을 확인했다. 가구매는 두 스토어 모두 source row 0개, 잘못된 금액 0개다. [발행 결과](2026-11-02-naver-stored-publication.json), [발행 후 대조](2026-11-02-naver-stored-after.json).
+
+실제 로그인된 운영 데일리 보고 화면에서 11/1 네이버 매출 12,262,250원, 순이익 2,705,975원, 광고비 4,036,368원을 확인했다. 전체 순이익은 7,685,426원이다. 앞서 수정한 자사몰(메타) 2,542,448원, 자사몰(유튜브) -129,169원과 쿠팡 2,566,173원이 유지된다. 네이버는 두 날짜 모두 저장 금액이 완전하므로 부분 금액 안내가 붙지 않는다. 원가 재계산은 실행하지 않았다.
+
+실제 화면 로컬 증거: `C:/Users/seong/.codex/visualizations/2026/10/30/product-performance-production/daily-2026-11-01-native-platforms.png`. 새 worker 이미지의 미래 정시 실행은 아직 관측하지 않았으며 배포 성공/제한 역할 실제 발행/원본-발행본 대조와 구분한다. 현재 화면과 선택한 두 날짜의 갱신은 완료됐다.
