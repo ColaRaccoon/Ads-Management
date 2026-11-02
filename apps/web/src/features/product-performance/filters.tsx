@@ -2,8 +2,8 @@
 
 import { PLATFORMS, PLATFORM_LABELS, type ComparisonMode, type Filters, type Grain, type SelectionOptions } from "./types";
 
-export function PerformanceFilters({ value, options, onChange, showProduct = true, showGrain = true }: {
-  value: Filters; options: SelectionOptions | undefined; onChange: (next: Filters) => void; showProduct?: boolean; showGrain?: boolean;
+export function PerformanceFilters({ value, options, onChange, showProduct = true, showGrain = true, showPeriod = true }: {
+  value: Filters; options: SelectionOptions | undefined; onChange: (next: Filters) => void; showProduct?: boolean; showGrain?: boolean; showPeriod?: boolean;
 }) {
   const change = (next: Partial<Filters>) => onChange({ ...value, ...next });
   const scopes = options?.scopes.filter(scope => value.platforms.includes(scope.platform)) ?? [];
@@ -36,6 +36,7 @@ export function PerformanceFilters({ value, options, onChange, showProduct = tru
           {options?.products.map(product => <option key={product.productName} value={product.productName}>{product.productName}{product.historical ? " (과거 발행)" : product.active ? "" : " (비활성)"}</option>)}
         </select>
       </label> : null}
+      {showPeriod ? <>
       <label className="field">시작일 (한국시간)<input className="input" type="date" value={value.from} onChange={event => change({ from: event.target.value })} /></label>
       <label className="field">종료일 (한국시간)<input className="input" type="date" value={value.to} onChange={event => change({ to: event.target.value })} /></label>
       {showGrain ? <label className="field">집계 간격<select className="select" value={value.grain} onChange={event => change({ grain: event.target.value as Grain })}>
@@ -46,6 +47,7 @@ export function PerformanceFilters({ value, options, onChange, showProduct = tru
       </select></label>
       <label className="field">비교 시작일<input className="input" type="date" value={value.compareFrom} disabled={value.compareMode !== "custom"} onChange={event => change({ compareFrom: event.target.value })} /></label>
       <label className="field">비교 종료일<input className="input" type="date" value={value.compareTo} disabled={value.compareMode !== "custom"} onChange={event => change({ compareTo: event.target.value })} /></label>
+      </> : null}
     </div>
     <fieldset style={{ marginTop: 16 }}>
       <legend>계정 / 스토어 범위</legend>
