@@ -174,7 +174,16 @@ export async function runStorefrontParity(args = process.argv.slice(2)) {
         difference: difference(row.ads, storedAds ?? "0"), nativeProfit: row.profit, unifiedProfit: storedProfit,
         profitDifference: difference(row.profit, storedProfit) };
     });
-    const output = { status: "COMPLETE", readOnly: true, date, nativeObservedAt: native.observedAt, unifiedObservedAt: unified.observedAt, adProductParity,
+    const publishedProductParity = nativeProductAds.map((row, index) => {
+      const marketplace = row.channel === "META" ? "CAFE24_META" : "CAFE24_YOUTUBE";
+      const ads = sum(unified.publishedFacts.filter(fact => fact.component === "AD_SPEND" && fact.medium === row.channel && fact.productName === row.name).map(fact => fact.amountKrw));
+      const before = sum(unified.publishedFacts.filter(fact => fact.component === "SALE" && fact.marketplace === marketplace && fact.productName === row.name).map(fact => fact.profitBeforeAds));
+      const profit = difference(before, ads ?? "0");
+      return { ordinal: index + 1, channel: row.channel, nativeAds: row.ads, publishedAds: ads,
+        adDifference: difference(row.ads, ads ?? "0"), nativeProfit: row.profit, publishedProfit: profit,
+        profitDifference: difference(row.profit, profit) };
+    });
+    const output = { status: "COMPLETE", readOnly: true, date, nativeObservedAt: native.observedAt, unifiedObservedAt: unified.observedAt, adProductParity, publishedProductParity,
       separateRepeatableReadSnapshots: true, sourcePolicyEnabled: process.env.DAILY_SYNC_FEATURE_ENABLED === "true",
       native: { totals, all: native.all, youtube: native.youtube, youtubeUnmatched: native.youtubeUnmatched, nonYoutube: native.nonYoutube,
         google: { summary: { revenue: native.google.summary.revenueKrw, knownRevenue: native.google.summary.knownRevenueKrw,

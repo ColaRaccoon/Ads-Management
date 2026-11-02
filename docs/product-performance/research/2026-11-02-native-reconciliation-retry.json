@@ -1,0 +1,19 @@
+{
+  "operation": "ONE_FAILED_PARTITION_RETRY",
+  "observedAt": "2026-11-02T07:37:20.844Z",
+  "sourceWrites": 0,
+  "requestedPartitions": 1,
+  "originalFailedJob": "bc008469-7578-4043-a822-c8be34f365ce",
+  "platform": "COUPANG",
+  "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+  "date": "2026-10-20",
+  "outcome": "PUBLISHED",
+  "status": "PASS",
+  "publication": {
+    "runId": "0deb855d-4a47-4eba-ab64-01e312c7a11f",
+    "revision": 4,
+    "updatedAt": "2026-11-02T07:37:19.101Z",
+    "status": "PUBLISHED",
+    "calculationVersion": "unified-report-v2-native-storefront"
+  }
+}
