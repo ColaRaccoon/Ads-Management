@@ -9,6 +9,8 @@ test('scheduled MCP reconciliation retries fresh reads twice, then requires acti
  const prior={...process.env},id='11111111-1111-4111-8111-111111111111',ref='vault://meta/22222222-2222-4222-8222-222222222222',expiresAt=new Date(Date.now()+20*86400000);
  Object.assign(process.env,{DAILY_SYNC_FEATURE_ENABLED:'true',DAILY_SYNC_META_TRANSPORT:'MCP',DAILY_SYNC_META_MCP_USE_CASE:'OWN_ACCOUNT_INTERNAL_REPORTING',DAILY_SYNC_META_CREDENTIAL_REF:ref,DAILY_SYNC_ALLOWED_ACCOUNTS:JSON.stringify(['META/123/default'])});
  const cases=[
+  {attempts:0,stage:'META_NORMALIZE',code:'RECONCILIATION_FAILED',trigger:'SCHEDULED',retry:false,reason:'CAPTURE_INVALID'},
+  {attempts:0,stage:'META_NORMALIZE',code:'RECONCILIATION_FAILED',trigger:'SCHEDULED',retry:false,reason:'NORMALIZATION_INVALID'},
   {attempts:0,stage:'META_NORMALIZE',code:'RECONCILIATION_FAILED',trigger:'SCHEDULED',retry:true},
   {attempts:1,stage:'META_NORMALIZE',code:'RECONCILIATION_FAILED',trigger:'SCHEDULED',retry:true},
   {attempts:2,stage:'META_NORMALIZE',code:'RECONCILIATION_FAILED',trigger:'SCHEDULED',retry:false},
@@ -23,7 +25,7 @@ test('scheduled MCP reconciliation retries fresh reads twice, then requires acti
   const run={id:'run',connectionId:id,connection,trigger:c.trigger,status:'PARTIAL',fromDate:new Date(c.trigger==='MANUAL'?'2026-10-14Z':'2026-10-08Z'),toDate:new Date('2026-10-14Z'),units};
   const prisma:any={syncRun:{findUnique:async()=>run,findUniqueOrThrow:async()=>run},sourceConnection:{findUnique:async()=>connection},sourcePolicy:{findMany:async()=>[{dataKind:'META_AD',primarySource:'API',version:1},{dataKind:'META_ADSET',primarySource:'API',version:1}]}};
   const foundation:any={claimRun:async()=>({connectionId:id,generation:1n,release:()=>released++}),beginScheduledUnit:async()=>{},failUnit:async(x:any)=>{failure=x;},finishRun:async()=>{}};
-  const error=new ProviderFailure(c.code,false);markMetaFailureStage(error,c.stage as any);
+  const error=new ProviderFailure(c.code,false,null,null,c.reason??'BASIC_TOTALS');markMetaFailureStage(error,c.stage as any);
   const client:any={transport:'MCP',fetchDay:async()=>{fetches++;if(c.stage!=='META_PUBLISH')throw error;return {ads:[],adsets:[],currencyCode:'USD',timeZone:'Asia/Seoul',transport:'MCP',protocolVersion:'2025-06-18',settings:{actionReportTime:'MCP_PROVIDER_DEFAULT_UNVERIFIED',attributionWindows:[]},pageCount:4};}};
   const writer:any={publishMetaDay:async()=>{publishes++;throw error;}};
   const resolver:any={resolve:async()=>({token:'x'.repeat(50),credentialRef:ref,connectionId:id,accountId:'123',appId:'4474691502806219',authClass:'SYSTEM_USER',scopes:['ads_read','ads_mcp_management'],expiresAt,transport:'MCP',currencyCode:'USD',timeZone:'Asia/Seoul'})};

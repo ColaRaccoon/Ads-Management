@@ -1,5 +1,5 @@
 import { META_REPORTING_FIELDS, metaReportingFields, MetaReportingMeasurement } from "../domain/meta-reporting-measurements";
-import { markMetaFailureStage } from "./meta-failure-diagnostic";
+import { markMetaFailureStage, metaReconciliationFailure, MetaReconciliationReason } from "./meta-failure-diagnostic";
 import { createHash } from "node:crypto";
 import { readFileSync, lstatSync } from "node:fs";
 import { isAbsolute } from "node:path";
@@ -22,7 +22,9 @@ import {convertMetaMcpPurchaseObservation,createMetaMcpPurchaseResidualProof,val
 type Json = Record<string, unknown>;
 const LEVELS: MetaMcpLevel[] = ["ad", "adset", "campaign", "ad_account"];
 const CONTEXT = "MCP_PROVIDER_DEFAULT_UNVERIFIED" as const;
-function fail(code = "FIELD_UNSUPPORTED"): never { throw new ProviderFailure(code, false); }
+function fail(code = "FIELD_UNSUPPORTED", reason:MetaReconciliationReason='NORMALIZATION_INVALID'): never {
+ throw code==='RECONCILIATION_FAILED'?metaReconciliationFailure(reason):new ProviderFailure(code, false);
+}
 const object = (v: unknown): v is Json => !!v && typeof v === "object" && !Array.isArray(v);
 const hash = (v: unknown) => createHash("sha256").update(stableMetadataJson(v)).digest("hex");
 function integer(value: unknown, big = false): string {
@@ -128,13 +130,13 @@ export function normalizeMetaMcpSnapshot(input: unknown, proofInput?:unknown,cat
     const imps=wire.levels[level].reduce((s,r)=>s+BigInt(integer(r.impressions,true)),0n);
     const links=wire.levels[level].reduce((s,r)=>s+BigInt(integer(r.link_click)),0n);
     const clicks=wire.levels[level].reduce((s,r)=>s+BigInt(integer(r.clicks)),0n);
-    if (!sum.eq(spend(account)) || imps!==BigInt(integer(account.impressions,true)) || links!==BigInt(integer(account.link_click))||clicks!==BigInt(integer(account.clicks))) fail("RECONCILIATION_FAILED");
+    if (!sum.eq(spend(account)) || imps!==BigInt(integer(account.impressions,true)) || links!==BigInt(integer(account.link_click))||clicks!==BigInt(integer(account.clicks))) fail("RECONCILIATION_FAILED","BASIC_TOTALS");
     for(const row of wire.levels[level]){integer(row.reach);fixedDecimal(row.frequency,12,6);}
   }
-  for (const adset of wire.levels.adset) {const parent=campaigns.get(adset.campaign_id);if(!parent||parent.name!==adset.campaign_name)fail("RECONCILIATION_FAILED");}
+  for (const adset of wire.levels.adset) {const parent=campaigns.get(adset.campaign_id);if(!parent||parent.name!==adset.campaign_name)fail("RECONCILIATION_FAILED","PARENT_IDENTITY");}
   const ads=wire.levels.ad.map(row=>{
     const adset=sets.get(row.adset_id),campaign=campaigns.get(row.campaign_id);
-    if(!adset||!campaign||adset.campaign_id!==row.campaign_id||adset.name!==row.adset_name||campaign.name!==row.campaign_name)fail("RECONCILIATION_FAILED");
+    if(!adset||!campaign||adset.campaign_id!==row.campaign_id||adset.name!==row.adset_name||campaign.name!==row.campaign_name)fail("RECONCILIATION_FAILED","PARENT_IDENTITY");
     const currentMetadata=metadata(campaign,adset,row,evidence,derivedIds.has(row.id as string));
     const result:MetaApiAd={...common(row),campaignId:row.campaign_id as string,campaignName:row.campaign_name as string,
       adsetId:row.adset_id as string,adsetName:row.adset_name as string,adId:row.id as string,adName:row.name as string,creative:parser.parse(row.name as string),
@@ -147,7 +149,7 @@ export function normalizeMetaMcpSnapshot(input: unknown, proofInput?:unknown,cat
     const campaign=campaigns.get(row.campaign_id)!;const children=ads.filter(r=>r.adsetId===row.id);
     if(!children.reduce((s,r)=>s.plus(r.spendUsd),new Prisma.Decimal(0)).eq(spend(row)) ||
       children.reduce((s,r)=>s+BigInt(r.impressions),0n)!==BigInt(integer(row.impressions,true)) ||
-      children.reduce((s,r)=>s+BigInt(r.inlineLinkClicks),0n)!==BigInt(integer(row.link_click))||children.reduce((s,r)=>s+BigInt(r.clicksAll!),0n)!==BigInt(integer(row.clicks))) fail("RECONCILIATION_FAILED");
+      children.reduce((s,r)=>s+BigInt(r.inlineLinkClicks),0n)!==BigInt(integer(row.link_click))||children.reduce((s,r)=>s+BigInt(r.clicksAll!),0n)!==BigInt(integer(row.clicks))) fail("RECONCILIATION_FAILED","BASIC_TOTALS");
     const currentMetadata=metadata(campaign,row,null,evidence,derivedParentAdsets.has(row.id as string));
     const result:MetaApiAdset={...common(row),campaignId:row.campaign_id as string,campaignName:row.campaign_name as string,
       adsetId:row.id as string,adsetName:row.name as string,sourceRevision:"",currentMetadata,deliveryStatus:currentDeliveryStatus(currentMetadata.adset),startDate:null,endStatus:null};
@@ -155,7 +157,7 @@ export function normalizeMetaMcpSnapshot(input: unknown, proofInput?:unknown,cat
   });
   for(const campaign of wire.levels.campaign){const children=ads.filter(r=>r.campaignId===campaign.id);
     if(!children.reduce((s,r)=>s.plus(r.spendUsd),new Prisma.Decimal(0)).eq(spend(campaign))||children.reduce((s,r)=>s+BigInt(r.impressions),0n)!==BigInt(integer(campaign.impressions,true))||
-      children.reduce((s,r)=>s+BigInt(r.inlineLinkClicks),0n)!==BigInt(integer(campaign.link_click))||children.reduce((s,r)=>s+BigInt(r.clicksAll!),0n)!==BigInt(integer(campaign.clicks)))fail("RECONCILIATION_FAILED");}
+      children.reduce((s,r)=>s+BigInt(r.inlineLinkClicks),0n)!==BigInt(integer(campaign.link_click))||children.reduce((s,r)=>s+BigInt(r.clicksAll!),0n)!==BigInt(integer(campaign.clicks)))fail("RECONCILIATION_FAILED","BASIC_TOTALS");}
   return {ads,adsets,pageCount:wire.pageCount,accountSpendUsd:spend(account),currencyCode:"USD",timeZone:account.timezone_name as string,requestId:null,transport:"MCP",protocolVersion:"2025-06-18",
     settings:{actionReportTime:CONTEXT,attributionWindows:[]}};
 }

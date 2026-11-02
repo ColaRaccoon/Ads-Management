@@ -1,6 +1,6 @@
 import {Prisma} from "@prisma/client";
 import {stableMetadataJson} from "../domain/meta-current-metadata";
-import {ProviderFailure} from "./bounded-request";
+import {metaReconciliationFailure,MetaReconciliationReason} from "./meta-failure-diagnostic";
 import {metaMcpFingerprint,selectMetaMcpDay,validateMetaMcpCapture} from "./meta-mcp-capture";
 import {MetaMcpWireSnapshot} from "./meta-mcp-wire-reader";
 import {createMetaMcpResidualProof,metaMcpResidualLinkView,metaMcpNeedsLinkProof} from "./meta-mcp-residual-proof";
@@ -10,7 +10,7 @@ const same=(a:unknown,b:unknown)=>stableMetadataJson(a)===stableMetadataJson(b);
 const LEVELS=["ad","adset","campaign","ad_account"] as const;
 const COUNT="omni_purchase",VALUE="omni_purchase_values";
 const COUNT_DEFINITION="The number of purchase events attributed to your ads, based on information received from one or more of your connected Meta Business Tools, or that occur directly on Meta technologies. This doesn't include purchases from messaging ads delivered to and from Europe and Japan.";
-function fail():never{throw new ProviderFailure("RECONCILIATION_FAILED",false);}
+function fail(reason:MetaReconciliationReason='PURCHASE_PROOF_INVALID'):never{throw metaReconciliationFailure(reason);}
 function integer(v:unknown):bigint{if(typeof v!=="string"||!/^(0|[1-9]\d{0,9})$(?![\s\S])/.test(v)||BigInt(v)>2147483647n)fail();return BigInt(v);}
 export function metaMcpPurchaseValue(row:Json):Prisma.Decimal{
  const value=row[VALUE];if(!object(value)||value.unit!=="USD"||typeof value.value!=="string"||!/^(0|[1-9]\d{0,9})(\.\d{1,4})?$(?![\s\S])/.test(value.value))fail();
@@ -46,7 +46,8 @@ function deriveParentZeros(wire:MetaMcpWireSnapshot,selected:ReturnType<typeof s
  const total=(rows:Json[],field:string)=>rows.reduce((sum,row)=>sum+(row[field]===null?0n:integer(row[field])),0n);
  const spend=(row:Json)=>{if(!object(row.amount_spent)||row.amount_spent.unit!=="USD"||typeof row.amount_spent.value!=="string")fail();return new Prisma.Decimal(row.amount_spent.value);};
  const infer=(parent:Json,children:Json[],level:"campaign"|"adset")=>{
-  if(total(children,COUNT)!==integer(parent[COUNT])||!children.reduce((sum,row)=>sum.plus(spend(row)),new Prisma.Decimal(0)).eq(spend(parent))||["impressions","clicks","link_click"].some(field=>total(children,field)!==integer(parent[field])))fail();
+  if(total(children,COUNT)!==integer(parent[COUNT]))fail("PURCHASE_TOTALS");
+  if(!children.reduce((sum,row)=>sum.plus(spend(row)),new Prisma.Decimal(0)).eq(spend(parent))||["impressions","clicks","link_click"].some(field=>total(children,field)!==integer(parent[field])))fail("BASIC_TOTALS");
   return children.map(row=>{if(row[COUNT]!==null)return row;if(row[VALUE]!==null)fail();targets.push({level,id:row.id as string,rawCount:null,rawValue:null,basis:"DERIVED_PURCHASE_ZERO_RESIDUAL"});return {...row,[COUNT]:"0",[VALUE]:{value:"0.0000",unit:"USD"}};});
  };
  const campaigns=infer(account,wire.levels.campaign,"campaign");
@@ -76,17 +77,17 @@ function derive(capture:unknown,catalog:unknown){
  const parentProof:Json[]=[];
  const total=(rows:Json[])=>rows.reduce((s,r)=>s+(r[COUNT]===null?0n:integer(r[COUNT])),0n);
  const check=(parent:Json,children:Json[],descendants:Json[],level:string)=>{
-  const parentCount=integer(parent[COUNT]),known=total(descendants);if(total(children)!==parentCount||known!==parentCount)fail();
+  const parentCount=integer(parent[COUNT]),known=total(descendants);if(total(children)!==parentCount||known!==parentCount)fail("PURCHASE_TOTALS");
   const coreCount=(rows:Json[],field:string)=>rows.reduce((n,r)=>n+(r[field]===null?0n:integer(r[field])),0n);
   const coreSpend=(r:Json)=>{if(!object(r.amount_spent)||r.amount_spent.unit!=="USD"||typeof r.amount_spent.value!=="string")fail();return new Prisma.Decimal(r.amount_spent.value);};
-  if(!children.reduce((n,r)=>n.plus(coreSpend(r)),new Prisma.Decimal(0)).eq(coreSpend(parent))||["impressions","clicks","link_click"].some(f=>coreCount(children,f)!==integer(parent[f])||coreCount(descendants,f)!==integer(parent[f])))fail();
+  if(!children.reduce((n,r)=>n.plus(coreSpend(r)),new Prisma.Decimal(0)).eq(coreSpend(parent))||["impressions","clicks","link_click"].some(f=>coreCount(children,f)!==integer(parent[f])||coreCount(descendants,f)!==integer(parent[f])))fail("BASIC_TOTALS");
   const knownValue=descendants.filter(r=>r[VALUE]!==null).reduce((s,r)=>s.plus(metaMcpPurchaseValue(r)),new Prisma.Decimal(0)),parentValue=metaMcpPurchaseValue(parent);
   parentProof.push({level,id:parent.id,childIdsFingerprint:metaMcpFingerprint(children.map(r=>r.id).sort()),parentCount:parentCount.toString(),knownCount:known.toString(),residualCount:"0",nullPurchaseAdCount:descendants.filter(r=>r[COUNT]===null).length,parentValueUsd:parentValue.toFixed(4),knownAdValueUsd:knownValue.toFixed(4),valueDifferenceUsd:parentValue.minus(knownValue).toFixed(4)});
  };
  for(const p of selected.selectedAdsets){const ads=wire.levels.ad.filter(r=>r.adset_id===p.id);check(p,ads,ads,"adset");}
  for(const p of wire.levels.campaign)check(p,selected.selectedAdsets.filter(r=>r.campaign_id===p.id),wire.levels.ad.filter(r=>r.campaign_id===p.id),"campaign");
  check(wire.levels.ad_account[0],wire.levels.campaign,wire.levels.ad,"ad_account");
- if(total(wire.levels.ad)!==integer(wire.levels.ad_account[0][COUNT])||total(selected.selectedAdsets)!==integer(wire.levels.ad_account[0][COUNT]))fail();
+ if(total(wire.levels.ad)!==integer(wire.levels.ad_account[0][COUNT])||total(selected.selectedAdsets)!==integer(wire.levels.ad_account[0][COUNT]))fail("PURCHASE_TOTALS");
  parentProof.sort((a,b)=>String(a.level).localeCompare(String(b.level))||String(a.id).localeCompare(String(b.id)));
  return {version:1 as const,status:"DERIVED_PURCHASE_ZERO_RESIDUAL" as const,rawCaptureFingerprint:selected.selection.rawCaptureFingerprint,catalogSemanticFingerprint,accountId:wire.accountId,day:wire.day,targetIds:targets.map(r=>r.id as string).sort(),parentProof,premises:META_MCP_PURCHASE_PREMISES,rawNullsPreserved:true as const,providerRequests:0 as const,...(selected.selection.nullBasicParentProjection?{nullBasicParentProjection:selected.selection.nullBasicParentProjection}:{}),...(parents.targets.length?{derivedParentTargets:parents.targets}:{})};
 }

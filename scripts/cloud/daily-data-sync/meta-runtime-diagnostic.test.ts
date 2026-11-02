@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Prisma} from '@prisma/client';
+import {ProviderFailure} from '../../../apps/api/src/daily-sync/bounded-request';
 import {safeMetaRuntimeFailureDiagnostic,markMetaFailureStage} from '../../../apps/api/src/daily-sync/meta-failure-diagnostic';
 import {MetaMcpWireFailure} from '../../../apps/api/src/daily-sync/meta-mcp-wire-reader';
 import {MetaSyncRunnerService} from '../../../apps/api/src/daily-sync/meta-sync-runner.service';
@@ -33,4 +34,13 @@ test('actual runner distinguishes wire read versus canonical publish failures wi
  assert.equal(fetches,1);assert.equal(started,1);assert.equal(released,1);assert.equal(publishes,mode==='publish'?1:0);assert.equal(fail.unitKey,'2026-10-14');assert.equal(fail.code,'PROVIDER_UNAVAILABLE');
  assert.equal(fail.diagnosticCode,mode==='wire'?'META_FETCH_WIRE_HTTP_UNAVAILABLE':mode==='publish'?'META_PUBLISH_PRISMA_P2028':'META_NORMALIZE_PRISMA_P2028');assert(!JSON.stringify(fail,(_,v)=>typeof v==='bigint'?String(v):v).includes('SYNTHETIC_PRIVATE'));
  }}finally{for(const key of Object.keys(process.env))if(!(key in original))delete process.env[key];Object.assign(process.env,original);}
+});
+
+
+test('reconciliation reason serialization uses a closed allowlist and never arbitrary provider text',()=>{
+ const typed=new ProviderFailure('RECONCILIATION_FAILED',false,null,null,'PURCHASE_TOTALS');
+ assert.equal(safeMetaRuntimeFailureDiagnostic(typed,'META_NORMALIZE'),'META_NORMALIZE_PROVIDER_PURCHASE_TOTALS');
+ const raw=new ProviderFailure('RECONCILIATION_FAILED',false,null,null,'SYNTHETIC_PRIVATE');
+ assert.equal(safeMetaRuntimeFailureDiagnostic(raw,'META_NORMALIZE'),'META_NORMALIZE_PROVIDER');
+ assert.equal(safeMetaRuntimeFailureDiagnostic({safeCode:'RECONCILIATION_FAILED',diagnosticCode:'PURCHASE_TOTALS'},'META_NORMALIZE'),'META_NORMALIZE_OTHER');
 });

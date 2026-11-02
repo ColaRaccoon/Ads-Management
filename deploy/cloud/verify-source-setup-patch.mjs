@@ -34,7 +34,8 @@ if (profile === 'reporting') {
     'domain/cafe24-csv.js', 'domain/cafe24-matcher.js',
     'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js']) expected.add(name);
   for (const name of ['daily-sync/canonical-api-writer.service.js', 'daily-sync/meta-mcp-ads.client.js',
-    'daily-sync/meta-sync-runner.service.js',
+    'daily-sync/meta-sync-runner.service.js', 'daily-sync/meta-failure-diagnostic.js',
+    'daily-sync/meta-mcp-residual-proof.js',
     'daily-sync/meta-mcp-capture.js', 'daily-sync/meta-mcp-purchase.js', 'daily-sync/meta-mcp-wire-reader.js',
     'domain/meta-current-metadata.js', 'domain/meta-reporting-measurements.js',
     'metrics/meta-ad-metrics-read.service.js', 'metrics/meta-creative-lifetimes.js']) expected.add(name);

@@ -3,11 +3,12 @@ import { Prisma } from "@prisma/client";
 import { stableMetadataJson, MetaMcpNullBasicProjection } from "../domain/meta-current-metadata";
 import { META_REPORTING_FIELDS, metaReportingFields } from "../domain/meta-reporting-measurements";
 import { ProviderFailure } from "./bounded-request";
+import { metaReconciliationFailure, MetaReconciliationReason } from "./meta-failure-diagnostic";
 import { parseIsoDate } from "./sync-contract";
 import { metaMcpFields, MetaMcpProfile, META_MCP_PURCHASE_NAMES, MetaMcpLevel, MetaMcpWireSnapshot, validateMetaMcpWireRow } from "./meta-mcp-wire-reader";
 type Json=Record<string,unknown>;
 const LEVELS:MetaMcpLevel[]=["ad","adset","campaign","ad_account"];
-function reject():never{throw new ProviderFailure("RECONCILIATION_FAILED",false);}
+function reject(reason:MetaReconciliationReason='CAPTURE_INVALID'):never{throw metaReconciliationFailure(reason);}
 function hasReportingActivity(wire: MetaMcpWireSnapshot, row: Json, isAd: boolean) {
  return wire.profile === "REPORTING_V2" && metaReportingFields(isAd).some(key => {
   const value = row[META_REPORTING_FIELDS[key]];
@@ -83,12 +84,14 @@ function nullBasicParentProjection(wire:MetaMcpWireSnapshot){
 export function selectMetaMcpDay(capture:unknown){
  const original=validateMetaMcpCapture(capture);
  const campaignMap=new Map(original.levels.campaign.map(r=>[r.id,r])),setMap=new Map(original.levels.adset.map(r=>[r.id,r]));
- for(const row of original.levels.adset){const parent=campaignMap.get(row.campaign_id);if(!parent||parent.name!==row.campaign_name)reject();}
- for(const row of original.levels.ad){const parent=setMap.get(row.adset_id),campaign=campaignMap.get(row.campaign_id);if(!parent||!campaign||parent.campaign_id!==row.campaign_id||parent.name!==row.adset_name||campaign.name!==row.campaign_name)reject();}
- const projected=nullBasicParentProjection(original),wire=projected?.wire??original,references=new Set(wire.levels.ad.map(r=>r.adset_id as string));
- const selected=wire.levels.adset.filter(r=>references.has(r.id as string)),excluded=wire.levels.adset.filter(r=>!references.has(r.id as string));if(selected.length!==references.size)reject();
- if(excluded.some(r=>hasReportingActivity(wire,r,false)))reject();
- for(const row of excluded){if(!new Prisma.Decimal((row.amount_spent as Json).value as string).isZero()||["impressions","link_click","clicks","reach","frequency"].some(f=>row[f]!==null&&(typeof row[f]!=="string"||!new Prisma.Decimal(row[f] as string).isZero())))reject();if(wire.profile&&META_MCP_PURCHASE_NAMES.some(f=>row[f]!==null&&!new Prisma.Decimal(f.endsWith("_values")?(row[f] as Json).value as string:row[f] as string).isZero()))reject();}
+ for(const row of original.levels.adset){const parent=campaignMap.get(row.campaign_id);if(!parent||parent.name!==row.campaign_name)reject("PARENT_IDENTITY");}
+ for(const row of original.levels.ad){const parent=setMap.get(row.adset_id),campaign=campaignMap.get(row.campaign_id);if(!parent||!campaign||parent.campaign_id!==row.campaign_id||parent.name!==row.adset_name||campaign.name!==row.campaign_name)reject("PARENT_IDENTITY");}
+ let projected:ReturnType<typeof nullBasicParentProjection>;
+ try{projected=nullBasicParentProjection(original);}catch(error){if(error instanceof ProviderFailure&&error.safeCode==="RECONCILIATION_FAILED")reject("ZERO_PROJECTION");throw error;}
+ const wire=projected?.wire??original,references=new Set(wire.levels.ad.map(r=>r.adset_id as string));
+ const selected=wire.levels.adset.filter(r=>references.has(r.id as string)),excluded=wire.levels.adset.filter(r=>!references.has(r.id as string));if(selected.length!==references.size)reject("ADSET_MEMBERSHIP");
+ if(excluded.some(r=>hasReportingActivity(wire,r,false)))reject("ADSET_MEMBERSHIP");
+ for(const row of excluded){if(!new Prisma.Decimal((row.amount_spent as Json).value as string).isZero()||["impressions","link_click","clicks","reach","frequency"].some(f=>row[f]!==null&&(typeof row[f]!=="string"||!new Prisma.Decimal(row[f] as string).isZero())))reject("ADSET_MEMBERSHIP");if(wire.profile&&META_MCP_PURCHASE_NAMES.some(f=>row[f]!==null&&!new Prisma.Decimal(f.endsWith("_values")?(row[f] as Json).value as string:row[f] as string).isZero()))reject("ADSET_MEMBERSHIP");}
  const selection:MetaMcpSelection={policy:"REFERENCED_ADSETS_FROM_COMPLETE_WIRE",rawCaptureFingerprint:metaMcpFingerprint(original),rawStatus:"COMPLETE_WIRE_UNVERIFIED_IDENTITY",rawIdentityVerified:false,rawAdsetCount:wire.levels.adset.length,selectedAdsetCount:selected.length,excludedAdsetCount:excluded.length,selectedAdsetFingerprint:metaMcpFingerprint([...references].sort()),excludedReason:"CURRENT_METADATA_ONLY_UNREFERENCED",...(projected?{nullBasicParentProjection:projected.projection}:{})};
  return {wire,...(projected?{rawWire:original}:{}),selectedAdsets:selected,excludedAdsets:excluded,selection};
 }

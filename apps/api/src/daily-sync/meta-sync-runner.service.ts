@@ -2,7 +2,7 @@ import { HttpException, Injectable } from "@nestjs/common";
 import { SourceDataKind, SourceKind, SourceProvider, SyncRunStatus } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { CanonicalApiWriterService } from "./canonical-api-writer.service";
-import { safeMetaRuntimeFailureDiagnostic, MetaFailureStage } from "./meta-failure-diagnostic";
+import { safeMetaRuntimeFailureDiagnostic, MetaFailureStage, retryableMetaReconciliationDiagnostic } from "./meta-failure-diagnostic";
 import { ProviderFailure } from "./bounded-request";
 import { MetaReadSettings } from "./meta-ads.client";
 import { MetaDayReader } from "./meta-day-reader";
@@ -181,7 +181,7 @@ export class MetaSyncRunnerService {
           // never relax reconciliation or retry canonical publication/auth failures here.
           const retryReconciliation = run.trigger === "SCHEDULED" && !!options &&
             transport === "MCP" && code === "RECONCILIATION_FAILED" &&
-            diagnosticCode === "META_NORMALIZE_PROVIDER" && unit.attempts < 2;
+            retryableMetaReconciliationDiagnostic(diagnosticCode) && unit.attempts < 2;
           const actionRequired = !retryReconciliation && ["PROVIDER_AUTH_REQUIRED", "FIELD_UNSUPPORTED", "ATTRIBUTION_MISMATCH",
             "ACCOUNT_SCOPE_MISMATCH", "CURRENCY_MISMATCH", "TIMEZONE_MISMATCH",
             "SOURCE_SELECTION_REQUIRED", "RECONCILIATION_FAILED", "PROVIDER_VERSION_UNVERIFIED"].includes(code);

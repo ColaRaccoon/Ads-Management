@@ -1,6 +1,6 @@
 import {Prisma} from "@prisma/client";
 import {stableMetadataJson} from "../domain/meta-current-metadata";
-import {ProviderFailure} from "./bounded-request";
+import {metaReconciliationFailure,MetaReconciliationReason} from "./meta-failure-diagnostic";
 import {metaMcpFingerprint,selectMetaMcpDay} from "./meta-mcp-capture";
 import {MetaMcpWireSnapshot} from "./meta-mcp-wire-reader";
 type Json=Record<string,unknown>;
@@ -8,7 +8,7 @@ const object=(v:unknown):v is Json=>!!v&&typeof v==="object"&&!Array.isArray(v);
 const DEFINITION="The number of clicks on links within the ad that led to advertiser-specified destinations, on or off Meta technologies.";
 const LEVELS=["ad","adset","campaign","ad_account"] as const;
 const same=(a:unknown,b:unknown)=>stableMetadataJson(a)===stableMetadataJson(b);
-function fail():never{throw new ProviderFailure("RECONCILIATION_FAILED",false);}
+function fail(reason:MetaReconciliationReason='LINK_PROOF_INVALID'):never{throw metaReconciliationFailure(reason);}
 function integer(v:unknown):bigint{if(typeof v!=="string"||!/^(0|[1-9]\d{0,18})$(?![\s\S])/.test(v)||BigInt(v)>9223372036854775807n)fail();return BigInt(v);}
 function spend(r:Json){if(!object(r.amount_spent)||r.amount_spent.unit!=="USD"||typeof r.amount_spent.value!=="string")fail();const n=new Prisma.Decimal(r.amount_spent.value);if(n.isNegative()||n.decimalPlaces()>4||n.gte("10000000000"))fail();return n;}
 export const META_MCP_RESIDUAL_PREMISES=Object.freeze({countSemantics:"NONNEGATIVE_ADDITIVE_LINK_EVENTS",sameDayScope:true,parentConservation:"SPEND_IMPRESSIONS_CLICKS_LINK_RESIDUAL",snapshotAtomic:false,providerScalarZeroObserved:false,aliasEquivalenceVerified:false} as const);
@@ -29,7 +29,8 @@ function deriveLinkParentZeros(selected:ReturnType<typeof selectMetaMcpDay>){
  integer(wire.levels.ad_account[0].link_click);
  const total=(rows:Json[],field:string)=>rows.reduce((n,row)=>n+(row[field]===null?0n:integer(row[field])),0n);
  const infer=(parent:Json,children:Json[],level:"campaign"|"adset")=>{
-  if(total(children,"link_click")!==integer(parent.link_click)||!children.reduce((sum,row)=>sum.plus(spend(row)),new Prisma.Decimal(0)).eq(spend(parent))||["impressions","clicks"].some(field=>total(children,field)!==integer(parent[field])))fail();
+  if(total(children,"link_click")!==integer(parent.link_click))fail("LINK_TOTALS");
+  if(!children.reduce((sum,row)=>sum.plus(spend(row)),new Prisma.Decimal(0)).eq(spend(parent))||["impressions","clicks"].some(field=>total(children,field)!==integer(parent[field])))fail("BASIC_TOTALS");
   return children.map(row=>{if(row.link_click!==null)return row;targets.push({level,id:row.id as string,rawLinkClick:null,basis:"DERIVED_ZERO_RESIDUAL"});return {...row,link_click:"0"};});
  };
  const campaigns=infer(wire.levels.ad_account[0],wire.levels.campaign,"campaign");
@@ -56,8 +57,8 @@ function derive(capture:unknown,catalog:unknown){
   const totalSpend=children.reduce((n,r)=>n.plus(spend(r)),new Prisma.Decimal(0));
   const total=(rows:Json[],field:string)=>rows.reduce((n,r)=>n+(r[field]===null?0n:integer(r[field])),0n);
   const known=total(descendantAds,"link_click"),parentLinks=integer(parent.link_click);
-  if(!totalSpend.eq(spend(parent))||total(children,"impressions")!==integer(parent.impressions)||total(children,"clicks")!==integer(parent.clicks)||
-   total(children,"link_click")!==parentLinks||known!==parentLinks)fail();
+  if(!totalSpend.eq(spend(parent))||total(children,"impressions")!==integer(parent.impressions)||total(children,"clicks")!==integer(parent.clicks))fail("BASIC_TOTALS");
+  if(total(children,"link_click")!==parentLinks||known!==parentLinks)fail("LINK_TOTALS");
   parents.push({level,id:parent.id as string,childIdsFingerprint:metaMcpFingerprint(children.map(r=>r.id as string).sort()),spendUsd:totalSpend.toFixed(4),impressions:integer(parent.impressions).toString(),clicks:integer(parent.clicks).toString(),knownLinkClicks:known.toString(),parentLinkClicks:parentLinks.toString(),residualLinkClicks:"0",nullAdLinkCount:descendantAds.filter(r=>r.link_click===null).length});
  };
  for(const parent of selected.selectedAdsets){const children=wire.levels.ad.filter(r=>r.adset_id===parent.id);check(parent,children,children,"adset");}
@@ -66,7 +67,7 @@ function derive(capture:unknown,catalog:unknown){
  // Independently conserve the account across ads and selected adsets as well.
  const account=wire.levels.ad_account[0];for(const rows of [wire.levels.ad,selected.selectedAdsets]){
   if(!rows.reduce((n,r)=>n.plus(spend(r)),new Prisma.Decimal(0)).eq(spend(account))||
-   ["impressions","clicks","link_click"].some(f=>rows.reduce((n,r)=>n+(r[f]===null?0n:integer(r[f])),0n)!==integer(account[f])))fail();
+   ["impressions","clicks","link_click"].some(f=>rows.reduce((n,r)=>n+(r[f]===null?0n:integer(r[f])),0n)!==integer(account[f])))fail("BASIC_TOTALS");
  }
  parents.sort((a,b)=>a.level.localeCompare(b.level)||a.id.localeCompare(b.id));
  return{version:1 as const,status:"DERIVED_ZERO_RESIDUAL" as const,validationMethod:"ZERO_RESIDUAL_VERIFIED" as const,rawCaptureFingerprint:selected.selection.rawCaptureFingerprint,catalogSemanticFingerprint,

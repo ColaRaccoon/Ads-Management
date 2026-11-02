@@ -36,3 +36,14 @@ test('frozen v8 no-parent proof body/hash and normalized business rows remain ex
  const oldPurchase=load('apps/api/src/daily-sync/meta-mcp-purchase.ts'),oldDomain=load('apps/api/src/domain/meta-current-metadata.ts');const oldNormalize=load('apps/api/src/daily-sync/meta-mcp-ads.client.ts',{'./meta-mcp-purchase':oldPurchase,'../domain/meta-current-metadata':oldDomain});
  for(const nullableAd of [false,true]){const c=hierarchy();if(nullableAd)nullPurchase(c.levels.ad[0]);const cat=catalog(c),old=oldPurchase.createMetaMcpPurchaseResidualProof(c,cat),current=proof(c);const strip=p=>{const{observedAtUtc,proofFingerprint,...body}=p;return body;};assert.deepEqual(strip(current),strip(old));assert.deepEqual(validateMetaMcpPurchaseResidualProof(c,cat,old),old);assert.deepEqual(normalize(c,old),oldNormalize.normalizeMetaMcpPurchaseSnapshot(c,{version:1,transport:'META_ADS_MCP',purchaseProof:old},cat));}
 });
+
+
+test('reconciliation diagnostics separate purchase/basic totals, parent identity and malformed captures',()=>{
+ const cases=[
+  [c=>{c.levels.ad_account[0].omni_purchase='1';c.levels.ad_account[0].omni_purchase_values.value='1';},'PURCHASE_TOTALS'],
+  [c=>{c.levels.adset[0].impressions='1';},'BASIC_TOTALS'],
+  [c=>{c.levels.ad[0].adset_name='OTHER_SYNTHETIC_NAME';},'PARENT_IDENTITY'],
+  [c=>{c.paginationComplete=false;},'CAPTURE_INVALID']
+ ];
+ for(const [mutate,reason] of cases){const capture=hierarchy();mutate(capture);assert.throws(()=>proof(capture),e=>e.safeCode==='RECONCILIATION_FAILED'&&e.diagnosticCode===reason);}
+});
