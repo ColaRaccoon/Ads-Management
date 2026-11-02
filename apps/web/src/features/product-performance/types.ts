@@ -47,3 +47,6 @@ export type Options = Envelope & { products: { productName: string; active: bool
   availableDateRanges: { platform: Platform; scopeKey: string; from: string | null; to: string | null }[];
   defaultSelection: { platforms: Platform[]; from: string; to: string } };
 export type DashboardData = { summary: PageResult<ProductRow>; timeseries: PageResult<Bucket>; diagnostics: PageResult<Diagnostic> };
+
+/** Metadata-only selection options; no financial aggregation envelope. */
+export type SelectionOptions = Pick<Options, "products" | "scopes" | "platformOptions" | "availableDateRanges" | "defaultSelection">;

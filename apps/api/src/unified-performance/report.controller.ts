@@ -7,6 +7,10 @@ import { ReportQueryDto, RebuildInputDto, RelationshipQueryDto } from "./report.
 @Controller("unified-performance")
 export class UnifiedReportController {
   constructor(private readonly service: UnifiedReportService) {}
+  @Get("selection-options") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  selectionOptions(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.selectionOptions({ ...query }, actor); }
+  @Get("dashboard") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  dashboard(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("dashboard", { ...query }, actor); }
   @Get("options") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   options(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("options", { ...query }, actor); }
   @Get("summary") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")

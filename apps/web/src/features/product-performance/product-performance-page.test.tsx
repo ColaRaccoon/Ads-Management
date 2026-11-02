@@ -10,19 +10,18 @@ import { authCoordinator } from "@/features/auth/auth-coordination";
 import { ApiError } from "@/lib/api";
 import { visibleNavGroups } from "@/components/app-shell";
 import { ProductPerformancePage } from "./product-performance-page";
-import { dashboardKey, filterParams } from "./model";
+import { dashboardKey, selectionOptionsKey, filterParams } from "./model";
 import { testData, testFilters, testOptions } from "./test-fixture";
 import type { Filters } from "./types";
 after(() => (authCoordinator as unknown as { channel: BroadcastChannel | null }).channel?.close());
 
-function render(f = testFilters(), state: "ready" | "loading" | "error" | "none" | "stale-selection" = "ready", error?: ApiError, can = true, params?: URLSearchParams) {
+function render(f = testFilters(), state: "ready" | "loading" | "error" | "none" | "stale-selection" | "refreshing" = "ready", error?: ApiError, can = true, params?: URLSearchParams) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, retryOnMount: false } } });
   const identity = "user:data.read", key = dashboardKey(identity, f);
-  const optionsQuery = filterParams({ ...f, scopeKeys: undefined }).toString();
   // Keep the seeded SSR cache fresh; production staleTime=0 otherwise optimistically refetches on mount.
   const fresh = { updatedAt: Date.now() + 60000 };
-  client.setQueryData(["product-performance-options", identity, optionsQuery], testOptions(f), fresh);
-  if (state === "ready" || state === "none" || state === "stale-selection") {
+  client.setQueryData(selectionOptionsKey(identity, f), testOptions(f), fresh);
+  if (state === "ready" || state === "none" || state === "stale-selection" || state === "refreshing") {
     const data = testData(f);
     if (state === "none") {
       for (const metric of Object.keys(data.summary.knownTotals) as Array<keyof typeof data.summary.knownTotals>) {
@@ -31,6 +30,7 @@ function render(f = testFilters(), state: "ready" | "loading" | "error" | "none"
     }
     if (state === "stale-selection") data.summary.selection.productName = "이전 제품";
     client.setQueryData(key, data, fresh);
+    if (state === "refreshing") client.getQueryCache().find({ queryKey: key })!.setState({ fetchStatus: "fetching" });
   }
   if (state === "error") client.getQueryCache().build(client, { queryKey: key }).setState({ status: "error", error, fetchStatus: "idle" });
   const auth = { user: { id: "user" }, permissions: ["data.read"], can: () => can } as unknown as AuthContextValue;
@@ -66,4 +66,12 @@ test("permission denial, malformed URL and mismatched selection never render cac
   const html = render(testFilters(), "ready", undefined, true, new URLSearchParams('platforms=["UNKNOWN"]'));
   assert.match(html, /URL의 조회 조건이 올바르지 않습니다/);
   assert.doesNotMatch(html, /제품 성과 요약|1,234.123456 원/);
+});
+
+
+test("same-selection refresh keeps calculated results visible without eager diagnostics", () => {
+  const html = render(testFilters(), "refreshing");
+  assert.match(html, /판매처별로 얼마나 달라졌을까/);
+  assert.match(html, /선택 범위의 최신 성과를 확인/);
+  assert.doesNotMatch(html, /선택한 범위의 성과와 발행 버전을 확인|진단 자료|상세 진단을 읽고/);
 });

@@ -47,8 +47,9 @@ const unified = [
   'runtime-prisma', 'runtime-prisma.test',
   'types', 'unified-performance.module'
 ].map(name => `unified-performance/${name}.js`);
+const reviewedCoupang = ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js', 'domain/coupang-profit-pipeline.test.js'];
 const preserved = ['metrics/metrics.service.js', 'sales/sales-metrics.service.js',
-  'coupang/coupang.service.js', 'domain/margin-calculator.js'];
+  'coupang/coupang.controller.js', 'domain/margin-calculator.js'];
 const metaMappings = ['mappings/mappings.service.js', 'mappings/mappings.controller.js', 'mappings/dto/mappings-transport.dto.js'];
 
 async function fixture(run, profile = 'reporting') {
@@ -68,7 +69,7 @@ async function fixture(run, profile = 'reporting') {
       await put(compiled, name, 'reviewed Cafe24 option mapping module\n');
     }
     if (profile === 'reporting') for (const name of unified) await put(compiled, name, 'reviewed unified module\n');
-    if (profile === 'reporting') for (const name of metaMappings) {
+    if (profile === 'reporting') for (const name of [...metaMappings, ...reviewedCoupang]) {
       await put(baseline, name, 'old mapping module\n'); await put(compiled, name, 'reviewed editable mapping module\n');
     }
     for (const name of preserved) { await put(baseline, name, 'legacy\r\n'); await put(compiled, name, 'legacy\n'); }
@@ -85,7 +86,7 @@ async function fixture(run, profile = 'reporting') {
 test('reporting accepts the complete reviewed Google, Cafe24 and unified patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
   const result = verify(); assert.equal(result.status, 0, result.stderr);
   const proof = JSON.parse(result.stdout);
-  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + metaMappings.length + unified.length);
+  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + metaMappings.length + reviewedCoupang.length + unified.length);
   for (const name of ['meta', 'cafe24', 'coupang', 'margin']) {
     assert.equal(proof.protectedUnchanged[name].files, 1);
     assert.match(proof.protectedUnchanged[name].sha256, /^[a-f0-9]{64}$/);
@@ -127,7 +128,7 @@ test('another Google module cannot bypass the exact allowlist', () => fixture(as
 }));
 
 test('Meta and Coupang calculation mutations remain blocked', async () => {
-  for (const name of ['sales/sales-metrics.service.js', 'coupang/coupang.service.js', 'domain/margin-calculator.js', 'domain/cafe24-sales-calculator.js', 'domain/cafe24-coupon-matcher.js'])
+  for (const name of ['sales/sales-metrics.service.js', 'coupang/coupang.controller.js', 'domain/margin-calculator.js', 'domain/cafe24-sales-calculator.js', 'domain/cafe24-coupon-matcher.js'])
     await fixture(async ({ compiled, put, verify }) => { await put(compiled, name, 'regression'); const result = verify();
       assert.notEqual(result.status, 0); assert.ok(result.stderr.includes(`Unreviewed C7 API change: ${name}`)); });
 });

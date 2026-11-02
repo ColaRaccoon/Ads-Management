@@ -46,9 +46,9 @@ export function ChangeAnalysis({ data, filters }: { data: DashboardData; filters
   const [lagDays, setLagDays] = useState(0);
   const [metric, setMetric] = useState<"revenue" | "estimatedProfit">("revenue");
   const buckets = data.timeseries.items;
-  const options = { medium, changeDate, windowDays, lagDays };
-  const analysis = useMemo(() => analyzeChanges(buckets, options), [buckets, medium, changeDate, windowDays, lagDays]); // eslint-disable-line react-hooks/exhaustive-deps
-  const mediaResults = MEDIA.map(item => ({ ...item, spend: analyzeChanges(buckets, { ...options, medium: item.id }).spend }));
+  const analyses = useMemo(() => MEDIA.map(item => ({ ...item, analysis: analyzeChanges(buckets, { medium: item.id, changeDate, windowDays, lagDays }) })), [buckets, changeDate, windowDays, lagDays]);
+  const analysis = analyses.find(item => item.id === medium)!.analysis;
+  const mediaResults = analyses.map(item => ({ ...item, spend: item.analysis.spend }));
   const source = MEDIA.find(item => item.id === medium)!;
   const channels = CHANNELS.filter(item => data.summary.selectedPlatforms.includes((item.id === "NAVER_SMARTSTORE" ? "NAVER" : item.id) as "CAFE24" | "NAVER" | "COUPANG"));
   const results = channels.map(item => ({ ...item, value: analysis.marketplaces.find(value => value.marketplace === item.id) }));
