@@ -49,6 +49,7 @@ const unified = [
   'management-impact', 'management-impact.test', 'management.controller', 'management.dto', 'management.repository',
   'management.service', 'management.service.test', 'relationship-input', 'relationship-input.test', 'relationship-query',
   'report-contract', 'report-query', 'report.controller', 'report.dto', 'report.repository', 'report.service', 'report.service.test',
+  'daily-products', 'daily-products.test', 'daily-products-naver.test',
   'runtime-prisma', 'runtime-prisma.test',
   'types', 'unified-performance.module'
 ].map(name => `unified-performance/${name}.js`);
