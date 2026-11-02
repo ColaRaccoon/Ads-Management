@@ -8,7 +8,7 @@ import { REQUIRED_PERMISSIONS } from "../auth/route-decorators";
 import { UnifiedReportController } from "./report.controller";
 import { ReportQueryDto, RebuildInputDto } from "./report.dto";
 import { parseReportQuery, reportBuckets, datesIn } from "./report-query";
-import { missingCoverage, selectReportScopes, type ReportSnapshot, UnifiedReportRepository } from "./report.repository";
+import { missingCoverage, selectReportScopes, selectionOptionsStatement, snapshotStatement, type ReportSnapshot, UnifiedReportRepository } from "./report.repository";
 import type { UnifiedManagementRepository } from "./management.repository";
 import { UnifiedReportService } from "./report.service";
 import type { UnifiedAggregationRepository } from "./aggregation.repository";
@@ -59,7 +59,7 @@ test("week/month buckets use inclusive partial boundaries", () => {
   const month = reportBuckets("2026-10-31", "2026-11-01", "month"); assert.equal(month.length, 2); assert(month.every(b => b.partial));
 });
 test("all HTTP routes have read/operation permissions and strict DTO validation", () => {
-  for (const method of ["options", "summary", "timeseries", "diagnostics"] as const)
+  for (const method of ["options", "summary", "timeseries", "diagnostics", "dashboard", "selectionOptions"] as const)
     assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, UnifiedReportController.prototype[method]), ["data.read"]);
   for (const method of ["rebuild", "job"] as const)
     assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, UnifiedReportController.prototype[method]), ["operations.run"]);
@@ -306,13 +306,73 @@ test("concurrent endpoint calculations leave the shared snapshot unchanged and s
   await assert.rejects(service.read("summary",{ ...f.query },{ ...actor, permissions: [] }), /실행 권한/);
   assert.equal(f.reads(), 1); f.resume();
   const results = await Promise.all(requests);
-  assert(results.every(result => result.snapshotHash === results[0].snapshotHash));
+  assert(results.every(result => "snapshotHash" in result && "snapshotHash" in results[0] && result.snapshotHash === results[0].snapshotHash));
   assert.equal(JSON.stringify(shared), before, "shared arrays, rows, dates and versions must not be mutated by consumers");
   shared = undefined; before = ""; f.hold();
   const analyses = [service.read("relationships",{ ...f.query, analysisMedia: ["COUPANG_ADS"] },readActor),
     service.read("relationships",{ ...f.query, analysisMedia: [] },readActor)];
   assert.equal(f.reads(), 2, "relationship lookback has its own load shared across analysis-media choices");
   f.resume(); const relationships = await Promise.all(analyses);
+  assert("knownTotals" in relationships[0] && "knownTotals" in relationships[1]);
   assert.deepEqual(relationships[0].knownTotals, relationships[1].knownTotals);
   assert.equal(JSON.stringify(shared), before, "relationship calculations must also preserve shared input");
 }));
+
+
+test("dashboard equals legacy financial envelopes and buckets without unused product details", async () => enabled(async () => {
+  for (const grain of ["day", "week", "month"] as const) for (const productName of [undefined, "A"]) {
+    const f = fixture(), input = { ...query, from: "2026-10-25", to: "2026-10-26", compareFrom: "2026-10-23", compareTo: "2026-10-24", grain, productName };
+    f.snapshot.facts[0].completeProfitBeforeAds = null;
+    const summary: any = await f.service.read("summary", input, actor), timeseries: any = await f.service.read("timeseries", input, actor);
+    const before = f.captured.length, result: any = await f.service.read("dashboard", input, actor);
+    assert.equal(f.captured.length, before + 1);
+    assert.deepEqual(result.summary, { ...summary, items: [], total: 0, nextCursor: null });
+    assert.deepEqual(result.timeseries, timeseries);
+    assert.equal(result.summary.snapshotHash, result.timeseries.snapshotHash);
+    assert.deepEqual(f.enqueued, []);
+  }
+}));
+
+test("dashboard includes all daily buckets without extra snapshot pages and keeps missing days null", async () => enabled(async () => {
+  const f = fixture(), input = { ...query, from: "2026-06-01", to: "2026-10-26" };
+  const result: any = await f.service.read("dashboard", input, actor);
+  assert.equal(result.timeseries.items.length, datesIn(input.from, input.to).length);
+  assert.equal(result.timeseries.nextCursor, null); assert.equal(result.timeseries.items[0].knownTotals.revenue, null);
+  assert.equal(f.captured.length, 1);
+  await assert.rejects(f.service.read("dashboard", { ...query, cursor: "old-page" }, actor), /cursor/);
+  await assert.rejects(f.service.read("dashboard", query, { ...actor, permissions: [] }), /실행 권한/);
+}));
+
+test("selection options preserve authorized historical metadata without financial payload or calculations", async () => enabled(async () => {
+  let reads = 0;
+  const metadata = { products: [{ canonical_name: "A", active: true }], connections: [], productNames: ["A", "과거 제품"],
+    ranges: [{ platform: "COUPANG", scope_key: "LEGACY_COUPANG_SINGLE_UPLOAD", first_date: "2026-01-01", last_date: "2026-10-26" }] };
+  const management = { read: async (work: (tx: unknown) => Promise<unknown>) => { reads++; return work({ $queryRaw: async (statement: any) => {
+    for (const unnecessary of ["f.payload", "unified_source_coverage", "unified_aggregation_runs", "unified_rules"]) assert(!statement.text.includes(unnecessary));
+    assert(statement.text.includes("f.product_name")); return [{ frame: JSON.stringify(metadata) }];
+  } }); } } as unknown as UnifiedManagementRepository;
+  const repository = new UnifiedReportRepository(management), service = new UnifiedReportService(repository, {} as UnifiedAggregationRepository);
+  const input = { ...query, platforms: ["COUPANG"], scopeKeys: ["LEGACY_COUPANG_SINGLE_UPLOAD"] };
+  const result = await service.selectionOptions(input, actor);
+  assert.deepEqual(result.products, [{ productName: "A", active: true, historical: false }, { productName: "과거 제품", active: false, historical: true }]);
+  assert.equal(result.scopes.length, 1); assert.equal(result.scopes[0].platform, "COUPANG");
+  assert.equal(result.availableDateRanges[0].from, "2026-01-01");
+  assert(!("knownTotals" in result)); assert.equal(reads, 1);
+  assert.equal((await service.selectionOptions({ ...input, scopeKeys: [] }, actor)).scopes.length, 0);
+  await assert.rejects(service.selectionOptions({ ...input, scopeKeys: ["not-authorized"] }, actor), /허용되지/);
+  const before = reads;
+  await assert.rejects(service.selectionOptions(input, { ...actor, permissions: [] }), /실행 권한/);
+  assert.equal(reads, before);
+  await assert.rejects(service.selectionOptions({ ...input, cursor: "old-page" }, actor), /cursor/);
+}));
+
+test("financial snapshot only projects required run fields and metadata options omit all monetary payloads", () => {
+  const input = parseReportQuery(query), policy = { legacyPlatforms: "META,CAFE24", naverStoreIds: "" };
+  const report = snapshotStatement(input, undefined, policy).text;
+  assert(!report.includes("to_jsonb(r) AS run"));
+  for (const field of ["r.versions", "r.control_totals", "r.published_at", "r.started_at"]) assert(report.includes(field));
+  assert(report.includes("CASE WHEN r.id IS NULL THEN NULL"));
+  const metadata = selectionOptionsStatement(input, policy).text;
+  assert(!metadata.includes("f.payload")); assert(!metadata.includes("unified_aggregation_runs"));
+  assert(metadata.includes("selected_scopes")); assert(metadata.includes("product_names"));
+});

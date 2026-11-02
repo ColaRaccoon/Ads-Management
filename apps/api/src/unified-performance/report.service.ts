@@ -13,7 +13,7 @@ import { CONTRACT_VERSION, PLATFORMS, type ComponentKind, type SourceCoverage } 
 import { REPORT_CALCULATION_VERSION } from "./report-contract";
 
 type Actor = Pick<AuthenticatedUser, "id" | "permissions">;
-type ViewKind = "summary" | "timeseries" | "diagnostics" | "options" | "relationships";
+type ViewKind = "summary" | "timeseries" | "diagnostics" | "options" | "relationships" | "dashboard";
 const date = (value: Date) => value.toISOString().slice(0, 10);
 const safeIssues = (issues: readonly string[]) => [...new Set(issues.filter(issue => /^[A-Z][A-Z0-9_:.|/-]{0,159}$/.test(issue)))].sort();
 const safeCoverage = (coverage: SourceCoverage[]) => coverage.map(c => ({
@@ -75,9 +75,19 @@ function page<T>(items: T[], query: ReportQuery, snapshotHash: string, kind: Vie
 @Injectable()
 export class UnifiedReportService {
   constructor(private readonly repository: UnifiedReportRepository, private readonly aggregation: UnifiedAggregationRepository) {}
+  async selectionOptions(input: Record<string, unknown>, actor: Actor) {
+    allowed(actor, "data.read");
+    const query = parseReportQuery(input);
+    if (query.cursor) throw new BadRequestException("조회 조건 목록에는 cursor를 사용할 수 없습니다.");
+    const metadata = await this.repository.selectionOptions(query);
+    return { ...metadata, platformOptions: PLATFORMS.map(key => ({ key, components: PLATFORM_COMPONENTS[key], defaultIncluded: true,
+      available: metadata.scopes.some(scope => scope.platform === key) })),
+      defaultSelection: { platforms: [...PLATFORMS], from: query.from, to: query.to } };
+  }
   async read(kind: ViewKind, input: Record<string, unknown>, actor: Actor) {
     allowed(actor, "data.read");
     const query = parseReportQuery(input);
+    if (kind === "dashboard" && query.cursor) throw new BadRequestException("통합 조회에는 cursor를 사용할 수 없습니다.");
     const analysisSettings = kind === "relationships" ? parseRelationshipQuery(input, query) : undefined;
     const lookbackFrom = analysisSettings ? shiftDate(query.from, -14) : undefined;
     const snapshot = await this.repository.snapshot(query, lookbackFrom);
@@ -138,6 +148,26 @@ export class UnifiedReportService {
         outcomeLabel: query.productName && allSales ? "제품 전체 매출" : "선택 판매처 합산 매출",
         events: { status: "UNAVAILABLE", message: "가격·행사·품절 이벤트 기록은 연결되지 않았습니다. 요일과 나머지 매체 광고비를 함께 확인하세요." },
         interpretation: "광고비 증가 기간에 매출이 증가하는 등 관측된 동반 변화를 확인합니다. 인과효과나 효과 발생일을 뜻하지 않습니다. 순이익은 광고비를 직접 차감하므로 분석 결과값에서 제외합니다." } };
+    }
+    if (kind === "dashboard") {
+      // One immutable snapshot, one envelope, no unused product-detail page. Index
+      // source/day once rather than scanning the entire period for every bucket.
+      const scope = scopeFor(query.productName);
+      const factsByDay = new Map<string, typeof scope.facts>();
+      const coverageByDay = new Map<string, typeof scope.coverage>();
+      for (const fact of scope.facts) { const rows = factsByDay.get(fact.date); if (rows) rows.push(fact); else factsByDay.set(fact.date, [fact]); }
+      for (const coverage of scope.coverage) { const rows = coverageByDay.get(coverage.date); if (rows) rows.push(coverage); else coverageByDay.set(coverage.date, [coverage]); }
+      const items = reportBuckets(query.from, query.to, query.grain).map(bucket => {
+        // Non-daily consumers retain legacy ordering of provenance/balance arrays.
+        if (bucket.bucketFrom !== bucket.bucketTo) {
+          const { coverage, ...result } = period(scope, query, bucket.bucketFrom, bucket.bucketTo, query.productName);
+          return { ...bucket, ...result, coverage: safeCoverage(coverage) };
+        }
+        const facts = factsByDay.get(bucket.bucketFrom) ?? [], coverage = coverageByDay.get(bucket.bucketFrom) ?? [];
+        return { ...bucket, ...summarizeReport(facts, coverage, { platforms: query.platforms, productName: query.productName }), coverage: safeCoverage(coverage) };
+      });
+      return { summary: { ...envelope, items: [], total: 0, nextCursor: null },
+        timeseries: { ...envelope, items, total: items.length, nextCursor: null } };
     }
     const productNames = [...new Set([...snapshot.products.map(p => p.canonicalName), ...(snapshot.availableProductNames??[]), ...snapshot.facts.map(f => f.productName).filter((name): name is string => name !== null)])].sort();
     if (kind === "options") return { ...envelope, products: productNames.map(productName => ({ productName, active: snapshot.products.find(p => p.canonicalName === productName)?.active ?? false,

@@ -2,7 +2,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { authCoordinator } from "@/features/auth/auth-coordination";
 import { ApiError } from "@/lib/api";
-import { assertResponse, changeFilters, comparisonReason, dashboardKey, difference, effectiveFilters, filterParams, loadDashboard, money, parseFilters, percent, percentagePoints, ratioPercent, responseMatches, validateFilters, type Reader } from "./model";
+import { assertResponse, changeFilters, comparisonReason, dashboardKey, difference, effectiveFilters, filterParams, loadDashboard, loadDiagnostics, selectionOptionsKey, money, parseFilters, percent, percentagePoints, ratioPercent, responseMatches, validateFilters, type Reader } from "./model";
 import { testData, testEnvelope, testFilters } from "./test-fixture";
 import type { Envelope } from "./types";
 after(() => (authCoordinator as unknown as { channel: BroadcastChannel | null }).channel?.close());
@@ -71,32 +71,53 @@ test("response validation refuses stale selection, omitted explicit accounts and
   assert.equal(responseMatches(e, { ...f, platforms: ["META"] }), false);
   assert.throws(() => assertResponse({ ...e, snapshotHash: "new" }, f, e), ApiError);
 });
-test("loader fetches every timeseries page and retries an entire changed snapshot, keeping diagnostics cursor explicit", async () => {
-  const f = testFilters(), seen: string[] = [], data = testData(f);
-  const read: Reader = async <T,>(path: string) => {
-    seen.push(path);
-    const url = new URL(path, "http://fixture"), kind = url.pathname.split("/").at(-1)!;
-    const result = structuredClone(data[kind as keyof typeof data]);
-    if (kind === "timeseries") result.nextCursor = url.searchParams.has("cursor") ? null : "page2";
-    if (kind === "diagnostics") result.nextCursor = "diagnostics-page2";
-    if (seen.length <= 3 && kind === "diagnostics") result.snapshotHash = "new-publication";
-    return result as T;
-  };
-  const result = await loadDashboard(f, read);
-  assert.equal(seen.filter(p => p.includes("summary?")).length, 2);
-  assert.equal(result.timeseries.items.length, 2); assert.equal(result.timeseries.nextCursor, null);
-  assert.equal(result.diagnostics.nextCursor, "diagnostics-page2");
-  for (const path of seen) assert.deepEqual(JSON.parse(new URL(path, "http://fixture").searchParams.get("platforms")!), f.platforms);
+test("one dashboard request includes every daily bucket and never eagerly fetches product rows or diagnostics", async () => {
+  const f = testFilters({ from: "2024-01-01", to: "2024-12-31" }), data = testData(f), seen: string[] = [];
+  data.summary.items = []; data.summary.total = 0;
+  data.timeseries.items = Array.from({ length: 366 }, () => data.timeseries.items[0]); data.timeseries.total = 366;
+  const result = await loadDashboard(f, async <T,>(path: string) => { seen.push(path); return structuredClone(data) as T; });
+  assert.equal(seen.length, 1); assert.match(seen[0], /^\/unified-performance\/dashboard\?/);
+  assert.equal(result.timeseries.items.length, 366); assert.equal(result.diagnostics.items.length, 0);
+  assert.equal(result.summary.total, 0);
 });
-test("rapid toggles use isolated caches and a cancelled selection never finishes into the new selection", async () => {
-  const f = testFilters(), controller = new AbortController();
-  let release!: (value: Envelope) => void;
-  const pending = new Promise<Envelope>(resolve => { release = resolve; });
-  const read: Reader = async <T,>() => await pending as T;
-  const old = loadDashboard(f, read, controller.signal);
-  controller.abort(); release(testEnvelope(f));
+
+test("single dashboard validates coherent snapshot, retries once, and rejects a truncated series", async () => {
+  const f = testFilters(), data = testData(f); let requests = 0;
+  const result = await loadDashboard(f, async <T,>() => {
+    const next = structuredClone(data); requests++;
+    if (requests === 1) next.timeseries.snapshotHash = "different";
+    return next as T;
+  });
+  assert.equal(requests, 2); assert.equal(result.summary.snapshotHash, data.summary.snapshotHash);
+  await assert.rejects(loadDashboard(f, async <T,>() => ({ ...data, timeseries: { ...data.timeseries, total: 366 } }) as T), /완전하지 않습니다/);
+});
+
+test("diagnostics are a separate requested operation bound to displayed scope and snapshot", async () => {
+  const f = testFilters(), data = testData(f), seen: string[] = [];
+  const result = await loadDiagnostics(f, data.summary, "page2", async <T,>(path: string) => { seen.push(path); return { ...data.diagnostics, nextCursor: "page3" } as T; });
+  assert.equal(seen.length, 1); assert.match(seen[0], /diagnostics\?/); assert.match(seen[0], /cursor=page2/);
+  assert.equal(result.nextCursor, "page3");
+  await assert.rejects(loadDiagnostics(f, data.summary, undefined, async <T,>() => ({ ...data.diagnostics, snapshotHash: "new" }) as T), ApiError);
+  assert.equal(data.summary.snapshotHash, "snapshot");
+});
+
+test("selection options cache metadata across products without sharing users, platforms or date ranges", () => {
+  const f = testFilters();
+  assert.deepEqual(selectionOptionsKey("u", f), selectionOptionsKey("u", { ...f, productName: "other", scopeKeys: ["account"] }));
+  assert.notDeepEqual(selectionOptionsKey("u", f), selectionOptionsKey("other-user", f));
+  assert.notDeepEqual(selectionOptionsKey("u", f), selectionOptionsKey("u", { ...f, platforms: ["META"] }));
+  assert.notDeepEqual(selectionOptionsKey("u", f), selectionOptionsKey("u", { ...f, to: "2026-10-27" }));
+});
+
+test("rapid toggles forward cancellation and never finish into a new selection", async () => {
+  const f = testFilters(), controller = new AbortController(); let forwarded: AbortSignal | undefined;
+  let release!: (value: ReturnType<typeof testData>) => void;
+  const pending = new Promise<ReturnType<typeof testData>>(resolve => { release = resolve; });
+  const read: Reader = async <T,>(_path: string, signal?: AbortSignal) => { forwarded = signal; return await pending as T; };
+  const old = loadDashboard(f, read, controller.signal); assert.equal(forwarded, controller.signal);
+  controller.abort(); release(testData(f));
   await assert.rejects(old, error => error instanceof Error && error.name === "AbortError");
   const changed = testFilters({ platforms: ["NAVER"] }), data = testData(changed);
-  const fresh = await loadDashboard(changed, async <T,>(path: string) => structuredClone(data[path.split("?")[0].split("/").at(-1) as keyof typeof data]) as T);
+  const fresh = await loadDashboard(changed, async <T,>() => structuredClone(data) as T);
   assert.deepEqual(fresh.summary.selectedPlatforms, ["NAVER"]);
 });

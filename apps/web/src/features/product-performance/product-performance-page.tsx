@@ -5,15 +5,15 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PermissionPage } from "@/components/permission-page";
+import { ApiError } from "@/lib/api";
 import { useAuth } from "@/features/auth/use-auth";
-import { apiGet } from "@/lib/api";
 import { PerformanceFilters } from "./filters";
 import { DiagnosticsPanel } from "./diagnostics";
 import { ChangeAnalysis } from "./change-analysis";
-import { assertResponse, changeFilters, dashboardError, dashboardKey, defaultFilters, filterParams, loadDashboard, parseFilters, responseMatches, validateFilters } from "./model";
-import type { DashboardData, Diagnostic, Filters, Options, PageResult } from "./types";
+import { changeFilters, dashboardError, dashboardKey, defaultFilters, diagnosticsKey, filterParams, loadDashboard, loadDiagnostics, parseFilters, readPerformance, responseMatches, selectionOptionsKey, validateFilters } from "./model";
+import type { Diagnostic, Filters, SelectionOptions, PageResult } from "./types";
 
-const QUERY_OPTIONS = { retry: false, staleTime: 0, refetchOnWindowFocus: false, refetchOnReconnect: false } as const;
+const QUERY_OPTIONS = { retry: false, staleTime: 30_000, refetchOnWindowFocus: false, refetchOnReconnect: false } as const;
 
 export function ProductPerformancePage() {
   const { user, permissions } = useAuth();
@@ -30,46 +30,48 @@ function Performance({ identity }: { identity: string }) {
   }, [search]);
   const invalid = urlError ?? validateFilters(filters);
   const empty = filters.platforms.length === 0 || filters.scopeKeys?.length === 0;
-  // The server projects alternative product names separately from financial
-  // payloads. Keep the chosen product so options do not load every product's money.
-  // An explicit account selection must still expose alternative accounts.
-  const optionFilters = { ...filters, scopeKeys: undefined };
+  // Metadata is independent of the selected product and exposes alternative authorized accounts.
+  const optionFilters = { ...filters, productName: "", scopeKeys: undefined };
   const optionQuery = filterParams(optionFilters).toString();
-  const options = useQuery({ ...QUERY_OPTIONS, queryKey: ["product-performance-options", identity, optionQuery], enabled: !invalid,
-    queryFn: () => apiGet<Options>(`/unified-performance/options?${optionQuery}`) });
+  const options = useQuery({ ...QUERY_OPTIONS, queryKey: selectionOptionsKey(identity, filters), staleTime: 300_000, enabled: !invalid,
+    queryFn: ({ signal }) => readPerformance<SelectionOptions>(`/unified-performance/selection-options?${optionQuery}`, signal) });
   const key = dashboardKey(identity, filters);
   const query = useQuery({ ...QUERY_OPTIONS, queryKey: key, enabled: !invalid && !empty,
-    queryFn: ({ signal }) => loadDashboard(filters, apiGet, signal) });
+    queryFn: ({ signal }) => loadDashboard(filters, readPerformance, signal) });
   // Never attach previous selection data, or partially refreshed endpoints, to a new filter label.
-  const data = !invalid && !empty && !query.isFetching && !query.isError && query.data && responseMatches(query.data.summary, filters) ? query.data : undefined;
-  const optionData = !options.isError && !options.isFetching ? options.data : undefined;
+  const data = !invalid && !empty && !query.isError && query.data && responseMatches(query.data.summary, filters) ? query.data : undefined;
+  const optionData = !options.isError ? options.data : undefined;
   const [pageError, setPageError] = useState("");
+  const [paginationNeedsRefresh, setPaginationNeedsRefresh] = useState(false);
   const [paging, setPaging] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const diagnosticKey = diagnosticsKey(identity, filters, data?.summary);
+  const diagnostics = useQuery({ ...QUERY_OPTIONS, queryKey: diagnosticKey, enabled: showDiagnostics && Boolean(data),
+    queryFn: ({ signal }) => loadDiagnostics(filters, data!.summary, undefined, readPerformance, signal) });
+  const diagnosticData = data && diagnostics.data && diagnostics.data.snapshotHash === data.summary.snapshotHash ? diagnostics.data : undefined;
   const lock = useRef(false);
   const activeSearch = useRef(search);
   activeSearch.current = search;
-  useEffect(() => { setPageError(""); }, [search]);
+  useEffect(() => { setPageError(""); setPaginationNeedsRefresh(false); }, [search]);
   const change = (raw: Filters) => {
     const next = changeFilters(filters, raw, options.data?.scopes ?? []);
     window.history.pushState(null, "", `${pathname}?${filterParams(next, true).toString()}`);
   };
-  const refresh = () => { setPageError(""); void options.refetch(); if (!invalid && !empty) void query.refetch(); };
+  const refresh = () => { setPageError(""); setPaginationNeedsRefresh(false); void options.refetch(); if (!invalid && !empty) void query.refetch(); };
   const moreDiagnostics = async () => {
-    if (!data?.diagnostics.nextCursor || lock.current) return;
+    if (!data || !diagnosticData?.nextCursor || lock.current) return;
     lock.current = true; setPaging(true); setPageError("");
     try {
-      const next = await apiGet<PageResult<Diagnostic>>(`/unified-performance/diagnostics?${filterParams(filters)}&cursor=${encodeURIComponent(data.diagnostics.nextCursor)}`);
+      const next = await loadDiagnostics(filters, data.summary, diagnosticData.nextCursor);
       if (activeSearch.current !== search) return;
-      assertResponse(next, filters, data.summary);
-      client.setQueryData<DashboardData>(key, old => old && old.summary.snapshotHash === next.snapshotHash ? {
-        ...old, diagnostics: { ...next, items: [...old.diagnostics.items, ...next.items] }
+      client.setQueryData<PageResult<Diagnostic>>(diagnosticKey, old => old && old.snapshotHash === next.snapshotHash ? {
+        ...next, items: [...old.items, ...next.items]
       } : old);
     } catch (error) {
       if (activeSearch.current !== search) return;
       setPageError(dashboardError(error));
-      // A cursor cannot be continued across a newly published snapshot. Restart all panels together.
-      void client.invalidateQueries({ queryKey: key, exact: true });
+      setPaginationNeedsRefresh(error instanceof ApiError && error.status === 409);
+      // Keep calculated results visible. A diagnostics failure must not discard dashboard data.
     } finally { lock.current = false; setPaging(false); }
   };
   return <section className="page" style={{ display: "grid", gap: 16 }}>
@@ -91,20 +93,23 @@ function Performance({ identity }: { identity: string }) {
     {invalid ? <div className="panel" role="alert">{invalid}</div> : null}
     {!invalid && options.isError ? <div className="panel" role="alert">조회 조건 목록: {dashboardError(options.error)}</div> : null}
     {!invalid && empty ? <div className="panel" role="status">{filters.platforms.length === 0 ? "플랫폼을 선택하세요." : "계정·스토어를 선택하세요."} 선택하지 않은 범위는 0원으로 표시하지 않습니다.</div> : null}
-    {!invalid && !empty && query.isFetching ? <div className="panel" role="status" aria-busy="true">선택한 범위의 성과와 발행 버전을 확인하고 있습니다.</div> : null}
+    {!invalid && !empty && query.isFetching && !data ? <div className="panel" role="status" aria-busy="true">선택한 범위의 성과와 발행 버전을 확인하고 있습니다.</div> : null}
     {!invalid && !empty && query.isError ? <div className="panel" role="alert">{dashboardError(query.error)}</div> : null}
     {data ? <>
       {Object.values(data.summary.knownTotals).every(value => value === null) ? <div className="panel" role="status">선택 범위에 확인 가능한 발행 데이터가 없습니다. 아래 데이터 확인에서 미수집·미매핑과 적용 여부를 확인하세요.</div> : null}
+      {query.isFetching ? <p role="status" className="muted">선택 범위의 최신 성과를 확인하고 있습니다.</p> : null}
       <ChangeAnalysis key={filterParams(filters).toString()} data={data} filters={filters} />
       <details className="panel" onToggle={event => setShowDiagnostics(event.currentTarget.open)}>
         <summary style={{ cursor: "pointer", color: "#61766d", fontSize: 13 }}>원천 데이터 상세 진단{data.summary.provisional ? " · 잠정 자료" : ""}{data.summary.isEstimate ? " · 추정 데이터 포함" : ""}</summary>
         {showDiagnostics ? <>
-          <DiagnosticsPanel data={data} />
-      {data.diagnostics.nextCursor ? <div className="toolbar"><span>상세 진단 {data.diagnostics.items.length} / {data.diagnostics.total}개</span>
-        <button type="button" className="button" disabled={paging} onClick={() => void moreDiagnostics()}>{paging ? "진단을 읽는 중…" : "다음 진단 100개"}</button></div> : null}
+          {diagnostics.isPending ? <p role="status">상세 진단을 읽고 있습니다.</p> : null}
+          {diagnostics.isError ? <div role="alert"><p>{dashboardError(diagnostics.error)}</p><button type="button" className="button" onClick={() => { if (diagnostics.error instanceof ApiError && diagnostics.error.status === 409) refresh(); else void diagnostics.refetch(); }}>{diagnostics.error instanceof ApiError && diagnostics.error.status === 409 ? "성과·진단 다시 조회" : "상세 진단 다시 조회"}</button></div> : null}
+          {diagnosticData ? <DiagnosticsPanel data={{ ...data, diagnostics: diagnosticData }} /> : null}
+          {diagnosticData?.nextCursor ? <div className="toolbar"><span>상세 진단 {diagnosticData.items.length} / {diagnosticData.total}개</span>
+            <button type="button" className="button" disabled={paging} onClick={() => void moreDiagnostics()}>{paging ? "진단을 읽는 중…" : "다음 진단 100개"}</button></div> : null}
         </> : null}
       </details>
-      {pageError ? <div className="panel" role="alert">{pageError}</div> : null}
+      {pageError ? <div className="panel" role="alert">{pageError}{paginationNeedsRefresh ? <button type="button" className="button" onClick={refresh}>성과·진단 다시 조회</button> : null}</div> : null}
       <p className="muted" style={{ fontSize: 12 }}>선택 매체와 다른 매체의 광고비, 행사·가격·품절이 함께 변할 수 있습니다. 관측된 전후 변화이며 선택 매체만의 광고 효과를 뜻하지 않습니다. <Link href="/products/mappings">제품명과 배분 설정</Link></p>
     </> : null}
   </section>;

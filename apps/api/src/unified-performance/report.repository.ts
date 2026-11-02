@@ -85,7 +85,9 @@ export function snapshotStatement(query: ReportQuery, lookbackFrom: string | und
       UNION ALL SELECT x->>'platform',x->>'scopeKey' FROM jsonb_array_elements(${JSON.stringify(fixedScopes)}::jsonb) x),
     selected_scopes AS MATERIALIZED (SELECT s.platform,s.scope_key FROM allowed_scopes s WHERE ${selected}),
     publications AS MATERIALIZED (
-      SELECT p.*,to_jsonb(r) AS run FROM meta_ads.unified_source_publications p
+      SELECT p.*,CASE WHEN r.id IS NULL THEN NULL ELSE jsonb_build_object(
+        'versions',r.versions,'control_totals',r.control_totals,'published_at',r.published_at,'started_at',r.started_at) END AS run
+      FROM meta_ads.unified_source_publications p
       LEFT JOIN meta_ads.unified_aggregation_runs r ON r.id=p.run_id
       WHERE EXISTS (SELECT 1 FROM selected_scopes s WHERE s.platform=p.platform AND s.scope_key=p.scope_key) AND ${dateFilter("p")}
       ORDER BY p.platform,p.scope_key,p.business_date,p.source_system LIMIT 20001),
@@ -115,6 +117,38 @@ export function snapshotStatement(query: ReportQuery, lookbackFrom: string | und
       'failures',COALESCE((SELECT jsonb_agg(to_jsonb(r) ORDER BY r.started_at DESC) FROM failures r),'[]'::jsonb),
       'ranges',COALESCE((SELECT jsonb_agg(to_jsonb(r) ORDER BY r.platform,r.scope_key) FROM ranges r),'[]'::jsonb))::text AS frame`;
 }
+/** Metadata projection: never materialize a run, money payload, coverage or rule. */
+export function selectionOptionsStatement(query: ReportQuery, policy: ReportScopePolicy) {
+  const fixedScopes = scopesFromConnections([], query.platforms, policy);
+  const metadataPlatforms = query.platforms.filter(p => ["META", "GOOGLE", "CAFE24"].includes(p));
+  const connections = metadataPlatforms.length ? Prisma.sql`SELECT c.id,c.provider,c.display_name FROM meta_ads.source_connections c
+    WHERE c.provider::text IN (SELECT jsonb_array_elements_text(${JSON.stringify(metadataPlatforms)}::jsonb)) ORDER BY c.id LIMIT 101` :
+    Prisma.sql`SELECT NULL::uuid AS id,NULL::text AS provider,NULL::text AS display_name WHERE FALSE`;
+  const selected = query.scopeKeys === undefined ? Prisma.sql`TRUE` :
+    Prisma.sql`s.scope_key IN (SELECT jsonb_array_elements_text(${JSON.stringify(query.scopeKeys)}::jsonb))`;
+  return Prisma.sql`WITH
+    products AS MATERIALIZED (SELECT p.canonical_name,p.active FROM meta_ads.unified_products p ORDER BY p.id LIMIT 10001),
+    connections AS MATERIALIZED (${connections}),
+    allowed_scopes AS MATERIALIZED (
+      SELECT c.provider::text AS platform,c.id::text AS scope_key FROM connections c
+      UNION ALL SELECT x->>'platform',x->>'scopeKey' FROM jsonb_array_elements(${JSON.stringify(fixedScopes)}::jsonb) x),
+    selected_scopes AS MATERIALIZED (SELECT s.platform,s.scope_key FROM allowed_scopes s WHERE ${selected}),
+    publications AS MATERIALIZED (SELECT p.run_id FROM meta_ads.unified_source_publications p
+      WHERE EXISTS (SELECT 1 FROM selected_scopes s WHERE s.platform=p.platform AND s.scope_key=p.scope_key)
+        AND ((p.business_date BETWEEN ${query.from}::date AND ${query.to}::date)
+          OR (p.business_date BETWEEN ${query.compareFrom}::date AND ${query.compareTo}::date))),
+    product_names AS (SELECT DISTINCT f.product_name AS name FROM meta_ads.unified_daily_facts f
+      WHERE f.run_id IN (SELECT run_id FROM publications) AND f.product_name IS NOT NULL ORDER BY f.product_name LIMIT 10001),
+    ranges AS (SELECT p.platform,p.scope_key,min(p.business_date) AS first_date,max(p.business_date) AS last_date
+      FROM meta_ads.unified_source_publications p
+      WHERE EXISTS (SELECT 1 FROM selected_scopes s WHERE s.platform=p.platform AND s.scope_key=p.scope_key)
+      GROUP BY p.platform,p.scope_key)
+    SELECT jsonb_build_object(
+      'products',COALESCE((SELECT jsonb_agg(to_jsonb(p)) FROM products p),'[]'::jsonb),
+      'connections',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'provider',c.provider,'displayName',c.display_name) ORDER BY c.id) FROM connections c),'[]'::jsonb),
+      'productNames',COALESCE((SELECT jsonb_agg(n.name ORDER BY n.name) FROM product_names n),'[]'::jsonb),
+      'ranges',COALESCE((SELECT jsonb_agg(to_jsonb(r) ORDER BY r.platform,r.scope_key) FROM ranges r),'[]'::jsonb))::text AS frame`;
+}
 export function selectReportScopes(scopes: ReportScope[], requested?: string[]) {
   if (requested?.some(key => !scopes.some(scope => scope.scopeKey === key))) throw new ForbiddenException({ code: "UNIFIED_SCOPE_FORBIDDEN", message: "허용되지 않은 원천 범위입니다." });
   return requested === undefined ? scopes : scopes.filter(scope => requested.includes(scope.scopeKey));
@@ -142,6 +176,22 @@ export class UnifiedReportRepository {
       }
       return selectReportScopes(await reportScopes(tx, platforms), scopeKeys);
     });
+  }
+  async selectionOptions(query: ReportQuery) {
+    const policy = reportScopePolicy();
+    type MetadataFrame = { products: { canonical_name: string; active: boolean }[]; connections: ConnectionMetadata[];
+      productNames: string[]; ranges: RawFrame["ranges"] };
+    const encoded = await this.management.read(async tx => {
+      const [result] = await tx.$queryRaw<Array<{ frame: MetadataFrame | string }>>(selectionOptionsStatement(query, policy));
+      return result.frame;
+    }, { timeoutMs: 20000 });
+    const frame: MetadataFrame = typeof encoded === "string" ? JSON.parse(encoded) : encoded;
+    const products = bounded(frame.products, 10000), names = bounded(frame.productNames, 10000);
+    const scopes = selectReportScopes(scopesFromConnections(bounded(frame.connections, 100), query.platforms, policy), query.scopeKeys);
+    const registered = new Map(products.map(product => [product.canonical_name, product]));
+    return { products: [...new Set([...registered.keys(), ...names])].sort().map(productName => ({ productName,
+      active: registered.get(productName)?.active ?? false, historical: !registered.has(productName) })), scopes,
+      availableDateRanges: frame.ranges.map(row => ({ platform: row.platform, scopeKey: row.scope_key, from: row.first_date, to: row.last_date })) };
   }
   /** All selected pointers, versions, compact facts and failure markers share one read-only RR snapshot. */
   snapshot(query: ReportQuery, lookbackFrom?: string) {

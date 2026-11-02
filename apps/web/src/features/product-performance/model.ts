@@ -1,8 +1,8 @@
-import { ApiError, apiGet } from "@/lib/api";
+import { ApiError, apiRequest } from "@/lib/api";
 import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { storefrontDecimal, storefrontMoney, storefrontTime } from "@/lib/storefront-display";
-import { PLATFORMS, PLATFORM_LABELS, type Bucket, type DashboardData, type Diagnostic, type Envelope, type Filters,
-  type Metric, type MetricComparison, type Options, type PageResult, type Platform, type ProductRow } from "./types";
+import { PLATFORMS, PLATFORM_LABELS, type DashboardData, type Diagnostic, type Envelope, type Filters,
+  type Metric, type MetricComparison, type Options, type PageResult, type Platform } from "./types";
 
 export const decimal = storefrontDecimal;
 export const money = storefrontMoney;
@@ -103,35 +103,40 @@ export function assertResponse(data: Envelope, filters: Filters, anchor?: Envelo
   if (!responseMatches(data, filters) || anchor && (data.snapshotHash !== anchor.snapshotHash || data.selection.selectionHash !== anchor.selection.selectionHash))
     throw new ApiError(409, "조회 조건 또는 발행 버전이 바뀌었습니다. 다시 조회해 주세요.", "UNIFIED_DASHBOARD_CHANGED");
 }
-export type Reader = <T>(path: string) => Promise<T>;
-export async function loadDashboard(filters: Filters, read: Reader = apiGet, signal?: AbortSignal): Promise<DashboardData> {
+export type Reader = <T>(path: string, signal?: AbortSignal) => Promise<T>;
+// Scoped reader preserves shared API/auth behavior while forwarding cancellation to fetch.
+export const readPerformance: Reader = <T>(path: string, signal?: AbortSignal) => apiRequest<T>(path, { cache: "no-store", signal });
+export const selectionOptionsKey = (identity: string, filters: Filters) =>
+  ["product-performance-selection-options", identity, filterParams({ ...filters, productName: "", scopeKeys: undefined }).toString()] as const;
+export const diagnosticsKey = (identity: string, filters: Filters, anchor?: Envelope) =>
+  ["product-performance-diagnostics", identity, filterParams(filters).toString(), anchor?.snapshotHash ?? ""] as const;
+export async function loadDashboard(filters: Filters, read: Reader = readPerformance, signal?: AbortSignal): Promise<DashboardData> {
   const invalid = validateFilters(filters);
   if (invalid) throw new Error(invalid);
   const query = filterParams(filters).toString();
-  const get = async <T extends Envelope>(path: string) => { signal?.throwIfAborted(); const result = await read<T>(path); signal?.throwIfAborted(); return result; };
   for (let attempt = 0; ; attempt++) {
     try {
-      const [summary, timeseries, diagnostics] = await Promise.all([
-        get<PageResult<ProductRow>>(`/unified-performance/summary?${query}`),
-        get<PageResult<Bucket>>(`/unified-performance/timeseries?${query}`),
-        get<PageResult<Diagnostic>>(`/unified-performance/diagnostics?${query}`)
-      ]);
-      for (const response of [summary, timeseries, diagnostics]) assertResponse(response, filters, summary);
-      // Daily series can exceed the API's 100-bucket page size. Never truncate a 366-day graph.
-      const seen = new Set<string>();
-      while (timeseries.nextCursor) {
-        if (seen.has(timeseries.nextCursor)) throw new Error("시계열 페이지가 반복되어 조회를 중단했습니다.");
-        seen.add(timeseries.nextCursor);
-        const next = await get<PageResult<Bucket>>(`/unified-performance/timeseries?${query}&cursor=${encodeURIComponent(timeseries.nextCursor)}`);
-        assertResponse(next, filters, summary);
-        timeseries.items.push(...next.items); timeseries.nextCursor = next.nextCursor;
-      }
-      return { summary, timeseries, diagnostics };
+      signal?.throwIfAborted();
+      const { summary, timeseries } = await read<Pick<DashboardData, "summary" | "timeseries">>(`/unified-performance/dashboard?${query}`, signal);
+      signal?.throwIfAborted();
+      assertResponse(summary, filters); assertResponse(timeseries, filters, summary);
+      if (timeseries.nextCursor || timeseries.total !== timeseries.items.length) throw new Error("시계열 자료가 완전하지 않습니다. 다시 조회해 주세요.");
+      // Unfetched placeholder preserves consumer types; never show as fetched diagnostics.
+      return { summary, timeseries, diagnostics: { ...summary, items: [], total: 0, nextCursor: null } };
     } catch (error) {
       if (attempt === 0 && error instanceof ApiError && ["UNIFIED_CURSOR_CHANGED", "UNIFIED_DASHBOARD_CHANGED"].includes(error.code ?? "")) continue;
       throw error;
     }
   }
+}
+export async function loadDiagnostics(filters: Filters, anchor: Envelope, cursor?: string, read: Reader = readPerformance, signal?: AbortSignal) {
+  signal?.throwIfAborted();
+  const query = filterParams(filters);
+  if (cursor) query.set("cursor", cursor);
+  const result = await read<PageResult<Diagnostic>>(`/unified-performance/diagnostics?${query}`, signal);
+  signal?.throwIfAborted();
+  assertResponse(result, filters, anchor);
+  return result;
 }
 
 // Decimal strings remain exact in every card/table/tooltip. BigInt arithmetic is only for display deltas.

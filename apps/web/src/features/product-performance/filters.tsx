@@ -1,9 +1,9 @@
 "use client";
 
-import { PLATFORMS, PLATFORM_LABELS, type ComparisonMode, type Filters, type Grain, type Options } from "./types";
+import { PLATFORMS, PLATFORM_LABELS, type ComparisonMode, type Filters, type Grain, type SelectionOptions } from "./types";
 
 export function PerformanceFilters({ value, options, onChange, showProduct = true, showGrain = true }: {
-  value: Filters; options: Options | undefined; onChange: (next: Filters) => void; showProduct?: boolean; showGrain?: boolean;
+  value: Filters; options: SelectionOptions | undefined; onChange: (next: Filters) => void; showProduct?: boolean; showGrain?: boolean;
 }) {
   const change = (next: Partial<Filters>) => onChange({ ...value, ...next });
   const scopes = options?.scopes.filter(scope => value.platforms.includes(scope.platform)) ?? [];
