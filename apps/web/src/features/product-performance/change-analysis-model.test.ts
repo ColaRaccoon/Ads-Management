@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { analyzeChanges } from "./change-analysis-model";
+import { analyzeChanges, applyRecommendedDate, changeStatusLabel, recommendChangeDate } from "./change-analysis-model";
 import type { Bucket } from "./types";
 
 const row = (date: string, revenue: string | null = "100", profit: string | null = "30"): Bucket => ({
@@ -87,4 +87,56 @@ test("partial known zero counts as an observed day without declaring the source 
   const result = analyzeChanges(changed, options);
   assert.equal(result.spend.before, 0); assert.equal(result.spend.beforeDays, 7);
   assert.equal(result.spend.beforePartialDays, 7); assert.equal(result.spend.changePct, null);
+});
+
+
+const googleDates = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date(Date.parse("2026-09-30T00:00:00Z") + i * 86400000).toISOString().slice(0, 10);
+  const numeric = date >= "2026-10-20" && date !== "2026-10-24";
+  return { ...row(date), byMedium: [{ medium: "GOOGLE", adSpend: numeric ? "100" : null, completeAdSpend: numeric ? "100" : null, share: null }] } as Bucket;
+});
+const googleRange = { from: "2026-09-30", to: "2026-10-29" };
+
+test("date recommendation prioritizes complete calendar windows before balanced observed days", () => {
+  const result = recommendChangeDate(googleDates, "GOOGLE", googleRange, 7, "2026-10-14");
+  assert.deepEqual(result, { date: "2026-10-23", fullWindow: true, beforeDays: 3, afterDays: 6 });
+  const missing = analyzeChanges(googleDates, { ...options, medium: "GOOGLE", changeDate: "2026-10-14" }).spend;
+  assert.equal(applyRecommendedDate("2026-10-14", missing, result, false), "2026-10-23");
+  assert.equal(applyRecommendedDate("2026-10-14", missing, result, true), "2026-10-14");
+  assert.equal(analyzeChanges(googleDates, { ...options, medium: "GOOGLE", changeDate: result!.date }).series.find(row => row.date === "2026-10-24")!.adSpend, null);
+});
+
+test("recommendations use coverage only, not financial values, and retain an already usable date", () => {
+  const original = recommendChangeDate(googleDates, "GOOGLE", googleRange, 7, "2026-10-14");
+  const changed = googleDates.map((bucket, i) => ({ ...bucket, byMedium: bucket.byMedium.map(medium => ({ ...medium, completeAdSpend: medium.completeAdSpend === null ? null : String(i % 2 ? 1 : 1000000) })) }));
+  assert.deepEqual(recommendChangeDate(changed, "GOOGLE", googleRange, 7, "2026-10-14"), original);
+  assert.equal(applyRecommendedDate("2026-10-22", { before: 100, after: 120 }, original, false), "2026-10-22");
+});
+
+test("short ranges require explicit partial-window recommendation and one observed day gives no recommendation", () => {
+  const short = recommendChangeDate(googleDates, "GOOGLE", { from: "2026-10-20", to: "2026-10-23" }, 7, "2026-10-20");
+  assert.ok(short); assert.equal(short.fullWindow, false);
+  assert.equal(applyRecommendedDate("2026-10-20", { before: null, after: 100 }, short, false), "2026-10-20");
+  assert.equal(recommendChangeDate([googleDates.find(row => row.date === "2026-10-20")!], "GOOGLE", googleRange, 7, "2026-10-14"), null);
+});
+
+test("recommendation excludes duplicates, aggregate buckets and explicit unavailable display even with fallback numbers", () => {
+  const duplicate = googleDates.find(row => row.date === "2026-10-20")!;
+  const onlyOne = [duplicate, duplicate, { ...duplicate, date: "2026-10-21", bucketFrom: "2026-10-21", bucketTo: "2026-10-28" },
+    { ...duplicate, date: "2026-10-22", bucketFrom: "2026-10-22", bucketTo: "2026-10-22", byMedium: [{ ...duplicate.byMedium[0], displayAdSpend: { value: null, state: "UNAVAILABLE" as const, availableSources: [], missingSources: ["GOOGLE" as const] } }] }];
+  assert.equal(recommendChangeDate(onlyOne, "GOOGLE", googleRange, 7, "2026-10-14"), null);
+});
+
+test("confirmed numeric zero participates in date coverage and comparison status distinguishes missing, zero and negative", () => {
+  const zeroRows = googleDates.map(bucket => ({ ...bucket, byMedium: bucket.byMedium.map(medium => ({ ...medium, completeAdSpend: medium.completeAdSpend === null ? null : "0" })) }));
+  assert.equal(recommendChangeDate(zeroRows, "GOOGLE", googleRange, 7, "2026-10-14")!.date, "2026-10-23");
+  const value = analyzeChanges(rows, options).spend;
+  assert.equal(changeStatusLabel({ ...value, before: null, after: null }), "전후 자료 없음");
+  assert.equal(changeStatusLabel({ ...value, before: null }), "변경 전 자료 없음");
+  assert.equal(changeStatusLabel({ ...value, after: null }), "변경 후 자료 없음");
+  assert.equal(changeStatusLabel({ ...value, before: 0, after: 10 }), "0원에서 증가");
+  assert.equal(changeStatusLabel({ ...value, before: 0, after: 10, beforePartialDays: 1 }), "기준 0원 · 증감액 확인");
+  assert.equal(changeStatusLabel({ ...value, before: 0, after: 10, beforeDays: 6 }), "기준 0원 · 증감액 확인");
+  assert.equal(changeStatusLabel({ ...value, before: -1 }), "음수 기준 · 증감액 확인");
+  assert.equal(changeStatusLabel(value), null);
 });

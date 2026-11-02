@@ -27,15 +27,15 @@ test("operator view renders real marketplace changes with integer units and hone
   assert.match(html, /판매처별로 얼마나 달라졌을까/);
   assert.match(html, /\+18%/); assert.match(html, /\+180원/);
   assert.match(html, /네이버/); assert.match(html, /\+50%/);
-  assert.match(html, /배분 기준 확인 필요/);
+  assert.match(html, /전후 자료 없음/);
   assert.doesNotMatch(html, /1000\.123456|100\.123456|산점도|상관계수/);
 });
 
 test("incomplete windows expose per-cell coverage instead of zero-filled results", () => {
   const { data, filters } = fixture();
-  data.timeseries.items = data.timeseries.items.filter(row => row.date >= "2026-10-14");
+  data.timeseries.items = data.timeseries.items.filter(row => row.date === "2026-10-14");
   const html = renderToStaticMarkup(<ChangeAnalysis data={data} filters={filters} />);
-  assert.match(html, /전0\/후7일/);
+  assert.match(html, /전0\/후1일/);
   assert.match(html, /변경 전 — · 변경 후/);
   assert.match(html, /각 항목에 확인된 금액이 있는 날의 평균/);
   assert.doesNotMatch(html, /\+18%/);
@@ -63,4 +63,22 @@ test("week or month buckets cannot masquerade as daily change analysis", () => {
   const html = renderToStaticMarkup(<ChangeAnalysis data={data} filters={{ ...filters, grain: "week" }} />);
   assert.match(html, /일별 자료가 필요합니다/);
   assert.doesNotMatch(html, /판매처별로 얼마나/);
+});
+
+
+test("single Google selection automatically chooses a covered comparison date and exposes partial days", () => {
+  const { data } = fixture();
+  const filters = testFilters({ from: "2026-09-30", to: "2026-10-29", productName: "", platforms: ["GOOGLE", "CAFE24"] });
+  data.summary.selectedPlatforms = filters.platforms;
+  data.timeseries.items = Array.from({ length: 30 }, (_, i) => {
+    const date = shiftDate(filters.from, i), value = date >= "2026-10-20" && date !== "2026-10-24" ? "100" : null;
+    return { ...data.timeseries.items[0], date, bucketFrom: date, bucketTo: date,
+      byMedium: [{ medium: "GOOGLE", adSpend: value, completeAdSpend: value, share: null }] };
+  });
+  const html = renderToStaticMarkup(<ChangeAnalysis data={data} filters={filters} />);
+  assert.match(html, /value="2026-10-23"/);
+  assert.match(html, /자동 조정: 2026-10-14 → 2026-10-23/);
+  assert.match(html, /전3\/후6일 확보/);
+  assert.match(html, /실제 광고비 변경일을 감지한 결과가 아닙니다/);
+  assert.doesNotMatch(html, /비교 불가/);
 });
