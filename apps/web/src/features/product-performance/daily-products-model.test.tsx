@@ -50,6 +50,31 @@ test("native channels use their persisted fields and total never adds the displa
   assert.equal(report.reconciliation.find(item => item.key === "unclassifiedRevenue")?.current, "60");
 });
 
+test("Naver native-source transition preserves stored amounts but excludes misleading channel and total deltas", () => {
+  const { filters, response } = fixture();
+  response.products[0].current.byMarketplace.push(market("NAVER_SMARTSTORE", "250", "25", "50"));
+  response.products[0].previous.byMarketplace.push(market("NAVER_SMARTSTORE", "100", "20", "10"));
+  response.allProducts.current.comparisonBasis = { NAVER: "native-store-a" };
+  response.allProducts.previous.comparisonBasis = { NAVER: "legacy-store-a" };
+  const report = buildDailyProductsReport(response, "2026-10-29", filters);
+  for (const row of [report.rows[0], report.totals]) for (const group of ["NAVER", "TOTAL"] as const) {
+    assert.equal(row.groups[group].revenue.changePct, null);
+    assert.equal(row.groups[group].revenue.change, null);
+    assert.equal(dailyProductChange(row.groups[group].revenue), "기준 변경");
+  }
+  assert.equal(report.rows[0].groups.NAVER.revenue.current.value, "250");
+  assert.equal(report.rows[0].groups.NAVER.revenue.previous.value, "100");
+  assert.equal(report.rows[0].groups.TOTAL.revenue.current.value, "1500");
+  assert.equal(report.rows[0].groups.STOREFRONT.revenue.changePct, "50.0000000000");
+  assert.ok(report.warnings.some(warning => warning.includes("네이버 집계 기준")));
+  response.allProducts.previous.comparisonBasis = { NAVER: "native-store-a" };
+  assert.equal(buildDailyProductsReport(response, "2026-10-29", filters).rows[0].groups.NAVER.revenue.changePct, "150.0000000000");
+  response.allProducts.previous.comparisonBasis = { NAVER: "legacy-store-a" };
+  assert.equal(buildDailyProductsReport(response, "2026-10-29", { ...filters, platforms: ["CAFE24"] }).rows[0].groups.TOTAL.revenue.changePct, "50.0000000000");
+  delete response.allProducts.previous.comparisonBasis;
+  assert.equal(buildDailyProductsReport(response, "2026-10-29", filters).rows[0].groups.NAVER.revenue.changePct, "150.0000000000");
+});
+
 test("zero, missing, negative bases and partial values retain different comparison states", () => {
   assert.equal(dailyProductChange(compareDailyProductAmounts(published("0"), published("0"))), "전일 0");
   assert.equal(dailyProductChange(compareDailyProductAmounts(published("100"), published(null))), "전일 없음");

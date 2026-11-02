@@ -1,5 +1,6 @@
 import type { ReportSnapshot } from "./report.repository";
 import type { ReportQuery } from "./report-query";
+import { reportHash } from "./report-query";
 import type { PublishedReportFact, ReportSummary } from "./report-contract";
 import type { Platform, SourceCoverage } from "./types";
 import { summarizeReport } from "./domain/report-calculation";
@@ -8,6 +9,7 @@ import { overlayStorefrontResults } from "./domain/storefront-report-overlay";
 export type DailyProductMetrics = Pick<ReportSummary,
   "knownTotals" | "completeTotals" | "byMarketplace" | "byMedium" | "isEstimate"> & {
     notApplicable?: { revenue: Platform[]; adSpend: Platform[] };
+    comparisonBasis?: { NAVER?: string };
   };
 export type DailyProductScope = { facts: PublishedReportFact[]; coverage: SourceCoverage[] };
 type ApplyScope = (snapshot: ReportSnapshot, productName?: string) => DailyProductScope;
@@ -26,7 +28,14 @@ function metrics(summary: ReportSummary, coverage: SourceCoverage[], day: string
   const excluded = [...participation.values()].filter(row => row.allNotApplicable);
   const notApplicable = { revenue: excluded.filter(row => row.component === "SALE").map(row => row.platform).sort(),
     adSpend: excluded.filter(row => row.component === "AD_SPEND").map(row => row.platform).sort() };
-  return { knownTotals, completeTotals, byMarketplace, byMedium, isEstimate, notApplicable };
+  // Preserve amounts; identify a source-basis change for the presentation layer.
+  // Daily revisions, amounts and timestamps normally change and are not the basis.
+  const naverBases = [...new Set(coverage.filter(row => row.date === day && row.platform === "NAVER" &&
+    row.participation === "INCLUDED" && row.collectionState !== "NOT_COLLECTED" && row.sourceVersion)
+    .map(row => JSON.stringify([row.scopeKey, row.selectedSource === "NAVER_STORED_PROFIT_V2" ||
+      row.quality.issues.includes("NAVER_STORED_NATIVE_SOURCE") ? "STORED_NATIVE" : "LEGACY"])))].sort();
+  const comparisonBasis = naverBases.length ? { NAVER: reportHash(naverBases) } : {};
+  return { knownTotals, completeTotals, byMarketplace, byMedium, isEstimate, notApplicable, comparisonBasis };
 }
 
 /**

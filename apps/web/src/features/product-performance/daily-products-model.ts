@@ -26,6 +26,7 @@ export type DailyProductRow = {
 export type DailyProductsAggregate = Pick<Aggregate, "knownTotals" | "completeTotals" | "byMarketplace" | "byMedium" | "isEstimate"> &
   Partial<Pick<Aggregate, "scopeBalances">> & {
     notApplicable?: { revenue: Platform[]; adSpend: Platform[] };
+    comparisonBasis?: { NAVER?: string };
   };
 export type DailyProductsSourceRow = Pick<DailyProductRow, "productKey" | "productName" | "active" | "historical"> & {
   current: DailyProductsAggregate; previous: DailyProductsAggregate;
@@ -73,7 +74,7 @@ export function dailyProductStateLabel(amount: PublishedAmount): string {
 export function dailyProductChange(metric: ComparedMetric): string {
   if (metric.current.state === "EXCLUDED") return "제외";
   if (metric.current.state === "NOT_APPLICABLE") return "해당 없음";
-  if (metric.comparisonReason === "STOREFRONT_SCOPE_CHANGED") return "기준 변경";
+  if (metric.comparisonReason === "STOREFRONT_SCOPE_CHANGED" || metric.comparisonReason === "NAVER_BASIS_CHANGED") return "기준 변경";
   if (metric.current.value === null) return "자료 없음";
   if (metric.previous.value === null) return "전일 없음";
   if (metric.comparisonReason === "ZERO_BASE") return "전일 0";
@@ -138,9 +139,9 @@ function selectedAmount(row: DailyProductsAggregate, group: DailyProductGroup, k
   return amount(market?.display?.[metric], key === "revenue" ? market?.completeRevenue : market?.estimatedProfit,
     row.isEstimate, !market && (storefront || group === "GOOGLE") ? "CHANNEL_RESULT_UNAVAILABLE" : market?.profitUnavailableReason ?? undefined);
 }
-export function compareDailyProductAmounts(current: PublishedAmount, previous: PublishedAmount, changedScope = false): ComparedMetric {
+export function compareDailyProductAmounts(current: PublishedAmount, previous: PublishedAmount, changedScope: boolean | "NAVER_BASIS_CHANGED" = false): ComparedMetric {
   const a = scaled(current.value), b = scaled(previous.value);
-  const comparisonReason = changedScope ? "STOREFRONT_SCOPE_CHANGED" : a === null ? "CURRENT_UNAVAILABLE" : b === null ? "PREVIOUS_UNAVAILABLE" :
+  const comparisonReason = changedScope ? typeof changedScope === "string" ? changedScope : "STOREFRONT_SCOPE_CHANGED" : a === null ? "CURRENT_UNAVAILABLE" : b === null ? "PREVIOUS_UNAVAILABLE" :
     b === 0n ? "ZERO_BASE" : b < 0n ? "NEGATIVE_BASE" : a < 0n ? "LOSS_TRANSITION" : null;
   const delta = a === null || b === null || changedScope ? null : a - b;
   let pct: string | null = null;
@@ -150,13 +151,19 @@ export function compareDailyProductAmounts(current: PublishedAmount, previous: P
   }
   return { current, previous, change: delta === null ? null : exact(delta), changePct: pct, comparisonReason };
 }
+function naverBasisChanged(current: DailyProductsAggregate, previous: DailyProductsAggregate) {
+  const now = current.comparisonBasis?.NAVER, before = previous.comparisonBasis?.NAVER;
+  return Boolean(now && before && now !== before);
+}
 function buildRow(row: DailyProductsSourceRow, platforms: readonly Platform[]): DailyProductRow {
   const currentMode = storefrontMode(row.current), previousMode = storefrontMode(row.previous);
   const changedScope = currentMode !== previousMode && currentMode !== "EMPTY" && previousMode !== "EMPTY";
+  const naverChanged = platforms.includes("NAVER") && naverBasisChanged(row.current, row.previous);
   const groups = Object.fromEntries(DAILY_PRODUCT_GROUPS.map(group => [group.key,
     Object.fromEntries(DAILY_PRODUCT_METRICS.map(metric => [metric.key, compareDailyProductAmounts(
       selectedAmount(row.current, group.key, metric.key, platforms), selectedAmount(row.previous, group.key, metric.key, platforms),
-      (group.key === "STOREFRONT" || group.key === "GOOGLE" && metric.key !== "adSpend") && changedScope)]))
+      naverChanged && (group.key === "NAVER" || group.key === "TOTAL") ? "NAVER_BASIS_CHANGED" :
+        (group.key === "STOREFRONT" || group.key === "GOOGLE" && metric.key !== "adSpend") && changedScope)]))
   ])) as DailyProductRow["groups"];
   return { productKey: row.productKey, productName: row.productName, active: row.active, historical: row.historical, groups };
 }
@@ -182,6 +189,8 @@ export function buildDailyProductsReport(data: DailyProductsResponse, date: stri
   const scopeLabel = dailyProductsScopeLabel(data, filters, options);
   const aggregateModes = [storefrontMode(data.allProducts.current), storefrontMode(data.allProducts.previous)];
   const warnings: string[] = [];
+  if (filters.platforms.includes("NAVER") && naverBasisChanged(data.allProducts.current, data.allProducts.previous))
+    warnings.push("전일과 당일의 네이버 집계 기준 또는 포함 원천이 달라 네이버·전체 증감 비교를 제외했습니다. 금액은 각 날짜의 저장된 결과입니다.");
   if (aggregateModes.includes("LEGACY")) warnings.push("이전 집계의 자사몰은 Meta·Google 판매/광고를 포함할 수 있습니다. 구글 매출·순이익은 채널별 저장값이 있을 때만 표시하며 그룹을 더해 전체를 계산하지 않습니다.");
   if (aggregateModes.includes("MIXED")) warnings.push("자사몰의 이전 통합 집계와 채널별 집계가 섞여 자사몰 그룹 금액을 확정할 수 없습니다. 전체 열은 저장된 통합 결과를 표시합니다.");
   if (aggregateModes[0] !== aggregateModes[1] && !aggregateModes.includes("EMPTY")) warnings.push("전일과 당일의 자사몰 집계 범위가 달라 해당 증감 비교를 제외했습니다.");
