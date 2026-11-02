@@ -35,7 +35,7 @@ export interface AggregationJob extends SourcePartition {
 }
 
 /** UUIDs allow a bounded lookup of the first request record without a JSONB queue scan. */
-export function aggregationRequestId(actorId: string, key: string): string {
+export function aggregationRequestId(actorId: string | null, key: string): string {
   const hex = digest(["unified-rebuild-v1", actorId, key]);
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
@@ -101,7 +101,7 @@ function factPayload(fact: ReportFact) {
 export class UnifiedAggregationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async enqueue(partitions: readonly SourcePartition[], actorId: string, reason: string, idempotencyKey?: string) {
+  async enqueue(partitions: readonly SourcePartition[], actorId: string | null, reason: string, idempotencyKey?: string) {
     const normalized = canonicalPartitions(partitions);
     if (typeof reason !== "string" || !reason.trim() || reason.length > 1024) throw new Error("INVALID_AGGREGATION_REASON");
     if (idempotencyKey !== undefined && (typeof idempotencyKey !== "string" || !idempotencyKey.trim() || idempotencyKey.length > 128))

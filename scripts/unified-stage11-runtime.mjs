@@ -8,7 +8,8 @@ import { spawnSync } from 'node:child_process';
 const target = Object.freeze({ projectRef:'iygjmosbelbosfxidqxv', host:'aws-1-ap-northeast-2.pooler.supabase.com', port:'5432',
   project:'6fe72710-1fc8-445a-a77f-da2da8fee200', service:'b0835b08-7799-4c1c-8bcd-90746b9d4248', environment:'01ab3d5a-1036-45b0-aa9c-47179339c9be' });
 const allowedScripts = new Set(['scripts/unified-stage11-role-check.ts', 'scripts/unified-stage11-reconcile.ts',
-  'scripts/unified-aggregation-worker.ts', 'scripts/unified-stage11-operator.ts']);
+  'scripts/unified-aggregation-worker.ts', 'scripts/unified-stage11-operator.ts', 'scripts/unified-source-freshness.ts',
+  'scripts/unified-reconcile-current.ts']);
 const reject = () => { throw Error('STAGE11_RUNTIME_REJECTED'); };
 
 /** Pure validation; callers must never serialize the returned credential-bearing URLs. */
@@ -57,17 +58,25 @@ function cliEnvironment() {
   return Object.fromEntries(names.filter(name => process.env[name] !== undefined).map(name=>[name,process.env[name]]));
 }
 
-function setRailwayRuntime(report) {
-  const result = spawnSync(railwayBinary(), ['variable','set','UNIFIED_RUNTIME_DATABASE_URL','--stdin','--skip-deploys',
-    '--project',target.project,'--service',target.service,'--environment',target.environment],
+function setRailwayRuntime(report, workerService) {
+  const key = workerService ? 'UNIFIED_AGGREGATION_DATABASE_URL' : 'UNIFIED_RUNTIME_DATABASE_URL';
+  if (workerService !== undefined && (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(workerService) || [target.service, 'd541d726-7785-42da-974a-06bbae702183'].includes(workerService))) reject();
+  if (workerService) {
+    report.searchParams.delete('sslrootcert');
+    report.searchParams.set('sslcert','/srv/app/deploy/cloud/certs/supabase-prod-ca-2021.crt');
+    report.searchParams.set('sslmode','require'); report.searchParams.set('sslaccept','strict');
+    report.searchParams.set('connection_limit','1');
+  }
+  const result = spawnSync(railwayBinary(), ['variable','set',key,'--stdin','--skip-deploys',
+    '--project',target.project,'--service',workerService ?? target.service,'--environment',target.environment],
     {env:cliEnvironment(),input:report.toString(),encoding:'utf8',windowsHide:true,
       stdio:['pipe','pipe','pipe'],maxBuffer:1048576,timeout:120000});
   // CLI variable output can contain the value even with --json; discard both streams entirely.
   if (result.status !== 0 || result.error) throw Error('STAGE11_RUNTIME_VARIABLE_SET_FAILED');
-  const receipt = {stage:11,operation:'RESTRICTED_REPORT_RUNTIME_VARIABLE_SET',status:'PASS',observedAt:new Date().toISOString(),
-    projectId:target.project,serviceId:target.service,environmentId:target.environment,key:'UNIFIED_RUNTIME_DATABASE_URL',
+  const receipt = {stage:11,operation:workerService ? 'RESTRICTED_WORKER_RUNTIME_VARIABLE_SET' : 'RESTRICTED_REPORT_RUNTIME_VARIABLE_SET',status:'PASS',observedAt:new Date().toISOString(),
+    projectId:target.project,serviceId:workerService ?? target.service,environmentId:target.environment,key,
     secretTransport:'stdin only; stdout/stderr discarded',skipDeploys:true,featureActivation:false};
-  writeFileSync('docs/product-performance/research/11-app-runtime-variable-result.json',JSON.stringify(receipt,null,2)+'\n');
+  writeFileSync(workerService ? join(tmpdir(),'unified-worker-runtime-variable-result.json') : 'docs/product-performance/research/11-app-runtime-variable-result.json',JSON.stringify(receipt,null,2)+'\n');
   process.stdout.write(JSON.stringify({stage:11,operation:receipt.operation,status:'PASS',skipDeploys:true})+'\n');
 }
 
@@ -77,6 +86,10 @@ function main() {
     // Parsing is inside the safe catch: malformed JSON/URL errors may echo their input.
     context = validateStage11Runtime(process.env);
     delete process.env.UNIFIED_STAGE11_SECRETS_JSON;
+    if (process.argv[2]?.startsWith('--set-railway-worker=')) {
+      if (process.argv.length !== 3) reject();
+      setRailwayRuntime(context.worker, process.argv[2].slice('--set-railway-worker='.length)); return;
+    }
     if (process.argv[2] === '--set-railway-runtime') {
       if (process.argv.length !== 3) reject();
       // Keep the original Linux TLS policy; never deploy a Windows temporary certificate path.
