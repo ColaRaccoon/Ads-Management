@@ -15,8 +15,8 @@ export function sourceDateStatement(scope: ReportScope, from: string, through: s
     case "CAFE24": sources = [read("meta_ads.cafe24_order_lines", "t.order_date", Prisma.sql`t.is_current AND t.validation_status<>'ERROR' AND ${connection}`)]; break;
     case "COUPANG": sources = [read("meta_ads.coupang_sale_lines", "t.sale_date", Prisma.sql`t.is_current AND t.validation_status<>'ERROR'`),
       read("meta_ads.coupang_ad_metrics", "t.metric_date", Prisma.sql`t.is_current AND t.validation_status<>'ERROR'`)]; break;
-    case "NAVER": sources = [read("public.order_items", "t.payload->>'paymentDate'", Prisma.sql`t.payload->>'storeId'=${scope.scopeKey}`),
-      read("public.ad_campaign_daily_costs", "t.payload->>'reportDate'", Prisma.sql`t.payload->>'storeId'=${scope.scopeKey}`)]; break;
+    case "NAVER": sources = [read("public.daily_store_summaries", "t.payload->>'date'", Prisma.sql`t.payload->>'storeId'=${scope.scopeKey}`),
+      read("public.daily_sales_unit_profits", "t.payload->>'date'", Prisma.sql`t.payload->>'storeId'=${scope.scopeKey}`)]; break;
   }
   if (["META", "GOOGLE", "CAFE24"].includes(scope.platform) && scope.scopeKey !== "LEGACY_UNBOUND") {
     const kind = scope.platform === "META" ? "META_ADSET" : scope.platform === "GOOGLE" ? "GOOGLE_CAMPAIGN" : "CAFE24_ORDER";

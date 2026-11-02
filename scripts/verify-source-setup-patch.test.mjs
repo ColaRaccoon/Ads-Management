@@ -35,6 +35,7 @@ const unified = [
   'adapters/coupang-sales', 'adapters/coupang-sales.test', 'adapters/coupang.adapter', 'adapters/coupang.adapter.test',
   'adapters/google.adapter', 'adapters/google.adapter.test', 'adapters/meta.adapter', 'adapters/meta.adapter.test',
   'adapters/naver-ads-common', 'adapters/naver-ads-common.test', 'adapters/naver-configuration', 'adapters/naver-reader',
+  'adapters/naver-native-results', 'adapters/naver-native-results.test',
   'adapters/naver-sales', 'adapters/naver-sales.test', 'adapters/naver.adapter', 'adapters/naver.adapter.test',
   'adapters/storefront-adapters.service', 'adapters/storefront-adapters.service.test',
   'aggregation.repository', 'aggregation.worker', 'aggregation.worker.test',
