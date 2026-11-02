@@ -28,7 +28,8 @@ RUN npm prune --omit=dev --legacy-peer-deps --workspace @meta-ads-performance/ap
   && rm -rf node_modules/@playwright node_modules/playwright node_modules/playwright-core node_modules/@meta-ads-performance/e2e \
   && rm -f node_modules/.bin/playwright \
   && rm -rf node_modules/@aws-sdk node_modules/@smithy \
-  && find apps/web/.next/standalone -type f -name '*.map' -delete
+  && find apps/web/.next/standalone apps/web/.next/static -type f -name '*.map' -delete \
+  && find apps/web/.next/static/media -type f -name 'daily-products-xlsx.worker.*.ts' -delete
 
 FROM c7
 ARG RAILWAY_GIT_COMMIT_SHA
