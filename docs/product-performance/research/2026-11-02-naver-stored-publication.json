@@ -1,0 +1,16 @@
+{
+  "observedAt": "2026-11-02T08:00:57.732Z",
+  "elapsedMs": 38853,
+  "through": "2026-11-01",
+  "lookback": 1,
+  "limit": 20,
+  "examined": 12,
+  "unchanged": 4,
+  "unavailable": 0,
+  "enqueued": 8,
+  "published": 8,
+  "failed": 0,
+  "drained": 0,
+  "discoveryFailures": [],
+  "exhausted": false
+}
