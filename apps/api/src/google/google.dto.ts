@@ -11,6 +11,15 @@ export class GoogleQuery {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) pageSize?: number;
 }
 
+export class GoogleCampaignKeywordInput {
+  @IsUUID() connectionId!: string;
+  @IsString() @MaxLength(256) keyword!: string;
+  @IsUUID() productId!: string;
+  @Matches(/^\d{4}-\d{2}-\d{2}$/) startDate!: string;
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) endDate?: string | null;
+  @IsOptional() @Matches(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/) expectedUpdatedAt?: string;
+}
+
 export class GoogleMappingInput {
   @IsOptional() @IsUUID() id?: string;
   @IsIn(["CAMPAIGN", "SALE"]) kind!: "CAMPAIGN" | "SALE";

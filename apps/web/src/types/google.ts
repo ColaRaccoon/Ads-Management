@@ -5,6 +5,10 @@ export type GoogleOptions = {
 };
 
 export type GoogleMappingKind = "CAMPAIGN" | "SALE";
+export type GoogleCampaignKeywordDraft = {
+  connectionId: string; keyword: string; productId: string; startDate: string; endDate: string | null; expectedUpdatedAt?: string;
+};
+export type GoogleCampaignKeyword = GoogleCampaignKeywordDraft & { id: string; productName: string | null; updatedAt: string };
 export type GoogleSaleConfiguration = {
   optionScope?: "EXACT" | "PRODUCT";
   saleUnitLabel?: string | null;

@@ -4,7 +4,12 @@ import { GooglePerformanceMapping, Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { asDateOnly } from "../common/date-range";
 import { assertGoogleEnabled, googleBound, googleConnection } from "./google-access";
-import { GoogleMappingInput, GoogleQuery } from "./google.dto";
+import { GoogleMappingInput, GoogleQuery, GoogleCampaignKeywordInput } from "./google.dto";
+import { googleKeywordFromMapping, googleKeywordIdentity, googleKeywordKey } from "./google-campaign-matcher";
+
+function keywordJson(row: GooglePerformanceMapping & { product?: { displayName: string } | null }) {
+  return { id: row.id, ...googleKeywordFromMapping(row)!, productName: row.product?.displayName ?? null, updatedAt: row.updatedAt.toISOString() };
+}
 
 export const mappingIdentity = (kind: string, campaignId?: string | null, productNo?: string | null, optionName = "", optionScope = "EXACT") =>
   createHash("sha256").update(JSON.stringify(kind === "CAMPAIGN" ? [kind, campaignId]
@@ -68,9 +73,59 @@ export class GoogleMappingsService {
       const audit = await tx.googleMappingAudit.findMany({ where: { mappingId: { in: rows.map(r => r.id) } },
         orderBy: [{ createdAt: "desc" }, { id: "asc" }], take: 100 });
       return { campaignMappingMode: "CAMPAIGN_NAME" as const, nameAutomaticProducts,
-        campaignMappings: rows.filter(r => r.kind === "CAMPAIGN").map(mappingJson),
+        campaignMappings: rows.filter(r => r.kind === "CAMPAIGN" && !googleKeywordFromMapping(r)).map(mappingJson),
         salesMappings: rows.filter(r => r.kind === "SALE").map(mappingJson), audit, pagination: { page, pageSize, total } };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+  }
+
+  async listKeywords(query: GoogleQuery) {
+    assertGoogleEnabled();
+    if (query.connectionId) await googleConnection(this.prisma, query.connectionId, "GOOGLE");
+    const rows = await this.prisma.googlePerformanceMapping.findMany({ where: { kind: "CAMPAIGN",
+      connection: { provider: "GOOGLE" }, ...(query.connectionId ? { connectionId: query.connectionId } : {}),
+      ...(query.productId ? { productId: query.productId } : {}) },
+      include: { product: { select: { displayName: true } } }, orderBy: [{ startDate: "desc" }, { id: "asc" }], take: 10_001 });
+    googleBound(rows, 10_000);
+    return { keywords: rows.filter(row => googleKeywordFromMapping(row)).map(keywordJson) };
+  }
+
+  async saveKeyword(input: GoogleCampaignKeywordInput, actorUserId: string, id?: string) {
+    assertGoogleEnabled();
+    const keyword = typeof input.keyword === "string" ? input.keyword.trim() : "";
+    if (!googleKeywordKey(keyword) || keyword.length > 256) throw new BadRequestException("캠페인 키워드를 1~256자로 입력해 주세요.");
+    const startDate = asDateOnly(input.startDate), endDate = input.endDate ? asDateOnly(input.endDate) : null;
+    if (endDate && endDate < startDate) throw new BadRequestException("종료일은 시작일 이후여야 합니다.");
+    try {
+      return await this.prisma.$transaction(async tx => {
+        await googleConnection(tx, input.connectionId, "GOOGLE");
+        await tx.$queryRaw(Prisma.sql`SELECT id FROM source_connections WHERE id=${input.connectionId}::uuid FOR UPDATE`);
+        if (!await tx.product.findFirst({ where: { id: input.productId, isActive: true }, select: { id: true } }))
+          throw new NotFoundException("활성 상품을 선택해 주세요.");
+        const before = id ? await tx.googlePerformanceMapping.findUnique({ where: { id }, include: { product: { select: { displayName: true } } } }) : null;
+        if (id && (!before || !googleKeywordFromMapping(before) || before.connectionId !== input.connectionId))
+          throw new NotFoundException("해당 계정의 키워드 연결을 찾을 수 없습니다.");
+        if (before && (!input.expectedUpdatedAt || before.updatedAt.toISOString() !== input.expectedUpdatedAt))
+          throw new ConflictException("키워드가 변경되었습니다. 새로고침 후 다시 수정해 주세요.");
+        const identityKey = googleKeywordIdentity(keyword);
+        const overlaps = await tx.googlePerformanceMapping.findMany({ where: { connectionId: input.connectionId, kind: "CAMPAIGN", identityKey,
+          ...(id ? { id: { not: id } } : {}), ...(endDate ? { startDate: { lte: endDate } } : {}),
+          OR: [{ endDate: null }, { endDate: { gte: startDate } }] }, take: 1 });
+        if (overlaps.length) throw new ConflictException("같은 계정의 동일 키워드에 적용기간이 겹칩니다. 기존 연결을 수정해 주세요.");
+        const data = { kind: "CAMPAIGN", connectionId: input.connectionId, identityKey, campaignId: keyword,
+          productNo: null, optionName: "", productId: input.productId, startDate, endDate };
+        const include = { product: { select: { displayName: true } } } as const;
+        const row = id ? await tx.googlePerformanceMapping.update({ where: { id }, data, include })
+          : await tx.googlePerformanceMapping.create({ data, include });
+        const after = keywordJson(row);
+        await tx.googleMappingAudit.create({ data: { mappingId: row.id, actorUserId,
+          before: before ? JSON.parse(JSON.stringify(keywordJson(before))) : Prisma.DbNull, after: JSON.parse(JSON.stringify(after)) } });
+        return { keyword: after };
+      }, { timeout: 15_000 });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && ["P2004", "P2010", "P2034"].includes(error.code))
+        throw new ConflictException("키워드 연결이 동시에 변경되었거나 기간이 겹칩니다. 새로고침해 주세요.");
+      throw error;
+    }
   }
 
   async preview(input: GoogleMappingInput) {

@@ -8,7 +8,7 @@ import { assertGoogleEnabled, googleBound, googleConnection } from "./google-acc
 import { GoogleQuery } from "./google.dto";
 import { calculateGooglePerformance, GoogleSaleLine } from "./google-performance";
 import { resolveGoogleSaleConfiguration } from "./google-sale-configuration";
-import { createGoogleCampaignMatcher } from "./google-campaign-matcher";
+import { createGoogleCampaignMatcher, googleKeywordFromMapping } from "./google-campaign-matcher";
 import { toCafe24MatcherRules } from "../daily-sync/cafe24-rule-loader";
 import { createGoogleSaleMatcher } from "./google-sale-matcher";
 import { nativeCafe24FinancialSelect } from "../sales/sales-metrics.service";
@@ -86,7 +86,7 @@ export class GoogleReadService {
     googleBound(connections, 100);
     const ids = connections.map(c => c.id), googleIds = connections.filter(c => c.provider === "GOOGLE").map(c => c.id);
     const dateWhere = { gte: range.fromDate, lte: range.toDate };
-    const [coverageRows, policies, adCandidates, batches, rates, costs, saleRules, products, couponRules] = await Promise.all([
+    const [coverageRows, policies, adCandidates, batches, rates, costs, saleRules, products, couponRules, campaignMappings] = await Promise.all([
       tx.sourceCoverage.findMany({ where: { connectionId: { in: ids }, metricDate: dateWhere }, take: MAX + 1 }),
       // Keep all policies in the context: unbound legacy CSV rows must not evade another account's primary source.
       tx.sourcePolicy.findMany({ where: { dataKind: { in: ["GOOGLE_CAMPAIGN", "CAFE24_ORDER"] }, fromDate: { lte: range.toDate },
@@ -107,10 +107,12 @@ export class GoogleReadService {
         orderBy: [{ priority: "asc" }, { createdAt: "asc" }], take: 10_001 }),
       tx.product.findMany({ where: { isActive: true }, select: { id: true, displayName: true, name: true }, take: 10_001 }),
       tx.cafe24CouponRule.findMany({ where: { isActive: true, validFrom: { lte: range.toDate }, OR: [{ validTo: null }, { validTo: { gte: range.fromDate } }] },
-        orderBy: [{ priority: "asc" }, { validFrom: "desc" }, { createdAt: "desc" }], take: 10_001 })
+        orderBy: [{ priority: "asc" }, { validFrom: "desc" }, { createdAt: "desc" }], take: 10_001 }),
+      tx.googlePerformanceMapping.findMany({ where: { kind: "CAMPAIGN", connectionId: { in: googleIds }, startDate: { lte: range.toDate },
+        OR: [{ endDate: null }, { endDate: { gte: range.fromDate } }] }, take: 10_001 })
     ]);
     [coverageRows, adCandidates, rates].forEach(r => googleBound(r));
-    [policies, batches, costs, saleRules, products, couponRules].forEach(r => googleBound(r, 10_000));
+    [policies, batches, costs, saleRules, products, couponRules, campaignMappings].forEach(r => googleBound(r, 10_000));
     const cafeCandidates = await tx.cafe24OrderLine.findMany({ where: { isCurrent: true, orderDate: dateWhere,
       ...(query.cafe24ConnectionId ? { connectionId: query.cafe24ConnectionId } : {}), validationStatus: { not: "ERROR" },
       ...(financial ? { connectionId: financial.scopeKey === "LEGACY_UNBOUND" ? null : financial.scopeKey } : {}),
@@ -227,11 +229,12 @@ export class GoogleReadService {
             ? line.actualOrderPriceKrw.plus(line.actualShippingFeeKrw).toNumber() : null,
           totalPaidKrw: number(line.totalPaidKrw), productId, salePriceKrw: line.salePriceKrw.toNumber(), quantity: line.quantity.toNumber(), isValid: line.validationStatus !== "ERROR" } };
     });
-    const matchCampaign = createGoogleCampaignMatcher(products);
+    const keywords = campaignMappings.flatMap(row => { const keyword = googleKeywordFromMapping(row); return keyword ? [keyword] : []; });
+    const matchCampaign = createGoogleCampaignMatcher(products, keywords);
     const adMetrics = selectedAds.filter(a => activeDates.has(day(a.metricDate)) && validGoogleDays.has(`${a.connectionId}:${day(a.metricDate)}`)).map(a => {
       const connection = connectionsById.get(a.connectionId)!;
       const date = day(a.metricDate);
-      const match = matchCampaign(a.campaignName);
+      const match = matchCampaign(a.campaignName, { connectionId: a.connectionId, date });
       const rate = ratesByDay.get(`${date}:${connection.currencyCode}`);
       return { id: a.id, date, connectionId: a.connectionId, customerId: connection.externalAccountId,
         campaignId: a.campaignId, campaignName: a.campaignName, currencyCode: connection.currencyCode,

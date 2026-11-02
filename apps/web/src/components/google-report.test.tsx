@@ -59,6 +59,7 @@ function renderMapping(manage: boolean, mappings: GoogleMappings = { campaignMap
   const client = new QueryClient();
   const query = settings.query ?? "", canRead = settings.canRead !== false;
   client.setQueryData(["google", "mappings", query, 1], mappings);
+  client.setQueryData(["google", "campaign-keywords", query], { keywords: [] });
   if (campaignReport) client.setQueryData(["google", "campaigns", query, 1], campaignReport);
   const unused = async (): Promise<never> => { throw new Error("Auth mutation not expected"); };
   const auth: AuthContextValue = { user: null, permissions: canRead ? manage ? ["data.read", "mappings.manage"] : ["data.read"] : [], isLoading: false, isAuthenticated: true, status: "authenticated", login: unused, acceptInvitation: unused, completeInvitation: unused, logout: unused, can: (permission) => (canRead && permission === "data.read") || (manage && permission === "mappings.manage"), refreshAuth: async () => null };
@@ -230,7 +231,9 @@ test("Google sale settings direct readers and managers to shared product/option 
     assert.match(html, /유튜브 판매 공통 설정/);
     assert.match(html, /href="\/mappings"/);
     assert.match(html, /상품번호가 달라도/);
-    assert.doesNotMatch(html, /<form|변경 영향 미리보기|Google 전용 판매 구성/);
+    assert.doesNotMatch(html, /변경 영향 미리보기|Google 전용 판매 구성/);
+    if (canManage) { assert.match(html, /키워드 추가/); assert.match(html, /<form/); }
+    else assert.doesNotMatch(html, /<form|키워드 추가/);
   }
 });
 
@@ -263,7 +266,7 @@ test("mapping diagnostics retain aliases, legacy IDs and audits with read permis
   };
   const html = renderMapping(true, mappings, fixture);
   assert.doesNotMatch(html, /legacy-campaign|원본 상품A|audit-user|이전 \/ 변경 값/);
-  assert.doesNotMatch(html, /<form|수정 \/ 연결 해제|저장된 유튜브 판매 연결/);
+  assert.doesNotMatch(html, /수정 \/ 연결 해제|저장된 유튜브 판매 연결/);
   assert.match(html, /유튜브 판매 공통 설정/);
   const query = "from=2026-10-25&to=2026-10-25&productId=product-1";
   const diagnostics = renderMapping(false, mappings, undefined, { diagnostics: true, query });
