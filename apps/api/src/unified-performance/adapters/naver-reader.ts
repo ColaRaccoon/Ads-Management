@@ -17,12 +17,15 @@ const projection = {
   ad_excel_uploads: { text: ["storeId", "reportDate", "sourceType", "state", "weekdayValidationStatus", "replacedUploadId"], number: [], boolean: ["isActive"] },
   ad_campaign_daily_costs: { text: ["storeId", "reportDate", "sourceUploadId", "campaignId", "campaignName"], number: ["totalCost", "totalConversionSales"], boolean: [] },
   daily_fake_purchases: { text: ["storeId", "date"], number: ["amount"], boolean: [] },
-  daily_store_summaries: { text: ["storeId", "date", "calculationVersion", "calculatedAt"], number: ["customerPaidDeliveryFee", "estimatedDeliveryBaseCost", "deliveryUnitCost", "uniquePackageCount"], boolean: [] },
-  daily_sales_unit_profits: { text: ["storeId", "date", "canonicalSalesUnitId", "calculationVersion", "calculatedAt", "costSnapshotId", "mappingBasisHash"], number: [], boolean: [] },
+  daily_store_summaries: { text: ["storeId", "date", "calculationVersion", "calculatedAt", "profitStatus"], number: ["totalProductRevenue", "totalAdCost", "estimatedNetProfit", "totalVatAmount", "deliveryMargin", "customerPaidDeliveryFee", "estimatedDeliveryBaseCost", "deliveryUnitCost", "uniquePackageCount"], boolean: [] },
+  daily_sales_unit_profits: { text: ["storeId", "date", "canonicalSalesUnitId", "displayName", "parentSalesUnitId", "calculationVersion", "calculatedAt", "profitStatus", "costSnapshotId", "mappingBasisHash"], number: ["totalQuantity", "totalProductRevenue", "totalAdCost", "totalUnitCost", "totalFeeCost", "totalOtherCost", "estimatedNetProfit", "vatAmount"], boolean: ["isGroup", "isStoreLevel"] },
   order_sync_states: { text: ["storeId", "initialCoverageFrom", "lastSuccessfulChangedTo", "lastSuccessfulSyncAt", "changedCoverageBaselineAt"], number: [], boolean: [] }
 } as const;
 export type NaverTable = keyof typeof projection;
 export type NaverProjectedRow = Record<string, unknown> & { id: string; updatedAt: string };
+export const NAVER_STORED_TABLES = ["stores", "daily_store_summaries", "daily_sales_unit_profits", "daily_fake_purchases"] as const;
+export type NaverStoredRaw = Record<typeof NAVER_STORED_TABLES[number], NaverProjectedRow[]>;
+export type NaverStoredErrors = Record<typeof NAVER_STORED_TABLES[number], string[]>;
 export const NAVER_READ_TABLES = [...Object.keys(projection), "operations", "order_sync_batch_items", "order_sync_batches"] as const;
 const MAX_ROWS = 10000;
 const fragment = (value: string) => Prisma.raw(value); // Only fixed identifiers from this module.
@@ -127,5 +130,17 @@ export async function readNaverDayProjections(tx: Prisma.TransactionClient, quer
   // The type guard is lookup metadata only; preserve the original projection and fingerprint input.
   for(const row of raw.order_items)delete row.__linkedReferencesTyped;
   await tx.$executeRawUnsafe('RELEASE SAVEPOINT naver_day_read');
+  return { raw, errors };
+}
+
+/** Production stored-only boundary: no orders, raw ads, current costs, or nested childRows. */
+export async function readNaverStoredDayProjections(tx: Prisma.TransactionClient, scope: string, date: string) {
+  const queries = naverQueries(scope, date), raw = {} as NaverStoredRaw, errors = {} as NaverStoredErrors;
+  await tx.$executeRawUnsafe("SAVEPOINT naver_day_read");
+  for (const key of NAVER_STORED_TABLES) {
+    errors[key] = [];
+    raw[key] = await readNaverProjection(tx, queries[key], key, errors[key], true);
+  }
+  await tx.$executeRawUnsafe("RELEASE SAVEPOINT naver_day_read");
   return { raw, errors };
 }

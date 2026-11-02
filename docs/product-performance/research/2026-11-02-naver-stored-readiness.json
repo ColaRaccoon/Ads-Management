@@ -1,0 +1,50 @@
+{
+  "status": "COMPLETE",
+  "observedAt": "2026-11-02T07:57:04.844Z",
+  "elapsedMs": 1233,
+  "from": "2026-10-31",
+  "to": "2026-11-01",
+  "readOnly": true,
+  "rows": [
+    {
+      "platform": "NAVER",
+      "scopeOrdinal": 1,
+      "date": "2026-10-31",
+      "status": "READY",
+      "issueCodes": [
+        "NAVER_STORED_NATIVE_SOURCE"
+      ],
+      "elapsedMs": 311
+    },
+    {
+      "platform": "NAVER",
+      "scopeOrdinal": 1,
+      "date": "2026-11-01",
+      "status": "READY",
+      "issueCodes": [
+        "NAVER_STORED_NATIVE_SOURCE"
+      ],
+      "elapsedMs": 160
+    },
+    {
+      "platform": "NAVER",
+      "scopeOrdinal": 2,
+      "date": "2026-10-31",
+      "status": "READY",
+      "issueCodes": [
+        "NAVER_STORED_NATIVE_SOURCE"
+      ],
+      "elapsedMs": 167
+    },
+    {
+      "platform": "NAVER",
+      "scopeOrdinal": 2,
+      "date": "2026-11-01",
+      "status": "READY",
+      "issueCodes": [
+        "NAVER_STORED_NATIVE_SOURCE"
+      ],
+      "elapsedMs": 159
+    }
+  ]
+}

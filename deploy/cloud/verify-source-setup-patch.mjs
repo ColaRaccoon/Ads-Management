@@ -63,6 +63,7 @@ if (profile === 'reporting') {
     'adapters/meta.adapter.js', 'adapters/meta.adapter.test.js',
     'adapters/naver-ads-common.js', 'adapters/naver-ads-common.test.js',
     'adapters/naver-configuration.js', 'adapters/naver-reader.js',
+      'adapters/naver-native-results.js', 'adapters/naver-native-results.test.js',
     'adapters/naver-sales.js', 'adapters/naver-sales.test.js',
     'adapters/naver.adapter.js', 'adapters/naver.adapter.test.js',
     'adapters/storefront-adapters.service.js', 'adapters/storefront-adapters.service.test.js',

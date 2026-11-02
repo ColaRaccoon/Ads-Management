@@ -55,13 +55,17 @@ test("Naver normalizes captured inputs after releasing its read-only database sn
   const previousEnabled=process.env.UNIFIED_PERFORMANCE_ENABLED,previousStores=process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS;
   process.env.UNIFIED_PERFORMANCE_ENABLED='true';process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS=scope;
   let inside=false,normalizationInputs=0;
+  const sourceQueries: string[] = [];
   const tx={$executeRawUnsafe:async()=>{assert(inside);return 0;},$queryRaw:async(sql:{sql:string})=>{
-    assert(inside);return sql.sql.includes('FROM public.stores ')?[row(scope,{platformType:'NAVER_SMARTSTORE',deliveryUnitCost:'0'})]:[];
+    assert(inside);sourceQueries.push(sql.sql);return sql.sql.includes('FROM public.stores ')?[row(scope,{platformType:'NAVER_SMARTSTORE',deliveryUnitCost:'0'})]:[];
   }};
   const management={snapshot:async()=>({products:[{canonicalName:'풀업바',active:true}],rules:[],versions:{scopePolicyVersion:'scope',nameRuleVersion:'names',saleUnitRuleVersion:'units',allocationRuleVersion:'allocation'}}),
     read:async(work:(tx:unknown)=>Promise<any>)=>{inside=true;const captured=await work(tx);inside=false;
       return new Proxy(captured,{get(target,key){if(key==='raw'||key==='errors'||key==='unified'){assert(!inside);normalizationInputs++;}return Reflect.get(target,key);}});}};
-  try{const batch=await new NaverPerformanceAdapter(management as unknown as UnifiedManagementRepository).read(request());assert(batch.coverage.length>0);assert.equal(normalizationInputs,3);}
+  try{const batch=await new NaverPerformanceAdapter(management as unknown as UnifiedManagementRepository).read(request());assert(batch.coverage.length>0);assert.equal(normalizationInputs,3);
+    assert(sourceQueries.some(sql=>sql.includes('daily_store_summaries')));
+    assert(sourceQueries.some(sql=>sql.includes('daily_sales_unit_profits')));
+    assert(sourceQueries.every(sql=>!/(?:order_items|sales_unit_cost_settings|sales_unit_cost_snapshot|ad_campaign_daily_costs)/.test(sql)));}
   finally{if(previousEnabled===undefined)delete process.env.UNIFIED_PERFORMANCE_ENABLED;else process.env.UNIFIED_PERFORMANCE_ENABLED=previousEnabled;
     if(previousStores===undefined)delete process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS;else process.env.UNIFIED_NAVER_ALLOWED_STORE_IDS=previousStores;}
 });
