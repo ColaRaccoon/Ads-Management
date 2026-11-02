@@ -1,4 +1,4 @@
-param([ValidateSet('Provision','Run','SetRailwayRuntime')][string]$Action='Run',[string]$ScriptPath,[string[]]$ScriptArguments=@())
+param([ValidateSet('Provision','Run','SetRailwayRuntime','SetRailwayWorker')][string]$Action='Run',[string]$ScriptPath,[string[]]$ScriptArguments=@(),[string]$WorkerServiceId)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'cloud/daily-data-sync/protected-context.ps1')
 $privateRoot=Join-Path $env:LOCALAPPDATA 'UnifiedPerformanceStage11Credentials'
@@ -46,6 +46,9 @@ try {
     if($Action -eq 'Run') {
       if(-not $ScriptPath){throw 'SCRIPT_PATH_REQUIRED'}
       & npx.cmd --yes @railway/cli@5.71.0 run --project 6fe72710-1fc8-445a-a77f-da2da8fee200 --service b0835b08-7799-4c1c-8bcd-90746b9d4248 --environment 01ab3d5a-1036-45b0-aa9c-47179339c9be --no-local -- node --import tsx scripts/unified-stage11-runtime.mjs $ScriptPath @ScriptArguments
+    } elseif ($Action -eq 'SetRailwayWorker') {
+      if($WorkerServiceId -notmatch '^[a-f0-9-]{36}$'){throw 'WORKER_SERVICE_ID_REQUIRED'}
+      & npx.cmd --yes @railway/cli@5.71.0 run --project 6fe72710-1fc8-445a-a77f-da2da8fee200 --service b0835b08-7799-4c1c-8bcd-90746b9d4248 --environment 01ab3d5a-1036-45b0-aa9c-47179339c9be --no-local -- node scripts/unified-stage11-runtime.mjs "--set-railway-worker=$WorkerServiceId"
     } else {
       & npx.cmd --yes @railway/cli@5.71.0 run --project 6fe72710-1fc8-445a-a77f-da2da8fee200 --service b0835b08-7799-4c1c-8bcd-90746b9d4248 --environment 01ab3d5a-1036-45b0-aa9c-47179339c9be --no-local -- node scripts/unified-stage11-runtime.mjs --set-railway-runtime
     }

@@ -37,6 +37,7 @@ const unified = [
   'adapters/naver-sales', 'adapters/naver-sales.test', 'adapters/naver.adapter', 'adapters/naver.adapter.test',
   'adapters/storefront-adapters.service', 'adapters/storefront-adapters.service.test',
   'aggregation.repository', 'aggregation.worker', 'aggregation.worker.test',
+  'reconciliation', 'reconciliation.repository', 'reconciliation-entrypoint', 'reconciliation.test',
   'domain/decimal', 'domain/legacy-name-migration', 'domain/legacy-name-migration.test',
   'domain/platform-selection', 'domain/platform-selection.test', 'domain/product-name-resolver', 'domain/product-name-resolver.test',
   'domain/relationship-calculation', 'domain/relationship-calculation.test', 'domain/report-allocation',

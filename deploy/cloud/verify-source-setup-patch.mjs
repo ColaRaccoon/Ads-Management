@@ -62,6 +62,7 @@ if (profile === 'reporting') {
     'adapters/naver.adapter.js', 'adapters/naver.adapter.test.js',
     'adapters/storefront-adapters.service.js', 'adapters/storefront-adapters.service.test.js',
     'aggregation.repository.js', 'aggregation.worker.js', 'aggregation.worker.test.js',
+    'reconciliation.js', 'reconciliation.repository.js', 'reconciliation-entrypoint.js', 'reconciliation.test.js',
     'domain/decimal.js', 'domain/legacy-name-migration.js', 'domain/legacy-name-migration.test.js',
     'domain/platform-selection.js', 'domain/platform-selection.test.js',
     'domain/product-name-resolver.js', 'domain/product-name-resolver.test.js',
