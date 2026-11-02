@@ -16,6 +16,8 @@ export type AdRow = {
   id: string; entityKey: string; originalName: string; source: "API" | "CSV";
   sourceVersion: string; runOrUploadId: string | null; observedAt: string; updatedAt: string;
   amount: string; conversionRevenue: string | null;
+  /** Explicit null is an authoritative native unmatched result, not a fallback request. */
+  nativeProductName?: string | null; nativeNameIssues?: string[];
 };
 export type AdDayInput = {
   platform: AdPlatform; date: string; scopeKey: string; currency: string; timeZone: string;
@@ -71,10 +73,24 @@ export function normalizeAdDay(request: AdapterRequest, input: AdDayInput): Adap
     [...input.legacyFx?.entries() ?? []].sort(([a], [b]) => a.localeCompare(b)), input.sourceSelectionEvidence ?? null, rows]);
   const exact = new Map<string, Prisma.Decimal>();
   const facts: AdSpendFact[] = rows.map(row => {
-    const name = resolveProductName({ originalName: row.originalName, nameField: input.platform === "META" ? "adset_name" : "campaign_name",
+    let name = resolveProductName({ originalName: row.originalName, nameField: input.platform === "META" ? "adset_name" : "campaign_name",
       platform: input.platform, scopeKey: input.scopeKey, businessDate: input.date }, input.configuration.products, input.configuration.nameRules, request.nameRuleVersion);
+    if (input.platform === "GOOGLE" && row.nativeProductName !== undefined) {
+      // Native Google matching owns campaign attribution. Unified aliases must not
+      // reassign its unmatched/ambiguous result or override a native product.
+      const native = resolveProductName({ originalName: row.nativeProductName, nameField: "native_product_name",
+        platform: input.platform, scopeKey: input.scopeKey, businessDate: input.date }, input.configuration.products, [], request.nameRuleVersion);
+      const ambiguous = row.nativeNameIssues?.includes("AMBIGUOUS_CAMPAIGN_PRODUCT") || native.matchStatus === "AMBIGUOUS";
+      const canonicalName = ambiguous ? null : native.canonicalProductName ?? row.nativeProductName;
+      name = { ...name, canonicalProductName: canonicalName, saleUnitName: null,
+        matchStatus: ambiguous ? "AMBIGUOUS" : canonicalName ? "MATCHED" : "UNMATCHED",
+        candidateNames: ambiguous ? native.candidateNames : canonicalName ? [canonicalName] : [], ruleIds: [],
+        restorationPath: "GOOGLE_NATIVE_CAMPAIGN_MATCHER", reasons: ["GOOGLE_NATIVE_CAMPAIGN_MATCHER", ...row.nativeNameIssues ?? []],
+        nameInputHash: adHash([name.nameInputHash, "GOOGLE_NATIVE_CAMPAIGN_MATCHER", row.nativeProductName, row.nativeNameIssues ?? [], native.candidateNames]) };
+    }
     const originalAmount = input.platform === "GOOGLE" ? microsToAmount(row.amount) : quantizeMoney(money(row.amount));
     const issues = [...input.sourceIssues];
+    if (input.platform === "GOOGLE" && row.nativeProductName !== undefined) issues.push("GOOGLE_NATIVE_CAMPAIGN_MATCHER", ...row.nativeNameIssues ?? []);
     if (name.matchStatus !== "MATCHED") issues.push(`NAME_${name.matchStatus}`);
     if (input.timeZone !== "Asia/Seoul") issues.push("TIME_ZONE_MISMATCH");
     let fx: FxEvidence = { baseCurrency: input.currency, quoteCurrency: "KRW", requestedDate: input.date,

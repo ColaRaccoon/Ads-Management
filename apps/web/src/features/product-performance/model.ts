@@ -189,7 +189,7 @@ export function comparisonReason(value: MetricComparison) {
   }
   return "";
 }
-const LABELS: Record<string, string> = { ...PLATFORM_LABELS, NAVER_DA: "네이버 DA", COUPANG_ADS: "쿠팡 광고", NAVER_SMARTSTORE: "네이버 스마트스토어",
+const LABELS: Record<string, string> = { ...PLATFORM_LABELS, CAFE24_META: "자사몰(메타)", CAFE24_YOUTUBE: "자사몰(유튜브)", NAVER_DA: "네이버 DA", COUPANG_ADS: "쿠팡 광고", NAVER_SMARTSTORE: "네이버 스마트스토어",
   SALE: "상품매출", AD_SPEND: "광고비", DIRECT_COST: "직접비·원가", COMMON_EXPENSE: "공통비", SHIPPING_INCOME: "배송수입",
   COMPLETE: "수집 완료", PARTIAL: "부분 수집", NOT_COLLECTED: "미수집", STALE: "이전 성공 자료", INCLUDED: "포함", EXCLUDED_BY_USER: "사용자 제외", NOT_APPLICABLE: "해당 없음",
   ESTIMATED: "추정 데이터", PARTIAL_TOTAL: "확인된 부분 금액", INCOMPLETE_COVERAGE: "미완료 수집 포함", UNALLOCATED_BALANCE: "미배분 잔액 있음",

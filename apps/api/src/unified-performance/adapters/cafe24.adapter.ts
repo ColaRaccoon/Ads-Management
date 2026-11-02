@@ -10,6 +10,7 @@ import { ExactDecimal as D, money, quantizeMoney } from "../domain/decimal";
 import { assertBusinessDate, normalizeProductName, resolveProductName, type NameRule } from "../domain/product-name-resolver";
 import { calculateSaleUnitQuantities, validateSaleUnit, type SaleUnitDefinition } from "../domain/sale-unit-validation";
 import { UnifiedManagementRepository } from "../management.repository";
+import { readNativeStorefrontResults } from "../native-storefront-results";
 import type { AdapterBatch, AdapterRequest, ControlTotal, SaleFact, SourceAdapter } from "../types";
 import { cafe24OrderCoupon, type Cafe24CouponPolicy } from "./cafe24-coupon";
 
@@ -265,6 +266,9 @@ export function normalizeCafe24Snapshot(request: AdapterRequest, snapshot: Cafe2
 export class Cafe24PerformanceAdapter implements SourceAdapter {
   readonly platform = "CAFE24" as const;
   constructor(private readonly prisma: PrismaService, private readonly management: UnifiedManagementRepository) {}
+  protected readNative(tx: Prisma.TransactionClient, options: Parameters<typeof readNativeStorefrontResults>[1]) {
+    return readNativeStorefrontResults(tx, options);
+  }
   async read(request: Readonly<AdapterRequest>): Promise<AdapterBatch> {
     assertAdapterRequest(request, this.platform);
     const date = request.cursor ?? request.from;
@@ -273,7 +277,25 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
     const batch = await this.prisma.$transaction(async tx => {
       await tx.$executeRaw(Prisma.sql`SET TRANSACTION READ ONLY`);
       const snapshot = await this.load(tx, request, date);
-      return normalizeCafe24Snapshot(request, snapshot);
+      const batch = normalizeCafe24Snapshot(request, snapshot);
+      const native = await this.readNative(tx, { date, scopeKey: request.scopeKeys[0], sourceComplete: snapshot.complete });
+      native.rows = native.rows.map(row => {
+        if (!row.productName) return row;
+        const matches = snapshot.configuration.products.filter(product => product.active &&
+          normalizeProductName(product.canonicalName) === normalizeProductName(row.productName!));
+        return { ...row, productName: matches.length === 1 ? matches[0].canonicalName : row.productName };
+      });
+      batch.nativeStorefrontResults = native;
+      batch.sourceFingerprint = hash([batch.sourceFingerprint, native.calculationVersion, native.sourceFingerprint]);
+      batch.coverage = batch.coverage.map(row => ({ ...row, sourceFingerprint: batch.sourceFingerprint,
+        // Collection evidence stays unchanged. Canonical cost gaps replace the incompatible legacy normalizer's gaps.
+        ...(row.component === "DIRECT_COST" ? { collectionState: snapshot.complete ?
+          native.rows.some(result => result.profitBeforeAds === null) ? "PARTIAL" as const : "COMPLETE" as const : row.collectionState,
+          missingCostRows: native.rows.filter(result => result.profitBeforeAds === null).length } : {}),
+        quality: { isEstimate: true, confidence: "ESTIMATED" as const,
+          issues: [...new Set([...snapshot.sourceIssues, ...native.issues, ...native.rows.flatMap(result => result.issues)])] } }));
+      assertAdapterBatch(request, this.platform, batch);
+      return batch;
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 30000 });
     batch.nextCursor = date < request.to ? day(new Date(Date.parse(date) + 86400000)) : null;
     return batch;

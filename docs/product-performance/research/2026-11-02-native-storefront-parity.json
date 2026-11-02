@@ -1,0 +1,438 @@
+{
+  "observedAt": "2026-11-02T07:16:05.359Z",
+  "date": "2026-11-01",
+  "readOnly": true,
+  "native": {
+    "revenue": "12545080.000000",
+    "coupon": "19000.000000",
+    "ads": "5067824.031000",
+    "grossCost": "4915808.000000",
+    "totalCost": "10002632.031000",
+    "margin": "2542447.969000",
+    "incompleteMarginProducts": 0,
+    "unmatchedAdSpend": 0
+  },
+  "youtube": {
+    "revenue": 521800,
+    "knownRevenue": 521800,
+    "grossCost": 203080,
+    "coupon": 1000,
+    "ads": 446889.026713,
+    "knownAds": 446889.026713,
+    "margin": -129169.026713,
+    "calculatedMargin": -129169.026713,
+    "complete": true,
+    "lineCount": 17
+  },
+  "publishedBefore": {
+    "revenue": "13151500.000000",
+    "adSpend": "5514713.057713",
+    "profitBeforeAds": "6683373.000000",
+    "estimatedProfit": "1168659.942287",
+    "mer": "2.3848022304"
+  },
+  "recomputed": {
+    "knownTotals": {
+      "revenue": "13066880.000000",
+      "adSpend": "5514713.057713",
+      "profitBeforeAds": "7927992.000000",
+      "estimatedProfit": "2413278.942287",
+      "mer": "2.3694578237"
+    },
+    "completeTotals": {
+      "revenue": null,
+      "adSpend": null,
+      "profitBeforeAds": null,
+      "estimatedProfit": null,
+      "mer": null
+    },
+    "byMarketplace": [
+      {
+        "marketplace": "CAFE24_META",
+        "revenue": "12545080.000000",
+        "completeRevenue": null,
+        "profitBeforeAds": null,
+        "adSpend": null,
+        "estimatedProfit": null,
+        "profitUnavailableReason": "MISSING_INPUT",
+        "display": {
+          "revenue": {
+            "value": "12545080.000000",
+            "state": "PARTIAL",
+            "availableSources": [
+              "CAFE24"
+            ],
+            "missingSources": [
+              "CAFE24"
+            ]
+          },
+          "estimatedProfit": {
+            "value": "2542447.969000",
+            "state": "PARTIAL",
+            "availableSources": [
+              "CAFE24",
+              "META"
+            ],
+            "missingSources": [
+              "CAFE24",
+              "META"
+            ]
+          },
+          "adSpend": {
+            "value": "5067824.031000",
+            "state": "PARTIAL",
+            "availableSources": [
+              "META"
+            ],
+            "missingSources": [
+              "META"
+            ]
+          }
+        }
+      },
+      {
+        "marketplace": "CAFE24_YOUTUBE",
+        "revenue": "521800.000000",
+        "completeRevenue": null,
+        "profitBeforeAds": null,
+        "adSpend": "446889.026713",
+        "estimatedProfit": null,
+        "profitUnavailableReason": "MISSING_INPUT",
+        "display": {
+          "revenue": {
+            "value": "521800.000000",
+            "state": "PARTIAL",
+            "availableSources": [
+              "CAFE24"
+            ],
+            "missingSources": [
+              "CAFE24"
+            ]
+          },
+          "estimatedProfit": {
+            "value": "-129169.026713",
+            "state": "PARTIAL",
+            "availableSources": [
+              "CAFE24",
+              "GOOGLE"
+            ],
+            "missingSources": [
+              "CAFE24",
+              "GOOGLE"
+            ]
+          },
+          "adSpend": {
+            "value": "446889.026713",
+            "state": "COMPLETE",
+            "availableSources": [
+              "GOOGLE"
+            ],
+            "missingSources": []
+          }
+        }
+      }
+    ]
+  },
+  "productParity": [
+    {
+      "ordinal": 1,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 2,
+      "channel": "META",
+      "nativeAds": 513008.907,
+      "unifiedAds": "513008.907000",
+      "difference": "0.000000",
+      "nativeProfit": 201742.09299999988,
+      "unifiedProfit": "201742.093000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 3,
+      "channel": "META",
+      "nativeAds": 653575.9380000001,
+      "unifiedAds": "653575.938000",
+      "difference": "0.000000",
+      "nativeProfit": 554564.0619999999,
+      "unifiedProfit": "554564.062000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 4,
+      "channel": "META",
+      "nativeAds": 146776.176,
+      "unifiedAds": "146776.176000",
+      "difference": "0.000000",
+      "nativeProfit": 332400.824,
+      "unifiedProfit": "332400.824000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 5,
+      "channel": "META",
+      "nativeAds": 54346.71,
+      "unifiedAds": "54346.710000",
+      "difference": "0.000000",
+      "nativeProfit": -25136.709999999992,
+      "unifiedProfit": "-25136.710000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 6,
+      "channel": "META",
+      "nativeAds": 291522.696,
+      "unifiedAds": "291522.696000",
+      "difference": "0.000000",
+      "nativeProfit": 91757.304,
+      "unifiedProfit": "91757.304000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 7,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 8,
+      "channel": "META",
+      "nativeAds": 99867.087,
+      "unifiedAds": "99867.087000",
+      "difference": "0.000000",
+      "nativeProfit": 168642.913,
+      "unifiedProfit": "168642.913000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 9,
+      "channel": "META",
+      "nativeAds": 643921.719,
+      "unifiedAds": "643921.719000",
+      "difference": "0.000000",
+      "nativeProfit": 474588.28099999996,
+      "unifiedProfit": "474588.281000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 10,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 21120,
+      "unifiedProfit": "21120.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 11,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 12,
+      "channel": "META",
+      "nativeAds": 50327.456999999995,
+      "unifiedAds": "50327.457000",
+      "difference": "-0.000000",
+      "nativeProfit": 44202.543000000005,
+      "unifiedProfit": "44202.543000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 13,
+      "channel": "META",
+      "nativeAds": 126559.734,
+      "unifiedAds": "126559.734000",
+      "difference": "0.000000",
+      "nativeProfit": 32990.266,
+      "unifiedProfit": "32990.266000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 14,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 15,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 16,
+      "channel": "META",
+      "nativeAds": 51021.813,
+      "unifiedAds": "51021.813000",
+      "difference": "0.000000",
+      "nativeProfit": -22111.812999999995,
+      "unifiedProfit": "-22111.813000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 17,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 18,
+      "channel": "META",
+      "nativeAds": 366526.497,
+      "unifiedAds": "366526.497000",
+      "difference": "0.000000",
+      "nativeProfit": 130405.50300000003,
+      "unifiedProfit": "130405.503000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 19,
+      "channel": "META",
+      "nativeAds": 1855866.705,
+      "unifiedAds": "1855866.705000",
+      "difference": "0.000000",
+      "nativeProfit": 195518.29499999993,
+      "unifiedProfit": "195518.295000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 20,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 403127,
+      "unifiedProfit": "403127.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 21,
+      "channel": "META",
+      "nativeAds": 214502.59199999998,
+      "unifiedAds": "214502.592000",
+      "difference": "-0.000000",
+      "nativeProfit": -61362.591999999946,
+      "unifiedProfit": "-61362.592000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 22,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 23,
+      "channel": "GOOGLE",
+      "nativeAds": 51575.083922,
+      "unifiedAds": "51575.083922",
+      "difference": "0.000000",
+      "nativeProfit": -34835.083922,
+      "unifiedProfit": "-34835.083922",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 24,
+      "channel": "GOOGLE",
+      "nativeAds": 51340.679848,
+      "unifiedAds": "51340.679848",
+      "difference": "0.000000",
+      "nativeProfit": -37430.679848,
+      "unifiedProfit": "-37430.679848",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 25,
+      "channel": "GOOGLE",
+      "nativeAds": 51238.484766,
+      "unifiedAds": "51238.484766",
+      "difference": "0.000000",
+      "nativeProfit": -51238.484766,
+      "unifiedProfit": "-51238.484766",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 26,
+      "channel": "GOOGLE",
+      "nativeAds": 51310.986633,
+      "unifiedAds": "51310.986633",
+      "difference": "0.000000",
+      "nativeProfit": -51310.986633,
+      "unifiedProfit": "-51310.986633",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 27,
+      "channel": "GOOGLE",
+      "nativeAds": 108550.07105,
+      "unifiedAds": "108550.071050",
+      "difference": "0.000000",
+      "nativeProfit": 41319.92895,
+      "unifiedProfit": "41319.928950",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 28,
+      "channel": "GOOGLE",
+      "nativeAds": 30735.113059,
+      "unifiedAds": "30735.113059",
+      "difference": "0.000000",
+      "nativeProfit": 32824.886941,
+      "unifiedProfit": "32824.886941",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 29,
+      "channel": "GOOGLE",
+      "nativeAds": 51192.405611,
+      "unifiedAds": "51192.405611",
+      "difference": "0.000000",
+      "nativeProfit": -22372.405611,
+      "unifiedProfit": "-22372.405611",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 30,
+      "channel": "GOOGLE",
+      "nativeAds": 50946.201824,
+      "unifiedAds": "50946.201824",
+      "difference": "0.000000",
+      "nativeProfit": -6126.201824,
+      "unifiedProfit": "-6126.201824",
+      "profitDifference": "0.000000"
+    }
+  ]
+}

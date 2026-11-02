@@ -8,6 +8,7 @@ import { availableAnalysisMedia } from "./relationships-model";
 import { PLATFORM_LABELS, type DashboardData, type Filters, type SelectionOptions } from "./types";
 
 const CHANNELS = [{ id: "CAFE24", platform: "CAFE24", name: "자사몰 Cafe24" }, { id: "NAVER_SMARTSTORE", platform: "NAVER", name: "네이버 스마트스토어" }, { id: "COUPANG", platform: "COUPANG", name: "쿠팡" }] as const;
+const SPLIT_CHANNELS = [{ id: "CAFE24_META", platform: "CAFE24", name: "자사몰(메타)" }, { id: "CAFE24_YOUTUBE", platform: "CAFE24", name: "자사몰(유튜브)" }, ...CHANNELS.filter(channel => channel.id !== "CAFE24")] as const;
 const MEDIA: Record<string, string> = { META: "Meta 광고", GOOGLE: "Google 광고", NAVER_DA: "네이버 DA", COUPANG_ADS: "쿠팡 광고" };
 const EMPTY: DailyMetric = { current: null, previous: null, change: null, changePct: null, currentState: "UNAVAILABLE", previousState: "UNAVAILABLE", missingSources: [], currentMissingSources: [], previousMissingSources: [] };
 const won = (n: number | null) => n === null ? "—" : Math.round(n).toLocaleString("ko-KR") + "원";
@@ -17,6 +18,7 @@ export function dailyChangeLabel(metric: DailyMetric) {
   if (metric.current === null && metric.previous === null) return "전일·당일 자료 없음";
   if (metric.previous === null) return "전일 자료 없음";
   if (metric.current === null) return "당일 자료 없음";
+  if (metric.comparisonIssue === "STOREFRONT_SCOPE_CHANGED") return "집계 범위 변경 · 증감 비교 제외";
   if (metric.previous < 0) return "전일 음수 · 증감액 비교";
   if (metric.previous === 0) return metric.current > 0 && metric.previousState === "COMPLETE" ? "0원에서 증가" : "전일 기준 0원";
   if (metric.changePct === null) return "증감률 계산 불가";
@@ -62,14 +64,15 @@ export function DailyReportSheet({ data, date, filters, options }: { data: Dashb
   const scopes = filters.scopeKeys === undefined ? "전체 계정·스토어" : `${filters.scopeKeys.length}개 계정·스토어 선택`;
   const scopeLabels = filters.scopeKeys?.map(key => options?.scopes.find(scope => scope.scopeKey === key)?.label ?? key) ?? [];
   const scopeDetail = scopeLabels.slice(0, 2).join(" · ").slice(0, 90) + (scopeLabels.length > 2 ? ` 외 ${scopeLabels.length - 2}개` : "");
-  const channels = CHANNELS.filter(channel => filters.platforms.includes(channel.platform));
+  const channels = (report.storefrontMode === "SPLIT" ? [...SPLIT_CHANNELS.slice(0, 2),
+    ...(report.mixedStorefront ? [{ id: "CAFE24", platform: "CAFE24" as const, name: "자사몰(이전집계)" }] : []), ...SPLIT_CHANNELS.slice(2)] : CHANNELS).filter(channel => filters.platforms.includes(channel.platform));
   const media = availableAnalysisMedia(filters.platforms);
   const metrics = [{ key: "revenue", title: "매출" }, { key: "estimatedProfit", title: "추정 순이익" }, { key: "adSpend", title: "광고비" }] as const;
   const allMetrics = [...Object.values(report.totals), ...report.marketplaces.flatMap(row => [row.revenue, row.estimatedProfit]), ...report.media.map(row => row.adSpend)];
   const partial = allMetrics.some(value => value.currentState === "PARTIAL" || value.previousState === "PARTIAL");
   const missing = [...new Set(allMetrics.flatMap(value => value.missingSources))].map(source => PLATFORM_LABELS[source as keyof typeof PLATFORM_LABELS] ?? source).join(" · ");
   const noCurrent = Object.values(report.totals).every(value => value.current === null);
-  return <article className="integrated-daily-report" aria-label="A4 데일리 성과 보고서">
+  return <article className={`integrated-daily-report${report.storefrontMode === "SPLIT" ? " integrated-daily-split" : ""}${report.mixedStorefront ? " integrated-daily-mixed" : ""}`} aria-label="A4 데일리 성과 보고서">
     <header className="integrated-daily-heading"><div><span>PATIMAGROUP / PERFORMANCE REPORT</span><h2>제품 통합 데일리 보고</h2></div><div><strong>{report.date}</strong><small>전일 비교 {report.previousDate} · 한국시간</small></div></header>
     <section className="integrated-daily-scope" aria-label="보고서 조회 범위"><div><span>제품</span><strong>{filters.productName || "전체 제품"}</strong></div><div><span>포함 플랫폼</span><p>{sources || "선택 없음"}</p></div><div><span>계정·스토어</span><p>{scopes}{scopeDetail ? ` · ${scopeDetail}` : ""}</p></div></section>
     {noCurrent ? <p className="integrated-daily-empty" role="status">선택일 {date}에 확인 가능한 금액이 없습니다. 미수집 금액은 0원으로 표시하지 않습니다.</p> : null}

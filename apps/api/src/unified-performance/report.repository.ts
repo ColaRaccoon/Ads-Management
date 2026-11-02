@@ -4,6 +4,7 @@ import { managementVersions, UnifiedManagementRepository } from "./management.re
 import type { ReportQuery } from "./report-query";
 import { datesIn, reportHash } from "./report-query";
 import type { PublishedReportFact, ReportFact } from "./report-contract";
+import { overlayStorefrontResults } from "./domain/storefront-report-overlay";
 import { PLATFORM_COMPONENTS } from "./domain/platform-selection";
 import type { Platform, SourceCoverage } from "./types";
 
@@ -274,7 +275,7 @@ export class UnifiedReportRepository {
       const hashSnapshot = (base: boolean) => reportHash([
         publications.filter(p => !base || inBase(p.businessDate)).map(p => [p.runId, p.revision]),
         failures.filter(f => !base || inBase(f.businessDate)).map(f => [f.id, f.completedAt, f.leaseExpiresAt]), catalog.versions, scopes]);
-      return { ...catalog, scopes, facts: reportFacts, coverage, publications, availableProductNames:bounded(frame.productNames??[],10000), availableDateRanges: frame.ranges.map(row => ({
+      return { ...catalog, scopes, facts: overlayStorefrontResults(reportFacts), coverage, publications, availableProductNames:bounded(frame.productNames??[],10000), availableDateRanges: frame.ranges.map(row => ({
         platform: row.platform, scopeKey: row.scope_key, from: row.first_date, to: row.last_date })),
         snapshotHash: hashSnapshot(false), baseSnapshotHash: hashSnapshot(true) };
     });

@@ -63,3 +63,60 @@ test("printed report retains provisional and estimated-source labels", () => {
   assert.match(html, /잠정 자료 · 한국시간 오늘을 포함한 집계/);
   assert.match(html, /추정 데이터 포함/);
 });
+
+
+test("persisted split storefront rows render four channels with exact negative Youtube profit and no combined duplicate", () => {
+  const { filters, data } = fixture();
+  for (const bucket of data.timeseries.items) bucket.byMarketplace = [
+    { marketplace: "CAFE24_META", revenue: "900000", completeRevenue: "900000", estimatedProfit: "2542448" },
+    { marketplace: "CAFE24_YOUTUBE", revenue: "300000", completeRevenue: "300000", estimatedProfit: bucket.date === "2026-10-29" ? "-129169" : "100000" },
+    { marketplace: "NAVER_SMARTSTORE", revenue: "100000", completeRevenue: "100000", estimatedProfit: "20000" },
+    { marketplace: "COUPANG", revenue: "50000", completeRevenue: "50000", estimatedProfit: "5000" },
+  ];
+  const html = renderToStaticMarkup(<DailyReportSheet data={data} date="2026-10-29" filters={filters} />);
+  assert.match(html, /자사몰\(메타\)/); assert.match(html, /자사몰\(유튜브\)/);
+  assert.match(html, /2,542,448원/); assert.match(html, /-129,169원/);
+  assert.match(html, /−229% · −229,169원/);
+  assert.match(html, /네이버 스마트스토어/); assert.match(html, /쿠팡/);
+  assert.doesNotMatch(html, /scope="row">자사몰 Cafe24/);
+  assert.match(html, /integrated-daily-split/);
+  // KPI remains the authoritative daily total; channel amounts are never added again in the UI.
+  assert.match(html, /1,200,000원/); assert.match(html, /140,000원/);
+});
+
+test("mixed old/new publication dates show missing previous split values instead of comparing the old total", () => {
+  const { filters, data } = fixture();
+  data.timeseries.items[1].byMarketplace = [
+    { marketplace: "CAFE24_META", revenue: "900000", completeRevenue: "900000", estimatedProfit: "100000" },
+    { marketplace: "CAFE24_YOUTUBE", revenue: null, estimatedProfit: null },
+  ];
+  const html = renderToStaticMarkup(<DailyReportSheet data={data} date="2026-10-29" filters={filters} />);
+  const match = html.match(/<th scope="row">자사몰\(메타\)<\/th>(.*?)<\/tr>/);
+  assert.ok(match); assert.match(match[1], /전일 자료 없음/); assert.doesNotMatch(match[1], /\+\d+%/);
+  assert.match(html, /자사몰\(유튜브\)<\/th>.*?전일·당일 자료 없음/);
+});
+
+test("old publications keep one combined Cafe24 row without fabricated split rows", () => {
+  const { filters, data } = fixture();
+  const html = renderToStaticMarkup(<DailyReportSheet data={data} date="2026-10-29" filters={filters} />);
+  assert.match(html, /scope="row">자사몰 Cafe24/);
+  assert.doesNotMatch(html, /자사몰\(메타\)|자사몰\(유튜브\)|integrated-daily-split/);
+});
+
+test("a current mixed-scope publication displays its remaining legacy amount as an independent fifth channel", () => {
+  const { filters, data } = fixture();
+  data.timeseries.items[1].byMarketplace = [
+    { marketplace: "CAFE24_META", revenue: "900000", completeRevenue: "900000", estimatedProfit: "100000" },
+    { marketplace: "CAFE24_YOUTUBE", revenue: "200000", completeRevenue: "200000", estimatedProfit: "-20000" },
+    { marketplace: "CAFE24", revenue: "12345", completeRevenue: "12345", estimatedProfit: null },
+  ];
+  const html = renderToStaticMarkup(<DailyReportSheet data={data} date="2026-10-29" filters={filters} />);
+  const legacy = html.match(/<th scope="row">자사몰\(이전집계\)<\/th>(.*?)<\/tr>/);
+  assert.ok(legacy); assert.match(legacy[1], /12,345원/); assert.match(legacy[1], /집계 범위 변경 · 증감 비교 제외/);
+  assert.doesNotMatch(legacy[1], /−99%|−1,187,655원/); assert.match(html, /integrated-daily-mixed/);
+  assert.equal((html.match(/scope="row">자사몰/g) ?? []).length, 3);
+  const meta = html.match(/<th scope="row">자사몰\(메타\)<\/th>(.*?)<\/tr>/)!;
+  assert.match(meta[1], /전일 자료 없음/); assert.doesNotMatch(meta[1], /\+\d+%/);
+  // The KPI remains the persisted total even while five channel rows are displayed.
+  assert.match(html, /1,200,000원/);
+});

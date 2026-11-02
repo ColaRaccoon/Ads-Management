@@ -20,6 +20,21 @@ test("selected day compares independent authoritative totals with exactly the pr
   assert.equal(report.hasCurrentData, true); assert.equal(report.hasPreviousData, true);
 });
 
+test("mixed legacy scope retains its amounts without comparing a residual to the previous whole-store total", () => {
+  const previous = bucket("2026-10-31"), current = bucket("2026-11-01");
+  previous.byMarketplace = [{ marketplace: "CAFE24", revenue: "1000", completeRevenue: "1000", estimatedProfit: "100" }];
+  current.byMarketplace = [{ marketplace: "CAFE24", revenue: "100", completeRevenue: "100", estimatedProfit: "10" },
+    { marketplace: "CAFE24_META", revenue: "900", completeRevenue: "900", estimatedProfit: "90" },
+    { marketplace: "CAFE24_YOUTUBE", revenue: "0", completeRevenue: "0", estimatedProfit: "0" }];
+  const report = buildDailyReport([previous, current], current.date);
+  const legacy = report.marketplaces.find(row => row.marketplace === "CAFE24")!;
+  assert.equal(report.mixedStorefront, true);
+  assert.equal(legacy.revenue.current, 100); assert.equal(legacy.revenue.previous, 1000);
+  assert.equal(legacy.revenue.change, null); assert.equal(legacy.revenue.changePct, null);
+  assert.equal(dailyMetricStatusLabel(legacy.revenue), "집계 범위 변경 · 증감 비교 제외");
+  assert.equal(legacy.estimatedProfit.change, null);
+});
+
 test("total net profit and ad spend never sum marketplace and medium ledgers a second time", () => {
   const row = bucket("2026-10-29", { revenue: "100", estimatedProfit: "30", adSpend: "20" });
   row.byMarketplace = [{ marketplace: "CAFE24", revenue: "100", display: { revenue: display("100"), estimatedProfit: display("30"), adSpend: display("20") } }];
@@ -106,4 +121,44 @@ test("channels present only on the previous day are retained with a missing curr
   const report = buildDailyReport([row, bucket("2026-10-29")], "2026-10-29");
   assert.equal(report.marketplaces[0].revenue.current, null); assert.equal(report.marketplaces[0].revenue.previous, 80);
   assert.equal(report.media[0].adSpend.current, null); assert.equal(report.media[0].adSpend.previous, 10);
+});
+
+
+test("split storefront keys remain independent and never replace authoritative totals with a channel sum", () => {
+  const previous = bucket("2026-10-31", { revenue: "1000", estimatedProfit: "500" });
+  previous.byMarketplace = [{ marketplace: "CAFE24_META", revenue: "700", completeRevenue: "700", estimatedProfit: "400" }, { marketplace: "CAFE24_YOUTUBE", revenue: "300", completeRevenue: "300", estimatedProfit: "100" }];
+  const current = bucket("2026-11-01", { revenue: "1200", estimatedProfit: "600" });
+  current.byMarketplace = [{ marketplace: "CAFE24_META", revenue: "900", completeRevenue: "900", estimatedProfit: "2542448" }, { marketplace: "CAFE24_YOUTUBE", revenue: "300", completeRevenue: "300", estimatedProfit: "-129169" }];
+  const result = buildDailyReport([previous, current], "2026-11-01");
+  assert.equal(result.storefrontMode, "SPLIT"); assert.equal(result.totals.revenue.current, 1200); assert.equal(result.totals.estimatedProfit.current, 600);
+  assert.equal(result.marketplaces.find(row => row.marketplace === "CAFE24_META")!.estimatedProfit.current, 2542448);
+  assert.equal(result.marketplaces.find(row => row.marketplace === "CAFE24_YOUTUBE")!.estimatedProfit.current, -129169);
+  assert.equal(result.marketplaces.find(row => row.marketplace === "CAFE24_YOUTUBE")!.estimatedProfit.previous, 100);
+});
+
+test("mixed publication versions never compare combined Cafe24 totals as a new channel", () => {
+  const previous = bucket("2026-10-31", { revenue: "1000" });
+  previous.byMarketplace = [{ marketplace: "CAFE24", revenue: "1000", completeRevenue: "1000", estimatedProfit: "500" }];
+  const current = bucket("2026-11-01", { revenue: "1200" });
+  current.byMarketplace = [{ marketplace: "CAFE24_META", revenue: "900", completeRevenue: "900", estimatedProfit: "300" }, { marketplace: "CAFE24_YOUTUBE", revenue: null, estimatedProfit: null }];
+  const result = buildDailyReport([previous, current], current.date);
+  assert.equal(result.storefrontMode, "SPLIT");
+  for (const key of ["CAFE24_META", "CAFE24_YOUTUBE"]) {
+    const row = result.marketplaces.find(row => row.marketplace === key)!;
+    assert.equal(row.revenue.previous, null); assert.equal(row.revenue.changePct, null);
+    assert.equal(row.estimatedProfit.previous, null); assert.equal(row.estimatedProfit.change, null);
+  }
+  assert.equal(result.marketplaces.find(row => row.marketplace === "CAFE24_YOUTUBE")!.revenue.current, null);
+  const reverse = buildDailyReport([{ ...current, date: previous.date, bucketFrom: previous.date, bucketTo: previous.date }, { ...previous, date: current.date, bucketFrom: current.date, bucketTo: current.date }], current.date);
+  assert.equal(reverse.storefrontMode, "COMBINED");
+  assert.equal(reverse.marketplaces.find(row => row.marketplace === "CAFE24")!.revenue.previous, null);
+});
+
+test("split unavailable and confirmed zero retain different states, including a missing selected day", () => {
+  const previous = bucket("2026-10-31"); previous.byMarketplace = [{ marketplace: "CAFE24_META", revenue: "0", completeRevenue: "0", estimatedProfit: "0" }, { marketplace: "CAFE24_YOUTUBE", revenue: "0", completeRevenue: "0", estimatedProfit: "0" }];
+  const current = bucket("2026-11-01"); current.byMarketplace = [{ marketplace: "CAFE24_META", revenue: "0", completeRevenue: "0", estimatedProfit: "0" }, { marketplace: "CAFE24_YOUTUBE", revenue: null, estimatedProfit: null }];
+  const result = buildDailyReport([previous, current], current.date);
+  assert.equal(result.marketplaces.find(row => row.marketplace === "CAFE24_META")!.estimatedProfit.current, 0);
+  assert.equal(result.marketplaces.find(row => row.marketplace === "CAFE24_YOUTUBE")!.estimatedProfit.current, null);
+  assert.equal(buildDailyReport([previous], current.date).storefrontMode, "SPLIT");
 });

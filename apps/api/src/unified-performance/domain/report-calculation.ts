@@ -5,6 +5,7 @@ import type { DisplayAmount, PublishedReportFact, ReportFact, ReportSummary, Rep
 import { ExactDecimal as D, money, quantizeMoney } from "./decimal";
 import { normalizePlatforms, platformSelection } from "./platform-selection";
 import { allocateReportAmount } from "./report-allocation";
+import { overlayStorefrontResults } from "./storefront-report-overlay";
 
 const uniq = (values: readonly string[]) => [...new Set(values)].sort();
 const sum = (values: readonly (string | null)[], empty: string | null = null) => {
@@ -29,6 +30,18 @@ export function prepareReportBatch(request: AdapterRequest, batch: AdapterBatch,
     amountKrw: sale.operatingRevenue, completeAmountKrw: sale.operatingRevenue, profitBeforeAds: sale.profitBeforeAds,
     completeProfitBeforeAds: sale.profitBeforeAds, originalAmount: sale.operatingRevenue,
     quantity: sale.calculationQuantity, attribution: sale.productName ? "DIRECT" : "UNALLOCATED", marketplace: sale.marketplace, quality: cleanQuality(sale.quality) }));
+  for (const result of batch.nativeStorefrontResults?.rows ?? []) rows.push(base({
+    component: "STOREFRONT_RESULT", productName: result.productName,
+    amountKrw: result.revenue, completeAmountKrw: result.complete ? result.revenue : null,
+    profitBeforeAds: result.profitBeforeAds, completeProfitBeforeAds: result.complete ? result.profitBeforeAds : null,
+    persistedNetProfit: result.estimatedProfit, persistedAdSpend: result.adSpend,
+    originalAmount: result.revenue, quantity: result.quantity, attribution: result.productName ? "DIRECT" : "UNALLOCATED",
+    marketplace: result.channel === "META" ? "CAFE24_META" : "CAFE24_YOUTUBE",
+    medium: result.channel === "META" ? "META" : "GOOGLE",
+    quality: cleanQuality({ isEstimate: result.issues.length > 0, confidence: "SOURCE_REPORTED", issues: result.issues }) }));
+  if (batch.nativeStorefrontResults) for (const medium of ["META", "GOOGLE"] as const) rows.push(base({
+    component: "STOREFRONT_RESULT", rowsCount: 0, saleUnitName: "PARTITION_MARKER", medium,
+    marketplace: medium === "META" ? "CAFE24_META" : "CAFE24_YOUTUBE" }));
   for (const ad of batch.adSpends) {
     const allocations = allocateReportAmount(request, batch, rules, { component: "AD_SPEND", name: ad.name.originalName,
       productName: ad.productName, amount: ad.amountKrw, attribution: ad.attribution, quality: cleanQuality(ad.quality) });
@@ -56,6 +69,9 @@ export function prepareReportBatch(request: AdapterRequest, batch: AdapterBatch,
     factKey: createHash("sha256").update(key).digest("hex"), amountKrw: sum(values.map(value => value.amountKrw)),
     completeAmountKrw: allSum(values.map(value => value.completeAmountKrw)), profitBeforeAds: sum(values.map(value => value.profitBeforeAds)),
     completeProfitBeforeAds: allSum(values.map(value => value.completeProfitBeforeAds)), originalAmount: sum(values.map(value => value.originalAmount)),
+    ...(values[0].component === "STOREFRONT_RESULT" ? {
+      persistedNetProfit: sum(values.map(value => value.persistedNetProfit ?? null)),
+      persistedAdSpend: sum(values.map(value => value.persistedAdSpend ?? null)) } : {}),
     quantity: sum(values.map(value => value.quantity)), rowsCount: values.reduce((count, row) => count + row.rowsCount, 0), quality: quality(values.map(value => value.quality)) }));
 }
 
@@ -95,6 +111,7 @@ const subtotal = (before: string | null, ads: string | null, common: string | nu
 export function summarizeReport(facts: readonly PublishedReportFact[], coverage: readonly SourceCoverage[],
   options: { platforms: readonly Platform[]; productName?: string; omitMarketplaceMetrics?: boolean }): ReportSummary {
   const platforms = normalizePlatforms(options.platforms), platformAvailability = platformSelection(platforms).metricAvailability;
+  facts = overlayStorefrontResults(facts);
   const scopeFacts = facts.filter(row => platforms.includes(row.platform));
   const scopedCoverage = coverage.filter(row => platforms.includes(row.platform) && row.participation === "INCLUDED");
   const applicableSale = scopedCoverage.some(row => row.component === "SALE") || scopeFacts.some(row => row.component === "SALE"),
@@ -157,8 +174,48 @@ export function summarizeReport(facts: readonly PublishedReportFact[], coverage:
       availableSources: members.filter(platform => sourceResult(platform).knownTotals[memberMetric(platform)] !== null),
       missingSources: members.filter(platform => sourceResult(platform).completeTotals[memberMetric(platform)] === null) };
   };
-  const byMarketplace = uniq([...sales.map(row => row.marketplace!), ...scopedCoverage.filter(row => row.component === "SALE").map(row => marketFor[row.platform]!)].filter(Boolean))
+  const nativeMarket = (market: string | null) => market === "CAFE24_META" || market === "CAFE24_YOUTUBE";
+  const partition = (row: { scopeKey: string; date: string }) => JSON.stringify([row.scopeKey, row.date]);
+  const nativePartitions = new Set(scopeFacts.filter(row => (row.component === "SALE" || row.component === "STOREFRONT_RESULT" && row.rowsCount === 0) && nativeMarket(row.marketplace)).map(partition));
+  const byMarketplace = uniq([...sales.map(row => row.marketplace!), ...scopeFacts.filter(row => row.component === "STOREFRONT_RESULT" && row.rowsCount === 0).map(row => row.marketplace!), ...scopedCoverage.filter(row => row.component === "SALE" &&
+    !(row.platform === "CAFE24" && nativePartitions.has(partition(row)))).map(row => marketFor[row.platform]!)].filter(Boolean))
     .map(marketplace => {
+      if (nativeMarket(marketplace) || marketplace === "CAFE24" && nativePartitions.size > 0) {
+        const native = nativeMarket(marketplace);
+        const medium = marketplace === "CAFE24_META" ? "META" : "GOOGLE";
+        const ownSales = sales.filter(row => row.marketplace === marketplace);
+        const ownCoverage = scopedCoverage.filter(row => row.platform === "CAFE24" && nativePartitions.has(partition(row)) === native);
+        const dates = new Set(ownCoverage.map(row => row.date));
+        const adPlatforms = platforms.filter(platform => native ? platform === medium : platform === "META" || platform === "GOOGLE");
+        const ownAds = ads.filter(row => adPlatforms.includes(row.platform) && dates.has(row.date));
+        const adCoverage = scopedCoverage.filter(row => adPlatforms.includes(row.platform) && dates.has(row.date));
+        const rev = metric(ownSales, ownCoverage, ["SALE"], row => row.amountKrw, row => row.completeAmountKrw);
+        const pre = metric(ownSales, ownCoverage, ["SALE", "DIRECT_COST"], row => row.profitBeforeAds, row => row.completeProfitBeforeAds, true);
+        const spend = metric(ownAds, adCoverage, ["AD_SPEND"], row => row.amountKrw, row => row.completeAmountKrw);
+        if (options.productName !== undefined) {
+          if (unresolvedSales.some(row => row.marketplace === marketplace)) {
+            rev.complete = null; pre.complete = null;
+            if (!ownSales.length) { rev.known = null; pre.known = null; }
+          }
+          if (unresolvedAds.some(row => adPlatforms.includes(row.platform) && dates.has(row.date))) {
+            spend.complete = null;
+            if (!ownAds.length) spend.known = null;
+          }
+        }
+        const overlap = scopedCoverage.some(row => row.platform === "CAFE24" && row.component === "SALE" && dates.has(row.date) &&
+          nativePartitions.has(partition(row)) !== native && numericallyAvailableCoverage(row));
+        const net = overlap ? null : subtotal(pre.known, spend.known, null, null);
+        const netComplete = overlap || pre.complete === null || adCoverage.length > 0 && spend.complete === null ? null : subtotal(pre.complete, spend.complete, null, null);
+        const display = (known: string | null, complete: string | null, sources: Platform[]): DisplayAmount => ({ value: complete ?? known,
+          state: complete !== null ? "COMPLETE" : known !== null ? "PARTIAL" : "UNAVAILABLE",
+          availableSources: known !== null ? sources : [], missingSources: complete === null ? sources : [] });
+        return { marketplace, revenue: rev.known, completeRevenue: rev.complete, profitBeforeAds: pre.complete,
+          adSpend: overlap ? null : spend.complete, estimatedProfit: netComplete,
+          profitUnavailableReason: overlap ? "MIXED_STOREFRONT_REVISIONS" : netComplete === null ? "MISSING_INPUT" : null,
+          ...(!options.omitMarketplaceMetrics ? { display: { revenue: display(rev.known, rev.complete, ["CAFE24"]),
+            estimatedProfit: display(net, netComplete, ["CAFE24", ...adPlatforms]),
+            adSpend: display(overlap ? null : spend.known, overlap ? null : spend.complete, adPlatforms) } } : {}) };
+      }
       const ownCoverage = scopedCoverage.filter(row => marketFor[row.platform] === marketplace), ownSales = sales.filter(row => row.marketplace === marketplace);
       const revenue = options.productName !== undefined && !ownSales.length && unresolvedSales.some(row => row.marketplace === marketplace) ? null :
         metric(ownSales, ownCoverage, ["SALE"], row => row.amountKrw, row => row.completeAmountKrw).known;

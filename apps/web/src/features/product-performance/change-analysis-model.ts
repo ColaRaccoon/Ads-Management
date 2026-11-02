@@ -6,7 +6,8 @@ const DAY = 86400000;
 const shift = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY).toISOString().slice(0, 10);
 type Period = [string, string];
 export type ChangeMetric = { before: number | null; after: number | null; change: number | null; changePct: number | null;
-  beforeDays: number; afterDays: number; expectedDays: number; beforePartialDays: number; afterPartialDays: number; missingSources: string[] };
+  beforeDays: number; afterDays: number; expectedDays: number; beforePartialDays: number; afterPartialDays: number; missingSources: string[];
+  comparisonIssue?: "STOREFRONT_SCOPE_CHANGED" };
 export type ChangeAnalysisOptions = { medium: AnalysisMedium; changeDate: string; windowDays: number; lagDays: number };
 /** Read the same numeric daily input for both analysis and date coverage recommendations. */
 function adAmount(bucket: Bucket, medium: AnalysisMedium): number | null {
@@ -48,6 +49,7 @@ export function changeStatusLabel(value: ChangeMetric): string | null {
   if (value.before === null && value.after === null) return "전후 자료 없음";
   if (value.before === null) return "변경 전 자료 없음";
   if (value.after === null) return "변경 후 자료 없음";
+  if (value.comparisonIssue === "STOREFRONT_SCOPE_CHANGED") return "집계 범위 변경 · 증감 비교 제외";
   if (value.before < 0) return "음수 기준 · 증감액 확인";
   if (value.before === 0) return value.after > 0 && value.beforeDays === value.expectedDays && value.beforePartialDays === 0 ? "0원에서 증가" : "기준 0원 · 증감액 확인";
   return null;
@@ -64,7 +66,9 @@ export function analyzeChanges(buckets: Bucket[], options: ChangeAnalysisOptions
     outcomeAfter: [outcomeStart, shift(outcomeStart, windowDays - 1)] as Period };
   // Never reinterpret an aggregated week/month, duplicated date, or missing day as daily data.
   const daily = uniqueDaily(buckets);
-  const marketplaces = [...new Set([...daily.values()].flatMap(row => row.byMarketplace.map(market => market.marketplace)))].sort();
+  const outcomeBuckets = [...daily.values()].filter(row => row.date >= periods.outcomeBefore[0] && row.date <= periods.outcomeAfter[1]);
+  const marketplaces = [...new Set(outcomeBuckets.flatMap(row => row.byMarketplace.map(market => market.marketplace)))].sort();
+  const splitStorefront = marketplaces.some(id => id === "CAFE24_META" || id === "CAFE24_YOUTUBE");
   type Amount = { value: number | null; partial: boolean; missingSources: string[] };
   type Display = { value: string | null; state: string; missingSources: string[] };
   const amount = (display: Display | undefined, fallback: string | null | undefined): Amount => ({
@@ -98,9 +102,15 @@ export function analyzeChanges(buckets: Bucket[], options: ChangeAnalysisOptions
   const end = periods.adAfter[1] > periods.outcomeAfter[1] ? periods.adAfter[1] : periods.outcomeAfter[1];
   const dates: string[] = [];
   for (let date = start; date <= end; date = shift(date, 1)) dates.push(date);
+  const marketComparison = (marketplace: string, metric: "revenue" | "estimatedProfit"): ChangeMetric => {
+    const value = compare(periods.outcomeBefore, periods.outcomeAfter, bucket => sale(bucket, marketplace, metric));
+    // An old whole-store total and a residual legacy scope can share CAFE24.
+    // Their observed amounts remain useful; their differences are not comparable.
+    return marketplace === "CAFE24" && splitStorefront ? { ...value, change: null, changePct: null, comparisonIssue: "STOREFRONT_SCOPE_CHANGED" } : value;
+  };
   return { periods, spend: compare(periods.adBefore, periods.adAfter, ads), marketplaces: marketplaces.map(marketplace => ({ marketplace,
-    revenue: compare(periods.outcomeBefore, periods.outcomeAfter, bucket => sale(bucket, marketplace, "revenue")),
-    estimatedProfit: compare(periods.outcomeBefore, periods.outcomeAfter, bucket => sale(bucket, marketplace, "estimatedProfit")),
+    revenue: marketComparison(marketplace, "revenue"),
+    estimatedProfit: marketComparison(marketplace, "estimatedProfit"),
     profitUnavailableReason: [...daily.values()].filter(row => row.date >= periods.outcomeBefore[0] && row.date <= periods.outcomeAfter[1])
       .map(row => row.byMarketplace.find(m => m.marketplace === marketplace)?.profitUnavailableReason).find(reason => reason != null) ?? null })),
     series: dates.map(date => { const bucket = daily.get(date); return { date, adSpend: bucket ? ads(bucket).value : null, adPartial: bucket ? ads(bucket).partial : false,

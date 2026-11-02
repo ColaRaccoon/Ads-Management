@@ -3,6 +3,7 @@ import { datesIn, type ReportQuery } from "./report-query";
 import type { SourceCoverage } from "./types";
 import { ExactDecimal as D } from "./domain/decimal";
 import { summarizeReport } from "./domain/report-calculation";
+import { overlayStorefrontResults } from "./domain/storefront-report-overlay";
 import type { RelationshipDay } from "./domain/relationship-calculation";
 import { MEDIUM_PLATFORM, type parseRelationshipQuery } from "./relationship-query";
 
@@ -10,7 +11,7 @@ import { MEDIUM_PLATFORM, type parseRelationshipQuery } from "./relationship-que
 export function relationshipDays(scope: { facts: PublishedReportFact[]; coverage: SourceCoverage[] }, query: ReportQuery,
   settings: ReturnType<typeof parseRelationshipQuery>, lookbackFrom: string): RelationshipDay[] {
   const factsByDay = new Map<string, PublishedReportFact[]>(), coverageByDay = new Map<string, SourceCoverage[]>();
-  for (const fact of scope.facts) {
+  for (const fact of overlayStorefrontResults(scope.facts)) {
     if (!factsByDay.has(fact.date)) factsByDay.set(fact.date, []);
     factsByDay.get(fact.date)!.push(fact);
   }

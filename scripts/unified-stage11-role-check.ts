@@ -30,6 +30,12 @@ async function main(){
   await denied(report,'SELECT * FROM meta_ads.cafe24_order_lines LIMIT 0','report denies raw Cafe24 source');
   await denied(report,'SELECT * FROM public.order_items LIMIT 0','report denies raw Naver source');
   await denied(report,'SELECT * FROM meta_ads.unified_product_match_results LIMIT 0','report denies internal match audit');
+  for (const [table,column] of [['products','name'],['meta_adset_daily_metrics','product_id'],['cafe24_order_lines','row_number']]) {
+   await worker.$queryRawUnsafe(`SELECT ${column} FROM meta_ads.${table} LIMIT 0`);
+   await denied(report,`SELECT ${column} FROM meta_ads.${table} LIMIT 0`,`report denies native ${table}.${column}`);
+   await denied(worker,`SELECT * FROM meta_ads.${table} LIMIT 0`,`worker denies broad native ${table}`);
+  }
+  checks.push('worker exact three native financial columns selectable; report and broad table access remain denied');
   const proposal=JSON.parse(readFileSync('docs/product-performance/research/11-data-source-access-proposal.json','utf8'));
   const sourceAccess=[];
   for(const table of [...proposal.metaAds,...proposal.naver]){

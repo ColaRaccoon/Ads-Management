@@ -209,7 +209,28 @@ export interface AdapterRequest extends RuleVersions {
   cursor: string | null;
   limit: number;
 }
+/** Canonical platform calculations captured by the worker, never by a report GET. */
+export interface NativeStorefrontResult {
+  channel: "META" | "YOUTUBE";
+  productName: string | null;
+  revenue: string | null;
+  grossCost: string | null;
+  coupon: string | null;
+  adSpend: string | null;
+  profitBeforeAds: string | null;
+  estimatedProfit: string | null;
+  quantity: string | null;
+  complete: boolean;
+  issues: string[];
+}
+export interface NativeStorefrontSnapshot {
+  calculationVersion: string;
+  sourceFingerprint: string;
+  rows: NativeStorefrontResult[];
+  issues: string[];
+}
 export interface AdapterBatch {
+  nativeStorefrontResults?: NativeStorefrontSnapshot;
   sales: SaleFact[];
   adSpends: AdSpendFact[];
   commonExpenses: CommonExpenseFact[];

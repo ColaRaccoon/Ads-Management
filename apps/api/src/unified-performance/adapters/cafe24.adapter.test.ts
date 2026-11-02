@@ -4,9 +4,19 @@ import { Prisma } from "@prisma/client";
 import { Cafe24SalesCalculator } from "../../domain/cafe24-sales-calculator";
 import { resolveCafe24CouponOrder } from "../../domain/cafe24-coupon-matcher";
 import { managementVersions, UnifiedManagementRepository } from "../management.repository";
-import { CONTRACT_VERSION, type AdapterRequest } from "../types";
-import { Cafe24PerformanceAdapter, normalizeCafe24Snapshot, type Cafe24SelectedLine, type Cafe24Snapshot } from "./cafe24.adapter";
+import { CONTRACT_VERSION, type AdapterRequest, type NativeStorefrontSnapshot } from "../types";
+import { Cafe24PerformanceAdapter as ProductionCafe24PerformanceAdapter, normalizeCafe24Snapshot, type Cafe24SelectedLine, type Cafe24Snapshot } from "./cafe24.adapter";
 import { cafe24OrderCoupon } from "./cafe24-coupon";
+
+/** These tests isolate the existing source-policy/normalization boundary. Native calculation
+ * has its own real-core tests plus an actual restricted-role parity and publication test. */
+class Cafe24PerformanceAdapter extends ProductionCafe24PerformanceAdapter {
+  protected override async readNative(): Promise<NativeStorefrontSnapshot> {
+    return { calculationVersion: "native-fixture", sourceFingerprint: "native-fixture", issues: [], rows:
+      (["META", "YOUTUBE"] as const).map(channel => ({ channel, productName: null, revenue: "0", grossCost: "0", coupon: "0",
+        adSpend: null, profitBeforeAds: "0", estimatedProfit: null, quantity: "0", complete: true, issues: [] })) };
+  }
+}
 
 const D = Prisma.Decimal;
 const date = new Date("2026-10-26T00:00:00Z");

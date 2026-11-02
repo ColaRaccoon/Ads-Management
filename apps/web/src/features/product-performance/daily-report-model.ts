@@ -6,6 +6,7 @@ export type DailyMetric = {
   current: number | null; previous: number | null; change: number | null; changePct: number | null;
   currentState: DailyAmountState; previousState: DailyAmountState; missingSources: string[];
   currentMissingSources: string[]; previousMissingSources: string[];
+  comparisonIssue?: "STOREFRONT_SCOPE_CHANGED";
 };
 type DailyAmount = { value: number | null; state: DailyAmountState; missingSources: string[] };
 type ReportMetric = "revenue" | "estimatedProfit" | "adSpend";
@@ -87,6 +88,13 @@ export function buildDailyReport(buckets: readonly Bucket[], date: string) {
   const previousDate = new Date(dateNumber(date) - DAY).toISOString().slice(0, 10);
   const rows = dailyBuckets(buckets), current = rows.get(date), previous = rows.get(previousDate);
   const totals = Object.fromEntries(METRICS.map(metric => [metric, comparison(totalAmount(current, metric), totalAmount(previous, metric))])) as Record<ReportMetric, DailyMetric>;
+  // The selected day's persisted keys decide the layout. Never reinterpret an old
+  // combined Cafe24 amount as either new channel, including across version boundaries.
+  const splitKeys = ["CAFE24_META", "CAFE24_YOUTUBE"];
+  const currentMarkets = current?.byMarketplace.map(row => row.marketplace) ?? [];
+  const previousMarkets = previous?.byMarketplace.map(row => row.marketplace) ?? [];
+  const storefrontMode = currentMarkets.some(key => splitKeys.includes(key)) ? "SPLIT" as const :
+    currentMarkets.includes("CAFE24") ? "COMBINED" as const : previousMarkets.some(key => splitKeys.includes(key)) ? "SPLIT" as const : "COMBINED" as const;
   const marketIds = unique([...(current?.byMarketplace ?? []), ...(previous?.byMarketplace ?? [])].map(row => row.marketplace));
   const mediumIds = unique([...(current?.byMedium ?? []), ...(previous?.byMedium ?? [])].map(row => row.medium));
   const marketAmount = (bucket: Bucket | undefined, marketplace: string, metric: "revenue" | "estimatedProfit") => {
@@ -97,13 +105,17 @@ export function buildDailyReport(buckets: readonly Bucket[], date: string) {
     const row = bucket?.byMedium.find(row => row.medium === medium);
     return readAmount(row?.displayAdSpend, row?.completeAdSpend);
   };
-  return { date, previousDate, totals,
+  const legacyScopeChanged = [...currentMarkets, ...previousMarkets].some(key => splitKeys.includes(key));
+  const marketComparison = (marketplace: string, metric: "revenue" | "estimatedProfit"): DailyMetric => {
+    const value = comparison(marketAmount(current, marketplace, metric), marketAmount(previous, marketplace, metric));
+    return marketplace === "CAFE24" && legacyScopeChanged ? { ...value, change: null, changePct: null, comparisonIssue: "STOREFRONT_SCOPE_CHANGED" } : value;
+  };
+  return { date, previousDate, totals, storefrontMode, mixedStorefront: storefrontMode === "SPLIT" && currentMarkets.includes("CAFE24"),
     hasCurrentData: METRICS.some(metric => totals[metric].current !== null),
     hasPreviousData: METRICS.some(metric => totals[metric].previous !== null),
     isEstimate: current?.isEstimate ?? false,
     marketplaces: marketIds.map(marketplace => ({ marketplace,
-      revenue: comparison(marketAmount(current, marketplace, "revenue"), marketAmount(previous, marketplace, "revenue")),
-      estimatedProfit: comparison(marketAmount(current, marketplace, "estimatedProfit"), marketAmount(previous, marketplace, "estimatedProfit")) })),
+      revenue: marketComparison(marketplace, "revenue"), estimatedProfit: marketComparison(marketplace, "estimatedProfit") })),
     media: mediumIds.map(medium => ({ medium, adSpend: comparison(mediumAmount(current, medium), mediumAmount(previous, medium)) })) };
 }
 export type DailyReport = ReturnType<typeof buildDailyReport>;
@@ -112,6 +124,7 @@ export function dailyMetricStatusLabel(metric: DailyMetric): string | null {
   if (metric.current === null && metric.previous === null) return "전일·선택일 자료 없음";
   if (metric.current === null) return "선택일 자료 없음";
   if (metric.previous === null) return "전일 자료 없음";
+  if (metric.comparisonIssue === "STOREFRONT_SCOPE_CHANGED") return "집계 범위 변경 · 증감 비교 제외";
   if (metric.previous < 0) return "전일 음수 · 증감액 확인";
   if (metric.previous === 0) return metric.current > 0 && metric.previousState === "COMPLETE" ? "0원에서 증가" : "전일 0원 · 증감액 확인";
   return null;

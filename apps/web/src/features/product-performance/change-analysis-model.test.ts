@@ -26,6 +26,18 @@ test("choosing another medium does not change marketplace net profit", () => {
   assert.equal(b.spend.before, 20);
   assert.deepEqual(a.marketplaces, b.marketplaces);
 });
+
+test("a legacy Cafe24 key alongside native channels retains means but suppresses scope-changing deltas", () => {
+  const mixed = rows.map((bucket, index) => ({ ...bucket, byMarketplace: [
+    { marketplace: "CAFE24", revenue: "9999", completeRevenue: index < 7 ? "100" : "10", estimatedProfit: index < 7 ? "30" : "3" },
+    ...(index < 7 ? [] : [{ marketplace: "CAFE24_META", revenue: "90", completeRevenue: "90", estimatedProfit: "27" }]),
+  ] }));
+  const legacy = analyzeChanges(mixed, options).marketplaces.find(row => row.marketplace === "CAFE24")!;
+  assert.equal(legacy.revenue.before, 100); assert.equal(legacy.revenue.after, 10);
+  assert.equal(legacy.revenue.change, null); assert.equal(legacy.revenue.changePct, null);
+  assert.equal(changeStatusLabel(legacy.revenue), "집계 범위 변경 · 증감 비교 제외");
+  assert.equal(legacy.estimatedProfit.change, null);
+});
 test("missing dates and amounts preserve gaps and disclose used days", () => {
   const partial = rows.slice(1).map(r => r.date === "2026-10-09" ? row(r.date, null, null) : r);
   const result = analyzeChanges(partial, options);

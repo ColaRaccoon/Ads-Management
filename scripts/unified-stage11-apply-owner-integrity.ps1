@@ -1,12 +1,28 @@
-param([switch]$Execute,[string]$ExpectedSqlSha256,[ValidateSet('NewTableFk','FxIdentity')][string]$Fix='NewTableFk')
+param([switch]$Execute,[string]$ExpectedSqlSha256,[ValidateSet('NewTableFk','FxIdentity','NativeResult','NativeComponent')][string]$Fix='NewTableFk')
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'cloud/daily-data-sync/protected-context.ps1')
-$fixFile=if($Fix -eq 'FxIdentity'){'unified-stage11-reconcile-roles-fx-fix.sql'}else{'unified-stage11-reconcile-roles-fk-fix.sql'}
+$fixFile=if($Fix -eq 'NativeComponent'){'../apps/api/prisma/migrations/20261102071000_native_storefront_results/migration.sql'}elseif($Fix -eq 'NativeResult'){'unified-stage11-native-result-grants.sql'}elseif($Fix -eq 'FxIdentity'){'unified-stage11-reconcile-roles-fx-fix.sql'}else{'unified-stage11-reconcile-roles-fk-fix.sql'}
 $path=Join-Path $PSScriptRoot $fixFile
 $hash=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
 if(-not $Execute){@{status='READY';fix=$Fix;sqlSha256=$hash;sourceWrites=0}|ConvertTo-Json -Compress;return}
 if($ExpectedSqlSha256 -cne $hash){throw 'OWNER_INTEGRITY_REVIEW_HASH_REQUIRED'}
 $body=[IO.File]::ReadAllText($path)
+if($Fix -eq 'NativeComponent') {
+ $precondition=@'
+BEGIN;
+SET LOCAL ROLE meta_ads_app;
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM meta_ads._prisma_migrations WHERE finished_at IS NULL AND rolled_back_at IS NULL) OR
+    EXISTS(SELECT 1 FROM meta_ads._prisma_migrations WHERE migration_name='20261102071000_native_storefront_results') OR
+    NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_roles r ON r.oid=c.relowner
+      WHERE c.oid='meta_ads.unified_daily_facts'::regclass AND r.rolname='meta_ads_app') OR
+    NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='meta_ads.unified_daily_facts'::regclass AND conname='unified_fact_valid' AND contype='c'
+      AND md5(pg_get_constraintdef(oid))='a6953af049a1cef48375d5ee265a2de5')
+ THEN RAISE EXCEPTION 'NATIVE_RESULT_MIGRATION_PRECONDITION'; END IF;
+END $$;
+'@
+ $body=$precondition+$body+"INSERT INTO meta_ads._prisma_migrations(id,checksum,finished_at,migration_name,started_at,applied_steps_count) VALUES (gen_random_uuid()::text,'$hash',clock_timestamp(),'20261102071000_native_storefront_results',clock_timestamp(),1); COMMIT;"
+}
 $first=$body.IndexOf('BEGIN;');$last=$body.LastIndexOf('COMMIT;')
 if($first -lt 0 -or $last -le $first){throw 'OWNER_INTEGRITY_SQL_BOUNDARY_REJECTED'}
 $sql=@'
@@ -26,11 +42,11 @@ $token=$null;$headers=$null;$reply=$null
 try{
  $token=Get-Phase08SupabaseCredential;$headers=@{Authorization=('Bearer '+$token)}
  $reply=Invoke-WebRequest -Uri 'https://api.supabase.com/v1/projects/iygjmosbelbosfxidqxv/database/query' -Method Post -Headers $headers -Body (@{query=$sql}|ConvertTo-Json -Compress) -ContentType application/json -MaximumRedirection 0 -TimeoutSec 45 -SkipHttpErrorCheck
- $operation=if($Fix -eq 'FxIdentity'){'WORKER_FX_IDENTITY_COLUMN_SELECT'}else{'NEW_TABLE_OWNER_FK_COLUMN_PRIVILEGES'}
- $receipt=@{stage=11;operation=$operation;observedAt=[DateTime]::UtcNow.ToString('o');httpStatus=[int]$reply.StatusCode;sqlSha256=$hash;sourceWrites=0;runtimePrivilegesChanged=($Fix -eq 'FxIdentity');legacyRolePrivilegesChanged=$false;credentialPrivilegesChanged=$false;ownerPoliciesAdded=0}
+ $operation=if($Fix -eq 'NativeComponent'){'NATIVE_RESULT_FACT_COMPONENT_MIGRATION'}elseif($Fix -eq 'NativeResult'){'WORKER_NATIVE_RESULT_THREE_COLUMN_SELECT'}elseif($Fix -eq 'FxIdentity'){'WORKER_FX_IDENTITY_COLUMN_SELECT'}else{'NEW_TABLE_OWNER_FK_COLUMN_PRIVILEGES'}
+ $receipt=@{stage=11;operation=$operation;observedAt=[DateTime]::UtcNow.ToString('o');httpStatus=[int]$reply.StatusCode;sqlSha256=$hash;sourceWrites=0;runtimePrivilegesChanged=($Fix -in @('FxIdentity','NativeResult'));legacyRolePrivilegesChanged=$false;credentialPrivilegesChanged=$false;ownerPoliciesAdded=0}
  $receipt.status=if([int]$reply.StatusCode -in @(200,201)){'APPLIED'}else{'FAIL'}
  $receipt.membershipRestoredByTransactionGuard=($receipt.status -eq 'APPLIED')
- $output=if($Fix -eq 'FxIdentity'){'docs/product-performance/research/11-role-fx-identity-result.json'}else{'docs/product-performance/research/11-role-owner-integrity-result.json'}
+ $output=if($Fix -eq 'NativeComponent'){'docs/product-performance/research/11-native-component-migration.json'}elseif($Fix -eq 'NativeResult'){'docs/product-performance/research/11-role-native-result.json'}elseif($Fix -eq 'FxIdentity'){'docs/product-performance/research/11-role-fx-identity-result.json'}else{'docs/product-performance/research/11-role-owner-integrity-result.json'}
  $receipt|ConvertTo-Json -Depth 8|Set-Content $output
  if($receipt.status -eq 'FAIL'){throw 'OWNER_INTEGRITY_APPLY_FAILED_CHECK_READBACK'}
  Write-Output 'STAGE11_RESTRICTED_OWNER_FIX_APPLIED'

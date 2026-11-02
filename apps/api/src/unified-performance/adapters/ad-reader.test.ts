@@ -32,6 +32,8 @@ function fixture(platform: "META" | "GOOGLE", options: { rows?: number; badLink?
     exchangeRate: { findMany: async () => [{ rate: decimal("1324.3"), sourceDate: date, provider: "KOREA_EXIM", fallbackType: "EXACT" }] },
     metaAdsetDailyMetric: { findMany: async () => { reads.push("meta"); return [...meta, ...meta.map(row => ({ ...row, id: `${row.id}-csv`, source: "CSV", spendUsd: decimal("999") }))]; } },
     googleCampaignDailyCost: { findMany: async () => { reads.push("google"); return google; } },
+    product: { findMany: async () => [{ id: "native-product", name: "보호대", displayName: "보호대", isActive: true }] },
+    googlePerformanceMapping: { findMany: async () => [] },
     sourceRecordLink: { findMany: async () => google.map(row => ({ connectionId: scope, recordId: row.id,
       version: options.badLink ? 1 : 2, syncRunId: "old-run" })) },
     runUnit: { findMany: async () => [{ runId: "success", unitKey: "2026-10-26", status: "SUCCEEDED", publishedCount: count }] },
