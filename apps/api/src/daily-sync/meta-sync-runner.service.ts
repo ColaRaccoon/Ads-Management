@@ -175,13 +175,20 @@ export class MetaSyncRunnerService {
           const code = failure ? safeSyncCode(failure.safeCode) :
             responseCode ? safeSyncCode(responseCode) : "PROVIDER_UNAVAILABLE";
           if (code === "LEASE_LOST") throw error;
-          const actionRequired = ["PROVIDER_AUTH_REQUIRED", "FIELD_UNSUPPORTED", "ATTRIBUTION_MISMATCH",
+          const diagnosticCode = safeMetaRuntimeFailureDiagnostic(error, failureStage);
+          // Separate MCP hierarchy reads can temporarily disagree while Meta updates a day.
+          // Retry a fresh capture within the existing schedule/three-attempt budget;
+          // never relax reconciliation or retry canonical publication/auth failures here.
+          const retryReconciliation = run.trigger === "SCHEDULED" && !!options &&
+            transport === "MCP" && code === "RECONCILIATION_FAILED" &&
+            diagnosticCode === "META_NORMALIZE_PROVIDER" && unit.attempts < 2;
+          const actionRequired = !retryReconciliation && ["PROVIDER_AUTH_REQUIRED", "FIELD_UNSUPPORTED", "ATTRIBUTION_MISMATCH",
             "ACCOUNT_SCOPE_MISMATCH", "CURRENCY_MISMATCH", "TIMEZONE_MISMATCH",
             "SOURCE_SELECTION_REQUIRED", "RECONCILIATION_FAILED", "PROVIDER_VERSION_UNVERIFIED"].includes(code);
           await this.foundation.failUnit({ runId, generation: claim.generation,
             unitKey: unit.unitKey, dataKinds: [SourceDataKind.META_AD, SourceDataKind.META_ADSET],
             metricDate, source: SourceKind.API, code, actionRequired,
-            diagnosticCode: safeMetaRuntimeFailureDiagnostic(error, failureStage) });
+            diagnosticCode });
           if (actionRequired || code === "RUN_LIMIT_EXCEEDED" || code === "PROVIDER_RATE_LIMITED") break;
         }
       }
