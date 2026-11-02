@@ -1,6 +1,44 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createGoogleCampaignMatcher } from "./google-campaign-matcher";
+import { createGoogleCampaignMatcher, googleKeywordIdentity, googleKeywordFromMapping } from "./google-campaign-matcher";
+import type { GooglePerformanceMapping } from "@prisma/client";
+
+test("account-scoped dated keywords resolve the three aliases and never leak through the name cache", () => {
+  const names = ["아이언볼", "러닝장갑", "퍼펙트슬라이드"];
+  const aliases = ["아이언", "방한장갑", "퍼슬"];
+  const products = names.map((name, index) => ({ id: String(index), name, displayName: name }));
+  const rules = aliases.map((keyword, index) => ({ connectionId: "google", keyword, productId: String(index), startDate: "2026-11-01", endDate: "2026-11-03" }));
+  const match = createGoogleCampaignMatcher(products, rules);
+  for (const [index, alias] of aliases.entries()) {
+    const name = `${alias} - 2026-10-30`;
+    assert.equal(match(name, { connectionId: "google", date: "2026-11-01" }).productId, String(index));
+    assert.equal(match(name, { connectionId: "other", date: "2026-11-01" }).productId, null);
+    assert.equal(match(name, { connectionId: "google", date: "2026-10-31" }).productId, null);
+    assert.equal(match(name, { connectionId: "google", date: "2026-11-03" }).productId, String(index));
+    assert.equal(match(name, { connectionId: "google", date: "2026-11-04" }).productId, null);
+  }
+  assert.equal(match("퍼 슬 - 신규", { connectionId: "google", date: "2026-11-01" }).productId, "2");
+});
+
+test("keyword/name collisions stay ambiguous while repeated matches for one product are deduplicated", () => {
+  const products = [{ id: "p", name: "퍼펙트슬라이드", displayName: "퍼펙트슬라이드" }, { id: "g", name: "러닝장갑", displayName: "러닝장갑" }];
+  const rule = { connectionId: "google", keyword: "퍼슬", productId: "p", startDate: "2026-11-01", endDate: null };
+  const scope = { connectionId: "google", date: "2026-11-01" };
+  const match = createGoogleCampaignMatcher(products, [rule, { ...rule, keyword: "슬라이드" }]);
+  assert.equal(match("퍼펙트슬라이드 퍼슬", scope).productId, "p");
+  assert.deepEqual(match("러닝장갑 퍼슬", scope), { productId: null, warningCodes: ["AMBIGUOUS_CAMPAIGN_PRODUCT"] });
+  const inactive = createGoogleCampaignMatcher(products.map(product => ({ ...product, isActive: false })), [rule]);
+  assert.equal(inactive("퍼슬", scope).productId, null);
+});
+
+test("keyword storage recognizes only its versioned identity and cannot reuse legacy campaign IDs", () => {
+  assert.equal(googleKeywordIdentity(" 퍼 슬 "), googleKeywordIdentity("퍼슬"));
+  const row = { kind: "CAMPAIGN", campaignId: "퍼슬", connectionId: "google", productId: "p",
+    identityKey: googleKeywordIdentity("퍼슬"), startDate: new Date("2026-11-01"), endDate: null } as GooglePerformanceMapping;
+  assert.equal(googleKeywordFromMapping(row)?.keyword, "퍼슬");
+  assert.equal(googleKeywordFromMapping({ ...row, identityKey: "legacy-campaign-id-hash" }), null);
+  assert.equal(googleKeywordFromMapping({ ...row, kind: "SALE" }), null);
+});
 
 test("production campaign names match fixed products independently of changing date suffixes", () => {
   const fixtures = [

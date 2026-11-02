@@ -2,7 +2,7 @@ import { Body, Controller, Get, Header, Param, Patch, Post, Query } from "@nestj
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
 import { AuthenticatedUser } from "../auth/auth.types";
 import { IdParam } from "../daily-sync/daily-sync.dto";
-import { GoogleQuery, GoogleMappingInput } from "./google.dto";
+import { GoogleQuery, GoogleMappingInput, GoogleCampaignKeywordInput } from "./google.dto";
 import { GoogleReadService } from "./google-read.service";
 import { GoogleMappingsService } from "./google-mappings.service";
 
@@ -19,6 +19,16 @@ export class GoogleController {
   campaigns(@Query() query: GoogleQuery) { return this.read.report(query, "campaigns"); }
   @Get("mappings") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   list(@Query() query: GoogleQuery) { return this.mappings.list(query); }
+  @Get("campaign-keywords") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  keywords(@Query() query: GoogleQuery) { return this.mappings.listKeywords(query); }
+  @Post("campaign-keywords") @RequirePermissions("mappings.manage")
+  createKeyword(@Body() input: GoogleCampaignKeywordInput, @CurrentUser() actor: AuthenticatedUser) {
+    return this.mappings.saveKeyword(input, actor.id);
+  }
+  @Patch("campaign-keywords/:id") @RequirePermissions("mappings.manage")
+  updateKeyword(@Param() params: IdParam, @Body() input: GoogleCampaignKeywordInput, @CurrentUser() actor: AuthenticatedUser) {
+    return this.mappings.saveKeyword(input, actor.id, params.id);
+  }
   @Post("mappings/preview") @RequirePermissions("mappings.manage")
   preview(@Body() input: GoogleMappingInput) { return this.mappings.preview(input); }
   @Post("mappings") @RequirePermissions("mappings.manage")

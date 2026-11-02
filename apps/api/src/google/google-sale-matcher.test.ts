@@ -88,7 +88,7 @@ test("report recomputes stored unmatched YouTube sales using dated common option
       isActive: true, salePriceKrwOverride: rule.id === "bundle" ? d(bundlePrice) : null,
       productCostKrwOverride: rule.id === "bundle" ? d(5400) : null, shippingKrwOverride: null, extraCostKrwOverride: null })) },
     cafe24CouponRule: { findMany: async () => [] }, cafe24OrderLine: { findMany: async () => lines },
-    googlePerformanceMapping: { findMany: async () => { throw Error("Google-only configuration must not be read"); } },
+    googlePerformanceMapping: { findMany: async ({ where }: any) => { assert.equal(where.kind, "CAMPAIGN"); return []; } },
     product: { findMany: async () => products }, sourceRecordLink: { findMany: async () => [] }
   };
   const db = { $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx) } as unknown as PrismaService;
