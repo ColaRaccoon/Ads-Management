@@ -1,0 +1,37 @@
+{
+  "status": "DEPLOYED_AND_READY",
+  "checkedAt": "2026-11-02T08:33:12.417Z",
+  "projectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
+  "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+  "serviceId": "b0835b08-7799-4c1c-8bcd-90746b9d4248",
+  "deploymentId": "8ea0590b-7bec-40e4-bd82-33c5dc161336",
+  "deploymentStatus": "SUCCESS",
+  "releaseSha": "a17038bb50eabd9c9804358b9890e51e4fe07e34",
+  "releaseBranch": "codex/daily-products-export",
+  "previousReleaseSha": "3a8e75b0350c385f0390f0029bc4898849cd9d02",
+  "previousDeploymentId": "51c926e8-99ea-427d-bcf2-8a3cb35874e2",
+  "firstAttempt": {
+    "deploymentId": "a6ae8c22-d01d-4b84-ae42-8e3a76bef7ad",
+    "status": "FAILED_BUILD_RUNTIME_CLOSURE",
+    "correction": "Exclude redundant Worker TypeScript asset and static source maps; preserve unchanged runtime guard"
+  },
+  "readiness": { "httpStatus": 200, "status": "ready", "releaseIdMatches": true, "runtimeConfigFingerprintPresent": true },
+  "reportPageHttpStatus": 200,
+  "verification": {
+    "apiTypeErrors": 0,
+    "apiTestsPassed": 397,
+    "apiOptionalBenchmarkSkipped": 1,
+    "webTestsPassed": 160,
+    "buildGuardTestsPassed": 10,
+    "runtimeGuardTestsPassed": 8,
+    "localProductionBrowserScenariosPassed": 6,
+    "workerDownloadWithoutRawSource": true,
+    "actualImageRuntimeClosure": "PASS",
+    "actualImageFileCount": 26518,
+    "financialSourceDiffAgainstPreviousProduction": 0,
+    "businessDataWrites": 0,
+    "manualRecalculations": 0,
+    "privateWorkerDeployments": 0
+  },
+  "limitations": ["Authenticated production UI inspection unavailable because computer-use could not bind the existing Whale window", "No physical printer validation"]
+}
