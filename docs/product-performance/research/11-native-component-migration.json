@@ -1,0 +1,14 @@
+{
+  "sourceWrites": 0,
+  "sqlSha256": "1967771fe0506cbbf3677045adbed2f928a5f1af2a868125eddaab7ef5e06b3b",
+  "credentialPrivilegesChanged": false,
+  "httpStatus": 201,
+  "observedAt": "2026-11-02T07:13:33.0582339Z",
+  "ownerPoliciesAdded": 0,
+  "operation": "NATIVE_RESULT_FACT_COMPONENT_MIGRATION",
+  "stage": 11,
+  "runtimePrivilegesChanged": false,
+  "status": "APPLIED",
+  "legacyRolePrivilegesChanged": false,
+  "membershipRestoredByTransactionGuard": true
+}

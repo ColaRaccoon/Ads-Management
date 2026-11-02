@@ -11,6 +11,7 @@ import { relationshipDays } from "./relationship-input";
 import { calculateRelationships } from "./domain/relationship-calculation";
 import { CONTRACT_VERSION, PLATFORMS, type ComponentKind, type SourceCoverage } from "./types";
 import { REPORT_CALCULATION_VERSION } from "./report-contract";
+import { overlayStorefrontResults } from "./domain/storefront-report-overlay";
 
 type Actor = Pick<AuthenticatedUser, "id" | "permissions">;
 type ViewKind = "summary" | "timeseries" | "diagnostics" | "options" | "relationships" | "dashboard";
@@ -28,8 +29,9 @@ function allowed(actor: Actor, permission: "data.read" | "operations.run") {
   if (!actor?.permissions?.includes(permission)) throw new ForbiddenException({ code: "PERMISSION_DENIED", message: "실행 권한이 없습니다." });
 }
 function applicable(snapshot: ReportSnapshot, productName?: string) {
+  const facts = overlayStorefrontResults(snapshot.facts);
   const product = snapshot.products.find(p => p.canonicalName === productName);
-  if (!productName) return { facts: snapshot.facts, coverage: snapshot.coverage };
+  if (!productName) return { facts, coverage: snapshot.coverage };
   const key = (platform: string, scope: string, day: string) => JSON.stringify([platform, scope, day]);
   const publications = new Map(snapshot.publications.map(p => [key(p.platform, p.scopeKey, date(p.businessDate)), p]));
   const components = (platform: SourceCoverage["platform"], scopeKey: string, day: string) => {
@@ -40,8 +42,8 @@ function applicable(snapshot: ReportSnapshot, productName?: string) {
     }
     return product ? scopePolicyComponents(snapshot.rules, product.id, platform, scopeKey, day, PLATFORM_COMPONENTS[platform]) : [...PLATFORM_COMPONENTS[platform]];
   };
-  return { facts: snapshot.facts.filter(f => components(f.platform, f.scopeKey, f.date).includes(
-    f.component === "SHIPPING_INCOME" ? "COMMON_EXPENSE" : f.component as ComponentKind)),
+  return { facts: facts.filter(f => components(f.platform, f.scopeKey, f.date).includes(
+    f.component === "SHIPPING_INCOME" ? "COMMON_EXPENSE" : f.component === "STOREFRONT_RESULT" ? "SALE" : f.component as ComponentKind)),
   coverage: snapshot.coverage.map(c => components(c.platform, c.scopeKey, c.date).includes(c.component) ? c : { ...c, participation: "NOT_APPLICABLE" as const }) };
 }
 function period(scope: ReturnType<typeof applicable>, query: ReportQuery, from: string, to: string, productName?: string) {

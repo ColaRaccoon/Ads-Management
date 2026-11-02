@@ -1,6 +1,6 @@
 {
   "stage": 11,
-  "observedAt": "2026-10-29T06:51:19.347Z",
+  "observedAt": "2026-11-02T06:54:18.423Z",
   "kind": "ACTUAL_RESTRICTED_LOGIN_CHECK",
   "sourceWrites": 0,
   "checks": [
@@ -16,6 +16,13 @@
     "report denies raw Cafe24 source",
     "report denies raw Naver source",
     "report denies internal match audit",
+    "report denies native products.name",
+    "worker denies broad native products",
+    "report denies native meta_adset_daily_metrics.product_id",
+    "worker denies broad native meta_adset_daily_metrics",
+    "report denies native cafe24_order_lines.row_number",
+    "worker denies broad native cafe24_order_lines",
+    "worker exact three native financial columns selectable; report and broad table access remain denied",
     "worker exact 44-table column SELECT succeeds; all source DML/TRUNCATE privileges false"
   ],
   "reportIdentity": {

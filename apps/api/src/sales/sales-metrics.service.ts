@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
 import { Prisma, RowValidationStatus, SourceDataKind, SourceKind, UploadStatus } from "@prisma/client";
 import { numberFrom, parseDateRange } from "../common/date-range";
 import {
@@ -8,6 +8,7 @@ import {
   resolveCafe24CouponOrder
 } from "../domain/cafe24-coupon-matcher";
 import { Cafe24SalesCalculator } from "../domain/cafe24-sales-calculator";
+import { allocateCafe24ProductCouponsToLines } from "../domain/cafe24-coupon-line-allocation";
 import { formatDateOnly, safeDivide, toDateOnly } from "../domain/date-number";
 import { findEffectiveRuleForDate } from "../domain/effective-rule";
 import { PrismaService } from "../common/prisma.service";
@@ -17,6 +18,21 @@ import { isCompleteCafe24UploadBatch } from "./cafe24-uploads.service";
 type Cafe24Line = Prisma.Cafe24OrderLineGetPayload<{
   include: { product: true; matchRule: true };
 }>;
+
+/** Internal financial projection: excludes provider/customer payloads and payment details unused by calculation. */
+export const nativeCafe24FinancialSelect = {
+  id: true, connectionId: true, source: true, syncRunId: true, uploadBatchId: true, rowNumber: true,
+  orderLineKey: true, orderNo: true, productNo: true, productName: true, optionName: true, optionValue: true,
+  quantity: true, salePriceKrw: true, totalOrderKrw: true, totalPaidKrw: true, paymentMethod: true,
+  providerCouponSignal: true, actualOrderPriceKrw: true, actualShippingFeeKrw: true,
+  orderDate: true, validationStatus: true, importVersion: true, productId: true,
+  product: { select: { id: true, displayName: true, isActive: true } }, matchRule: true
+} satisfies Prisma.Cafe24OrderLineSelect;
+export interface NativeMetaFinancialRow {
+  productId: string | null; productName: string | null; revenue: number | null; grossCost: number | null;
+  coupon: number | null; adSpend: number | null; profitBeforeAds: number | null; estimatedProfit: number | null;
+  quantity: number; salesRows: number; issues: string[];
+}
 type UnmatchedCafe24Line = Prisma.Cafe24OrderLineGetPayload<{ include: { batch: true } }>;
 type AdMetric = Prisma.MetaAdsetDailyMetricGetPayload<{
   include: { product: true };
@@ -48,6 +64,72 @@ export class SalesMetricsService {
   private readonly calculator = new Cafe24SalesCalculator();
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Worker-only native calculation. Resolve coupons with every sibling before excluding YouTube lines.
+   * The HTTP productPerformance method retains its existing whole-storefront behavior. */
+  async nativeMetaStorefrontDay(date: string, scopeKey: string, includeAds: boolean,
+    sharedCouponLines?: ReadonlyMap<string, number | null>): Promise<NativeMetaFinancialRow[]> {
+    const range = parseDateRange(date, date), data = await this.cafe24SalesLines(range, scopeKey);
+    const adCandidates = includeAds ? await this.prisma.metaAdsetDailyMetric.findMany({
+      where: { isCurrent: true, metricDate: range.fromDate },
+      select: { id: true, source: true, connectionId: true, syncRunId: true, uploadBatchId: true,
+        importVersion: true, sourceRevision: true, metricDate: true, metaAdsetId: true, adsetName: true,
+        spendUsd: true, productId: true, product: { select: { id: true, displayName: true, isActive: true } } },
+      orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }, { id: "asc" }]
+    }) : [];
+    let adSelectionFailed = false;
+    let adMetrics: typeof adCandidates;
+    try { adMetrics = await selectCurrentSourceRows(this.prisma, SourceDataKind.META_ADSET, adCandidates, row => row.metricDate); }
+    catch (error) { if (!(error instanceof ConflictException)) throw error; adSelectionFailed = true; adMetrics = []; }
+    const productIds = uniqueNonEmpty([...data.salesLines.map(activeLineProductId), ...adMetrics.map(activeMetricProductId)]);
+    const [costs, rates, couponRules] = await Promise.all([
+      productIds.length ? this.prisma.productCostRule.findMany({ where: { productId: { in: productIds } },
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }] }) : [],
+      includeAds ? this.prisma.exchangeRate.findMany({ where: { rateDate: range.fromDate, baseCurrency: "USD", quoteCurrency: "KRW", provider: "KOREA_EXIM" },
+        select: { id: true, baseCurrency: true, quoteCurrency: true, rateDate: true, rate: true, provider: true, sourceDate: true, fallbackType: true } }) : [],
+      this.findCouponRules(range, productIds)
+    ]);
+    const coupons = this.resolveCouponOrders(data.couponLines, couponRules, data.couponInputSources);
+    const lineCoupons = new Map<string, number | null>();
+    for (const { resolution, orderLines } of coupons.resolutionDetails) {
+      orderLines.forEach(line => lineCoupons.set(line.id, resolution.status === "UNKNOWN" ? null : 0));
+      if (resolution.status !== "APPLIED") continue;
+      const allocation = allocateCafe24ProductCouponsToLines(resolution.allocationsByProductId, orderLines.map(line => ({
+        id: line.id, productId: activeLineProductId(line), salePriceKrw: numberFrom(line.salePriceKrw), quantity: numberFrom(line.quantity) })));
+      orderLines.forEach(line => lineCoupons.set(line.id, allocation?.get(line.id) ?? null));
+    }
+    if (sharedCouponLines) for (const line of data.salesLines) if (sharedCouponLines.has(line.id))
+      lineCoupons.set(line.id, sharedCouponLines.get(line.id) ?? null);
+    const lines = data.salesLines.filter(line => !line.productName.includes("[유튜브]"));
+    const costsByProduct = groupBy(costs, row => row.productId);
+    const sales = this.aggregateSales(lines, costsByProduct, range.fromDate, new Map());
+    const ads = this.aggregateAdSpend(adMetrics as unknown as AdMetric[], costsByProduct,
+      new Map(rates.map(row => [formatDateOnly(row.rateDate), row as ExchangeRateRow])));
+    const products = productMap(lines, adMetrics as unknown as AdMetric[]);
+    const ids = [...new Set([...sales.keys(), ...ads.byProductId.keys()])].sort();
+    const rows: NativeMetaFinancialRow[] = ids.map(productId => {
+      const sale = sales.get(productId) ?? emptySalesAccumulator(products.get(productId) ?? null);
+      const productLines = lines.filter(line => activeLineProductId(line) === productId);
+      const couponAmounts = productLines.map(line => lineCoupons.get(line.id) ?? null);
+      const coupon = couponAmounts.some(amount => amount === null) ? null : couponAmounts.reduce<number>((total, value) => total + value!, 0);
+      const grossCost = sale.missingCostRule ? null : sale.grossCostKrw;
+      const ad = ads.byProductId.get(productId) ?? emptyAdAccumulator();
+      const adSpend = !includeAds || adSelectionFailed || ad.hasMissingExchangeRate ? null : ad.spendKrw;
+      const before = grossCost === null || coupon === null ? null : sale.revenueKrw - grossCost - coupon;
+      return { productId, productName: products.get(productId)?.displayName ?? null, revenue: sale.revenueKrw,
+        grossCost, coupon, adSpend, profitBeforeAds: before, estimatedProfit: before === null || adSpend === null ? null : before - adSpend,
+        quantity: sale.quantity, salesRows: sale.lineCount, issues: [...(grossCost === null ? ["MISSING_COST_RULE"] : []), ...(coupon === null ? ["COUPON_UNRESOLVED"] : []),
+          ...(ad.hasMissingExchangeRate ? ["MISSING_EXCHANGE_RATE"] : []), ...(adSelectionFailed ? ["META_AD_AUDIT_UNAVAILABLE"] : [])] };
+    });
+    if (lines.some(line => !activeLineProductId(line))) rows.push({ productId: null, productName: null, revenue: null,
+      grossCost: null, coupon: null, adSpend: null, profitBeforeAds: null, estimatedProfit: null,
+      quantity: lines.filter(line => !activeLineProductId(line)).reduce((total, line) => total + numberFrom(line.quantity), 0),
+      salesRows: lines.filter(line => !activeLineProductId(line)).length, issues: ["UNMAPPED_SALES"] });
+    if (includeAds && ads.unmatched.metricCount) rows.push({ productId: null, productName: null, revenue: 0, grossCost: 0,
+      coupon: 0, adSpend: ads.unmatched.hasMissingExchangeRate ? null : ads.unmatched.spendKrw,
+      profitBeforeAds: 0, estimatedProfit: null, quantity: 0, salesRows: 0, issues: ["UNALLOCATED_AD_SPEND"] });
+    return rows;
+  }
 
   /** Phase 06 read-only check through the same sales, cost, and coupon path as
    * the product view. Advertising cost is intentionally outside this probe. */
@@ -352,7 +434,7 @@ export class SalesMetricsService {
     return selected.slice(0, take);
   }
 
-  private async cafe24SalesLines(range: ReturnType<typeof parseDateRange>) {
+  private async cafe24SalesLines(range: ReturnType<typeof parseDateRange>, financialScope?: string) {
     const completeCafe24BatchIds = await this.completeCafe24BatchIds(range);
     const candidates = await this.prisma.cafe24OrderLine.findMany({
       where: {
@@ -362,14 +444,15 @@ export class SalesMetricsService {
           { uploadBatchId: null, source: SourceKind.API }
         ],
         orderDate: { gte: range.fromDate, lte: range.toDate },
-        validationStatus: { not: RowValidationStatus.ERROR }
+        validationStatus: { not: RowValidationStatus.ERROR },
+        ...(financialScope === undefined ? {} : { connectionId: financialScope === "LEGACY_UNBOUND" ? null : financialScope })
       },
-      include: { product: true, matchRule: true },
+      ...(financialScope === undefined ? { include: { product: true, matchRule: true } } : { select: nativeCafe24FinancialSelect }),
       orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
-    });
+    } as Prisma.Cafe24OrderLineFindManyArgs);
     const salesLines = await selectCurrentSourceRows(
       this.prisma, SourceDataKind.CAFE24_ORDER, candidates, (row) => row.orderDate
-    );
+    ) as Cafe24Line[];
     if (salesLines.length === 0) {
       return { salesLines, couponLines: salesLines, couponInputSources: new Map<string, string>() };
     }
@@ -404,9 +487,9 @@ export class SalesMetricsService {
           { validationStatus: RowValidationStatus.ERROR }
         ]
       },
-      include: { product: true, matchRule: true },
+      ...(financialScope === undefined ? { include: { product: true, matchRule: true } } : { select: nativeCafe24FinancialSelect }),
       orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }]
-    }) : [];
+    } as Prisma.Cafe24OrderLineFindManyArgs) as Cafe24Line[] : [];
     const couponLines = [
       ...siblingCandidates.filter((line) => currentOrderBatchKeys.has(orderBatchKey(line))),
       ...salesLines.filter((line) => line.source === SourceKind.API)

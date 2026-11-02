@@ -1,0 +1,14 @@
+{
+  "operation": "WORKER_NATIVE_RESULT_THREE_COLUMN_SELECT",
+  "credentialPrivilegesChanged": false,
+  "membershipRestoredByTransactionGuard": true,
+  "runtimePrivilegesChanged": true,
+  "sourceWrites": 0,
+  "ownerPoliciesAdded": 0,
+  "sqlSha256": "6ec2b1cd366a1d4698bc383410596cfcea2c7905e181beca18ae942bfd90c10c",
+  "observedAt": "2026-11-02T06:54:10.4370972Z",
+  "httpStatus": 201,
+  "status": "APPLIED",
+  "stage": 11,
+  "legacyRolePrivilegesChanged": false
+}

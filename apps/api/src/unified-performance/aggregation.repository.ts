@@ -78,6 +78,13 @@ export function assertReportConservation(batch: AdapterBatch, facts: readonly Re
   };
   same(batch.sales.map(row => row.operatingRevenue), facts.filter(row => row.component === "SALE").map(row => row.amountKrw));
   same(batch.sales.map(row => row.profitBeforeAds), facts.filter(row => row.component === "SALE").map(row => row.profitBeforeAds));
+  if (batch.nativeStorefrontResults) {
+    const native = facts.filter(row => row.component === "STOREFRONT_RESULT");
+    same(batch.nativeStorefrontResults.rows.map(row => row.revenue), native.map(row => row.amountKrw));
+    same(batch.nativeStorefrontResults.rows.map(row => row.profitBeforeAds), native.map(row => row.profitBeforeAds));
+    same(batch.nativeStorefrontResults.rows.map(row => row.estimatedProfit), native.map(row => row.persistedNetProfit ?? null));
+    same(batch.nativeStorefrontResults.rows.map(row => row.adSpend), native.map(row => row.persistedAdSpend ?? null));
+  } else if (facts.some(row => row.component === "STOREFRONT_RESULT")) throw new Error("UNEXPECTED_NATIVE_STOREFRONT_RESULT");
   same(batch.adSpends.map(row => row.amountKrw), facts.filter(row => row.component === "AD_SPEND").map(row => row.amountKrw));
   const currencies = new Set([...batch.adSpends.map(row => row.currency), ...facts.filter(row => row.component === "AD_SPEND").map(row => row.currency)]);
   for (const currency of currencies) same(batch.adSpends.filter(row => row.currency === currency).map(row => row.originalAmount),
@@ -90,6 +97,7 @@ function factPayload(fact: ReportFact) {
   // Explicit projection prevents an accidental adapter payload/ref/name field escaping into report storage.
   return json({ component: fact.component, factKey: fact.factKey, productName: fact.productName, saleUnitName: fact.saleUnitName,
     amountKrw: fact.amountKrw, completeAmountKrw: fact.completeAmountKrw, profitBeforeAds: fact.profitBeforeAds,
+    ...(fact.component === "STOREFRONT_RESULT" ? { persistedNetProfit: fact.persistedNetProfit ?? null, persistedAdSpend: fact.persistedAdSpend ?? null } : {}),
     completeProfitBeforeAds: fact.completeProfitBeforeAds, originalAmount: fact.originalAmount, currency: fact.currency,
     quantity: fact.quantity, attribution: fact.attribution, medium: fact.medium, marketplace: fact.marketplace, commonKind: fact.commonKind,
     rowsCount: fact.rowsCount, quality: { isEstimate: fact.quality.isEstimate, confidence: fact.quality.confidence,
@@ -194,7 +202,8 @@ export class UnifiedAggregationRepository {
     if (facts.length > 50000 || new Set(facts.map(f => JSON.stringify([f.component, f.factKey]))).size !== facts.length)
       throw new Error("AGGREGATION_REPORT_FACTS_INVALID");
     for (const fact of facts) {
-      for (const amount of [fact.amountKrw, fact.completeAmountKrw, fact.profitBeforeAds, fact.completeProfitBeforeAds, fact.originalAmount]) if (amount !== null) money(amount);
+      for (const amount of [fact.amountKrw, fact.completeAmountKrw, fact.profitBeforeAds, fact.completeProfitBeforeAds, fact.originalAmount,
+        fact.persistedNetProfit ?? null, fact.persistedAdSpend ?? null]) if (amount !== null) money(amount);
       if (fact.quantity !== null) quantity(fact.quantity);
     }
     assertReportConservation(batch, facts);

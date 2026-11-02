@@ -37,6 +37,43 @@ test("100000 revenue / 40000 cost / 5000 coupon / 20000 spend produces 35000 mar
   assert.equal(result.summary.complete, true);
 });
 
+test("snapshot channels share one full-order product/line coupon ledger without changing HTTP calculations", () => {
+  for (const amount of [1, 2, 1001]) {
+    const lines = [sale({ id: "z-meta", productName: "일반 상품", collectedSalePriceKrw: 1 }),
+      sale({ id: "a-yt", collectedSalePriceKrw: 2 }),
+      sale({ id: "q-meta", productId: "product-2", productName: "일반 상품", collectedSalePriceKrw: 3 }),
+      sale({ id: "b-yt", productId: "product-2", collectedSalePriceKrw: 5 })].map(line => ({ ...withCoupon(line, 11, 11 - amount),
+        couponInput: { ...withCoupon(line, 11, 11 - amount).couponInput, productId: line.productId,
+          salePriceKrw: line.collectedSalePriceKrw! } }));
+    const args = input({ salesLines: lines, couponRules: [coupon(amount)], adMetrics: [] });
+    const before = calculateGooglePerformance(args);
+    const snapshot = calculateGooglePerformance(args, { salesSnapshot: true });
+    const ledger = new Map(snapshot.salesSnapshotCouponLines!.map(row => [row.id, row.amount]));
+    const metaCoupon = lines.filter(line => !line.productName!.includes("[유튜브]")).reduce((total, line) => total + ledger.get(line.id)!, 0);
+    const youtubeCoupon = snapshot.salesSnapshots!.reduce((total, row) => total + row.couponDeductionKrw!, 0);
+    assert.equal(metaCoupon + youtubeCoupon, amount);
+    assert.deepEqual(calculateGooglePerformance(args), before);
+    assert.equal("salesSnapshotCouponLines" in before, false);
+  }
+});
+
+test("snapshot sales before ads remain known before Google starts collecting", () => {
+  const result = calculateGooglePerformance(input({ adMetrics: [], days: [{ date: day, googleComplete: false, cafe24Complete: true }] }), { salesSnapshot: true });
+  assert.equal(result.salesSnapshots![0].profitBeforeAdsKrw, 60000);
+  assert.equal(result.salesSnapshots![0].complete, true);
+  assert.equal(result.salesSnapshots![0].adSpendKrw, null);
+  assert.equal(result.salesSnapshots![0].marginKrw, null);
+  assert.deepEqual(result.salesSnapshotCouponLines, []);
+});
+
+test("single-channel unmatched coupons do not override the other native calculator's semantics", () => {
+  const normal = withCoupon(sale({ id: "meta-only", productName: "일반 상품" }), 100000, 99000);
+  const youtube = withCoupon(sale({ id: "yt-only", orderNo: "yt-order" }), 100000, 99000);
+  const snapshot = calculateGooglePerformance(input({ salesLines: [normal, youtube], couponRules: [] }), { salesSnapshot: true });
+  assert.deepEqual(snapshot.salesSnapshotCouponLines, []);
+  assert.equal(snapshot.salesSnapshots![0].couponDeductionKrw, null);
+});
+
 test("channel selection uses only the historical line productName literal token", () => {
   const lines = ["[유튜브] 상품", "상품 [유튜브]", "유튜브 상품", "일반 옵션", null].map((productName, i) =>
     sale({ id: `sale-${i}`, orderNo: `order-${i}`, productName }));

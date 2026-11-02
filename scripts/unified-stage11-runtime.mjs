@@ -9,7 +9,7 @@ const target = Object.freeze({ projectRef:'iygjmosbelbosfxidqxv', host:'aws-1-ap
   project:'6fe72710-1fc8-445a-a77f-da2da8fee200', service:'b0835b08-7799-4c1c-8bcd-90746b9d4248', environment:'01ab3d5a-1036-45b0-aa9c-47179339c9be' });
 const allowedScripts = new Set(['scripts/unified-stage11-role-check.ts', 'scripts/unified-stage11-reconcile.ts',
   'scripts/unified-aggregation-worker.ts', 'scripts/unified-stage11-operator.ts', 'scripts/unified-source-freshness.ts',
-  'scripts/unified-reconcile-current.ts', 'scripts/unified-reconciliation-diagnose.ts']);
+  'scripts/unified-reconcile-current.ts', 'scripts/unified-reconciliation-diagnose.ts', 'scripts/unified-storefront-parity.ts']);
 const reject = () => { throw Error('STAGE11_RUNTIME_REJECTED'); };
 
 /** Pure validation; callers must never serialize the returned credential-bearing URLs. */

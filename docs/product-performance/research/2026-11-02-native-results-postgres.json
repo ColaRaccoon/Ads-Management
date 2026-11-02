@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "realBusinessData": false,
+  "remoteWrites": 0,
+  "migration": "20261102071000_native_storefront_results",
+  "migrationSha256": "1967771fe0506cbbf3677045adbed2f928a5f1af2a868125eddaab7ef5e06b3b",
+  "startedAt": "2026-11-02T07:11:58.928Z",
+  "checks": [
+    "fresh PG17 loopback identity verified; complete migration history applied; repeat deploy no pending migrations; exact new migration checksum matches",
+    "all four legacy fact components remain valid/publishable; native component accepted; invalid component/attribution/blank-key/non-object JSON rejected; duplicate run/component/fact-key rejected",
+    "actual non-owner repository enqueue/claim/stageAndPublish accepts native results plus null adoption markers; altered native profit fails conservation before any insert; atomic revision2 published; stored reader returns revenue120/beforeAds60 and negative audit-5 intact",
+    "actual immutable-child/run triggers reject published fact insert/update/delete and run update/delete; old/new published facts remain byte-for-byte equal; ENABLE/FORCE RLS remain set"
+  ],
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55863,
+    "database": "unified_native_results"
+  },
+  "stopExitCode": 0,
+  "finishedAt": "2026-11-02T07:12:16.537Z"
+}

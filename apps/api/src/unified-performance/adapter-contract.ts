@@ -35,6 +35,18 @@ export function assertOffsetTimestamp(value: string): void {
 /** Stage writers call this before persisting JSON payloads; numeric columns alone cannot validate JSON. */
 export function assertAdapterBatch(request: AdapterRequest, platform: Platform, batch: AdapterBatch): void {
   assertAdapterRequest(request, platform);
+  if (batch.nativeStorefrontResults) {
+    const native = batch.nativeStorefrontResults;
+    if (platform !== "CAFE24" || !native.calculationVersion || !native.sourceFingerprint ||
+      !native.rows.some(row => row.channel === "META") || !native.rows.some(row => row.channel === "YOUTUBE"))
+      throw new Error("INVALID_NATIVE_STOREFRONT_PARTITION");
+    for (const row of native.rows) {
+      if (!["META", "YOUTUBE"].includes(row.channel) || typeof row.complete !== "boolean" ||
+        row.productName !== null && (typeof row.productName !== "string" || !row.productName.trim())) throw new Error("INVALID_NATIVE_STOREFRONT_RESULT");
+      for (const amount of [row.revenue, row.grossCost, row.coupon, row.adSpend, row.profitBeforeAds, row.estimatedProfit]) nullableMoney(amount);
+      if (row.quantity !== null) quantity(row.quantity);
+    }
+  }
   const seen = new Set<string>();
   const ref = (source: SourceRef) => {
     assertBusinessDate(source.businessDate);

@@ -29,6 +29,7 @@ const cafe24 = ['daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24
   'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js'];
 const unified = [
   'adapter-contract', 'adapter-contract.test', 'adapters/ad-reader', 'adapters/ad-reader.test', 'adapters/ad-source',
+  'adapters/native-google-ad.test',
   'adapters/cafe24-coupon', 'adapters/cafe24.adapter', 'adapters/cafe24.adapter.test',
   'adapters/coupang-ads', 'adapters/coupang-ads.test', 'adapters/coupang-configuration', 'adapters/coupang-configuration.test',
   'adapters/coupang-sales', 'adapters/coupang-sales.test', 'adapters/coupang.adapter', 'adapters/coupang.adapter.test',
@@ -38,6 +39,8 @@ const unified = [
   'adapters/storefront-adapters.service', 'adapters/storefront-adapters.service.test',
   'aggregation.repository', 'aggregation.worker', 'aggregation.worker.test',
   'reconciliation', 'reconciliation.repository', 'reconciliation-entrypoint', 'reconciliation.test',
+  'native-storefront-results', 'native-storefront-results.test',
+  'domain/storefront-report-overlay', 'domain/storefront-report-overlay.test', 'domain/native-storefront-report.test',
   'domain/decimal', 'domain/legacy-name-migration', 'domain/legacy-name-migration.test',
   'domain/platform-selection', 'domain/platform-selection.test', 'domain/product-name-resolver', 'domain/product-name-resolver.test',
   'domain/relationship-calculation', 'domain/relationship-calculation.test', 'domain/report-allocation',
@@ -48,8 +51,9 @@ const unified = [
   'runtime-prisma', 'runtime-prisma.test',
   'types', 'unified-performance.module'
 ].map(name => `unified-performance/${name}.js`);
-const reviewedCoupang = ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js', 'domain/coupang-profit-pipeline.test.js'];
-const preserved = ['metrics/metrics.service.js', 'sales/sales-metrics.service.js',
+const reviewedCoupang = ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js', 'domain/coupang-profit-pipeline.test.js', 'sales/sales-metrics.service.js',
+  'domain/cafe24-coupon-line-allocation.js', 'domain/cafe24-coupon-line-allocation.test.js'];
+const preserved = ['metrics/metrics.service.js', 'domain/cafe24-sales-calculator.js',
   'coupang/coupang.controller.js', 'domain/margin-calculator.js'];
 const metaMappings = ['mappings/mappings.service.js', 'mappings/mappings.controller.js', 'mappings/dto/mappings-transport.dto.js'];
 
@@ -129,7 +133,7 @@ test('another Google module cannot bypass the exact allowlist', () => fixture(as
 }));
 
 test('Meta and Coupang calculation mutations remain blocked', async () => {
-  for (const name of ['sales/sales-metrics.service.js', 'coupang/coupang.controller.js', 'domain/margin-calculator.js', 'domain/cafe24-sales-calculator.js', 'domain/cafe24-coupon-matcher.js'])
+  for (const name of ['metrics/metrics.service.js', 'coupang/coupang.controller.js', 'domain/margin-calculator.js', 'domain/cafe24-sales-calculator.js', 'domain/cafe24-coupon-matcher.js'])
     await fixture(async ({ compiled, put, verify }) => { await put(compiled, name, 'regression'); const result = verify();
       assert.notEqual(result.status, 0); assert.ok(result.stderr.includes(`Unreviewed C7 API change: ${name}`)); });
 });

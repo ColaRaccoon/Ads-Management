@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { Cafe24CouponOrderLineInput, Cafe24CouponRuleInput, resolveCafe24CouponOrder } from "../domain/cafe24-coupon-matcher";
 import { CostRuleInput } from "../domain/margin-calculator";
+import { allocateCafe24ProductCouponsToLines } from "../domain/cafe24-coupon-line-allocation";
 
 // Do not change Prisma's shared Decimal configuration or legacy channel calculations.
 const Money = Prisma.Decimal.clone({ precision: 80 });
@@ -63,7 +64,7 @@ function ratio(numerator: Amount, denominator: Amount): number | null {
 function finish(bucket: Bucket) {
   const calculable = !bucket.missingRevenue && !bucket.missingGross && !bucket.missingCoupon && !bucket.missingSpend;
   const calculated = calculable ? bucket.revenue.minus(bucket.gross).minus(bucket.coupon).minus(bucket.spend) : null;
-  const blocking = [...bucket.warnings].some((warning) => !["PRICE_MISMATCH", "COUPON_ESTIMATED"].includes(warning));
+  const blocking = [...bucket.warnings].some((warning) => !["PRICE_MISMATCH", "COUPON_ESTIMATED", "NATIVE_COUPON_LINE_ROUNDING_ADJUSTED"].includes(warning));
   const margin = blocking ? null : calculated;
   // Sales cost/coupon or allocation gaps do not hide valid account-level ad counts.
   // Calendar/source gaps do: a partial count is not the selected period's total.
@@ -98,7 +99,7 @@ function finish(bucket: Bucket) {
 
 /** Loader must supply current, source-selected rows and effective dated product mappings/costs.
  * This module never reads or mutates Meta/Coupang data, mappings, or source history. */
-export function calculateGooglePerformance(input: GooglePerformanceInput) {
+export function calculateGooglePerformance(input: GooglePerformanceInput, options?: { salesSnapshot: true }) {
   const buckets = new Map<string, Bucket>();
   const days = new Map(input.days.map((day) => [day.date, day]));
   const bucketFor = (productId: string | null, date: string) => {
@@ -124,8 +125,12 @@ export function calculateGooglePerformance(input: GooglePerformanceInput) {
     orders.set(key, [...(orders.get(key) ?? []), line]);
   }
   const couponByLine = new Map<string, number | null>();
+  const mixedChannelLines = new Set<string>();
   const estimatedCouponLines = new Set<string>();
+  const snapshotCouponRoundingLines = new Set<string>();
   for (const lines of orders.values()) {
+    if (lines.some(line => line.productName?.includes("[유튜브]")) && lines.some(line => !line.productName?.includes("[유튜브]")))
+      lines.forEach(line => mixedChannelLines.add(line.id));
     const resolution = resolveCafe24CouponOrder({ orderNo: lines[0].orderNo,
       lines: lines.map((line) => ({ ...line.couponInput, productId: line.productId })),
       rules: input.couponRules ?? [] });
@@ -139,9 +144,13 @@ export function calculateGooglePerformance(input: GooglePerformanceInput) {
     }
     const rule = input.couponRules?.find((candidate) => candidate.id === resolution.selectedRuleId);
     const applicable = lines.filter((line) => resolution.selectedScope !== "PRODUCT" || line.productId === rule?.productId);
-    const allocations = allocateOrderCoupon(resolution.couponDeductionKrw, applicable);
+    const legacyAllocations = allocateOrderCoupon(resolution.couponDeductionKrw, applicable);
+    const allocations = options?.salesSnapshot ? allocateCafe24ProductCouponsToLines(resolution.allocationsByProductId,
+      lines.map(line => ({ id: line.id, productId: line.productId, salePriceKrw: line.collectedSalePriceKrw,
+        quantity: line.collectedQuantity ?? line.quantity }))) : legacyAllocations;
     for (const line of lines) {
       couponByLine.set(line.id, allocations === null ? null : allocations.get(line.id) ?? 0);
+      if (options?.salesSnapshot && allocations?.get(line.id) !== (legacyAllocations?.get(line.id) ?? 0)) snapshotCouponRoundingLines.add(line.id);
       if (resolution.confidence === "ESTIMATED") estimatedCouponLines.add(line.id);
     }
   }
@@ -179,6 +188,7 @@ export function calculateGooglePerformance(input: GooglePerformanceInput) {
     if (coupon === null || coupon === undefined) { bucket.missingCoupon = true; bucket.warnings.add("COUPON_UNRESOLVED"); }
     else bucket.coupon = bucket.coupon.plus(coupon);
     if (estimatedCouponLines.has(line.id)) bucket.warnings.add("COUPON_ESTIMATED");
+    if (snapshotCouponRoundingLines.has(line.id)) bucket.warnings.add("NATIVE_COUPON_LINE_ROUNDING_ADJUSTED");
   }
 
   const campaigns = new Map<string, { connectionId: string; customerId: string; campaignId: string; campaignName: string;
@@ -267,6 +277,19 @@ export function calculateGooglePerformance(input: GooglePerformanceInput) {
     warningCodes: [...row.warnings].sort()
   }));
   return {
+    ...(options?.salesSnapshot ? { salesSnapshotCouponLines: [...couponByLine].filter(([id]) => mixedChannelLines.has(id))
+      .map(([id, amount]) => ({ id, amount })) } : {}),
+    ...(options?.salesSnapshot ? { salesSnapshots: [...buckets.values()].map(bucket => {
+      const numeric = !bucket.missingRevenue && !bucket.missingGross && !bucket.missingCoupon;
+      const audit = finish(bucket);
+      return { productId: bucket.productId, date: bucket.date, quantity: bucket.quantity, salesRows: bucket.lineCount,
+        revenueKrw: bucket.missingRevenue ? null : bucket.revenue.toNumber(),
+        grossCostKrw: bucket.missingGross ? null : bucket.gross.toNumber(),
+        couponDeductionKrw: bucket.missingCoupon ? null : bucket.coupon.toNumber(),
+        profitBeforeAdsKrw: numeric ? bucket.revenue.minus(bucket.gross).minus(bucket.coupon).toNumber() : null,
+        adSpendKrw: audit.adSpendKrw, marginKrw: audit.marginKrw,
+        complete: numeric && !bucket.warnings.has("UNMAPPED_SALES"), warningCodes: [...bucket.warnings].sort() };
+    }) } : {}),
     summary: { ...finish(summary),
       calculatedProductsMarginKrw: productRows.reduce((sum, row) => sum + (row.calculatedMarginKrw ?? 0), 0),
       unallocatedAdSpendKrw: missingFx ? null : unallocated.toNumber(),

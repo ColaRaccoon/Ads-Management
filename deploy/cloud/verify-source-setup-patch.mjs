@@ -14,6 +14,10 @@ expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled, profile] = process.argv.slice(2);
 if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch profile');
 if (profile === 'reporting') {
+  // Reviewed additive worker entry reuses the native sales/coupon calculators; HTTP formulas remain unchanged.
+  expected.add('sales/sales-metrics.service.js');
+  expected.add('domain/cafe24-coupon-line-allocation.js');
+  expected.add('domain/cafe24-coupon-line-allocation.test.js');
   // Reviewed Coupang upload batching and non-blocking manual-sales excess.
   for (const name of ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js',
     'domain/coupang-profit-pipeline.test.js']) expected.add(name);
@@ -49,6 +53,7 @@ if (profile === 'reporting') {
   for (const name of [
     'adapter-contract.js', 'adapter-contract.test.js',
     'adapters/ad-reader.js', 'adapters/ad-reader.test.js', 'adapters/ad-source.js',
+    'adapters/native-google-ad.test.js',
     'adapters/cafe24-coupon.js', 'adapters/cafe24.adapter.js', 'adapters/cafe24.adapter.test.js',
     'adapters/coupang-ads.js', 'adapters/coupang-ads.test.js',
     'adapters/coupang-configuration.js', 'adapters/coupang-configuration.test.js',
@@ -63,6 +68,8 @@ if (profile === 'reporting') {
     'adapters/storefront-adapters.service.js', 'adapters/storefront-adapters.service.test.js',
     'aggregation.repository.js', 'aggregation.worker.js', 'aggregation.worker.test.js',
     'reconciliation.js', 'reconciliation.repository.js', 'reconciliation-entrypoint.js', 'reconciliation.test.js',
+    'native-storefront-results.js', 'native-storefront-results.test.js',
+    'domain/storefront-report-overlay.js', 'domain/storefront-report-overlay.test.js', 'domain/native-storefront-report.test.js',
     'domain/decimal.js', 'domain/legacy-name-migration.js', 'domain/legacy-name-migration.test.js',
     'domain/platform-selection.js', 'domain/platform-selection.test.js',
     'domain/product-name-resolver.js', 'domain/product-name-resolver.test.js',

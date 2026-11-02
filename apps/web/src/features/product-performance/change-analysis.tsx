@@ -15,6 +15,8 @@ const MEDIA: { id: AnalysisMedium; name: string; logo: string; color: string }[]
 const CHANNELS = [{ id: "CAFE24", name: "자사몰", sub: "Cafe24", color: "#2a947e" },
   { id: "NAVER_SMARTSTORE", name: "네이버", sub: "스마트스토어", color: "#6587cf" },
   { id: "COUPANG", name: "쿠팡", sub: "마켓플레이스", color: "#ad83bf" }];
+const SPLIT_CHANNELS = [{ id: "CAFE24_META", name: "자사몰(메타)", sub: "Cafe24 · Meta", color: "#2a947e" },
+  { id: "CAFE24_YOUTUBE", name: "자사몰(유튜브)", sub: "Cafe24 · YouTube", color: "#c38a4f" }];
 type Change = ChangeMetric;
 const isPartial = (value: Change) => value.beforeDays < value.expectedDays || value.afterDays < value.expectedDays || value.beforePartialDays > 0 || value.afterPartialDays > 0;
 const sourceNames = (sources: string[]) => sources.map(source => PLATFORM_LABELS[source as Platform] ?? source).join(", ");
@@ -33,6 +35,24 @@ function ChangeCell({ value }: { value: Change }) {
     <span className={`${styles.delta} ${tone(value.change)}`}>{delta(value.change)} / 일</span>
     {isPartial(value) ? <small className={styles.partial} title={`대상 전후 각각 ${value.expectedDays}일${value.missingSources.length ? ` · 일부 미확인: ${sourceNames(value.missingSources)}` : ""}`}>{coverageLabel(value)}</small> : null}
   </>;
+}
+
+/** Table, normalized chart, and CSV share exact persisted channel keys. */
+export function changeAnalysisView(analysis: ReturnType<typeof analyzeChanges>, selectedPlatforms: readonly Platform[], metric: "revenue" | "estimatedProfit", sourceName: string) {
+  const ids = new Set(analysis.marketplaces.map(row => row.marketplace));
+  const split = SPLIT_CHANNELS.some(channel => ids.has(channel.id));
+  const channels = [...(split ? [...SPLIT_CHANNELS, ...(ids.has("CAFE24") ? [{ ...CHANNELS[0], name: "자사몰(이전집계)" }] : [])] : [CHANNELS[0]]), ...CHANNELS.slice(1)]
+    .filter(item => selectedPlatforms.includes(item.id.startsWith("CAFE24") ? "CAFE24" : item.id === "NAVER_SMARTSTORE" ? "NAVER" : "COUPANG"));
+  const results = channels.map(item => ({ ...item, value: analysis.marketplaces.find(value => value.marketplace === item.id) }));
+  const baselines = new Map(results.map(row => [row.id, row.value?.[metric].comparisonIssue ? null : row.value?.[metric].before ?? null]));
+  const graphRows = analysis.series.map(row => {
+    const result: Record<string, string | number | null> = { date: row.date, adSpend: analysis.spend.before !== null && analysis.spend.before > 0 && row.adSpend !== null ? row.adSpend / analysis.spend.before * 100 : null, adRaw: row.adSpend, adPartial: row.adPartial ? 1 : 0 };
+    for (const channel of channels) { const base = baselines.get(channel.id), raw = row.marketplaces.find(m => m.marketplace === channel.id)?.[metric] ?? null;
+      result[channel.id] = base != null && base > 0 && raw !== null ? raw / base * 100 : null; result[`${channel.id}Raw`] = raw; result[`${channel.id}Partial`] = row.marketplaces.find(m => m.marketplace === channel.id)?.[metric === "revenue" ? "revenuePartial" : "estimatedProfitPartial"] ? 1 : 0; }
+    return result;
+  });
+  const rawRows = [{ label: `${sourceName} 광고비`, value: analysis.spend }, ...results.flatMap(row => row.value ? [{ label: `${row.name} 매출`, value: row.value.revenue }, { label: `${row.name} 추정 순이익`, value: row.value.estimatedProfit }] : [])];
+  return { channels, results, graphRows, rawRows };
 }
 
 export function ChangeAnalysis({ data, filters }: { data: DashboardData; filters: Filters }) {
@@ -63,17 +83,8 @@ export function ChangeAnalysis({ data, filters }: { data: DashboardData; filters
   const analysis = analyses.find(item => item.id === medium)!.analysis;
   const mediaResults = analyses.map(item => ({ ...item, spend: item.analysis.spend }));
   const source = MEDIA.find(item => item.id === medium)!;
-  const channels = CHANNELS.filter(item => data.summary.selectedPlatforms.includes((item.id === "NAVER_SMARTSTORE" ? "NAVER" : item.id) as "CAFE24" | "NAVER" | "COUPANG"));
-  const results = channels.map(item => ({ ...item, value: analysis.marketplaces.find(value => value.marketplace === item.id) }));
-  const baselines = new Map(results.map(row => [row.id, row.value?.[metric].before ?? null]));
-  const graphRows = analysis.series.map(row => {
-    const result: Record<string, string | number | null> = { date: row.date, adSpend: analysis.spend.before !== null && analysis.spend.before > 0 && row.adSpend !== null ? row.adSpend / analysis.spend.before * 100 : null, adRaw: row.adSpend, adPartial: row.adPartial ? 1 : 0 };
-    for (const channel of channels) { const base = baselines.get(channel.id), raw = row.marketplaces.find(m => m.marketplace === channel.id)?.[metric] ?? null;
-      result[channel.id] = base != null && base > 0 && raw !== null ? raw / base * 100 : null; result[`${channel.id}Raw`] = raw; result[`${channel.id}Partial`] = row.marketplaces.find(m => m.marketplace === channel.id)?.[metric === "revenue" ? "revenuePartial" : "estimatedProfitPartial"] ? 1 : 0; }
-    return result;
-  });
+  const { channels, results, graphRows, rawRows } = changeAnalysisView(analysis, data.summary.selectedPlatforms, metric, source.name);
   const completeResult = results.filter(row => row.value?.revenue.changePct != null).sort((a, b) => Math.abs(b.value!.revenue.changePct!) - Math.abs(a.value!.revenue.changePct!))[0];
-  const rawRows = [{ label: `${source.name} 광고비`, value: analysis.spend }, ...results.flatMap(row => row.value ? [{ label: `${row.name} 매출`, value: row.value.revenue }, { label: `${row.name} 추정 순이익`, value: row.value.estimatedProfit }] : [])];
   const partial = rawRows.some(row => isPartial(row.value));
   const concurrent = mediaResults.filter(row => row.id !== medium && available.includes(row.id) && row.spend.changePct !== null && Math.abs(row.spend.changePct) >= 5);
   const exportCsv = () => {

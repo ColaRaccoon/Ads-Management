@@ -4,12 +4,13 @@ import { reconcilePublications, reconciliationCandidates, reconciliationOptions,
 import { assertReconciliationRole } from "./reconciliation-entrypoint";
 import { ReconciliationRepository, sourceDateStatement, type ReconciliationCandidate } from "./reconciliation.repository";
 import type { AdapterBatch } from "./types";
+import { REPORT_CALCULATION_VERSION } from "./report-contract";
 import type { PrismaService } from "../common/prisma.service";
 
 const scope = { platform: "META" as const, scopeKey: "allowed-account", label: "account" };
 const part: ReconciliationCandidate = { ...scope, date: "2026-11-01", published: false };
 const versions = { scopePolicyVersion: "scope", nameRuleVersion: "name", saleUnitRuleVersion: "unit", allocationRuleVersion: "allocation" };
-const allVersions = { ...versions, calculationVersion: "unified-report-v1", fxVersion: "stored-daily-fx-v1" };
+const allVersions = { ...versions, calculationVersion: REPORT_CALCULATION_VERSION, fxVersion: "stored-daily-fx-v1" };
 const batch = (fingerprint = "fp"): AdapterBatch => ({ sales: [], adSpends: [{ amountKrw: "10" }], commonExpenses: [], coverage: [], sourceControlTotals: [], sourceFingerprint: fingerprint, nextCursor: null } as unknown as AdapterBatch);
 function fixture() {
   let time = Date.parse("2026-11-02T01:10:00Z"), fingerprint = "fp", published: unknown = null, fail = false, reads = 0;

@@ -1,6 +1,7 @@
 import { ConflictException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { createSourceReadContext, selectCurrentSourceRows, sourceApiDaysInContext } from "../../common/source-read-policy";
+import { createGoogleCampaignMatcher, googleKeywordFromMapping } from "../../google/google-campaign-matcher";
 import { UnifiedManagementRepository } from "../management.repository";
 import type { AdapterBatch, AdapterRequest } from "../types";
 import { AdPlatform, AdRow, adConfiguration, adHash, adPageDate, assertAdScope, day, normalizeAdDay, sum } from "./ad-source";
@@ -41,6 +42,7 @@ export async function readAdDay(tx: Prisma.TransactionClient, management: Unifie
   let complete = false, excludedRows = 0;
   let normalizedRows: AdRow[] = [];
   let unverifiedRows = 0, unverifiedFingerprint: string | null = null;
+  let nativeNameEvidence: unknown = null;
   const legacyFx = new Map<string, { rate: string; sourceDate: string; ruleId: string }>();
   if (platform === "META") {
     const candidates = bounded(await tx.metaAdsetDailyMetric.findMany({ where: { isCurrent: true, connectionId: legacy ? null : scope, metricDate: at },
@@ -83,6 +85,19 @@ export async function readAdDay(tx: Prisma.TransactionClient, management: Unifie
       }
     }
   } else {
+    const [nativeProducts, campaignMappings] = await Promise.all([
+      tx.product.findMany({ where: { isActive: true }, select: { id: true, name: true, displayName: true, isActive: true }, take: MAX_ROWS + 1 }),
+      tx.googlePerformanceMapping.findMany({ where: { kind: "CAMPAIGN", connectionId: scope, startDate: { lte: at },
+        OR: [{ endDate: null }, { endDate: { gte: at } }] }, take: MAX_ROWS + 1 })
+    ]);
+    bounded(nativeProducts); bounded(campaignMappings);
+    const keywords = campaignMappings.flatMap(mapping => { const keyword = googleKeywordFromMapping(mapping); return keyword ? [keyword] : []; });
+    const matchCampaign = createGoogleCampaignMatcher(nativeProducts, keywords);
+    const productNames = new Map(nativeProducts.map(product => [product.id, product.displayName]));
+    const sortedEvidence = (values: unknown[]) => values.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b), "en"));
+    nativeNameEvidence = { version: "GOOGLE_NATIVE_CAMPAIGN_MATCHER_V1", products: sortedEvidence(nativeProducts.map(product =>
+      [product.id, product.name, product.displayName, product.isActive])), keywords: sortedEvidence(keywords.map(keyword =>
+      [keyword.connectionId, keyword.keyword, keyword.productId, keyword.startDate, keyword.endDate])) };
     const candidates = bounded(await tx.googleCampaignDailyCost.findMany({ where: { isCurrent: true, connectionId: scope, metricDate: at },
       select: { id: true, campaignId: true, campaignName: true, connectionId: true, source: true, version: true, syncRunId: true,
         metricDate: true, costMicros: true, conversionValue: true, fetchedAt: true }, orderBy: { id: "asc" }, take: MAX_ROWS + 1 }));
@@ -99,9 +114,13 @@ export async function readAdDay(tx: Prisma.TransactionClient, management: Unifie
         stored.rowCount === rows.length && stored.totalAmount !== null && links.length === rows.length &&
         rows.every(row => { const match = links.filter(link => link.recordId === row.id); return match.length === 1 && match[0].version === row.version && match[0].syncRunId === row.syncRunId; }) &&
         sum(rows.map(row => row.costMicros.toString())).div(1000000).equals(stored.totalAmount) && units.length === 1 && units[0].publishedCount === rows.length;
-      normalizedRows = rows.map(row => ({ id: row.id, entityKey: row.campaignId, originalName: row.campaignName, source: row.source,
+      normalizedRows = rows.map(row => {
+        const match = matchCampaign(row.campaignName, { connectionId: scope, date });
+        return { id: row.id, entityKey: row.campaignId, originalName: row.campaignName, source: row.source,
         sourceVersion: String(row.version), runOrUploadId: row.syncRunId, observedAt: row.fetchedAt.toISOString(), updatedAt: row.fetchedAt.toISOString(),
-        amount: row.costMicros.toString(), conversionRevenue: row.conversionValue?.toFixed() ?? null }));
+        amount: row.costMicros.toString(), conversionRevenue: row.conversionValue?.toFixed() ?? null,
+        nativeProductName: match.productId ? productNames.get(match.productId) ?? null : null, nativeNameIssues: match.warningCodes };
+      });
       // Match the existing report: incomplete lineage cannot establish a usable atomic API snapshot.
       if (selectedSource === "API" && !complete) {
         sourceIssues.push("GOOGLE_CURRENT_LINEAGE_UNVERIFIED");
@@ -119,7 +138,8 @@ export async function readAdDay(tx: Prisma.TransactionClient, management: Unifie
   const rate = rates.length === 1 ? rates[0] : null;
   return normalizeAdDay(request, { platform, date, scopeKey: scope, currency, timeZone, rows: normalizedRows, selectedSource, complete,
     sourceIssues, storedCoverage: stored, fx: rate ? { rate: rate.rate.toFixed(), sourceDate: day(rate.sourceDate), provider: rate.provider, fallbackType: rate.fallbackType } : null,
-    legacyFx, excludedRows, configuration, unverifiedRows, sourceSelectionEvidence: { feature, unverifiedFingerprint, policies: policies.map(policy => [policy.connectionId,
+    legacyFx, excludedRows, configuration, unverifiedRows, sourceSelectionEvidence: { feature, unverifiedFingerprint,
+      ...(platform === "GOOGLE" ? { nativeNameEvidence } : {}), policies: policies.map(policy => [policy.connectionId,
       policy.dataKind, policy.fromDate.toISOString(), policy.toDate?.toISOString() ?? null, policy.primarySource])
       .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b), "en")),
       coverage: stored ? [stored.lastSuccessRunId, stored.lastSuccessAt?.toISOString(), stored.rowCount, stored.totalAmount?.toFixed(), stored.warningCodes] : null } });
