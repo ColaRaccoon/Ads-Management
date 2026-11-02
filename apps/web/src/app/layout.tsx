@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "@/features/product-performance/change-analysis.css";
+import "@/features/product-performance/daily-report.css";
 import { Providers } from "./providers";
 import { AppFrame } from "@/components/app-frame";
 

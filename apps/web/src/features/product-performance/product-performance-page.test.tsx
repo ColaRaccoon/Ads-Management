@@ -75,3 +75,14 @@ test("same-selection refresh keeps calculated results visible without eager diag
   assert.match(html, /선택 범위의 최신 성과를 확인/);
   assert.doesNotMatch(html, /선택한 범위의 성과와 발행 버전을 확인|진단 자료|상세 진단을 읽고/);
 });
+
+
+test("daily tab is independent of analysis windows and does not render the 30-day analysis or diagnostic controls", () => {
+  const filters = testFilters();
+  const params = filterParams(filters, true); params.set("view", "daily"); params.set("dailyDate", "2026-10-29");
+  const html = render(filters, "ready", undefined, true, params);
+  assert.match(html, /role="tab"[^>]*id="performance-daily-tab"[^>]*aria-selected="true"/);
+  assert.match(html, /데일리 보고일/); assert.match(html, /A4 인쇄 \/ PDF 저장/);
+  assert.match(html, /선택일과 전일의 데일리 성과를 읽고 있습니다/);
+  assert.doesNotMatch(html, /매출 반영 시차|광고비 변경일|원천 데이터 상세 진단|비교 시작일|종료일 \(한국시간\)/);
+});
