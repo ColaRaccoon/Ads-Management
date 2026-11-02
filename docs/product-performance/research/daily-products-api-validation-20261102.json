@@ -1,0 +1,123 @@
+{
+  "date": "2026-11-02",
+  "baseCommit": "e478a9fbf83d1eeb5404859b3c3a490e08e1730d",
+  "tests": {
+    "skipped": 1,
+    "command": "node --import tsx --test src/unified-performance/daily-products.test.ts src/unified-performance/report.service.test.ts",
+    "skipReason": "opt-in benchmark runs separately",
+    "failed": 0,
+    "passed": 32
+  },
+  "benchmark": {
+    "limitation": "In-memory synthetic repository, one sample per size, no database/network latency and not p95. Shared host may run concurrent tasks.",
+    "command": "UNIFIED_DAILY_PRODUCTS_BENCHMARK=true node --import tsx --test --test-name-pattern=opt-in src/unified-performance/daily-products.test.ts",
+    "exitCode": 0,
+    "samples": [
+      {
+        "benchmark": "daily-products",
+        "products": 100,
+        "storedFacts": 804,
+        "serviceMs": 379.52,
+        "responseBytes": 743897,
+        "snapshotCalls": 1,
+        "sourceCalls": 0,
+        "database": "synthetic repository only",
+        "measurement": "single sample; not p95"
+      },
+      {
+        "benchmark": "daily-products",
+        "products": 1000,
+        "storedFacts": 8004,
+        "serviceMs": 2562.2,
+        "responseBytes": 6736406,
+        "snapshotCalls": 1,
+        "sourceCalls": 0,
+        "database": "synthetic repository only",
+        "measurement": "single sample; not p95"
+      },
+      {
+        "benchmark": "daily-products",
+        "products": 5000,
+        "storedFacts": 40004,
+        "serviceMs": 13339.76,
+        "responseBytes": 33372584,
+        "snapshotCalls": 1,
+        "sourceCalls": 0,
+        "database": "synthetic repository only",
+        "measurement": "single sample; not p95"
+      }
+    ],
+    "optimization": "Reuse already computed full-product timeseries buckets for allProducts totals; no change to domain calculations.",
+    "optimizedSamples": [
+      {
+        "benchmark": "daily-products",
+        "products": 100,
+        "storedFacts": 804,
+        "serviceMs": 227.15,
+        "responseBytes": 743897,
+        "snapshotCalls": 1,
+        "sourceCalls": 0,
+        "database": "synthetic repository only",
+        "measurement": "single sample; not p95"
+      },
+      {
+        "benchmark": "daily-products",
+        "products": 1000,
+        "storedFacts": 8004,
+        "serviceMs": 1764.64,
+        "responseBytes": 6736406,
+        "snapshotCalls": 1,
+        "sourceCalls": 0,
+        "database": "synthetic repository only",
+        "measurement": "single sample; not p95"
+      },
+      {
+        "benchmark": "daily-products",
+        "products": 5000,
+        "storedFacts": 40004,
+        "serviceMs": 8949.07,
+        "responseBytes": 33372584,
+        "snapshotCalls": 1,
+        "sourceCalls": 0,
+        "database": "synthetic repository only",
+        "measurement": "single sample; not p95"
+      }
+    ]
+  },
+  "baselineTypecheck": {
+    "files": [
+      {
+        "path": "apps/api/src/unified-performance/adapters/ad-reader.ts",
+        "headBlob": "6b1a3fca2c413ec353524d88222ba40c80d54c9f",
+        "workingBlob": "6b1a3fca2c413ec353524d88222ba40c80d54c9f",
+        "unchanged": true
+      },
+      {
+        "path": "apps/api/src/unified-performance/adapters/native-google-ad.test.ts",
+        "headBlob": "259c8d71461d4bb27d6d9c6d46b7dab24170ad22",
+        "workingBlob": "259c8d71461d4bb27d6d9c6d46b7dab24170ad22",
+        "unchanged": true
+      },
+      {
+        "path": "apps/api/src/google/google-campaign-matcher.ts",
+        "headBlob": "43f3e400558dddbcd3e931bdf894040691dc9e9f",
+        "workingBlob": "43f3e400558dddbcd3e931bdf894040691dc9e9f",
+        "unchanged": true
+      }
+    ],
+    "command": "npm --workspace @meta-ads-performance/api run lint",
+    "exitCode": 1,
+    "errors": [
+      "ad-reader.ts:4 googleKeywordFromMapping not exported",
+      "ad-reader.ts:95 expected 1 argument, got 2",
+      "ad-reader.ts:118 expected 1 argument, got 2",
+      "native-google-ad.test.ts:4 googleKeywordIdentity not exported"
+    ]
+  },
+  "review": {
+    "scope": "daily-products model/data/table/export and common XLSX generator",
+    "resolvedFinding": "Explicit product non-participation was indistinguishable from unavailable data; added per-day notApplicable metadata with all-account and missing-coverage tests.",
+    "remainingMonetaryFindings": [],
+    "limitation": "Source review only; actual browser, printer and Excel visual verification is owned by the parent task."
+  }
+}

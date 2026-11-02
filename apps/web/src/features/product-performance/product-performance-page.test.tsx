@@ -82,7 +82,8 @@ test("daily tab is independent of analysis windows and does not render the 30-da
   const params = filterParams(filters, true); params.set("view", "daily"); params.set("dailyDate", "2026-10-29");
   const html = render(filters, "ready", undefined, true, params);
   assert.match(html, /role="tab"[^>]*id="performance-daily-tab"[^>]*aria-selected="true"/);
-  assert.match(html, /데일리 보고일/); assert.match(html, /A4 인쇄 \/ PDF 저장/);
-  assert.match(html, /선택일과 전일의 데일리 성과를 읽고 있습니다/);
+  assert.match(html, /데일리 보고일/); assert.match(html, /요약 \+ 전체 제품 인쇄 \/ PDF/);
+  assert.match(html, /요약만 인쇄/); assert.match(html, /상세표만 인쇄/); assert.match(html, /전체 제품 엑셀 다운로드/);
+  assert.match(html, /선택일과 전일의 전체 제품 성과를 읽고 있습니다/);
   assert.doesNotMatch(html, /매출 반영 시차|광고비 변경일|원천 데이터 상세 진단|비교 시작일|종료일 \(한국시간\)/);
 });

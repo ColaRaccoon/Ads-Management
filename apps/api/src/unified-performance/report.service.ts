@@ -12,9 +12,10 @@ import { calculateRelationships } from "./domain/relationship-calculation";
 import { CONTRACT_VERSION, PLATFORMS, type ComponentKind, type SourceCoverage } from "./types";
 import { REPORT_CALCULATION_VERSION } from "./report-contract";
 import { overlayStorefrontResults } from "./domain/storefront-report-overlay";
+import { buildDailyProducts } from "./daily-products";
 
 type Actor = Pick<AuthenticatedUser, "id" | "permissions">;
-type ViewKind = "summary" | "timeseries" | "diagnostics" | "options" | "relationships" | "dashboard";
+type ViewKind = "summary" | "timeseries" | "diagnostics" | "options" | "relationships" | "dashboard" | "daily-products";
 const date = (value: Date) => value.toISOString().slice(0, 10);
 const safeIssues = (issues: readonly string[]) => [...new Set(issues.filter(issue => /^[A-Z][A-Z0-9_:.|/-]{0,159}$/.test(issue)))].sort();
 const safeCoverage = (coverage: SourceCoverage[]) => coverage.map(c => ({
@@ -89,10 +90,21 @@ export class UnifiedReportService {
   async read(kind: ViewKind, input: Record<string, unknown>, actor: Actor) {
     allowed(actor, "data.read");
     const query = parseReportQuery(input);
-    if (kind === "dashboard" && query.cursor) throw new BadRequestException("통합 조회에는 cursor를 사용할 수 없습니다.");
+    if ((kind === "dashboard" || kind === "daily-products") && query.cursor) throw new BadRequestException("통합 조회에는 cursor를 사용할 수 없습니다.");
+    if (kind === "daily-products" && (query.grain !== "day" || query.from !== shiftDate(query.to, -1) ||
+      query.compareFrom !== query.from || query.compareTo !== query.from ||
+      query.to > new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10))) {
+      throw new BadRequestException({ code: "UNIFIED_DAILY_RANGE_INVALID", message: "데일리 상세는 한국시간 보고일과 바로 전날을 조회해야 합니다." });
+    }
     const analysisSettings = kind === "relationships" ? parseRelationshipQuery(input, query) : undefined;
     const lookbackFrom = analysisSettings ? shiftDate(query.from, -14) : undefined;
-    const snapshot = await this.repository.snapshot(query, lookbackFrom);
+    // The appended table always includes all products; the summary keeps the user's
+    // selected product. Both are derived from one immutable authorized snapshot.
+    const snapshot = await this.repository.snapshot(kind === "daily-products" ? { ...query, productName: undefined } : query, lookbackFrom);
+    if (kind === "daily-products" && query.productName && !snapshot.products.some(product => product.canonicalName === query.productName) &&
+      !snapshot.facts.some(fact => fact.productName === query.productName)) {
+      throw new NotFoundException({ code: "UNIFIED_PRODUCT_NOT_FOUND", message: "기준 제품명을 찾을 수 없습니다." });
+    }
     // Participation belongs to this immutable request snapshot, not each time bucket.
     const scopes = new Map<string | undefined, ReturnType<typeof applicable>>();
     const scopeFor = (productName?: string) => {
@@ -151,7 +163,7 @@ export class UnifiedReportService {
         events: { status: "UNAVAILABLE", message: "가격·행사·품절 이벤트 기록은 연결되지 않았습니다. 요일과 나머지 매체 광고비를 함께 확인하세요." },
         interpretation: "광고비 증가 기간에 매출이 증가하는 등 관측된 동반 변화를 확인합니다. 인과효과나 효과 발생일을 뜻하지 않습니다. 순이익은 광고비를 직접 차감하므로 분석 결과값에서 제외합니다." } };
     }
-    if (kind === "dashboard") {
+    if (kind === "dashboard" || kind === "daily-products") {
       // One immutable snapshot, one envelope, no unused product-detail page. Index
       // source/day once rather than scanning the entire period for every bucket.
       const scope = scopeFor(query.productName);
@@ -168,8 +180,12 @@ export class UnifiedReportService {
         const facts = factsByDay.get(bucket.bucketFrom) ?? [], coverage = coverageByDay.get(bucket.bucketFrom) ?? [];
         return { ...bucket, ...summarizeReport(facts, coverage, { platforms: query.platforms, productName: query.productName }), coverage: safeCoverage(coverage) };
       });
-      return { summary: { ...envelope, items: [], total: 0, nextCursor: null },
+      const dashboard = { summary: { ...envelope, items: [], total: 0, nextCursor: null },
         timeseries: { ...envelope, items, total: items.length, nextCursor: null } };
+      // With no selected product, these daily buckets already are authoritative
+      // all-product totals. Reuse them instead of summarizing the full ledger twice.
+      return kind === "daily-products" ? { ...dashboard, ...buildDailyProducts(snapshot, query, applicable,
+        query.productName ? undefined : { current: items[1], previous: items[0] }) } : dashboard;
     }
     const productNames = [...new Set([...snapshot.products.map(p => p.canonicalName), ...(snapshot.availableProductNames??[]), ...snapshot.facts.map(f => f.productName).filter((name): name is string => name !== null)])].sort();
     if (kind === "options") return { ...envelope, products: productNames.map(productName => ({ productName, active: snapshot.products.find(p => p.canonicalName === productName)?.active ?? false,

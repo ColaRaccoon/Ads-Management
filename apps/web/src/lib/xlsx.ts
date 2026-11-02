@@ -16,7 +16,8 @@ export type XlsxCellStyle =
   | "TotalRatio"
   | "Percent0"
   | "TotalPercent0"
-  | "Percent1";
+  | "Percent1"
+  | "Decimal";
 
 export type XlsxCellFill =
   | "GROUP_MINT"
@@ -55,6 +56,7 @@ export type XlsxCell = {
   indent?: number;
   wrapText?: boolean;
   borderTone?: XlsxBorderTone;
+  fontSize?: number;
 };
 
 export type XlsxRow = {
@@ -75,8 +77,20 @@ export type XlsxWorkbookInput = {
   rows: Array<XlsxCell[] | XlsxRow>;
   merges?: XlsxMergeRange[];
   freezeRow?: number;
+  freezeColumn?: number;
   autoFilter?: { fromRow: number; toRow?: number };
+  print?: {
+    orientation: "portrait" | "landscape";
+    paperSize?: "A4";
+    fitToWidth?: number;
+    fitToHeight?: number;
+    margins?: { left: number; right: number; top: number; bottom: number; header?: number; footer?: number };
+    area?: XlsxMergeRange;
+    repeatRows?: { from: number; to: number };
+  };
 };
+
+export type XlsxMultiSheetWorkbookInput = { sheets: XlsxWorkbookInput[]; activeSheet?: number };
 
 type ZipFile = { name: string; content: string | Uint8Array };
 type NormalizedXlsxWorkbookInput = Omit<XlsxWorkbookInput, "rows"> & {
@@ -102,6 +116,7 @@ type XlsxStyleCatalog = {
   borders: string[];
   cellXfs: string[];
   styleIds: Map<string, number>;
+  cellStyleIds: Map<string, number>;
 };
 
 const REGULAR_FONT_XML = fontXml(false);
@@ -129,23 +144,30 @@ const LEGACY_STYLE_ORDER: XlsxCellStyle[] = [
   "Percent1"
 ];
 
-export function buildXlsxWorkbook(input: XlsxWorkbookInput) {
+export function buildXlsxWorkbook(input: XlsxWorkbookInput | XlsxMultiSheetWorkbookInput) {
   const modifiedAt = new Date().toISOString();
-  const normalizedInput: NormalizedXlsxWorkbookInput = {
-    ...input,
-    rows: input.rows.map(normalizeXlsxRow)
-  };
-  const styleCatalog = buildStyleCatalog(normalizedInput.rows);
+  const sheets = "sheets" in input ? input.sheets : [input];
+  const activeSheet = "sheets" in input ? input.activeSheet ?? 0 : 0;
+  if (!sheets.length || !Number.isInteger(activeSheet) || activeSheet < 0 || activeSheet >= sheets.length) throw new Error("XLSX active sheet is invalid.");
+  const names = new Set<string>();
+  for (const sheet of sheets) {
+    if (!sheet.sheetName || sheet.sheetName.length > 31 || /[\\/?*\[\]:]/.test(sheet.sheetName) || /^'|'$/.test(sheet.sheetName)) throw new Error("XLSX sheet name is invalid.");
+    const name = sheet.sheetName.toLocaleLowerCase();
+    if (names.has(name)) throw new Error("XLSX sheet names must be unique.");
+    names.add(name);
+  }
+  const normalizedSheets: NormalizedXlsxWorkbookInput[] = sheets.map(sheet => ({ ...sheet, rows: sheet.rows.map(normalizeXlsxRow) }));
+  const styleCatalog = buildStyleCatalog(normalizedSheets.flatMap(sheet => sheet.rows));
 
   return zipFiles([
-    { name: "[Content_Types].xml", content: contentTypesXml() },
+    { name: "[Content_Types].xml", content: contentTypesXml(sheets.length) },
     { name: "_rels/.rels", content: packageRelationshipsXml() },
     { name: "docProps/app.xml", content: appPropertiesXml() },
     { name: "docProps/core.xml", content: corePropertiesXml(modifiedAt) },
-    { name: "xl/workbook.xml", content: workbookXml(input.sheetName) },
-    { name: "xl/_rels/workbook.xml.rels", content: workbookRelationshipsXml() },
+    { name: "xl/workbook.xml", content: workbookXml(sheets, activeSheet) },
+    { name: "xl/_rels/workbook.xml.rels", content: workbookRelationshipsXml(sheets.length) },
     { name: "xl/styles.xml", content: stylesXml(styleCatalog) },
-    { name: "xl/worksheets/sheet1.xml", content: worksheetXml(normalizedInput, styleCatalog) }
+    ...normalizedSheets.map((sheet, index) => ({ name: `xl/worksheets/sheet${index + 1}.xml`, content: worksheetXml(sheet, styleCatalog, index === activeSheet) }))
   ]);
 }
 
@@ -163,7 +185,7 @@ export function downloadXlsx(fileName: string, workbook: Uint8Array) {
   URL.revokeObjectURL(url);
 }
 
-function contentTypesXml() {
+function contentTypesXml(sheetCount: number) {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -172,7 +194,7 @@ function contentTypesXml() {
   <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  ${Array.from({ length: sheetCount }, (_, index) => `<Override PartName="/xl/worksheets/sheet${index + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}
 </Types>`;
 }
 
@@ -206,21 +228,36 @@ function corePropertiesXml(modifiedAt: string) {
 </cp:coreProperties>`;
 }
 
-function workbookXml(sheetName: string) {
+function workbookXml(sheets: XlsxWorkbookInput[], activeSheet: number) {
+  const definitions = sheets.flatMap((sheet, index) => {
+    const name = `'${sheet.sheetName.replace(/'/g, "''")}'`;
+    const values: string[] = [];
+    if (sheet.print?.area) {
+      const area = normalizeMergeRanges([sheet.print.area])[0];
+      const address = `$${columnName(area.fromColumn)}$${area.fromRow}:$${columnName(area.toColumn)}$${area.toRow}`;
+      values.push(`<definedName name="_xlnm.Print_Area" localSheetId="${index}">${escapeXml(`${name}!${address}`)}</definedName>`);
+    }
+    if (sheet.print?.repeatRows) {
+      const { from, to } = sheet.print.repeatRows;
+      if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from || to > XLSX_MAX_ROW) throw new Error("XLSX repeat rows are invalid.");
+      values.push(`<definedName name="_xlnm.Print_Titles" localSheetId="${index}">${escapeXml(`${name}!$${from}:$${to}`)}</definedName>`);
+    }
+    return values;
+  });
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
   xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <sheets>
-    <sheet name="${escapeXml(sheetName)}" sheetId="1" r:id="rId1"/>
-  </sheets>
+  <bookViews><workbookView activeTab="${activeSheet}"/></bookViews>
+  <sheets>${sheets.map((sheet, index) => `<sheet name="${escapeXml(sheet.sheetName)}" sheetId="${index + 1}" r:id="rId${index + 1}"/>`).join("")}</sheets>
+  ${definitions.length ? `<definedNames>${definitions.join("")}</definedNames>` : ""}
 </workbook>`;
 }
 
-function workbookRelationshipsXml() {
+function workbookRelationshipsXml(sheetCount: number) {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  ${Array.from({ length: sheetCount }, (_, index) => `<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${index + 1}.xml"/>`).join("")}
+  <Relationship Id="rId${sheetCount + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`;
 }
 
@@ -237,15 +274,16 @@ function stylesXml(catalog: XlsxStyleCatalog) {
 </styleSheet>`;
 }
 
-function worksheetXml(input: NormalizedXlsxWorkbookInput, catalog: XlsxStyleCatalog) {
+function worksheetXml(input: NormalizedXlsxWorkbookInput, catalog: XlsxStyleCatalog, active: boolean) {
   const merges = normalizeMergeRanges(input.merges);
   const columnCount = Math.max(
     input.columns?.length ?? 0,
-    ...input.rows.map((row) => row.cells.length),
+    input.rows.reduce((maximum, row) => Math.max(maximum, row.cells.length), 0),
     ...merges.map((merge) => merge.toColumn),
     1
   );
   const lastRow = Math.max(input.rows.length, ...merges.map((merge) => merge.toRow), 1);
+  if (lastRow > XLSX_MAX_ROW || columnCount > XLSX_MAX_COLUMN) throw new Error("XLSX worksheet exceeds supported dimensions.");
   const lastCell = `${columnName(columnCount)}${lastRow}`;
   const columnsXml =
     input.columns
@@ -261,10 +299,10 @@ function worksheetXml(input: NormalizedXlsxWorkbookInput, catalog: XlsxStyleCata
         .join("")}</row>`;
     })
     .join("");
-  const freezeRow = input.freezeRow && input.freezeRow > 0 ? input.freezeRow : null;
-  const sheetViewsXml = freezeRow
-    ? `<sheetViews><sheetView workbookViewId="0"><pane ySplit="${freezeRow}" topLeftCell="A${freezeRow + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`
-    : "";
+  const freezeRow = freezeCount(input.freezeRow, XLSX_MAX_ROW), freezeColumn = freezeCount(input.freezeColumn, XLSX_MAX_COLUMN);
+  const pane = freezeRow && freezeColumn ? "bottomRight" : freezeColumn ? "topRight" : "bottomLeft";
+  const sheetViewsXml = `<sheetViews><sheetView workbookViewId="0"${active ? ` tabSelected="1"` : ""}>${freezeRow || freezeColumn
+    ? `<pane${freezeColumn ? ` xSplit="${freezeColumn}"` : ""}${freezeRow ? ` ySplit="${freezeRow}"` : ""} topLeftCell="${cellRef(freezeRow + 1, freezeColumn + 1)}" activePane="${pane}" state="frozen"/><selection pane="${pane}"/>` : ""}</sheetView></sheetViews>`;
   const autoFilterXml = input.autoFilter
     ? `<autoFilter ref="A${input.autoFilter.fromRow}:${columnName(columnCount)}${Math.max(input.autoFilter.toRow ?? lastRow, input.autoFilter.fromRow)}"/>`
     : "";
@@ -276,6 +314,7 @@ function worksheetXml(input: NormalizedXlsxWorkbookInput, catalog: XlsxStyleCata
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  ${input.print ? `<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>` : ""}
   <dimension ref="A1:${lastCell}"/>
   ${sheetViewsXml}
   <sheetFormatPr defaultRowHeight="18"/>
@@ -283,7 +322,23 @@ function worksheetXml(input: NormalizedXlsxWorkbookInput, catalog: XlsxStyleCata
   <sheetData>${rowsXml}</sheetData>
   ${autoFilterXml}
   ${mergeCellsXml}
+  ${pageSetupXml(input.print)}
 </worksheet>`;
+}
+
+function freezeCount(value: number | undefined, limit: number) {
+  if (value === undefined) return 0;
+  if (!Number.isInteger(value) || value < 0 || value >= limit) throw new Error("XLSX freeze coordinate is invalid.");
+  return value;
+}
+
+function pageSetupXml(print: XlsxWorkbookInput["print"]) {
+  if (!print) return "";
+  const { fitToWidth = 1, fitToHeight = 0 } = print;
+  if (![fitToWidth, fitToHeight].every(value => Number.isInteger(value) && value >= 0 && value <= 32767)) throw new Error("XLSX page fit is invalid.");
+  const margins = { left: .315, right: .315, top: .394, bottom: .394, header: .15, footer: .15, ...print.margins };
+  if (!Object.values(margins).every(value => Number.isFinite(value) && value >= 0 && value <= 10)) throw new Error("XLSX page margins are invalid.");
+  return `<pageMargins ${Object.entries(margins).map(([key, value]) => `${key}="${value}"`).join(" ")}/><pageSetup paperSize="9" orientation="${print.orientation}" fitToWidth="${fitToWidth}" fitToHeight="${fitToHeight}"/>`;
 }
 
 function xlsxCell(ref: string, cell: XlsxCell, catalog: XlsxStyleCatalog) {
@@ -308,11 +363,17 @@ function xlsxStringCell(ref: string, value: string, styleId: number, protectForm
 }
 
 function xlsxStyleId(cell: XlsxCell, catalog: XlsxStyleCatalog) {
-  const styleId = catalog.styleIds.get(resolvedStyleKey(resolveCellStyle(cell)));
+  const styleId = catalog.cellStyleIds.get(cellStyleKey(cell));
   if (styleId === undefined) {
     throw new Error("XLSX style was not registered.");
   }
   return styleId;
+}
+
+// A workbook can contain hundreds of thousands of values but only a handful of
+// style combinations. Resolve the XML once per combination, never per value.
+function cellStyleKey(cell: XlsxCell) {
+  return JSON.stringify([cell.style ?? "Text", cell.fill, cell.fontTone, cell.bold, cell.indent, cell.wrapText, cell.borderTone, cell.fontSize]);
 }
 
 function normalizeXlsxRow(row: XlsxCell[] | XlsxRow): XlsxRow {
@@ -325,13 +386,15 @@ function buildStyleCatalog(rows: XlsxRow[]): XlsxStyleCatalog {
       `<numFmt numFmtId="164" formatCode="#,##0&quot;원&quot;"/>`,
       `<numFmt numFmtId="165" formatCode="$#,##0.00"/>`,
       `<numFmt numFmtId="166" formatCode="0.00&quot;배&quot;"/>`,
-      `<numFmt numFmtId="167" formatCode="0.0%"/>`
+      `<numFmt numFmtId="167" formatCode="0.0%"/>`,
+      `<numFmt numFmtId="168" formatCode="#,##0.##########"/>`
     ],
     fonts: [REGULAR_FONT_XML],
     fills: [NO_FILL_XML, GRAY_125_FILL_XML],
     borders: [NO_BORDER_XML],
     cellXfs: [],
-    styleIds: new Map()
+    styleIds: new Map(),
+    cellStyleIds: new Map()
   };
 
   registerResolvedStyle(catalog, {
@@ -345,7 +408,12 @@ function buildStyleCatalog(rows: XlsxRow[]): XlsxStyleCatalog {
   }
   for (const row of rows) {
     for (const cell of row.cells) {
-      registerResolvedStyle(catalog, resolveCellStyle(cell));
+      const key = cellStyleKey(cell);
+      if (!catalog.cellStyleIds.has(key)) {
+        const style = resolveCellStyle(cell);
+        registerResolvedStyle(catalog, style);
+        catalog.cellStyleIds.set(key, catalog.styleIds.get(resolvedStyleKey(style))!);
+      }
     }
   }
   return catalog;
@@ -399,7 +467,8 @@ function resolveCellStyle(cell: XlsxCell): XlsxResolvedStyle {
     numFmtId: base.numFmtId,
     fontXml: fontXml(
       cell.bold ?? base.bold,
-      cell.fontTone ? fontColor(cell.fontTone) : base.fontColor
+      cell.fontTone ? fontColor(cell.fontTone) : base.fontColor,
+      cell.fontSize
     ),
     fillXml: cell.fill ? namedFillXml(cell.fill) : base.fillXml,
     borderXml: cell.borderTone ? namedBorderXml(cell.borderTone) : base.borderXml,
@@ -448,6 +517,8 @@ function numberFormatId(style: XlsxCellStyle) {
       return 166;
     case "Percent1":
       return 167;
+    case "Decimal":
+      return 168;
     case "Percent0":
     case "TotalPercent0":
       return 9;
@@ -516,8 +587,9 @@ function namedBorderXml(border: XlsxBorderTone) {
   }
 }
 
-function fontXml(bold: boolean, color?: string) {
-  return `<font>${bold ? "<b/>" : ""}${color ? `<color rgb="${color}"/>` : ""}<sz val="11"/><name val="맑은 고딕"/></font>`;
+function fontXml(bold: boolean, color?: string, size = 11) {
+  if (!Number.isFinite(size) || size < 1 || size > 409) throw new Error("XLSX font size is invalid.");
+  return `<font>${bold ? "<b/>" : ""}${color ? `<color rgb="${color}"/>` : ""}<sz val="${size}"/><name val="맑은 고딕"/></font>`;
 }
 
 function solidFillXml(color: string) {
