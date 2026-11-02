@@ -10,3 +10,11 @@
 .integrated-daily-split .integrated-daily-basis{margin-top:14px}
 .integrated-daily-split .integrated-daily-section td{padding-top:5px;padding-bottom:5px}
 @media print{.integrated-daily-split .integrated-daily-kpis{margin-top:3.5mm;margin-bottom:4mm}.integrated-daily-split .integrated-daily-section{margin-top:3mm}.integrated-daily-split .integrated-daily-basis{margin-top:3.5mm}.integrated-daily-split .integrated-daily-section td{padding-top:5px;padding-bottom:5px}}
+.integrated-daily-print-not-ready{display:none}
+@media print{
+  .integrated-daily-root[data-print-mode="detail"]>.integrated-daily-report{display:none!important}
+  .integrated-daily-root[data-print-mode="detail"] .daily-products-report{break-before:auto!important}
+  .integrated-daily-root[data-print-ready="false"]>.integrated-daily-report,
+  .integrated-daily-root[data-print-ready="false"]>.daily-products-report{display:none!important}
+  .integrated-daily-root[data-print-ready="false"]>.integrated-daily-print-not-ready{display:block!important;font-size:12pt}
+}

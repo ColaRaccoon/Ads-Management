@@ -11,6 +11,8 @@ export class UnifiedReportController {
   selectionOptions(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.selectionOptions({ ...query }, actor); }
   @Get("dashboard") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   dashboard(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("dashboard", { ...query }, actor); }
+  @Get("daily-products") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  dailyProducts(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("daily-products", { ...query }, actor); }
   @Get("options") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   options(@Query() query: ReportQueryDto, @CurrentUser() actor: AuthenticatedUser) { return this.service.read("options", { ...query }, actor); }
   @Get("summary") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
