@@ -97,6 +97,9 @@ test("source discovery queries date evidence only, including Naver/Coupang and c
   }
   const zero = sourceDateStatement({ ...scope, platform: "GOOGLE" }, "2026-10-26", "2026-11-02", 4).text;
   assert(zero.includes("COMPLETE_ZERO")); assert(zero.includes("last_success_run_id IS NOT NULL"));
+  const naver = sourceDateStatement({ ...scope, platform: "NAVER" }, "2026-10-26", "2026-11-02", 4).text;
+  assert(naver.includes("daily_store_summaries")); assert(naver.includes("daily_sales_unit_profits"));
+  assert(!naver.includes("order_items")); assert(!naver.includes("ad_campaign_daily_costs"));
 });
 test("discovery enforces a server-side statement timeout and isolates a denied scope", async () => {
   const statements: string[] = [];
