@@ -177,8 +177,10 @@ export function summarizeReport(facts: readonly PublishedReportFact[], coverage:
   const nativeMarket = (market: string | null) => market === "CAFE24_META" || market === "CAFE24_YOUTUBE";
   const partition = (row: { scopeKey: string; date: string }) => JSON.stringify([row.scopeKey, row.date]);
   const nativePartitions = new Set(scopeFacts.filter(row => (row.component === "SALE" || row.component === "STOREFRONT_RESULT" && row.rowsCount === 0) && nativeMarket(row.marketplace)).map(partition));
+  const legacyPartitions = new Set(scopeFacts.filter(row => row.component === "SALE" && row.marketplace === "CAFE24").map(partition));
   const byMarketplace = uniq([...sales.map(row => row.marketplace!), ...scopeFacts.filter(row => row.component === "STOREFRONT_RESULT" && row.rowsCount === 0).map(row => row.marketplace!), ...scopedCoverage.filter(row => row.component === "SALE" &&
-    !(row.platform === "CAFE24" && nativePartitions.has(partition(row)))).map(row => marketFor[row.platform]!)].filter(Boolean))
+    !(row.platform === "CAFE24" && (nativePartitions.has(partition(row)) || nativePartitions.size > 0 && !numericallyAvailableCoverage(row) &&
+      !legacyPartitions.has(partition(row))))).map(row => marketFor[row.platform]!)].filter(Boolean))
     .map(marketplace => {
       if (nativeMarket(marketplace) || marketplace === "CAFE24" && nativePartitions.size > 0) {
         const native = nativeMarket(marketplace);

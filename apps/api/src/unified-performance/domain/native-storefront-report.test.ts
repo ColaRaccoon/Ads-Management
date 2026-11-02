@@ -99,6 +99,38 @@ test("mixed old and new source days sum each source day once and leave the old m
   assert.equal(market(result, "CAFE24_META").revenue, "12545080.000000");
 });
 
+const missingLegacyCoverage = () => missingCoverage({ platform: "CAFE24", scopeKey: "LEGACY_UNBOUND", label: "legacy" }, DATE) as SourceCoverage[];
+test("native storefront with missing legacy-unbound coverage does not manufacture an empty combined Cafe24 row", () => {
+  const input = fixture();
+  const result = summarizeReport(input.facts, [...input.coverage, ...missingLegacyCoverage()], { platforms });
+  assert.deepEqual(result.byMarketplace.map(row => row.marketplace).sort(), ["CAFE24_META", "CAFE24_YOUTUBE"]);
+  assert.equal(result.knownTotals.revenue, "13066880.000000");
+  assert.equal(market(result, "CAFE24_META").display!.revenue.value, "12545080.000000");
+  assert.equal(market(result, "CAFE24_YOUTUBE").display!.revenue.value, "521800.000000");
+  assert.equal(result.completeTotals.revenue, null); // Missing coverage remains honest even without a phantom display row.
+});
+
+test("an actual legacy-unbound sale remains a distinct Cafe24 row beside native storefront rows", () => {
+  const input = fixture();
+  const legacy = published("CAFE24", { ...baseBatch(), sales: [rawSale("111", "57")] }).map(row => ({ ...row, scopeKey: "LEGACY_UNBOUND" }));
+  const result = summarizeReport([...input.facts, ...legacy], [...input.coverage, ...missingLegacyCoverage()], { platforms });
+  assert.equal(market(result, "CAFE24").display!.revenue.value, "111.000000");
+  assert.equal(result.byMarketplace.length, 3);
+  assert.equal(result.knownTotals.revenue, "13066991.000000");
+  assert.equal(market(result, "CAFE24_META").display!.revenue.value, "12545080.000000");
+});
+
+test("explicitly confirmed zero legacy-unbound coverage preserves its real zero Cafe24 row", () => {
+  const input = fixture();
+  const legacy = missingLegacyCoverage().map(row => ({ ...row, collectionState: "COMPLETE" as const, rowsPresent: 0,
+    zeroConfirmed: true, lastSuccessAt: "2026-11-02T00:00:00Z", quality }));
+  const result = summarizeReport(input.facts, [...input.coverage, ...legacy], { platforms });
+  assert.equal(market(result, "CAFE24").display!.revenue.value, "0.000000");
+  assert.equal(market(result, "CAFE24").completeRevenue, "0.000000");
+  assert.equal(result.byMarketplace.length, 3);
+  assert.equal(result.knownTotals.revenue, "13066880.000000");
+});
+
 test("unknown native monetary inputs never fall back to stale legacy amounts or invented zeros", () => {
   const input = fixture(nativeRows().map(row => ({ ...row, revenue: null, grossCost: null, coupon: null, profitBeforeAds: null, estimatedProfit: null, complete: false, issues: ["MISSING_INPUT"] })));
   const result = summarizeReport(input.facts, input.coverage, { platforms });
