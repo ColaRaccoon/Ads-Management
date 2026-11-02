@@ -1,0 +1,1946 @@
+{
+  "status": "COMPLETE",
+  "readOnly": true,
+  "date": "2026-11-01",
+  "nativeObservedAt": "2026-11-02T07:39:10.043Z",
+  "unifiedObservedAt": "2026-11-02T07:39:14.191Z",
+  "adProductParity": [
+    {
+      "ordinal": 1,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 2,
+      "channel": "META",
+      "nativeAds": 513008.907,
+      "unifiedAds": "513008.907000",
+      "difference": "0.000000",
+      "nativeProfit": 201742.09299999988,
+      "unifiedProfit": "201742.093000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 3,
+      "channel": "META",
+      "nativeAds": 653575.9380000001,
+      "unifiedAds": "653575.938000",
+      "difference": "0.000000",
+      "nativeProfit": 554564.0619999999,
+      "unifiedProfit": "554564.062000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 4,
+      "channel": "META",
+      "nativeAds": 146776.176,
+      "unifiedAds": "146776.176000",
+      "difference": "0.000000",
+      "nativeProfit": 332400.824,
+      "unifiedProfit": "332400.824000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 5,
+      "channel": "META",
+      "nativeAds": 54346.71,
+      "unifiedAds": "54346.710000",
+      "difference": "0.000000",
+      "nativeProfit": -25136.709999999992,
+      "unifiedProfit": "-25136.710000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 6,
+      "channel": "META",
+      "nativeAds": 291522.696,
+      "unifiedAds": "291522.696000",
+      "difference": "0.000000",
+      "nativeProfit": 91757.304,
+      "unifiedProfit": "91757.304000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 7,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 8,
+      "channel": "META",
+      "nativeAds": 99867.087,
+      "unifiedAds": "99867.087000",
+      "difference": "0.000000",
+      "nativeProfit": 168642.913,
+      "unifiedProfit": "168642.913000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 9,
+      "channel": "META",
+      "nativeAds": 643921.719,
+      "unifiedAds": "643921.719000",
+      "difference": "0.000000",
+      "nativeProfit": 474588.28099999996,
+      "unifiedProfit": "474588.281000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 10,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 21120,
+      "unifiedProfit": "21120.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 11,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 12,
+      "channel": "META",
+      "nativeAds": 50327.456999999995,
+      "unifiedAds": "50327.457000",
+      "difference": "-0.000000",
+      "nativeProfit": 44202.543000000005,
+      "unifiedProfit": "44202.543000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 13,
+      "channel": "META",
+      "nativeAds": 126559.734,
+      "unifiedAds": "126559.734000",
+      "difference": "0.000000",
+      "nativeProfit": 32990.266,
+      "unifiedProfit": "32990.266000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 14,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 15,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 16,
+      "channel": "META",
+      "nativeAds": 51021.813,
+      "unifiedAds": "51021.813000",
+      "difference": "0.000000",
+      "nativeProfit": -22111.812999999995,
+      "unifiedProfit": "-22111.813000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 17,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 18,
+      "channel": "META",
+      "nativeAds": 366526.497,
+      "unifiedAds": "366526.497000",
+      "difference": "0.000000",
+      "nativeProfit": 130405.50300000003,
+      "unifiedProfit": "130405.503000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 19,
+      "channel": "META",
+      "nativeAds": 1855866.705,
+      "unifiedAds": "1855866.705000",
+      "difference": "0.000000",
+      "nativeProfit": 195518.29499999993,
+      "unifiedProfit": "195518.295000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 20,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 403127,
+      "unifiedProfit": "403127.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 21,
+      "channel": "META",
+      "nativeAds": 214502.59199999998,
+      "unifiedAds": "214502.592000",
+      "difference": "-0.000000",
+      "nativeProfit": -61362.591999999946,
+      "unifiedProfit": "-61362.592000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 22,
+      "channel": "META",
+      "nativeAds": 0,
+      "unifiedAds": "0.000000",
+      "difference": "0.000000",
+      "nativeProfit": 0,
+      "unifiedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 23,
+      "channel": "GOOGLE",
+      "nativeAds": 51575.083922,
+      "unifiedAds": "51575.083922",
+      "difference": "0.000000",
+      "nativeProfit": -34835.083922,
+      "unifiedProfit": "-34835.083922",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 24,
+      "channel": "GOOGLE",
+      "nativeAds": 51340.679848,
+      "unifiedAds": "51340.679848",
+      "difference": "0.000000",
+      "nativeProfit": -37430.679848,
+      "unifiedProfit": "-37430.679848",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 25,
+      "channel": "GOOGLE",
+      "nativeAds": 51238.484766,
+      "unifiedAds": "51238.484766",
+      "difference": "0.000000",
+      "nativeProfit": -51238.484766,
+      "unifiedProfit": "-51238.484766",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 26,
+      "channel": "GOOGLE",
+      "nativeAds": 51310.986633,
+      "unifiedAds": "51310.986633",
+      "difference": "0.000000",
+      "nativeProfit": -51310.986633,
+      "unifiedProfit": "-51310.986633",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 27,
+      "channel": "GOOGLE",
+      "nativeAds": 108550.07105,
+      "unifiedAds": "108550.071050",
+      "difference": "0.000000",
+      "nativeProfit": 41319.92895,
+      "unifiedProfit": "41319.928950",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 28,
+      "channel": "GOOGLE",
+      "nativeAds": 30735.113059,
+      "unifiedAds": "30735.113059",
+      "difference": "0.000000",
+      "nativeProfit": 32824.886941,
+      "unifiedProfit": "32824.886941",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 29,
+      "channel": "GOOGLE",
+      "nativeAds": 51192.405611,
+      "unifiedAds": "51192.405611",
+      "difference": "0.000000",
+      "nativeProfit": -22372.405611,
+      "unifiedProfit": "-22372.405611",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 30,
+      "channel": "GOOGLE",
+      "nativeAds": 50946.201824,
+      "unifiedAds": "50946.201824",
+      "difference": "0.000000",
+      "nativeProfit": -6126.201824,
+      "unifiedProfit": "-6126.201824",
+      "profitDifference": "0.000000"
+    }
+  ],
+  "publishedProductParity": [
+    {
+      "ordinal": 1,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 0,
+      "publishedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 2,
+      "channel": "META",
+      "nativeAds": 513008.907,
+      "publishedAds": "513008.907000",
+      "adDifference": "0.000000",
+      "nativeProfit": 201742.09299999988,
+      "publishedProfit": "201742.093000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 3,
+      "channel": "META",
+      "nativeAds": 653575.9380000001,
+      "publishedAds": "653575.938000",
+      "adDifference": "0.000000",
+      "nativeProfit": 554564.0619999999,
+      "publishedProfit": "554564.062000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 4,
+      "channel": "META",
+      "nativeAds": 146776.176,
+      "publishedAds": "146776.176000",
+      "adDifference": "0.000000",
+      "nativeProfit": 332400.824,
+      "publishedProfit": "332400.824000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 5,
+      "channel": "META",
+      "nativeAds": 54346.71,
+      "publishedAds": "54346.710000",
+      "adDifference": "0.000000",
+      "nativeProfit": -25136.709999999992,
+      "publishedProfit": "-25136.710000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 6,
+      "channel": "META",
+      "nativeAds": 291522.696,
+      "publishedAds": "291522.696000",
+      "adDifference": "0.000000",
+      "nativeProfit": 91757.304,
+      "publishedProfit": "91757.304000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 7,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 0,
+      "publishedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 8,
+      "channel": "META",
+      "nativeAds": 99867.087,
+      "publishedAds": "99867.087000",
+      "adDifference": "0.000000",
+      "nativeProfit": 168642.913,
+      "publishedProfit": "168642.913000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 9,
+      "channel": "META",
+      "nativeAds": 643921.719,
+      "publishedAds": "643921.719000",
+      "adDifference": "0.000000",
+      "nativeProfit": 474588.28099999996,
+      "publishedProfit": "474588.281000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 10,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 21120,
+      "publishedProfit": "21120.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 11,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 0,
+      "publishedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 12,
+      "channel": "META",
+      "nativeAds": 50327.456999999995,
+      "publishedAds": "50327.457000",
+      "adDifference": "-0.000000",
+      "nativeProfit": 44202.543000000005,
+      "publishedProfit": "44202.543000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 13,
+      "channel": "META",
+      "nativeAds": 126559.734,
+      "publishedAds": "126559.734000",
+      "adDifference": "0.000000",
+      "nativeProfit": 32990.266,
+      "publishedProfit": "32990.266000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 14,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 0,
+      "publishedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 15,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 0,
+      "publishedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 16,
+      "channel": "META",
+      "nativeAds": 51021.813,
+      "publishedAds": "51021.813000",
+      "adDifference": "0.000000",
+      "nativeProfit": -22111.812999999995,
+      "publishedProfit": "-22111.813000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 17,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 0,
+      "publishedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 18,
+      "channel": "META",
+      "nativeAds": 366526.497,
+      "publishedAds": "366526.497000",
+      "adDifference": "0.000000",
+      "nativeProfit": 130405.50300000003,
+      "publishedProfit": "130405.503000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 19,
+      "channel": "META",
+      "nativeAds": 1855866.705,
+      "publishedAds": "1855866.705000",
+      "adDifference": "0.000000",
+      "nativeProfit": 195518.29499999993,
+      "publishedProfit": "195518.295000",
+      "profitDifference": "-0.000000"
+    },
+    {
+      "ordinal": 20,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 403127,
+      "publishedProfit": "403127.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 21,
+      "channel": "META",
+      "nativeAds": 214502.59199999998,
+      "publishedAds": "214502.592000",
+      "adDifference": "-0.000000",
+      "nativeProfit": -61362.591999999946,
+      "publishedProfit": "-61362.592000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 22,
+      "channel": "META",
+      "nativeAds": 0,
+      "publishedAds": "0.000000",
+      "adDifference": "0.000000",
+      "nativeProfit": 0,
+      "publishedProfit": "0.000000",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 23,
+      "channel": "GOOGLE",
+      "nativeAds": 51575.083922,
+      "publishedAds": "51575.083922",
+      "adDifference": "0.000000",
+      "nativeProfit": -34835.083922,
+      "publishedProfit": "-34835.083922",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 24,
+      "channel": "GOOGLE",
+      "nativeAds": 51340.679848,
+      "publishedAds": "51340.679848",
+      "adDifference": "0.000000",
+      "nativeProfit": -37430.679848,
+      "publishedProfit": "-37430.679848",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 25,
+      "channel": "GOOGLE",
+      "nativeAds": 51238.484766,
+      "publishedAds": "51238.484766",
+      "adDifference": "0.000000",
+      "nativeProfit": -51238.484766,
+      "publishedProfit": "-51238.484766",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 26,
+      "channel": "GOOGLE",
+      "nativeAds": 51310.986633,
+      "publishedAds": "51310.986633",
+      "adDifference": "0.000000",
+      "nativeProfit": -51310.986633,
+      "publishedProfit": "-51310.986633",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 27,
+      "channel": "GOOGLE",
+      "nativeAds": 108550.07105,
+      "publishedAds": "108550.071050",
+      "adDifference": "0.000000",
+      "nativeProfit": 41319.92895,
+      "publishedProfit": "41319.928950",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 28,
+      "channel": "GOOGLE",
+      "nativeAds": 30735.113059,
+      "publishedAds": "30735.113059",
+      "adDifference": "0.000000",
+      "nativeProfit": 32824.886941,
+      "publishedProfit": "32824.886941",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 29,
+      "channel": "GOOGLE",
+      "nativeAds": 51192.405611,
+      "publishedAds": "51192.405611",
+      "adDifference": "0.000000",
+      "nativeProfit": -22372.405611,
+      "publishedProfit": "-22372.405611",
+      "profitDifference": "0.000000"
+    },
+    {
+      "ordinal": 30,
+      "channel": "GOOGLE",
+      "nativeAds": 50946.201824,
+      "publishedAds": "50946.201824",
+      "adDifference": "0.000000",
+      "nativeProfit": -6126.201824,
+      "publishedProfit": "-6126.201824",
+      "profitDifference": "0.000000"
+    }
+  ],
+  "separateRepeatableReadSnapshots": true,
+  "sourcePolicyEnabled": true,
+  "native": {
+    "totals": {
+      "revenue": "12545080.000000",
+      "coupon": "19000.000000",
+      "ads": "5067824.031000",
+      "grossCost": "4915808.000000",
+      "totalCost": "10002632.031000",
+      "margin": "2542447.969000",
+      "incompleteMarginProducts": 0,
+      "unmatchedAdSpend": 0
+    },
+    "all": {
+      "rows": 349,
+      "matchedRows": 330,
+      "quantity": "405.000000",
+      "sourceListGross": "12878200.000000",
+      "revenue": "12545080.000000",
+      "grossCost": "4915808.000000",
+      "missingCostProducts": 0
+    },
+    "youtube": {
+      "rows": 17,
+      "matchedRows": 0,
+      "quantity": null,
+      "sourceListGross": "498100.000000",
+      "revenue": null,
+      "grossCost": null,
+      "missingCostProducts": 0
+    },
+    "youtubeUnmatched": {
+      "rows": 17,
+      "matchedRows": 0,
+      "quantity": null,
+      "sourceListGross": "498100.000000",
+      "revenue": null,
+      "grossCost": null,
+      "missingCostProducts": 0
+    },
+    "nonYoutube": {
+      "rows": 332,
+      "matchedRows": 330,
+      "quantity": "405.000000",
+      "sourceListGross": "12380100.000000",
+      "revenue": "12545080.000000",
+      "grossCost": "4915808.000000",
+      "missingCostProducts": 0
+    },
+    "google": {
+      "summary": {
+        "revenue": 521800,
+        "knownRevenue": 521800,
+        "grossCost": 203080,
+        "coupon": 1000,
+        "ads": 446889.026713,
+        "knownAds": 446889.026713,
+        "margin": -129169.026713,
+        "calculatedMargin": -129169.026713,
+        "complete": true,
+        "lineCount": 17
+      },
+      "productCount": 8,
+      "returnedProducts": 8,
+      "warningCodes": [
+        "COUPON_ESTIMATED",
+        "PRICE_MISMATCH"
+      ],
+      "unmappedYoutubeRows": 0
+    }
+  },
+  "unified": {
+    "allSales": {
+      "rows": 349,
+      "knownRevenueRows": 348,
+      "knownProfitRows": 300,
+      "netRevenue": "13151500.000000",
+      "registeredGross": "10643400.000000",
+      "sourceGross": "12878200.000000",
+      "coupon": "20000.000000",
+      "productCost": "2589200.000000",
+      "shipping": "266100.000000",
+      "otherCost": "0.000000",
+      "vat": "1064340.000000",
+      "profitBeforeAds": "6683373.000000",
+      "issueCodes": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+        "COST_INPUT_MISSING",
+        "COUPON_IGNORED_RESIDUAL",
+        "COUPON_NON_POSITIVE_GAP",
+        "COUPON_UNRESOLVED",
+        "NAME_UNMATCHED",
+        "REVENUE_INPUT_MISSING",
+        "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+        "SALE_UNIT_RULE_MISSING"
+      ]
+    },
+    "nativeMatchedSales": {
+      "rows": 330,
+      "knownRevenueRows": 329,
+      "knownProfitRows": 287,
+      "netRevenue": "12461300.000000",
+      "registeredGross": "10266100.000000",
+      "sourceGross": "12210700.000000",
+      "coupon": "19000.000000",
+      "productCost": "2480800.000000",
+      "shipping": "266100.000000",
+      "otherCost": "0.000000",
+      "vat": "1026610.000000",
+      "profitBeforeAds": "6453203.000000",
+      "issueCodes": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+        "COST_INPUT_MISSING",
+        "COUPON_IGNORED_RESIDUAL",
+        "COUPON_NON_POSITIVE_GAP",
+        "COUPON_UNRESOLVED",
+        "NAME_UNMATCHED",
+        "REVENUE_INPUT_MISSING",
+        "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+        "SALE_UNIT_RULE_MISSING"
+      ]
+    },
+    "nativeUnmatchedSales": {
+      "rows": 19,
+      "knownRevenueRows": 19,
+      "knownProfitRows": 13,
+      "netRevenue": "690200.000000",
+      "registeredGross": "377300.000000",
+      "sourceGross": "667500.000000",
+      "coupon": "1000.000000",
+      "productCost": "108400.000000",
+      "shipping": "0.000000",
+      "otherCost": "0.000000",
+      "vat": "37730.000000",
+      "profitBeforeAds": "230170.000000",
+      "issueCodes": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+        "COST_INPUT_MISSING",
+        "COUPON_IGNORED_RESIDUAL",
+        "NAME_UNMATCHED",
+        "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+        "SALE_UNIT_RULE_MISSING"
+      ]
+    },
+    "youtube": {
+      "rows": 17,
+      "knownRevenueRows": 17,
+      "knownProfitRows": 13,
+      "netRevenue": "520800.000000",
+      "registeredGross": "377300.000000",
+      "sourceGross": "498100.000000",
+      "coupon": "1000.000000",
+      "productCost": "108400.000000",
+      "shipping": "0.000000",
+      "otherCost": "0.000000",
+      "vat": "37730.000000",
+      "profitBeforeAds": "230170.000000",
+      "issueCodes": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+        "COST_INPUT_MISSING",
+        "COUPON_IGNORED_RESIDUAL",
+        "NAME_UNMATCHED",
+        "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+        "SALE_UNIT_RULE_MISSING"
+      ]
+    },
+    "notInNativeSelection": {
+      "rows": 0,
+      "knownRevenueRows": 0,
+      "knownProfitRows": 0,
+      "netRevenue": null,
+      "registeredGross": null,
+      "sourceGross": null,
+      "coupon": null,
+      "productCost": null,
+      "shipping": null,
+      "otherCost": null,
+      "vat": null,
+      "profitBeforeAds": null,
+      "issueCodes": []
+    },
+    "published": {
+      "knownTotals": {
+        "revenue": "13066880.000000",
+        "adSpend": "5514713.057713",
+        "profitBeforeAds": "7927992.000000",
+        "estimatedProfit": "2413278.942287",
+        "mer": "2.3694578237"
+      },
+      "completeTotals": {
+        "revenue": null,
+        "adSpend": null,
+        "profitBeforeAds": null,
+        "estimatedProfit": null,
+        "mer": null
+      },
+      "byMarketplace": [
+        {
+          "marketplace": "CAFE24_META",
+          "revenue": "12545080.000000",
+          "completeRevenue": null,
+          "profitBeforeAds": null,
+          "adSpend": null,
+          "estimatedProfit": null,
+          "profitUnavailableReason": "MISSING_INPUT",
+          "display": {
+            "revenue": {
+              "value": "12545080.000000",
+              "state": "PARTIAL",
+              "availableSources": [
+                "CAFE24"
+              ],
+              "missingSources": [
+                "CAFE24"
+              ]
+            },
+            "estimatedProfit": {
+              "value": "2542447.969000",
+              "state": "PARTIAL",
+              "availableSources": [
+                "CAFE24",
+                "META"
+              ],
+              "missingSources": [
+                "CAFE24",
+                "META"
+              ]
+            },
+            "adSpend": {
+              "value": "5067824.031000",
+              "state": "PARTIAL",
+              "availableSources": [
+                "META"
+              ],
+              "missingSources": [
+                "META"
+              ]
+            }
+          }
+        },
+        {
+          "marketplace": "CAFE24_YOUTUBE",
+          "revenue": "521800.000000",
+          "completeRevenue": "521800.000000",
+          "profitBeforeAds": "317720.000000",
+          "adSpend": "446889.026713",
+          "estimatedProfit": "-129169.026713",
+          "profitUnavailableReason": null,
+          "display": {
+            "revenue": {
+              "value": "521800.000000",
+              "state": "COMPLETE",
+              "availableSources": [
+                "CAFE24"
+              ],
+              "missingSources": []
+            },
+            "estimatedProfit": {
+              "value": "-129169.026713",
+              "state": "COMPLETE",
+              "availableSources": [
+                "CAFE24",
+                "GOOGLE"
+              ],
+              "missingSources": []
+            },
+            "adSpend": {
+              "value": "446889.026713",
+              "state": "COMPLETE",
+              "availableSources": [
+                "GOOGLE"
+              ],
+              "missingSources": []
+            }
+          }
+        }
+      ],
+      "byMedium": [
+        {
+          "medium": "GOOGLE",
+          "adSpend": "446889.026713",
+          "completeAdSpend": "446889.026713",
+          "displayAdSpend": {
+            "value": "446889.026713",
+            "state": "COMPLETE",
+            "availableSources": [
+              "GOOGLE"
+            ],
+            "missingSources": []
+          },
+          "share": "8.1035771406"
+        },
+        {
+          "medium": "META",
+          "adSpend": "5067824.031000",
+          "completeAdSpend": null,
+          "displayAdSpend": {
+            "value": "5067824.031000",
+            "state": "PARTIAL",
+            "availableSources": [
+              "META"
+            ],
+            "missingSources": [
+              "META"
+            ]
+          },
+          "share": "91.8964228594"
+        }
+      ],
+      "scopeBalances": {
+        "unallocatedAdSpend": "0.000000",
+        "unallocatedExpense": null,
+        "shippingIncome": null,
+        "unallocatedShippingIncome": null,
+        "unclassifiedRevenue": "0.000000",
+        "unclassifiedProfitBeforeAds": "0.000000"
+      },
+      "issues": [
+        "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+        "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+        "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+        "COUPON_ESTIMATED",
+        "GOOGLE_NATIVE_CAMPAIGN_MATCHER",
+        "INCOMPLETE_COVERAGE",
+        "NAME_UNMATCHED",
+        "NOT_COLLECTED",
+        "PARTIAL_TOTAL",
+        "PRICE_MISMATCH",
+        "UNALLOCATED_AD_SPEND",
+        "UNCLASSIFIED_SALES",
+        "UNMAPPED_SALES"
+      ]
+    },
+    "recomputed": {
+      "knownTotals": {
+        "revenue": "13066880.000000",
+        "adSpend": "5514713.057713",
+        "profitBeforeAds": "7927992.000000",
+        "estimatedProfit": "2413278.942287",
+        "mer": "2.3694578237"
+      },
+      "completeTotals": {
+        "revenue": null,
+        "adSpend": null,
+        "profitBeforeAds": null,
+        "estimatedProfit": null,
+        "mer": null
+      },
+      "byMarketplace": [
+        {
+          "marketplace": "CAFE24_META",
+          "revenue": "12545080.000000",
+          "completeRevenue": null,
+          "profitBeforeAds": null,
+          "adSpend": null,
+          "estimatedProfit": null,
+          "profitUnavailableReason": "MISSING_INPUT",
+          "display": {
+            "revenue": {
+              "value": "12545080.000000",
+              "state": "PARTIAL",
+              "availableSources": [
+                "CAFE24"
+              ],
+              "missingSources": [
+                "CAFE24"
+              ]
+            },
+            "estimatedProfit": {
+              "value": "2542447.969000",
+              "state": "PARTIAL",
+              "availableSources": [
+                "CAFE24",
+                "META"
+              ],
+              "missingSources": [
+                "CAFE24",
+                "META"
+              ]
+            },
+            "adSpend": {
+              "value": "5067824.031000",
+              "state": "PARTIAL",
+              "availableSources": [
+                "META"
+              ],
+              "missingSources": [
+                "META"
+              ]
+            }
+          }
+        },
+        {
+          "marketplace": "CAFE24_YOUTUBE",
+          "revenue": "521800.000000",
+          "completeRevenue": null,
+          "profitBeforeAds": null,
+          "adSpend": "446889.026713",
+          "estimatedProfit": null,
+          "profitUnavailableReason": "MISSING_INPUT",
+          "display": {
+            "revenue": {
+              "value": "521800.000000",
+              "state": "PARTIAL",
+              "availableSources": [
+                "CAFE24"
+              ],
+              "missingSources": [
+                "CAFE24"
+              ]
+            },
+            "estimatedProfit": {
+              "value": "-129169.026713",
+              "state": "PARTIAL",
+              "availableSources": [
+                "CAFE24",
+                "GOOGLE"
+              ],
+              "missingSources": [
+                "CAFE24",
+                "GOOGLE"
+              ]
+            },
+            "adSpend": {
+              "value": "446889.026713",
+              "state": "COMPLETE",
+              "availableSources": [
+                "GOOGLE"
+              ],
+              "missingSources": []
+            }
+          }
+        }
+      ]
+    },
+    "sourceQuality": [
+      {
+        "platform": "CAFE24",
+        "scopes": 2,
+        "issueCodes": [
+          "ATTRIBUTION_UNKNOWN",
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_COLLECTION_INCOMPLETE",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COMMON_COSTS_INCLUDED_IN_DIRECT_LEDGER",
+          "COUPON_ESTIMATED",
+          "PRICE_MISMATCH",
+          "SOURCE_COLLECTION_INCOMPLETE",
+          "UNALLOCATED_AD_SPEND",
+          "UNMAPPED_SALES"
+        ]
+      },
+      {
+        "platform": "META",
+        "scopes": 2,
+        "issueCodes": [
+          "NAME_UNMATCHED",
+          "SOURCE_SELECTION_REQUIRED"
+        ]
+      },
+      {
+        "platform": "GOOGLE",
+        "scopes": 1,
+        "issueCodes": [
+          "GOOGLE_NATIVE_CAMPAIGN_MATCHER"
+        ]
+      }
+    ]
+  },
+  "differences": {
+    "nativeMarginMinusPublishedUnified": "129169.026713",
+    "nativeBeforeAdsMinusPublishedUnified": "-317720.000000",
+    "googleAds": "446889.026713",
+    "nativeNetRevenueMinusPublishedUnified": "-540800.000000"
+  },
+  "products": [
+    {
+      "productOrdinal": 1,
+      "active": true,
+      "native": {
+        "rows": 11,
+        "matchedRows": 11,
+        "quantity": "11.000000",
+        "sourceListGross": "405900.000000",
+        "revenue": "405900.000000",
+        "grossCost": "137390.000000",
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 99867.087,
+        "margin": 168642.913
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 11,
+        "knownRevenueRows": 11,
+        "knownProfitRows": 11,
+        "netRevenue": "405900.000000",
+        "registeredGross": "405900.000000",
+        "sourceGross": "405900.000000",
+        "coupon": "0.000000",
+        "productCost": "66000.000000",
+        "shipping": "30800.000000",
+        "otherCost": "0.000000",
+        "vat": "40590.000000",
+        "profitBeforeAds": "268510.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "268510.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 2,
+      "active": false,
+      "native": {
+        "rows": 0,
+        "matchedRows": 0,
+        "quantity": null,
+        "sourceListGross": null,
+        "revenue": null,
+        "grossCost": null,
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 0
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 0,
+        "knownRevenueRows": 0,
+        "knownProfitRows": 0,
+        "netRevenue": null,
+        "registeredGross": null,
+        "sourceGross": null,
+        "coupon": null,
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": []
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "0.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 3,
+      "active": false,
+      "native": {
+        "rows": 0,
+        "matchedRows": 0,
+        "quantity": null,
+        "sourceListGross": null,
+        "revenue": null,
+        "grossCost": null,
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 0
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 0,
+        "knownRevenueRows": 0,
+        "knownProfitRows": 0,
+        "netRevenue": null,
+        "registeredGross": null,
+        "sourceGross": null,
+        "coupon": null,
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": []
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "0.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 4,
+      "active": false,
+      "native": {
+        "rows": 0,
+        "matchedRows": 0,
+        "quantity": null,
+        "sourceListGross": null,
+        "revenue": null,
+        "grossCost": null,
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 0
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 0,
+        "knownRevenueRows": 0,
+        "knownProfitRows": 0,
+        "netRevenue": null,
+        "registeredGross": null,
+        "sourceGross": null,
+        "coupon": null,
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": []
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "0.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 5,
+      "active": true,
+      "native": {
+        "rows": 25,
+        "matchedRows": 25,
+        "quantity": "44.000000",
+        "sourceListGross": "394600.000000",
+        "revenue": "561200.000000",
+        "grossCost": "174920.000000",
+        "missingCostProducts": 0,
+        "coupon": 3000,
+        "adSpend": 291522.696,
+        "margin": 91757.304
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 25,
+        "knownRevenueRows": 25,
+        "knownProfitRows": 25,
+        "netRevenue": "558200.000000",
+        "registeredGross": "561200.000000",
+        "sourceGross": "394600.000000",
+        "coupon": "3000.000000",
+        "productCost": "118800.000000",
+        "shipping": "0.000000",
+        "otherCost": "0.000000",
+        "vat": "56120.000000",
+        "profitBeforeAds": "383280.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "383280.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 6,
+      "active": true,
+      "native": {
+        "rows": 1,
+        "matchedRows": 1,
+        "quantity": "1.000000",
+        "sourceListGross": "24900.000000",
+        "revenue": "44900.000000",
+        "grossCost": "15990.000000",
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 51021.813,
+        "margin": -22111.812999999995
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 1,
+        "knownRevenueRows": 1,
+        "knownProfitRows": 1,
+        "netRevenue": "44900.000000",
+        "registeredGross": "44900.000000",
+        "sourceGross": "24900.000000",
+        "coupon": "0.000000",
+        "productCost": "11500.000000",
+        "shipping": "0.000000",
+        "otherCost": "0.000000",
+        "vat": "4490.000000",
+        "profitBeforeAds": "28910.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "28910.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 7,
+      "active": true,
+      "native": {
+        "rows": 3,
+        "matchedRows": 3,
+        "quantity": "3.000000",
+        "sourceListGross": "146700.000000",
+        "revenue": "146700.000000",
+        "grossCost": "52170.000000",
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 50327.456999999995,
+        "margin": 44202.543000000005
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 3,
+        "knownRevenueRows": 3,
+        "knownProfitRows": 3,
+        "netRevenue": "146700.000000",
+        "registeredGross": "146700.000000",
+        "sourceGross": "146700.000000",
+        "coupon": "0.000000",
+        "productCost": "27000.000000",
+        "shipping": "10500.000000",
+        "otherCost": "0.000000",
+        "vat": "14670.000000",
+        "profitBeforeAds": "94530.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "94530.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 8,
+      "active": false,
+      "native": {
+        "rows": 0,
+        "matchedRows": 0,
+        "quantity": null,
+        "sourceListGross": null,
+        "revenue": null,
+        "grossCost": null,
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 0
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 0,
+        "knownRevenueRows": 0,
+        "knownProfitRows": 0,
+        "netRevenue": null,
+        "registeredGross": null,
+        "sourceGross": null,
+        "coupon": null,
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": []
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "0.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 9,
+      "active": true,
+      "native": {
+        "rows": 5,
+        "matchedRows": 5,
+        "quantity": "5.000000",
+        "sourceListGross": "424500.000000",
+        "revenue": "424500.000000",
+        "grossCost": "264950.000000",
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 126559.734,
+        "margin": 32990.266
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 5,
+        "knownRevenueRows": 5,
+        "knownProfitRows": 0,
+        "netRevenue": "424500.000000",
+        "registeredGross": null,
+        "sourceGross": "424500.000000",
+        "coupon": "0.000000",
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COST_INPUT_MISSING",
+          "NAME_UNMATCHED",
+          "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+          "SALE_UNIT_RULE_MISSING"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "159550.000000",
+      "unifiedMappedElsewhereRows": 5
+    },
+    {
+      "productOrdinal": 10,
+      "active": true,
+      "native": {
+        "rows": 95,
+        "matchedRows": 95,
+        "quantity": "96.000000",
+        "sourceListGross": "3350400.000000",
+        "revenue": "3350400.000000",
+        "grossCost": "1295040.000000",
+        "missingCostProducts": 0,
+        "coupon": 3975,
+        "adSpend": 1855866.705,
+        "margin": 195518.29499999993
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 95,
+        "knownRevenueRows": 94,
+        "knownProfitRows": 94,
+        "netRevenue": "3311525.000000",
+        "registeredGross": "3350400.000000",
+        "sourceGross": "3350400.000000",
+        "coupon": "3975.000000",
+        "productCost": "960000.000000",
+        "shipping": "0.000000",
+        "otherCost": "0.000000",
+        "vat": "335040.000000",
+        "profitBeforeAds": "2029975.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COUPON_IGNORED_RESIDUAL",
+          "COUPON_NON_POSITIVE_GAP",
+          "COUPON_UNRESOLVED",
+          "REVENUE_INPUT_MISSING"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "2051385.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 11,
+      "active": true,
+      "native": {
+        "rows": 7,
+        "matchedRows": 7,
+        "quantity": "7.000000",
+        "sourceListGross": "278600.000000",
+        "revenue": "278600.000000",
+        "grossCost": "124460.000000",
+        "missingCostProducts": 0,
+        "coupon": 1000,
+        "adSpend": 214502.59199999998,
+        "margin": -61362.591999999946
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 7,
+        "knownRevenueRows": 7,
+        "knownProfitRows": 7,
+        "netRevenue": "277600.000000",
+        "registeredGross": "278600.000000",
+        "sourceGross": "278600.000000",
+        "coupon": "1000.000000",
+        "productCost": "77000.000000",
+        "shipping": "19600.000000",
+        "otherCost": "0.000000",
+        "vat": "27860.000000",
+        "profitBeforeAds": "153140.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "153140.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 12,
+      "active": true,
+      "native": {
+        "rows": 24,
+        "matchedRows": 24,
+        "quantity": "24.000000",
+        "sourceListGross": "475200.000000",
+        "revenue": "594200.000000",
+        "grossCost": "190520.000000",
+        "missingCostProducts": 0,
+        "coupon": 553,
+        "adSpend": 0,
+        "margin": 403127
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 24,
+        "knownRevenueRows": 24,
+        "knownProfitRows": 24,
+        "netRevenue": "593647.000000",
+        "registeredGross": "594200.000000",
+        "sourceGross": "475200.000000",
+        "coupon": "553.000000",
+        "productCost": "113500.000000",
+        "shipping": "17600.000000",
+        "otherCost": "0.000000",
+        "vat": "59420.000000",
+        "profitBeforeAds": "403127.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COUPON_IGNORED_RESIDUAL"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "403127.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 13,
+      "active": false,
+      "native": {
+        "rows": 0,
+        "matchedRows": 0,
+        "quantity": null,
+        "sourceListGross": null,
+        "revenue": null,
+        "grossCost": null,
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 0
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 0,
+        "knownRevenueRows": 0,
+        "knownProfitRows": 0,
+        "netRevenue": null,
+        "registeredGross": null,
+        "sourceGross": null,
+        "coupon": null,
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": []
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "0.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 14,
+      "active": false,
+      "native": {
+        "rows": 0,
+        "matchedRows": 0,
+        "quantity": null,
+        "sourceListGross": null,
+        "revenue": null,
+        "grossCost": null,
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 0
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 0,
+        "knownRevenueRows": 0,
+        "knownProfitRows": 0,
+        "netRevenue": null,
+        "registeredGross": null,
+        "sourceGross": null,
+        "coupon": null,
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": []
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "0.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 15,
+      "active": true,
+      "native": {
+        "rows": 17,
+        "matchedRows": 17,
+        "quantity": "18.000000",
+        "sourceListGross": "846600.000000",
+        "revenue": "876480.000000",
+        "grossCost": "379548.000000",
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 366526.497,
+        "margin": 130405.50300000003
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 17,
+        "knownRevenueRows": 17,
+        "knownProfitRows": 0,
+        "netRevenue": "846600.000000",
+        "registeredGross": null,
+        "sourceGross": "846600.000000",
+        "coupon": "0.000000",
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COST_INPUT_MISSING",
+          "NAME_UNMATCHED",
+          "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+          "SALE_UNIT_RULE_MISSING"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "496932.000000",
+      "unifiedMappedElsewhereRows": 17
+    },
+    {
+      "productOrdinal": 16,
+      "active": true,
+      "native": {
+        "rows": 1,
+        "matchedRows": 1,
+        "quantity": "1.000000",
+        "sourceListGross": "42000.000000",
+        "revenue": "41800.000000",
+        "grossCost": "20680.000000",
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 21120
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 1,
+        "knownRevenueRows": 1,
+        "knownProfitRows": 1,
+        "netRevenue": "41800.000000",
+        "registeredGross": "41800.000000",
+        "sourceGross": "42000.000000",
+        "coupon": "0.000000",
+        "productCost": "16500.000000",
+        "shipping": "0.000000",
+        "otherCost": "0.000000",
+        "vat": "4180.000000",
+        "profitBeforeAds": "21120.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "21120.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 17,
+      "active": true,
+      "native": {
+        "rows": 1,
+        "matchedRows": 1,
+        "quantity": "1.000000",
+        "sourceListGross": "49800.000000",
+        "revenue": "48900.000000",
+        "grossCost": "19690.000000",
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 54346.71,
+        "margin": -25136.709999999992
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 1,
+        "knownRevenueRows": 1,
+        "knownProfitRows": 1,
+        "netRevenue": "48900.000000",
+        "registeredGross": "48900.000000",
+        "sourceGross": "49800.000000",
+        "coupon": "0.000000",
+        "productCost": "12000.000000",
+        "shipping": "2800.000000",
+        "otherCost": "0.000000",
+        "vat": "4890.000000",
+        "profitBeforeAds": "29210.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "29210.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 18,
+      "active": true,
+      "native": {
+        "rows": 20,
+        "matchedRows": 20,
+        "quantity": "20.000000",
+        "sourceListGross": "978000.000000",
+        "revenue": "978000.000000",
+        "grossCost": "497800.000000",
+        "missingCostProducts": 0,
+        "coupon": 1023,
+        "adSpend": 146776.176,
+        "margin": 332400.824
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 20,
+        "knownRevenueRows": 20,
+        "knownProfitRows": 0,
+        "netRevenue": "976977.000000",
+        "registeredGross": null,
+        "sourceGross": "978000.000000",
+        "coupon": "1023.000000",
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COST_INPUT_MISSING",
+          "COUPON_IGNORED_RESIDUAL",
+          "REVENUE_SOURCE_ROW_LIST_PRICE_FALLBACK",
+          "SALE_UNIT_RULE_MISSING"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "479177.000000",
+      "unifiedMappedElsewhereRows": 20
+    },
+    {
+      "productOrdinal": 19,
+      "active": false,
+      "native": {
+        "rows": 0,
+        "matchedRows": 0,
+        "quantity": null,
+        "sourceListGross": null,
+        "revenue": null,
+        "grossCost": null,
+        "missingCostProducts": 0,
+        "coupon": 0,
+        "adSpend": 0,
+        "margin": 0
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 0,
+        "knownRevenueRows": 0,
+        "knownProfitRows": 0,
+        "netRevenue": null,
+        "registeredGross": null,
+        "sourceGross": null,
+        "coupon": null,
+        "productCost": null,
+        "shipping": null,
+        "otherCost": null,
+        "vat": null,
+        "profitBeforeAds": null,
+        "issueCodes": []
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": null,
+      "nativeBeforeAds": "0.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 20,
+      "active": true,
+      "native": {
+        "rows": 35,
+        "matchedRows": 35,
+        "quantity": "35.000000",
+        "sourceListGross": "1393000.000000",
+        "revenue": "1393000.000000",
+        "grossCost": "674800.000000",
+        "missingCostProducts": 0,
+        "coupon": 3449,
+        "adSpend": 513008.907,
+        "margin": 201742.09299999988
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 35,
+        "knownRevenueRows": 35,
+        "knownProfitRows": 35,
+        "netRevenue": "1389551.000000",
+        "registeredGross": "1393000.000000",
+        "sourceGross": "1393000.000000",
+        "coupon": "3449.000000",
+        "productCost": "437500.000000",
+        "shipping": "98000.000000",
+        "otherCost": "0.000000",
+        "vat": "139300.000000",
+        "profitBeforeAds": "714751.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COUPON_IGNORED_RESIDUAL"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "714751.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 21,
+      "active": true,
+      "native": {
+        "rows": 31,
+        "matchedRows": 31,
+        "quantity": "31.000000",
+        "sourceListGross": "1515900.000000",
+        "revenue": "1515900.000000",
+        "grossCost": "393390.000000",
+        "missingCostProducts": 0,
+        "coupon": 4000,
+        "adSpend": 643921.719,
+        "margin": 474588.28099999996
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 31,
+        "knownRevenueRows": 31,
+        "knownProfitRows": 31,
+        "netRevenue": "1511900.000000",
+        "registeredGross": "1515900.000000",
+        "sourceGross": "1515900.000000",
+        "coupon": "4000.000000",
+        "productCost": "155000.000000",
+        "shipping": "86800.000000",
+        "otherCost": "0.000000",
+        "vat": "151590.000000",
+        "profitBeforeAds": "1118510.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE",
+          "COUPON_IGNORED_RESIDUAL"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "1118510.000000",
+      "unifiedMappedElsewhereRows": 0
+    },
+    {
+      "productOrdinal": 22,
+      "active": true,
+      "native": {
+        "rows": 54,
+        "matchedRows": 54,
+        "quantity": "108.000000",
+        "sourceListGross": "1884600.000000",
+        "revenue": "1884600.000000",
+        "grossCost": "674460.000000",
+        "missingCostProducts": 0,
+        "coupon": 2000,
+        "adSpend": 653575.9380000001,
+        "margin": 554564.0619999999
+      },
+      "nativeYoutubeRows": 0,
+      "unified": {
+        "rows": 54,
+        "knownRevenueRows": 54,
+        "knownProfitRows": 54,
+        "netRevenue": "1882600.000000",
+        "registeredGross": "1884600.000000",
+        "sourceGross": "1884600.000000",
+        "coupon": "2000.000000",
+        "productCost": "486000.000000",
+        "shipping": "0.000000",
+        "otherCost": "0.000000",
+        "vat": "188460.000000",
+        "profitBeforeAds": "1208140.000000",
+        "issueCodes": [
+          "CAFE24_CACHE_FRESHNESS_UNVERIFIED",
+          "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+          "CAFE24_PRODUCT_MAPPING_INCOMPLETE"
+        ]
+      },
+      "nativeGrossMinusUnifiedRegisteredGross": "0.000000",
+      "nativeBeforeAds": "1208140.000000",
+      "unifiedMappedElsewhereRows": 0
+    }
+  ]
+}

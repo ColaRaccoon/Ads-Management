@@ -38,4 +38,24 @@
 
 ## 운영 배포와 후속 확인
 
-배포/발행/실제 브라우저 검증 대기. source 원본과 과거 immutable 발행본은 보존한다. 앱 롤백은 새 컴포넌트를 이해하지 않는 이전 코드도 기존 원장을 읽을 수 있지만, 수정 전 금액으로 돌아가므로 코드·worker를 함께 추적한다.
+구현 커밋 `1a8b00d`를 원격 `codex/performance-speedup`에 올리고 웹과 비공개 reconciliation worker에 배포했다. 첫 웹 실행은 `RELEASE_GIT_SHA`가 이미지 SHA와 달라 시작 검사에서 거부됐다(`4d3c0f91-f4fa-46f3-9f30-76c6a97621a8`). 검사를 끄지 않고 설정을 정확한 SHA로 맞춰 재배포했고 `add7a638-9291-4790-897d-0a5eb0d61f5a`가 성공했다.
+
+11/1과 10/31 저장 집계를 갱신한 실제 운영 관리자 화면에서 자사몰(메타) 이익 2,542,448원, 자사몰(유튜브) 이익 -129,169원, 전체 이익 5,978,555원을 확인했다. 전체 매출은 35,550,970원, 광고비는 12,069,169원이다. 네이버 이익 999,104원과 쿠팡 이익 2,566,173원도 유지된다. 같은 11/1 보고서의 실제 브라우저 인쇄 미리보기에서 PDF 1페이지를 확인했다(물리 인쇄는 실행하지 않음).
+
+화면 확인 중 합성된 미수집 LEGACY_UNBOUND coverage가 빈 `자사몰(이전집계)` 행을 만드는 것을 발견했다. `b5526db`는 새 채널 집계가 있고 실제 이전 SALE/확인된 0원이 없는 경우에만 그 빈 행을 숨긴다. 실제 legacy 부분금액과 확인된 0원은 유지하고 coverage 누락 상태·총액은 바꾸지 않는다. 추가 회귀 3건, 관련 54개 테스트, 독립 검토 45개 테스트와 API 빌드가 통과했다. 최종 배포/갱신 결과는 아래에 기록한다.
+
+source 원본과 과거 immutable 발행본은 보존한다. 앱 롤백은 새 컴포넌트를 이해하지 않는 이전 코드도 기존 원장을 읽을 수 있지만, 수정 전 금액으로 돌아가므로 코드·worker를 함께 추적한다.
+
+최종 운영 코드 SHA는 `b5526dbe70db2d8bb79fa8f2a3e87b088527b24d`다. 웹 deployment `7529150b-286f-4aa5-b697-a595436487e8`, private worker `20d6a532-8a2a-467c-8fd4-d7b44255ce40` 모두 SUCCESS, 기존 `asia-southeast1-eqsg3a`에서 실행한다. 소스는 정확한 커밋으로 pin돼 문서/보수 도구 후속 커밋은 자동 배포되지 않는다. 실제 운영 페이지를 새로고침해 빈 이전집계 행이 사라지고 네 판매처의 금액이 유지됨을 확인했다.
+
+최종 화면 증거: `C:/Users/seong/.codex/visualizations/2026/10/30/product-performance-production/daily-2026-11-01-native-storefront.png`. 원본 관리자/보고서 화면을 로컬에만 저장했으며 비식별 집계 검증은 저장소의 JSON 증거를 사용한다.
+
+최근 15일(10/18~11/1) 재발행은 368.815초에 88건을 조사·enqueue했고 87건 게시, 1건 실패였다. 실패한 COUPANG 10/20은 `SOURCE_EXECUTION_FAILED`로 이전 정상 게시를 보존했다. 같은 날짜 read-only 진단은 READY였고, 제한 역할·최근 FAILED·허용 scope를 검사하는 단건 retry를 독립 검토 후 실행해 해당 날짜만 revision 4, 새 계산 버전으로 게시했다. 결과적으로 대상 88건을 모두 갱신했다. 최초 원인의 상세 예외는 보존되지 않아 일시적 조회 오류로 추정할 뿐 timeout으로 확정하지 않는다.
+
+보수 도구 `unified-reconcile-current.ts`에 읽기 전용 실패 metadata 조회와 명시 UUID 한 건 재시도 옵션을 추가했다. 재시도는 원천 쓰기 없이 기존 enqueue/runOne/원자적 publication을 사용하고 다른 queue를 drain하지 않는다. 재실행 key는 실패 job 기반으로 고정한다. 보호 wrapper 실제 실행과 독립 검토를 통과했다.
+
+최종 운영 저장값의 read-only 대조에서 자사몰 전체 매출 13,066,880원·광고 전 이익 7,927,992원·최종 이익 2,413,278.942287원을 확인했다. `publishedProductParity`는 실제 저장된 사실을 읽은 상품 30건의 광고비/순이익 차액이 모두 0이다. 기존 `adProductParity`는 재계산 결과 대조이며 두 검증을 구분한다. 증거: [최근 재발행](2026-11-02-native-reconciliation.json), [실패 1건 복구](2026-11-02-native-reconciliation-retry.json), [게시 후 상품별 대조](2026-11-02-native-storefront-published-parity.json).
+
+최종 배포 worker의 실제 실행 `a2c07380-3793-4f31-8797-bbb8cb9a6d4c`는 07:38:19~07:43:38 UTC, 318초에 EXITED했다. 완료 로그는 through 11/2, lookback 7, examined 42, unchanged 28, enqueued/published 14, failed 0, discoveryFailures [], exhausted false다. 기존 매시 10분 UTC cron을 유지한다. 이는 배포 이미지 수동 1회 실행 검증이며 미래 정시 실행을 미리 성공으로 주장하지 않는다.
+
+후속 사용자 제보인 네이버 수동 프로그램 약270만원과 통합999,104원의 차이는 별도 조사로 이어간다. 이 기록의 native 일치 검증은 자사몰 Meta/YouTube에 한정하며 네이버 기존 계산과의 일치까지 입증한 것이 아니다.
