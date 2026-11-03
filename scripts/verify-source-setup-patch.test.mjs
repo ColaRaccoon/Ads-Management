@@ -42,6 +42,9 @@ const unified = [
   'aggregation.repository', 'aggregation.worker', 'aggregation.worker.test',
   'reconciliation', 'reconciliation.repository', 'reconciliation-entrypoint', 'reconciliation.test',
   'native-storefront-results', 'native-storefront-results.test',
+  'native-result-contract', 'native-result-contract.test',
+  'native-original-storefront-results', 'native-original-storefront-results.test',
+  'domain/stored-result-projection', 'domain/stored-result-projection.test',
   'domain/storefront-report-overlay', 'domain/storefront-report-overlay.test', 'domain/native-storefront-report.test',
   'domain/decimal', 'domain/legacy-name-migration', 'domain/legacy-name-migration.test',
   'domain/platform-selection', 'domain/platform-selection.test', 'domain/product-name-resolver', 'domain/product-name-resolver.test',
@@ -54,7 +57,8 @@ const unified = [
   'runtime-prisma', 'runtime-prisma.test',
   'types', 'unified-performance.module'
 ].map(name => `unified-performance/${name}.js`);
-const reviewedCoupang = ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js', 'domain/coupang-profit-pipeline.test.js', 'sales/sales-metrics.service.js',
+const reviewedCoupang = ['coupang/coupang.service.js', 'coupang/coupang-native-results.js', 'coupang/coupang-native-results.test.js',
+  'domain/coupang-profit-pipeline.js', 'domain/coupang-profit-pipeline.test.js', 'sales/sales-metrics.service.js',
   'domain/cafe24-coupon-line-allocation.js', 'domain/cafe24-coupon-line-allocation.test.js'];
 const preserved = ['metrics/metrics.service.js', 'domain/cafe24-sales-calculator.js',
   'coupang/coupang.controller.js', 'domain/margin-calculator.js'];

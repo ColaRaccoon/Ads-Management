@@ -20,6 +20,7 @@ if (profile === 'reporting') {
   expected.add('domain/cafe24-coupon-line-allocation.test.js');
   // Reviewed Coupang upload batching and non-blocking manual-sales excess.
   for (const name of ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js',
+    'coupang/coupang-native-results.js', 'coupang/coupang-native-results.test.js',
     'domain/coupang-profit-pipeline.test.js']) expected.add(name);
   // Rule editing, dated reapplication and transport authorization are reviewed
   // together. Other mapping modules and all financial calculators remain fixed.
@@ -72,6 +73,10 @@ if (profile === 'reporting') {
     'aggregation.repository.js', 'aggregation.worker.js', 'aggregation.worker.test.js',
     'reconciliation.js', 'reconciliation.repository.js', 'reconciliation-entrypoint.js', 'reconciliation.test.js',
     'native-storefront-results.js', 'native-storefront-results.test.js',
+    // Reviewed original-platform final-result serialization and pure read projection.
+    'native-result-contract.js', 'native-result-contract.test.js',
+    'native-original-storefront-results.js', 'native-original-storefront-results.test.js',
+    'domain/stored-result-projection.js', 'domain/stored-result-projection.test.js',
     'domain/storefront-report-overlay.js', 'domain/storefront-report-overlay.test.js', 'domain/native-storefront-report.test.js',
     'domain/decimal.js', 'domain/legacy-name-migration.js', 'domain/legacy-name-migration.test.js',
     'domain/platform-selection.js', 'domain/platform-selection.test.js',
