@@ -200,3 +200,27 @@ test("table contains the required 16 columns, all products and a single final to
   assert.match(html, /제품 미귀속 금액/); assert.match(html, /미분류 매출/);
   assert.equal((html.match(/scope="colgroup"/g) ?? []).length, 5);
 });
+
+test("print filtering only annotates original rows and does not replace screen amounts or duplicate the table", () => {
+  const { filters, response } = fixture();
+  response.products.push({ ...response.products[0], productKey: "print-selected", productName: "출력 대상 제품" });
+  response.totalProducts = 2;
+  const report = buildDailyProductsReport(response, "2026-10-29", filters);
+  const original = structuredClone(report);
+  const printReport = { ...report, rows: report.rows.filter(row => row.productKey === "print-selected"),
+    exportSelection: { platform: "COUPANG" as const, label: "쿠팡", totalProducts: 2, basis: "당일 판매·광고 활동 제품" } };
+  const filtered = renderToStaticMarkup(<DailyProductsTable report={report} printReport={printReport} />);
+  assert.equal((filtered.match(/<table\b/g) ?? []).length, 1);
+  assert.equal((filtered.match(/data-product-key=/g) ?? []).length, 3);
+  assert.match(filtered, /<tr(?=[^>]*data-product-key="p1")(?=[^>]*data-print-hidden="true")[^>]*>/);
+  assert.doesNotMatch(filtered, /<tr(?=[^>]*data-product-key="print-selected")(?=[^>]*data-print-hidden="true")[^>]*>/);
+  assert.match(filtered, /<tr(?=[^>]*class="daily-products-total")(?=[^>]*data-print-hidden="true")[^>]*>/);
+  assert.match(filtered, /data-print-filtered="true" data-print-count="1"/);
+  assert.match(filtered, /전체 2개 제품/);
+  assert.match(filtered, /출력 제품 필터: 쿠팡 · 당일 판매·광고 활동 제품/);
+  assert.match(filtered, /전체 제품 합계와 미귀속 조정을 포함하지 않습니다/);
+  assert.match(filtered, /1,500/);
+  assert.deepEqual(report, original);
+  const unfiltered = renderToStaticMarkup(<DailyProductsTable report={report} />);
+  assert.doesNotMatch(unfiltered, /data-print-hidden="true"/);
+});
