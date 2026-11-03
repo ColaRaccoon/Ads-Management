@@ -124,3 +124,32 @@ The November 2 zero-activity sleep-mask product has no eligible export platforms
 The 02:29 UTC scheduled reconciliation finished 24 checks, all unchanged, with
 zero failures, zero discovery failures and no exhausted deadline. Earlier
 historical Naver check failures were resolved by the native cache repair.
+
+## Explicit option links (2026-11-03)
+
+`native:NAVER_OPTION` links the exact source option display name within its store
+and effective dates. The stored-only reader projects a fixed allowlist of option
+identity, date, quantity and source-completed revenue/ads/profit fields. It does
+not read customer data or recompute prices, fees, VAT or costs.
+
+Only explicitly linked options become separate product facts. Their stored
+amounts are subtracted from the parent once; source SUMMARY facts remain intact.
+Common advertising that the source retained on the parent stays there. For
+example, 2026-11-02 full-metal gyro revenue 411,600 and net 243,033 move to
+아이언볼 with zero option-specific ads; parent gyro retains revenue 489,700,
+ads 193,102 and net 99,027. Combined revenue and profit remain 901,300 and 342,060.
+The report labels this provenance with `PARENT_COMMON_AD_SPEND_RETAINED`.
+
+`sourceOptions` holds source amounts and `optionBasis` retains the original parent
+amounts. Reapplying, changing or disabling a link reconstructs that basis and
+removes prior derived option rows, preventing repeated subtraction. Invalid child
+revenue/quantity reconciliation or missing required option metrics prevents an
+extraction. Unlinked options remain inside the parent and are independently
+available in the product mapping inventory.
+
+Approved corrections are recorded in
+`approved/platform-product-corrections-20261103.json`. The maintenance runner
+preserves original publications, clones audit ledgers unchanged, verifies exact
+native summary/product-total conservation, and atomically switches each source/day
+pointer under the existing partition and configuration locks. All writes are in
+the private unified-reporting schema; original platform source data is unchanged.

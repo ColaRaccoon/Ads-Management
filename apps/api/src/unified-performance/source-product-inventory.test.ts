@@ -57,6 +57,8 @@ test("stored Naver options are independently manageable even before extraction a
   const read = () => sourceProductInventory(tx, { from: "2026-10-20", to: "2026-10-21" }, [{ canonicalName: "아이언볼" }], links, "v");
   const pending = (await read()).products.find(row => row.group === "NAVER_OPTION")!;
   assert.equal(pending.sourceName, option.name); assert.equal(pending.targetName, "아이언볼"); assert.equal(pending.pending, true);
+  const unlinked = (await sourceProductInventory(tx, { from: "2026-10-20", to: "2026-10-21" }, [], [], "v")).products.find(row => row.group === "NAVER_OPTION")!;
+  assert.equal(unlinked.matchStatus, "UNMATCHED"); assert.equal(unlinked.pending, false);
   extracted = true;
   const rows = (await read()).products.filter(row => row.group === "NAVER_OPTION");
   assert.equal(rows.length, 1); assert.equal(rows[0].publishedName, "아이언볼"); assert.equal(rows[0].pending, false);

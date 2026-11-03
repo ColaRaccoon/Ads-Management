@@ -16,7 +16,7 @@ const json = value => JSON.parse(JSON.stringify(value));
 const day = value => value.toISOString().slice(0, 10);
 const params = Object.fromEntries(process.argv.slice(2).map(arg => { const i = arg.indexOf('='); assert(i > 2); return [arg.slice(2, i), arg.slice(i + 1)]; }));
 assert(Object.keys(params).every(key => ['action', 'plan-sha', 'limit'].includes(key)));
-assert(['preflight', 'trial', 'apply', 'replay', 'verify'].includes(params.action));
+assert(['preflight', 'trial', 'apply', 'replay', 'verify', 'report-check'].includes(params.action));
 const planPath = 'docs/product-performance/approved/platform-product-corrections-20261103.json';
 const planText = readFileSync(planPath, 'utf8').replaceAll('\r\n', '\n');
 const planHash = digest(planText); assert.equal(params['plan-sha'], planHash);
@@ -205,7 +205,22 @@ try {
         const pointer=state.pointersBefore.find(pointer=>pointer.platform===platform && day(new Date(pointer.businessDate))===plan.through && (platform!=='NAVER'||pointer.scopeKey===plan.optionStore));
         assert(pointer); pointer.businessDate=new Date(pointer.businessDate); results.push(await replay(pointer,virtual(),actor,true));
       }
-      assert(results.every(row=>row.status==='ROLLED_BACK')); state.trial=results; persist(); console.log(JSON.stringify({status:'PASS',action:'trial',results}));
+      assert(results.every(row=>row.status==='ROLLED_BACK')); state.trial=results;
+      const virtualSnapshot=virtual(), optionRules=virtualSnapshot.rules.filter(rule=>rule.kind==='NAME').map(rule=>ruleName(rule,virtualSnapshot.products.find(product=>product.id===rule.productId).canonicalName));
+      const historyPointers=state.pointersBefore.filter(pointer=>pointer.platform==='NAVER'&&pointer.scopeKey===plan.optionStore);
+      let historyChecked=0, optionDays=0;
+      for(const entry of historyPointers) {
+        const pointer={...entry,businessDate:new Date(entry.businessDate)};
+        await worker.$transaction(async tx=>{
+          await tx.$executeRawUnsafe('SET TRANSACTION READ ONLY');
+          const facts=await tx.unifiedDailyFact.findMany({where:{runId:pointer.runId,component:'NATIVE_RESULT'},select:{payload:true}});
+          const originals=facts.map(fact=>fact.payload.nativeResult),hydrated=await hydrateOptions(tx,originals,pointer);
+          const mapped=mapNativeProducts(hydrated,pointer.scopeKey,day(pointer.businessDate),virtualSnapshot.products,optionRules,virtualSnapshot.versions.nameRuleVersion);
+          conserve(originals,mapped);if(mapped.some(row=>row.audit?.optionParentProductKey))optionDays++;
+        },{timeout:30000});historyChecked++;
+        if(historyChecked%25===0)console.log(JSON.stringify({action:'trial-history',checked:historyChecked,total:historyPointers.length}));
+      }
+      state.historyTrial={status:'PASS',checked:historyChecked,optionDays,committedWrites:0};persist();console.log(JSON.stringify({status:'PASS',action:'trial',results,history:state.historyTrial}));
     } else if(params.action === 'apply') {
       assert(state.trial?.length===2, 'TRIAL_REQUIRED');
       for(const link of plan.links) {
@@ -230,7 +245,7 @@ try {
         if(processed%25===0)console.log(JSON.stringify({action:'replay',processed,already,total:pointers.length}));if(processed>=limit)break;
       }
       console.log(JSON.stringify({status:'PASS',action:'replay',processed,already,total:pointers.length}));
-    } else if(params.action==='verify') {
+    } else if(params.action==='verify'||params.action==='report-check') {
       const pointers=await publications(report);
       const runs=await report.unifiedAggregationRun.findMany({where:{id:{in:pointers.map(pointer=>pointer.runId)}},select:{versions:true}});
       const stale=runs.filter(run=>run.versions.nameRuleVersion!==snapshot.versions.nameRuleVersion).length;
@@ -241,7 +256,7 @@ try {
         AND f.product_name IN ('러닝양말','퍼펙트슬라이드','아이언볼','자이로볼') GROUP BY 1,2 ORDER BY 1,2`;
       const expected=[['COUPANG','러닝양말','243400','71242','30874.80727272728'],['COUPANG','퍼펙트슬라이드','254000','0','96438.8909090909'],['NAVER','아이언볼','411600','0','243033']];
       for(const [platform,name,revenue,ads,net] of expected){const actual=totals.find(row=>row.platform===platform&&row.product_name===name);assert(actual,'TARGET_RESULT_MISSING');assert(eq(actual.revenue,revenue));assert(eq(actual.ads,ads));assert(decimal(actual.net).minus(net).abs().lt('0.000002'),'TARGET_NET_CHANGED');}
-      assert.equal(stale,0,'STALE_PARTITIONS_REMAIN');
+      if(params.action==='verify')assert.equal(stale,0,'STALE_PARTITIONS_REMAIN');
       const audits=await report.unifiedMappingAudit.findMany({where:{entityId:{in:state.rules.map(rule=>rule.id)},actorUserId:actor.id},select:{action:true,entityId:true}});
       assert(state.rules.every(rule=>audits.some(a=>a.action===rule.action&&a.entityId===rule.id)),'AUDIT_MISSING');
       process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED='true';
@@ -256,7 +271,7 @@ try {
         for(const [field,value] of [['revenue',revenue],['adSpend',ads],['estimatedProfit',net]])assert(eq(market.display[field].value,quantizeMoney(decimal(value))),'DAILY_DISPLAY_MISMATCH');
       }
       assert(!response.summary.warnings.includes('CONFIGURATION_CHANGED_REBUILD_RECOMMENDED'),'DAILY_CONFIGURATION_WARNING');
-      state.verification={at:new Date().toISOString(),status:'PASS',partitions:pointers.length,stale,totals,actualDailyReportChecks:9,sourceWrites:0,financialDifferences:0};persist();console.log(JSON.stringify(state.verification));
+      const result={at:new Date().toISOString(),status:stale?'HISTORY_REBUILDING':'PASS',partitions:pointers.length,stale,totals,actualDailyReportChecks:9,sourceWrites:0,financialDifferences:0};if(params.action==='report-check')writeFileSync(`${dir}/current-report-check.json`,JSON.stringify(result,null,2));else{state.verification=result;persist();}console.log(JSON.stringify(result));
     }
   }
 } catch (error) {

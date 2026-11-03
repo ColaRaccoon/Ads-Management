@@ -55,7 +55,8 @@ export async function sourceProductInventory(tx: Prisma.TransactionClient, query
     inventory.set(key, { key, group, platform: mappingPlatform(group), scopeKey: publication.scopeKey,
       sourceName, nameField: NATIVE_NAME_FIELDS[group], firstDate: previous?.firstDate && previous.firstDate < date ? previous.firstDate : date,
       lastDate: date, publishedName: row.productName, targetName: mapped.audit?.mappingStatus === "MATCHED" ? mapped.productName : null,
-      matchStatus: mapped.audit?.mappingStatus ?? "UNMATCHED", pending: mapped.productName !== row.productName,
+      matchStatus: mapped.audit?.mappingStatus ?? "UNMATCHED",
+      pending: group === "NAVER_OPTION" && row.productName === null && mapped.audit?.mappingStatus !== "MATCHED" ? false : mapped.productName !== row.productName,
       ruleIds: mapped.audit?.mappingRuleIds?.split(",").filter(Boolean) ?? [] });
   }
   return { ...dates, basis: "PUBLISHED_PRODUCT_RESULTS", products: [...inventory.values()].sort((a, b) =>
