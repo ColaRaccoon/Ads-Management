@@ -23,6 +23,24 @@ function fixture(): NaverStoredRaw {
 }
 const errors = (): NaverStoredErrors => ({ stores: [], daily_store_summaries: [], daily_sales_unit_profits: [], daily_fake_purchases: [] });
 const normalize = (raw = fixture(), readErrors = errors()) => normalizeNaverStoredDay(request(), raw, readErrors, configuration, at);
+test("completed child options split only with an explicit option link and reconciled revenue/quantity", () => {
+  const raw = fixture();
+  raw.daily_sales_unit_profits[0].childRows = [{ canonicalSalesUnitId: "full", displayName: "풀메탈", date,
+    totalQuantity: "361", totalProductRevenue: "5732080", totalAdCost: "0", estimatedNetProfit: "3428554" }];
+  const config = { products: [{ canonicalName: "아이언볼" }], nameRules: [{ id: "option", canonicalProductName: "아이언볼", matchType: "EXACT" as const,
+    terms: ["풀메탈"], platform: "NAVER" as const, scopeKey: scope, nameField: "native:NAVER_OPTION", validFrom: date, validTo: null, active: true }] };
+  const batch = normalizeNaverStoredDay(request(), raw, errors(), config, at);
+  assert.equal(batch.sales.length, 1); assert.equal(batch.nativeResults?.length, 3);
+  const iron = batch.nativeResults!.find(row => row.productName === "아이언볼")!;
+  assert.equal(iron.revenue.known, "5732080.000000"); assert.equal(iron.adSpend.known, "0.000000");
+  assert.equal(iron.netProfit.known, "3428554.000000");
+  const parent = batch.nativeResults!.find(row => row.kind === "PRODUCT" && !row.audit?.optionParentProductKey)!;
+  assert.equal(parent.netProfit.known, "-2385197");
+  assert.deepEqual(batch.nativeResults![0], normalize(raw).nativeResults![0]);
+  (raw.daily_sales_unit_profits[0].childRows as Record<string, unknown>[])[0].totalProductRevenue = "1";
+  const bad = normalizeNaverStoredDay(request(), raw, errors(), config, at);
+  assert.equal(bad.nativeResults?.length, 2); assert.ok(bad.nativeResults![1].issues.includes("NAVER_STORED_OPTIONS_INVALID"));
+});
 function summary(raw = fixture()) {
   const batch = completeSourceCoverage({ platform: "NAVER", scopeKey: scope, date, runId: "run", token: "token", previousRunId: null }, normalize(raw));
   const facts = prepareReportBatch(request(), batch).map(row => ({ ...row, platform: "NAVER" as const, scopeKey: scope, date }));

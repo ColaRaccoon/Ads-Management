@@ -6,7 +6,7 @@ import { resolveProductName } from "../domain/product-name-resolver";
 import type { AdapterBatch, AdapterRequest, ControlTotal, Quality, SaleFact, SourceCoverage, SourceRef } from "../types";
 import type { AdConfiguration } from "./ad-source";
 import { naverPageDate, naverTimestamp, type NaverProjectedRow, type NaverStoredRaw, type NaverStoredErrors } from "./naver-reader";
-import type { NativeStoredResult } from "../native-result-contract";
+import type { NativeStoredResult, NativeStoredOption } from "../native-result-contract";
 
 const VERSION = "NAVER_STORED_NATIVE_V2";
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -98,10 +98,27 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
     sale.costComponents = [["PRODUCT_COST", sale.productCost], ["PLATFORM_FEE", sale.platformFee], ["OTHER_DIRECT_COST", sale.otherDirectCost], ["VAT_EXPENSE", sale.vatExpense]]
       .map(([kind, value]) => ({ kind: kind!, amount: value, sourceExpenseKey: `${scopeKey}:${row.id}:${kind}`, includedInRevenue: false, applied: value !== null }));
     batch.sales.push(sale);
+    const children = Array.isArray(row.childRows) ? row.childRows as Record<string, unknown>[] : [];
+    const sourceOptions: NativeStoredOption[] = children.flatMap(child => {
+      if (typeof child.canonicalSalesUnitId !== "string" || !child.canonicalSalesUnitId ||
+        typeof child.displayName !== "string" || !child.displayName || child.date !== date) return [];
+      const childAd = amount(child.totalAdCost), childNet = amount(child.estimatedNetProfit);
+      return [{ key: child.canonicalSalesUnitId, name: child.displayName, quantity: amount(child.totalQuantity),
+        revenue: storedMetric(amount(child.totalProductRevenue)), adSpend: storedMetric(childAd),
+        netProfit: storedMetric(childNet), profitBeforeAds: storedMetric(plus(childNet, childAd)) }];
+    });
+    // Reject malformed or overlapping option projections rather than duplicate source totals.
+    const validOptions = sourceOptions.length === children.length && new Set(sourceOptions.map(option => option.key)).size === sourceOptions.length &&
+      ["quantity", "revenue"].every(key => {
+        const values = sourceOptions.map(option => key === "quantity" ? option.quantity : option.revenue.known);
+        const expected = key === "quantity" ? nativeQuantity : revenue;
+        return expected !== null && values.every((value): value is string => value !== null) && money(sum(values)).eq(expected);
+      });
     nativeProducts.push({ kind: "PRODUCT", group: "NAVER", productKey: `naver:${scopeKey}:product:${row.canonicalSalesUnitId ?? row.id}`,
       productName: sale.productName, quantity: nativeQuantity, revenue: storedMetric(revenue), adSpend: storedMetric(ad),
       netProfit: storedMetric(net), profitBeforeAds: storedMetric(beforeAds), sourceUpdatedAt: latestTimestamp([row]),
-      issues: quality(rowIssues).issues, audit: { calculationVersion: "profit-v2", sourceRowId: row.id,
+      ...(validOptions && sourceOptions.length ? { sourceOptions } : {}),
+      issues: quality([...rowIssues, ...(children.length && !validOptions ? ["NAVER_STORED_OPTIONS_INVALID"] : [])]).issues, audit: { calculationVersion: "profit-v2", sourceRowId: row.id,
         sourceProductName: nativeName, isStoreLevel: row.isStoreLevel === true ? "true" : "false", deliveryIncluded: "false", fakePurchaseIncluded: "false" } });
     if (ad === null) adIssues.push("NAVER_AD_AMOUNT_INVALID", "NAVER_STORED_AD_UNAVAILABLE");
     else batch.adSpends.push({ ref: ref(row, "daily_sales_unit_profits", "AD_SPEND"), name, productName: sale.productName, medium: "NAVER_DA", originalAmount: ad,

@@ -2,7 +2,7 @@ import { ServiceUnavailableException } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import type { ReportFact } from "./report-contract";
 import type { CatalogProduct, NameRule } from "./domain/product-name-resolver";
-import { mapNativeProducts, mappingPlatform, NATIVE_NAME_FIELDS } from "./domain/native-product-mapping";
+import { mapNativeProducts, mappingPlatform, NATIVE_NAME_FIELDS, type MappingGroup } from "./domain/native-product-mapping";
 import { reportScopes } from "./report.repository";
 import { range } from "./report-query";
 
@@ -25,18 +25,35 @@ export async function sourceProductInventory(tx: Prisma.TransactionClient, query
     firstDate: string; lastDate: string; publishedName: string | null; targetName: string | null;
     matchStatus: string; pending: boolean; ruleIds: string[];
   }>();
-  for (const fact of facts) {
+  const publishedOptions = new Map(facts.flatMap(fact => {
+    const row = (fact.payload as unknown as ReportFact).nativeResult;
+    return row?.audit?.optionParentProductKey ? [[JSON.stringify([fact.runId, row.productKey]), row] as const] : [];
+  }));
+  const expanded = facts.flatMap(fact => {
+    const parent = (fact.payload as unknown as ReportFact).nativeResult;
+    if (!parent?.sourceOptions?.length) return [fact];
+    return [fact, ...parent.sourceOptions.flatMap(option => {
+      const productKey = `${parent.productKey}:option:${option.key}`;
+      if (publishedOptions.has(JSON.stringify([fact.runId, productKey]))) return [];
+      return [{ runId: fact.runId, payload: { nativeResult: { kind: "PRODUCT", group: "NAVER", productKey,
+        productName: null, quantity: option.quantity, revenue: option.revenue, adSpend: option.adSpend,
+        netProfit: option.netProfit, profitBeforeAds: option.profitBeforeAds, sourceUpdatedAt: parent.sourceUpdatedAt, issues: [],
+        audit: { sourceProductName: option.name, optionParentProductKey: parent.productKey } } } as unknown as typeof fact.payload }];
+    })];
+  });
+  for (const fact of expanded) {
     const row = (fact.payload as unknown as ReportFact).nativeResult, publication = byRun.get(fact.runId);
     if (!row || !publication || row.kind !== "PRODUCT" || row.audit?.isStoreLevel === "true") continue;
     const sourceName = row.audit?.sourceProductName ?? row.productName;
     if (!sourceName) continue;
     const date = publication.businessDate.toISOString().slice(0, 10);
-    const key = JSON.stringify([row.group, publication.scopeKey, sourceName]);
+    const group: MappingGroup = row.audit?.optionParentProductKey ? "NAVER_OPTION" : row.group;
+    const key = JSON.stringify([group, publication.scopeKey, sourceName]);
     const previous = inventory.get(key);
     if (previous && previous.lastDate > date) { previous.firstDate = date < previous.firstDate ? date : previous.firstDate; continue; }
     const mapped = mapNativeProducts([row], publication.scopeKey, date, products, rules, version)[0];
-    inventory.set(key, { key, group: row.group, platform: mappingPlatform(row.group), scopeKey: publication.scopeKey,
-      sourceName, nameField: NATIVE_NAME_FIELDS[row.group], firstDate: previous?.firstDate && previous.firstDate < date ? previous.firstDate : date,
+    inventory.set(key, { key, group, platform: mappingPlatform(group), scopeKey: publication.scopeKey,
+      sourceName, nameField: NATIVE_NAME_FIELDS[group], firstDate: previous?.firstDate && previous.firstDate < date ? previous.firstDate : date,
       lastDate: date, publishedName: row.productName, targetName: mapped.audit?.mappingStatus === "MATCHED" ? mapped.productName : null,
       matchStatus: mapped.audit?.mappingStatus ?? "UNMATCHED", pending: mapped.productName !== row.productName,
       ruleIds: mapped.audit?.mappingRuleIds?.split(",").filter(Boolean) ?? [] });

@@ -15,6 +15,29 @@ const row = (name: string | null, kind: "PRODUCT" | "SUMMARY" = "PRODUCT"): Nati
   kind, group: "COUPANG", productKey: name ?? "SUMMARY", productName: name, quantity: "2", revenue: amount("100000.123456789"),
   adSpend: amount("10000"), netProfit: amount(null), profitBeforeAds: amount("30000"), issues: [], sourceUpdatedAt: null
 });
+
+test("full-metal option conserves every metric, retains parent advertising and supports replay/removal", () => {
+  const parent: NativeStoredResult = { ...row("자이로볼"), group: "NAVER", productKey: "gyro", quantity: "34",
+    revenue: amount("901300"), adSpend: amount("193102"), netProfit: amount("342060"), profitBeforeAds: amount("535162"),
+    sourceOptions: [{ key: "full", name: "자이로볼 풀메탈", quantity: "11", revenue: amount("411600"), adSpend: amount("0"),
+      netProfit: amount("243033"), profitBeforeAds: amount("243033") }] };
+  const link: NameRule = { ...rule(["자이로볼 풀메탈"], "아이언볼"), platform: "NAVER", nameField: "native:NAVER_OPTION" };
+  const catalog = [...products, { canonicalName: "아이언볼", active: true }];
+  const apply = (rows: NativeStoredResult[], links = [link]) => mapNativeProducts(rows, "shop", "2026-10-20", catalog, links, "v");
+  const mapped = apply([parent]);
+  assert.equal(mapped.length, 2); assert.equal(mapped[1].productName, "아이언볼");
+  assert.equal(mapped[0].quantity, "23"); assert.equal(mapped[0].revenue.known, "489700");
+  assert.equal(mapped[0].adSpend.known, "193102"); assert.equal(mapped[0].netProfit.known, "99027");
+  assert.equal(mapped[1].revenue.known, "411600"); assert.equal(mapped[1].adSpend.known, "0");
+  assert.deepEqual(apply(mapped), mapped);
+  const disabled = apply(mapped, []); assert.equal(disabled.length, 1);
+  assert.equal(disabled[0].revenue.known, parent.revenue.known); assert.equal(disabled[0].netProfit.known, parent.netProfit.known);
+  for (const foreign of [{ ...link, scopeKey: "other" }, { ...link, validFrom: "2026-10-21" }, { ...link, nameField: "native:NAVER" }])
+    assert.equal(apply([parent], [foreign]).length, 1);
+  const unknown = structuredClone(parent); unknown.sourceOptions![0].netProfit = amount(null);
+  const blocked = apply([unknown]); assert.equal(blocked.length, 1); assert.equal(blocked[0].netProfit.known, "342060");
+  assert.ok(blocked[0].issues.includes("NATIVE_OPTION_INCOMPLETE"));
+});
 test("explicit final-result links group existing canonical products while preserving every source amount, unit and key", () => {
   const input = [row(null, "SUMMARY"), row("두줄보호대 2개입")], before = structuredClone(input);
   const mapped = mapNativeProducts(input, "shop", "2026-10-20", products, [rule()], "v1");

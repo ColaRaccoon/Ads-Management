@@ -1,0 +1,79 @@
+{
+  "kind": "USER_CONFIRMED_PRODUCT_CORRECTIONS",
+  "targetProject": "iygjmosbelbosfxidqxv",
+  "through": "2026-11-02",
+  "confirmation": [
+    "같은 제품, 러닝양말로 연결",
+    "기본형·프로를 합산",
+    "아이언볼은 자이로볼 제품 옵션중에 하나인 풀메탈 제품이랑 매칭시키면 돼."
+  ],
+  "optionStore": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+  "optionParentId": "81891398-8f8c-43fa-8e52-4ed6e3907c4b",
+  "optionId": "440079d0-3aa6-46ce-a2ea-583df7bcefe3",
+  "links": [
+    {
+      "group": "COUPANG",
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "sourceName": "스포츠양말",
+      "targetName": "러닝양말",
+      "validFrom": "2026-07-01"
+    },
+    {
+      "group": "COUPANG",
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "sourceName": "스포츠양말 3개입",
+      "targetName": "러닝양말",
+      "validFrom": "2026-07-01",
+      "ruleId": "418ffbd4-b4e5-42f1-836b-4f0781d28879",
+      "previousTarget": "스포츠양말"
+    },
+    {
+      "group": "COUPANG",
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "sourceName": "스포츠양말 5개입",
+      "targetName": "러닝양말",
+      "validFrom": "2026-07-01",
+      "ruleId": "fb7c638a-bafa-453d-9166-4d1a919e5165",
+      "previousTarget": "스포츠양말"
+    },
+    {
+      "group": "COUPANG",
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "sourceName": "스포츠양말 7개입",
+      "targetName": "러닝양말",
+      "validFrom": "2026-07-02",
+      "ruleId": "10aee2aa-0cee-4f0d-a8a9-404235dbe80b",
+      "previousTarget": "스포츠양말"
+    },
+    {
+      "group": "COUPANG",
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "sourceName": "스포츠양말 10개입",
+      "targetName": "러닝양말",
+      "validFrom": "2026-07-01",
+      "ruleId": "d73992d4-b749-4700-b638-816fb58fbcaf",
+      "previousTarget": "스포츠양말"
+    },
+    {
+      "group": "COUPANG",
+      "platform": "COUPANG",
+      "scopeKey": "LEGACY_COUPANG_SINGLE_UPLOAD",
+      "sourceName": "퍼펙트슬라이드 프로",
+      "targetName": "퍼펙트슬라이드",
+      "validFrom": "2026-07-01"
+    },
+    {
+      "group": "NAVER_OPTION",
+      "platform": "NAVER",
+      "scopeKey": "78f8cb08-ffe3-481a-94d7-be87ae93ed79",
+      "sourceName": "자이로볼 풀메탈",
+      "targetName": "아이언볼",
+      "validFrom": "2026-01-01"
+    }
+  ]
+}

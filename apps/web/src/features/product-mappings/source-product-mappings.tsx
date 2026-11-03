@@ -10,6 +10,7 @@ export const SOURCE_GROUPS = {
   STOREFRONT: { label: "자사몰 · Meta 보고", platform: "CAFE24" },
   GOOGLE: { label: "자사몰 · Google 보고", platform: "CAFE24" },
   NAVER: { label: "네이버", platform: "NAVER" }, COUPANG: { label: "쿠팡", platform: "COUPANG" },
+  NAVER_OPTION: { label: "네이버 옵션", platform: "NAVER" },
   META_ADS: { label: "Meta 광고", platform: "META" }, GOOGLE_ADS: { label: "Google 광고", platform: "GOOGLE" }
 } as const;
 type Group = keyof typeof SOURCE_GROUPS;
@@ -84,6 +85,7 @@ export function SourceProductMappings({ products, rules, from, to, userId, busy,
       onPrepare(draft, existing?.id, [{ originalName: name.trim(), nameField: `native:${group}`, platform: SOURCE_GROUPS[group].platform,
         scopeKey: scopeKey || "preview", businessDate: validFrom }]);
     }}><fieldset disabled={busy}><legend>원천 상품 → 기준 제품 연결</legend>
+      {group === "NAVER_OPTION" && <p>옵션에 저장된 매출·수량·손익만 분리해 연결합니다. 상품 공통 광고비는 기존 상품에 남습니다.</p>}
       <div className="form-grid">
         <label className="field">원천 플랫폼<select className="select" value={group} onChange={e => { setGroup(e.target.value as Group); setRuleId(""); setScopeKey(""); }}>{Object.entries(SOURCE_GROUPS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}</select></label>
         <label className="field">원천 상품명<input className="input" required maxLength={1024} value={name} onChange={e => { setName(e.target.value); setRuleId(""); }} /></label>

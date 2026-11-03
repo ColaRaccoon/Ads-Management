@@ -41,3 +41,23 @@ test("invalid and overlong inventory ranges fail before source data reads", asyn
     const { tx, calls } = fixture(); await assert.rejects(sourceProductInventory(tx, dates, [], [], "v")); assert.equal(calls.length, 0);
   }
 });
+
+test("stored Naver options are independently manageable even before extraction and never duplicate published options", async () => {
+  const { tx } = fixture();
+  const source = native("자이로볼").nativeResult;
+  const option = { key: "full", name: "자이로볼 풀메탈", quantity: source.quantity, revenue: source.revenue,
+    adSpend: source.adSpend, netProfit: source.netProfit, profitBeforeAds: source.profitBeforeAds };
+  const parent = { ...source, group: "NAVER", sourceOptions: [option] };
+  const child = { ...source, group: "NAVER", productKey: `${parent.productKey}:option:full`, productName: "아이언볼",
+    audit: { sourceProductName: option.name, optionParentProductKey: parent.productKey } };
+  let extracted = false;
+  (tx.unifiedDailyFact.findMany as any) = async () => [{ runId: "new", payload: { nativeResult: parent } },
+    ...(extracted ? [{ runId: "new", payload: { nativeResult: child } }] : [])];
+  const links = [{ ...rules[0], terms: [option.name], canonicalProductName: "아이언볼", platform: "NAVER" as const, nameField: "native:NAVER_OPTION" }];
+  const read = () => sourceProductInventory(tx, { from: "2026-10-20", to: "2026-10-21" }, [{ canonicalName: "아이언볼" }], links, "v");
+  const pending = (await read()).products.find(row => row.group === "NAVER_OPTION")!;
+  assert.equal(pending.sourceName, option.name); assert.equal(pending.targetName, "아이언볼"); assert.equal(pending.pending, true);
+  extracted = true;
+  const rows = (await read()).products.filter(row => row.group === "NAVER_OPTION");
+  assert.equal(rows.length, 1); assert.equal(rows[0].publishedName, "아이언볼"); assert.equal(rows[0].pending, false);
+});

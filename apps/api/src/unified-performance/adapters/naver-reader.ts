@@ -38,6 +38,9 @@ function columns(table: NaverTable): string {
     ...fields.number.map(key => `CASE WHEN jsonb_typeof(t.payload->'${key}') IN ('number','string') THEN t.payload->>'${key}' END AS "${key}"`),
     ...fields.boolean.map(key => `CASE WHEN jsonb_typeof(t.payload->'${key}')='boolean' THEN (t.payload->>'${key}')::boolean END AS "${key}"`),
     ...array.map(key => `CASE WHEN jsonb_typeof(t.payload->'${key}')='array' THEN (SELECT coalesce(jsonb_agg(a.value),'[]'::jsonb) FROM jsonb_array_elements(t.payload->'${key}') a WHERE jsonb_typeof(a.value)='string') ELSE '[]'::jsonb END AS "${key}"`),
+    ...(table === "daily_sales_unit_profits" ? [`CASE WHEN jsonb_typeof(t.payload->'childRows')='array' THEN
+      (SELECT coalesce(jsonb_agg(jsonb_build_object(${["canonicalSalesUnitId", "displayName", "date", "totalQuantity", "totalProductRevenue", "totalAdCost", "estimatedNetProfit", "profitStatus"].map(key => `'${key}',c.value->>'${key}'`).join(",")})), '[]'::jsonb)
+       FROM jsonb_array_elements(t.payload->'childRows') c) ELSE '[]'::jsonb END AS "childRows"`] : []),
     ...(table === "order_sync_states" ? ["t.payload#>>'{historicalCoverageGap,from}' AS \"gapFrom\"", "t.payload#>>'{historicalCoverageGap,to}' AS \"gapTo\""] : [])
   ].join(",");
 }
@@ -133,7 +136,8 @@ export async function readNaverDayProjections(tx: Prisma.TransactionClient, quer
   return { raw, errors };
 }
 
-/** Production stored-only boundary: no orders, raw ads, current costs, or nested childRows. */
+/** Stored-only boundary: no orders, raw ads or current costs. Child options use
+ * only the fixed identity and completed-financial projection above. */
 export async function readNaverStoredDayProjections(tx: Prisma.TransactionClient, scope: string, date: string) {
   const queries = naverQueries(scope, date), raw = {} as NaverStoredRaw, errors = {} as NaverStoredErrors;
   await tx.$executeRawUnsafe("SAVEPOINT naver_day_read");
