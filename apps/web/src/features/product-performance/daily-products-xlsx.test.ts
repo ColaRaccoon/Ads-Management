@@ -29,13 +29,14 @@ function unzipStored(bytes: Uint8Array) {
   return members;
 }
 
-test("Excel-only product filtering preserves source rows, every platform value, screen totals and zero-valued source products", async () => {
+test("Excel-only product filtering preserves source rows, every platform value, screen totals and zero-revenue products with activity", async () => {
   const source = report();
   source.rows[0].exportPlatforms = ["STOREFRONT", "GOOGLE"];
   source.rows[1].exportPlatforms = ["NAVER", "COUPANG"];
   source.rows[1].groups.NAVER.revenue = metric("0", "0", null);
+  source.exportActivityVersion = 2;
   const before = structuredClone(source);
-  assert.equal(filterDailyProductsForExcel(source, "ALL"), source);
+  assert.deepEqual(filterDailyProductsForExcel(source, "ALL").rows, source.rows);
   for (const platform of ["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const) {
     const filtered = filterDailyProductsForExcel(source, platform);
     const expected = platform === "STOREFRONT" || platform === "GOOGLE" ? source.rows[0] : source.rows[1];
@@ -60,15 +61,32 @@ test("Excel-only product filtering preserves source rows, every platform value, 
   assert.deepEqual(source, before);
   source.rows.forEach(row => { row.exportPlatforms = []; });
   assert.equal(filterDailyProductsForExcel(source, "GOOGLE").rows.length, 0);
+  assert.equal(filterDailyProductsForExcel(source, "ALL").rows.length, 0);
 });
 
 test("missing or invalid membership never guesses platform membership from synthetic zero or positive amounts", () => {
   const source = report();
   assert.equal(hasDailyExcelProductMembership(source), false);
   assert.throws(() => filterDailyProductsForExcel(source, "STOREFRONT"), /다시 조회/);
-  assert.equal(filterDailyProductsForExcel(source, "ALL"), source);
+  assert.throws(() => filterDailyProductsForExcel(source, "ALL"), /다시 조회/);
   source.rows.forEach(row => { row.exportPlatforms = ["TOTAL" as never]; });
   assert.equal(hasDailyExcelProductMembership(source), false);
+});
+
+test("all-products export also omits inactive and previous-only products without hiding their screen rows", () => {
+  const source = report(); source.exportActivityVersion = 2;
+  source.rows[0].exportPlatforms = ["GOOGLE"];
+  source.rows[1].exportPlatforms = [];
+  const before = structuredClone(source);
+  const filtered = filterDailyProductsForExcel(source, "ALL");
+  assert.deepEqual(filtered.rows.map(row => row.productKey), ["one"]);
+  assert.equal(filtered.totals, source.totals);
+  assert.equal(dailyExcelFileName(filtered), "제품통합_데일리_전체제품_2026-11-02.xlsx");
+  for (const xml of unzipStored(buildDailyProductsXlsx(filtered)).values()) assert.doesNotMatch(xml, /HYPERLINK/);
+  assert.deepEqual(source, before);
+  source.exportActivityVersion = 1;
+  assert.equal(hasDailyExcelProductMembership(source), false);
+  assert.throws(() => filterDailyProductsForExcel(source, "ALL"), /다시 조회/);
 });
 function cell(xml: string, address: string) {
   const result = xml.match(new RegExp(`<c r="${address}"[^>]*>[\\s\\S]*?</c>`));

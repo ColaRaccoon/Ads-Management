@@ -33,16 +33,18 @@ export type DailyProductsSourceRow = Pick<DailyProductRow, "productKey" | "produ
   current: DailyProductsAggregate; previous: DailyProductsAggregate;
 };
 export type DailyProductsResponse = Pick<DashboardData, "summary" | "timeseries"> & {
+  exportActivityVersion?: number;
   reportDate: string; previousDate: string; totalProducts: number; nextCursor: null;
   products: DailyProductsSourceRow[];
   allProducts: { current: DailyProductsAggregate; previous: DailyProductsAggregate };
 };
 export type DailyReconciliation = { key: string; label: string; current: string | null; previous: string | null };
 export type DailyProductsReport = {
+  exportActivityVersion?: number;
   date: string; previousDate: string; snapshotHash: string; scopeLabel: string;
   rows: DailyProductRow[]; totals: DailyProductRow; warnings: string[]; provisional: boolean;
   reconciliation: DailyReconciliation[];
-  exportSelection?: { platform: Exclude<DailyProductGroup, "TOTAL">; label: string; totalProducts: number; basis: string };
+  exportSelection?: { platform: Exclude<DailyProductGroup, "TOTAL"> | "ALL"; label: string; totalProducts: number; basis: string };
 };
 
 const SCALE = 10n ** 10n;
@@ -206,5 +208,6 @@ export function buildDailyProductsReport(data: DailyProductsResponse, date: stri
   ];
   const reconciliation = balanceLabels.map(([key, label]) => ({ key, label,
     current: data.allProducts.current.scopeBalances?.[key] ?? null, previous: data.allProducts.previous.scopeBalances?.[key] ?? null }));
-  return { date, previousDate, snapshotHash: data.summary.snapshotHash, scopeLabel, rows, totals, warnings, provisional: data.summary.provisional, reconciliation };
+  return { date, previousDate, snapshotHash: data.summary.snapshotHash, scopeLabel, rows, totals, warnings, provisional: data.summary.provisional, reconciliation,
+    exportActivityVersion: data.exportActivityVersion };
 }

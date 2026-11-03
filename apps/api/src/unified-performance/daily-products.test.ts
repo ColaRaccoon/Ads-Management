@@ -114,16 +114,17 @@ test("Excel platform presence uses own source rows rather than catalog, coverage
   assert.ok(response.products.find((row: any) => row.productName === "거래 없는 비활성").current.byMarketplace.length > 0,
     "synthetic marketplace summaries must not become membership evidence");
   assert.equal(response.totalProducts, 5, "export metadata never removes ordinary report products");
+  assert.equal(response.exportActivityVersion, 2);
   assert.equal(f.reads.length, 1);
 }));
 
-test("Excel source presence retains real zero, negative, unknown, previous-only and ad-only results without inferred allocations", async () => enabled(async () => {
+test("Excel current activity excludes confirmed zero and previous-only rows while preserving unknown quantities", async () => enabled(async () => {
   const f = fixture();
   f.snapshot.availableProductNames.push("legacy zero");
   f.snapshot.facts.push(
     fact({ productName: "legacy zero", amountKrw: "0", completeAmountKrw: "0" }),
     fact({ productName: "native meta zero", component: "STOREFRONT_RESULT", marketplace: "CAFE24_META", medium: "META",
-      amountKrw: "0", completeAmountKrw: "0", profitBeforeAds: "0", completeProfitBeforeAds: "0" }),
+      amountKrw: "0", completeAmountKrw: "0", profitBeforeAds: "0", completeProfitBeforeAds: "0", quantity: "0" }),
     fact({ productName: "native google unknown", component: "STOREFRONT_RESULT", marketplace: "CAFE24_YOUTUBE", medium: "GOOGLE",
       amountKrw: null, completeAmountKrw: null, profitBeforeAds: null, completeProfitBeforeAds: null }),
     fact({ productName: "naver unknown", platform: "NAVER", scopeKey: "NAVER", marketplace: "NAVER_SMARTSTORE",
@@ -143,17 +144,17 @@ test("Excel source presence retains real zero, negative, unknown, previous-only 
   // Legacy sales coexist with native adoption in this fixture and are correctly
   // removed by the canonical overlay, so test their evidence in an older partition.
   assert.deepEqual(platforms("legacy zero"), []);
-  assert.deepEqual(platforms("native meta zero"), ["STOREFRONT"]);
+  assert.deepEqual(platforms("native meta zero"), []);
   assert.deepEqual(platforms("native google unknown"), ["GOOGLE"]);
   assert.deepEqual(platforms("naver unknown"), ["NAVER"]);
-  assert.deepEqual(platforms("coupang previous negative"), ["COUPANG"]);
-  assert.deepEqual(platforms("coupang manual zero"), ["COUPANG"]);
-  assert.deepEqual(platforms("META ad only"), ["STOREFRONT"]);
-  assert.deepEqual(platforms("GOOGLE ad only"), ["GOOGLE"]);
-  assert.deepEqual(platforms("COUPANG ad only"), ["COUPANG"]);
+  assert.deepEqual(platforms("coupang previous negative"), []);
+  assert.deepEqual(platforms("coupang manual zero"), []);
+  assert.deepEqual(platforms("META ad only"), []);
+  assert.deepEqual(platforms("GOOGLE ad only"), []);
+  assert.deepEqual(platforms("COUPANG ad only"), []);
   for (const name of ["NAVER ad only", "allocation only", "expense only", "invalid product marker", "outside date"])
     assert.deepEqual(platforms(name), [], name);
-  f.snapshot.facts = [fact({ productName: "legacy zero", amountKrw: "0", completeAmountKrw: "0" })];
+  f.snapshot.facts = [fact({ productName: "legacy zero", amountKrw: "0", completeAmountKrw: "0", quantity: "1" })];
   const legacy = await f.service.read("daily-products", input, actor) as any;
   assert.deepEqual(legacy.products.find((row: any) => row.productName === "legacy zero").exportPlatforms, ["STOREFRONT"],
     "an older Cafe24 row never guesses a Google channel");
@@ -166,7 +167,7 @@ test("Excel source presence respects selected platforms, accounts and published 
   for (const day of [input.from, input.to]) f.snapshot.publications.push({ platform: "CAFE24", scopeKey: "CAFE24", businessDate: new Date(day), runId: day, revision: 1,
     run: { versions: { participationOverrides: { A: day === input.to ? [] : ["SALE", "DIRECT_COST"] } }, publishedAt: new Date("2026-11-02T00:00:00Z") } } as any);
   const previous = await f.service.read("daily-products", input, actor) as any;
-  assert.deepEqual(previous.products[0].exportPlatforms, ["STOREFRONT", "GOOGLE"], "previous day's eligible result remains evidence");
+  assert.deepEqual(previous.products[0].exportPlatforms, [], "previous day's eligible result does not establish current activity");
   (f.snapshot.publications[0].run.versions as any).participationOverrides.A = [];
   const excluded = await f.service.read("daily-products", input, actor) as any;
   assert.deepEqual(excluded.products[0].exportPlatforms, [], "published overrides and policy exclude both days and ad media");
@@ -175,6 +176,56 @@ test("Excel source presence respects selected platforms, accounts and published 
   assert.deepEqual(selected.products.find((row: any) => row.productName === "과거 이름").exportPlatforms, []);
   const noAccounts = await f.service.read("daily-products", { ...input, scopeKeys: [] }, actor) as any;
   assert.ok(noAccounts.products.every((row: any) => row.exportPlatforms.length === 0));
+}));
+
+test("Excel activity uses exact current quantity and canonical allocated spend independently for each platform", async () => enabled(async () => {
+  const f = fixture();
+  const sale = (productName: string, quantity: string | null, overrides: Partial<PublishedReportFact> = {}) => fact({
+    productName, platform: "COUPANG", scopeKey: "COUPANG", marketplace: "COUPANG", quantity,
+    amountKrw: "0", completeAmountKrw: "0", profitBeforeAds: "0", completeProfitBeforeAds: "0", ...overrides });
+  const ad = (productName: string, amount: string | null, overrides: Partial<PublishedReportFact> = {}) => fact({
+    productName, platform: "COUPANG", scopeKey: "COUPANG", marketplace: null, medium: "COUPANG_ADS", component: "AD_SPEND",
+    amountKrw: amount, completeAmountKrw: amount, profitBeforeAds: null, completeProfitBeforeAds: null, ...overrides });
+  f.snapshot.facts.push(
+    sale("free sale", "1"), sale("zero both", "0"), sale("negative quantity", "-1"), sale("unknown quantity", null),
+    sale("net zero quantity", "1"), sale("net zero quantity", "-1"),
+    sale("tiny exact quantity", "0.000001"),
+    sale("allocated positive ad", "0"), ad("allocated positive ad", "7", { attribution: "ALLOCATED" }),
+    sale("negative ad", "0"), ad("negative ad", "-0.000001"),
+    sale("net zero ad", "0"), ad("net zero ad", "9007199254740993.000001"), ad("net zero ad", "-9007199254740993.000001", { attribution: "ALLOCATED" }),
+    sale("unknown ad", "0"), ad("unknown ad", null),
+    ad("positive ad only", "1"), ad("negative ad only", "-1"), ad("unknown ad only", null),
+    ad("allocated-only product", "7", { attribution: "ALLOCATED" }),
+    sale("quantity warning", "0", { platform: "NAVER", scopeKey: "NAVER", marketplace: "NAVER_SMARTSTORE",
+      quality: { ...quality, issues: ["NAVER_STORED_QUANTITY_UNAVAILABLE"] } }),
+    sale("independent channels", "0", { platform: "CAFE24", scopeKey: "CAFE24", component: "STOREFRONT_RESULT", marketplace: "CAFE24_META", medium: "META" }),
+    sale("independent channels", "1", { platform: "CAFE24", scopeKey: "CAFE24", component: "STOREFRONT_RESULT", marketplace: "CAFE24_YOUTUBE", medium: "GOOGLE" }),
+    sale("independent channels", "0", { platform: "NAVER", scopeKey: "NAVER", marketplace: "NAVER_SMARTSTORE" })
+  );
+  const response = await f.service.read("daily-products", input, actor) as any;
+  const platforms = (name: string) => response.products.find((row: any) => row.productName === name).exportPlatforms;
+  for (const name of ["free sale", "negative quantity", "unknown quantity", "tiny exact quantity", "allocated positive ad", "negative ad", "unknown ad",
+    "positive ad only", "negative ad only", "unknown ad only"]) assert.deepEqual(platforms(name), ["COUPANG"], name);
+  for (const name of ["zero both", "net zero quantity", "net zero ad", "allocated-only product"]) assert.deepEqual(platforms(name), [], name);
+  assert.deepEqual(platforms("quantity warning"), ["NAVER"]);
+  assert.deepEqual(platforms("independent channels"), ["GOOGLE"]);
+  assert.equal(response.products.find((row: any) => row.productName === "net zero ad").current.knownTotals.adSpend, "0.000000");
+  for (const name of ["allocated positive ad", "negative ad", "net zero ad", "independent channels"]) {
+    const canonical = await f.service.read("summary", { ...input, from: input.to, to: input.to, productName: name }, actor) as any;
+    assert.deepEqual(compact(response.products.find((row: any) => row.productName === name).current), compact(canonical.items[0]), name);
+  }
+}));
+
+test("Excel keeps zero-valued current rows when sales or ad coverage is incomplete", async () => enabled(async () => {
+  for (const component of ["SALE", "AD_SPEND"] as const) {
+    const f = fixture();
+    f.snapshot.facts.push(fact({ productName: "partial zero", platform: "COUPANG", scopeKey: "COUPANG", marketplace: "COUPANG", quantity: "0",
+      amountKrw: "0", completeAmountKrw: "0" }));
+    f.snapshot.coverage = f.snapshot.coverage.map(row => row.platform === "COUPANG" && row.date === input.to && row.component === component
+      ? { ...row, collectionState: "PARTIAL", zeroConfirmed: false } : row);
+    const response = await f.service.read("daily-products", input, actor) as any;
+    assert.deepEqual(response.products.find((row: any) => row.productName === "partial zero").exportPlatforms, ["COUPANG"], component);
+  }
 }));
 
 test("date-specific product policy and published overrides are applied identically to existing reads", async () => enabled(async () => {

@@ -5,6 +5,7 @@ import type { PublishedReportFact, ReportSummary } from "./report-contract";
 import type { Platform, SourceCoverage } from "./types";
 import { summarizeReport } from "./domain/report-calculation";
 import { overlayStorefrontResults } from "./domain/storefront-report-overlay";
+import { decimal, ExactDecimal } from "./domain/decimal";
 
 export type DailyProductMetrics = Pick<ReportSummary,
   "knownTotals" | "completeTotals" | "byMarketplace" | "byMedium" | "isEstimate"> & {
@@ -15,25 +16,68 @@ export type DailyProductScope = { facts: PublishedReportFact[]; coverage: Source
 type ApplyScope = (snapshot: ReportSnapshot, productName?: string) => DailyProductScope;
 export type DailyProductExportPlatform = "STOREFRONT" | "GOOGLE" | "COUPANG" | "NAVER";
 
-/** Product presence in published source results, never synthesized summary zeroes.
- * Native margin views include ad-only products. Allocations and shared partition
- * context do not establish that a product appeared in the source platform view.
+function sourceGroup(fact: PublishedReportFact): DailyProductExportPlatform | null {
+  if (fact.platform === "CAFE24" && (fact.component === "SALE" || fact.component === "STOREFRONT_RESULT")) {
+    if (fact.marketplace === "CAFE24_YOUTUBE") return "GOOGLE";
+    if (fact.marketplace === "CAFE24_META" || fact.marketplace === "CAFE24") return "STOREFRONT";
+  } else if (fact.component === "AD_SPEND" && fact.platform === "META") return "STOREFRONT";
+  else if (fact.component === "AD_SPEND" && fact.platform === "GOOGLE") return "GOOGLE";
+  else if (fact.platform === "COUPANG" && (fact.component === "SALE" || fact.component === "AD_SPEND")) return "COUPANG";
+  else if (fact.platform === "NAVER" && fact.component === "SALE") return "NAVER";
+  return null;
+}
+function confirmedZero(value: string | null | undefined): boolean {
+  try { return decimal(value).isZero(); } catch { return false; }
+}
+/** Consume the same canonical marketplace/media spend shown by the report.
+ * Partial zeroes are not confirmed zero; excluded sources contribute no activity.
  */
-function exportPlatforms(scope: DailyProductScope, query: ReportQuery, productName: string): DailyProductExportPlatform[] {
-  const present = new Set<DailyProductExportPlatform>();
+function confirmedZeroAds(group: DailyProductExportPlatform, summary: ReportSummary, scope: DailyProductScope, query: ReportQuery): boolean {
+  const split = summary.byMarketplace.some(row => row.marketplace === "CAFE24_META" || row.marketplace === "CAFE24_YOUTUBE");
+  const legacy = summary.byMarketplace.some(row => row.marketplace === "CAFE24");
+  const platforms: Platform[] = group === "STOREFRONT" ? !split && legacy ? ["META", "GOOGLE"] : ["META"] : [group];
+  const selected = platforms.filter(platform => query.platforms.includes(platform));
+  if (!selected.length) return true;
+  const coverage = scope.coverage.filter(row => row.date === query.to && row.component === "AD_SPEND" && selected.includes(row.platform) &&
+    (query.scopeKeys === undefined || query.scopeKeys.includes(row.scopeKey)));
+  if (coverage.length && coverage.every(row => row.participation === "NOT_APPLICABLE")) return true;
+  if (group === "STOREFRONT" && split && legacy) return false;
+  const marketplace = group === "STOREFRONT" ? !split && legacy ? "CAFE24" : "CAFE24_META" :
+    group === "GOOGLE" ? "CAFE24_YOUTUBE" : group === "NAVER" ? "NAVER_SMARTSTORE" : "COUPANG";
+  const market = summary.byMarketplace.find(row => row.marketplace === marketplace);
+  if (market?.display?.adSpend) return market.display.adSpend.state === "COMPLETE" && confirmedZero(market.display.adSpend.value);
+  if (market?.adSpend != null) return confirmedZero(market.adSpend);
+  const medium = group === "STOREFRONT" ? "META" : group === "COUPANG" ? "COUPANG_ADS" : group === "NAVER" ? "NAVER_DA" : "GOOGLE";
+  const media = summary.byMedium.find(row => row.medium === medium);
+  if (media?.displayAdSpend) return media.displayAdSpend.state === "COMPLETE" && confirmedZero(media.displayAdSpend.value);
+  return confirmedZero(media?.completeAdSpend);
+}
+/** Only current-day source products qualify. Drop a group solely when both its
+ * stored sale quantity and canonical ad spend are confirmed zero. No monetary
+ * calculation is repeated, and missing quantities never become invented zeroes.
+ */
+function exportPlatforms(scope: DailyProductScope, query: ReportQuery, productName: string, summary: ReportSummary): DailyProductExportPlatform[] {
+  const present = new Map<DailyProductExportPlatform, { quantity: InstanceType<typeof ExactDecimal>; unknown: boolean }>();
+  const incompleteSales = new Set(scope.coverage.filter(row => row.date === query.to && row.component === "SALE" &&
+    row.participation === "INCLUDED" && row.collectionState !== "COMPLETE").map(row => JSON.stringify([row.platform, row.scopeKey])));
   for (const fact of scope.facts) {
     if (fact.productName !== productName || fact.rowsCount <= 0 || fact.saleUnitName === "PARTITION_MARKER" ||
-      (fact.date !== query.from && fact.date !== query.to) || !query.platforms.includes(fact.platform) ||
+      fact.date !== query.to || !query.platforms.includes(fact.platform) ||
       (query.scopeKeys !== undefined && !query.scopeKeys.includes(fact.scopeKey)) || fact.attribution !== "DIRECT") continue;
-    if (fact.platform === "CAFE24" && (fact.component === "SALE" || fact.component === "STOREFRONT_RESULT")) {
-      if (fact.marketplace === "CAFE24_YOUTUBE") present.add("GOOGLE");
-      else if (fact.marketplace === "CAFE24_META" || fact.marketplace === "CAFE24") present.add("STOREFRONT");
-    } else if (fact.component === "AD_SPEND" && fact.platform === "META") present.add("STOREFRONT");
-    else if (fact.component === "AD_SPEND" && fact.platform === "GOOGLE") present.add("GOOGLE");
-    else if (fact.platform === "COUPANG" && (fact.component === "SALE" || fact.component === "AD_SPEND")) present.add("COUPANG");
-    else if (fact.platform === "NAVER" && fact.component === "SALE") present.add("NAVER");
+    const group = sourceGroup(fact);
+    if (!group) continue;
+    const state = present.get(group) ?? { quantity: new ExactDecimal(0), unknown: false };
+    if (fact.component === "SALE" || fact.component === "STOREFRONT_RESULT") {
+      try { state.quantity = state.quantity.plus(decimal(fact.quantity)); } catch { state.unknown = true; }
+      if (fact.quality.issues.some(issue => /QUANTITY/.test(issue) && /UNAVAILABLE|UNKNOWN|MISSING|INVALID|UNRESOLVED/.test(issue)) ||
+        incompleteSales.has(JSON.stringify([fact.platform, fact.scopeKey]))) state.unknown = true;
+    }
+    present.set(group, state);
   }
-  return (["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const).filter(platform => present.has(platform));
+  return (["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const).filter(group => {
+    const state = present.get(group);
+    return state !== undefined && (state.unknown || !state.quantity.isZero() || !confirmedZeroAds(group, summary, scope, query));
+  });
 }
 
 function metrics(summary: ReportSummary, coverage: SourceCoverage[], day: string): DailyProductMetrics {
@@ -104,15 +148,16 @@ export function buildDailyProducts(snapshot: ReportSnapshot, query: ReportQuery,
     const productFacts = [...new Set([...(byProduct.get(productName) ?? []), ...context])];
     const scope = applyScope({ ...snapshot, facts: productFacts, products: product ? [product] : [],
       rules: product ? rules.get(product.id) ?? [] : [] }, productName);
+    const currentSummary = summarizeDay(scope, query.to, productName);
     return { productKey: product ? `product:${product.id}` : `historical:${productName}`, productName,
       active: product?.active ?? false, historical: !product,
-      exportPlatforms: exportPlatforms(scope, query, productName),
-      current: metrics(summarizeDay(scope, query.to, productName), scope.coverage, query.to),
+      exportPlatforms: exportPlatforms(scope, query, productName, currentSummary),
+      current: metrics(currentSummary, scope.coverage, query.to),
       previous: metrics(summarizeDay(scope, query.from, productName), scope.coverage, query.from) };
   });
   const allScope = precomputedDays ? { facts, coverage: snapshot.coverage } : applyScope({ ...snapshot, facts });
   const withBalances = (summary: ReportSummary, day: string) => ({ ...metrics(summary, allScope.coverage, day), scopeBalances: summary.scopeBalances });
-  return { products, totalProducts: products.length, nextCursor: null,
+  return { products, totalProducts: products.length, nextCursor: null, exportActivityVersion: 2 as const,
     reportDate: query.to, previousDate: query.from,
     allProducts: { current: withBalances(precomputedDays?.current ?? summarizeDay(allScope, query.to), query.to),
       previous: withBalances(precomputedDays?.previous ?? summarizeDay(allScope, query.from), query.from) } };
