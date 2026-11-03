@@ -37,4 +37,3 @@ export function mapNativeProducts(rows: NativeStoredResult[], scopeKey: string, 
         mappingRuleIds: name.ruleIds.join(","), mappingVersion: version } };
   });
 }
-
