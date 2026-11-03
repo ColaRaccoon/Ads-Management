@@ -88,3 +88,39 @@ The 134-product portrait fixture remains three detail pages; the summary is one
 page. Source times are compacted only for printing; screen/Excel retain per-source
 details. Live monetary parity evidence is kept under the ignored
 `reports/daily-products-export` directory.
+
+## Production verification — 2026-11-03
+
+The reporting application is healthy at release
+`ad7baa6456557a00c783a96e276e84af7bc56dae`; the publisher runs the identical
+financial implementation from `624dcb0f7bf21429e9922fa4e812b947620522a1`.
+The follow-up application commit only registers reviewed modules in the build
+allowlist. Both native read/write flags are enabled. The protected live readiness
+probe and report page returned HTTP 200 at 02:28 UTC.
+
+All 674 discovered authorized date/account partitions through November 2 now
+have native publications. The first pass published 639; the remaining 35 Naver
+partitions had missing summaries or an old calculation version. The existing
+local Naver recalculation API persisted those exact dates using its own profit
+calculator. Original dashboard responses were equal before and after all 35
+operations, and the resulting published summaries also matched. Only calculated
+summary/product caches were refreshed; orders, costs, mappings and fake purchases
+were not edited. The separate Naver repository's concurrent changes were left
+untouched. The initial publication pointers and operation evidence are retained
+locally in the ignored reports directory.
+
+November 2 live reader parity (KRW, before display rounding):
+
+| Original platform | Revenue | Advertising | Final profit |
+| --- | ---: | ---: | ---: |
+| Storefront | 12,158,060 | 5,864,437.692 | 1,316,616.308 |
+| Google | 338,280 | 347,160.071585 | -146,408.071585 |
+| Coupang | 10,212,090 | 1,721,561 | 2,351,382.602545 |
+| Naver | 11,925,810 | 4,078,157 | 2,255,626 |
+
+These are each original platform's basis, including the documented possible
+storefront/Google overlap; the overall total does not introduce a new allocation.
+The November 2 zero-activity sleep-mask product has no eligible export platforms.
+The 02:29 UTC scheduled reconciliation finished 24 checks, all unchanged, with
+zero failures, zero discovery failures and no exhausted deadline. Earlier
+historical Naver check failures were resolved by the native cache repair.
