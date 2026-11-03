@@ -271,7 +271,14 @@ try {
         for(const [field,value] of [['revenue',revenue],['adSpend',ads],['estimatedProfit',net]])assert(eq(market.display[field].value,quantizeMoney(decimal(value))),'DAILY_DISPLAY_MISMATCH');
       }
       assert(!response.summary.warnings.includes('CONFIGURATION_CHANGED_REBUILD_RECOMMENDED'),'DAILY_CONFIGURATION_WARNING');
-      const result={at:new Date().toISOString(),status:stale?'HISTORY_REBUILDING':'PASS',partitions:pointers.length,stale,totals,actualDailyReportChecks:9,sourceWrites:0,financialDifferences:0};if(params.action==='report-check')writeFileSync(`${dir}/current-report-check.json`,JSON.stringify(result,null,2));else{state.verification=result;persist();}console.log(JSON.stringify(result));
+      const { sourceProductInventory } = require('../apps/api/dist/unified-performance/source-product-inventory.js');
+      const names=snapshot.rules.filter(rule=>rule.kind==='NAME').map(rule=>ruleName(rule,snapshot.products.find(product=>product.id===rule.productId).canonicalName));
+      const inventory=await management.read(tx=>sourceProductInventory(tx,{from:plan.through,to:plan.through},snapshot.products,names,snapshot.versions.nameRuleVersion));
+      const option=inventory.products.find(row=>row.group==='NAVER_OPTION'&&row.scopeKey===plan.optionStore&&row.sourceName==='자이로볼 풀메탈');
+      assert(option?.targetName==='아이언볼'&&option.publishedName==='아이언볼'&&!option.pending,'OPTION_INVENTORY_MISMATCH');
+      assert(inventory.products.filter(row=>row.group==='NAVER_OPTION'&&row.matchStatus==='UNMATCHED'&&row.publishedName===null).every(row=>!row.pending),'UNLINKED_OPTION_STATUS_MISMATCH');
+
+      const result={at:new Date().toISOString(),status:stale?'HISTORY_REBUILDING':'PASS',partitions:pointers.length,stale,totals,actualDailyReportChecks:9,optionInventoryVerified:true,sourceWrites:0,financialDifferences:0};if(params.action==='report-check')writeFileSync(`${dir}/current-report-check.json`,JSON.stringify(result,null,2));else{state.verification=result;persist();}console.log(JSON.stringify(result));
     }
   }
 } catch (error) {

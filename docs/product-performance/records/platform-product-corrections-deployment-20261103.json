@@ -1,0 +1,205 @@
+{
+  "kind": "APPLIED_USER_CONFIRMED_PRODUCT_CORRECTIONS",
+  "completedAt": "2026-11-03T05:40:02.393Z",
+  "approval": [
+    "같은 제품, 러닝양말로 연결",
+    "기본형·프로를 합산",
+    "아이언볼은 자이로볼 제품 옵션중에 하나인 풀메탈 제품이랑 매칭시키면 돼."
+  ],
+  "release": "6a5cc5d144c22325c7873c313cce8ce2916f4cb2",
+  "projectId": "6fe72710-1fc8-445a-a77f-da2da8fee200",
+  "environmentId": "01ab3d5a-1036-45b0-aa9c-47179339c9be",
+  "domain": "https://patimagroup-work.com",
+  "deployments": {
+    "web": {
+      "id": "0c024817-109f-4dfa-9f1a-ac25db75a16c",
+      "status": "SUCCESS"
+    },
+    "worker": {
+      "id": "16b4fa41-90c0-457b-9f85-43787621795e",
+      "status": "SUCCESS"
+    }
+  },
+  "planFile": "docs/product-performance/approved/platform-product-corrections-20261103.json",
+  "planSha256": "67676d1a8f311f6ef64a97557bc1e2bee05b51a759e17de09eebc08053d11bca",
+  "configurationVersion": "c7705b74ce83ca6559c5f931baa1190d446537b78334e400ac83790718d3ca75",
+  "rules": [
+    {
+      "id": "6693a19b-31ec-4b8c-b2ed-ee92ebbfbbc3",
+      "sourceName": "스포츠양말",
+      "targetName": "러닝양말",
+      "action": "CREATE"
+    },
+    {
+      "id": "418ffbd4-b4e5-42f1-836b-4f0781d28879",
+      "sourceName": "스포츠양말 3개입",
+      "targetName": "러닝양말",
+      "action": "UPDATE"
+    },
+    {
+      "id": "fb7c638a-bafa-453d-9166-4d1a919e5165",
+      "sourceName": "스포츠양말 5개입",
+      "targetName": "러닝양말",
+      "action": "UPDATE"
+    },
+    {
+      "id": "10aee2aa-0cee-4f0d-a8a9-404235dbe80b",
+      "sourceName": "스포츠양말 7개입",
+      "targetName": "러닝양말",
+      "action": "UPDATE"
+    },
+    {
+      "id": "d73992d4-b749-4700-b638-816fb58fbcaf",
+      "sourceName": "스포츠양말 10개입",
+      "targetName": "러닝양말",
+      "action": "UPDATE"
+    },
+    {
+      "id": "49b5b05b-427e-4b17-a58e-0f6f97b89f7f",
+      "sourceName": "퍼펙트슬라이드 프로",
+      "targetName": "퍼펙트슬라이드",
+      "action": "CREATE"
+    },
+    {
+      "id": "2addc65b-9fe7-405e-991f-873596c4dc30",
+      "sourceName": "자이로볼 풀메탈",
+      "targetName": "아이언볼",
+      "action": "CREATE"
+    }
+  ],
+  "historyTrial": {
+    "status": "PASS",
+    "checked": 166,
+    "optionDays": 165,
+    "committedWrites": 0
+  },
+  "publishedPartitions": 975,
+  "replayOperations": 978,
+  "financialDifferences": 0,
+  "sourceWrites": 0,
+  "originalPublicationsRetained": true,
+  "verification": {
+    "at": "2026-11-03T05:40:02.393Z",
+    "status": "PASS",
+    "partitions": 975,
+    "stale": 0,
+    "totals": [
+      {
+        "platform": "CAFE24",
+        "product_name": "러닝양말",
+        "revenue": "929100",
+        "ads": "211518.296",
+        "net": "241671.70400000003",
+        "quantity": "19"
+      },
+      {
+        "platform": "CAFE24",
+        "product_name": "아이언볼",
+        "revenue": "48900",
+        "ads": "68609.648088000005",
+        "net": "-37099.648088000005",
+        "quantity": "1"
+      },
+      {
+        "platform": "CAFE24",
+        "product_name": "퍼펙트슬라이드",
+        "revenue": "1284840",
+        "ads": "579264.9459900001",
+        "net": "133391.05401000004",
+        "quantity": "27"
+      },
+      {
+        "platform": "COUPANG",
+        "product_name": "러닝양말",
+        "revenue": "243400",
+        "ads": "71242",
+        "net": "30874.807272727280",
+        "quantity": "6"
+      },
+      {
+        "platform": "COUPANG",
+        "product_name": "퍼펙트슬라이드",
+        "revenue": "254000",
+        "ads": "0",
+        "net": "96438.8909090909",
+        "quantity": "5"
+      },
+      {
+        "platform": "NAVER",
+        "product_name": "러닝양말",
+        "revenue": "547300.000000",
+        "ads": "113813.000000",
+        "net": "226118.000000",
+        "quantity": "62"
+      },
+      {
+        "platform": "NAVER",
+        "product_name": "아이언볼",
+        "revenue": "411600.000000",
+        "ads": "0.000000",
+        "net": "243033.000000",
+        "quantity": "11.000000"
+      },
+      {
+        "platform": "NAVER",
+        "product_name": "자이로볼",
+        "revenue": "489700",
+        "ads": "193102",
+        "net": "99027",
+        "quantity": "23"
+      },
+      {
+        "platform": "NAVER",
+        "product_name": "퍼펙트슬라이드",
+        "revenue": "1156650.000000",
+        "ads": "220108.000000",
+        "net": "324585.000000",
+        "quantity": "29"
+      }
+    ],
+    "actualDailyReportChecks": 9,
+    "optionInventoryVerified": true,
+    "sourceWrites": 0,
+    "financialDifferences": 0
+  },
+  "readiness": {
+    "status": "PASS",
+    "checkedAt": "2026-11-03T05:37:11.789Z",
+    "release": "6a5cc5d144c22325c7873c313cce8ce2916f4cb2",
+    "readyStatus": "ready",
+    "runtimeConfigFingerprint": "208b8dc4e1c477b451a629540ff1fcb74fc6bedd96a4d2f3e3de04d5109de958",
+    "mappingsPageHttpStatus": 200
+  },
+  "commonAdvertisingPolicy": "NAVER parent common advertising stays on 자이로볼; only source-stored 풀메탈 option amounts move to 아이언볼.",
+  "separateProductPreserved": "퍼슬2",
+  "tests": {
+    "apiFullSuite": {
+      "passed": 390,
+      "skipped": 1
+    },
+    "finalInventoryTests": {
+      "passed": 3
+    },
+    "webMappingTests": {
+      "passed": 11
+    },
+    "compiledBoundaryGuard": {
+      "passed": 10
+    },
+    "apiTypecheck": "PASS",
+    "apiBuild": "PASS",
+    "webBuild": "PASS"
+  },
+  "recoveredOperationalEvents": [
+    {
+      "at": "2026-11-03T05:35:36.768Z",
+      "action": "replay",
+      "code": "P2037",
+      "databaseCode": null,
+      "safeReason": null,
+      "diagnostic": null,
+      "recovered": true,
+      "resumedFromPublishedCheckpoint": true
+    }
+  ]
+}
