@@ -7,6 +7,7 @@ import { PermissionPage } from "@/components/permission-page";
 import { useAuth } from "@/features/auth/use-auth";
 import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { koreaTodayDateInput, koreaYesterdayDateInput } from "@/lib/korea-date";
+import { SourceProductMappings } from "./source-product-mappings";
 import { NameRuleFields } from "./name-rule-fields";
 import { NamePreview } from "./name-preview";
 import { SaleUnitFields } from "./sale-unit-fields";
@@ -96,7 +97,7 @@ function Mappings() {
   const start = (rule?: Rule, kind: RuleKind = filter) => {
     setEditingId(rule?.id); setDraft(rule ? editRule(rule) : newRule(kind, koreaTodayDateInput())); setPreview(undefined); setSamples([]);
   };
-  const refresh = async () => { await configuration.refetch(); await queryClient.invalidateQueries({ queryKey: ["unified-audit"] }); };
+  const refresh = async () => { await configuration.refetch(); await queryClient.invalidateQueries({ queryKey: ["unified-audit"] }); await queryClient.invalidateQueries({ queryKey: ["unified-source-products"] }); };
   const previewRule = () => run(async () => {
     const result = await apiPost<Preview>("/unified-rules/preview", input);
     setPreview({ key, result });
@@ -142,6 +143,9 @@ function Mappings() {
     <div className="page-header"><div><h1>제품명과 배분 설정</h1><p>고정 제품명과 이름으로 자동 분류합니다. 같은 이름의 신규 상품 ID도 기존 규칙으로 판정합니다.</p></div><button className="button" disabled={busy} onClick={() => void refresh()}>최신 설정 불러오기</button></div>
     <div className="panel"><strong>관리 설정</strong><p>이름·비용·적용기간은 전체 사용자의 설정입니다. 아래 플랫폼 선택은 금액 미리보기의 조회 범위에만 적용됩니다. Meta·Google 광고와 Cafe24 판매는 별도 원천입니다.</p>{!can("mappings.manage") && <p>조회 권한: 설정과 미리보기를 확인할 수 있습니다. 저장에는 매핑 관리 권한이 필요합니다.</p>}</div>
     {error && <div role="alert" className="warning-strip">{error}</div>}{notice && <div role="status" className="warning-strip">{notice}</div>}
+    <SourceProductMappings products={data.products} rules={data.rules} from={from} to={to} userId={user?.id} busy={busy} canManage={can("mappings.manage")}
+      onRange={(nextFrom, nextTo) => { setFrom(nextFrom); setTo(nextTo); setPreview(undefined); }}
+      onPrepare={(next, id, nextSamples) => { setDraft(next); setEditingId(id); setSamples(nextSamples); setFilter("NAME"); setPreview(undefined); setNotice("연결안을 불러왔습니다. 아래 판정·영향 미리보기에서 확인 후 저장하세요."); }} />
     <div className="grid two"><div className="panel"><h2>고정 기준 제품명</h2><div className="table-wrap"><table><thead><tr><th>제품명</th><th>상태·버전</th><th>관리</th></tr></thead><tbody>{data.products.map(p => <tr key={p.id}><td>{p.canonicalName}</td><td>{p.active ? "활성" : "비활성"} · v{p.version}</td><td>{can("products.manage") && <button className="button" disabled={busy} onClick={() => { setProduct({ id: p.id, canonicalName: p.canonicalName, active: p.active, expectedVersion: p.version, reason: "" }); setProductPreview(undefined); }}>수정</button>}</td></tr>)}</tbody></table></div>{!data.products.length && <p>등록된 통합 기준 제품이 없습니다. 기존 원천 설정은 아래 링크에서 확인할 수 있습니다.</p>}</div>
       {can("products.manage") && <form className="panel" onSubmit={e => { e.preventDefault(); void productAction(false); }}><h2>{product.id ? "기준 제품 수정" : "기준 제품 추가"}</h2><fieldset disabled={busy}><label className="field">고정 제품명<input className="input" required maxLength={256} value={product.canonicalName} onChange={e => setProduct({ ...product, canonicalName: e.target.value })} /></label><label><input type="checkbox" checked={product.active} onChange={e => setProduct({ ...product, active: e.target.checked })} /> 활성</label><label className="field">변경 사유<input className="input" required maxLength={1024} value={product.reason} onChange={e => setProduct({ ...product, reason: e.target.value })} /></label><div className="toolbar"><button className="button" type="submit">제품 변경 미리보기</button><button className="button primary" type="button" disabled={productPreview?.key !== previewKey(product) || !productPreview.canSave} onClick={() => void productAction(true)}>제품 저장</button><button className="button" type="button" onClick={() => { setProduct({ canonicalName: "", active: true, reason: "" }); setProductPreview(undefined); }}>새 제품</button></div></fieldset>{productPreview?.key === previewKey(product) && <p role="status">{productPreview.canSave ? "저장 가능한 제품명입니다." : "제품명·기존 별칭·배분 참조·버전 충돌을 확인하세요."}</p>}</form>}
     </div>

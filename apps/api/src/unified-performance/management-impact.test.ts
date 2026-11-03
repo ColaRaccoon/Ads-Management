@@ -46,3 +46,15 @@ test("empty preview selection never reads publication data and remains distinct 
   assert.equal(result.publishedRevenue, null);
   assert.equal(result.basis, "PUBLISHED_SCOPE_REVIEW_TOTALS");
 });
+
+
+test("native mapping preview uses the selected source final summary without adding its raw ledger or product rows", async () => {
+  const native = (kind: string, value: string, group = "COUPANG") => ({ runId: "one", payload: {
+    component: "NATIVE_RESULT", productName: kind === "SUMMARY" ? null : "A", amountKrw: value,
+    nativeResult: { kind, group, revenue: { known: value, complete: value }, adSpend: { known: "7", complete: "7" } }
+  } });
+  const rows = [fact("one", "A", "999"), native("SUMMARY", "100"), native("PRODUCT", "100"), native("SUMMARY", "888", "NAVER")];
+  const preview = await configurationImpact(tx(rows, ["one"]), { ...input, kind: "NAME", productId: "target",
+    payload: { matchType: "EXACT", terms: ["A"], nameField: "native:COUPANG" } }, null, [product]);
+  assert.equal(preview.publishedRevenue, "100.000000"); assert.equal(preview.publishedAdSpend, "7.000000");
+});

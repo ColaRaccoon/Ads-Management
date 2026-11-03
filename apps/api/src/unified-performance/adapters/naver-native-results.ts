@@ -1,3 +1,4 @@
+import { mapNativeProducts } from "../domain/native-product-mapping";
 import { createHash } from "node:crypto";
 import { assertAdapterBatch, assertOffsetTimestamp } from "../adapter-contract";
 import { money, quantity, quantizeMoney, ExactDecimal as D } from "../domain/decimal";
@@ -101,7 +102,7 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
       productName: sale.productName, quantity: nativeQuantity, revenue: storedMetric(revenue), adSpend: storedMetric(ad),
       netProfit: storedMetric(net), profitBeforeAds: storedMetric(beforeAds), sourceUpdatedAt: latestTimestamp([row]),
       issues: quality(rowIssues).issues, audit: { calculationVersion: "profit-v2", sourceRowId: row.id,
-        isStoreLevel: row.isStoreLevel === true ? "true" : "false", deliveryIncluded: "false", fakePurchaseIncluded: "false" } });
+        sourceProductName: nativeName, isStoreLevel: row.isStoreLevel === true ? "true" : "false", deliveryIncluded: "false", fakePurchaseIncluded: "false" } });
     if (ad === null) adIssues.push("NAVER_AD_AMOUNT_INVALID", "NAVER_STORED_AD_UNAVAILABLE");
     else batch.adSpends.push({ ref: ref(row, "daily_sales_unit_profits", "AD_SPEND"), name, productName: sale.productName, medium: "NAVER_DA", originalAmount: ad,
       currency: "KRW", amountKrw: ad, fx: { baseCurrency: "KRW", quoteCurrency: "KRW", requestedDate: date, sourceDate: date, rate: "1", provider: "IDENTITY", fallbackType: "IDENTITY", fxVersion: request.fxVersion },
@@ -134,7 +135,7 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
     issues: quality([...saleIssues, ...adIssues, ...commonIssues, ...(finalStoreNet === null ? ["NAVER_STORED_PROFIT_UNAVAILABLE"] : [])]).issues,
     audit: { calculationVersion: "profit-v2", sourceRowId: summary!.id, nativeNetBeforeFakePurchase: nativeStoreNet,
       fakePurchaseAmount: fakeTotal, deliveryMargin: amount(summary!.deliveryMargin), deliveryIncluded: "true", fakePurchaseIncluded: "true" } };
-  batch.nativeResults = [nativeSummary, ...nativeProducts.sort((a, b) => a.productKey.localeCompare(b.productKey, "en"))];
+  batch.nativeResults = mapNativeProducts([nativeSummary, ...nativeProducts.sort((a, b) => a.productKey.localeCompare(b.productKey, "en"))], scopeKey, date, configuration.products, configuration.nameRules, request.nameRuleVersion);
   fingerprint = hash([fingerprint, batch.nativeResults]);
   batch.sourceFingerprint = fingerprint;
   for (const entry of [...batch.sales, ...batch.adSpends, ...batch.commonExpenses]) entry.ref.sourceVersion = fingerprint;

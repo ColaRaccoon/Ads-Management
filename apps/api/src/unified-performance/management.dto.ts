@@ -5,6 +5,10 @@ import { IsBoundedJson, IsDateOnly, IsOnOrAfter } from "../validation/transport-
 export const RULE_KINDS = ["NAME", "SALE_UNIT", "ALLOCATION", "SCOPE_POLICY"] as const;
 export type RuleKind = (typeof RULE_KINDS)[number];
 export const CONFIG_PLATFORMS = ["META", "GOOGLE", "NAVER", "COUPANG", "CAFE24"] as const;
+export class SourceProductsQuery {
+  @IsDateOnly() from!: string;
+  @IsDateOnly() @IsOnOrAfter("from") to!: string;
+}
 export class UnifiedIdParam { @IsUUID() id!: string; }
 export class ConfigurationQuery {
   @IsOptional() @IsIn(RULE_KINDS) kind?: RuleKind;

@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Header, Param, Patch, Post, Query } from "@nestjs/common";
 import { AuthenticatedUser } from "../auth/auth.types";
 import { CurrentUser, RequirePermissions } from "../auth/route-decorators";
-import { ConfigurationQuery, DeleteConfigurationInput, ProductInput, ProductPreviewInput, RuleInput, RulePreviewInput, UnifiedIdParam } from "./management.dto";
+import { SourceProductsQuery, ConfigurationQuery, DeleteConfigurationInput, ProductInput, ProductPreviewInput, RuleInput, RulePreviewInput, UnifiedIdParam } from "./management.dto";
 import { UnifiedManagementService } from "./management.service";
 
 @Controller("unified-products")
@@ -11,6 +11,8 @@ export class UnifiedProductsController {
   list(@Query() query: ConfigurationQuery) { return this.service.listProducts(query); }
   @Get("configuration") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   configuration() { return this.service.configuration(); }
+  @Get("source-products") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  sourceProducts(@Query() query: SourceProductsQuery) { return this.service.sourceProducts(query); }
   @Post("preview") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   preview(@Body() input: ProductPreviewInput) { return this.service.previewProduct(input, input.id); }
   @Get(":id/audit") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")

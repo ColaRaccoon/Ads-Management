@@ -1,3 +1,5 @@
+import { sourceProductInventory } from "./source-product-inventory";
+import { resolveNativeProduct, isNativeNameField, NATIVE_NAME_FIELDS, mappingPlatform } from "./domain/native-product-mapping";
 import { createHash } from "node:crypto";
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { Prisma, UnifiedProduct, UnifiedRule } from "@prisma/client";
@@ -84,6 +86,14 @@ export function configurationRule(input: RuleInput, canonicalProductName?: strin
       saleUnitName: payload.saleUnitName == null ? null : text(payload.saleUnitName, "판매단위", 256) };
     validateDomain(() => validateNameRule({ ...normalizedPayload, id: "preview", canonicalProductName, platform: input.platform,
       scopeKey, validFrom: input.validFrom, validTo: input.validTo } as NameRule));
+    if (typeof normalizedPayload.nameField === "string" && normalizedPayload.nameField.startsWith("native:")) {
+      const group = Object.entries(NATIVE_NAME_FIELDS).find(([, field]) => field === normalizedPayload.nameField)?.[0] as keyof typeof NATIVE_NAME_FIELDS | undefined;
+      if (!group || input.platform !== mappingPlatform(group) || normalizedPayload.matchType !== "EXACT" ||
+          (normalizedPayload.terms as string[]).length !== 1 || normalizedPayload.optionExact != null ||
+          (normalizedPayload.optionInclude as string[]).length || (normalizedPayload.optionExclude as string[]).length ||
+          (normalizedPayload.excludeTerms as string[]).length || normalizedPayload.saleUnitName != null)
+        bad("플랫폼 제품 연결은 원천 플랫폼과 상품명 하나의 정확 일치를 사용합니다. 옵션과 비용은 원본에서 유지됩니다.");
+    }
     // The destination is intentionally absent: competing products cannot claim
     // the same predicate in an overlapping account/date range.
     const { saleUnitName: _saleUnitName, ...condition } = normalizedPayload;
@@ -139,6 +149,7 @@ export function scopesOverlap(a: { platform: string | null; scopeKey: string | n
 }
 function equivalentNameConflict(a: Prisma.JsonValue | Prisma.InputJsonObject, b: Prisma.JsonValue | Prisma.InputJsonObject) {
   const left = a as unknown as NameRule, right = b as unknown as NameRule;
+  if ((isNativeNameField(left.nameField) || isNativeNameField(right.nameField)) && left.nameField !== right.nameField) return false;
   // Exact aliases stored together must still collide with a single-alias rule.
   // Disjoint option/name-field conditions describe distinct predicates.
   if (left.nameField && right.nameField && left.nameField !== right.nameField ||
@@ -177,6 +188,17 @@ export class UnifiedManagementService {
       return { ...catalog, rules: catalog.rules.map(row => ({ ...row, validFrom: date(row.validFrom), validTo: row.validTo ? date(row.validTo) : null })) };
     });
   }
+  async sourceProducts(query: { from: string; to: string }) {
+    assertUnifiedEnabled();
+    return this.repository.read(async tx => {
+      const catalog = await this.catalog(tx);
+      const rules = catalog.rules.filter(row => row.kind === "NAME").flatMap(row => {
+        const product = catalog.products.find(product => product.id === row.productId);
+        return product ? [ruleName(row, product.canonicalName)] : [];
+      });
+      return sourceProductInventory(tx, query, catalog.products, rules, catalog.versions.nameRuleVersion);
+    }, { timeoutMs: 20000 });
+  }
   private async catalog(tx: ManagementTransaction) {
     const products = bounded(await tx.unifiedProduct.findMany({ orderBy: { id: "asc" }, take: 10001 }));
     const rules = bounded(await tx.unifiedRule.findMany({ orderBy: { id: "asc" }, take: 10001 }));
@@ -211,7 +233,7 @@ export class UnifiedManagementService {
       after.active = input.active ?? before?.active ?? true;
       const conflict = await tx.unifiedProduct.findFirst({ where: { normalizedName: after.normalizedName, ...(id ? { id: { not: id } } : {}) } });
       const aliases = bounded(await tx.unifiedRule.findMany({ where: { kind: "NAME", active: true, ...(id ? { productId: { not: id } } : {}) }, take: 10001 }));
-      const aliasConflicts = aliases.filter(row => (row.payload as Record<string, unknown>).matchType === "EXACT" && ((row.payload as Record<string, unknown>).terms as string[]).includes(after.normalizedName)).map(row => row.id);
+      const aliasConflicts = aliases.filter(row => (row.payload as Record<string, unknown>).matchType === "EXACT" && !isNativeNameField((row.payload as Record<string, unknown>).nameField) && ((row.payload as Record<string, unknown>).terms as string[]).includes(after.normalizedName)).map(row => row.id);
       const allocations = before && before.canonicalName !== after.canonicalName ? bounded(await tx.unifiedRule.findMany({ where: { kind: "ALLOCATION", active: true }, take: 10001 })) : [];
       const referencedAllocationRules = allocations.filter(row => ((row.payload as Record<string, unknown>).targets as { productName: string }[]).some(target => normalizeProductName(target.productName) === before!.normalizedName)).map(row => row.id);
       const versionConflict = before ? input.expectedVersion !== before.version : input.expectedVersion !== undefined;
@@ -228,7 +250,7 @@ export class UnifiedManagementService {
       this.expected(before?.version, input.expectedVersion);
       if (await tx.unifiedProduct.findFirst({ where: { normalizedName: data.normalizedName, ...(id ? { id: { not: id } } : {}) } })) throw new ConflictException("정규화한 기준 제품명이 다른 제품과 충돌합니다.");
       const aliases = bounded(await tx.unifiedRule.findMany({ where: { kind: "NAME", active: true, ...(id ? { productId: { not: id } } : {}) }, take: 10001 }));
-      if (aliases.some(rule => (rule.payload as Record<string, unknown>).matchType === "EXACT" && ((rule.payload as Record<string, unknown>).terms as string[]).includes(data.normalizedName))) throw new ConflictException("기준 제품명이 다른 제품의 정확 별칭과 충돌합니다.");
+      if (aliases.some(rule => (rule.payload as Record<string, unknown>).matchType === "EXACT" && !isNativeNameField((rule.payload as Record<string, unknown>).nameField) && ((rule.payload as Record<string, unknown>).terms as string[]).includes(data.normalizedName))) throw new ConflictException("기준 제품명이 다른 제품의 정확 별칭과 충돌합니다.");
       if (before && before.canonicalName !== data.canonicalName) {
         const allocations = bounded(await tx.unifiedRule.findMany({ where: { kind: "ALLOCATION", active: true }, take: 10001 }));
         if (allocations.some(rule => ((rule.payload as Record<string, unknown>).targets as { productName: string }[]).some(target => normalizeProductName(target.productName) === before.normalizedName)))
@@ -259,7 +281,7 @@ export class UnifiedManagementService {
     const overlaps = after.active ? catalog.rules.filter(row => row.id !== id && row.active && row.kind === after.kind &&
       payloadConflict(after.kind, row, after) && scopesOverlap(row, after) && intervalsOverlap(row, after)) : [];
     const aliasConflicts: string[] = [];
-    if (after.kind === "NAME" && after.active && after.payload.matchType === "EXACT") {
+    if (after.kind === "NAME" && after.active && after.payload.matchType === "EXACT" && !isNativeNameField(after.payload.nameField)) {
       for (const term of after.payload.terms as string[]) for (const item of catalog.products)
         if (item.normalizedName === term && item.id !== input.productId) aliasConflicts.push(item.canonicalName);
     }
@@ -307,7 +329,11 @@ export class UnifiedManagementService {
           if (sample[field] != null && (typeof sample[field] !== "string" || (sample[field] as string).length > 1024)) bad("표본 판매단위와 복원 경로를 확인해 주세요.");
         if (sample.requiresSaleUnit !== undefined && typeof sample.requiresSaleUnit !== "boolean") bad("표본 판매단위 필요 여부가 올바르지 않습니다.");
         const sampleInput = sample as unknown as NameInput;
-        const resolution = resolveProductName(sampleInput, products, nameRules, `${catalog.versions.nameRuleVersion}:preview:${digest(prepared.after)}`);
+        const nativeGroup = Object.entries(NATIVE_NAME_FIELDS).find(([, field]) => field === sampleInput.nameField)?.[0] as keyof typeof NATIVE_NAME_FIELDS | undefined;
+        const previewVersion = `${catalog.versions.nameRuleVersion}:preview:${digest(prepared.after)}`;
+        const resolution = nativeGroup ? resolveNativeProduct(sampleInput.originalName, nativeGroup, sampleInput.scopeKey, sampleInput.businessDate, products, nameRules, previewVersion) :
+          resolveProductName(sampleInput, products, nameRules, previewVersion);
+        if (nativeGroup) return { ...resolution, unitPreview: null };
         const product = catalog.products.find(row => row.canonicalName === resolution.canonicalProductName);
         if (!product || resolution.matchStatus === "AMBIGUOUS") return { ...resolution, unitPreview: null };
         const forProduct = unitRows.filter(row => row.productId === product.id && row.active);

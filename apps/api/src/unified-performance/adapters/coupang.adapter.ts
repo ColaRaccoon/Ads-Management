@@ -1,3 +1,4 @@
+import { mapNativeProducts } from "../domain/native-product-mapping";
 import { createHash } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
@@ -126,7 +127,7 @@ export async function readCoupangDay(tx: Prisma.TransactionClient, management: U
   let nativeResults: NativeStoredResult[];
   await tx.$executeRawUnsafe("SAVEPOINT coupang_native_read");
   try {
-    nativeResults = await readCoupangNativeDailyResults(tx, date);
+    nativeResults = mapNativeProducts(await readCoupangNativeDailyResults(tx, date), COUPANG_UPLOAD_SCOPE, date, configuration.products, configuration.nameRules, request.nameRuleVersion);
     await tx.$executeRawUnsafe("RELEASE SAVEPOINT coupang_native_read");
   } catch {
     await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT coupang_native_read");

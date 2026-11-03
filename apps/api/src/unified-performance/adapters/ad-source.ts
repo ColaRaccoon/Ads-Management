@@ -1,3 +1,4 @@
+import { resolveNativeProduct } from "../domain/native-product-mapping";
 import { createHash } from "node:crypto";
 import { Prisma, SourceCoverage as StoredCoverage } from "@prisma/client";
 import { assertAdapterBatch, assertAdapterRequest } from "../adapter-contract";
@@ -110,6 +111,15 @@ export function normalizeAdDay(request: AdapterRequest, input: AdDayInput): Adap
       exact.set(row.entityKey, value);
       amountKrw = quantizeMoney(value);
     } else issues.push("MISSING_EXCHANGE_RATE");
+    if (name.matchStatus === "MATCHED" && name.canonicalProductName) {
+      const linked = resolveNativeProduct(name.canonicalProductName, input.platform === "META" ? "META_ADS" : "GOOGLE_ADS", input.scopeKey, input.date, input.configuration.products, input.configuration.nameRules, request.nameRuleVersion);
+      if (linked.ruleIds.length || linked.matchStatus === "AMBIGUOUS") {
+        if (linked.matchStatus !== "MATCHED") issues.push(`NAME_${linked.matchStatus}`);
+        name = { ...name, canonicalProductName: linked.canonicalProductName, candidateNames: linked.candidateNames,
+          matchStatus: linked.matchStatus, ruleIds: linked.ruleIds, reasons: [...name.reasons, ...linked.reasons],
+          nameInputHash: adHash([name.nameInputHash, linked.nameInputHash]), restorationPath: name.canonicalProductName };
+      }
+    }
     return { ref: { sourceSystem: system, platform: input.platform, schema: "meta_ads", table, scopeKey: input.scopeKey,
       recordKind: "AD_SPEND", sourceRecordKey: `${input.date}:${row.entityKey}`, selectedSource: input.scopeKey === "LEGACY_UNBOUND" ? "LEGACY_UNBOUND" : row.source,
       sourceVersion: row.sourceVersion, uploadOrRunId: row.runOrUploadId, payloadHash: adHash(row), providerUpdatedAt: row.updatedAt,

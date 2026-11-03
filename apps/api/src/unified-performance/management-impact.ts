@@ -1,3 +1,4 @@
+import { NATIVE_NAME_FIELDS } from "./domain/native-product-mapping";
 import { BadRequestException, ServiceUnavailableException } from "@nestjs/common";
 import { Prisma, UnifiedProduct, UnifiedRule } from "@prisma/client";
 import { RulePreviewInput, CONFIG_PLATFORMS } from "./management.dto";
@@ -31,7 +32,7 @@ export async function configurationImpact(tx: ManagementTransaction, input: Rule
   const rows = publications.length ? await tx.unifiedDailyFact.findMany({ where: { runId: { in: publications.map(p => p.runId) } }, select: { runId: true, payload: true }, take: 100001 }) : [];
   if (rows.length > 100000) throw new ServiceUnavailableException({ code: "UNIFIED_IMPACT_TOO_LARGE", message: "미리보기 기간을 줄여 주세요." });
   const facts = rows.map(row => row.payload as unknown as ReportFact);
-  if (facts.some(f => !f || !["SALE", "AD_SPEND", "COMMON_EXPENSE", "SHIPPING_INCOME"].includes(f.component) ||
+  if (facts.some(f => !f || !["SALE", "AD_SPEND", "COMMON_EXPENSE", "SHIPPING_INCOME", "STOREFRONT_RESULT", "NATIVE_RESULT"].includes(f.component) ||
       (f.productName !== null && typeof f.productName !== "string") ||
       (f.amountKrw !== null && (typeof f.amountKrw !== "string" || !/^-?\d+(?:\.\d+)?$/.test(f.amountKrw)))))
     throw new ServiceUnavailableException({ code: "UNIFIED_REPORT_REBUILD_REQUIRED", message: "기존 발행 결과의 형식을 확인하고 재집계해 주세요." });
@@ -39,7 +40,14 @@ export async function configurationImpact(tx: ManagementTransaction, input: Rule
     const amounts = facts.filter(f => f.component === component && f.amountKrw != null).map(f => f.amountKrw!);
     return amounts.length ? amounts.reduce((n, v) => n.plus(v), new Decimal(0)).toFixed(6) : null;
   };
-  const revenue = sum("SALE");
+  const nativeGroup = Object.entries(NATIVE_NAME_FIELDS).find(([, field]) => field === input.payload.nameField)?.[0];
+  const nativeSummaries = facts.filter(f => f.component === "NATIVE_RESULT" && f.nativeResult?.kind === "SUMMARY" && f.nativeResult.group === nativeGroup);
+  const nativeSum = (metric: "revenue" | "adSpend") => {
+    const values = nativeSummaries.map(f => f.nativeResult![metric].known).filter((v): v is string => v !== null);
+    return values.length ? values.reduce((total, value) => total.plus(value), new Decimal(0)).toFixed(6) : null;
+  };
+  const finalResultLink = nativeGroup !== undefined && !nativeGroup.endsWith("_ADS");
+  const revenue = finalResultLink ? nativeSum("revenue") : sum("SALE");
   const targetNames = new Set(((input.payload.targets ?? []) as { productName: string }[]).map(t => t.productName));
   const zeroDenominator = input.kind === "ALLOCATION" && input.payload.method === "REVENUE_SHARE" && (!publications.length || publications.some(p => {
     const selected = rows.filter(r => r.runId === p.runId).map(r => r.payload as unknown as ReportFact)
@@ -51,7 +59,7 @@ export async function configurationImpact(tx: ManagementTransaction, input: Rule
   return { basis: "PUBLISHED_SCOPE_REVIEW_TOTALS" as const, ...dates, selectedPlatforms,
     excludedPlatforms: CONFIG_PLATFORMS.filter(p => !selectedPlatforms.includes(p)),
     affectedProducts: [...new Set([...products.map(p => p.canonicalName), ...facts.map(f => f.productName).filter((p): p is string => p !== null)])].sort(),
-    publishedRevenue: revenue, publishedAdSpend: sum("AD_SPEND"), publishedRows: rows.length,
+    publishedRevenue: revenue, publishedAdSpend: finalResultLink ? nativeSum("adSpend") : sum("AD_SPEND"), publishedRows: rows.length,
     unallocatedRows: facts.filter(f => f.productName == null).length,
     zeroDenominator,
     warnings: ["CONSERVATIVE_SCOPE_TOTALS_NOT_PREDICTED_CHANGE", ...(rows.length ? [] : ["NO_PUBLISHED_DATA"]),

@@ -112,3 +112,19 @@ test("Fingerprint tracks native name/mapping dependencies, is order stable and n
   assert.notEqual(first.sourceFingerprint, reassigned.sourceFingerprint);
   assert.deepEqual(first.sourceControlTotals.map(c => c.selectedAmount), reassigned.sourceControlTotals.map(c => c.selectedAmount));
 });
+
+
+test("explicit Google product link remaps native campaign product without altering conversion, money or campaign evidence", () => {
+  const source = input([row("베놈공용")]);
+  source.configuration.products = [{ canonicalName: "베놈공용" }, { canonicalName: "베놈무릎보호대" }];
+  const before = normalizeAdDay(request(), source);
+  source.configuration.nameRules = [{ id: "link", canonicalProductName: "베놈무릎보호대", matchType: "EXACT", terms: ["베놈공용"],
+    nameField: "native:GOOGLE_ADS", platform: "GOOGLE", scopeKey: scope, validFrom: "2026-11-01" }];
+  const after = normalizeAdDay(request(), source);
+  assert.equal(after.adSpends[0].productName, "베놈무릎보호대");
+  assert.equal(after.adSpends[0].amountKrw, before.adSpends[0].amountKrw);
+  assert.deepEqual(after.adSpends[0].fx, before.adSpends[0].fx);
+  assert.equal(after.adSpends[0].name.originalName, before.adSpends[0].name.originalName);
+  assert.equal(after.adSpends[0].name.restorationPath, "베놈공용");
+  assert.deepEqual(after.sourceControlTotals, before.sourceControlTotals);
+});

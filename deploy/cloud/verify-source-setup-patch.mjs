@@ -81,6 +81,9 @@ if (profile === 'reporting') {
     'domain/decimal.js', 'domain/legacy-name-migration.js', 'domain/legacy-name-migration.test.js',
     'domain/platform-selection.js', 'domain/platform-selection.test.js',
     'domain/product-name-resolver.js', 'domain/product-name-resolver.test.js',
+    // Explicit final-result identity links and a published-only inventory. Financial source calculators stay fixed.
+    'domain/native-product-mapping.js', 'domain/native-product-mapping.test.js',
+    'source-product-inventory.js', 'source-product-inventory.test.js',
     'domain/relationship-calculation.js', 'domain/relationship-calculation.test.js',
     'domain/report-allocation.js', 'domain/report-calculation.js', 'domain/report-calculation.test.js',
     'domain/sale-unit-validation.js', 'domain/sale-unit-validation.test.js',

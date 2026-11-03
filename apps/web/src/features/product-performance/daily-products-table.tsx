@@ -30,6 +30,7 @@ export function DailyProductsTable({ report, printReport }: DailyProductsTablePr
   return <article className="daily-products-report" aria-label="전체 제품 데일리 상세표" data-print-filtered={printReport ? "true" : "false"} data-print-count={printReport?.rows.length ?? report.rows.length}>
     <header className="daily-products-heading"><div><span>PRODUCT DAILY DETAIL</span><h2><span className="daily-products-screen-only">전체 제품 상세</span><span className="daily-products-print-only">{printLabel}</span></h2></div><p>{report.date}<small>전일 {report.previousDate} · 한국시간</small></p></header>
     <p className="daily-products-scope">{report.scopeLabel}</p>
+    <p className="daily-products-screen-only"><a href="/products/mappings">플랫폼 통합 제품 매핑 관리</a></p>
     <div className="daily-products-meta daily-products-screen-only"><span>전체 {report.rows.length.toLocaleString("ko-KR")}개 제품 · 금액 단위: 원</span><span>금액 / 전일 대비 증감률 · 인쇄 A4 세로</span></div>
     <div className="daily-products-meta daily-products-print-only"><span>출력 {String(printReport?.rows.length ?? report.rows.length)} / 전체 {report.rows.length.toLocaleString("ko-KR")}개 제품 · 금액 단위: 원</span><span>금액 / 전일 대비 증감률 · A4 세로</span></div>
     {printSelection ? <p className="daily-products-print-basis daily-products-print-only">출력 제품 필터: {printSelection.label} · {printSelection.basis}</p> : null}

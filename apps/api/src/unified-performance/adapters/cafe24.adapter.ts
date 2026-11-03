@@ -1,3 +1,4 @@
+import { mapNativeProducts } from "../domain/native-product-mapping";
 import { createHash } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
@@ -286,8 +287,8 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
         return { ...row, productName: matches.length === 1 ? matches[0].canonicalName : row.productName };
       });
       batch.nativeStorefrontResults = native;
-      batch.nativeResults = native.nativeResults;
-      batch.sourceFingerprint = hash([batch.sourceFingerprint, native.calculationVersion, native.sourceFingerprint]);
+      batch.nativeResults = native.nativeResults ? mapNativeProducts(native.nativeResults, request.scopeKeys[0], date, snapshot.configuration.products, nameRules(snapshot.configuration), request.nameRuleVersion) : undefined;
+      batch.sourceFingerprint = hash([batch.sourceFingerprint, native.calculationVersion, native.sourceFingerprint, batch.nativeResults]);
       batch.coverage = batch.coverage.map(row => ({ ...row, sourceFingerprint: batch.sourceFingerprint,
         // Collection evidence stays unchanged. Canonical cost gaps replace the incompatible legacy normalizer's gaps.
         ...(row.component === "DIRECT_COST" ? { collectionState: snapshot.complete ?

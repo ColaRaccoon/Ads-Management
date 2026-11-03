@@ -170,3 +170,31 @@ test("sale-unit preview reports ambiguity and honors an explicit label without d
   assert.equal(preview.samples[2].matchStatus, "UNIT_REQUIRED");
   assert.equal(preview.samples[2].unitPreview?.candidates.length, 0);
 }));
+
+
+test("native product links group existing catalog names, preview their destination and reject competing links", async () => enabled(async () => {
+  const nativeInput: RuleInput = { ...base, payload: { matchType: "EXACT", terms: ["상품 B"], nameField: "native:STOREFRONT" } };
+  let stored: any[] = [];
+  const repository = { read: async (work: any) => work({
+    unifiedProduct: { findMany: async () => [product(), product("product-2", "상품 B")] },
+    unifiedRule: { findMany: async () => stored }
+  }) } as unknown as UnifiedManagementRepository;
+  const service = new UnifiedManagementService(repository);
+  const result = await service.previewRule({ ...nativeInput, samples: [{ originalName: "상품 B", nameField: "native:STOREFRONT",
+    platform: "CAFE24", scopeKey: "shop", businessDate: "2026-10-20" }] });
+  assert.equal(result.canSave, true); assert.deepEqual(result.aliasConflicts, []);
+  assert.equal(result.samples[0].canonicalProductName, "상품 A"); assert.equal(result.samples[0].matchStatus, "MATCHED");
+  const ordinary = await service.previewRule({ ...nativeInput, payload: { matchType: "EXACT", terms: ["상품 B"] } });
+  assert.equal(ordinary.canSave, false); assert.deepEqual(ordinary.aliasConflicts, ["상품 B"]);
+  stored = [{ id: "existing-link", version: 1, ...configurationRule(nativeInput, "상품 A") }];
+  const competing = await service.previewRule({ ...nativeInput, productId: "product-2" });
+  assert.equal(competing.canSave, false); assert.equal(competing.overlaps.length, 1);
+}));
+
+test("native links reject wildcard platforms, contains predicates, multiple aliases and option or unit recosting", () => {
+  const payload = { matchType: "EXACT", terms: ["상품 B"], nameField: "native:STOREFRONT" };
+  for (const patch of [{ platform: null }, { platform: "META" }, { payload: { ...payload, matchType: "CONTAINS" } },
+    { payload: { ...payload, terms: ["상품 B", "상품 C"] } }, { payload: { ...payload, optionExact: "2개입" } },
+    { payload: { ...payload, saleUnitName: "단품" } }, { payload: { ...payload, nameField: "native:UNKNOWN" } }])
+    assert.throws(() => configurationRule({ ...base, payload, ...patch } as RuleInput, "상품 A"), /플랫폼 제품 연결/);
+});
