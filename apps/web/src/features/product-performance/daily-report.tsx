@@ -9,6 +9,7 @@ import { loadDailyProducts } from "./daily-products-data";
 import { DailyProductsTable } from "./daily-products-table";
 import { dailyProductsScopeLabel } from "./daily-products-model";
 import { generateDailyProductsWorkbook } from "./daily-products-export";
+import { DAILY_EXCEL_PRODUCT_FILTERS, dailyExcelFileName, filterDailyProductsForExcel, hasDailyExcelProductMembership, type DailyExcelProductFilter } from "./daily-products-filter";
 import { availableAnalysisMedia } from "./relationships-model";
 import { PLATFORM_LABELS, type DashboardData, type Filters, type SelectionOptions } from "./types";
 
@@ -50,6 +51,7 @@ export function DailyReport({ identity, filters, options, requestedDate, onDateC
   const exportController = useRef<AbortController | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [excelProductFilter, setExcelProductFilter] = useState<DailyExcelProductFilter>("ALL");
   useEffect(() => {
     const reset = () => { if (root.current) root.current.dataset.printMode = "all"; };
     window.addEventListener("afterprint", reset);
@@ -65,25 +67,30 @@ export function DailyReport({ identity, filters, options, requestedDate, onDateC
     queryFn: ({ signal }) => loadDailyProducts(dailyFilters, readPerformance, signal), retry: false, staleTime: 30_000, refetchOnWindowFocus: false, refetchOnReconnect: false });
   const data = valid && !query.isError && query.data && responseMatches(query.data.summary, dailyFilters) ? query.data : undefined;
   const report = useMemo(() => data ? { ...data.report, scopeLabel: dailyProductsScopeLabel(data, filters, options) } : undefined, [data, filters, options]);
+  const membershipReady = Boolean(report && hasDailyExcelProductMembership(report));
+  const excelReport = useMemo(() => report && (excelProductFilter === "ALL" || membershipReady)
+    ? filterDailyProductsForExcel(report, excelProductFilter) : undefined, [report, excelProductFilter, membershipReady]);
   const ready = Boolean(data) && !query.isFetching;
+  const excelReady = ready && Boolean(excelReport && (excelProductFilter === "ALL" || excelReport.rows.length > 0));
   const print = (mode: "summary" | "all" | "detail") => {
     if (!ready || !root.current) return;
     root.current.dataset.printMode = mode;
     try { window.print(); } catch { root.current.dataset.printMode = "all"; setExportError("인쇄 창을 열지 못했습니다. 다시 시도해 주세요."); }
   };
   const exportWorkbook = async () => {
-    if (!report || !ready || exporting) return;
+    if (!excelReport || !excelReady || exporting) return;
     setExporting(true); setExportError(null);
     const controller = new AbortController(); exportController.current = controller;
     try {
-      const [workbook, { downloadXlsx }] = await Promise.all([generateDailyProductsWorkbook(report, controller.signal), import("@/lib/xlsx")]);
+      const [workbook, { downloadXlsx }] = await Promise.all([generateDailyProductsWorkbook(excelReport, controller.signal), import("@/lib/xlsx")]);
       controller.signal.throwIfAborted();
-      downloadXlsx(`제품통합_데일리_전체제품_${report.date}.xlsx`, workbook);
+      downloadXlsx(dailyExcelFileName(excelReport), workbook);
     } catch (error) { if (!controller.signal.aborted) setExportError(error instanceof Error ? error.message : "엑셀 파일을 만들지 못했습니다."); }
     finally { if (exportController.current === controller) { exportController.current = null; setExporting(false); } }
   };
   return <section ref={root} className="integrated-daily-root" data-print-mode="all" data-print-ready={ready ? "true" : "false"} id="performance-daily-panel" role="tabpanel" aria-labelledby="performance-daily-tab">
-    <div className="integrated-daily-controls"><div><label>보고일 <input type="date" aria-label="데일리 보고일" value={valid ? date : ""} max={today} onChange={event => { if (event.target.value) onDateChange(event.target.value); }} /></label><button type="button" disabled={!valid} onClick={() => onDateChange(shiftDate(date, -1))}>이전 날</button><button type="button" disabled={!valid || date >= today} onClick={() => onDateChange(shiftDate(date, 1))}>다음 날</button><button type="button" disabled={!latest || (!requestedDate && latest === date)} onClick={() => onDateChange("")}>최신 발행일{latest ? ` ${latest}` : ""}</button></div><div><button type="button" disabled={!valid || query.isFetching} onClick={() => { onRefreshLatest?.(); void query.refetch(); }}>다시 조회</button><button type="button" disabled={!ready} onClick={() => print("summary")}>요약만 인쇄</button><button type="button" disabled={!ready} onClick={() => print("detail")}>상세표만 인쇄</button><button type="button" className="integrated-daily-print-button" disabled={!ready} onClick={() => print("all")}>요약 + 전체 제품 인쇄 / PDF</button><button type="button" disabled={!ready || exporting} onClick={() => void exportWorkbook()}>{exporting ? "엑셀 만드는 중…" : "전체 제품 엑셀 다운로드"}</button></div></div>
+    <div className="integrated-daily-controls"><div><label>보고일 <input type="date" aria-label="데일리 보고일" value={valid ? date : ""} max={today} onChange={event => { if (event.target.value) onDateChange(event.target.value); }} /></label><button type="button" disabled={!valid} onClick={() => onDateChange(shiftDate(date, -1))}>이전 날</button><button type="button" disabled={!valid || date >= today} onClick={() => onDateChange(shiftDate(date, 1))}>다음 날</button><button type="button" disabled={!latest || (!requestedDate && latest === date)} onClick={() => onDateChange("")}>최신 발행일{latest ? ` ${latest}` : ""}</button></div><div><button type="button" disabled={!valid || query.isFetching} onClick={() => { onRefreshLatest?.(); void query.refetch(); }}>다시 조회</button><button type="button" disabled={!ready} onClick={() => print("summary")}>요약만 인쇄</button><button type="button" disabled={!ready} onClick={() => print("detail")}>상세표만 인쇄</button><button type="button" className="integrated-daily-print-button" disabled={!ready} onClick={() => print("all")}>요약 + 전체 제품 인쇄 / PDF</button><label>엑셀 제품 필터 <select aria-label="엑셀 제품 필터" value={excelProductFilter} disabled={exporting} onChange={event => { setExcelProductFilter(event.target.value as DailyExcelProductFilter); setExportError(null); }}>{DAILY_EXCEL_PRODUCT_FILTERS.map(option => <option key={option.value} value={option.value} disabled={option.value !== "ALL" && !membershipReady}>{option.label}</option>)}</select></label><button type="button" disabled={!excelReady || exporting} onClick={() => void exportWorkbook()}>{exporting ? "엑셀 만드는 중…" : "전체 제품 엑셀 다운로드"}</button></div></div>
+    <p className="integrated-daily-help" aria-live="polite">엑셀 제품 필터는 다운로드에만 적용됩니다. 보고일 또는 전일의 원본 보고서에 데이터가 있는 제품을 포함하며, 데일리 보고·인쇄는 바뀌지 않습니다.{ready && excelReport ? ` 엑셀 대상 ${excelReport.rows.length}개 제품.` : ""}{ready && !membershipReady ? " 플랫폼별 제품 정보를 확인하려면 다시 조회해 주세요." : ""}{ready && excelProductFilter !== "ALL" && excelReport?.rows.length === 0 ? " 해당 플랫폼의 제품 데이터가 없습니다." : ""}</p>
     <p className="integrated-daily-help">보고일과 바로 전날의 성과를 비교합니다. 최신 발행일은 선택한 플랫폼·계정 범위의 최근 발행 기준이며, 모든 원천의 수집 완료를 뜻하지 않습니다.</p>
     {requestedDate && !valid ? <p role="alert">보고일을 확인해 주세요. 한국시간 오늘까지의 유효한 날짜를 선택할 수 있습니다.</p> : !date ? <p role="status">{options ? "선택 범위의 발행일이 없습니다. 보고일을 직접 선택해 확인할 수 있습니다." : "최신 발행일을 확인하고 있습니다."}</p> : null}
     {valid && query.isPending ? <p role="status">선택일과 전일의 전체 제품 성과를 읽고 있습니다.</p> : null}

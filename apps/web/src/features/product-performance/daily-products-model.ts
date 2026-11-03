@@ -21,6 +21,7 @@ export type ComparedMetric = {
 };
 export type DailyProductRow = {
   productKey: string; productName: string; active: boolean; historical: boolean;
+  exportPlatforms?: Exclude<DailyProductGroup, "TOTAL">[];
   groups: Record<DailyProductGroup, Record<DailyProductMetric, ComparedMetric>>;
 };
 export type DailyProductsAggregate = Pick<Aggregate, "knownTotals" | "completeTotals" | "byMarketplace" | "byMedium" | "isEstimate"> &
@@ -28,7 +29,7 @@ export type DailyProductsAggregate = Pick<Aggregate, "knownTotals" | "completeTo
     notApplicable?: { revenue: Platform[]; adSpend: Platform[] };
     comparisonBasis?: { NAVER?: string };
   };
-export type DailyProductsSourceRow = Pick<DailyProductRow, "productKey" | "productName" | "active" | "historical"> & {
+export type DailyProductsSourceRow = Pick<DailyProductRow, "productKey" | "productName" | "active" | "historical" | "exportPlatforms"> & {
   current: DailyProductsAggregate; previous: DailyProductsAggregate;
 };
 export type DailyProductsResponse = Pick<DashboardData, "summary" | "timeseries"> & {
@@ -41,6 +42,7 @@ export type DailyProductsReport = {
   date: string; previousDate: string; snapshotHash: string; scopeLabel: string;
   rows: DailyProductRow[]; totals: DailyProductRow; warnings: string[]; provisional: boolean;
   reconciliation: DailyReconciliation[];
+  exportSelection?: { platform: Exclude<DailyProductGroup, "TOTAL">; label: string; totalProducts: number; basis: string };
 };
 
 const SCALE = 10n ** 10n;
@@ -165,7 +167,8 @@ function buildRow(row: DailyProductsSourceRow, platforms: readonly Platform[]): 
       naverChanged && (group.key === "NAVER" || group.key === "TOTAL") ? "NAVER_BASIS_CHANGED" :
         (group.key === "STOREFRONT" || group.key === "GOOGLE" && metric.key !== "adSpend") && changedScope)]))
   ])) as DailyProductRow["groups"];
-  return { productKey: row.productKey, productName: row.productName, active: row.active, historical: row.historical, groups };
+  return { productKey: row.productKey, productName: row.productName, active: row.active, historical: row.historical,
+    exportPlatforms: row.exportPlatforms?.slice(), groups };
 }
 
 export function dailyProductsScopeLabel(data: DailyProductsResponse, filters: Filters, options?: SelectionOptions): string {

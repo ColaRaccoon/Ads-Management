@@ -16,6 +16,7 @@ const existing = ['cafe24-manual-preparation', 'cafe24-oauth.service', 'cafe24-t
   'schedule-definition', 'scheduled-occurrence', 'sync-foundation.service', 'provider-run-scope'].map(n => `daily-sync/${n}.js`)
   .concat(['storefront/storefront-read.service.js', 'exchange-rates/exchange-rate-provider.js', 'auth/machine-sync.guard.js']);
 const reporting = ['daily-sync/canonical-api-writer.service.js', 'daily-sync/meta-mcp-ads.client.js',
+  'daily-sync/meta-sync-runner.service.js', 'daily-sync/meta-failure-diagnostic.js', 'daily-sync/meta-mcp-residual-proof.js',
   'daily-sync/meta-mcp-capture.js', 'daily-sync/meta-mcp-purchase.js', 'daily-sync/meta-mcp-wire-reader.js',
   'domain/meta-current-metadata.js', 'domain/meta-reporting-measurements.js',
   'metrics/meta-ad-metrics-read.service.js', 'metrics/meta-creative-lifetimes.js'];

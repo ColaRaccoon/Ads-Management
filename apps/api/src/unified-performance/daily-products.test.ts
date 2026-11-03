@@ -105,6 +105,78 @@ test("native readiness context survives when old result partitions lack explicit
   }
 }));
 
+test("Excel platform presence uses own source rows rather than catalog, coverage or other-product native context", async () => enabled(async () => {
+  const f = fixture();
+  const response = await f.service.read("daily-products", { ...input, productName: "A" }, actor) as any;
+  assert.deepEqual(Object.fromEntries(response.products.map((row: any) => [row.productName, row.exportPlatforms])), {
+    A: ["STOREFRONT", "GOOGLE"], B: ["COUPANG"], "거래 없는 비활성": [], "과거 이름": ["NAVER"], "과거 자료 없음": []
+  });
+  assert.ok(response.products.find((row: any) => row.productName === "거래 없는 비활성").current.byMarketplace.length > 0,
+    "synthetic marketplace summaries must not become membership evidence");
+  assert.equal(response.totalProducts, 5, "export metadata never removes ordinary report products");
+  assert.equal(f.reads.length, 1);
+}));
+
+test("Excel source presence retains real zero, negative, unknown, previous-only and ad-only results without inferred allocations", async () => enabled(async () => {
+  const f = fixture();
+  f.snapshot.availableProductNames.push("legacy zero");
+  f.snapshot.facts.push(
+    fact({ productName: "legacy zero", amountKrw: "0", completeAmountKrw: "0" }),
+    fact({ productName: "native meta zero", component: "STOREFRONT_RESULT", marketplace: "CAFE24_META", medium: "META",
+      amountKrw: "0", completeAmountKrw: "0", profitBeforeAds: "0", completeProfitBeforeAds: "0" }),
+    fact({ productName: "native google unknown", component: "STOREFRONT_RESULT", marketplace: "CAFE24_YOUTUBE", medium: "GOOGLE",
+      amountKrw: null, completeAmountKrw: null, profitBeforeAds: null, completeProfitBeforeAds: null }),
+    fact({ productName: "naver unknown", platform: "NAVER", scopeKey: "NAVER", marketplace: "NAVER_SMARTSTORE",
+      amountKrw: null, completeAmountKrw: null, profitBeforeAds: null, completeProfitBeforeAds: null }),
+    fact({ productName: "coupang previous negative", date: input.from, platform: "COUPANG", scopeKey: "COUPANG", marketplace: "COUPANG", amountKrw: "-12" }),
+    fact({ productName: "coupang manual zero", platform: "COUPANG", scopeKey: "COUPANG", marketplace: "COUPANG", amountKrw: "0", quantity: "0", profitBeforeAds: "-5" }),
+    ...(["META", "GOOGLE", "COUPANG", "NAVER"] as const).map(platform => fact({ productName: `${platform} ad only`, platform, scopeKey: platform,
+      component: "AD_SPEND", marketplace: null, medium: platform === "COUPANG" ? "COUPANG_ADS" : platform === "NAVER" ? "NAVER_ADS" : platform,
+      amountKrw: "0", completeAmountKrw: "0", profitBeforeAds: null, completeProfitBeforeAds: null })),
+    fact({ productName: "allocation only", platform: "META", scopeKey: "META", component: "AD_SPEND", marketplace: null, medium: "META", attribution: "ALLOCATED" }),
+    fact({ productName: "expense only", platform: "COUPANG", scopeKey: "COUPANG", component: "COMMON_EXPENSE", marketplace: null, commonKind: "OTHER" }),
+    fact({ productName: "invalid product marker", component: "STOREFRONT_RESULT", marketplace: "CAFE24_YOUTUBE", medium: "GOOGLE", rowsCount: 0, saleUnitName: "PARTITION_MARKER" }),
+    fact({ productName: "outside date", date: "2026-10-30", platform: "COUPANG", scopeKey: "COUPANG", marketplace: "COUPANG" })
+  );
+  const response = await f.service.read("daily-products", input, actor) as any;
+  const platforms = (name: string) => response.products.find((row: any) => row.productName === name).exportPlatforms;
+  // Legacy sales coexist with native adoption in this fixture and are correctly
+  // removed by the canonical overlay, so test their evidence in an older partition.
+  assert.deepEqual(platforms("legacy zero"), []);
+  assert.deepEqual(platforms("native meta zero"), ["STOREFRONT"]);
+  assert.deepEqual(platforms("native google unknown"), ["GOOGLE"]);
+  assert.deepEqual(platforms("naver unknown"), ["NAVER"]);
+  assert.deepEqual(platforms("coupang previous negative"), ["COUPANG"]);
+  assert.deepEqual(platforms("coupang manual zero"), ["COUPANG"]);
+  assert.deepEqual(platforms("META ad only"), ["STOREFRONT"]);
+  assert.deepEqual(platforms("GOOGLE ad only"), ["GOOGLE"]);
+  assert.deepEqual(platforms("COUPANG ad only"), ["COUPANG"]);
+  for (const name of ["NAVER ad only", "allocation only", "expense only", "invalid product marker", "outside date"])
+    assert.deepEqual(platforms(name), [], name);
+  f.snapshot.facts = [fact({ productName: "legacy zero", amountKrw: "0", completeAmountKrw: "0" })];
+  const legacy = await f.service.read("daily-products", input, actor) as any;
+  assert.deepEqual(legacy.products.find((row: any) => row.productName === "legacy zero").exportPlatforms, ["STOREFRONT"],
+    "an older Cafe24 row never guesses a Google channel");
+}));
+
+test("Excel source presence respects selected platforms, accounts and published date-specific participation", async () => enabled(async () => {
+  const f = fixture();
+  f.snapshot.rules.push({ id: "policy", productId: "A", kind: "SCOPE_POLICY", platform: "CAFE24", scopeKey: "CAFE24", active: true,
+    validFrom: new Date(input.from), validTo: null, payload: { components: ["SALE", "DIRECT_COST"] } } as any);
+  for (const day of [input.from, input.to]) f.snapshot.publications.push({ platform: "CAFE24", scopeKey: "CAFE24", businessDate: new Date(day), runId: day, revision: 1,
+    run: { versions: { participationOverrides: { A: day === input.to ? [] : ["SALE", "DIRECT_COST"] } }, publishedAt: new Date("2026-11-02T00:00:00Z") } } as any);
+  const previous = await f.service.read("daily-products", input, actor) as any;
+  assert.deepEqual(previous.products[0].exportPlatforms, ["STOREFRONT", "GOOGLE"], "previous day's eligible result remains evidence");
+  (f.snapshot.publications[0].run.versions as any).participationOverrides.A = [];
+  const excluded = await f.service.read("daily-products", input, actor) as any;
+  assert.deepEqual(excluded.products[0].exportPlatforms, [], "published overrides and policy exclude both days and ad media");
+  const selected = await f.service.read("daily-products", { ...input, platforms: ["COUPANG"], scopeKeys: ["COUPANG"] }, actor) as any;
+  assert.deepEqual(selected.products.find((row: any) => row.productName === "B").exportPlatforms, ["COUPANG"]);
+  assert.deepEqual(selected.products.find((row: any) => row.productName === "과거 이름").exportPlatforms, []);
+  const noAccounts = await f.service.read("daily-products", { ...input, scopeKeys: [] }, actor) as any;
+  assert.ok(noAccounts.products.every((row: any) => row.exportPlatforms.length === 0));
+}));
+
 test("date-specific product policy and published overrides are applied identically to existing reads", async () => enabled(async () => {
   const f = fixture();
   f.snapshot.rules.push({ id: "policy", productId: "A", kind: "SCOPE_POLICY", platform: "CAFE24", scopeKey: "CAFE24", active: true,

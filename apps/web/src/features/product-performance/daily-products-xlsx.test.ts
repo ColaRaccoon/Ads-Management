@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import ExcelJS from "exceljs";
 import { buildDailyProductsXlsx, buildDailyProductsXlsxInput } from "./daily-products-xlsx";
+import { dailyExcelFileName, filterDailyProductsForExcel, hasDailyExcelProductMembership } from "./daily-products-filter";
 import { DAILY_PRODUCT_GROUPS, DAILY_PRODUCT_METRICS, type ComparedMetric, type DailyProductRow, type DailyProductsReport } from "./daily-products-model";
 
 function metric(current: string | null = "112.3", previous: string | null = "100", changePct: string | null = "12.3"): ComparedMetric {
@@ -27,6 +28,48 @@ function unzipStored(bytes: Uint8Array) {
   }
   return members;
 }
+
+test("Excel-only product filtering preserves source rows, every platform value, screen totals and zero-valued source products", async () => {
+  const source = report();
+  source.rows[0].exportPlatforms = ["STOREFRONT", "GOOGLE"];
+  source.rows[1].exportPlatforms = ["NAVER", "COUPANG"];
+  source.rows[1].groups.NAVER.revenue = metric("0", "0", null);
+  const before = structuredClone(source);
+  assert.equal(filterDailyProductsForExcel(source, "ALL"), source);
+  for (const platform of ["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const) {
+    const filtered = filterDailyProductsForExcel(source, platform);
+    const expected = platform === "STOREFRONT" || platform === "GOOGLE" ? source.rows[0] : source.rows[1];
+    assert.deepEqual(filtered.rows, [expected]);
+    assert.equal(filtered.rows[0], expected);
+    assert.equal(filtered.totals, source.totals);
+    assert.equal(filtered.reconciliation, source.reconciliation);
+    const zip = unzipStored(buildDailyProductsXlsx(filtered));
+    const numeric = zip.get("xl/worksheets/sheet2.xml")!;
+    assert.match(numeric, /autoFilter ref="A1:L16"/);
+    assert.doesNotMatch(numeric, /__TOTAL__|__UNASSIGNED__|미배분 광고비/);
+    assert.match(zip.get("xl/worksheets/sheet1.xml")!, /엑셀 제품 필터/);
+    assert.doesNotMatch(zip.get("xl/worksheets/sheet1.xml")!, /전체 합계/);
+    assert.ok(dailyExcelFileName(filtered).includes(filtered.exportSelection!.label + "제품"));
+    const book = new ExcelJS.Workbook();
+    const bytes = buildDailyProductsXlsx(filtered), buffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(buffer).set(bytes); await book.xlsx.load(buffer);
+    const sheet = book.getWorksheet("숫자 데이터")!;
+    assert.equal(sheet.getCell("A2").value, expected.productKey);
+    assert.equal(sheet.getCell("E3").value, Number(expected.groups.STOREFRONT.revenue.current.value));
+  }
+  assert.deepEqual(source, before);
+  source.rows.forEach(row => { row.exportPlatforms = []; });
+  assert.equal(filterDailyProductsForExcel(source, "GOOGLE").rows.length, 0);
+});
+
+test("missing or invalid membership never guesses platform membership from synthetic zero or positive amounts", () => {
+  const source = report();
+  assert.equal(hasDailyExcelProductMembership(source), false);
+  assert.throws(() => filterDailyProductsForExcel(source, "STOREFRONT"), /다시 조회/);
+  assert.equal(filterDailyProductsForExcel(source, "ALL"), source);
+  source.rows.forEach(row => { row.exportPlatforms = ["TOTAL" as never]; });
+  assert.equal(hasDailyExcelProductMembership(source), false);
+});
 function cell(xml: string, address: string) {
   const result = xml.match(new RegExp(`<c r="${address}"[^>]*>[\\s\\S]*?</c>`));
   assert.ok(result, address); return result[0];

@@ -13,6 +13,28 @@ export type DailyProductMetrics = Pick<ReportSummary,
   };
 export type DailyProductScope = { facts: PublishedReportFact[]; coverage: SourceCoverage[] };
 type ApplyScope = (snapshot: ReportSnapshot, productName?: string) => DailyProductScope;
+export type DailyProductExportPlatform = "STOREFRONT" | "GOOGLE" | "COUPANG" | "NAVER";
+
+/** Product presence in published source results, never synthesized summary zeroes.
+ * Native margin views include ad-only products. Allocations and shared partition
+ * context do not establish that a product appeared in the source platform view.
+ */
+function exportPlatforms(scope: DailyProductScope, query: ReportQuery, productName: string): DailyProductExportPlatform[] {
+  const present = new Set<DailyProductExportPlatform>();
+  for (const fact of scope.facts) {
+    if (fact.productName !== productName || fact.rowsCount <= 0 || fact.saleUnitName === "PARTITION_MARKER" ||
+      (fact.date !== query.from && fact.date !== query.to) || !query.platforms.includes(fact.platform) ||
+      (query.scopeKeys !== undefined && !query.scopeKeys.includes(fact.scopeKey)) || fact.attribution !== "DIRECT") continue;
+    if (fact.platform === "CAFE24" && (fact.component === "SALE" || fact.component === "STOREFRONT_RESULT")) {
+      if (fact.marketplace === "CAFE24_YOUTUBE") present.add("GOOGLE");
+      else if (fact.marketplace === "CAFE24_META" || fact.marketplace === "CAFE24") present.add("STOREFRONT");
+    } else if (fact.component === "AD_SPEND" && fact.platform === "META") present.add("STOREFRONT");
+    else if (fact.component === "AD_SPEND" && fact.platform === "GOOGLE") present.add("GOOGLE");
+    else if (fact.platform === "COUPANG" && (fact.component === "SALE" || fact.component === "AD_SPEND")) present.add("COUPANG");
+    else if (fact.platform === "NAVER" && fact.component === "SALE") present.add("NAVER");
+  }
+  return (["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const).filter(platform => present.has(platform));
+}
 
 function metrics(summary: ReportSummary, coverage: SourceCoverage[], day: string): DailyProductMetrics {
   const { knownTotals, completeTotals, byMarketplace, byMedium, isEstimate } = summary;
@@ -84,6 +106,7 @@ export function buildDailyProducts(snapshot: ReportSnapshot, query: ReportQuery,
       rules: product ? rules.get(product.id) ?? [] : [] }, productName);
     return { productKey: product ? `product:${product.id}` : `historical:${productName}`, productName,
       active: product?.active ?? false, historical: !product,
+      exportPlatforms: exportPlatforms(scope, query, productName),
       current: metrics(summarizeDay(scope, query.to, productName), scope.coverage, query.to),
       previous: metrics(summarizeDay(scope, query.from, productName), scope.coverage, query.from) };
   });

@@ -47,6 +47,8 @@ function reportCell(metric: ComparedMetric, total: boolean): XlsxCell {
 }
 
 export function buildDailyProductsXlsxInput(report: DailyProductsReport): XlsxMultiSheetWorkbookInput {
+  const selection = report.exportSelection;
+  const selectionNote = selection ? `엑셀 제품 필터: ${selection.label} · ${selection.basis} · ${report.rows.length}/${selection.totalProducts}제품 · 제품의 모든 플랫폼 열은 원본 금액 유지` : "";
   const sheet: XlsxWorkbookInput = {
     sheetName: "전체 제품 데일리", columns: Array.from({ length: 16 }, (_, index) => ({ width: index === 0 ? 20 : 9 })),
     rows: [], merges: [], freezeColumn: 1
@@ -55,9 +57,9 @@ export function buildDailyProductsXlsxInput(report: DailyProductsReport): XlsxMu
     sheet.rows.push({ height, cells: [{ value: text, style: "Text", fontSize: 8, wrapText: true }] });
     sheet.merges!.push({ fromRow: sheet.rows.length, toRow: sheet.rows.length, fromColumn: 1, toColumn: 16 });
   };
-  banner(`제품 통합 데일리 · ${report.date} · 전일 ${report.previousDate} · 전체 ${report.rows.length}제품`);
+  banner(`제품 통합 데일리 · ${report.date} · 전일 ${report.previousDate} · ${selection ? selection.label + " " : "전체 "}${report.rows.length}제품`);
   banner(`${report.scopeLabel} · 금액 단위: 원 · 순이익은 기존 플랫폼 계산 기준${report.provisional ? " · 잠정 자료" : ""}`);
-  banner("인쇄: 현재 ‘전체 제품 데일리’ 시트를 선택하세요. ‘숫자 데이터’ 시트는 필터·검산용입니다.");
+  banner(selectionNote || "인쇄: 현재 ‘전체 제품 데일리’ 시트를 선택하세요. ‘숫자 데이터’ 시트는 필터·검산용입니다.");
   const groupRow = sheet.rows.length + 1;
   const top: XlsxCell[] = [{ value: "제품", style: "Header", fontSize: 8, wrapText: true }];
   for (const group of DAILY_PRODUCT_GROUPS) {
@@ -77,10 +79,11 @@ export function buildDailyProductsXlsxInput(report: DailyProductsReport): XlsxMu
     ] });
   };
   report.rows.forEach(row => appendProduct(row, false));
-  appendProduct(report.totals, true);
+  if (!selection) appendProduct(report.totals, true);
   banner("—는 미확인, 0은 확인된 0원입니다. *는 부분 금액, †는 추정 포함입니다. 전일 0·음수·자료 없음은 비율 대신 상태를 표시합니다.", 25);
   banner("전체 금액은 중복 제거된 통합 결과입니다. 플랫폼 표시 금액을 다시 합산하지 않습니다. 증감률은 전일 대비 변화이며 광고의 인과효과를 뜻하지 않습니다.", 25);
-  for (const row of report.reconciliation) banner(`${row.label} · 당일 ${dailyProductMoney(row.current)} · 전일 ${dailyProductMoney(row.previous)}`, 22);
+  if (selection) banner("제품 필터가 적용된 엑셀에는 전체 제품 합계와 미귀속 조정을 포함하지 않습니다. 화면의 데일리 보고 및 인쇄 금액은 그대로입니다.", 25);
+  else for (const row of report.reconciliation) banner(`${row.label} · 당일 ${dailyProductMoney(row.current)} · 전일 ${dailyProductMoney(row.previous)}`, 22);
   for (const warning of report.warnings) banner(warning, 25);
   banner(`발행 기준: ${report.snapshotHash} · 작성 시각: ${new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} 한국시간`, 22);
   sheet.print = { orientation: "landscape", paperSize: "A4", fitToWidth: 1, fitToHeight: 0,
@@ -108,12 +111,13 @@ export function buildDailyProductsXlsxInput(report: DailyProductsReport): XlsxMu
   // Keep data filters exclusive to real products; totals and residuals follow a blank separator.
   numeric.autoFilter!.toRow = numeric.rows.length;
   numeric.rows.push([]);
-  appendNumeric(report.totals, true);
-  for (const residual of report.reconciliation) numeric.rows.push([
+  if (!selection) appendNumeric(report.totals, true);
+  for (const residual of selection ? [] : report.reconciliation) numeric.rows.push([
     { value: "__UNASSIGNED__", style: "Text" }, { value: residual.label, style: "Text" }, { value: "미귀속 조정", style: "Text" },
     { value: residual.key, style: "Text" }, numberCell(residual.current, "Decimal").cell, numberCell(residual.previous, "Decimal").cell
   ]);
   numeric.rows.push([{ value: `보고일 ${report.date} · 전일 ${report.previousDate} · ${report.scopeLabel} · 발행 기준 ${report.snapshotHash}`, style: "Text" }]);
+  if (selection) numeric.rows.push([{ value: selectionNote + " · 전체 제품 합계 및 미귀속 조정 제외", style: "Text" }]);
   numeric.rows.push([{ value: "빈 숫자 셀은 미확인/제외이며 0원이 아닙니다. 정밀도 보존 문자열은 숫자 계산에서 제외될 수 있으므로 비교 사유를 확인하세요.", style: "Text" }]);
   return { sheets: [sheet, numeric], activeSheet: 0 };
 }

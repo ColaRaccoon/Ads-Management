@@ -48,7 +48,9 @@ function response(query, revision, mismatched = false) {
   return { reportDate: date, previousDate, totalProducts: 3, nextCursor: null,
     summary: { ...envelope, items: [], total: 0, nextCursor: null },
     timeseries: { ...envelope, snapshotHash: mismatched ? `${revision}-different` : revision, items: [previousDate, date].map((day, i) => ({ ...envelope, ...(i ? current : previous), date: day, bucketFrom: day, bucketTo: day, partial: false })), total: 2, nextCursor: null },
-    products: Array.from({ length: 3 }, (_, i) => ({ productKey: `synthetic-product-${i}`, productName: `합성 제품 ${i + 1} ${revision}`, active: i !== 2, historical: i === 2, current: aggregate(i === 1 ? 0 : 1), previous: aggregate(.9) })),
+    products: Array.from({ length: 3 }, (_, i) => ({ productKey: `synthetic-product-${i}`, productName: `합성 제품 ${i + 1} ${revision}`, active: i !== 2, historical: i === 2,
+      exportPlatforms: [["STOREFRONT", "GOOGLE"], ["NAVER"], ["COUPANG", "STOREFRONT"]][i],
+      current: aggregate(i === 1 ? 0 : 1), previous: aggregate(.9) })),
     allProducts: { current, previous } };
 }
 
@@ -168,6 +170,37 @@ try {
   assert.equal(events.pageErrors.length, 0);
   assert.ok(events.api.every(request => request.method === "GET"));
   events.checks.push("real bundled worker downloads both XLSX sheets from the visible fresh snapshot");
+  const summaryBeforeFilter = await page.locator(".integrated-daily-report").innerHTML();
+  const detailBeforeFilter = await page.locator(".daily-products-report").innerHTML();
+  const readsBeforeFilter = events.api.length;
+  for (const [platform, label, included] of [["STOREFRONT", "자사몰", [1, 3]], ["GOOGLE", "구글", [1]], ["COUPANG", "쿠팡", [3]], ["NAVER", "네이버", [2]]]) {
+    await page.getByLabel("엑셀 제품 필터", { exact: true }).selectOption(platform);
+    assert.equal(await page.locator(".integrated-daily-report").innerHTML(), summaryBeforeFilter);
+    assert.equal(await page.locator(".daily-products-report").innerHTML(), detailBeforeFilter);
+    assert.equal(events.api.length, readsBeforeFilter, "Excel product selection never changes the report query");
+    const pendingDownload = page.waitForEvent("download", { timeout: 30000 });
+    await downloadButton.click();
+    const filteredDownload = await pendingDownload;
+    assert.equal(filteredDownload.suggestedFilename(), `제품통합_데일리_${label}제품_${reportDate}.xlsx`);
+    const filteredPath = path.join(output, `filtered-${platform}.xlsx`);
+    await filteredDownload.saveAs(filteredPath);
+    const filteredZip = await JSZip.loadAsync(await readFile(filteredPath));
+    for (const sheet of ["sheet1", "sheet2"]) {
+      const xml = await filteredZip.file(`xl/worksheets/${sheet}.xml`).async("string");
+      for (const product of [1, 2, 3]) assert.equal(xml.includes(`합성 제품 ${product} fresh-snapshot`), included.includes(product));
+      assert.ok(xml.includes(`엑셀 제품 필터: ${label}`));
+      assert.doesNotMatch(xml, /__TOTAL__|__UNASSIGNED__/);
+    }
+    await page.getByRole("button", { name: "요약만 인쇄", exact: true }).click();
+    assert.equal(await root.getAttribute("data-print-mode"), "summary");
+    await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
+  }
+  await page.getByLabel("엑셀 제품 필터", { exact: true }).selectOption("ALL");
+  assert.equal(await page.locator(".integrated-daily-report").innerHTML(), summaryBeforeFilter);
+  assert.equal(await page.locator(".daily-products-report").innerHTML(), detailBeforeFilter);
+  assert.equal(events.api.length, readsBeforeFilter);
+  assert.equal(events.pageErrors.length, 0);
+  events.checks.push("four Excel-only platform filters select product rows including zero sales without changing summary, detail, print or API reads");
   await page.screenshot({ path: path.join(output, "browser-daily-report.png"), fullPage: true });
   const scroll = page.locator(".daily-products-scroll");
   const beforeScroll = await page.locator(".daily-products-table tbody th").first().boundingBox();
