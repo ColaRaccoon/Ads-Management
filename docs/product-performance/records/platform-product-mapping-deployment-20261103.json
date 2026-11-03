@@ -1,0 +1,953 @@
+{
+  "status": "DEPLOYED_AND_MAPPED",
+  "completedAt": "2026-11-03T05:09:08.676Z",
+  "releaseSha": "1117fb072ea6726e54c869f3e55033055ffa585a",
+  "sourceBranch": "codex/platform-product-mapping",
+  "webDeploymentId": "b2e41f0f-7f83-4aa8-aae4-c908396c625e",
+  "workerDeploymentId": "a64887e1-12b2-46d9-a984-8cdc488b481d",
+  "previousWebReleaseSha": "ad7baa6456557a00c783a96e276e84af7bc56dae",
+  "previousWorkerReleaseSha": "624dcb0f7bf21429e9922fa4e812b947620522a1",
+  "approvedPlanHash": "1d70e9879550cb107f155786abae31f98e3a9422662d7e4f7b76910ea8357b55",
+  "createdProducts": [
+    {
+      "id": "75fd2e29-60c1-421c-b365-3210fda987bf",
+      "name": "무릎키퍼"
+    },
+    {
+      "id": "3fbf0a73-b872-4dc2-8cce-fe627fcac3a2",
+      "name": "스카이깔창"
+    },
+    {
+      "id": "bed1b140-2bff-4ed1-9459-d142c6382054",
+      "name": "실리콘리프팅+페이스롤러"
+    },
+    {
+      "id": "42ea8501-d2e8-4e58-b391-684f1596fc69",
+      "name": "퍼펙트스케이트+퍼펙트슬라이드2"
+    }
+  ],
+  "links": [
+    {
+      "id": "bd2bd4c2-f606-4f87-955c-b1143f56b8af",
+      "sourceName": "두줄보호대",
+      "targetName": "두줄무릎보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "00493432-7716-49a4-b7a2-85e85471c90c",
+      "sourceName": "버닝슬라이드",
+      "targetName": "버닝 슬라이드",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "79aa60a7-2b33-4d3e-b6b5-83cf39585c9a",
+      "sourceName": "버닝웨이브바 1개입",
+      "targetName": "버닝웨이브바",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "ded9aa89-5d60-4873-b1aa-8fb6b5e4702f",
+      "sourceName": "버닝웨이브바 2개입",
+      "targetName": "버닝웨이브바",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "5056113d-40e9-4313-ab53-f6429dae5378",
+      "sourceName": "플로우라이트_1개입",
+      "targetName": "플로우라이트",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "38127991-f7cb-4d50-ba44-fdf2cd81c007",
+      "sourceName": "플로우라이트_2개입",
+      "targetName": "플로우라이트",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "17424793-69ce-410e-932e-019b32c79c13",
+      "sourceName": "한줄보호대 2개입",
+      "targetName": "한줄보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "434e4472-1a1f-4192-a873-657a5cece90e",
+      "sourceName": "한줄보호대 4개입",
+      "targetName": "한줄보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "0a7c9679-ab1d-4709-b0a5-ceefed3ea3f2",
+      "sourceName": "다이어트 양말",
+      "targetName": "다이어트양말",
+      "platform": "NAVER"
+    },
+    {
+      "id": "2d643678-aeb8-4780-95eb-d9aa45fcc625",
+      "sourceName": "두줄보호대",
+      "targetName": "두줄무릎보호대",
+      "platform": "NAVER"
+    },
+    {
+      "id": "c8e2b784-d77e-4813-b586-6775585fdbb8",
+      "sourceName": "러닝깔창 데일리 1+1",
+      "targetName": "데일리 깔창",
+      "platform": "NAVER"
+    },
+    {
+      "id": "d68f5e7f-0330-4331-8f63-e514c6de67c6",
+      "sourceName": "러닝깔창 데일리 단품",
+      "targetName": "데일리 깔창",
+      "platform": "NAVER"
+    },
+    {
+      "id": "4b034f71-f5aa-4084-8e6f-2d7b42ef84f1",
+      "sourceName": "러닝깔창 PORON 1+1",
+      "targetName": "포론깔창",
+      "platform": "NAVER"
+    },
+    {
+      "id": "65aab188-346a-47a8-8a5e-74992233a253",
+      "sourceName": "러닝깔창 PORON 단품",
+      "targetName": "포론깔창",
+      "platform": "NAVER"
+    },
+    {
+      "id": "b48411ff-9e45-49d0-a401-53d2d84bc8b2",
+      "sourceName": "러닝장갑 1+1",
+      "targetName": "러닝장갑",
+      "platform": "NAVER"
+    },
+    {
+      "id": "db9497bf-cb62-4c56-a275-b66102825631",
+      "sourceName": "무릎키퍼",
+      "targetName": "무릎키퍼",
+      "platform": "NAVER"
+    },
+    {
+      "id": "9383f38f-cd7a-47fc-9070-afcdc51147eb",
+      "sourceName": "발목보호대 데일리",
+      "targetName": "발목보호대데일리",
+      "platform": "NAVER"
+    },
+    {
+      "id": "ba832839-1d57-412b-a4ec-fdc69674e218",
+      "sourceName": "발목보호대 싸커",
+      "targetName": "싸커발목보호대",
+      "platform": "NAVER"
+    },
+    {
+      "id": "78afb27c-4d60-4b0c-8702-90f4126c0976",
+      "sourceName": "버닝슬라이드",
+      "targetName": "버닝 슬라이드",
+      "platform": "NAVER"
+    },
+    {
+      "id": "184af390-3304-4751-9de7-48d63b827b69",
+      "sourceName": "버닝웨이브",
+      "targetName": "버닝웨이브바",
+      "platform": "NAVER"
+    },
+    {
+      "id": "a7513297-cce1-4c7a-a8c8-2200ae862bc6",
+      "sourceName": "베놈 무릎보호대",
+      "targetName": "베놈무릎보호대",
+      "platform": "NAVER"
+    },
+    {
+      "id": "2dd15dd6-c590-4624-bace-445c6e69615d",
+      "sourceName": "손목보호대 기본형 1+1",
+      "targetName": "손목보호대",
+      "platform": "NAVER"
+    },
+    {
+      "id": "90a66baf-53f7-419b-91ec-0da4ea34b634",
+      "sourceName": "손목보호대 기본형 단품",
+      "targetName": "손목보호대",
+      "platform": "NAVER"
+    },
+    {
+      "id": "da92816b-2d2d-4224-b50d-20f9a40473bc",
+      "sourceName": "손목보호대 프로 1+1",
+      "targetName": "손목보호대프로",
+      "platform": "NAVER"
+    },
+    {
+      "id": "8b2d5382-16d6-41b0-b91e-73fbe5b79166",
+      "sourceName": "손목보호대 프로 단품",
+      "targetName": "손목보호대프로",
+      "platform": "NAVER"
+    },
+    {
+      "id": "23f435be-a867-4299-bd3c-23eb3ae42485",
+      "sourceName": "스카이깔창",
+      "targetName": "스카이깔창",
+      "platform": "NAVER"
+    },
+    {
+      "id": "081441f1-8d0c-4fc2-8ff4-45842ef89842",
+      "sourceName": "스텝마스터",
+      "targetName": "스탭마스터",
+      "platform": "NAVER"
+    },
+    {
+      "id": "f1d34e6f-c598-470d-8755-affc3ea789d4",
+      "sourceName": "스포츠 양말",
+      "targetName": "스포츠양말",
+      "platform": "NAVER"
+    },
+    {
+      "id": "49a76af4-4c9e-485b-8578-4616d4975a11",
+      "sourceName": "실리콘리프팅+페이스롤러",
+      "targetName": "실리콘리프팅+페이스롤러",
+      "platform": "NAVER"
+    },
+    {
+      "id": "11125ae6-1841-4d84-9c43-bcab6dc16b80",
+      "sourceName": "실리콘리프팅1+1",
+      "targetName": "실리콘리프팅밴드",
+      "platform": "NAVER"
+    },
+    {
+      "id": "046cd2de-5ac5-419a-95ef-a04391aaa4a4",
+      "sourceName": "카프슬리브 1+1",
+      "targetName": "카프슬리브",
+      "platform": "NAVER"
+    },
+    {
+      "id": "e6a01f56-3141-4103-a53d-d39fd9057297",
+      "sourceName": "퍼펙트 스케이트",
+      "targetName": "퍼펙트스케이트",
+      "platform": "NAVER"
+    },
+    {
+      "id": "8a28c8db-c552-419f-9712-0d22add08fd0",
+      "sourceName": "퍼펙트스케이트+퍼펙트슬라이드2",
+      "targetName": "퍼펙트스케이트+퍼펙트슬라이드2",
+      "platform": "NAVER"
+    },
+    {
+      "id": "e33ecbd3-6676-45b2-876a-49986246a6d0",
+      "sourceName": "페이스 롤러",
+      "targetName": "페이스&바디롤러",
+      "platform": "NAVER"
+    },
+    {
+      "id": "4a31416b-43c8-4177-96d7-6d63c3dd61e2",
+      "sourceName": "푸쉬업바",
+      "targetName": "푸샵바",
+      "platform": "NAVER"
+    },
+    {
+      "id": "e27b6612-09ad-4c44-b060-3f49e0cfbabe",
+      "sourceName": "히트체인지 넥워머",
+      "targetName": "히트체인지",
+      "platform": "NAVER"
+    },
+    {
+      "id": "5ad11cac-c885-409f-b844-94691061683f",
+      "sourceName": "다이어트양말 10개입",
+      "targetName": "다이어트양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "e0c97d2e-175e-46a9-a64c-2e50e10e43a5",
+      "sourceName": "다이어트양말 3개입",
+      "targetName": "다이어트양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "72bc8608-242a-479d-a339-1fd49757a78c",
+      "sourceName": "다이어트양말 5개입",
+      "targetName": "다이어트양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "3e0574db-ffa8-4acd-9779-d3ba17d9f2f4",
+      "sourceName": "데일리 깔창 2개입",
+      "targetName": "데일리 깔창",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "d1496e90-bb7f-48bb-8500-7386e3880cf6",
+      "sourceName": "두줄보호대 2개입",
+      "targetName": "두줄무릎보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "fb32e488-5b07-4126-8c22-11f8ca89bd80",
+      "sourceName": "러닝장갑 2개입",
+      "targetName": "러닝장갑",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "0dfca2fc-1155-490b-97aa-e380152295d5",
+      "sourceName": "레그워머 2개입",
+      "targetName": "레그워머",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "3fca534b-9975-434d-af42-991e0cf91fe6",
+      "sourceName": "마사지양말 3개",
+      "targetName": "마사지양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "ebeaca2c-8bed-44f9-aa30-16197b8cd179",
+      "sourceName": "목도리 2개입",
+      "targetName": "목도리",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "a433cd6f-cf5f-451d-995d-f6065188943f",
+      "sourceName": "바라클라바 베이직 2개입",
+      "targetName": "바라클라바 베이직",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "51957cf9-b2f9-413b-8b90-5f61d847cce4",
+      "sourceName": "바라클라바 프로 2개입",
+      "targetName": "바라클라바 프로",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "a88145ad-2697-4cf7-9e7c-a4322322fab6",
+      "sourceName": "발목보호대데일리 2개입",
+      "targetName": "발목보호대데일리",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "3b6eb64b-e436-44fd-b409-de9fee514665",
+      "sourceName": "방한마스크 2개입",
+      "targetName": "방한마스크",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "a229c849-fd44-4fd1-a3a0-c40792d8535e",
+      "sourceName": "베놈공용",
+      "targetName": "베놈무릎보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "57884b6b-8d4e-4cda-bc40-785b24e44260",
+      "sourceName": "베놈공용 2개입",
+      "targetName": "베놈무릎보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "6e0f7582-5ac9-456b-9791-30d485b9e01d",
+      "sourceName": "베놈여성",
+      "targetName": "베놈무릎보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "3bb36a40-5b03-42df-9796-8f310d3c7a6e",
+      "sourceName": "베놈여성 2개입",
+      "targetName": "베놈무릎보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "e95d7771-2cc7-419c-8be1-d5edb7c373a0",
+      "sourceName": "비니 2개입",
+      "targetName": "비니",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "b198e79f-fd3a-4c28-9fc1-d997eceb7a7b",
+      "sourceName": "손목보호대 2개입",
+      "targetName": "손목보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "68b9d818-7acb-499c-9a74-ba9261656ae2",
+      "sourceName": "손목보호대프로 2개입",
+      "targetName": "손목보호대프로",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "467543f6-4d1d-4288-b443-d0cd1ec5bc27",
+      "sourceName": "스카이스텝 2개입",
+      "targetName": "스카이스텝",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "d73992d4-b749-4700-b638-816fb58fbcaf",
+      "sourceName": "스포츠양말 10개입",
+      "targetName": "스포츠양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "418ffbd4-b4e5-42f1-836b-4f0781d28879",
+      "sourceName": "스포츠양말 3개입",
+      "targetName": "스포츠양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "fb7c638a-bafa-453d-9166-4d1a919e5165",
+      "sourceName": "스포츠양말 5개입",
+      "targetName": "스포츠양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "10aee2aa-0cee-4f0d-a8a9-404235dbe80b",
+      "sourceName": "스포츠양말 7개입",
+      "targetName": "스포츠양말",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "a853bb2f-18a3-4b3d-ad74-213c2c14544a",
+      "sourceName": "실리콘리프팅밴드 2개입",
+      "targetName": "실리콘리프팅밴드",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "603ffd4c-49f5-4352-9a5f-db98dcd809de",
+      "sourceName": "실크안대 2개입",
+      "targetName": "실크안대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "8a0accff-f83a-4121-a39c-dc62e4553aaf",
+      "sourceName": "싸커발목보호대 2개입",
+      "targetName": "싸커발목보호대",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "9b7beb24-18d4-4eba-a2b1-d6d7c1c67a86",
+      "sourceName": "카프슬리브 2개입",
+      "targetName": "카프슬리브",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "9e377f5e-75a5-49cf-ad9f-0d4342207bd3",
+      "sourceName": "포론깔창 2개입",
+      "targetName": "포론깔창",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "d8f1b047-466f-4fff-a276-4e40580554b6",
+      "sourceName": "풀업밴드 그린",
+      "targetName": "풀업밴드",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "4c8a7b49-6a26-4b34-851d-4e5ca8ce7ab1",
+      "sourceName": "풀업밴드 레드",
+      "targetName": "풀업밴드",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "1f9021ee-8c76-4332-baf6-24bd770bc1c2",
+      "sourceName": "풀업밴드 블랙",
+      "targetName": "풀업밴드",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "65adbce3-eba0-4672-bf8b-3ace0a9e3bd5",
+      "sourceName": "풀업밴드 세트",
+      "targetName": "풀업밴드",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "b5f6261b-ce88-45ee-8145-6183f053b8a8",
+      "sourceName": "풀업밴드 퍼플",
+      "targetName": "풀업밴드",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "eb2bb0cc-99c6-4805-a505-a1d6d7fd0589",
+      "sourceName": "핸드워머 2개입",
+      "targetName": "핸드워머",
+      "platform": "COUPANG"
+    },
+    {
+      "id": "19cb3b58-e5cd-4746-9fda-3769707a43b9",
+      "sourceName": "히트체인지 2개입",
+      "targetName": "히트체인지",
+      "platform": "COUPANG"
+    }
+  ],
+  "verification": {
+    "at": "2026-11-03T05:06:22.931Z",
+    "products": 128,
+    "rules": 121,
+    "stalePartitions": [],
+    "unmappedPublishedNames": [],
+    "approvedLinksVerified": 73,
+    "configurationAuditRecords": 77,
+    "replayedPartitions": 975,
+    "financialDifferences": 0,
+    "sourceWrites": 0
+  },
+  "dailyReportCheck": {
+    "at": "2026-11-03T05:08:25.211Z",
+    "status": "PASS",
+    "date": "2026-11-02",
+    "totalProducts": 143,
+    "metricChecks": 30,
+    "samples": [
+      {
+        "productName": "두줄무릎보호대",
+        "totals": {
+          "revenue": "6275010.000000",
+          "adSpend": "1928484.083605",
+          "estimatedProfit": "1476413.339304",
+          "profitBeforeAds": "2623547.422909",
+          "mer": "3.2538562560"
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "CAFE24_META",
+            "revenue": "1221500.000000",
+            "completeRevenue": "1221500.000000",
+            "adSpend": "886590.344000",
+            "estimatedProfit": "-105240.344000",
+            "profitBeforeAds": null,
+            "display": {
+              "revenue": {
+                "value": "1221500.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "886590.344000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "-105240.344000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "CAFE24_YOUTUBE",
+            "revenue": "139600.000000",
+            "completeRevenue": "139600.000000",
+            "adSpend": "59685.739605",
+            "estimatedProfit": "28954.260395",
+            "profitBeforeAds": "88640.000000",
+            "display": {
+              "revenue": {
+                "value": "139600.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "59685.739605",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "28954.260395",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "2674300.000000",
+            "completeRevenue": "2674300.000000",
+            "adSpend": "677850.000000",
+            "estimatedProfit": "901969.000000",
+            "profitBeforeAds": "1579819.000000",
+            "display": {
+              "revenue": {
+                "value": "2674300.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "677850.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "901969.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "COUPANG",
+            "revenue": "2239610.000000",
+            "completeRevenue": "2239610.000000",
+            "adSpend": "304358.000000",
+            "estimatedProfit": "650730.422909",
+            "profitBeforeAds": "955088.422909",
+            "display": {
+              "revenue": {
+                "value": "2239610.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "304358.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "650730.422909",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              }
+            }
+          }
+        ]
+      },
+      {
+        "productName": "버닝웨이브바",
+        "totals": {
+          "revenue": "1089100.000000",
+          "adSpend": "419738.928000",
+          "estimatedProfit": "309308.072000",
+          "profitBeforeAds": "340487.000000",
+          "mer": "2.5947081087"
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "CAFE24_META",
+            "revenue": "590400.000000",
+            "completeRevenue": "590400.000000",
+            "adSpend": "220958.928000",
+            "estimatedProfit": "167601.072000",
+            "profitBeforeAds": null,
+            "display": {
+              "revenue": {
+                "value": "590400.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "220958.928000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "167601.072000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "CAFE24_YOUTUBE",
+            "revenue": "0.000000",
+            "completeRevenue": "0.000000",
+            "adSpend": "0.000000",
+            "estimatedProfit": "0.000000",
+            "profitBeforeAds": "0.000000",
+            "display": {
+              "revenue": {
+                "value": "0.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "0.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "0.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "498700.000000",
+            "completeRevenue": "498700.000000",
+            "adSpend": "196378.000000",
+            "estimatedProfit": "144109.000000",
+            "profitBeforeAds": "340487.000000",
+            "display": {
+              "revenue": {
+                "value": "498700.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "196378.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "144109.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "COUPANG",
+            "revenue": "0.000000",
+            "completeRevenue": "0.000000",
+            "adSpend": "2402.000000",
+            "estimatedProfit": "-2402.000000",
+            "profitBeforeAds": "0.000000",
+            "display": {
+              "revenue": {
+                "value": "0.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "2402.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "-2402.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              }
+            }
+          }
+        ]
+      },
+      {
+        "productName": "베놈무릎보호대",
+        "totals": {
+          "revenue": "3147150.000000",
+          "adSpend": "1023572.000000",
+          "estimatedProfit": "867652.092727",
+          "profitBeforeAds": "1022184.092727",
+          "mer": "3.0746737894"
+        },
+        "byMarketplace": [
+          {
+            "marketplace": "CAFE24_META",
+            "revenue": "1173600.000000",
+            "completeRevenue": "1173600.000000",
+            "adSpend": "755518.000000",
+            "estimatedProfit": "113522.000000",
+            "profitBeforeAds": null,
+            "display": {
+              "revenue": {
+                "value": "1173600.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "755518.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "113522.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "CAFE24_YOUTUBE",
+            "revenue": "0.000000",
+            "completeRevenue": "0.000000",
+            "adSpend": "0.000000",
+            "estimatedProfit": "0.000000",
+            "profitBeforeAds": "0.000000",
+            "display": {
+              "revenue": {
+                "value": "0.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "0.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "0.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "CAFE24"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "NAVER_SMARTSTORE",
+            "revenue": "366200.000000",
+            "completeRevenue": "366200.000000",
+            "adSpend": "65155.000000",
+            "estimatedProfit": "174715.000000",
+            "profitBeforeAds": "239870.000000",
+            "display": {
+              "revenue": {
+                "value": "366200.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "65155.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "174715.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "NAVER"
+                ],
+                "missingSources": []
+              }
+            }
+          },
+          {
+            "marketplace": "COUPANG",
+            "revenue": "1607350.000000",
+            "completeRevenue": "1607350.000000",
+            "adSpend": "202899.000000",
+            "estimatedProfit": "579415.092727",
+            "profitBeforeAds": "782314.092727",
+            "display": {
+              "revenue": {
+                "value": "1607350.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              },
+              "adSpend": {
+                "value": "202899.000000",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              },
+              "estimatedProfit": {
+                "value": "579415.092727",
+                "state": "COMPLETE",
+                "availableSources": [
+                  "COUPANG"
+                ],
+                "missingSources": []
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "configurationWarning": false
+  },
+  "ready": {
+    "status": "PASS",
+    "checkedAt": "2026-11-03T04:56:24.191Z",
+    "release": "1117fb072ea6726e54c869f3e55033055ffa585a",
+    "readyStatus": "ready",
+    "runtimeConfigFingerprint": "e89954a6a8a519a7f76f3e0e8c30e04a6c8f741d8c1aace226569d6d737f69a0",
+    "mappingsPageHttpStatus": 200
+  },
+  "historyPolicy": "New published revisions retain original source final amounts and quantities. Prior revisions and source ledgers retained. No source orders, ads, costs or source settings updated.",
+  "tests": {
+    "apiPassed": 388,
+    "apiSkipped": 1,
+    "webPassed": 25,
+    "buildGuardPassed": 10,
+    "apiBuild": "PASS",
+    "webBuild": "PASS",
+    "liveRollbackTrialPartitions": 3
+  }
+}

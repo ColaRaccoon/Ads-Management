@@ -1,4 +1,4 @@
-param([Parameter(Mandatory)][ValidateSet('preflight','trial','apply','replay','verify')][string]$Action,[ValidateRange(1,2000)][int]$Limit=1000)
+param([Parameter(Mandatory)][ValidateSet('preflight','trial','apply','replay','verify','report-check')][string]$Action,[ValidateRange(1,2000)][int]$Limit=1000)
 $ErrorActionPreference='Stop'
 $privateRoot=Join-Path $env:LOCALAPPDATA 'UnifiedPerformanceStage11Credentials'
 $privateFile=Join-Path $privateRoot 'roles.dpapi'

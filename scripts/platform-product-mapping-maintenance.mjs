@@ -16,7 +16,7 @@ const json = value => JSON.parse(JSON.stringify(value));
 const day = value => value.toISOString().slice(0, 10);
 const params = Object.fromEntries(process.argv.slice(2).map(arg => { const i = arg.indexOf('='); assert(i > 2); return [arg.slice(2, i), arg.slice(i + 1)]; }));
 assert(Object.keys(params).every(key => ['action', 'plan-sha', 'limit'].includes(key)));
-assert(['preflight', 'trial', 'apply', 'replay', 'verify'].includes(params.action));
+assert(['preflight', 'trial', 'apply', 'replay', 'verify', 'report-check'].includes(params.action));
 const planPath = 'docs/product-performance/approved/platform-product-links-20261103.json';
 const planText = readFileSync(planPath, 'utf8').replaceAll('\r\n', '\n');
 const planHash = digest(planText); assert.equal(params['plan-sha'], planHash);
@@ -199,6 +199,40 @@ try {
       if (processed >= limit) break;
     }
     console.log(JSON.stringify({ status: 'PASS', action: 'replay', processed, already, total: pointers.length, financialDifferences: 0 }));
+  } else if (params.action === 'report-check') {
+    assert(state.verification, 'VERIFICATION_REQUIRED');
+    process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED = 'true';
+    const { UnifiedReportRepository } = require('../apps/api/dist/unified-performance/report.repository.js');
+    const { UnifiedReportService } = require('../apps/api/dist/unified-performance/report.service.js');
+    const { UnifiedAggregationRepository } = require('../apps/api/dist/unified-performance/aggregation.repository.js');
+    const reports = new UnifiedReportService(new UnifiedReportRepository(management), new UnifiedAggregationRepository(report));
+    const response = await reports.read('daily-products', { from: '2026-11-01', to: plan.through, compareFrom: '2026-11-01', compareTo: '2026-11-01',
+      platforms: ['META','GOOGLE','CAFE24','NAVER','COUPANG'] }, actor);
+    const sums = await report.$queryRaw(Prisma.sql`SELECT f.product_name,n->>'group' source_group,
+      sum((n->'revenue'->>'known')::numeric)::text revenue,sum((n->'adSpend'->>'known')::numeric)::text ad_spend,
+      sum((n->'netProfit'->>'known')::numeric)::text net_profit
+      FROM meta_ads.unified_source_publications p JOIN meta_ads.unified_daily_facts f ON f.run_id=p.run_id
+      CROSS JOIN LATERAL (SELECT f.payload->'nativeResult' n) native
+      WHERE p.business_date=${plan.through}::date AND f.component='NATIVE_RESULT' AND n->>'kind'='PRODUCT'
+        AND f.product_name IN ('두줄무릎보호대','버닝웨이브바','베놈무릎보호대') GROUP BY 1,2`);
+    const market = { STOREFRONT: 'CAFE24_META', GOOGLE: 'CAFE24_YOUTUBE', COUPANG: 'COUPANG', NAVER: 'NAVER_SMARTSTORE' };
+    let checks = 0;
+    for (const sum of sums) {
+      const product = response.products.find(product => product.productName === sum.product_name); assert(product);
+      const row = product.current.byMarketplace.find(row => row.marketplace === market[sum.source_group]); assert(row);
+      for (const [metric, field] of [['revenue','revenue'],['ad_spend','adSpend'],['net_profit','estimatedProfit']]) {
+        const actual = row.display[field].value, expected = sum[metric];
+        if (expected === null) assert.equal(actual, null); else assert(new Prisma.Decimal(actual).eq(new Prisma.Decimal(expected).toFixed(6)), 'DAILY_PRODUCT_STORED_MONEY_MISMATCH');
+        checks++;
+      }
+    }
+    state.reportCheck = { at: new Date().toISOString(), status: 'PASS', date: response.reportDate, totalProducts: response.totalProducts,
+      metricChecks: checks, samples: response.products.filter(product => ['두줄무릎보호대','버닝웨이브바','베놈무릎보호대'].includes(product.productName)).map(product => ({ productName: product.productName,
+        totals: product.current.knownTotals, byMarketplace: product.current.byMarketplace })),
+      configurationWarning: response.summary.warnings.includes('CONFIGURATION_CHANGED_REBUILD_RECOMMENDED') };
+    assert(!state.reportCheck.configurationWarning); persist();
+    console.log(JSON.stringify({ status: 'PASS', action: 'report-check', date: response.reportDate, totalProducts: response.totalProducts,
+      metricChecks: checks, configurationWarning: state.reportCheck.configurationWarning }));
   } else {
     assert(state.appliedAt, 'APPLY_REQUIRED');
     const rows = await report.$queryRaw(Prisma.sql`SELECT p.platform,p.scope_key,p.business_date::text date,r.id,r.versions->>'nameRuleVersion' name_version
