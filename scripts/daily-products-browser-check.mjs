@@ -46,7 +46,7 @@ function response(query, behavior) {
     versions: { calculationVersion: "synthetic" }, latestConfigurationVersions: {}, requestedCalculationVersion: "synthetic", asOfBySource: [],
     coverage: [], comparisonCoverage: [], warnings: [], provisional: false,
     comparison: { known: metricComparison, complete: metricComparison, byMedium: [], previousByMarketplace: previous.byMarketplace, currentDays: 2, previousDays: 1, unequalPeriods: true } };
-  return { ...(missingActivity ? {} : { exportActivityVersion: 2 }), reportDate: date, previousDate, totalProducts: count, nextCursor: null,
+  return { ...(missingActivity ? {} : { exportActivityVersion: 3 }), reportDate: date, previousDate, totalProducts: count, nextCursor: null,
     summary: { ...envelope, items: [], total: 0, nextCursor: null },
     timeseries: { ...envelope, snapshotHash: mismatched ? `${revision}-different` : revision, items: [previousDate, date].map((day, i) => ({ ...envelope, ...(i ? current : previous), date: day, bucketFrom: day, bucketTo: day, partial: false })), total: 2, nextCursor: null },
     products: Array.from({ length: count }, (_, i) => {

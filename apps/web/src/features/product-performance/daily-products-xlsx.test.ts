@@ -34,7 +34,7 @@ test("Excel-only product filtering preserves source rows, every platform value, 
   source.rows[0].exportPlatforms = ["STOREFRONT", "GOOGLE"];
   source.rows[1].exportPlatforms = ["NAVER", "COUPANG"];
   source.rows[1].groups.NAVER.revenue = metric("0", "0", null);
-  source.exportActivityVersion = 2;
+  source.exportActivityVersion = 3;
   const before = structuredClone(source);
   assert.deepEqual(filterDailyProductsForExcel(source, "ALL").rows, source.rows);
   for (const platform of ["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const) {
@@ -74,7 +74,7 @@ test("missing or invalid membership never guesses platform membership from synth
 });
 
 test("all-products export also omits inactive and previous-only products without hiding their screen rows", () => {
-  const source = report(); source.exportActivityVersion = 2;
+  const source = report(); source.exportActivityVersion = 3;
   source.rows[0].exportPlatforms = ["GOOGLE"];
   source.rows[1].exportPlatforms = [];
   const before = structuredClone(source);
@@ -84,7 +84,7 @@ test("all-products export also omits inactive and previous-only products without
   assert.equal(dailyExcelFileName(filtered), "제품통합_데일리_전체제품_2026-11-02.xlsx");
   for (const xml of unzipStored(buildDailyProductsXlsx(filtered)).values()) assert.doesNotMatch(xml, /HYPERLINK/);
   assert.deepEqual(source, before);
-  source.exportActivityVersion = 1;
+  source.exportActivityVersion = 2;
   assert.equal(hasDailyExcelProductMembership(source), false);
   assert.throws(() => filterDailyProductsForExcel(source, "ALL"), /다시 조회/);
 });

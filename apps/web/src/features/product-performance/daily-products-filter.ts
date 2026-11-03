@@ -8,7 +8,7 @@ export type DailyExcelProductFilter = typeof DAILY_EXCEL_PRODUCT_FILTERS[number]
 export const DAILY_EXCEL_FILTER_BASIS = "보고일 당일 판매 0건·광고비 0원 제품 제외 (미확정은 0으로 보지 않음)";
 
 export function hasDailyExcelProductMembership(report: DailyProductsReport): boolean {
-  return report.exportActivityVersion === 2 && report.rows.every(row => Array.isArray(row.exportPlatforms) && row.exportPlatforms.every(platform =>
+  return report.exportActivityVersion === 3 && report.rows.every(row => Array.isArray(row.exportPlatforms) && row.exportPlatforms.every(platform =>
     DAILY_EXCEL_PRODUCT_FILTERS.some(option => option.value !== "ALL" && option.value === platform)));
 }
 

@@ -114,7 +114,7 @@ test("Excel platform presence uses own source rows rather than catalog, coverage
   assert.ok(response.products.find((row: any) => row.productName === "거래 없는 비활성").current.byMarketplace.length > 0,
     "synthetic marketplace summaries must not become membership evidence");
   assert.equal(response.totalProducts, 5, "export metadata never removes ordinary report products");
-  assert.equal(response.exportActivityVersion, 2);
+  assert.equal(response.exportActivityVersion, 3);
   assert.equal(f.reads.length, 1);
 }));
 
@@ -216,7 +216,7 @@ test("Excel activity uses exact current quantity and canonical allocated spend i
   }
 }));
 
-test("Excel keeps zero-valued current rows when sales or ad coverage is incomplete", async () => enabled(async () => {
+test("Excel quantity uses stored values while absent ads with incomplete coverage remain unknown", async () => enabled(async () => {
   for (const component of ["SALE", "AD_SPEND"] as const) {
     const f = fixture();
     f.snapshot.facts.push(fact({ productName: "partial zero", platform: "COUPANG", scopeKey: "COUPANG", marketplace: "COUPANG", quantity: "0",
@@ -224,8 +224,44 @@ test("Excel keeps zero-valued current rows when sales or ad coverage is incomple
     f.snapshot.coverage = f.snapshot.coverage.map(row => row.platform === "COUPANG" && row.date === input.to && row.component === component
       ? { ...row, collectionState: "PARTIAL", zeroConfirmed: false } : row);
     const response = await f.service.read("daily-products", input, actor) as any;
-    assert.deepEqual(response.products.find((row: any) => row.productName === "partial zero").exportPlatforms, ["COUPANG"], component);
+    assert.deepEqual(response.products.find((row: any) => row.productName === "partial zero").exportPlatforms, component === "SALE" ? [] : ["COUPANG"], component);
   }
+}));
+
+test("Excel excludes a known zero native product despite unrelated coverage and unassigned-ad warnings", async () => enabled(async () => {
+  const f = fixture(), name = "노필수면안대";
+  const native = fact({ productName: name, component: "STOREFRONT_RESULT", marketplace: "CAFE24_META", medium: "META", quantity: "0",
+    amountKrw: "0", completeAmountKrw: "0", profitBeforeAds: "0", completeProfitBeforeAds: "0", persistedAdSpend: "0", persistedNetProfit: "0" });
+  const ownAd = fact({ productName: name, platform: "META", scopeKey: "META", component: "AD_SPEND", marketplace: null, medium: "META",
+    amountKrw: "0", completeAmountKrw: "0", profitBeforeAds: null, completeProfitBeforeAds: null });
+  f.snapshot.facts.push(native, ownAd, { ...ownAd, productName: null, attribution: "UNALLOCATED", amountKrw: "9", completeAmountKrw: "9" });
+  f.snapshot.coverage = f.snapshot.coverage.map(row => row.date !== input.to ? row : row.platform === "CAFE24"
+    ? { ...row, quality: { ...quality, isEstimate: true, issues: ["CAFE24_CACHE_FRESHNESS_UNVERIFIED", "CAFE24_PAST_CHANGES_REQUIRE_MANUAL_DAY_RERUN",
+      "CAFE24_PRODUCT_MAPPING_INCOMPLETE", "UNMAPPED_SALES", "UNALLOCATED_AD_SPEND", "PRICE_MISMATCH"] } }
+    : row.platform === "META" ? { ...row, quality: { ...quality, issues: ["NAME_UNMATCHED"] } } : row);
+  const read = async () => (await f.service.read("daily-products", input, actor) as any).products.find((row: any) => row.productName === name);
+  const zero = await read();
+  assert.deepEqual(zero.exportPlatforms, []);
+  const market = zero.current.byMarketplace.find((row: any) => row.marketplace === "CAFE24_META");
+  assert.equal(market.display.adSpend.value, "0.000000");
+  assert.equal(market.display.adSpend.state, "PARTIAL", "financial quality stays unchanged");
+  assert.equal(market.estimatedProfit, null);
+  const canonical = await f.service.read("summary", { ...input, from: input.to, to: input.to, productName: name }, actor) as any;
+  assert.deepEqual(compact(zero.current), compact(canonical.items[0]));
+  // A current monetary unknown is preserved even if another own ad row and the
+  // older native audit both say zero; no audit-value fallback is allowed.
+  const unknownAd = { ...ownAd, amountKrw: null, completeAmountKrw: null };
+  f.snapshot.facts.push(unknownAd);
+  assert.deepEqual((await read()).exportPlatforms, ["STOREFRONT"]);
+  f.snapshot.facts.pop();
+  ownAd.amountKrw = "7"; ownAd.completeAmountKrw = "7";
+  assert.deepEqual((await read()).exportPlatforms, ["STOREFRONT"], "current ads override a stale zero native audit");
+  ownAd.amountKrw = "0"; ownAd.completeAmountKrw = "0";
+  native.quantity = "1";
+  assert.deepEqual((await read()).exportPlatforms, ["STOREFRONT"], "a free sale with positive quantity remains active");
+  native.quantity = "0";
+  native.quality = { ...quality, issues: ["NATIVE_QUANTITY_UNAVAILABLE"] };
+  assert.deepEqual((await read()).exportPlatforms, ["STOREFRONT"]);
 }));
 
 test("date-specific product policy and published overrides are applied identically to existing reads", async () => enabled(async () => {

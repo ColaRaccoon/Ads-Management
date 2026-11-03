@@ -29,10 +29,10 @@ function sourceGroup(fact: PublishedReportFact): DailyProductExportPlatform | nu
 function confirmedZero(value: string | null | undefined): boolean {
   try { return decimal(value).isZero(); } catch { return false; }
 }
-/** Consume the same canonical marketplace/media spend shown by the report.
- * Partial zeroes are not confirmed zero; excluded sources contribute no activity.
+/** Consume canonical spend; unrelated unassigned ads may make its display partial
+ * without making this product's fully numeric stored ad rows unknown.
  */
-function confirmedZeroAds(group: DailyProductExportPlatform, summary: ReportSummary, scope: DailyProductScope, query: ReportQuery): boolean {
+function confirmedZeroAds(group: DailyProductExportPlatform, summary: ReportSummary, scope: DailyProductScope, query: ReportQuery, productName: string): boolean {
   const split = summary.byMarketplace.some(row => row.marketplace === "CAFE24_META" || row.marketplace === "CAFE24_YOUTUBE");
   const legacy = summary.byMarketplace.some(row => row.marketplace === "CAFE24");
   const platforms: Platform[] = group === "STOREFRONT" ? !split && legacy ? ["META", "GOOGLE"] : ["META"] : [group];
@@ -42,14 +42,24 @@ function confirmedZeroAds(group: DailyProductExportPlatform, summary: ReportSumm
     (query.scopeKeys === undefined || query.scopeKeys.includes(row.scopeKey)));
   if (coverage.length && coverage.every(row => row.participation === "NOT_APPLICABLE")) return true;
   if (group === "STOREFRONT" && split && legacy) return false;
+  const zeroDisplay = (display: { value: string | null; state: string }) => {
+    if (!confirmedZero(display.value)) return false;
+    if (display.state === "COMPLETE") return true;
+    if (display.state !== "PARTIAL") return false;
+    const ownAds = scope.facts.filter(fact => fact.productName === productName && fact.date === query.to && fact.component === "AD_SPEND" &&
+      fact.rowsCount > 0 && selected.includes(fact.platform) && (query.scopeKeys === undefined || query.scopeKeys.includes(fact.scopeKey)));
+    return ownAds.length > 0 && ownAds.every(fact => {
+      try { return decimal(fact.amountKrw).isFinite() && decimal(fact.completeAmountKrw).isFinite(); } catch { return false; }
+    });
+  };
   const marketplace = group === "STOREFRONT" ? !split && legacy ? "CAFE24" : "CAFE24_META" :
     group === "GOOGLE" ? "CAFE24_YOUTUBE" : group === "NAVER" ? "NAVER_SMARTSTORE" : "COUPANG";
   const market = summary.byMarketplace.find(row => row.marketplace === marketplace);
-  if (market?.display?.adSpend) return market.display.adSpend.state === "COMPLETE" && confirmedZero(market.display.adSpend.value);
+  if (market?.display?.adSpend) return zeroDisplay(market.display.adSpend);
   if (market?.adSpend != null) return confirmedZero(market.adSpend);
   const medium = group === "STOREFRONT" ? "META" : group === "COUPANG" ? "COUPANG_ADS" : group === "NAVER" ? "NAVER_DA" : "GOOGLE";
   const media = summary.byMedium.find(row => row.medium === medium);
-  if (media?.displayAdSpend) return media.displayAdSpend.state === "COMPLETE" && confirmedZero(media.displayAdSpend.value);
+  if (media?.displayAdSpend) return zeroDisplay(media.displayAdSpend);
   return confirmedZero(media?.completeAdSpend);
 }
 /** Only current-day source products qualify. Drop a group solely when both its
@@ -58,8 +68,6 @@ function confirmedZeroAds(group: DailyProductExportPlatform, summary: ReportSumm
  */
 function exportPlatforms(scope: DailyProductScope, query: ReportQuery, productName: string, summary: ReportSummary): DailyProductExportPlatform[] {
   const present = new Map<DailyProductExportPlatform, { quantity: InstanceType<typeof ExactDecimal>; unknown: boolean }>();
-  const incompleteSales = new Set(scope.coverage.filter(row => row.date === query.to && row.component === "SALE" &&
-    row.participation === "INCLUDED" && row.collectionState !== "COMPLETE").map(row => JSON.stringify([row.platform, row.scopeKey])));
   for (const fact of scope.facts) {
     if (fact.productName !== productName || fact.rowsCount <= 0 || fact.saleUnitName === "PARTITION_MARKER" ||
       fact.date !== query.to || !query.platforms.includes(fact.platform) ||
@@ -69,14 +77,14 @@ function exportPlatforms(scope: DailyProductScope, query: ReportQuery, productNa
     const state = present.get(group) ?? { quantity: new ExactDecimal(0), unknown: false };
     if (fact.component === "SALE" || fact.component === "STOREFRONT_RESULT") {
       try { state.quantity = state.quantity.plus(decimal(fact.quantity)); } catch { state.unknown = true; }
-      if (fact.quality.issues.some(issue => /QUANTITY/.test(issue) && /UNAVAILABLE|UNKNOWN|MISSING|INVALID|UNRESOLVED/.test(issue)) ||
-        incompleteSales.has(JSON.stringify([fact.platform, fact.scopeKey]))) state.unknown = true;
+      // Source-wide collection/cost warnings do not invalidate a stored quantity.
+      if (fact.quality.issues.some(issue => /QUANTITY/.test(issue) && /UNAVAILABLE|UNKNOWN|MISSING|INVALID|UNRESOLVED/.test(issue))) state.unknown = true;
     }
     present.set(group, state);
   }
   return (["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const).filter(group => {
     const state = present.get(group);
-    return state !== undefined && (state.unknown || !state.quantity.isZero() || !confirmedZeroAds(group, summary, scope, query));
+    return state !== undefined && (state.unknown || !state.quantity.isZero() || !confirmedZeroAds(group, summary, scope, query, productName));
   });
 }
 
@@ -157,7 +165,7 @@ export function buildDailyProducts(snapshot: ReportSnapshot, query: ReportQuery,
   });
   const allScope = precomputedDays ? { facts, coverage: snapshot.coverage } : applyScope({ ...snapshot, facts });
   const withBalances = (summary: ReportSummary, day: string) => ({ ...metrics(summary, allScope.coverage, day), scopeBalances: summary.scopeBalances });
-  return { products, totalProducts: products.length, nextCursor: null, exportActivityVersion: 2 as const,
+  return { products, totalProducts: products.length, nextCursor: null, exportActivityVersion: 3 as const,
     reportDate: query.to, previousDate: query.from,
     allProducts: { current: withBalances(precomputedDays?.current ?? summarizeDay(allScope, query.to), query.to),
       previous: withBalances(precomputedDays?.previous ?? summarizeDay(allScope, query.from), query.from) } };
