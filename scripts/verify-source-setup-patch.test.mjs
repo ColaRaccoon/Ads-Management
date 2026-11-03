@@ -55,6 +55,8 @@ const unified = [
   'report-contract', 'report-query', 'report.controller', 'report.dto', 'report.repository', 'report.service', 'report.service.test',
   'daily-products', 'daily-products.test', 'daily-products-naver.test',
   'runtime-prisma', 'runtime-prisma.test',
+  'domain/native-product-mapping', 'domain/native-product-mapping.test',
+  'source-product-inventory', 'source-product-inventory.test',
   'types', 'unified-performance.module'
 ].map(name => `unified-performance/${name}.js`);
 const reviewedCoupang = ['coupang/coupang.service.js', 'coupang/coupang-native-results.js', 'coupang/coupang-native-results.test.js',
