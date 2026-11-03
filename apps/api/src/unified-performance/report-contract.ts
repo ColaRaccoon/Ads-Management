@@ -1,9 +1,10 @@
 import type { AdapterRequest, Platform, Quality, SourceCoverage } from "./types";
 
-export const REPORT_CALCULATION_VERSION = "unified-report-v2-native-storefront";
+export const REPORT_CALCULATION_VERSION = "unified-source-final-v1";
 /** Only compact, public-safe daily aggregates are persisted in the reporting fact payload. */
 export interface ReportFact {
-  component: "SALE" | "AD_SPEND" | "COMMON_EXPENSE" | "SHIPPING_INCOME" | "STOREFRONT_RESULT";
+  component: "SALE" | "AD_SPEND" | "COMMON_EXPENSE" | "SHIPPING_INCOME" | "STOREFRONT_RESULT" | "NATIVE_RESULT";
+  nativeResult?: import("./native-result-contract").NativeStoredResult;
   /** Stored native final results are audit values; selection may change the applicable ad spend. */
   persistedNetProfit?: string | null;
   persistedAdSpend?: string | null;

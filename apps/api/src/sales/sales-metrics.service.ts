@@ -237,20 +237,24 @@ export class SalesMetricsService {
     };
   }
 
-  async productPerformance(query: { from?: string; to?: string; deliveryStatus?: string }) {
+  async productPerformance(query: { from?: string; to?: string; deliveryStatus?: string }, financialProjection = false) {
     const range = parseDateRange(query.from, query.to);
     const deliveryStatus = parseOptionalDeliveryStatusFilter(query.deliveryStatus);
     const [salesData, adCandidates] = await Promise.all([
-      this.cafe24SalesLines(range),
+      this.cafe24SalesLines(range, undefined, financialProjection),
       this.prisma.metaAdsetDailyMetric.findMany({
         where: {
           isCurrent: true,
           metricDate: { gte: range.fromDate, lte: range.toDate },
           ...deliveryStatusWhere(deliveryStatus)
         },
-        include: { product: true },
+        ...(financialProjection ? { select: {
+          id: true, source: true, connectionId: true, syncRunId: true, uploadBatchId: true,
+          importVersion: true, sourceRevision: true, metricDate: true, metaAdsetId: true, adsetName: true,
+          spendUsd: true, productId: true, product: { select: { id: true, displayName: true, isActive: true } }
+        } } : { include: { product: true } }),
         orderBy: [{ metricDate: "asc" }, { adsetName: "asc" }, { id: "asc" }]
-      })
+      } as Prisma.MetaAdsetDailyMetricFindManyArgs) as Promise<AdMetric[]>
     ]);
     const adMetrics = await selectCurrentSourceRows(
       this.prisma, SourceDataKind.META_ADSET, adCandidates, (row) => row.metricDate
@@ -276,8 +280,10 @@ export class SalesMetricsService {
               quoteCurrency: "KRW",
               provider: "KOREA_EXIM",
               rateDate: { in: metricDates.map((date) => toDateOnly(date)).filter((date): date is Date => Boolean(date)) }
-            }
-          })
+            },
+            ...(financialProjection ? { select: { id: true, rateDate: true, sourceDate: true, baseCurrency: true,
+              quoteCurrency: true, rate: true, provider: true, fallbackType: true } } : {})
+          } as Prisma.ExchangeRateFindManyArgs) as Promise<ExchangeRateRow[]>
         : Promise.resolve([] as ExchangeRateRow[]),
       this.findCouponRules(range, productIds)
     ]);
@@ -434,7 +440,7 @@ export class SalesMetricsService {
     return selected.slice(0, take);
   }
 
-  private async cafe24SalesLines(range: ReturnType<typeof parseDateRange>, financialScope?: string) {
+  private async cafe24SalesLines(range: ReturnType<typeof parseDateRange>, financialScope?: string, financialProjection = financialScope !== undefined) {
     const completeCafe24BatchIds = await this.completeCafe24BatchIds(range);
     const candidates = await this.prisma.cafe24OrderLine.findMany({
       where: {
@@ -447,7 +453,7 @@ export class SalesMetricsService {
         validationStatus: { not: RowValidationStatus.ERROR },
         ...(financialScope === undefined ? {} : { connectionId: financialScope === "LEGACY_UNBOUND" ? null : financialScope })
       },
-      ...(financialScope === undefined ? { include: { product: true, matchRule: true } } : { select: nativeCafe24FinancialSelect }),
+      ...(financialProjection ? { select: nativeCafe24FinancialSelect } : { include: { product: true, matchRule: true } }),
       orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
     } as Prisma.Cafe24OrderLineFindManyArgs);
     const salesLines = await selectCurrentSourceRows(
@@ -487,7 +493,7 @@ export class SalesMetricsService {
           { validationStatus: RowValidationStatus.ERROR }
         ]
       },
-      ...(financialScope === undefined ? { include: { product: true, matchRule: true } } : { select: nativeCafe24FinancialSelect }),
+      ...(financialProjection ? { select: nativeCafe24FinancialSelect } : { include: { product: true, matchRule: true } }),
       orderBy: [{ orderDate: "asc" }, { rowNumber: "asc" }]
     } as Prisma.Cafe24OrderLineFindManyArgs) as Cafe24Line[] : [];
     const couponLines = [

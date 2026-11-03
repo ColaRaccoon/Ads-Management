@@ -230,6 +230,7 @@ export interface NativeStorefrontSnapshot {
   issues: string[];
 }
 export interface AdapterBatch {
+  nativeResults?: import("./native-result-contract").NativeStoredResult[];
   nativeStorefrontResults?: NativeStorefrontSnapshot;
   sales: SaleFact[];
   adSpends: AdSpendFact[];

@@ -21,6 +21,17 @@ export function relationshipDays(scope: { facts: PublishedReportFact[]; coverage
   }
   return datesIn(lookbackFrom, query.to).map(date => {
     const facts = factsByDay.get(date) ?? [], coverage = coverageByDay.get(date) ?? [];
+    if (process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED === "true") {
+      const stored = summarizeReport(facts, coverage, query);
+      const selected = stored.byMedium.filter(row => settings.availableMedia.includes(row.medium as typeof settings.availableMedia[number]));
+      const total = (values: Array<string | null>, empty: string | null) => !values.length ? empty : values.some(v => v === null) ? null :
+        values.reduce((sum, value) => sum.plus(value!), new D(0)).toFixed(6);
+      return { date,
+        adSpend: total(selected.filter(row => settings.analysisMedia.includes(row.medium as typeof settings.analysisMedia[number])).map(row => row.completeAdSpend ?? null), null),
+        otherAdSpend: total(selected.filter(row => !settings.analysisMedia.includes(row.medium as typeof settings.analysisMedia[number])).map(row => row.completeAdSpend ?? null), "0.000000"),
+        revenue: stored.completeTotals.revenue, profitBeforeAds: stored.completeTotals.profitBeforeAds,
+        isEstimate: stored.isEstimate, issues: stored.issues };
+    }
     const outcome = summarizeReport(facts.filter(f => f.component === "SALE"), coverage.filter(c => c.component === "SALE" || c.component === "DIRECT_COST"), query);
     const media = settings.availableMedia.map(medium => {
       const platform = MEDIUM_PLATFORM[medium];

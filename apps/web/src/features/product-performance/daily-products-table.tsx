@@ -1,4 +1,6 @@
 import React from "react";
+import { NativeResultPublicationTimes } from "./native-result-basis";
+import { NATIVE_RESULT_HELP } from "./native-result-metadata";
 import { DAILY_PRODUCT_GROUPS, DAILY_PRODUCT_METRICS, dailyProductChange, dailyProductMoney, dailyProductStateLabel, dailyProductTone,
   type ComparedMetric, type DailyProductRow, type DailyProductsReport } from "./daily-products-model";
 
@@ -41,7 +43,7 @@ export function DailyProductsTable({ report, printReport }: DailyProductsTablePr
     </table></div>
     <footer className="daily-products-basis">
       <p><strong>표시 기준</strong> —는 미확인, 0은 확인된 0원입니다. *는 당일 또는 전일의 부분 금액 기준입니다. 전일이 0·음수이거나 자료가 없으면 증감률 대신 상태를 표시합니다. 증감률은 소수점 한 자리로 반올림합니다. 색은 증감 방향이며 광고비 증가가 수익 개선을 뜻하지는 않습니다.</p>
-      <p>순이익은 기존 플랫폼별 계산 기준의 추정 순이익입니다. 자사몰은 채널별 집계에서 Meta 판매, 구글은 Cafe24 유튜브 판매 기준입니다. 전체 열과 합계는 통합 결과를 사용하며, 그룹 금액이나 제품 증감률을 더하지 않습니다.</p>
+      {report.resultBasis === "NATIVE_FINAL" ? <><p>{NATIVE_RESULT_HELP} 순이익의 비용 포함 범위와 추정 여부는 각 원본 보고서 기준을 유지합니다.</p><NativeResultPublicationTimes date={report.date} sources={report.sourcePublicationTimes ?? []} /></> : <p>순이익은 기존 플랫폼별 계산 기준의 추정 순이익입니다. 자사몰은 채널별 집계에서 Meta 판매, 구글은 Cafe24 유튜브 판매 기준입니다. 전체 열과 합계는 통합 결과를 사용하며, 그룹 금액이나 제품 증감률을 더하지 않습니다.</p>}
       {report.provisional || estimates ? <p className="daily-products-warning">{report.provisional ? "잠정 자료 · 오늘을 포함한 발행 결과입니다. " : ""}{estimates ? "추정 데이터가 포함되어 있습니다." : ""}</p> : null}
       {report.warnings.map(warning => <p className="daily-products-warning" key={warning}>{warning}</p>)}
       <p data-print-hidden={printReport ? "true" : undefined}><strong>제품 미귀속 금액</strong> 전체 합계에 포함될 수 있는 미분류·미배분 원천입니다. 아래 값은 서로 다른 항목이므로 합산하지 않습니다.</p>

@@ -29,6 +29,24 @@ test("daily report prints selected date, exact preceding date, scope, integer KP
   assert.doesNotMatch(html, /1,200,000.49|산점도|svg|success|발행 계산 버전/);
 });
 
+test("native source mode explains stored final results and shows only selected-day KST source publication times", () => {
+  const { filters, data } = fixture();
+  data.summary.resultBasis = "NATIVE_FINAL";
+  data.summary.issues.push("STOREFRONT_GOOGLE_SALES_MAY_OVERLAP");
+  data.summary.asOfBySource = [
+    { platform: "CAFE24", scopeKey: "internal-store-id", date: "2026-10-29", sourceAsOf: "2026-10-29T01:02:00Z", publishedAt: "2026-10-29T02:03:00Z", stale: true },
+    { platform: "NAVER", scopeKey: "store", date: "2026-10-29", sourceAsOf: null, publishedAt: null, stale: false },
+    { platform: "CAFE24", scopeKey: "previous", date: "2026-10-28", sourceAsOf: "2026-10-28T01:02:00Z", publishedAt: "2026-10-28T02:03:00Z", stale: false }
+  ];
+  const html = renderToStaticMarkup(<DailyReportSheet data={data} date="2026-10-29" filters={filters} />);
+  assert.match(html, /저장된 플랫폼 원본 계산 결과/);
+  assert.match(html, /원본자료 기준 2026-10-29 10:02 · 통합 발행 2026-10-29 11:03/);
+  assert.match(html, /원본자료 기준 미확인 · 통합 발행 미확인/);
+  assert.match(html, /이전 성공 자료/); assert.match(html, /구글 원본 매출과 겹칠 수/);
+  assert.doesNotMatch(html, /2026-10-28 10:02|internal-store-id/);
+  assert.match(html, /1,200,000원/); assert.match(html, /140,000원/);
+});
+
 test("manually requested missing day is never silently replaced by prior known data", () => {
   const { filters, data } = fixture();
   const html = renderToStaticMarkup(<DailyReportSheet data={data} date="2026-10-30" filters={filters} />);

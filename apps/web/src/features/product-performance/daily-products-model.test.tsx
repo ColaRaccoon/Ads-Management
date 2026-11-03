@@ -201,6 +201,26 @@ test("table contains the required 16 columns, all products and a single final to
   assert.equal((html.match(/scope="colgroup"/g) ?? []).length, 5);
 });
 
+test("native detail metadata preserves all money and replaces the legacy profit reconstruction explanation", () => {
+  const { filters, response } = fixture();
+  filters.platforms = ["CAFE24", "META"];
+  const before = buildDailyProductsReport(response, "2026-10-29", filters);
+  response.summary.resultBasis = "NATIVE_FINAL";
+  response.summary.issues.push("STOREFRONT_GOOGLE_SALES_MAY_OVERLAP");
+  response.summary.asOfBySource = [
+    { platform: "CAFE24", scopeKey: "shop", date: "2026-10-29", sourceAsOf: null, publishedAt: "2026-10-29T00:00:00Z", stale: false },
+    { platform: "CAFE24", scopeKey: "shop", date: "2026-10-28", sourceAsOf: null, publishedAt: "2026-10-28T00:00:00Z", stale: false }
+  ];
+  const report = buildDailyProductsReport(response, "2026-10-29", filters);
+  assert.deepEqual(report.rows, before.rows); assert.deepEqual(report.totals, before.totals);
+  assert.equal(report.sourcePublicationTimes?.length, 1);
+  const html = renderToStaticMarkup(<DailyProductsTable report={report} />);
+  assert.match(html, /저장된 플랫폼 원본 계산 결과/);
+  assert.match(html, /통합 발행 2026-10-29 09:00/);
+  assert.match(html, /구글 원본 매출과 겹칠 수/);
+  assert.doesNotMatch(html, /광고비를 차감하지 않은 값|자사몰은 채널별 집계에서 Meta 판매/);
+});
+
 test("print filtering only annotates original rows and does not replace screen amounts or duplicate the table", () => {
   const { filters, response } = fixture();
   response.products.push({ ...response.products[0], productKey: "print-selected", productName: "출력 대상 제품" });

@@ -5,6 +5,8 @@ import { SalesMetricsService } from "../sales/sales-metrics.service";
 import { GoogleReadService } from "../google/google-read.service";
 import { assertBusinessDate } from "./domain/product-name-resolver";
 import type { NativeStorefrontResult, NativeStorefrontSnapshot } from "./types";
+import type { NativeStoredResult } from "./native-result-contract";
+import { readOriginalStorefrontResults } from "./native-original-storefront-results";
 
 export const NATIVE_STOREFRONT_CALCULATION_VERSION = "native-storefront-v1";
 const amount = (value: number | null) => value === null ? null : new Prisma.Decimal(value).toFixed(6);
@@ -51,7 +53,7 @@ function trackedReader(tx: Prisma.TransactionClient) {
  * sourceComplete is the Cafe24 adapter's selected-source evidence, including confirmed empty days;
  * it must not be the old unified cost-rule completeness flag. */
 export async function readNativeStorefrontResults(tx: Prisma.TransactionClient,
-  options: { date: string; scopeKey: string; sourceComplete: boolean }): Promise<NativeStorefrontSnapshot> {
+  options: { date: string; scopeKey: string; sourceComplete: boolean; includeOriginalResults?: boolean }): Promise<NativeStorefrontSnapshot & { nativeResults?: NativeStoredResult[] }> {
   assertBusinessDate(options.date);
   if (!options.scopeKey) throw new Error("NATIVE_STOREFRONT_SCOPE_REQUIRED");
   const reader = trackedReader(tx), prisma = reader.facade;
@@ -93,7 +95,8 @@ export async function readNativeStorefrontResults(tx: Prisma.TransactionClient,
       estimatedProfit: null, quantity: confirmed ? "0.000000" : null, complete: confirmed,
       issues: confirmed ? ["CONFIRMED_EMPTY_CHANNEL"] : ["SOURCE_COLLECTION_INCOMPLETE"] });
   }
-  return { calculationVersion: NATIVE_STOREFRONT_CALCULATION_VERSION,
-    sourceFingerprint: reader.fingerprint([options, process.env.DAILY_SYNC_FEATURE_ENABLED === "true", rows]),
+  const nativeResults = options.includeOriginalResults ? await readOriginalStorefrontResults(prisma, { ...options, ownsSource: ownsAds }) : undefined;
+  return { calculationVersion: NATIVE_STOREFRONT_CALCULATION_VERSION, ...(nativeResults ? { nativeResults } : {}),
+    sourceFingerprint: reader.fingerprint([options, process.env.DAILY_SYNC_FEATURE_ENABLED === "true", rows, nativeResults]),
     rows, issues: issueSet([...commonIssues, ...(!options.sourceComplete ? ["SOURCE_COLLECTION_INCOMPLETE"] : [])]) };
 }

@@ -44,7 +44,7 @@ function applicable(snapshot: ReportSnapshot, productName?: string) {
     return product ? scopePolicyComponents(snapshot.rules, product.id, platform, scopeKey, day, PLATFORM_COMPONENTS[platform]) : [...PLATFORM_COMPONENTS[platform]];
   };
   return { facts: facts.filter(f => components(f.platform, f.scopeKey, f.date).includes(
-    f.component === "SHIPPING_INCOME" ? "COMMON_EXPENSE" : f.component === "STOREFRONT_RESULT" ? "SALE" : f.component as ComponentKind)),
+    f.component === "SHIPPING_INCOME" ? "COMMON_EXPENSE" : f.component === "STOREFRONT_RESULT" || f.component === "NATIVE_RESULT" ? "SALE" : f.component as ComponentKind)),
   coverage: snapshot.coverage.map(c => components(c.platform, c.scopeKey, c.date).includes(c.component) ? c : { ...c, participation: "NOT_APPLICABLE" as const }) };
 }
 function period(scope: ReturnType<typeof applicable>, query: ReportQuery, from: string, to: string, productName?: string) {
@@ -138,12 +138,13 @@ export class UnifiedReportService {
         stale: c.collectionState === "STALE" || previous?.stale === true });
     }
     const envelope = { contractVersion: CONTRACT_VERSION,
+      ...(process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED === "true" ? { resultBasis: "NATIVE_FINAL" as const } : {}),
       selection: { selectedPlatforms: selection.selectedPlatforms, excludedPlatforms: selection.excludedPlatforms,
         scopeKeys: [...new Set(snapshot.scopes.map(s => s.scopeKey))].sort(), productName: query.productName ?? null,
         from: query.from, to: query.to, compareFrom: query.compareFrom, compareTo: query.compareTo, grain: query.grain, selectionHash: query.selectionHash },
       selectedPlatforms: selection.selectedPlatforms, excludedPlatforms: selection.excludedPlatforms,
       excludedByUser: selection.excludedPlatforms.map(platform => ({ platform, participation: "EXCLUDED_BY_USER" })),
-      scopeLabel: selection.scopeLabel, profitLabel: metricAvailability(current.coverage, query.platforms.length).state === "SALE_ONLY" ? "선택 범위 광고 전 이익" : selection.profitLabel,
+      scopeLabel: selection.scopeLabel, profitLabel: process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED === "true" ? "원본 순이익" : metricAvailability(current.coverage, query.platforms.length).state === "SALE_ONLY" ? "선택 범위 광고 전 이익" : selection.profitLabel,
       metricAvailability: metricAvailability(current.coverage, query.platforms.length),
       versions: pinnedVersions, latestConfigurationVersions: snapshot.versions, requestedCalculationVersion: REPORT_CALCULATION_VERSION,
       publishedVersions: snapshot.publications.map(p => ({ runId: p.runId, platform: p.platform, scopeKey: p.scopeKey, date: date(p.businessDate), versions: publicVersions(p.run.versions) })),

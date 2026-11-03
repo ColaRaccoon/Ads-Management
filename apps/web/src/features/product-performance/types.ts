@@ -25,6 +25,7 @@ export type Aggregate = { knownTotals: Totals; completeTotals: Totals; productPr
     unallocatedShippingIncome: string | null; unclassifiedRevenue: string | null; unclassifiedProfitBeforeAds: string | null };
   isEstimate: boolean; issues: string[] };
 export type Envelope = Aggregate & { contractVersion: string; snapshotHash: string;
+  resultBasis?: "NATIVE_FINAL";
   selection: { selectedPlatforms: Platform[]; excludedPlatforms: Platform[]; scopeKeys: string[]; productName: string | null;
     from: string; to: string; compareFrom: string; compareTo: string; grain: Grain; selectionHash: string };
   selectedPlatforms: Platform[]; excludedPlatforms: Platform[]; scopeLabel: string; profitLabel: string; metricAvailability: Availability;

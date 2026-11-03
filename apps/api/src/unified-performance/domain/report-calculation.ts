@@ -6,6 +6,7 @@ import { ExactDecimal as D, money, quantizeMoney } from "./decimal";
 import { normalizePlatforms, platformSelection } from "./platform-selection";
 import { allocateReportAmount } from "./report-allocation";
 import { overlayStorefrontResults } from "./storefront-report-overlay";
+import { prepareNativeResultFacts, summarizeNativeResults } from "./stored-result-projection";
 
 const uniq = (values: readonly string[]) => [...new Set(values)].sort();
 const sum = (values: readonly (string | null)[], empty: string | null = null) => {
@@ -65,7 +66,7 @@ export function prepareReportBatch(request: AdapterRequest, batch: AdapterBatch,
     const key = JSON.stringify([row.component, row.productName, row.saleUnitName, row.attribution, row.medium, row.marketplace, row.commonKind, row.currency]);
     groups.set(key, [...(groups.get(key) ?? []), row]);
   }
-  return [...groups.entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, values]) => ({ ...values[0],
+  const legacy = [...groups.entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, values]) => ({ ...values[0],
     factKey: createHash("sha256").update(key).digest("hex"), amountKrw: sum(values.map(value => value.amountKrw)),
     completeAmountKrw: allSum(values.map(value => value.completeAmountKrw)), profitBeforeAds: sum(values.map(value => value.profitBeforeAds)),
     completeProfitBeforeAds: allSum(values.map(value => value.completeProfitBeforeAds)), originalAmount: sum(values.map(value => value.originalAmount)),
@@ -73,6 +74,7 @@ export function prepareReportBatch(request: AdapterRequest, batch: AdapterBatch,
       persistedNetProfit: sum(values.map(value => value.persistedNetProfit ?? null)),
       persistedAdSpend: sum(values.map(value => value.persistedAdSpend ?? null)) } : {}),
     quantity: sum(values.map(value => value.quantity)), rowsCount: values.reduce((count, row) => count + row.rowsCount, 0), quality: quality(values.map(value => value.quality)) }));
+  return [...legacy, ...prepareNativeResultFacts(batch.nativeResults ?? [])];
 }
 
 const sourceFailure = (issues: readonly string[]) => issues.some(issue => /(?:READ_FAILED|NORMALIZATION_FAILED|SOURCE_SELECTION_REQUIRED|WITHHELD|NAVER_AD_AMOUNT_INVALID|NAVER_FAKE_PURCHASE_AMOUNT_INVALID|NAVER_DELIVERY_(?:COMPONENTS|COST|INCOME)_MISSING|NAVER_DELIVERY_AMOUNT_INVALID|PUBLISH_FAILED|SOURCE_READ_FAILED|FAILED_REBUILD)/.test(issue));
@@ -110,6 +112,7 @@ const subtotal = (before: string | null, ads: string | null, common: string | nu
 /** Input coverage must include expected source/day gaps synthesized from the authorized scope policy. */
 export function summarizeReport(facts: readonly PublishedReportFact[], coverage: readonly SourceCoverage[],
   options: { platforms: readonly Platform[]; productName?: string; omitMarketplaceMetrics?: boolean }): ReportSummary {
+  if (process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED === "true") return summarizeNativeResults(facts, coverage, options);
   const platforms = normalizePlatforms(options.platforms), platformAvailability = platformSelection(platforms).metricAvailability;
   facts = overlayStorefrontResults(facts);
   const scopeFacts = facts.filter(row => platforms.includes(row.platform));

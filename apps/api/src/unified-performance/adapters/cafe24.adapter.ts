@@ -278,7 +278,7 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
       await tx.$executeRaw(Prisma.sql`SET TRANSACTION READ ONLY`);
       const snapshot = await this.load(tx, request, date);
       const batch = normalizeCafe24Snapshot(request, snapshot);
-      const native = await this.readNative(tx, { date, scopeKey: request.scopeKeys[0], sourceComplete: snapshot.complete });
+      const native = await this.readNative(tx, { date, scopeKey: request.scopeKeys[0], sourceComplete: snapshot.complete, includeOriginalResults: true });
       native.rows = native.rows.map(row => {
         if (!row.productName) return row;
         const matches = snapshot.configuration.products.filter(product => product.active &&
@@ -286,6 +286,7 @@ export class Cafe24PerformanceAdapter implements SourceAdapter {
         return { ...row, productName: matches.length === 1 ? matches[0].canonicalName : row.productName };
       });
       batch.nativeStorefrontResults = native;
+      batch.nativeResults = native.nativeResults;
       batch.sourceFingerprint = hash([batch.sourceFingerprint, native.calculationVersion, native.sourceFingerprint]);
       batch.coverage = batch.coverage.map(row => ({ ...row, sourceFingerprint: batch.sourceFingerprint,
         // Collection evidence stays unchanged. Canonical cost gaps replace the incompatible legacy normalizer's gaps.

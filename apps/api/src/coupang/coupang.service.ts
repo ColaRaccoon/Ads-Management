@@ -3331,343 +3331,7 @@ export class CoupangService {
   }
 
   private async buildProductProfitRows(range: ReturnType<typeof parseDateRange>): Promise<ProductProfitRow[]> {
-    const [saleLines, adMetrics, manualPurchases, salesFeeRules] = await Promise.all([
-      this.prisma.coupangSaleLine.findMany({
-        where: {
-          isCurrent: true,
-          saleDate: { gte: range.fromDate, lte: range.toDate },
-          validationStatus: { not: RowValidationStatus.ERROR }
-        },
-        include: { product: true },
-        orderBy: [{ saleDate: "asc" }, { rowNumber: "asc" }]
-      }),
-      this.prisma.coupangAdMetric.findMany({
-        where: {
-          isCurrent: true,
-          metricDate: { gte: range.fromDate, lte: range.toDate },
-          validationStatus: { not: RowValidationStatus.ERROR }
-        },
-        include: { spendProduct: true, conversionProduct: true }
-      }),
-      this.prisma.coupangManualPurchase.findMany({
-        where: {
-          purchaseDate: { gte: range.fromDate, lte: range.toDate }
-        },
-        include: { product: true }
-      }),
-      this.prisma.coupangSalesFeeRule.findMany({
-        where: {
-          effectiveFrom: { lte: range.toDate },
-          OR: [{ effectiveTo: null }, { effectiveTo: { gte: range.fromDate } }]
-        },
-        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
-      })
-    ]);
-
-    const productIds = uniqueNonEmpty([
-      ...saleLines.map((line) => line.coupangProductId),
-      ...adMetrics.map((metric) => metric.spendProductId),
-      ...adMetrics.map((metric) => metric.conversionProductId),
-      ...manualPurchases.map((row) => row.coupangProductId)
-    ]);
-    const costRules =
-      productIds.length > 0
-        ? await this.prisma.coupangCostRule.findMany({
-            where: { coupangProductId: { in: productIds } },
-            orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
-          })
-        : [];
-    const products =
-      productIds.length > 0
-        ? await this.prisma.coupangProduct.findMany({ where: { id: { in: productIds } } })
-        : [];
-    const promotionPrices =
-      productIds.length > 0
-        ? await this.prisma.coupangPromotionPrice.findMany({
-            where: {
-              coupangProductId: { in: productIds },
-              promotionStartDate: { lte: range.toDate },
-              promotionEndDate: { gte: range.fromDate },
-              validationStatus: { not: RowValidationStatus.ERROR }
-            },
-            include: { batch: { select: { uploadedAt: true } } },
-            orderBy: [{ promotionStartDate: "desc" }, { createdAt: "desc" }]
-          })
-        : [];
-    const productById = new Map(products.map((product) => [product.id, product]));
-    const costRulesByProductId = groupBy(costRules, (rule) => rule.coupangProductId);
-    const promotionPricesByProductId = groupBy(promotionPrices, (promotion) => promotion.coupangProductId ?? "");
-    const reportedByProductDate = aggregateReportedSalesByProductDate(
-      saleLines.flatMap((line) => line.coupangProductId ? [{
-        productId: line.coupangProductId,
-        productName: line.product?.displayName ?? line.productName,
-        date: formatDateOnly(line.saleDate ?? range.toDate),
-        salesKrw: numberFrom(line.salesKrw),
-        cancelAmountKrw: numberFrom(line.cancelAmountKrw),
-        netSalesKrw: numberFrom(line.netSalesKrw),
-        salesQuantity: numberFrom(line.salesQuantity),
-        orderCount: line.orderCount,
-        saleMethod: line.saleMethod,
-        lineCount: 1
-      }] : [])
-    );
-    const manualByProductDate = aggregateManualPurchasesByProductDate(
-      manualPurchases
-        .filter((row) => row.quantity > 0)
-        .map((row) => ({
-          productId: row.coupangProductId,
-          date: formatDateOnly(row.purchaseDate ?? range.toDate),
-          quantity: row.quantity,
-          salesAmountKrw: nullableNumberFrom(row.salesAmountKrw),
-          salePriceKrw: nullableNumberFrom(row.salePriceKrw),
-          promotionPriceKrw: nullableNumberFrom(row.promotionPriceKrw),
-          baseSalePriceKrw: nullableNumberFrom(row.baseSalePriceKrw),
-          productCostKrw: nullableNumberFrom(row.productCostKrw),
-          vendorFeeKrw: nullableNumberFrom(row.vendorFeeTotalKrw),
-          coupangSalesFeeKrw: nullableNumberFrom(row.coupangSalesFeeKrw),
-          shippingCostKrw: nullableNumberFrom(row.shippingCostKrw),
-          otherCostKrw: nullableNumberFrom(row.otherCostKrw),
-          totalCostKrw: nullableNumberFrom(row.totalCostKrw),
-          saleMethod: row.saleMethod
-        }))
-    );
-
-    const adPerformanceByProductDate = new Map<string, AdPerformanceEntry>();
-    const salesAttributionByProductDate = new Map<string, SalesAttributionEntry>();
-    for (const metric of adMetrics) {
-      const date = formatDateOnly(metric.metricDate ?? range.toDate);
-      if (metric.spendProductId) {
-        const key = productDateKey(metric.spendProductId, date);
-        const current = adPerformanceByProductDate.get(key) ?? {
-          productId: metric.spendProductId,
-          date,
-          spendKrw: 0,
-          generatedSalesKrw: 0,
-          generatedQuantity: 0
-        };
-        current.spendKrw += numberFrom(metric.adSpendKrw);
-        current.generatedSalesKrw += numberFrom(metric.totalConversionSales1dKrw);
-        current.generatedQuantity += numberFrom(metric.totalSalesQuantity1d);
-        adPerformanceByProductDate.set(key, current);
-      }
-      if (metric.conversionProductId) {
-        const key = productDateKey(metric.conversionProductId, date);
-        const current = salesAttributionByProductDate.get(key) ?? {
-          productId: metric.conversionProductId,
-          date,
-          attributedSalesKrw: 0,
-          attributedQuantity: 0
-        };
-        current.attributedSalesKrw += numberFrom(metric.totalConversionSales1dKrw);
-        current.attributedQuantity += numberFrom(metric.totalSalesQuantity1d);
-        salesAttributionByProductDate.set(key, current);
-      }
-    }
-
-    const allProductDateKeys = new Set([
-      ...reportedByProductDate.keys(),
-      ...manualByProductDate.keys(),
-      ...adPerformanceByProductDate.keys(),
-      ...salesAttributionByProductDate.keys()
-    ]);
-    const dailyRows: ProductProfitRow[] = Array.from(allProductDateKeys).map((key) => {
-        const reportedEntry = reportedByProductDate.get(key);
-        const manual = manualByProductDate.get(key) ?? null;
-        const performanceEntry = adPerformanceByProductDate.get(key);
-        const attributionEntry = salesAttributionByProductDate.get(key);
-        const productId =
-          reportedEntry?.productId ??
-          manual?.productId ??
-          performanceEntry?.productId ??
-          attributionEntry?.productId ??
-          "";
-        const dateText =
-          reportedEntry?.date ??
-          manual?.date ??
-          performanceEntry?.date ??
-          attributionEntry?.date ??
-          range.to;
-        const date = asDateOnly(dateText);
-        const productName = productById.get(productId)?.displayName ?? reportedEntry?.productName ?? "Coupang Product";
-        const reported = reportedEntry ?? emptyReportedSalesFacts(productId, dateText, productName);
-        const performance = performanceEntry ?? {
-          productId,
-          date: dateText,
-          spendKrw: 0,
-          generatedSalesKrw: 0,
-          generatedQuantity: 0
-        };
-        const attribution = attributionEntry ?? {
-          productId,
-          date: dateText,
-          attributedSalesKrw: 0,
-          attributedQuantity: 0
-        };
-        const adSpendKrw = performance.spendKrw;
-        const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], date);
-        const salesFeeRule = findSalesFeeRuleForDate(salesFeeRules, date);
-        const resolvedPrice = resolveCoupangSalePrice({
-          baseSalePriceKrw: costRule ? numberFrom(costRule.salePriceKrw) : null,
-          promotions: (promotionPricesByProductId.get(productId) ?? []).map((promotion) => ({
-            promotionPriceKrw: numberFrom(promotion.promotionPriceKrw),
-            promotionStartDate: promotion.promotionStartDate,
-            promotionEndDate: promotion.promotionEndDate,
-            promotionStatus: promotion.promotionStatus,
-            validationErrors: promotion.validationErrors
-          })),
-          date
-        });
-        const actual = adjustReportedSalesForManualPurchase(reported, manual);
-        const normalCostBasisSegments = actual.isValid
-          ? actual.segments
-          : reported.segments;
-        const normalCostBasisSellerSalesQuantity = normalCostBasisSegments.find(
-          (segment) => segment.fulfillmentMethod === "SELLER"
-        )?.salesQuantity ?? 0;
-        const normalCostBasisGrowthSalesQuantity = normalCostBasisSegments.find(
-          (segment) => segment.fulfillmentMethod === "GROWTH"
-        )?.salesQuantity ?? 0;
-        const normalAttempt = calculateNormalCoupangProfit({
-          actual,
-          cost: costRule ? costInput(costRule) : null,
-          ads: {
-            adSpendKrw,
-            adGeneratedSalesKrw: performance.generatedSalesKrw,
-            attributedConversionSalesKrw: attribution.attributedSalesKrw,
-            adGeneratedQuantity: performance.generatedQuantity,
-            attributedConversionQuantity: attribution.attributedQuantity
-          },
-          salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
-        });
-        const normalReference = actual.isValid
-          ? normalAttempt
-          : calculateNormalCoupangProfit({
-              actual: {
-                salesKrw: reported.salesKrw,
-                netSalesKrw: reported.netSalesKrw,
-                salesQuantity: reported.salesQuantity,
-                orderCount: reported.orderCount,
-                segments: reported.segments,
-                warnings: [],
-                isValid: true,
-                isManualOnly: false
-              },
-              cost: costRule ? costInput(costRule) : null,
-              ads: {
-                adSpendKrw,
-                adGeneratedSalesKrw: performance.generatedSalesKrw,
-                attributedConversionSalesKrw: attribution.attributedSalesKrw,
-                adGeneratedQuantity: performance.generatedQuantity,
-                attributedConversionQuantity: attribution.attributedQuantity
-              },
-              salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
-            });
-        const normal = actual.isValid
-          ? normalAttempt
-          : actual.isManualOnly
-            ? normalAttempt
-            : { ...normalReference, calculated: null };
-        const initialManualPart = calculateManualPurchaseProfitAdjustment(manual);
-        const manualPart = manual && !actual.isValid && !actual.isManualOnly
-          ? { ...initialManualPart, status: "INCOMPLETE" as const, marginAdjustmentKrw: null }
-          : initialManualPart;
-        const combined = combineCoupangProfitParts({ normal, manual: manualPart });
-        const actualOrganicSalesKrw =
-          actual.netSalesKrw === null
-            ? null
-            : actual.netSalesKrw - attribution.attributedSalesKrw;
-        const reportedOrganicSalesKrw =
-          reported.netSalesKrw - attribution.attributedSalesKrw;
-        const displaySaleMethods = uniqueNonEmpty([...reported.saleMethods, ...(manual?.saleMethods ?? [])]);
-        const requiresNormalCostRule = hasCoupangSalesSegmentActivity(normalCostBasisSegments);
-        const dailyComplete = combined.calculationStatus === "COMPLETE";
-        return {
-          productId,
-          productName,
-          saleMethod: displaySaleMethods.length > 1 ? "MIXED" : displaySaleMethods[0] ?? null,
-          matchedSalesLineCount: reported.lineCount,
-          reportedSalesQuantity: reported.salesQuantity,
-          reportedOrderCount: reported.orderCount,
-          reportedSalesKrw: reported.salesKrw,
-          reportedNetSalesKrw: reported.netSalesKrw,
-          salesQuantity: actual.salesQuantity,
-          orderCount: actual.orderCount,
-          salesKrw: actual.salesKrw,
-          cancelAmountKrw: reported.cancelAmountKrw,
-          netSalesKrw: actual.netSalesKrw,
-          salePriceKrw: resolvedPrice.salePriceKrw,
-          baseSalePriceKrw: resolvedPrice.baseSalePriceKrw,
-          promotionPriceKrw: resolvedPrice.promotionPriceKrw,
-          priceSource: resolvedPrice.priceSource,
-          priceWarnings: resolvedPrice.priceWarnings,
-          productCostKrw: normal.calculated?.productCostKrw ?? null,
-          salesFeeKrw: normal.calculated?.salesFeeKrw ?? null,
-          shippingCostKrw: normal.calculated?.shippingCostKrw ?? null,
-          sellerSalesQuantity: normal.calculated?.sellerSalesQuantity ?? normalCostBasisSellerSalesQuantity,
-          growthSalesQuantity: normal.calculated?.growthSalesQuantity ?? normalCostBasisGrowthSalesQuantity,
-          sellerShippingCostKrw: normal.calculated?.sellerShippingCostKrw ?? null,
-          hanaroShippingCostKrw: normal.calculated?.hanaroShippingCostKrw ?? null,
-          growthInboundCostKrw: normal.calculated?.growthInboundCostKrw ?? null,
-          growthShippingCostKrw: normal.calculated?.growthShippingCostKrw ?? null,
-          totalLogisticsCostKrw: normal.calculated?.totalLogisticsCostKrw ?? null,
-          returnCostKrw: normal.calculated?.returnCostKrw ?? null,
-          extraCostKrw: normal.calculated?.extraCostKrw ?? null,
-          vatKrw: normal.calculated?.vatKrw ?? null,
-          manualPurchaseSalesKrw: manual ? manual.salesAmountKrw : 0,
-          manualPurchaseQuantity: manual?.quantity ?? 0,
-          manualPurchaseProductCostKrw: manual ? manual.productCostKrw : 0,
-          manualPurchaseVendorFeeKrw: manual ? manual.vendorFeeKrw : 0,
-          manualPurchaseCoupangSalesFeeKrw: manual ? manual.coupangSalesFeeKrw : 0,
-          manualPurchaseShippingCostKrw: manual ? manual.shippingCostKrw : 0,
-          manualPurchaseOtherCostKrw: manual ? manual.otherCostKrw : 0,
-          manualPurchaseTotalCostKrw: manual ? manual.totalCostKrw : 0,
-          actualSalesKrw: actual.salesKrw,
-          actualNetSalesKrw: actual.netSalesKrw,
-          actualSalesQuantity: actual.salesQuantity,
-          normalCalculationStatus: normal.status,
-          manualCalculationStatus: manualPart.status,
-          calculationStatus: combined.calculationStatus,
-          adSpendKrw,
-          adGeneratedSalesKrw: performance.generatedSalesKrw,
-          adGeneratedQuantity: performance.generatedQuantity,
-          attributedConversionSalesKrw: attribution.attributedSalesKrw,
-          attributedConversionQuantity: attribution.attributedQuantity,
-          organicSalesKrw: actualOrganicSalesKrw,
-          reportedOrganicSalesKrw,
-          actualOrganicSalesKrw,
-          normalMarginKrw: actual.isValid
-            ? normalAttempt.calculated?.marginKrw ?? null
-            : null,
-          totalCostKrw: combined.totalCostKrw,
-          marginKrw: combined.marginKrw,
-          knownTotalCostKrw: dailyComplete ? combined.totalCostKrw ?? 0 : 0,
-          knownMarginKrw: dailyComplete ? combined.marginKrw ?? 0 : 0,
-          completeProductCount: dailyComplete ? 1 : 0,
-          incompleteProductCount: dailyComplete ? 0 : 1,
-          excludedNetSalesKrw: dailyComplete
-            ? 0
-            : (actual.isValid ? actual.netSalesKrw ?? reported.netSalesKrw : reported.netSalesKrw),
-          excludedSalesQuantity: dailyComplete
-            ? 0
-            : (actual.isValid ? actual.salesQuantity ?? reported.salesQuantity : reported.salesQuantity),
-          incompleteNormalCount: normal.status === "INCOMPLETE" ? 1 : 0,
-          incompleteManualCount: manualPart.status === "INCOMPLETE" ? 1 : 0,
-          marginRate: combined.marginKrw === null || actual.netSalesKrw === null ? null : safeDivide(combined.marginKrw, actual.netSalesKrw),
-          roas: safeDivide(performance.generatedSalesKrw, adSpendKrw),
-          warnings: uniqueNonEmpty([
-            ...actual.warnings,
-            ...normal.warnings,
-            ...manualPart.warnings,
-            ...resolvedPrice.priceWarnings,
-            ...(actualOrganicSalesKrw !== null && actualOrganicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : [])
-          ]),
-          ruleStatus: !costRule && requiresNormalCostRule ? "MISSING_COST_RULE" as const : "OK" as const
-        };
-      });
-    const dailyRowsByProductId = groupBy(dailyRows, (row) => row.productId);
-    return Array.from(dailyRowsByProductId.values())
-      .map(aggregateCoupangProductDateRows)
-      .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName) || a.productId.localeCompare(b.productId));
+    return buildCoupangNativeProductProfitRows(this.prisma, range);
   }
 
   private async groupProductProfitRows(rows: ProductProfitRow[]): Promise<ProductProfitRow[]> {
@@ -6423,17 +6087,6 @@ function commonNullableNumber(values: Array<number | null | undefined>): number 
 type CoupangCostRuleForSelection = Pick<
   Prisma.CoupangCostRuleGetPayload<Record<string, never>>,
   | "id"
-  | "supplyPriceKrw"
-  | "productCostKrw"
-  | "salesFeeRate"
-  | "salesFeeKrw"
-  | "sellerShippingFeeKrw"
-  | "hanaroShippingFeeKrw"
-  | "growthInboundFeeKrw"
-  | "growthShippingFeeKrw"
-  | "returnRate"
-  | "returnCostPerUnitKrw"
-  | "extraCostKrw"
   | "effectiveFrom"
   | "effectiveTo"
   | "createdAt"
@@ -6452,7 +6105,7 @@ type CoupangSalesFeeRuleForSelection = Pick<
   "id" | "salesFeeRate" | "effectiveFrom" | "effectiveTo" | "note" | "createdAt" | "updatedAt"
 >;
 
-export function findSalesFeeRuleForDate<T extends CoupangSalesFeeRuleForSelection>(rules: T[], date: Date): T | null {
+export function findSalesFeeRuleForDate<T extends Pick<CoupangSalesFeeRuleForSelection, "id" | "effectiveFrom" | "effectiveTo" | "createdAt">>(rules: T[], date: Date): T | null {
   return (
     rules
       .filter((rule) => rule.effectiveFrom <= date && (!rule.effectiveTo || rule.effectiveTo >= date))
@@ -6490,7 +6143,9 @@ function compareCoupangCostRuleForSelection(a: CoupangCostRuleForSelection, b: C
   );
 }
 
-function costInput(rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>): CoupangCostInput {
+function costInput(rule: Pick<Prisma.CoupangCostRuleGetPayload<Record<string, never>>,
+  "salePriceKrw" | "supplyPriceKrw" | "productCostKrw" | "sellerShippingFeeKrw" | "hanaroShippingFeeKrw" |
+  "growthInboundFeeKrw" | "growthShippingFeeKrw" | "returnRate" | "returnCostPerUnitKrw" | "extraCostKrw">): CoupangCostInput {
   return {
     salePriceKrw: numberFrom(rule.salePriceKrw),
     supplyPriceKrw: numberFrom(rule.supplyPriceKrw),
@@ -6503,4 +6158,369 @@ function costInput(rule: Prisma.CoupangCostRuleGetPayload<Record<string, never>>
     returnCostPerUnitKrw: numberFrom(rule.returnCostPerUnitKrw),
     extraCostKrw: numberFrom(rule.extraCostKrw)
   };
+}
+
+/** Shared source calculation: native GETs and the publication worker use this exact pipeline. */
+export async function buildCoupangNativeProductProfitRows(
+  client: Prisma.TransactionClient,
+  range: ReturnType<typeof parseDateRange>,
+  onSourceUpdatedAt?: (value: string | null) => void
+): Promise<ProductProfitRow[]> {
+  const [saleLines, adMetrics, manualPurchases, salesFeeRules] = await Promise.all([
+    client.coupangSaleLine.findMany({
+      where: {
+        isCurrent: true,
+        saleDate: { gte: range.fromDate, lte: range.toDate },
+        validationStatus: { not: RowValidationStatus.ERROR }
+      },
+      select: { coupangProductId: true, productName: true, saleDate: true, salesKrw: true, cancelAmountKrw: true,
+        netSalesKrw: true, salesQuantity: true, orderCount: true, saleMethod: true, createdAt: true,
+        product: { select: { displayName: true } } },
+      orderBy: [{ saleDate: "asc" }, { rowNumber: "asc" }]
+    }),
+    client.coupangAdMetric.findMany({
+      where: {
+        isCurrent: true,
+        metricDate: { gte: range.fromDate, lte: range.toDate },
+        validationStatus: { not: RowValidationStatus.ERROR }
+      },
+      select: { metricDate: true, spendProductId: true, conversionProductId: true, adSpendKrw: true,
+        totalConversionSales1dKrw: true, totalSalesQuantity1d: true, createdAt: true }
+    }),
+    client.coupangManualPurchase.findMany({
+      where: {
+        purchaseDate: { gte: range.fromDate, lte: range.toDate }
+      },
+      select: { coupangProductId: true, purchaseDate: true, quantity: true, salesAmountKrw: true,
+        salePriceKrw: true, promotionPriceKrw: true, baseSalePriceKrw: true, productCostKrw: true,
+        vendorFeeTotalKrw: true, coupangSalesFeeKrw: true, shippingCostKrw: true, otherCostKrw: true,
+        totalCostKrw: true, saleMethod: true, createdAt: true, updatedAt: true }
+    }),
+    client.coupangSalesFeeRule.findMany({
+      where: {
+        effectiveFrom: { lte: range.toDate },
+        OR: [{ effectiveTo: null }, { effectiveTo: { gte: range.fromDate } }]
+      },
+      select: { id: true, salesFeeRate: true, effectiveFrom: true, effectiveTo: true, createdAt: true, updatedAt: true },
+      orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+    })
+  ]);
+
+  const productIds = uniqueNonEmpty([
+    ...saleLines.map((line) => line.coupangProductId),
+    ...adMetrics.map((metric) => metric.spendProductId),
+    ...adMetrics.map((metric) => metric.conversionProductId),
+    ...manualPurchases.map((row) => row.coupangProductId)
+  ]);
+  const costRules =
+    productIds.length > 0
+      ? await client.coupangCostRule.findMany({
+          where: { coupangProductId: { in: productIds } },
+          select: { id: true, coupangProductId: true, effectiveFrom: true, effectiveTo: true, createdAt: true, updatedAt: true,
+            salePriceKrw: true, supplyPriceKrw: true, productCostKrw: true, sellerShippingFeeKrw: true, hanaroShippingFeeKrw: true,
+            growthInboundFeeKrw: true, growthShippingFeeKrw: true, returnRate: true, returnCostPerUnitKrw: true, extraCostKrw: true },
+          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }]
+        })
+      : [];
+  const products =
+    productIds.length > 0
+      ? await client.coupangProduct.findMany({ where: { id: { in: productIds } },
+          select: { id: true, displayName: true, createdAt: true, updatedAt: true } })
+      : [];
+  const promotionPrices =
+    productIds.length > 0
+      ? await client.coupangPromotionPrice.findMany({
+          where: {
+            coupangProductId: { in: productIds },
+            promotionStartDate: { lte: range.toDate },
+            promotionEndDate: { gte: range.fromDate },
+            validationStatus: { not: RowValidationStatus.ERROR }
+          },
+          select: { id: true, coupangProductId: true, promotionPriceKrw: true, promotionStartDate: true,
+            promotionEndDate: true, promotionStatus: true, validationErrors: true, createdAt: true },
+          orderBy: [{ promotionStartDate: "desc" }, { createdAt: "desc" }]
+        })
+      : [];
+  if (onSourceUpdatedAt) {
+    const sourceTimes = [...saleLines, ...adMetrics, ...manualPurchases, ...salesFeeRules,
+      ...costRules, ...products, ...promotionPrices].flatMap((row) => {
+        const timestamps = row as { createdAt?: Date; updatedAt?: Date };
+        return [timestamps.createdAt, timestamps.updatedAt].filter((value): value is Date => value instanceof Date);
+      });
+    onSourceUpdatedAt(sourceTimes.length ? new Date(sourceTimes.reduce((latest, value) => Math.max(latest, value.getTime()), -Infinity)).toISOString() : null);
+  }
+  const productById = new Map(products.map((product) => [product.id, product]));
+  const costRulesByProductId = groupBy(costRules, (rule) => rule.coupangProductId);
+  const promotionPricesByProductId = groupBy(promotionPrices, (promotion) => promotion.coupangProductId ?? "");
+  const reportedByProductDate = aggregateReportedSalesByProductDate(
+    saleLines.flatMap((line) => line.coupangProductId ? [{
+      productId: line.coupangProductId,
+      productName: line.product?.displayName ?? line.productName,
+      date: formatDateOnly(line.saleDate ?? range.toDate),
+      salesKrw: numberFrom(line.salesKrw),
+      cancelAmountKrw: numberFrom(line.cancelAmountKrw),
+      netSalesKrw: numberFrom(line.netSalesKrw),
+      salesQuantity: numberFrom(line.salesQuantity),
+      orderCount: line.orderCount,
+      saleMethod: line.saleMethod,
+      lineCount: 1
+    }] : [])
+  );
+  const manualByProductDate = aggregateManualPurchasesByProductDate(
+    manualPurchases
+      .filter((row) => row.quantity > 0)
+      .map((row) => ({
+        productId: row.coupangProductId,
+        date: formatDateOnly(row.purchaseDate ?? range.toDate),
+        quantity: row.quantity,
+        salesAmountKrw: nullableNumberFrom(row.salesAmountKrw),
+        salePriceKrw: nullableNumberFrom(row.salePriceKrw),
+        promotionPriceKrw: nullableNumberFrom(row.promotionPriceKrw),
+        baseSalePriceKrw: nullableNumberFrom(row.baseSalePriceKrw),
+        productCostKrw: nullableNumberFrom(row.productCostKrw),
+        vendorFeeKrw: nullableNumberFrom(row.vendorFeeTotalKrw),
+        coupangSalesFeeKrw: nullableNumberFrom(row.coupangSalesFeeKrw),
+        shippingCostKrw: nullableNumberFrom(row.shippingCostKrw),
+        otherCostKrw: nullableNumberFrom(row.otherCostKrw),
+        totalCostKrw: nullableNumberFrom(row.totalCostKrw),
+        saleMethod: row.saleMethod
+      }))
+  );
+
+  const adPerformanceByProductDate = new Map<string, AdPerformanceEntry>();
+  const salesAttributionByProductDate = new Map<string, SalesAttributionEntry>();
+  for (const metric of adMetrics) {
+    const date = formatDateOnly(metric.metricDate ?? range.toDate);
+    if (metric.spendProductId) {
+      const key = productDateKey(metric.spendProductId, date);
+      const current = adPerformanceByProductDate.get(key) ?? {
+        productId: metric.spendProductId,
+        date,
+        spendKrw: 0,
+        generatedSalesKrw: 0,
+        generatedQuantity: 0
+      };
+      current.spendKrw += numberFrom(metric.adSpendKrw);
+      current.generatedSalesKrw += numberFrom(metric.totalConversionSales1dKrw);
+      current.generatedQuantity += numberFrom(metric.totalSalesQuantity1d);
+      adPerformanceByProductDate.set(key, current);
+    }
+    if (metric.conversionProductId) {
+      const key = productDateKey(metric.conversionProductId, date);
+      const current = salesAttributionByProductDate.get(key) ?? {
+        productId: metric.conversionProductId,
+        date,
+        attributedSalesKrw: 0,
+        attributedQuantity: 0
+      };
+      current.attributedSalesKrw += numberFrom(metric.totalConversionSales1dKrw);
+      current.attributedQuantity += numberFrom(metric.totalSalesQuantity1d);
+      salesAttributionByProductDate.set(key, current);
+    }
+  }
+
+  const allProductDateKeys = new Set([
+    ...reportedByProductDate.keys(),
+    ...manualByProductDate.keys(),
+    ...adPerformanceByProductDate.keys(),
+    ...salesAttributionByProductDate.keys()
+  ]);
+  const dailyRows: ProductProfitRow[] = Array.from(allProductDateKeys).map((key) => {
+      const reportedEntry = reportedByProductDate.get(key);
+      const manual = manualByProductDate.get(key) ?? null;
+      const performanceEntry = adPerformanceByProductDate.get(key);
+      const attributionEntry = salesAttributionByProductDate.get(key);
+      const productId =
+        reportedEntry?.productId ??
+        manual?.productId ??
+        performanceEntry?.productId ??
+        attributionEntry?.productId ??
+        "";
+      const dateText =
+        reportedEntry?.date ??
+        manual?.date ??
+        performanceEntry?.date ??
+        attributionEntry?.date ??
+        range.to;
+      const date = asDateOnly(dateText);
+      const productName = productById.get(productId)?.displayName ?? reportedEntry?.productName ?? "Coupang Product";
+      const reported = reportedEntry ?? emptyReportedSalesFacts(productId, dateText, productName);
+      const performance = performanceEntry ?? {
+        productId,
+        date: dateText,
+        spendKrw: 0,
+        generatedSalesKrw: 0,
+        generatedQuantity: 0
+      };
+      const attribution = attributionEntry ?? {
+        productId,
+        date: dateText,
+        attributedSalesKrw: 0,
+        attributedQuantity: 0
+      };
+      const adSpendKrw = performance.spendKrw;
+      const costRule = findRuleForDate(costRulesByProductId.get(productId) ?? [], date);
+      const salesFeeRule = findSalesFeeRuleForDate(salesFeeRules, date);
+      const resolvedPrice = resolveCoupangSalePrice({
+        baseSalePriceKrw: costRule ? numberFrom(costRule.salePriceKrw) : null,
+        promotions: (promotionPricesByProductId.get(productId) ?? []).map((promotion) => ({
+          promotionPriceKrw: numberFrom(promotion.promotionPriceKrw),
+          promotionStartDate: promotion.promotionStartDate,
+          promotionEndDate: promotion.promotionEndDate,
+          promotionStatus: promotion.promotionStatus,
+          validationErrors: promotion.validationErrors
+        })),
+        date
+      });
+      const actual = adjustReportedSalesForManualPurchase(reported, manual);
+      const normalCostBasisSegments = actual.isValid
+        ? actual.segments
+        : reported.segments;
+      const normalCostBasisSellerSalesQuantity = normalCostBasisSegments.find(
+        (segment) => segment.fulfillmentMethod === "SELLER"
+      )?.salesQuantity ?? 0;
+      const normalCostBasisGrowthSalesQuantity = normalCostBasisSegments.find(
+        (segment) => segment.fulfillmentMethod === "GROWTH"
+      )?.salesQuantity ?? 0;
+      const normalAttempt = calculateNormalCoupangProfit({
+        actual,
+        cost: costRule ? costInput(costRule) : null,
+        ads: {
+          adSpendKrw,
+          adGeneratedSalesKrw: performance.generatedSalesKrw,
+          attributedConversionSalesKrw: attribution.attributedSalesKrw,
+          adGeneratedQuantity: performance.generatedQuantity,
+          attributedConversionQuantity: attribution.attributedQuantity
+        },
+        salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
+      });
+      const normalReference = actual.isValid
+        ? normalAttempt
+        : calculateNormalCoupangProfit({
+            actual: {
+              salesKrw: reported.salesKrw,
+              netSalesKrw: reported.netSalesKrw,
+              salesQuantity: reported.salesQuantity,
+              orderCount: reported.orderCount,
+              segments: reported.segments,
+              warnings: [],
+              isValid: true,
+              isManualOnly: false
+            },
+            cost: costRule ? costInput(costRule) : null,
+            ads: {
+              adSpendKrw,
+              adGeneratedSalesKrw: performance.generatedSalesKrw,
+              attributedConversionSalesKrw: attribution.attributedSalesKrw,
+              adGeneratedQuantity: performance.generatedQuantity,
+              attributedConversionQuantity: attribution.attributedQuantity
+            },
+            salesFeeRate: salesFeeRule ? numberFrom(salesFeeRule.salesFeeRate) : null
+          });
+      const normal = actual.isValid
+        ? normalAttempt
+        : actual.isManualOnly
+          ? normalAttempt
+          : { ...normalReference, calculated: null };
+      const initialManualPart = calculateManualPurchaseProfitAdjustment(manual);
+      const manualPart = manual && !actual.isValid && !actual.isManualOnly
+        ? { ...initialManualPart, status: "INCOMPLETE" as const, marginAdjustmentKrw: null }
+        : initialManualPart;
+      const combined = combineCoupangProfitParts({ normal, manual: manualPart });
+      const actualOrganicSalesKrw =
+        actual.netSalesKrw === null
+          ? null
+          : actual.netSalesKrw - attribution.attributedSalesKrw;
+      const reportedOrganicSalesKrw =
+        reported.netSalesKrw - attribution.attributedSalesKrw;
+      const displaySaleMethods = uniqueNonEmpty([...reported.saleMethods, ...(manual?.saleMethods ?? [])]);
+      const requiresNormalCostRule = hasCoupangSalesSegmentActivity(normalCostBasisSegments);
+      const dailyComplete = combined.calculationStatus === "COMPLETE";
+      return {
+        productId,
+        productName,
+        saleMethod: displaySaleMethods.length > 1 ? "MIXED" : displaySaleMethods[0] ?? null,
+        matchedSalesLineCount: reported.lineCount,
+        reportedSalesQuantity: reported.salesQuantity,
+        reportedOrderCount: reported.orderCount,
+        reportedSalesKrw: reported.salesKrw,
+        reportedNetSalesKrw: reported.netSalesKrw,
+        salesQuantity: actual.salesQuantity,
+        orderCount: actual.orderCount,
+        salesKrw: actual.salesKrw,
+        cancelAmountKrw: reported.cancelAmountKrw,
+        netSalesKrw: actual.netSalesKrw,
+        salePriceKrw: resolvedPrice.salePriceKrw,
+        baseSalePriceKrw: resolvedPrice.baseSalePriceKrw,
+        promotionPriceKrw: resolvedPrice.promotionPriceKrw,
+        priceSource: resolvedPrice.priceSource,
+        priceWarnings: resolvedPrice.priceWarnings,
+        productCostKrw: normal.calculated?.productCostKrw ?? null,
+        salesFeeKrw: normal.calculated?.salesFeeKrw ?? null,
+        shippingCostKrw: normal.calculated?.shippingCostKrw ?? null,
+        sellerSalesQuantity: normal.calculated?.sellerSalesQuantity ?? normalCostBasisSellerSalesQuantity,
+        growthSalesQuantity: normal.calculated?.growthSalesQuantity ?? normalCostBasisGrowthSalesQuantity,
+        sellerShippingCostKrw: normal.calculated?.sellerShippingCostKrw ?? null,
+        hanaroShippingCostKrw: normal.calculated?.hanaroShippingCostKrw ?? null,
+        growthInboundCostKrw: normal.calculated?.growthInboundCostKrw ?? null,
+        growthShippingCostKrw: normal.calculated?.growthShippingCostKrw ?? null,
+        totalLogisticsCostKrw: normal.calculated?.totalLogisticsCostKrw ?? null,
+        returnCostKrw: normal.calculated?.returnCostKrw ?? null,
+        extraCostKrw: normal.calculated?.extraCostKrw ?? null,
+        vatKrw: normal.calculated?.vatKrw ?? null,
+        manualPurchaseSalesKrw: manual ? manual.salesAmountKrw : 0,
+        manualPurchaseQuantity: manual?.quantity ?? 0,
+        manualPurchaseProductCostKrw: manual ? manual.productCostKrw : 0,
+        manualPurchaseVendorFeeKrw: manual ? manual.vendorFeeKrw : 0,
+        manualPurchaseCoupangSalesFeeKrw: manual ? manual.coupangSalesFeeKrw : 0,
+        manualPurchaseShippingCostKrw: manual ? manual.shippingCostKrw : 0,
+        manualPurchaseOtherCostKrw: manual ? manual.otherCostKrw : 0,
+        manualPurchaseTotalCostKrw: manual ? manual.totalCostKrw : 0,
+        actualSalesKrw: actual.salesKrw,
+        actualNetSalesKrw: actual.netSalesKrw,
+        actualSalesQuantity: actual.salesQuantity,
+        normalCalculationStatus: normal.status,
+        manualCalculationStatus: manualPart.status,
+        calculationStatus: combined.calculationStatus,
+        adSpendKrw,
+        adGeneratedSalesKrw: performance.generatedSalesKrw,
+        adGeneratedQuantity: performance.generatedQuantity,
+        attributedConversionSalesKrw: attribution.attributedSalesKrw,
+        attributedConversionQuantity: attribution.attributedQuantity,
+        organicSalesKrw: actualOrganicSalesKrw,
+        reportedOrganicSalesKrw,
+        actualOrganicSalesKrw,
+        normalMarginKrw: actual.isValid
+          ? normalAttempt.calculated?.marginKrw ?? null
+          : null,
+        totalCostKrw: combined.totalCostKrw,
+        marginKrw: combined.marginKrw,
+        knownTotalCostKrw: dailyComplete ? combined.totalCostKrw ?? 0 : 0,
+        knownMarginKrw: dailyComplete ? combined.marginKrw ?? 0 : 0,
+        completeProductCount: dailyComplete ? 1 : 0,
+        incompleteProductCount: dailyComplete ? 0 : 1,
+        excludedNetSalesKrw: dailyComplete
+          ? 0
+          : (actual.isValid ? actual.netSalesKrw ?? reported.netSalesKrw : reported.netSalesKrw),
+        excludedSalesQuantity: dailyComplete
+          ? 0
+          : (actual.isValid ? actual.salesQuantity ?? reported.salesQuantity : reported.salesQuantity),
+        incompleteNormalCount: normal.status === "INCOMPLETE" ? 1 : 0,
+        incompleteManualCount: manualPart.status === "INCOMPLETE" ? 1 : 0,
+        marginRate: combined.marginKrw === null || actual.netSalesKrw === null ? null : safeDivide(combined.marginKrw, actual.netSalesKrw),
+        roas: safeDivide(performance.generatedSalesKrw, adSpendKrw),
+        warnings: uniqueNonEmpty([
+          ...actual.warnings,
+          ...normal.warnings,
+          ...manualPart.warnings,
+          ...resolvedPrice.priceWarnings,
+          ...(actualOrganicSalesKrw !== null && actualOrganicSalesKrw < 0 ? ["AD_CONVERSION_EXCEEDS_NET_SALES"] : [])
+        ]),
+        ruleStatus: !costRule && requiresNormalCostRule ? "MISSING_COST_RULE" as const : "OK" as const
+      };
+    });
+  const dailyRowsByProductId = groupBy(dailyRows, (row) => row.productId);
+  return Array.from(dailyRowsByProductId.values())
+    .map(aggregateCoupangProductDateRows)
+    .sort((a, b) => compareNullableNumbersDesc(a.actualNetSalesKrw, b.actualNetSalesKrw) || a.productName.localeCompare(b.productName) || a.productId.localeCompare(b.productId));
 }

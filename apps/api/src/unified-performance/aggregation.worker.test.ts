@@ -8,6 +8,7 @@ import type { UnifiedManagementRepository } from "./management.repository";
 import type { PrismaService } from "../common/prisma.service";
 import type { AdapterBatch, AdapterRequest, Platform, SourceAdapter, SourceCoverage } from "./types";
 import type { ReportFact } from "./report-contract";
+import type { NativeResultGroup, NativeStoredResult } from "./native-result-contract";
 
 const claim = (platform: Platform = "META", scopeKey = "scope"): AggregationClaim => ({ platform, scopeKey, date: "2026-10-26", runId: randomUUID(), token: randomUUID(), previousRunId: null });
 const batch = (): AdapterBatch => ({ sales: [], adSpends: [], commonExpenses: [], coverage: [], sourceControlTotals: [], nextCursor: null, sourceFingerprint: "fingerprint" });
@@ -25,6 +26,18 @@ async function enabled(work: () => Promise<void>) {
   process.env.UNIFIED_PERFORMANCE_ENABLED = "true";
   try { await work(); } finally { if (previous === undefined) delete process.env.UNIFIED_PERFORMANCE_ENABLED; else process.env.UNIFIED_PERFORMANCE_ENABLED = previous; }
 }
+async function nativeRequired(work: () => Promise<void>) {
+  const previous = process.env.UNIFIED_NATIVE_RESULTS_WRITE_REQUIRED;
+  process.env.UNIFIED_NATIVE_RESULTS_WRITE_REQUIRED = "true";
+  try { await enabled(work); }
+  finally { if (previous === undefined) delete process.env.UNIFIED_NATIVE_RESULTS_WRITE_REQUIRED; else process.env.UNIFIED_NATIVE_RESULTS_WRITE_REQUIRED = previous; }
+}
+const nativeSummary = (group: NativeResultGroup, issues: string[] = []): NativeStoredResult => ({
+  kind: "SUMMARY", group, productKey: `${group}:SUMMARY`, productName: null, quantity: "1",
+  revenue: { known: "100", complete: "100" }, adSpend: { known: "20", complete: "20" },
+  netProfit: { known: "30", complete: "30" }, profitBeforeAds: { known: "50", complete: "50" },
+  sourceUpdatedAt: "2026-10-26T00:00:00Z", issues
+});
 
 test("worker isolates a failed Naver read, publishes both sibling sources and persists only a safe failure code", async () => enabled(async () => {
   const jobs = [claim("NAVER"), claim("META"), claim("CAFE24")], failed: string[] = [], published: string[] = [];
@@ -54,6 +67,87 @@ test("execution failure markers retain prior revisions while estimate and collec
   const input = batch(); input.coverage = [coverage("NAVER", ["NAVER_PAYMENT_DATE_COMPLETION_UNPROVEN", "STALE", "ESTIMATED"])];
   assert.doesNotThrow(() => assertSourceExecutionSucceeded(input));
 });
+
+test("native Coupang read failure prevents publication and retains the previous published revision", async () => enabled(async () => {
+  const job = { ...claim("COUPANG"), previousRunId: randomUUID() };
+  let publishedRunId: string = job.previousRunId;
+  let publishCalls = 0;
+  const failed: string[] = [];
+  const input = batch(), unavailable = { known: null, complete: null };
+  input.nativeResults = [{ kind: "SUMMARY", group: "COUPANG", productKey: "COUPANG:SUMMARY", productName: null,
+    quantity: null, revenue: unavailable, adSpend: unavailable, netProfit: unavailable, profitBeforeAds: unavailable,
+    sourceUpdatedAt: null, issues: ["COUPANG_NATIVE_READ_FAILED"] }];
+  assert.throws(() => assertSourceExecutionSucceeded(input), /SOURCE_EXECUTION_FAILED/);
+  const repo = { claim: async () => job, heartbeat: async () => true,
+    stageAndPublish: async () => { publishCalls++; publishedRunId = job.runId; },
+    fail: async (_job: AggregationClaim, issue: string) => { failed.push(issue); return true; } };
+  const adapters = { COUPANG: { platform: "COUPANG", read: async () => input } } as unknown as Record<Platform, SourceAdapter>;
+  assert.equal((await new UnifiedAggregationWorker(repo, management, adapters).runOne())?.status, "FAILED");
+  assert.equal(publishCalls, 0); assert.equal(publishedRunId, job.previousRunId);
+  assert.deepEqual(failed, ["SOURCE_EXECUTION_FAILED"]);
+}));
+
+test("required native summaries publish independently of legacy audit read and normalization failures", async () => nativeRequired(async () => {
+  for (const [platform, groups] of [["COUPANG", ["COUPANG"]], ["NAVER", ["NAVER"]], ["CAFE24", ["STOREFRONT", "GOOGLE"]]] as const) {
+    const input = batch();
+    input.coverage = [coverage(platform, [`${platform}_SALES_READ_FAILED`, `${platform}_SALES_NORMALIZATION_FAILED`])];
+    input.nativeResults = groups.map(group => nativeSummary(group));
+    assert.doesNotThrow(() => assertSourceExecutionSucceeded(input));
+    const job = claim(platform), published: AdapterBatch[] = [];
+    let failCalls = 0;
+    const repo = { claim: async () => job, heartbeat: async () => true,
+      stageAndPublish: async (_job: AggregationClaim, _request: AdapterRequest, result: AdapterBatch) => { published.push(result); },
+      fail: async () => { failCalls++; return true; } };
+    const adapters = { [platform]: { platform, read: async () => input } } as unknown as Record<Platform, SourceAdapter>;
+    assert.equal((await new UnifiedAggregationWorker(repo, management, adapters).runOne())?.status, "PUBLISHED");
+    assert.equal(failCalls, 0); assert.equal(published.length, 1);
+    assert.deepEqual(published[0].nativeResults, input.nativeResults);
+    assert.ok(published[0].coverage[0].quality.issues.includes(`${platform}_SALES_READ_FAILED`), "audit evidence remains stored");
+  }
+}));
+
+test("required native source-selection and execution failures retain the previous publication", async () => nativeRequired(async () => {
+  for (const issue of ["SOURCE_SELECTION_REQUIRED", "COUPANG_NATIVE_READ_FAILED", "COUPANG_NATIVE_NORMALIZATION_FAILED"]) {
+    const job = { ...claim("COUPANG"), previousRunId: randomUUID() };
+    const input = batch(); input.coverage = [coverage("COUPANG")]; input.nativeResults = [nativeSummary("COUPANG", [issue])];
+    assert.throws(() => assertSourceExecutionSucceeded(input), /SOURCE_EXECUTION_FAILED/);
+    let pointer: string = job.previousRunId, publishCalls = 0;
+    const failures: string[] = [];
+    const repo = { claim: async () => job, heartbeat: async () => true,
+      stageAndPublish: async () => { publishCalls++; pointer = job.runId; },
+      fail: async (_job: AggregationClaim, reason: string) => { failures.push(reason); return true; } };
+    const adapters = { COUPANG: { platform: "COUPANG", read: async () => input } } as unknown as Record<Platform, SourceAdapter>;
+    assert.equal((await new UnifiedAggregationWorker(repo, management, adapters).runOne())?.status, "FAILED");
+    assert.equal(publishCalls, 0); assert.equal(pointer, job.previousRunId); assert.deepEqual(failures, ["SOURCE_EXECUTION_FAILED"]);
+  }
+}));
+
+test("required native publication rejects absent summaries including either missing storefront group", async () => nativeRequired(async () => {
+  const cases: Array<{ platform: Platform; nativeResults?: NativeStoredResult[] }> = [
+    { platform: "COUPANG" }, { platform: "NAVER", nativeResults: [] },
+    { platform: "COUPANG", nativeResults: [{ ...nativeSummary("COUPANG"), kind: "PRODUCT", productName: "product" }] },
+    { platform: "CAFE24", nativeResults: [nativeSummary("STOREFRONT")] },
+    { platform: "CAFE24", nativeResults: [nativeSummary("GOOGLE")] }
+  ];
+  for (const fixture of cases) {
+    const input = { ...batch(), nativeResults: fixture.nativeResults, coverage: [coverage(fixture.platform)] };
+    assert.throws(() => assertSourceExecutionSucceeded(input), /NATIVE_FINAL_SOURCE_RESULT_REQUIRED/);
+    const job = { ...claim(fixture.platform), previousRunId: randomUUID() };
+    let pointer: string = job.previousRunId, publishCalls = 0;
+    const repo = { claim: async () => job, heartbeat: async () => true,
+      stageAndPublish: async () => { publishCalls++; pointer = job.runId; }, fail: async () => true };
+    const adapters = { [fixture.platform]: { platform: fixture.platform, read: async () => input } } as unknown as Record<Platform, SourceAdapter>;
+    assert.equal((await new UnifiedAggregationWorker(repo, management, adapters).runOne())?.status, "FAILED");
+    assert.equal(publishCalls, 0); assert.equal(pointer, job.previousRunId);
+  }
+}));
+
+test("required native mode still rejects failed standalone advertising source reads", async () => nativeRequired(async () => {
+  for (const platform of ["META", "GOOGLE"] as const) {
+    const input = batch(); input.coverage = [{ ...coverage(platform, [`${platform}_ADS_READ_FAILED`]), component: "AD_SPEND" }];
+    assert.throws(() => assertSourceExecutionSucceeded(input), /SOURCE_EXECUTION_FAILED/);
+  }
+}));
 
 test("direct-ledger platforms mark absent separate common costs N/A without masking actual common facts or Naver gaps", () => {
   for (const platform of ["CAFE24", "COUPANG"] as const) {

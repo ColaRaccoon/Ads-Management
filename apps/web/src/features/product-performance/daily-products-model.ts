@@ -1,4 +1,5 @@
 import { PLATFORM_LABELS, type Aggregate, type DashboardData, type DisplayAmount, type Filters, type Platform, type SelectionOptions } from "./types";
+import { NATIVE_OVERLAP_HELP, type NativeSourcePublication } from "./native-result-metadata";
 
 export const DAILY_PRODUCT_GROUPS = [
   { key: "STOREFRONT", label: "자사몰" }, { key: "COUPANG", label: "쿠팡" },
@@ -40,6 +41,8 @@ export type DailyProductsResponse = Pick<DashboardData, "summary" | "timeseries"
 };
 export type DailyReconciliation = { key: string; label: string; current: string | null; previous: string | null };
 export type DailyProductsReport = {
+  resultBasis?: "NATIVE_FINAL";
+  sourcePublicationTimes?: NativeSourcePublication[];
   exportActivityVersion?: number;
   date: string; previousDate: string; snapshotHash: string; scopeLabel: string;
   rows: DailyProductRow[]; totals: DailyProductRow; warnings: string[]; provisional: boolean;
@@ -199,7 +202,9 @@ export function buildDailyProductsReport(data: DailyProductsResponse, date: stri
   if (aggregateModes.includes("LEGACY")) warnings.push("이전 집계의 자사몰은 Meta·Google 판매/광고를 포함할 수 있습니다. 구글 매출·순이익은 채널별 저장값이 있을 때만 표시하며 그룹을 더해 전체를 계산하지 않습니다.");
   if (aggregateModes.includes("MIXED")) warnings.push("자사몰의 이전 통합 집계와 채널별 집계가 섞여 자사몰 그룹 금액을 확정할 수 없습니다. 전체 열은 저장된 통합 결과를 표시합니다.");
   if (aggregateModes[0] !== aggregateModes[1] && !aggregateModes.includes("EMPTY")) warnings.push("전일과 당일의 자사몰 집계 범위가 달라 해당 증감 비교를 제외했습니다.");
-  if (filters.platforms.includes("CAFE24") && (!filters.platforms.includes("META") || !filters.platforms.includes("GOOGLE"))) warnings.push("광고 플랫폼을 제외해도 Cafe24 판매처의 해당 매출은 유지됩니다. 광고비 제외 범위의 이익은 해당 광고비를 차감하지 않은 값입니다.");
+  if (data.summary.resultBasis !== "NATIVE_FINAL" && filters.platforms.includes("CAFE24") && (!filters.platforms.includes("META") || !filters.platforms.includes("GOOGLE"))) warnings.push("광고 플랫폼을 제외해도 Cafe24 판매처의 해당 매출은 유지됩니다. 광고비 제외 범위의 이익은 해당 광고비를 차감하지 않은 값입니다.");
+  if (data.summary.resultBasis === "NATIVE_FINAL" && [...data.summary.issues, ...data.summary.warnings].some(issue =>
+    issue === "STOREFRONT_GOOGLE_SALES_MAY_OVERLAP" || issue === "SOURCE_OVERLAP")) warnings.push(NATIVE_OVERLAP_HELP);
   if (data.summary.warnings.includes("CONFIGURATION_CHANGED_REBUILD_RECOMMENDED")) warnings.push("현재 설정과 발행된 집계 기준이 다릅니다. 저장된 발행 금액을 표시합니다.");
   if (data.summary.warnings.includes("LATEST_REBUILD_FAILED") || data.summary.asOfBySource.some(source => source.stale)) warnings.push("일부 원천은 이전 성공 발행 자료입니다. 최신 수집 상태를 확인해 주세요.");
   const balanceLabels: Array<[keyof NonNullable<DailyProductsAggregate["scopeBalances"]>, string]> = [
@@ -209,5 +214,7 @@ export function buildDailyProductsReport(data: DailyProductsResponse, date: stri
   const reconciliation = balanceLabels.map(([key, label]) => ({ key, label,
     current: data.allProducts.current.scopeBalances?.[key] ?? null, previous: data.allProducts.previous.scopeBalances?.[key] ?? null }));
   return { date, previousDate, snapshotHash: data.summary.snapshotHash, scopeLabel, rows, totals, warnings, provisional: data.summary.provisional, reconciliation,
+    ...(data.summary.resultBasis === "NATIVE_FINAL" ? { resultBasis: "NATIVE_FINAL" as const,
+      sourcePublicationTimes: data.summary.asOfBySource.filter(source => source.date === date) } : {}),
     exportActivityVersion: data.exportActivityVersion };
 }

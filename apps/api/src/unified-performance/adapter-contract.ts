@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { CONTRACT_VERSION } from "./types";
 import type { AdapterBatch, AdapterRequest, Platform, Quality, SourceRef } from "./types";
-import { money, quantity, ratio } from "./domain/decimal";
+import { decimal, quantizeMoney, money, quantity, ratio } from "./domain/decimal";
 import { assertBusinessDate } from "./domain/product-name-resolver";
 import { normalizePlatforms } from "./domain/platform-selection";
 
@@ -35,6 +35,32 @@ export function assertOffsetTimestamp(value: string): void {
 /** Stage writers call this before persisting JSON payloads; numeric columns alone cannot validate JSON. */
 export function assertAdapterBatch(request: AdapterRequest, platform: Platform, batch: AdapterBatch): void {
   assertAdapterRequest(request, platform);
+  if (batch.nativeResults) {
+    if (new Set(batch.coverage.map(row => row.date)).size > 1) throw new Error("NATIVE_RESULT_SINGLE_DAY_REQUIRED");
+    const groups = platform === "CAFE24" ? ["STOREFRONT", "GOOGLE"] : platform === "NAVER" ? ["NAVER"] : platform === "COUPANG" ? ["COUPANG"] : [];
+    const keys = new Set<string>();
+    for (const row of batch.nativeResults) {
+      if (!groups.includes(row.group) || !["SUMMARY", "PRODUCT"].includes(row.kind) ||
+        typeof row.productKey !== "string" || !row.productKey.trim() || row.productKey.length > 256 ||
+        row.productName !== null && (typeof row.productName !== "string" || !row.productName.trim()) ||
+        row.kind === "SUMMARY" && row.productName !== null) throw new Error("INVALID_NATIVE_RESULT_IDENTITY");
+      const key = JSON.stringify([row.group, row.kind, row.productKey]);
+      if (keys.has(key)) throw new Error("DUPLICATE_NATIVE_RESULT");
+      keys.add(key);
+      for (const field of ["revenue", "adSpend", "netProfit", "profitBeforeAds"] as const) {
+        const value = row[field];
+        if (!value || !("known" in value) || !("complete" in value)) throw new Error("INVALID_NATIVE_RESULT_AMOUNT");
+        for (const amount of [value.known, value.complete]) if (amount !== null) quantizeMoney(decimal(amount));
+        if (value.complete !== null && (value.known === null || !decimal(value.complete).eq(decimal(value.known))))
+          throw new Error("NATIVE_RESULT_COMPLETE_KNOWN_MISMATCH");
+      }
+      if (row.quantity !== null) quantity(row.quantity);
+      if (row.sourceUpdatedAt !== null) assertOffsetTimestamp(row.sourceUpdatedAt);
+      if (!Array.isArray(row.issues) || row.issues.some(issue => typeof issue !== "string")) throw new Error("INVALID_NATIVE_RESULT_ISSUES");
+    }
+    for (const group of groups) if (batch.nativeResults.filter(row => row.group === group && row.kind === "SUMMARY").length !== 1)
+      throw new Error("NATIVE_RESULT_SUMMARY_REQUIRED");
+  }
   if (batch.nativeStorefrontResults) {
     const native = batch.nativeStorefrontResults;
     if (platform !== "CAFE24" || !native.calculationVersion || !native.sourceFingerprint ||

@@ -39,11 +39,14 @@ function response(query, behavior) {
   const current = aggregate(emptyActivity ? 0 : count), previous = aggregate(count * .9);
   const metricComparison = Object.fromEntries(Object.keys(current.knownTotals).map(key => [key, { current: current.knownTotals[key], previous: previous.knownTotals[key], change: "0", changePct: "0", reason: null, currentDailyAverage: current.knownTotals[key], previousDailyAverage: previous.knownTotals[key] }]));
   const envelope = { ...current, contractVersion: "product-performance-v1.1.0", snapshotHash: revision,
+    ...(process.env.QA_NATIVE_RESULTS === "true" ? { resultBasis: "NATIVE_FINAL" } : {}),
     selection: { selectedPlatforms, excludedPlatforms: platforms.filter(p => !selectedPlatforms.includes(p)), scopeKeys: ["synthetic-store"], productName: query.get("productName") || null,
       from: query.get("from"), to: date, compareFrom: query.get("compareFrom"), compareTo: query.get("compareTo"), grain: query.get("grain"), selectionHash: query.toString() },
     selectedPlatforms, excludedPlatforms: platforms.filter(p => !selectedPlatforms.includes(p)), scopeLabel: "선택 범위", profitLabel: "추정 순이익",
     metricAvailability: { state: "SALE_AND_AD", revenue: true, adSpend: true, profitBeforeAds: true, estimatedProfit: true, mer: true },
-    versions: { calculationVersion: "synthetic" }, latestConfigurationVersions: {}, requestedCalculationVersion: "synthetic", asOfBySource: [],
+    versions: { calculationVersion: "synthetic" }, latestConfigurationVersions: {}, requestedCalculationVersion: "synthetic",
+    asOfBySource: process.env.QA_NATIVE_RESULTS === "true" ? platforms.map(platform => ({ platform, scopeKey: "synthetic-store", date,
+      sourceAsOf: `${date}T14:00:00Z`, publishedAt: `${date}T14:05:00Z`, stale: false })) : [],
     coverage: [], comparisonCoverage: [], warnings: [], provisional: false,
     comparison: { known: metricComparison, complete: metricComparison, byMedium: [], previousByMarketplace: previous.byMarketplace, currentDays: 2, previousDays: 1, unequalPeriods: true } };
   return { ...(missingActivity ? {} : { exportActivityVersion: 3 }), reportDate: date, previousDate, totalProducts: count, nextCursor: null,

@@ -68,6 +68,10 @@ const safeJob = (row: { id: string; platform: string; scopeKey: string; business
 
 /** Recheck the allocation transform at the publication boundary, independently of adapter controls. */
 export function assertReportConservation(batch: AdapterBatch, facts: readonly ReportFact[]): void {
+  const native = facts.filter(fact => fact.component === "NATIVE_RESULT");
+  const sourceNative = (batch.nativeResults ?? []).map(row => JSON.stringify(row)).sort();
+  if (JSON.stringify(native.map(fact => JSON.stringify(fact.nativeResult)).sort()) !== JSON.stringify(sourceNative))
+    throw new Error("NATIVE_RESULT_COPY_MISMATCH");
   const total = (values: readonly (string | null)[]) => {
     const known = values.filter((value): value is string => value !== null);
     return known.length || !values.length ? known.reduce((sum, value) => sum.plus(money(value)), new ExactDecimal(0)) : null;
@@ -98,6 +102,7 @@ function factPayload(fact: ReportFact) {
   return json({ component: fact.component, factKey: fact.factKey, productName: fact.productName, saleUnitName: fact.saleUnitName,
     amountKrw: fact.amountKrw, completeAmountKrw: fact.completeAmountKrw, profitBeforeAds: fact.profitBeforeAds,
     ...(fact.component === "STOREFRONT_RESULT" ? { persistedNetProfit: fact.persistedNetProfit ?? null, persistedAdSpend: fact.persistedAdSpend ?? null } : {}),
+    ...(fact.component === "NATIVE_RESULT" ? { nativeResult: fact.nativeResult } : {}),
     completeProfitBeforeAds: fact.completeProfitBeforeAds, originalAmount: fact.originalAmount, currency: fact.currency,
     quantity: fact.quantity, attribution: fact.attribution, medium: fact.medium, marketplace: fact.marketplace, commonKind: fact.commonKind,
     rowsCount: fact.rowsCount, quality: { isEstimate: fact.quality.isEstimate, confidence: fact.quality.confidence,

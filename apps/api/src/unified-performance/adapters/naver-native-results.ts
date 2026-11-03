@@ -5,14 +5,18 @@ import { resolveProductName } from "../domain/product-name-resolver";
 import type { AdapterBatch, AdapterRequest, ControlTotal, Quality, SaleFact, SourceCoverage, SourceRef } from "../types";
 import type { AdConfiguration } from "./ad-source";
 import { naverPageDate, naverTimestamp, type NaverProjectedRow, type NaverStoredRaw, type NaverStoredErrors } from "./naver-reader";
+import type { NativeStoredResult } from "../native-result-contract";
 
-const VERSION = "NAVER_STORED_NATIVE_V1";
+const VERSION = "NAVER_STORED_NATIVE_V2";
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const unique = (values: readonly string[]) => [...new Set(values)].sort();
 const amount = (value: unknown): string | null => { try { return quantizeMoney(money(value)); } catch { return null; } };
 const sum = (values: readonly string[]) => quantizeMoney(values.reduce((total, value) => total.plus(value), new D(0)));
 const plus = (a: string | null, b: string | null) => a === null || b === null ? null : quantizeMoney(money(a).plus(b));
 const quality = (issues: readonly string[]): Quality => ({ isEstimate: true, confidence: "ESTIMATED", issues: unique(["NAVER_STORED_NATIVE_SOURCE", ...issues]) });
+const storedMetric = (value: string | null) => ({ known: value, complete: value });
+const latestTimestamp = (rows: NaverProjectedRow[]) => rows.flatMap(row => [naverTimestamp(row.calculatedAt), naverTimestamp(row.updatedAt)])
+  .filter((value): value is string => value !== null).sort().at(-1) ?? null;
 
 /** Native profit-v2 already includes its ads, VAT, fees and costs. Never recost it. */
 export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStoredRaw, errors: NaverStoredErrors,
@@ -21,7 +25,7 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
   const summary = raw.daily_store_summaries.length === 1 ? raw.daily_store_summaries[0] : undefined;
   const topRows = raw.daily_sales_unit_profits.filter(row => !row.parentSalesUnitId);
   const sorted = (rows: NaverProjectedRow[]) => [...rows].sort((a, b) => a.id.localeCompare(b.id, "en"));
-  const fingerprint = hash([VERSION, date, scopeKey, sorted(raw.daily_store_summaries), sorted(raw.daily_sales_unit_profits),
+  let fingerprint = hash([VERSION, date, scopeKey, sorted(raw.daily_store_summaries), sorted(raw.daily_sales_unit_profits),
     sorted(raw.daily_fake_purchases), errors, request.nameRuleVersion, request.scopePolicyVersion, request.saleUnitRuleVersion,
     request.allocationRuleVersion, request.calculationVersion]);
   const fatal = Object.values(errors).flat();
@@ -64,6 +68,7 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
     assertAdapterBatch(request, "NAVER", batch); return batch;
   }
   const commonIssues: string[] = [], saleIssues: string[] = [], adIssues: string[] = [];
+  const nativeProducts: NativeStoredResult[] = [];
   if (!naverTimestamp(summary!.calculatedAt)) saleIssues.push("NAVER_STORED_CALCULATION_TIME_FALLBACK");
   if (topRows.length !== raw.daily_sales_unit_profits.length) saleIssues.push("NAVER_STORED_CHILD_ROW_EXCLUDED");
   const ref = (row: NaverProjectedRow, table: string, kind: string): SourceRef => ({ sourceSystem: "NAVER_SMARTSTORE", platform: "NAVER", schema: "public", table,
@@ -78,7 +83,8 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
     const revenue = amount(row.totalProductRevenue), ad = amount(row.totalAdCost), net = amount(row.estimatedNetProfit);
     const beforeAds = plus(net, ad), rowIssues = [...saleIssues, ...(name.matchStatus === "MATCHED" ? [] : [`NAME_${name.matchStatus}`])];
     if (beforeAds === null) rowIssues.push("NAVER_STORED_PROFIT_UNAVAILABLE");
-    let q = "0"; try { q = quantity(row.totalQuantity).toFixed(); } catch { rowIssues.push("NAVER_STORED_QUANTITY_UNAVAILABLE"); }
+    let q = "0", nativeQuantity: string | null = null;
+    try { q = quantity(row.totalQuantity).toFixed(); nativeQuantity = q; } catch { rowIssues.push("NAVER_STORED_QUANTITY_UNAVAILABLE"); }
     const sale: SaleFact = { ref: ref(row, "daily_sales_unit_profits", "STORED_PRODUCT_PROFIT"), name, productName: row.isStoreLevel === true ? null : name.matchStatus === "MATCHED" ? name.canonicalProductName : null,
       marketplace: "NAVER_SMARTSTORE", saleUnitName: nativeName, optionName: null, orderedQuantity: q, calculationQuantity: q, unitsPerSaleUnit: null,
       physicalQuantity: null, quantityBasis: "NATIVE_STORED_SALES_UNIT_QUANTITY", operatingRevenue: revenue, collectedPaymentAmount: revenue,
@@ -91,6 +97,11 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
     sale.costComponents = [["PRODUCT_COST", sale.productCost], ["PLATFORM_FEE", sale.platformFee], ["OTHER_DIRECT_COST", sale.otherDirectCost], ["VAT_EXPENSE", sale.vatExpense]]
       .map(([kind, value]) => ({ kind: kind!, amount: value, sourceExpenseKey: `${scopeKey}:${row.id}:${kind}`, includedInRevenue: false, applied: value !== null }));
     batch.sales.push(sale);
+    nativeProducts.push({ kind: "PRODUCT", group: "NAVER", productKey: `naver:${scopeKey}:product:${row.canonicalSalesUnitId ?? row.id}`,
+      productName: sale.productName, quantity: nativeQuantity, revenue: storedMetric(revenue), adSpend: storedMetric(ad),
+      netProfit: storedMetric(net), profitBeforeAds: storedMetric(beforeAds), sourceUpdatedAt: latestTimestamp([row]),
+      issues: quality(rowIssues).issues, audit: { calculationVersion: "profit-v2", sourceRowId: row.id,
+        isStoreLevel: row.isStoreLevel === true ? "true" : "false", deliveryIncluded: "false", fakePurchaseIncluded: "false" } });
     if (ad === null) adIssues.push("NAVER_AD_AMOUNT_INVALID", "NAVER_STORED_AD_UNAVAILABLE");
     else batch.adSpends.push({ ref: ref(row, "daily_sales_unit_profits", "AD_SPEND"), name, productName: sale.productName, medium: "NAVER_DA", originalAmount: ad,
       currency: "KRW", amountKrw: ad, fx: { baseCurrency: "KRW", quoteCurrency: "KRW", requestedDate: date, sourceDate: date, rate: "1", provider: "IDENTITY", fallbackType: "IDENTITY", fxVersion: request.fxVersion },
@@ -107,6 +118,26 @@ export function normalizeNaverStoredDay(request: AdapterRequest, raw: NaverStore
   addCommon(summary!, "daily_store_summaries", "SHIPPING_INCOME", summary!.customerPaidDeliveryFee);
   addCommon(summary!, "daily_store_summaries", "SHIPPING_COST", summary!.estimatedDeliveryBaseCost);
   for (const fake of raw.daily_fake_purchases) addCommon(fake, "daily_fake_purchases", "FAKE_PURCHASE", fake.amount);
+  // The native UI applies its one final fake-purchase deduction to the stored
+  // store summary. Persist that result here; readers must not reconstruct it
+  // from product profit, ads, VAT, shipping or common-expense ledger rows.
+  const fakeAmounts = raw.daily_fake_purchases.map(row => amount(row.amount));
+  const fakeTotal = fakeAmounts.every((value): value is string => value !== null) ? sum(fakeAmounts) : null;
+  const nativeStoreNet = amount(summary!.estimatedNetProfit), nativeStoreAds = amount(summary!.totalAdCost);
+  const finalStoreNet = nativeStoreNet === null || fakeTotal === null ? null : quantizeMoney(money(nativeStoreNet).minus(fakeTotal));
+  const quantities = nativeProducts.map(row => row.quantity);
+  const nativeSummary: NativeStoredResult = { kind: "SUMMARY", group: "NAVER", productKey: `naver:${scopeKey}:summary`, productName: null,
+    quantity: quantities.every((value): value is string => value !== null) ? sum(quantities) : null,
+    revenue: storedMetric(amount(summary!.totalProductRevenue)), adSpend: storedMetric(nativeStoreAds), netProfit: storedMetric(finalStoreNet),
+    profitBeforeAds: storedMetric(plus(finalStoreNet, nativeStoreAds)),
+    sourceUpdatedAt: latestTimestamp([...raw.daily_store_summaries, ...raw.daily_sales_unit_profits, ...raw.daily_fake_purchases]),
+    issues: quality([...saleIssues, ...adIssues, ...commonIssues, ...(finalStoreNet === null ? ["NAVER_STORED_PROFIT_UNAVAILABLE"] : [])]).issues,
+    audit: { calculationVersion: "profit-v2", sourceRowId: summary!.id, nativeNetBeforeFakePurchase: nativeStoreNet,
+      fakePurchaseAmount: fakeTotal, deliveryMargin: amount(summary!.deliveryMargin), deliveryIncluded: "true", fakePurchaseIncluded: "true" } };
+  batch.nativeResults = [nativeSummary, ...nativeProducts.sort((a, b) => a.productKey.localeCompare(b.productKey, "en"))];
+  fingerprint = hash([fingerprint, batch.nativeResults]);
+  batch.sourceFingerprint = fingerprint;
+  for (const entry of [...batch.sales, ...batch.adSpends, ...batch.commonExpenses]) entry.ref.sourceVersion = fingerprint;
   const missingCosts = batch.sales.filter(row => row.profitBeforeAds === null).length;
   batch.coverage = [coverage("SALE", batch.sales.length, true, saleIssues, missingCosts), coverage("AD_SPEND", batch.adSpends.length, !adIssues.length, adIssues),
     coverage("COMMON_EXPENSE", batch.commonExpenses.length, !commonIssues.length, commonIssues)];

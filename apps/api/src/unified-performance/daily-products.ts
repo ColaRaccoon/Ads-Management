@@ -67,6 +67,19 @@ function confirmedZeroAds(group: DailyProductExportPlatform, summary: ReportSumm
  * calculation is repeated, and missing quantities never become invented zeroes.
  */
 function exportPlatforms(scope: DailyProductScope, query: ReportQuery, productName: string, summary: ReportSummary): DailyProductExportPlatform[] {
+  if (process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED === "true") {
+    const active = new Set<DailyProductExportPlatform>();
+    for (const fact of scope.facts) {
+      const row = fact.nativeResult;
+      if (fact.component !== "NATIVE_RESULT" || !row || row.kind !== "PRODUCT" || fact.productName !== productName ||
+        fact.date !== query.to || !query.platforms.includes(fact.platform) ||
+        (query.scopeKeys !== undefined && !query.scopeKeys.includes(fact.scopeKey))) continue;
+      // Quantity and spend belong to this exact native product result. Unrelated
+      // source coverage warnings never turn a numeric product zero into activity.
+      if (!confirmedZero(row.quantity) || !confirmedZero(row.adSpend.known)) active.add(row.group);
+    }
+    return (["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const).filter(group => active.has(group));
+  }
   const present = new Map<DailyProductExportPlatform, { quantity: InstanceType<typeof ExactDecimal>; unknown: boolean }>();
   for (const fact of scope.facts) {
     if (fact.productName !== productName || fact.rowsCount <= 0 || fact.saleUnitName === "PARTITION_MARKER" ||

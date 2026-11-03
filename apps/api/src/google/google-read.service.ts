@@ -52,6 +52,16 @@ export class GoogleReadService {
     return this.read(tx, query, googleRange(query), "profit", { scopeKey });
   }
 
+  /** Source publication uses the HTTP calculator mode, including its original coupon policy.
+   * Pagination is presentation only; a durable source snapshot must contain every product. */
+  async nativeOriginalStorefrontDay(tx: Prisma.TransactionClient, date: string, scopeKey: string) {
+    // The publisher already verifies sole-shop ownership. Match the original
+    // unfiltered margin page, including old CSV rows with no connection ID.
+    // Filtering by the current shop here would change the original page's inputs.
+    const query: GoogleQuery = { from: date, to: date };
+    return this.read(tx, query, googleRange(query), "profit", undefined, true);
+  }
+
   async options() {
     const enabled = process.env.GOOGLE_PERFORMANCE_ENABLED === "true";
     if (!enabled) return { enabled, connections: [], products: [] };
@@ -74,15 +84,22 @@ export class GoogleReadService {
   }
 
   private async read(tx: Prisma.TransactionClient, query: GoogleQuery, range: ReturnType<typeof googleRange>, mode: string,
-    financial?: { scopeKey: string }) {
+    financial?: { scopeKey: string }, unpaged = false) {
+    // Projection and calculation policy are independent: the original-result publisher
+    // omits private/provider payloads without enabling the alternate coupon snapshot mode.
+    const financialProjection = Boolean(financial || unpaged);
     if (query.connectionId) await googleConnection(tx, query.connectionId, "GOOGLE");
-    if (query.cafe24ConnectionId) await googleConnection(tx, query.cafe24ConnectionId, "CAFE24");
+    if (query.cafe24ConnectionId) {
+      if (!financialProjection) await googleConnection(tx, query.cafe24ConnectionId, "CAFE24");
+      else if (!await tx.sourceConnection.findFirst({ where: { id: query.cafe24ConnectionId, provider: "CAFE24" }, select: { id: true } }))
+        throw new NotFoundException("해당 채널의 연결을 찾을 수 없습니다.");
+    }
     if (query.productId && !await tx.product.findFirst({ where: { id: query.productId, isActive: true }, select: { id: true } }))
       throw new NotFoundException("활성 상품을 찾을 수 없습니다.");
     const connections = await tx.sourceConnection.findMany({ where: { OR: [
       { provider: "GOOGLE", ...(query.connectionId ? { id: query.connectionId } : {}) },
       { provider: "CAFE24", ...(financial && financial.scopeKey !== "LEGACY_UNBOUND" ? { id: financial.scopeKey } : query.cafe24ConnectionId ? { id: query.cafe24ConnectionId } : {}) }
-    ] }, select: { id: true, provider: true, displayName: true, ...(!financial ? { externalAccountId: true } : {}), currencyCode: true, timeZone: true }, take: 101 });
+    ] }, select: { id: true, provider: true, displayName: true, ...(!financialProjection ? { externalAccountId: true } : {}), currencyCode: true, timeZone: true }, take: 101 });
     googleBound(connections, 100);
     const ids = connections.map(c => c.id), googleIds = connections.filter(c => c.provider === "GOOGLE").map(c => c.id);
     const dateWhere = { gte: range.fromDate, lte: range.toDate };
@@ -92,14 +109,14 @@ export class GoogleReadService {
       tx.sourcePolicy.findMany({ where: { dataKind: { in: ["GOOGLE_CAMPAIGN", "CAFE24_ORDER"] }, fromDate: { lte: range.toDate },
         OR: [{ toDate: null }, { toDate: { gt: range.fromDate } }] }, take: 10_001 }),
       tx.googleCampaignDailyCost.findMany({ where: { connectionId: { in: googleIds }, isCurrent: true, metricDate: dateWhere },
-        ...(financial ? { select: { id: true, connectionId: true, campaignId: true, campaignName: true, metricDate: true,
+        ...(financialProjection ? { select: { id: true, connectionId: true, campaignId: true, campaignName: true, metricDate: true,
           source: true, syncRunId: true, version: true, costMicros: true } } : {}),
         orderBy: [{ metricDate: "asc" }, { id: "asc" }], take: MAX + 1 }),
       tx.cafe24UploadBatch.findMany({ where: { status: { in: ["IMPORTED", "PARTIAL"] },
         OR: [{ orderStart: null }, { orderEnd: null }, { orderStart: { lte: range.toDate }, orderEnd: { gte: range.fromDate } }] },
         select: { id: true, rowCount: true, _count: { select: { rows: true } } }, take: 10_001 }),
       tx.exchangeRate.findMany({ where: { rateDate: dateWhere, quoteCurrency: "KRW", provider: "KOREA_EXIM" },
-        ...(financial ? { select: { id: true, rateDate: true, baseCurrency: true, rate: true } } : {}), take: MAX + 1 }),
+        ...(financialProjection ? { select: { id: true, rateDate: true, baseCurrency: true, rate: true } } : {}), take: MAX + 1 }),
       tx.productCostRule.findMany({ where: { effectiveFrom: { lte: range.toDate }, OR: [{ effectiveTo: null }, { effectiveTo: { gte: range.fromDate } }] },
         orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }], take: 10_001 }),
       tx.cafe24ProductRule.findMany({ where: { isActive: true, product: { is: { isActive: true } }, validFrom: { lte: range.toDate },
@@ -118,7 +135,7 @@ export class GoogleReadService {
       ...(financial ? { connectionId: financial.scopeKey === "LEGACY_UNBOUND" ? null : financial.scopeKey } : {}),
       OR: [{ source: "CSV", uploadBatchId: { in: batches.filter(b => b.rowCount === b._count.rows).map(b => b.id) } },
         { source: "API", uploadBatchId: null, connectionId: { in: connections.filter(c => c.provider === "CAFE24").map(c => c.id) } }]
-    }, ...(financial ? { select: nativeCafe24FinancialSelect } : { include: { product: true, matchRule: true } }),
+    }, ...(financialProjection ? { select: nativeCafe24FinancialSelect } : { include: { product: true, matchRule: true } }),
       orderBy: [{ orderDate: "asc" }, { id: "asc" }], take: MAX + 1 } as Prisma.Cafe24OrderLineFindManyArgs) as Prisma.Cafe24OrderLineGetPayload<{ include: { product: true; matchRule: true } }>[];
     googleBound(cafeCandidates);
     const context = createSourceReadContext(tx, range.fromDate, range.toDate, policies, coverageRows);
@@ -135,14 +152,14 @@ export class GoogleReadService {
     const coverageByDay = new Map(coverageRows.map(r => [`${r.connectionId}:${r.dataKind}:${day(r.metricDate)}`, r]));
     const runIds = [...new Set(coverageRows.filter(c => c.dataKind === "GOOGLE_CAMPAIGN" && c.lastSuccessRunId).map(c => c.lastSuccessRunId!))];
     const units = runIds.length ? await tx.runUnit.findMany({ where: { runId: { in: runIds }, status: "SUCCEEDED" },
-      ...(financial ? { select: { runId: true, unitKey: true, publishedCount: true, run: { select: { connectionId: true } } } }
+      ...(financialProjection ? { select: { runId: true, unitKey: true, publishedCount: true, run: { select: { connectionId: true } } } }
         : { include: { run: { select: { connectionId: true } } } }), take: MAX + 1 } as Prisma.RunUnitFindManyArgs) as Prisma.RunUnitGetPayload<{ include: { run: { select: { connectionId: true } } } }>[] : [];
     googleBound(units);
     const unitsByDay = grouped(units, r => `${r.run.connectionId}:${r.runId}:${r.unitKey}`);
     const links = selectedAds.length ? await tx.sourceRecordLink.findMany({ where: {
       connectionId: { in: googleIds }, dataKind: "GOOGLE_CAMPAIGN", source: "API", recordTable: "google_campaign_daily_costs",
       recordId: { in: selectedAds.map(r => r.id) }, isCurrent: true
-    }, ...(financial ? { select: { id: true, connectionId: true, recordId: true, version: true, syncRunId: true } } : {}), take: MAX + 1 }) : [];
+    }, ...(financialProjection ? { select: { id: true, connectionId: true, recordId: true, version: true, syncRunId: true } } : {}), take: MAX + 1 }) : [];
     googleBound(links);
     const linked = new Map(links.map(link => [link.recordId, link]));
     const feature = process.env.DAILY_SYNC_FEATURE_ENABLED === "true";
@@ -197,7 +214,7 @@ export class GoogleReadService {
     const csvBatchIds = [...new Set(selectedCafe.flatMap(c => c.uploadBatchId ? [c.uploadBatchId] : []))];
     const siblings = csvBatchIds.length ? await tx.cafe24OrderLine.findMany({ where: { uploadBatchId: { in: csvBatchIds },
       OR: [{ isCurrent: true }, { validationStatus: "ERROR" }] },
-      ...(financial ? { select: nativeCafe24FinancialSelect } : { include: { product: true, matchRule: true } }), take: MAX + 1 } as Prisma.Cafe24OrderLineFindManyArgs) as Prisma.Cafe24OrderLineGetPayload<{ include: { product: true; matchRule: true } }>[] : [];
+      ...(financialProjection ? { select: nativeCafe24FinancialSelect } : { include: { product: true, matchRule: true } }), take: MAX + 1 } as Prisma.Cafe24OrderLineFindManyArgs) as Prisma.Cafe24OrderLineGetPayload<{ include: { product: true; matchRule: true } }>[] : [];
     googleBound(siblings);
     const orderKey = (r: { source: string; connectionId: string | null; uploadBatchId: string | null; orderNo: string }) => `${r.source}:${r.uploadBatchId ?? r.connectionId}:${r.orderNo}`;
     const selectedOrders = new Set(selectedCafe.map(orderKey));
@@ -238,7 +255,7 @@ export class GoogleReadService {
       const rate = ratesByDay.get(`${date}:${connection.currencyCode}`);
       return { id: a.id, date, connectionId: a.connectionId, customerId: connection.externalAccountId,
         campaignId: a.campaignId, campaignName: a.campaignName, currencyCode: connection.currencyCode,
-        timeZone: connection.timeZone, costMicros: a.costMicros.toString(), impressions: financial ? 0 : Number(a.impressions), clicks: financial ? 0 : Number(a.clicks),
+        timeZone: connection.timeZone, costMicros: a.costMicros.toString(), impressions: financialProjection ? 0 : Number(a.impressions), clicks: financialProjection ? 0 : Number(a.clicks),
         productId: match.productId, warningCodes: match.warningCodes,
         exchangeRateKrw: rate?.rate.toString() ?? null };
     });
@@ -260,7 +277,7 @@ export class GoogleReadService {
       range: { from: activeDays[0].date, to: activeDays[activeDays.length - 1].date },
       ...(financial ? { nativeFinancialRows: financialRows, nativeFinancialCouponLines: result.salesSnapshotCouponLines,
         nativeSalesSelectionFailed: failedKinds.has("CAFE24_ORDER") } : {}),
-      products: financial ? namedProducts : paged(namedProducts), campaigns: financial ? result.campaigns : paged(result.campaigns),
+      products: financial || unpaged ? namedProducts : paged(namedProducts), campaigns: financial || unpaged ? result.campaigns : paged(result.campaigns),
       daily: result.daily.map(p => ({ ...p, productName: p.productId ? activeProducts.get(p.productId) ?? null : null })),
       coverage: coverage.filter(c => activeDates.has(c.date)),
       pagination: { page, pageSize, total: mode === "campaigns" ? result.campaigns.length : result.products.length },

@@ -9,6 +9,8 @@ import type { UnifiedAggregationRepository } from "./aggregation.repository";
 import type { PublishedReportFact, ReportSummary } from "./report-contract";
 import type { ReportQuery } from "./report-query";
 import type { Platform } from "./types";
+import type { NativeStoredResult } from "./native-result-contract";
+import { prepareNativeResultFacts } from "./domain/stored-result-projection";
 
 const actor = { id: "reader", permissions: ["data.read" as const] };
 const input = { from: "2026-10-31", to: "2026-11-01", compareFrom: "2026-10-31", compareTo: "2026-10-31", grain: "day",
@@ -26,6 +28,35 @@ const compact = (value: ReportSummary) => ({ knownTotals: value.knownTotals, com
 async function enabled(work: () => Promise<void>) {
   const saved = process.env.UNIFIED_PERFORMANCE_ENABLED; process.env.UNIFIED_PERFORMANCE_ENABLED = "true";
   try { await work(); } finally { if (saved === undefined) delete process.env.UNIFIED_PERFORMANCE_ENABLED; else process.env.UNIFIED_PERFORMANCE_ENABLED = saved; }
+}
+async function nativeEnabled(work: () => Promise<void>) {
+  const saved = process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED;
+  process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED = "true";
+  try { await enabled(work); } finally {
+    if (saved === undefined) delete process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED;
+    else process.env.UNIFIED_NATIVE_RESULTS_READ_ENABLED = saved;
+  }
+}
+function nativeRow(overrides: Partial<NativeStoredResult> = {}): NativeStoredResult {
+  const amount = (value: string) => ({ known: value, complete: value });
+  return { kind: "PRODUCT", group: "STOREFRONT", productKey: "A", productName: "A", quantity: "0",
+    revenue: amount("0"), adSpend: amount("0"), netProfit: amount("7"), profitBeforeAds: amount("999"),
+    sourceUpdatedAt: "2026-11-01T09:00:00Z", issues: [], ...overrides };
+}
+function nativeFacts(rows: NativeStoredResult[], date = input.to): PublishedReportFact[] {
+  return prepareNativeResultFacts(rows).map(row => {
+    const platform: Platform = row.nativeResult!.group === "STOREFRONT" || row.nativeResult!.group === "GOOGLE" ? "CAFE24" : row.nativeResult!.group;
+    return { ...row, platform, scopeKey: platform, date };
+  });
+}
+function withNativeSummaries() {
+  const f = fixture();
+  for (const date of [input.from, input.to]) {
+    f.snapshot.facts.push(...nativeFacts((["STOREFRONT", "GOOGLE", "NAVER", "COUPANG"] as const).map(group =>
+      nativeRow({ group, kind: "SUMMARY", productKey: `${group}:summary`, productName: null,
+        netProfit: { known: group === "STOREFRONT" ? date === input.to ? "101" : "43" : "0", complete: group === "STOREFRONT" ? date === input.to ? "101" : "43" : "0" } })), date));
+  }
+  return f;
 }
 function fixture() {
   const scopes = input.platforms.map(platform => ({ platform: platform as Platform, scopeKey: platform, label: platform }));
@@ -55,6 +86,59 @@ function fixture() {
   const aggregation = { enqueue: () => assert.fail("a read cannot rebuild") } as unknown as UnifiedAggregationRepository;
   return { service: new UnifiedReportService(repository, aggregation), snapshot, reads };
 }
+
+test("native daily report preserves stored summary and product final profits independently", async () => nativeEnabled(async () => {
+  const f = withNativeSummaries();
+  f.snapshot.facts.push(...nativeFacts([nativeRow()]));
+  f.snapshot.facts.push(...nativeFacts([nativeRow({ netProfit: { known: "-3", complete: "-3" } })], input.from));
+  const before = structuredClone(f.snapshot.facts);
+  const response = await f.service.read("daily-products", input, actor) as any;
+  assert.equal(f.reads.length, 1, "native rows use the same immutable snapshot");
+  assert.equal(response.allProducts.current.knownTotals.estimatedProfit, "101.000000");
+  assert.equal(response.allProducts.previous.knownTotals.estimatedProfit, "43.000000");
+  assert.equal(response.timeseries.items[1].knownTotals.estimatedProfit, "101.000000");
+  const product = response.products.find((row: any) => row.productName === "A");
+  assert.equal(product.current.knownTotals.estimatedProfit, "7.000000", "never derive final net from profitBeforeAds=999");
+  assert.equal(product.previous.knownTotals.estimatedProfit, "-3.000000");
+  assert.deepEqual(product.exportPlatforms, [], "stored zero activity wins over positive legacy revenue and ads");
+  assert.ok(response.products.some((row: any) => row.productName === "거래 없는 비활성"), "screen/print detail retains catalog rows");
+  const selected = await f.service.read("daily-products", { ...input, productName: "A" }, actor) as any;
+  assert.deepEqual(selected.allProducts, response.allProducts, "a selected product cannot replace native overall summaries");
+  assert.deepEqual(selected.products, response.products, "detail/export membership cannot mutate any totals");
+  assert.equal(selected.timeseries.items[1].knownTotals.estimatedProfit, "7.000000");
+  assert.deepEqual(f.snapshot.facts, before, "reads never overwrite persisted native or legacy rows");
+}));
+
+test("native Excel activity uses current product quantities and ads independently for all four groups", async () => nativeEnabled(async () => {
+  const f = withNativeSummaries();
+  const cases = [
+    { name: "zero", quantity: "0", ad: "0", active: false },
+    { name: "sold with zero revenue", quantity: "2", ad: "0", active: true },
+    { name: "ads only", quantity: "0", ad: "12.5", active: true },
+    { name: "negative adjustment", quantity: "0", ad: "-1", active: true },
+    { name: "unknown quantity", quantity: null, ad: "0", active: true },
+    { name: "unknown ads", quantity: "0", ad: null, active: true }
+  ];
+  for (const group of ["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const) {
+    for (const row of cases) {
+      const name = `${group}:${row.name}`;
+      f.snapshot.facts.push(...nativeFacts([nativeRow({ group, productKey: name, productName: name, quantity: row.quantity,
+        adSpend: { known: row.ad, complete: row.ad } })]));
+    }
+    f.snapshot.facts.push(...nativeFacts([nativeRow({ group, productKey: `${group}:yesterday`, productName: `${group}:yesterday`, quantity: "9" })], input.from));
+    // Same named product has activity only on another platform.
+    f.snapshot.facts.push(...nativeFacts([nativeRow({ group, productKey: "mixed", productName: "mixed", quantity: group === "NAVER" ? "1" : "0" })]));
+  }
+  const response = await f.service.read("daily-products", input, actor) as any;
+  const platforms = (name: string) => response.products.find((row: any) => row.productName === name).exportPlatforms;
+  for (const group of ["STOREFRONT", "GOOGLE", "COUPANG", "NAVER"] as const) {
+    for (const row of cases) assert.deepEqual(platforms(`${group}:${row.name}`), row.active ? [group] : [], `${group}:${row.name}`);
+    assert.deepEqual(platforms(`${group}:yesterday`), [], "previous-day activity alone is not export activity");
+  }
+  assert.deepEqual(platforms("mixed"), ["NAVER"]);
+  assert.deepEqual(platforms("거래 없는 비활성"), [], "synthetic catalog zeroes have no native activity");
+  assert.equal(response.allProducts.current.knownTotals.estimatedProfit, "101.000000", "detail activity never replaces stored whole-platform net");
+}));
 
 test("daily products reads one all-product snapshot, retaining selected summary and exact two-day totals", async () => enabled(async () => {
   const f = fixture();

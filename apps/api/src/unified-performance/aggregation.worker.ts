@@ -14,6 +14,21 @@ export interface AggregationOutcome { jobId: string; platform: Platform; status:
 
 /** Collection uncertainty can be published; an actual execution failure retains the last good revision. */
 export function assertSourceExecutionSucceeded(batch: AdapterBatch): void {
+  if (process.env.UNIFIED_NATIVE_RESULTS_WRITE_REQUIRED === "true") {
+    const platform = batch.coverage[0]?.platform;
+    const groups = platform === "CAFE24" ? ["STOREFRONT", "GOOGLE"] : platform === "NAVER" ? ["NAVER"] : platform === "COUPANG" ? ["COUPANG"] : [];
+    if (groups.some(group => !batch.nativeResults?.some(row => row.kind === "SUMMARY" && row.group === group)))
+      throw new Error("NATIVE_FINAL_SOURCE_RESULT_REQUIRED");
+    if (groups.length) {
+      if (batch.nativeResults?.some(row => row.issues.some(issue => /(?:READ|NORMALIZATION)_FAILED|SOURCE_SELECTION_REQUIRED/.test(issue))))
+        throw new Error("SOURCE_EXECUTION_FAILED");
+      // Legacy ledgers remain audit evidence. Their separate matcher/cost rules
+      // cannot veto successfully produced original platform final results.
+      return;
+    }
+  }
+  if (batch.nativeResults?.some(row => row.issues.some(issue => /(?:READ|NORMALIZATION)_FAILED/.test(issue))))
+    throw new Error("SOURCE_EXECUTION_FAILED");
   if (batch.coverage.some(coverage => coverage.quality.issues.some(issue =>
     /(?:READ|NORMALIZATION)_FAILED|SOURCE_SELECTION_REQUIRED|CURRENT_LINEAGE_UNVERIFIED|CURRENT_(?:SALES|ADS)_WITHHELD/.test(issue))))
     throw new Error("SOURCE_EXECUTION_FAILED");

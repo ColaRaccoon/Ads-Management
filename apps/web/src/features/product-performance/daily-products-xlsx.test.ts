@@ -29,6 +29,24 @@ function unzipStored(bytes: Uint8Array) {
   return members;
 }
 
+test("native XLSX notes describe original stored results and current-day source times without changing monetary cells", () => {
+  const source = report();
+  const original = buildDailyProductsXlsxInput(source);
+  source.resultBasis = "NATIVE_FINAL";
+  source.sourcePublicationTimes = [
+    { platform: "CAFE24", scopeKey: "shop", date: "2026-11-02", sourceAsOf: null, publishedAt: "2026-11-02T01:00:00Z", stale: true },
+    { platform: "CAFE24", scopeKey: "shop", date: "2026-11-01", sourceAsOf: null, publishedAt: "2026-11-01T01:00:00Z", stale: false }
+  ];
+  const native = buildDailyProductsXlsxInput(source);
+  assert.deepEqual(native.sheets[0].rows.slice(0, 5 + source.rows.length + 1), original.sheets[0].rows.slice(0, 5 + source.rows.length + 1));
+  assert.deepEqual(native.sheets[1].rows.slice(0, 1 + source.rows.length * 15), original.sheets[1].rows.slice(0, 1 + source.rows.length * 15));
+  const serialized = JSON.stringify(native);
+  assert.match(serialized, /저장된 플랫폼 원본 계산 결과/);
+  assert.match(serialized, /원본자료 기준 미확인 · 통합 발행 2026-11-02 10:00/);
+  assert.match(serialized, /이전 성공 자료/);
+  assert.doesNotMatch(serialized, /중복 제거된 통합 결과|2026-11-01 10:00/);
+});
+
 test("Excel-only product filtering preserves source rows, every platform value, screen totals and zero-revenue products with activity", async () => {
   const source = report();
   source.rows[0].exportPlatforms = ["STOREFRONT", "GOOGLE"];

@@ -12,6 +12,8 @@ import { generateDailyProductsWorkbook } from "./daily-products-export";
 import { DAILY_EXCEL_PRODUCT_FILTERS, dailyExcelFileName, filterDailyProductsForExcel, hasDailyExcelProductMembership, type DailyExcelProductFilter } from "./daily-products-filter";
 import { availableAnalysisMedia } from "./relationships-model";
 import { PLATFORM_LABELS, type DashboardData, type Filters, type SelectionOptions } from "./types";
+import { NativeResultPublicationTimes } from "./native-result-basis";
+import { NATIVE_OVERLAP_HELP, NATIVE_RESULT_HELP } from "./native-result-metadata";
 
 const CHANNELS = [{ id: "CAFE24", platform: "CAFE24", name: "자사몰 Cafe24" }, { id: "NAVER_SMARTSTORE", platform: "NAVER", name: "네이버 스마트스토어" }, { id: "COUPANG", platform: "COUPANG", name: "쿠팡" }] as const;
 const SPLIT_CHANNELS = [{ id: "CAFE24_META", platform: "CAFE24", name: "자사몰(메타)" }, { id: "CAFE24_YOUTUBE", platform: "CAFE24", name: "자사몰(유튜브)" }, ...CHANNELS.filter(channel => channel.id !== "CAFE24")] as const;
@@ -102,13 +104,18 @@ export function DailyReport({ identity, filters, options, requestedDate, onDateC
   </section>;
 }
 export function DailyReportSheet({ data, date, filters, options }: { data: DashboardData; date: string; filters: Filters; options?: SelectionOptions }) {
+  const native = data.summary.resultBasis === "NATIVE_FINAL";
+  const nativeOverlap = native && [...data.summary.issues, ...data.summary.warnings].some(issue =>
+    issue === "STOREFRONT_GOOGLE_SALES_MAY_OVERLAP" || issue === "SOURCE_OVERLAP");
   const report = buildDailyReport(data.timeseries.items, date);
   const sources = filters.platforms.map(platform => PLATFORM_LABELS[platform]).join(" · ");
   const scopes = filters.scopeKeys === undefined ? "전체 계정·스토어" : `${filters.scopeKeys.length}개 계정·스토어 선택`;
   const scopeLabels = filters.scopeKeys?.map(key => options?.scopes.find(scope => scope.scopeKey === key)?.label ?? key) ?? [];
   const scopeDetail = scopeLabels.slice(0, 2).join(" · ").slice(0, 90) + (scopeLabels.length > 2 ? ` 외 ${scopeLabels.length - 2}개` : "");
   const channels = (report.storefrontMode === "SPLIT" ? [...SPLIT_CHANNELS.slice(0, 2),
-    ...(report.mixedStorefront ? [{ id: "CAFE24", platform: "CAFE24" as const, name: "자사몰(이전집계)" }] : []), ...SPLIT_CHANNELS.slice(2)] : CHANNELS).filter(channel => filters.platforms.includes(channel.platform));
+    ...(report.mixedStorefront ? [{ id: "CAFE24", platform: "CAFE24" as const, name: "자사몰(이전집계)" }] : []), ...SPLIT_CHANNELS.slice(2)] : CHANNELS)
+    .filter(channel => filters.platforms.includes(channel.platform)).map(channel => native && channel.id === "CAFE24_META" ? { ...channel, name: "자사몰 원본" }
+      : native && channel.id === "CAFE24_YOUTUBE" ? { ...channel, name: "구글 원본" } : channel);
   const media = availableAnalysisMedia(filters.platforms);
   const metrics = [{ key: "revenue", title: "매출" }, { key: "estimatedProfit", title: "추정 순이익" }, { key: "adSpend", title: "광고비" }] as const;
   const allMetrics = [...Object.values(report.totals), ...report.marketplaces.flatMap(row => [row.revenue, row.estimatedProfit]), ...report.media.map(row => row.adSpend)];
@@ -122,6 +129,6 @@ export function DailyReportSheet({ data, date, filters, options }: { data: Dashb
     <section className="integrated-daily-kpis" aria-label="데일리 성과 요약">{metrics.map(metric => <div className="integrated-daily-kpi" key={metric.key}><span>{metric.title}</span><Result metric={report.totals[metric.key]} /><small>전일 {won(report.totals[metric.key].previous)}</small></div>)}</section>
     <section className="integrated-daily-section"><div className="integrated-daily-section-title"><h3>판매처별 매출 · 이익</h3><span>당일 금액 / 전일 대비 변화</span></div><table><thead><tr><th scope="col">판매처</th><th scope="col">매출</th><th scope="col">추정 순이익</th></tr></thead><tbody>{channels.map(channel => { const row = report.marketplaces.find(item => item.marketplace === channel.id); return <tr key={channel.id}><th scope="row">{channel.name}</th><td><Result metric={row?.revenue ?? EMPTY} /></td><td><Result metric={row?.estimatedProfit ?? EMPTY} /></td></tr>; })}</tbody></table>{!channels.length ? <p className="integrated-daily-empty">선택한 범위에 판매 플랫폼이 없습니다.</p> : null}</section>
     <section className="integrated-daily-section"><div className="integrated-daily-section-title"><h3>광고 매체별 집행비</h3><span>당일 금액 / 전일 대비 변화</span></div><table><thead><tr><th scope="col">광고 매체</th><th scope="col">당일 광고비</th><th scope="col">전일 광고비</th><th scope="col">증감률 · 증감액</th></tr></thead><tbody>{media.map(medium => { const metric = report.media.find(item => item.medium === medium)?.adSpend ?? EMPTY; return <tr key={medium}><th scope="row">{MEDIA[medium]}</th><td>{won(metric.current)}<Basis metric={metric} /></td><td>{won(metric.previous)}</td><td className={`integrated-daily-${tone(metric.change)}`}>{dailyChangeLabel(metric)}<small>{signedWon(metric.change)}</small></td></tr>; })}</tbody></table>{!media.length ? <p className="integrated-daily-empty">선택한 범위에 광고 매체가 없습니다.</p> : null}</section>
-    <footer className="integrated-daily-basis"><strong>집계 기준</strong>{data.summary.provisional || report.isEstimate ? <p>{data.summary.provisional ? "잠정 자료 · 한국시간 오늘을 포함한 집계입니다. " : ""}{report.isEstimate ? "추정 데이터 포함. " : ""}발행된 금액이며 모든 원천의 수집 완료를 뜻하지 않습니다.</p> : null}<p>{partial ? "일부 수집·매핑·원가 입력이 미완료되어 확인된 금액 기준입니다. " : "선택 범위에 저장된 일별 집계 기준입니다. "}{missing ? `일부 미확인 원천: ${missing}. ` : ""}—는 미확인, 0원은 확인된 0원입니다. 전일 자료가 없거나 0원·음수 기준이면 증감률 대신 상태와 증감액을 표시합니다.</p><p>추정 순이익은 저장된 원가·수수료·배송비·광고비 등 비용과 배분 기준을 반영합니다. Meta·Google 전환매출은 판매처 매출에 중복 합산하지 않습니다. 전일 비교는 관측 변화이며 광고의 인과효과를 뜻하지 않습니다.</p><div>제품 통합 성과 · 데일리 보고<span>A4 · 요약</span></div></footer>
+    <footer className="integrated-daily-basis"><strong>집계 기준</strong>{data.summary.provisional || report.isEstimate ? <p>{data.summary.provisional ? "잠정 자료 · 한국시간 오늘을 포함한 집계입니다. " : ""}{report.isEstimate ? "추정 데이터 포함. " : ""}발행된 금액이며 모든 원천의 수집 완료를 뜻하지 않습니다.</p> : null}<p>{partial ? "일부 수집·매핑·원가 입력이 미완료되어 확인된 금액 기준입니다. " : "선택 범위에 저장된 일별 집계 기준입니다. "}{missing ? `일부 미확인 원천: ${missing}. ` : ""}—는 미확인, 0원은 확인된 0원입니다. 전일 자료가 없거나 0원·음수 기준이면 증감률 대신 상태와 증감액을 표시합니다.</p>{native ? <><p>{NATIVE_RESULT_HELP} 비용 포함 범위와 추정 여부는 각 원본 보고서 기준을 유지합니다.</p><NativeResultPublicationTimes date={date} sources={data.summary.asOfBySource} />{nativeOverlap ? <p>{NATIVE_OVERLAP_HELP}</p> : null}<p>전일 비교는 관측 변화이며 광고의 인과효과를 뜻하지 않습니다.</p></> : <p>추정 순이익은 저장된 원가·수수료·배송비·광고비 등 비용과 배분 기준을 반영합니다. Meta·Google 전환매출은 판매처 매출에 중복 합산하지 않습니다. 전일 비교는 관측 변화이며 광고의 인과효과를 뜻하지 않습니다.</p>}<div>제품 통합 성과 · 데일리 보고<span>A4 · 요약</span></div></footer>
   </article>;
 }

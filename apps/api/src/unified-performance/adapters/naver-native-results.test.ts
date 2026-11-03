@@ -110,3 +110,86 @@ test("optional cost fingerprints and calculated timestamps never hide stored nat
   const failed = errors(); failed.daily_sales_unit_profits = ["NAVER_DAILY_SALES_UNIT_PROFITS_READ_FAILED"];
   assert.equal(normalize(fixture(), failed).sales.length, 0);
 });
+
+test("durable native results retain product net directly and store final net includes fake purchases exactly once", () => {
+  const raw = fixture();
+  raw.daily_fake_purchases = [row("fake", { amount: "12345", updatedAt: "2026-11-02T08:00:00Z" })];
+  const before = structuredClone(raw), batch = normalize(raw);
+  const total = batch.nativeResults!.find(result => result.kind === "SUMMARY")!;
+  const product = batch.nativeResults!.find(result => result.kind === "PRODUCT")!;
+  assert.deepEqual(total.netProfit, { known: "988312.000000", complete: "988312.000000" });
+  assert.deepEqual(product.netProfit, { known: "1043357.000000", complete: "1043357.000000" });
+  assert.deepEqual(total.adSpend, { known: "2385197.000000", complete: "2385197.000000" });
+  assert.equal(total.profitBeforeAds.known, "3373509.000000");
+  assert.equal(product.profitBeforeAds.known, "3428554.000000");
+  assert.equal(total.audit!.nativeNetBeforeFakePurchase, "1000657.000000");
+  assert.equal(total.audit!.fakePurchaseAmount, "12345.000000");
+  assert.equal(total.audit!.deliveryMargin, "-42700.000000");
+  assert.equal(total.sourceUpdatedAt, "2026-11-02T08:00:00.000Z");
+  assert.equal(total.quantity, "361.000000");
+  assert.equal(product.productKey, `naver:${scope}:product:native-unit`);
+  assert.ok(batch.coverage.every(coverage => coverage.sourceFingerprint === batch.sourceFingerprint && coverage.sourceVersion === batch.sourceFingerprint));
+  assert.ok([...batch.sales, ...batch.adSpends, ...batch.commonExpenses].every(entry => entry.ref.sourceVersion === batch.sourceFingerprint));
+  assert.deepEqual(raw, before, "producer never mutates source rows");
+  raw.daily_sales_unit_profits[0].totalUnitCost = "999999";
+  assert.deepEqual(normalize(raw).nativeResults!.map(result => result.netProfit), batch.nativeResults!.map(result => result.netProfit),
+    "direct source net is not rebuilt from cost or VAT fields");
+});
+
+test("two native store final results reproduce 2255626 after the current ads and 304800 fake purchases", () => {
+  const first = fixture(), second = fixture();
+  Object.assign(first.daily_store_summaries[0], { totalProductRevenue: "5553500", totalAdCost: "2318578", estimatedNetProfit: "1025760",
+    totalVatAmount: "555350", customerPaidDeliveryFee: "32200", estimatedDeliveryBaseCost: "0", deliveryMargin: "32200" });
+  Object.assign(first.daily_sales_unit_profits[0], { totalProductRevenue: "5553500", totalAdCost: "2318578", estimatedNetProfit: "993560", vatAmount: "555350" });
+  Object.assign(second.daily_store_summaries[0], { totalProductRevenue: "6372310", totalAdCost: "1759579", estimatedNetProfit: "1534666",
+    totalVatAmount: "637231", customerPaidDeliveryFee: "0", estimatedDeliveryBaseCost: "241500", deliveryMargin: "-241500" });
+  Object.assign(second.daily_sales_unit_profits[0], { totalProductRevenue: "6372310", totalAdCost: "1759579", estimatedNetProfit: "1776166", vatAmount: "637231" });
+  // Only the combined fake purchase amount matters in this two-store fixture.
+  second.daily_fake_purchases = [row("fake", { amount: "304800" })];
+  const firstResult = normalize(first).nativeResults!.find(result => result.kind === "SUMMARY")!;
+  const secondScope = "22222222-2222-4222-8222-222222222222";
+  for (const rows of Object.values(second)) for (const item of rows) item.storeId = secondScope;
+  second.stores[0].id = secondScope;
+  const secondResult = normalizeNaverStoredDay({ ...request(), scopeKeys: [secondScope] }, second, errors(), configuration, at).nativeResults!.find(result => result.kind === "SUMMARY")!;
+  assert.equal(new Prisma.Decimal(firstResult.netProfit.known!).plus(secondResult.netProfit.known!).toFixed(6), "2255626.000000");
+  assert.notEqual(firstResult.productKey, secondResult.productKey);
+  assert.equal(secondResult.adSpend.known, "1759579.000000", "the refreshed source ad value is retained directly");
+});
+
+test("native result nulls remain strict while children, store-level rows and empty days preserve their own identities", () => {
+  const raw = fixture();
+  raw.daily_sales_unit_profits[0].isStoreLevel = true;
+  raw.daily_sales_unit_profits.push(row("child", { parentSalesUnitId: "native-unit", totalProductRevenue: "9999999", estimatedNetProfit: "9999999" }));
+  let results = normalize(raw).nativeResults!;
+  assert.equal(results.length, 2);
+  assert.equal(results[1].kind, "PRODUCT"); assert.equal(results[1].productName, null);
+  assert.equal(results[1].netProfit.known, "1043357.000000");
+  raw.daily_store_summaries[0].estimatedNetProfit = null;
+  raw.daily_sales_unit_profits[0].estimatedNetProfit = null;
+  raw.daily_sales_unit_profits[0].totalQuantity = null;
+  results = normalize(raw).nativeResults!;
+  for (const result of results) {
+    assert.deepEqual(result.netProfit, { known: null, complete: null });
+    assert.equal(result.quantity, null);
+  }
+  const fakeUnknown = fixture(); fakeUnknown.daily_fake_purchases = [row("fake", { amount: "invalid" })];
+  assert.deepEqual(normalize(fakeUnknown).nativeResults![0].netProfit, { known: null, complete: null });
+  const adsUnknown = fixture(); adsUnknown.daily_store_summaries[0].totalAdCost = null; adsUnknown.daily_sales_unit_profits[0].totalAdCost = null;
+  results = normalize(adsUnknown).nativeResults!;
+  assert.deepEqual(results[0].adSpend, { known: null, complete: null });
+  assert.equal(results[0].netProfit.known, "1000657.000000", "known stored net does not depend on reconstructing net plus/minus unknown ads");
+  const empty = fixture(); empty.daily_sales_unit_profits = [];
+  for (const key of ["totalProductRevenue", "totalAdCost", "estimatedNetProfit", "totalVatAmount", "customerPaidDeliveryFee", "estimatedDeliveryBaseCost", "deliveryMargin"]) empty.daily_store_summaries[0][key] = "0";
+  assert.deepEqual(normalize(empty).nativeResults!.map(result => [result.kind, result.netProfit.known, result.quantity]), [["SUMMARY", "0.000000", "0.000000"]]);
+});
+
+test("native result identities and fingerprints are stable under source row reordering", () => {
+  const raw = fixture();
+  raw.daily_sales_unit_profits.push(row("store-row", { canonicalSalesUnitId: "store-unit", displayName: "스토어 공통", isStoreLevel: true,
+    totalQuantity: "0", totalProductRevenue: "0", totalAdCost: "0", estimatedNetProfit: "0", vatAmount: "0" }));
+  const first = normalize(raw);
+  raw.daily_sales_unit_profits.reverse();
+  const second = normalize(raw);
+  assert.deepEqual(second.nativeResults, first.nativeResults);
+  assert.equal(second.sourceFingerprint, first.sourceFingerprint);
+});

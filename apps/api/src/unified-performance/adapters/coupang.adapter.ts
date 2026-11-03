@@ -9,6 +9,8 @@ import type { AdapterBatch, AdapterRequest, SourceAdapter } from "../types";
 import { COUPANG_UPLOAD_SCOPE, normalizeCoupangAdsDay } from "./coupang-ads";
 import { normalizeCoupangSalesDay } from "./coupang-sales";
 import { coupangConfiguration } from "./coupang-configuration";
+import { readCoupangNativeDailyResults } from "../../coupang/coupang-native-results";
+import type { NativeStoredResult } from "../native-result-contract";
 
 const MAX_ROWS = 10000;
 const day = (value: Date) => value.toISOString().slice(0, 10);
@@ -119,10 +121,27 @@ export async function readCoupangDay(tx: Prisma.TransactionClient, management: U
     coverage.collectionState = "PARTIAL"; coverage.rowsPresent = saleCandidates.length + manual.length;
   }
   if (adIssues.length) for (const coverage of adBatch.coverage) coverage.collectionState = "PARTIAL";
+  // The native calculator sees the very same read snapshot as the retained audit ledger.
+  // Isolate unavailable native tables so their failure cannot erase a healthy raw component.
+  let nativeResults: NativeStoredResult[];
+  await tx.$executeRawUnsafe("SAVEPOINT coupang_native_read");
+  try {
+    nativeResults = await readCoupangNativeDailyResults(tx, date);
+    await tx.$executeRawUnsafe("RELEASE SAVEPOINT coupang_native_read");
+  } catch {
+    await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT coupang_native_read");
+    await tx.$executeRawUnsafe("RELEASE SAVEPOINT coupang_native_read");
+    const unavailable = { known: null, complete: null };
+    nativeResults = [{ kind: "SUMMARY", group: "COUPANG", productKey: "COUPANG:SUMMARY", productName: null,
+      quantity: null, revenue: unavailable, adSpend: unavailable, netProfit: unavailable, profitBeforeAds: unavailable,
+      sourceUpdatedAt: null, issues: ["COUPANG_NATIVE_READ_FAILED"] }];
+  }
   const next = new Date(at.getTime() + 86400000).toISOString().slice(0, 10);
   const batch: AdapterBatch = { sales: saleBatch.sales, adSpends: adBatch.adSpends, commonExpenses: saleBatch.commonExpenses,
     coverage: [...saleBatch.coverage, ...adBatch.coverage], sourceControlTotals: [...saleBatch.sourceControlTotals, ...adBatch.sourceControlTotals],
-    sourceFingerprint: hash([saleBatch.sourceFingerprint, adBatch.sourceFingerprint, request.sourceWatermarks, request.sourcePolicySnapshot]), nextCursor: next <= request.to ? next : null };
+    nativeResults,
+    sourceFingerprint: hash([saleBatch.sourceFingerprint, adBatch.sourceFingerprint, sourceVersion, nativeResults,
+      request.sourceWatermarks, request.sourcePolicySnapshot]), nextCursor: next <= request.to ? next : null };
   assertAdapterBatch(request, "COUPANG", batch); return batch;
 }
 
@@ -132,6 +151,6 @@ export class CoupangPerformanceAdapter implements SourceAdapter {
   constructor(private readonly management: UnifiedManagementRepository) {}
   read(request: AdapterRequest): Promise<AdapterBatch> {
     assertUnifiedEnabled(); coupangPageDate(request);
-    return this.management.read(tx => readCoupangDay(tx, this.management, request));
+    return this.management.read(tx => readCoupangDay(tx, this.management, request), { timeoutMs: 20000 });
   }
 }
