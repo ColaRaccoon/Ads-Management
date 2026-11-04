@@ -7,11 +7,12 @@ export type ReconciliationCandidate = SourcePartition & { published: boolean; la
 export type ReconciliationCheckOutcome = "UNCHANGED" | "PUBLISHED" | "QUEUED" | "UNAVAILABLE" | "FAILED";
 /** Only date evidence is projected. Source-policy choice and monetary calculations remain in adapters. */
 export function sourceDateStatement(scope: ReportScope, from: string, through: string, limit: number) {
-  // Collapse repeated dates before the UNION. Keep SQL date columns typed so
+  // Keep UNION branches simple so PostgreSQL can use parallel source scans.
+  // Keep SQL date columns typed so
   // publication/check lookups can use their existing date indexes. Naver dates
   // are untrusted JSON strings and must never be cast to date here.
   const nativeDates = scope.platform !== "NAVER";
-  const read = (table: string, column: string, where: Prisma.Sql) => Prisma.sql`SELECT DISTINCT ${Prisma.raw(column)} AS date FROM ${Prisma.raw(table)} t WHERE ${where}`;
+  const read = (table: string, column: string, where: Prisma.Sql) => Prisma.sql`SELECT ${Prisma.raw(column)} AS date FROM ${Prisma.raw(table)} t WHERE ${where}`;
   const connection = scope.scopeKey === "LEGACY_UNBOUND" ? Prisma.sql`t.connection_id IS NULL AND t.source='CSV'` : Prisma.sql`t.connection_id::text=${scope.scopeKey}`;
   let sources: Prisma.Sql[];
   switch (scope.platform) {

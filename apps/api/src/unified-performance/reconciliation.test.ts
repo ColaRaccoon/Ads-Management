@@ -160,7 +160,7 @@ test("sole configured Cafe24 owner discovers legacy CSV dates without claiming a
     "the target must actually be a configured Cafe24 shop");
   assert.match(legacyBranch, /AND NOT EXISTS\(SELECT 1 FROM meta_ads\.source_connections c WHERE c\.provider='CAFE24' AND c\.id::text<>\$\d+\)/,
     "any other configured shop disables historical ownership inference");
-  assert(legacyBranch.includes("SELECT DISTINCT t.order_date AS date"));
+  assert(legacyBranch.includes("SELECT t.order_date AS date"));
   assert(!/amount|revenue|profit|quantity|product_name/i.test(legacyBranch));
   const legacy = sourceDateStatement({ ...scope, platform: "CAFE24", scopeKey: "LEGACY_UNBOUND" }, "2026-11-01", "2026-11-02", 24);
   assert.equal(legacy.text.split(" UNION ALL ").filter(branch => branch.includes("cafe24_order_lines")).length, 1,
