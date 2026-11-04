@@ -7,7 +7,11 @@ export type ReconciliationCandidate = SourcePartition & { published: boolean; la
 export type ReconciliationCheckOutcome = "UNCHANGED" | "PUBLISHED" | "QUEUED" | "UNAVAILABLE" | "FAILED";
 /** Only date evidence is projected. Source-policy choice and monetary calculations remain in adapters. */
 export function sourceDateStatement(scope: ReportScope, from: string, through: string, limit: number) {
-  const read = (table: string, column: string, where: Prisma.Sql) => Prisma.sql`SELECT ${Prisma.raw(column)}::text AS date FROM ${Prisma.raw(table)} t WHERE ${where}`;
+  // Collapse repeated dates before the UNION. Keep SQL date columns typed so
+  // publication/check lookups can use their existing date indexes. Naver dates
+  // are untrusted JSON strings and must never be cast to date here.
+  const nativeDates = scope.platform !== "NAVER";
+  const read = (table: string, column: string, where: Prisma.Sql) => Prisma.sql`SELECT DISTINCT ${Prisma.raw(column)} AS date FROM ${Prisma.raw(table)} t WHERE ${where}`;
   const connection = scope.scopeKey === "LEGACY_UNBOUND" ? Prisma.sql`t.connection_id IS NULL AND t.source='CSV'` : Prisma.sql`t.connection_id::text=${scope.scopeKey}`;
   let sources: Prisma.Sql[];
   switch (scope.platform) {
@@ -38,18 +42,19 @@ export function sourceDateStatement(scope: ReportScope, from: string, through: s
   }
   // Retain dates after their last source row is deleted, so an old publication
   // can still be checked for a source-confirmed empty replacement or a gap.
-  sources.push(read("meta_ads.unified_source_publications", "t.business_date", Prisma.sql`t.platform=${scope.platform} AND t.scope_key=${scope.scopeKey}`));
+  sources.push(read("meta_ads.unified_source_publications", nativeDates ? "t.business_date" : "t.business_date::text", Prisma.sql`t.platform=${scope.platform} AND t.scope_key=${scope.scopeKey}`));
   if (["META", "GOOGLE", "CAFE24"].includes(scope.platform) && scope.scopeKey !== "LEGACY_UNBOUND") {
     const kind = scope.platform === "META" ? "META_ADSET" : scope.platform === "GOOGLE" ? "GOOGLE_CAMPAIGN" : "CAFE24_ORDER";
     sources.push(read("meta_ads.source_coverage", "t.metric_date", Prisma.sql`t.connection_id::text=${scope.scopeKey} AND t.data_kind::text=${kind}
       AND t.state='COMPLETE_ZERO' AND t.row_count=0 AND t.last_success_run_id IS NOT NULL AND t.last_success_at IS NOT NULL`));
   }
   return Prisma.sql`WITH observed AS (${Prisma.join(sources, " UNION ALL ")}), dates AS (SELECT DISTINCT date FROM observed
-    WHERE date IS NOT NULL AND date<=${through} AND date~'^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-    , classified AS (SELECT d.date, EXISTS(SELECT 1 FROM meta_ads.unified_source_publications p WHERE p.platform=${scope.platform}
-      AND p.scope_key=${scope.scopeKey} AND p.business_date::text=d.date) AS published,
-      (SELECT c.last_checked_at FROM meta_ads.unified_reconciliation_checks c WHERE c.platform=${scope.platform}
-        AND c.scope_key=${scope.scopeKey} AND c.business_date::text=d.date) AS "lastCheckedAt" FROM dates d)
+    WHERE date IS NOT NULL AND date::text<=${through} AND date::text~'^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+    , classified AS (SELECT d.date::text AS date, EXISTS(SELECT 1 FROM meta_ads.unified_source_publications p WHERE p.platform=${scope.platform}
+      AND p.scope_key=${scope.scopeKey} AND ${Prisma.raw(nativeDates ? "p.business_date" : "p.business_date::text")}=d.date) AS published,
+      c.last_checked_at AS "lastCheckedAt" FROM dates d
+      LEFT JOIN meta_ads.unified_reconciliation_checks c ON c.platform=${scope.platform}
+        AND c.scope_key=${scope.scopeKey} AND ${Prisma.raw(nativeDates ? "c.business_date" : "c.business_date::text")}=d.date)
     SELECT * FROM (
       (SELECT * FROM classified WHERE date>=${from} ORDER BY "lastCheckedAt" ASC NULLS FIRST, date DESC LIMIT ${limit})
       UNION ALL
