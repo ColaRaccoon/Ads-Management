@@ -26,3 +26,12 @@ Product margin continues to use source adset spend; ad spend is retained indepen
 `scripts/check-daily-collection.ps1` continues to require actual scheduled `SUCCEEDED` results and exact own-level coverage/canonical amounts. Only the above warning is accepted, with the publication evidence, independently recomputed ad/adset L1, original totals, day and all six <= USD 10 boundaries checked. Other warnings remain attention items. Past manual recovery does not become scheduled success: the November 4 Meta scheduled run remains `ACTION_REQUIRED` in preserved history.
 
 The monitor in the main workspace uses the existing protected production query helper. No Supabase relogin or new authentication mechanism is required.
+
+## Production deployment verified
+
+- Release: `6c66dbf4b35e55928e6a358dcc4cf9597f36f30b`.
+- Railway deployment: `f7a609c7-2000-4a7c-aee0-9313a2f0a4b6`, `SUCCESS`.
+- Protected readiness probe at 2026-11-05 09:38 KST returned `ready` with that exact release. Cafe24/Meta daily schedule flags and definitions remain enabled.
+- Monitoring automation 24 remains active at 04:10 KST and references the approved tolerance and persisted evidence checks.
+- Monitor regression with synthetic receipts accepted USD 6 and rejected accumulated USD 12. Actual read-only production health check still reports the preserved November 4 Meta scheduled failure, with both stored Meta totals exactly USD 3,938.27.
+- No historical canonical data rewritten; the next scheduled execution is the first real scheduled test of this release.
