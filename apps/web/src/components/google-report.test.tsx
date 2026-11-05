@@ -69,7 +69,7 @@ function renderMapping(manage: boolean, mappings: GoogleMappings = { campaignMap
 
 test("profit retains integer server totals and exports while technical details move to diagnostics", () => {
   const html = render({ ...fixture, summary: { ...fixture.summary, adSpendKrwExact: "20000.5" } });
-  for (const value of ["35,000 원", "20,001 원", "35%", "5배", "상품A", "2026-10-25", "엑셀 출력"]) assert.ok(html.includes(value), value);
+  for (const value of ["35,000 원", "20,001 원", "35%", "5.00배", "상품A", "2026-10-25", "엑셀 출력"]) assert.ok(html.includes(value), value);
   assert.doesNotMatch(html, /현재 페이지 CSV/);
   assert.ok(!html.includes("35.00%"));
   assert.ok(!html.includes("20,000.5 원"));
@@ -298,16 +298,17 @@ test("profit table displays one complete set with the unchanged server revenue",
 });
 
 test("Google margin displays server aggregate advertising ratios rather than averaging visible products", () => {
-  const product = { ...row, impressions: 1000, clicks: 10, ctr: 0.01, cpcKrw: 2000, costPerSaleKrw: 10000 };
-  const summary = { ...fixture.summary, impressions: 9000, clicks: 333, ctr: 0.037, cpcKrw: 123.456789, costPerSaleKrw: 4567.891234 };
+  const product = { ...row, impressions: 1000, clicks: 10, ctr: 0.012345, roas: 5.6789, cpcKrw: 2000, costPerSaleKrw: 10000 };
+  const summary = { ...fixture.summary, impressions: 9000, clicks: 333, ctr: 0.037, roas: 4.321, cpcKrw: 123.456789, costPerSaleKrw: 4567.891234 };
   const html = render({ ...fixture, products: [product], summary });
   const body = tableRowValues(html, "tbody");
   const footer = tableRowValues(html, "tfoot");
-  for (const [header, value] of Object.entries({ "노출수": "1,000", "클릭수": "10", "클릭률": "1%", "클릭당 비용": "2,000 원", "판매 1개당 광고비": "10,000 원" })) assert.equal(body[header], value, header);
-  for (const [header, value] of Object.entries({ "노출수": "9,000", "클릭수": "333", "클릭률": "4%", "클릭당 비용": "123 원", "판매 1개당 광고비": "4,568 원" })) assert.equal(footer[header], value, header);
+  for (const [header, value] of Object.entries({ "노출수": "1,000", "클릭수": "10", "클릭률": "1.23%", "광고수익률": "5.68배", "클릭당 비용": "2,000 원", "판매 1개당 광고비": "10,000 원" })) assert.equal(body[header], value, header);
+  for (const [header, value] of Object.entries({ "노출수": "9,000", "클릭수": "333", "클릭률": "3.70%", "광고수익률": "4.32배", "클릭당 비용": "123 원", "판매 1개당 광고비": "4,568 원" })) assert.equal(footer[header], value, header);
   const bottom = bottomSummary(html);
   assert.match(bottom, /노출수 \/ 클릭수<\/span><strong>9,000 \/ 333<\/strong>/);
-  assert.match(bottom, /클릭률<\/span><strong>4%<\/strong>/);
+  assert.match(bottom, /클릭률<\/span><strong>3.70%<\/strong>/);
+  assert.match(bottom, /광고수익률<\/span><strong>4.32배<\/strong>/);
   assert.match(bottom, /클릭당 비용<\/span><strong>123 원<\/strong>/);
   assert.match(bottom, /판매 1개당 광고비<\/span><strong>4,568 원<\/strong>/);
 });
@@ -319,7 +320,7 @@ test("absent legacy or null advertising metrics remain unknown instead of becomi
       const cells = tableRowValues(html, part);
       for (const header of ["노출수", "클릭수", "클릭률", "클릭당 비용", "판매 1개당 광고비"]) assert.equal(cells[header], "—", `${part} ${header}`);
       assert.equal(cells["광고비"], "20,000 원");
-      assert.equal(cells["광고수익률"], "5배");
+      assert.equal(cells["광고수익률"], "5.00배");
     }
     const bottom = bottomSummary(html);
     assert.match(bottom, /노출수 \/ 클릭수<\/span><strong>— \/ —<\/strong>/);

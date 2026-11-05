@@ -74,7 +74,11 @@ test("Google Excel keeps Meta column order, numeric precision, total style and f
   assert.match(cell(sheet, "H6"), /<v>-9999\.5<\/v>/); // Server total, not product subtotal.
   assert.match(cell(sheet, "B6"), /<v>123<\/v>/);
   const xfs = styles.match(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/)![1].match(/<xf\b[^>]*\/>|<xf\b[^>]*>[\s\S]*?<\/xf>/g)!;
-  for (const ref of ["I5", "K5", "N5", "I6", "K6", "N6"]) {
+  for (const ref of ["I5", "N5", "I6", "N6"]) {
+    const styleId = Number(cell(sheet, ref).match(/ s="(\d+)"/)![1]);
+    assert.match(xfs[styleId], /numFmtId="10"/); // Built-in 0.00%; values remain precise.
+  }
+  for (const ref of ["K5", "K6"]) {
     const styleId = Number(cell(sheet, ref).match(/ s="(\d+)"/)![1]);
     assert.match(xfs[styleId], /numFmtId="9"/); // Integer percentage; values remain precise.
   }

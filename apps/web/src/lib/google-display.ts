@@ -44,8 +44,13 @@ export const googleMoney = (value: number | string | null | undefined) => {
   return rounded === "—" ? rounded : `${rounded} 원`;
 };
 export const googleNumber = (value: number | null | undefined) => roundedGoogleInteger(value);
-export const googleRatio = (value: number | null, percent = false) => {
-  const rounded = roundedGoogleInteger(value == null ? null : percent ? value * 100 : value);
+export const googleRatio = (value: number | null, percent = false, fractionDigits = 0) => {
+  const scaled = value == null ? null : percent ? value * 100 : value;
+  const rounded = fractionDigits === 0 ? roundedGoogleInteger(scaled)
+    : scaled == null || !Number.isFinite(scaled) ? "—"
+    : (Number(scaled.toFixed(fractionDigits)) || 0).toLocaleString("ko-KR", {
+      minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits
+    });
   return rounded === "—" ? rounded : `${rounded}${percent ? "%" : "배"}`;
 };
 export const googleSaleUnit = (row: Pick<GoogleProfitRow, "saleUnitLabel" | "saleUnitLabels">) => row.saleUnitLabel || (row.saleUnitLabels?.length ? `혼합 단위 (${row.saleUnitLabels.join(" / ")} · 기존 단위 포함 가능)` : "기존 판매단위");

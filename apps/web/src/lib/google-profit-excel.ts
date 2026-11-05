@@ -19,6 +19,7 @@ function profitCells(row: GoogleProfitRow, label: string, total = false): XlsxCe
   const money: XlsxCellStyle = total ? "TotalKrw" : "Krw";
   const number: XlsxCellStyle = total ? "TotalNumber" : "Number";
   const percent: XlsxCellStyle = total ? "TotalPercent0" : "Percent0";
+  const percent2: XlsxCellStyle = total ? "TotalPercent" : "Percent";
   const text: XlsxCellStyle = total ? "TotalText" : "Text";
   return [
     { value: label, style: text },
@@ -29,12 +30,12 @@ function profitCells(row: GoogleProfitRow, label: string, total = false): XlsxCe
     numberCell(view.totalCostKrw, money),
     numberCell(view.marginBeforeCouponKrw, money),
     numberCell(row.marginKrw, money),
-    numberCell(row.roas, percent),
+    numberCell(row.roas, percent2),
     numberCell(row.costPerSaleKrw, money),
     numberCell(row.marginRate, percent),
     numberCell(row.impressions, number),
     numberCell(row.clicks, number),
-    numberCell(row.ctr, percent),
+    numberCell(row.ctr, percent2),
     numberCell(row.cpcKrw, money),
     { value: row.complete ? "확정" : "미확정", style: text }
   ];

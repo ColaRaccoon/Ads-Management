@@ -25,12 +25,12 @@ export function GoogleProfitOverview({ data, productName, filtered }: {
     { key: "cost", header: "총비용", render: (row) => googleMoney(googleProfitView(row).totalCostKrw) },
     { key: "marginBeforeCoupon", header: "쿠폰 적용 전 마진", render: (row) => margin(googleProfitView(row).marginBeforeCouponKrw) },
     { key: "margin", header: "최종 순마진", render: (row) => margin(row.marginKrw) },
-    { key: "roas", header: "광고수익률", render: (row) => googleRatio(row.roas) },
+    { key: "roas", header: "광고수익률", render: (row) => googleRatio(row.roas, false, 2) },
     { key: "costPerSale", header: "판매 1개당 광고비", render: (row) => googleMoney(row.costPerSaleKrw) },
     { key: "marginRate", header: "마진율", render: (row) => googleRatio(row.marginRate, true) },
     { key: "impressions", header: "노출수", render: (row) => googleNumber(row.impressions) },
     { key: "clicks", header: "클릭수", render: (row) => googleNumber(row.clicks) },
-    { key: "ctr", header: "클릭률", render: (row) => googleRatio(row.ctr ?? null, true) },
+    { key: "ctr", header: "클릭률", render: (row) => googleRatio(row.ctr ?? null, true, 2) },
     { key: "cpc", header: "클릭당 비용", render: (row) => googleMoney(row.cpcKrw) },
     { key: "status", header: "상태", render: (row) => <Status complete={row.complete} /> }
   ];
@@ -69,10 +69,10 @@ export function GoogleProfitTotal({ data, filtered }: { data: GoogleReportRespon
       <div className="metric-cell"><span>광고비</span><strong>{googleMoney(total.adSpendKrwExact)}</strong></div>
       <div className="metric-cell"><span>총비용</span><strong>{googleMoney(view.totalCostKrw)}</strong></div>
       <div className="metric-cell"><span>쿠폰 적용 전 마진</span><strong>{margin(view.marginBeforeCouponKrw)}</strong></div>
-      <div className="metric-cell"><span>광고수익률</span><strong>{googleRatio(total.roas)}</strong></div>
+      <div className="metric-cell"><span>광고수익률</span><strong>{googleRatio(total.roas, false, 2)}</strong></div>
       <div className="metric-cell"><span>판매 1개당 광고비</span><strong>{googleMoney(total.costPerSaleKrw)}</strong></div>
       <div className="metric-cell"><span>노출수 / 클릭수</span><strong>{googleNumber(total.impressions)} / {googleNumber(total.clicks)}</strong></div>
-      <div className="metric-cell"><span>클릭률</span><strong>{googleRatio(total.ctr ?? null, true)}</strong></div>
+      <div className="metric-cell"><span>클릭률</span><strong>{googleRatio(total.ctr ?? null, true, 2)}</strong></div>
       <div className="metric-cell"><span>클릭당 비용</span><strong>{googleMoney(total.cpcKrw)}</strong></div>
     </div>
   </section>;
