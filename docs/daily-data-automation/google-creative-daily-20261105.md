@@ -27,3 +27,13 @@
 - 실제 저장 데이터를 사용하는 로컬 production 웹 번들에서 화면 8행, ID별 전일 매칭, 실제 XLSX 다운로드·XML 내용, 열 선택, 검색을 검증했다. 운영 로그인 UI를 직접 조작한 검증과는 구분한다.
 
 비공개 응답과 SQL 적용 영수증, backfill 실행별 이력, 실제 XLSX 및 화면 캡처는 Git에서 제외된 `reports/google-creative-rollout-20261105/`에 보관한다. 실행 도구는 `scripts/google-creative-backfill.ts`이며 기본값은 읽기만 수행하고 `--apply`에서 정상 수집 publication을 실행한다. 배포 완료 정보는 실제 확인 뒤 추가한다.
+
+## 운영 배포 확인
+
+- 운영 릴리스: `064c5d0b00ed448154656a7cd39c929fc9ac632d`, 브랜치 `codex/google-creative-daily-report`.
+- Railway `grand-fascination` deployment `6e5d4612-f9e0-45e6-9d12-7af6dbedf272`: SUCCESS.
+- 2026-11-05 10:34 KST 보호된 readiness가 `ready` 및 같은 releaseId를 반환했다. 실제 보고 페이지 HTTP 200, 해당 페이지가 제공하는 JS에서 소재별 v2 화면 번들도 확인했다.
+- 배포 중 실제 Linux production API/웹 빌드와 C7 보호 검사, runtime closure 검사를 통과했다. 기존 D-1/D-7 예약 정의는 변경하지 않았으며, 두 예약 모두 새 GoogleAdsClient를 사용한다. 아직 새 버전의 다음 예약 시각이 도래한 결과까지 확인한 것은 아니다.
+- 별도 운영 SQL로 현재 데이터 16일·캠페인 99행·소재×날짜 323행을 재검증했다. 소재 실적 누락 0, 비용·노출·클릭 불일치 0, 미완료 커버리지 0. 과거 버전을 포함한 캠페인 이력 215행을 보존한다.
+- 과거 mixed-client 합성 테스트의 Google 응답 fixture도 새 광고 쿼리를 지원하도록 보완하고 Google 테스트 1개를 추가 통과했다. 같은 과거 harness의 Meta 테스트는 기존 카탈로그 fixture가 현행 계약과 맞지 않아 `CATALOG_INVALID`로 실패한다. 그 Meta 코드·fixture 계약은 이번 작업에서 변경하지 않았다.
+- 이 배포 확인과 fixture 보완만 담은 후속 커밋은 재배포하지 않는다. 실행 중인 릴리스는 위 고정 SHA다.

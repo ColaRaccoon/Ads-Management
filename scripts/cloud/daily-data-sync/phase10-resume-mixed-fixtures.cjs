@@ -56,6 +56,7 @@ function makeFixtures(fields, delayMs = 5) {
       const day = query.match(/segments.date = '([0-9-]+)'/)?.[1];
       const nonzero = day && Number(day.slice(-2)) % 2 === 0;
       if (query.includes('FROM campaign')) body = { results: nonzero ? [1,2,3].map(i => ({ campaign: { id: String(400000 + i), name: `Synthetic Google ${i}`, advertisingChannelType: 'SEARCH' }, segments: { date: day }, metrics: { costMicros: String(1000000*version), impressions: '100', clicks: '1' } })) : [] };
+      else if (query.includes('FROM ad_group_ad')) body = { results: nonzero && !query.includes('conversion_action_category') && !query.includes('video_trueview_views') ? [1,2,3].map(i => ({ campaign: { id: String(400000 + i) }, adGroup: { id: String(500000 + i), name: `Synthetic group ${i}` }, adGroupAd: { status: 'ENABLED', ad: { id: String(600000 + i), name: `Synthetic ad ${i}`, type: 'RESPONSIVE_SEARCH_AD' } }, segments: { date: day }, metrics: { costMicros: String(1000000*version), impressions: '100', clicks: '1' } })) : [] };
       else if (day) body = { results: nonzero ? [{ segments: { date: day }, metrics: { costMicros: String(3000000*version) } }] : [] };
       else body = { results: [{ customer: { id: '9000000001', currencyCode: 'KRW', timeZone: 'Asia/Seoul' } }] };
     } else if (url.origin === 'https://didadi0729.cafe24api.com') {
