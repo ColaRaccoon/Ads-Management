@@ -12,6 +12,7 @@ import { createGoogleCampaignMatcher, googleKeywordFromMapping } from "./google-
 import { toCafe24MatcherRules } from "../daily-sync/cafe24-rule-loader";
 import { createGoogleSaleMatcher } from "./google-sale-matcher";
 import { nativeCafe24FinancialSelect } from "../sales/sales-metrics.service";
+import { validGoogleCreatives } from "../domain/google-creative-metrics";
 
 const day = (value: Date) => value.toISOString().slice(0, 10);
 const number = (value: Prisma.Decimal | null | undefined) => value == null ? null : value.toNumber();
@@ -75,7 +76,7 @@ export class GoogleReadService {
     return { enabled, connections, products };
   }
 
-  async report(query: GoogleQuery, mode: "summary" | "profit" | "campaigns" = "summary") {
+  async report(query: GoogleQuery, mode: "summary" | "profit" | "campaigns" | "creatives" = "summary") {
     assertGoogleEnabled();
     const range = googleRange(query);
     return this.prisma.$transaction(tx => this.read(tx, query, range, mode), {
@@ -272,6 +273,33 @@ export class GoogleReadService {
     const cafeById = new Map(selectedCafe.map(c => [c.id, c]));
     const financialRows = result.salesSnapshots?.map(row => ({ ...row,
       productName: row.productId ? activeProducts.get(row.productId) ?? null : null }));
+    const creativeRows = [];
+    const missingCreativeDays = new Set<string>();
+    if (mode === "creatives") {
+      const factsById = new Map(selectedAds.map(row => [row.id, row]));
+      for (const parent of adMetrics) {
+        const fact = factsById.get(parent.id)!;
+        if (!validGoogleCreatives(fact.creativeMetrics, fact)) { missingCreativeDays.add(parent.date); continue; }
+        if (query.productId && parent.productId !== query.productId) continue;
+        for (const ad of fact.creativeMetrics.ads) {
+          const spend = parent.currencyCode === "KRW" ? new D(ad.costMicros).div(1_000_000)
+            : parent.exchangeRateKrw ? new D(ad.costMicros).div(1_000_000).times(parent.exchangeRateKrw) : null;
+          const purchaseValueKrw = parent.currencyCode === "KRW" ? ad.purchaseValue
+            : parent.exchangeRateKrw ? new D(ad.purchaseValue).times(parent.exchangeRateKrw).toNumber() : null;
+          creativeRows.push({ ...ad, date: parent.date, connectionId: parent.connectionId, customerId: parent.customerId,
+            campaignId: parent.campaignId, campaignName: parent.campaignName, currencyCode: parent.currencyCode,
+            productIds: parent.productId ? [parent.productId] : [], hasUnmapped: !parent.productId,
+            adSpendKrw: spend?.toNumber() ?? null, adSpendKrwExact: spend?.toFixed() ?? null,
+            ctr: ad.impressions ? ad.clicks / ad.impressions : null,
+            cpcKrw: ad.clicks ? spend?.div(ad.clicks).toNumber() ?? null : null,
+            cpmKrw: ad.impressions ? spend?.div(ad.impressions).times(1000).toNumber() ?? null : null,
+            purchaseValueKrw, cpaKrw: ad.purchaseCount > 0 ? spend?.div(ad.purchaseCount).toNumber() ?? null : null,
+            purchaseRoas: spend && !spend.isZero() && purchaseValueKrw !== null ? new D(purchaseValueKrw).div(spend).toNumber() : null,
+            warningCodes: parent.warningCodes });
+        }
+      }
+      creativeRows.sort((a, b) => `${a.date}/${a.connectionId}/${a.campaignId}/${a.adGroupId}/${a.adId}`.localeCompare(`${b.date}/${b.connectionId}/${b.campaignId}/${b.adGroupId}/${b.adId}`));
+    }
     return { ...result, unmappedSales: result.unmappedSales.map(row => { const original = cafeById.get(row.id);
       return { ...row, productNo: original?.productNo ?? null, optionName: original?.optionName ?? null }; }),
       range: { from: activeDays[0].date, to: activeDays[activeDays.length - 1].date },
@@ -280,7 +308,11 @@ export class GoogleReadService {
       products: financial || unpaged ? namedProducts : paged(namedProducts), campaigns: financial || unpaged ? result.campaigns : paged(result.campaigns),
       daily: result.daily.map(p => ({ ...p, productName: p.productId ? activeProducts.get(p.productId) ?? null : null })),
       coverage: coverage.filter(c => activeDates.has(c.date)),
-      pagination: { page, pageSize, total: mode === "campaigns" ? result.campaigns.length : result.products.length },
+      ...(mode === "creatives" ? { creatives: paged(creativeRows), creativeCompleteness: {
+        complete: activeDays.every(d => d.googleComplete) && missingCreativeDays.size === 0,
+        missingDates: [...new Set([...missingCreativeDays, ...activeDays.filter(d => !d.googleComplete).map(d => d.date)])].sort()
+      } } : {}),
+      pagination: { page, pageSize, total: mode === "creatives" ? creativeRows.length : mode === "campaigns" ? result.campaigns.length : result.products.length },
       notices: ["설정 판매가와 기존 비용 규칙 기준입니다. 실제 결제액 또는 Google 클릭 전환 매출이 아닙니다.",
         "Meta와 Google의 매출·마진을 합산하면 중복될 수 있습니다.", "취소·반품은 기존 수집 필터 범위이며 실제 환불액을 별도 차감하지 않습니다."] };
   }

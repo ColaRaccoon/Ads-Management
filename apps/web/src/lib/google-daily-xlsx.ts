@@ -1,5 +1,5 @@
 import type { GoogleReportResponse } from "../types/google";
-import { GOOGLE_DAILY_COLUMNS, googleCampaignKey, googleDailyCampaignValue, googleDailySalesMetrics, type GoogleDailyColumnKey, type GoogleDailyGroup } from "./google-daily-report";
+import { GOOGLE_DAILY_COLUMNS, googleCreativeKey, googleDailyCreativeValue, googleDailyCreativeTotals, googleDailySalesMetrics, type GoogleDailyColumnKey, type GoogleDailyGroup } from "./google-daily-report";
 import { buildXlsxWorkbook, type XlsxCell, type XlsxCellStyle, type XlsxWorkbookInput } from "./xlsx";
 import { googleReasons } from "./google-display";
 
@@ -13,40 +13,45 @@ const numeric = (value: number | string | null | undefined, style: XlsxCellStyle
 
 export function buildGoogleDailyXlsxInput(report: GoogleDailyExport): XlsxWorkbookInput {
   const columns = GOOGLE_DAILY_COLUMNS.filter(column => report.columns.includes(column.key));
-  const count = Math.max(11, columns.reduce((total, column) => total + (column.key === "campaign" ? 1 : 2), 0));
-  const input: XlsxWorkbookInput = { sheetName: "Google 데일리 리포트", columns: Array.from({ length: count }, (_, i) => ({ width: i ? 16 : 30 })), rows: [], merges: [] };
+  const count = Math.max(11, columns.reduce((total, column) => total + (column.key === "creative" ? 1 : 2), 0));
+  const input: XlsxWorkbookInput = { sheetName: "Google 데일리 리포트", columns: Array.from({ length: count }, (_, i) => ({ width: i ? 14 : 42 })), rows: [], merges: [],
+    print: { orientation: "landscape", paperSize: "A4", fitToWidth: 1, fitToHeight: 0 } };
   const banner = (text: string, fill: XlsxCell["fill"] = "REPORT_HEADER") => {
     input.rows.push({ height: 32, cells: [{ value: text, style: "Text", bold: true, fill, wrapText: true }] });
     input.merges!.push({ fromRow: input.rows.length, toRow: input.rows.length, fromColumn: 1, toColumn: count });
   };
   banner(`Google Daily Report · ${report.reportDate} · 전일 ${report.previousDate}`);
-  if (!report.data.completeness.complete || !report.previous.completeness.complete || !report.data.reconciliation.balanced) {
+  if (!report.data.completeness.complete || !report.previous.completeness.complete || !report.data.reconciliation.balanced ||
+      report.data.creativeCompleteness?.complete !== true || report.previous.creativeCompleteness?.complete !== true) {
     banner("현재 또는 전일에 미확정 데이터가 있습니다. 빈 지표는 0이 아닌 미확정/자료 없음입니다.", "GROUP_SAND");
   }
-  input.rows.push(["전체 제품수", "총 광고비 KRW", "총 판매수량", "판매 1개당 광고비", "페이지 기준 ROAS", "최종 순마진"].map(value => ({ value, style: "Header" })));
+  input.rows.push(["전체 제품수", "총 광고비 KRW", "총 구매 전환수", "구매 CPA (원)", "Google ROAS", "최종 순마진"].map(value => ({ value, style: "Header" })));
   const total = report.data.summary;
+  const creativeTotal = googleDailyCreativeTotals(report.data);
   input.rows.push([
     numeric(report.data.products.filter(row => row.productId !== null).length, "TotalNumber"),
-    numeric(total.adSpendKrwExact, "TotalKrw"), numeric(total.quantity, "TotalNumber"),
-    numeric(total.costPerSaleKrw, "TotalKrw"), numeric(total.roas, "TotalRatio"), numeric(total.marginKrw, "TotalKrw")
+    numeric(creativeTotal.spend, "TotalKrw"), numeric(creativeTotal.purchases, "Decimal"),
+    numeric(creativeTotal.cpa, "TotalKrw"), numeric(creativeTotal.roas, "TotalRatio"), numeric(total.marginKrw, "TotalKrw")
   ]);
   input.freezeRow = input.rows.length;
-  const previous = new Map(report.previous.campaigns.map(row => [googleCampaignKey(row), row]));
+  const previous = new Map((report.previous.creatives ?? []).map(row => [googleCreativeKey(row), row]));
   for (const group of report.groups) {
     input.rows.push([]);
-    banner(`${group.productName} · ${group.campaigns.length}개 캠페인 · ${group.sales.complete ? "확정" : "미확정"}`, "GROUP_MINT");
-    input.rows.push({ height: 36, cells: columns.flatMap<XlsxCell>(column => column.key === "campaign"
+    banner(`${group.productName} · ${group.creatives.length}개 소재 · ${group.sales.complete ? "확정" : "미확정"}`, "GROUP_MINT");
+    input.rows.push({ height: 36, cells: columns.flatMap<XlsxCell>(column => column.key === "creative"
       ? [{ value: column.label, style: "Header" as const }]
       : [report.reportDate, report.previousDate].map(date => ({ value: `${column.label}\n${date}`, style: "Header" as const, wrapText: true }))) });
-    for (const row of group.campaigns) {
-      const prior = previous.get(googleCampaignKey(row));
+    for (const row of group.creatives) {
+      const prior = previous.get(googleCreativeKey(row));
       input.rows.push({ height: 48, cells: columns.flatMap(column => {
-        if (column.key === "campaign") return [{ value: `${row.campaignName}\n${row.customerId} · ${row.campaignId}`, style: "Text" as const, wrapText: true }];
-        const style = column.key === "ctr" ? "Percent0" : column.key === "impressions" || column.key === "clicks" ? "Number" : "Krw";
-        return [numeric(googleDailyCampaignValue(row, column.key), style), numeric(googleDailyCampaignValue(prior, column.key), style)];
+        if (column.key === "creative") return [{ value: `${row.adName}\n${row.campaignName} · ${row.adId}`, style: "Text" as const, wrapText: true }];
+        const style: XlsxCellStyle = column.key === "ctr" || column.key === "videoViewRate" || column.key.startsWith("videoP") ? "Percent1"
+          : column.key === "purchaseRoas" ? "Ratio" : column.key === "purchaseCount" ? "Decimal"
+          : ["impressions", "clicks", "videoViews"].includes(column.key) ? "Number" : "Krw";
+        return [numeric(googleDailyCreativeValue(row, column.key), style), numeric(googleDailyCreativeValue(prior, column.key), style)];
       }) });
     }
-    if (!group.campaigns.length) banner("해당 날짜에 연결된 Google 캠페인이 없습니다.", "GROUP_SAND");
+    if (!group.creatives.length) banner("해당 날짜에 연결된 Google 소재이 없습니다.", "GROUP_SAND");
     banner("카페24 [유튜브] 판매 기반 마진", "GROUP_BLUE");
     const sales = googleDailySalesMetrics(group.sales);
     input.rows.push({ height: 36, cells: ["제품", ...sales.map(metric => metric.label)].map(value => ({ value, style: "Header", wrapText: true })) });

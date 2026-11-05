@@ -43,6 +43,8 @@ if (profile === 'reporting') {
     'metrics/meta-ad-metrics-read.service.js', 'metrics/meta-creative-lifetimes.js']) expected.add(name);
   // Google is an additive, reviewed feature in the reporting image. Keep each
   // generated module explicit: a new google/*.js file still requires review.
+  for (const name of ['daily-sync/google-ads.client.js', 'daily-sync/google-canonical-writer.service.js',
+    'domain/google-creative-metrics.js']) expected.add(name);
   for (const name of ['app.module.js',
     'google/google-access.js', 'google/google-mappings.service.js', 'google/google-campaign-matcher.js',
     'google/google-performance.js', 'google/google-read.service.js',

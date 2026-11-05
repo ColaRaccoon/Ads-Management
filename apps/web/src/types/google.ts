@@ -66,6 +66,8 @@ export type GoogleCampaignRow = {
   impressions: number; clicks: number; ctr: number | null; cpcKrw: number | null; warningCodes: string[];
 };
 export type GoogleReportResponse = {
+  creatives?: GoogleCreativeRow[];
+  creativeCompleteness?: { complete: boolean; missingDates: string[] };
   range: { from: string; to: string };
   summary: GoogleProfitRow & { calculatedProductsMarginKrw: number; allocatedAdSpendKrw: number | null; unallocatedAdSpendKrw: number | null; unmappedSalesCount: number };
   products: GoogleProfitRow[]; daily: GoogleProfitRow[]; campaigns: GoogleCampaignRow[];
@@ -75,4 +77,11 @@ export type GoogleReportResponse = {
   pagination: { page: number; pageSize: number; total: number };
   coverage: Array<{ connectionId: string; provider: string; date: string; selectedSource: string | null; complete: boolean; state: string; rowCount: number | null; amount: string | null; lastSuccessAt: string | null; lastAttemptAt: string | null; warningCodes: string[] }>;
   notices: string[];
+};
+
+export type GoogleCreativeRow = GoogleCampaignRow & {
+  date: string; adGroupId: string; adGroupName: string; adId: string; adName: string; adType: string; status: string;
+  purchaseCount: number; purchaseValueKrw: number | null; cpaKrw: number | null; purchaseRoas: number | null;
+  videoViews: number | null; videoViewRate: number | null; videoP25: number | null; videoP50: number | null; videoP75: number | null; videoP100: number | null;
+  assets: Array<{ id: string; type: "IMAGE" | "YOUTUBE_VIDEO"; name: string; imageUrl: string | null; videoId: string | null }>;
 };

@@ -10,13 +10,13 @@ import { apiGet, apiErrorMessage } from "@/lib/api";
 import { googleDateFilterError, googleFilterQuery, readGoogleDateFilters } from "@/lib/google-date-filters";
 import { googleMoney, googleNumber, googleRatio, googleReasons, googleSaleUnit } from "@/lib/google-display";
 import { buildGoogleDailyGroups, DEFAULT_GOOGLE_DAILY_SETTINGS, formatGoogleDailyValue, GOOGLE_DAILY_COLUMNS, GOOGLE_DAILY_SETTINGS_KEY,
-  googleCampaignKey, googleDailyCampaignValue, googleDailyQueries, googleDailySalesMetrics, loadGoogleDailyReport,
+  googleCreativeKey, googleDailyCreativeValue, googleDailyCreativeTotals, googleDailyQueries, googleDailySalesMetrics, loadGoogleDailyReport,
   normalizeGoogleDailySettings, type GoogleDailyColumnKey, type GoogleDailySettings } from "@/lib/google-daily-report";
 import { buildGoogleDailyXlsx } from "@/lib/google-daily-xlsx";
 import { downloadXlsx } from "@/lib/xlsx";
 import type { GoogleOptions, GoogleReportResponse } from "@/types/google";
 
-const fetchReport = (endpoint: "profit" | "campaigns", query: string) => apiGet<GoogleReportResponse>(`/google/${endpoint}?${query}`);
+const fetchReport = (endpoint: "profit" | "creatives", query: string) => apiGet<GoogleReportResponse>(`/google/${endpoint}?${query}`);
 
 export function GoogleDailyReportPage() {
   const search = useSearchParams().toString();
@@ -53,11 +53,11 @@ export function GoogleDailyReportPage() {
     catch (error) { return { groups: [], error: apiErrorMessage(error, "리포트 데이터를 확인해 주세요.") }; }
   }, [current.data, options.data, settings]);
   const columns = GOOGLE_DAILY_COLUMNS.filter(column => settings.columns.includes(column.key));
-  const previousRows = useMemo(() => new Map((previous.isError ? [] : previous.data?.campaigns ?? []).map(row => [googleCampaignKey(row), row])), [previous.data, previous.isError]);
+  const previousRows = useMemo(() => new Map((previous.isError ? [] : previous.data?.creatives ?? []).map(row => [googleCreativeKey(row), row])), [previous.data, previous.isError]);
   const busy = options.isLoading || (enabled && (current.isFetching || previous.isFetching)) || !settingsLoaded;
   const canExport = enabled && !!current.data && !!previous.data && !busy && !current.isError && !previous.isError && !model.error && model.groups.length > 0;
   const toggleColumn = (key: GoogleDailyColumnKey) => {
-    if (key === "campaign") return;
+    if (key === "creative") return;
     setSettings(value => ({ ...value, columns: value.columns.includes(key) ? value.columns.filter(column => column !== key) : [...value.columns, key] }));
   };
   const exportXlsx = () => {
@@ -70,16 +70,17 @@ export function GoogleDailyReportPage() {
   };
   const report = canRead && options.data?.enabled && !dateError && !current.isError ? current.data : undefined;
   const diagnosticsHref = `/google/diagnostics${dates ? `?${dates.current}` : ""}`;
+  const creativeTotal = report ? googleDailyCreativeTotals(report) : null;
   return <section className="page daily-report-page google-daily-report-page">
     <div className="page-title no-print"><div><h1>Google Daily Report</h1><p>보고 기준일: {dates?.reportDate ?? "날짜를 선택해 주세요"}</p></div>
       <div className="daily-report-controls">
         <select className="select" aria-label="광고비 필터" value={settings.spendOnly ? "hasSpend" : "all"} onChange={event => setSettings(value => ({ ...value, spendOnly: event.target.value === "hasSpend" }))}>
           <option value="all">전체</option><option value="hasSpend">광고비 존재</option>
         </select>
-        <label className="daily-report-search"><Search size={15} /><input aria-label="제품명 또는 캠페인명" placeholder="제품명 또는 캠페인명" value={settings.query} onChange={event => setSettings(value => ({ ...value, query: event.target.value }))} /></label>
-        <div className="daily-column-picker"><span><Settings2 size={15} />표시 항목</span><div className="daily-column-options">
-          {GOOGLE_DAILY_COLUMNS.map(column => <label key={column.key}><input type="checkbox" checked={settings.columns.includes(column.key)} disabled={column.key === "campaign"} onChange={() => toggleColumn(column.key)} />{column.label}</label>)}
-        </div></div>
+        <label className="daily-report-search"><Search size={15} /><input aria-label="제품명 또는 소재명" placeholder="제품명 또는 소재명" value={settings.query} onChange={event => setSettings(value => ({ ...value, query: event.target.value }))} /></label>
+        <details className="daily-column-picker"><summary><Settings2 size={15} />표시 항목</summary><div className="daily-column-options">
+          {GOOGLE_DAILY_COLUMNS.map(column => <label key={column.key}><input type="checkbox" checked={settings.columns.includes(column.key)} disabled={column.key === "creative"} onChange={() => toggleColumn(column.key)} />{column.label}</label>)}
+        </div></details>
         <button className="button" type="button" disabled={!canExport} onClick={() => window.print()}><Printer size={15} />출력</button>
         <button className="button primary" type="button" disabled={!canExport} onClick={exportXlsx}><Download size={15} />XLSX</button>
       </div>
@@ -94,36 +95,41 @@ export function GoogleDailyReportPage() {
     {exportError ? <p className="warning-strip" role="alert">{exportError}</p> : null}
     {busy ? <p className="daily-report-empty" role="status">보고 데이터를 불러오는 중입니다.</p> : null}
     {report && !model.error ? <>
-      {!report.completeness.complete || !report.summary.complete || !report.reconciliation.balanced || previous.data?.completeness.complete === false ?
+      {!report.completeness.complete || !report.summary.complete || !report.reconciliation.balanced || previous.data?.completeness.complete === false ||
+        report.creativeCompleteness?.complete !== true || previous.data?.creativeCompleteness?.complete !== true ?
         <p className="warning-strip" role="status">현재 또는 전일에 미확정 데이터가 있습니다. 미확정 지표는 ‘—’로 표시합니다. <Link href={diagnosticsHref}>데이터 점검</Link></p> : null}
-      <p className="field-help">전체 집계 · 표시 {model.groups.length}개 그룹 / 전체 {report.products.filter(row => row.productId !== null).length}개 제품. 검색은 일치하는 제품의 모든 캠페인을 표시합니다.</p>
+      <p className="field-help">전체 집계 · 표시 {model.groups.length}개 그룹 / 전체 {report.products.filter(row => row.productId !== null).length}개 제품. 검색은 일치하는 제품의 모든 소재을 표시합니다.</p>
       <div className="daily-report-summary">
         <Tile label="전체 제품수" value={`${report.products.filter(row => row.productId !== null).length}개`} />
-        <Tile label="총 광고비 KRW" value={googleMoney(report.summary.adSpendKrwExact)} />
-        <Tile label="총 판매수량" value={googleNumber(report.summary.quantity)} />
-        <Tile label="판매 1개당 광고비" value={googleMoney(report.summary.costPerSaleKrw)} />
-        <Tile label="페이지 기준 ROAS" value={googleRatio(report.summary.roas)} />
+        <Tile label="총 광고비 KRW" value={googleMoney(creativeTotal?.spend)} />
+        <Tile label="총 구매 전환수" value={formatGoogleDailyValue(creativeTotal?.purchases, "purchaseCount")} />
+        <Tile label="구매 CPA (원)" value={googleMoney(creativeTotal?.cpa)} />
+        <Tile label="Google ROAS" value={googleRatio(creativeTotal?.roas ?? null, false, 2)} />
         <Tile label="최종 순마진" value={googleMoney(report.summary.marginKrw)} />
       </div>
-      <p className="field-help">[유튜브] 판매 기준입니다. 판매수량·ROAS는 Google Ads 전환 실적이 아니며, 설정가 매출과 수집 판매금액은 실결제액과 다릅니다.</p>
-      {!busy && !model.groups.length ? <p className="daily-report-empty">조건에 맞는 캠페인 또는 카페24 판매 데이터가 없습니다.</p> : null}
+      <p className="field-help">구매 전환·Google ROAS는 Google Ads 기준입니다. 하단 판매·마진은 카페24 [유튜브] 판매 기준이며 소재별 전환매출과 다릅니다.</p>
+      {!busy && !model.groups.length ? <p className="daily-report-empty">조건에 맞는 소재 또는 카페24 판매 데이터가 없습니다.</p> : null}
       <div className="daily-product-list">{model.groups.map(group => <article className="daily-product-box" key={group.productId ?? "unallocated"}>
-        <div className="daily-product-header"><div className="daily-product-title"><h2>{group.productName}</h2><span>{group.campaigns.length}개 캠페인 · {group.sales.complete ? "확정" : "미확정"}</span></div>
+        <div className="daily-product-header"><div className="daily-product-title"><h2>{group.productName}</h2><span>{group.creatives.length}개 소재 · {group.sales.complete ? "확정" : "미확정"}</span></div>
           <div className="daily-product-stats">
             <Stat label="광고비 KRW" value={googleMoney(group.sales.adSpendKrwExact)} /><Stat label="판매수량" value={googleNumber(group.sales.quantity)} />
-            <Stat label="판매 1개당 광고비" value={googleMoney(group.sales.costPerSaleKrw)} /><Stat label="페이지 기준 ROAS" value={googleRatio(group.sales.roas)} />
+            <Stat label="판매 1개당 광고비" value={googleMoney(group.sales.costPerSaleKrw)} /><Stat label="페이지 기준 ROAS" value={googleRatio(group.sales.roas, false, 2)} />
             <Stat label="최종 순마진" value={googleMoney(group.sales.marginKrw)} />
           </div>
         </div>
         <details className="meta-report-details muted"><summary>지표 기준 및 수집 정보</summary>
-          <p>광고 표는 캠페인 단위입니다. 소재·활성 상태·구매 전환·영상 시청 지표는 현재 Google 수집 범위에 포함되지 않습니다. CPM은 원화 광고비 ÷ 노출수 × 1,000입니다.</p>
-          <p>전일 값은 광고 계정과 캠페인 ID가 일치하는 행을 비교합니다. 전일 행이 없거나 수집이 미완료이면 ‘—’로 표시합니다.</p>
+          <p>소재 표는 광고 ID별 실적입니다. 구매 전환은 Google의 구매 액션 기준이며 카페24 판매수량과 다릅니다. 영상 조회수·조회율은 TrueView 기준입니다. 한 광고의 여러 이미지·영상은 함께 표시하고 광고비는 한 번만 집계합니다.</p>
+          <p>전일 값은 계정·광고그룹·광고 ID로 비교합니다. 전일 행이 없거나 수집이 미완료이면 ‘—’로 표시합니다. 상태와 소재 정보는 해당 실적을 수집할 때의 정보입니다.</p>
           {group.sales.warningCodes.length ? <p>{googleReasons(group.sales.warningCodes)}</p> : null}
         </details>
         <div className="daily-product-table-wrap"><table className="daily-product-table"><thead><tr>{columns.map(column => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>
-          {!group.campaigns.length ? <tr><td className="daily-product-table-empty" colSpan={columns.length}>해당 날짜에 연결된 Google 캠페인이 없습니다.</td></tr> : group.campaigns.map(row => <tr key={googleCampaignKey(row)}>{columns.map(column => <td key={column.key}>
-            {column.key === "campaign" ? <div className="daily-creative-name"><strong>{row.campaignName}</strong><span>{row.customerId} · {row.campaignId}</span>{row.warningCodes.length ? <span>{googleReasons(row.warningCodes)}</span> : null}</div> :
-              <span className="metric-with-previous"><strong>{formatGoogleDailyValue(googleDailyCampaignValue(row, column.key), column.key)}</strong><small>전일 {formatGoogleDailyValue(googleDailyCampaignValue(previousRows.get(googleCampaignKey(row)), column.key), column.key)}</small></span>}
+          {!group.creatives.length ? <tr><td className="daily-product-table-empty" colSpan={columns.length}>해당 날짜에 연결된 Google 소재이 없습니다.</td></tr> : group.creatives.map(row => <tr key={googleCreativeKey(row)}>{columns.map(column => <td key={column.key}>
+            {column.key === "creative" ? <div className="daily-creative-name"><strong>{row.adName}</strong><span>{row.campaignName} · {row.status === "ENABLED" ? "활성" : row.status === "PAUSED" ? "중지" : row.status === "REMOVED" ? "삭제" : "상태 미확인"}</span>
+              <span>광고 ID {row.adId}</span>
+              {row.assets.map(asset => asset.videoId ? <a key={asset.id} href={`https://www.youtube.com/watch?v=${asset.videoId}`} target="_blank" rel="noreferrer">{asset.name || "영상 보기"}</a>
+                : asset.imageUrl ? <a key={asset.id} href={asset.imageUrl} target="_blank" rel="noreferrer">{asset.name || "이미지 보기"}</a> : null)}
+              {row.warningCodes.length ? <span>{googleReasons(row.warningCodes)}</span> : null}</div> :
+              <span className="metric-with-previous"><strong>{formatGoogleDailyValue(googleDailyCreativeValue(row, column.key), column.key)}</strong><small>전일 {formatGoogleDailyValue(googleDailyCreativeValue(previousRows.get(googleCreativeKey(row)), column.key), column.key)}</small></span>}
           </td>)}</tr>)}
         </tbody></table></div>
         <section className="daily-sales-margin"><h3>카페24 [유튜브] 판매 기반 마진</h3><div className="daily-sales-table-wrap"><table className="daily-sales-table"><thead><tr><th>제품</th>{googleDailySalesMetrics(group.sales).map(metric => <th key={metric.label}>{metric.label}</th>)}</tr></thead><tbody><tr>

@@ -17,6 +17,8 @@ export class GoogleController {
   profit(@Query() query: GoogleQuery) { return this.read.report(query, "profit"); }
   @Get("campaigns") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   campaigns(@Query() query: GoogleQuery) { return this.read.report(query, "campaigns"); }
+  @Get("creatives") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
+  creatives(@Query() query: GoogleQuery) { return this.read.report(query, "creatives"); }
   @Get("mappings") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")
   list(@Query() query: GoogleQuery) { return this.mappings.list(query); }
   @Get("campaign-keywords") @Header("Cache-Control", "no-store") @RequirePermissions("data.read")

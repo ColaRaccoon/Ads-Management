@@ -1535,6 +1535,42 @@ tr.clickable-row:focus-visible td {
   white-space: nowrap;
 }
 
+.google-daily-report-page,
+.google-daily-report-page .daily-product-list,
+.google-daily-report-page .daily-product-box {
+  min-width: 0;
+}
+
+.google-daily-report-page .daily-column-picker {
+  position: relative;
+  display: block;
+}
+
+.google-daily-report-page .daily-column-picker summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.google-daily-report-page .daily-column-options {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(420px, 85vw);
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 6px 20px #0002;
+}
+
 .daily-report-print-header {
   display: flex;
   align-items: flex-end;

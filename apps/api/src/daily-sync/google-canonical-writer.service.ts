@@ -1,9 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { createHash, randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { Prisma, SourceBindingMethod, SourceDataKind, SourceKind, SourceProvider } from "@prisma/client";
 import { GoogleCampaignRow, GoogleDaySnapshot } from "./google-ads.client";
 import { SyncFoundationService } from "./sync-foundation.service";
 import { syncError } from "./sync-contract";
+import { validGoogleCreatives } from "../domain/google-creative-metrics";
 
 const MAX_INT64 = 9_223_372_036_854_775_807n;
 
@@ -83,6 +85,7 @@ export class GoogleCanonicalWriterService {
               channelType: row.channelType, costMicros: row.costMicros,
               impressions: row.impressions, clicks: row.clicks,
               conversionCount: null, conversionValue: null,
+              creativeMetrics: row.creativeMetrics ?? Prisma.DbNull,
               source: SourceKind.API, syncRunId: input.runId, fetchedAt,
               version, isCurrent: true
             })) });
@@ -109,6 +112,7 @@ function* chunks<T>(items: T[]): Generator<T[]> {
 }
 
 function validateRow(row: GoogleCampaignRow) {
+  if (row.creativeMetrics !== undefined && !validGoogleCreatives(row.creativeMetrics, row)) syncError("RECONCILIATION_FAILED");
   if (!/^\d{1,20}$/.test(row.campaignId) || !row.campaignName.trim() ||
       row.campaignName.length > 256 || !/^[A-Z_]{1,64}$/.test(row.channelType) ||
       [row.costMicros, row.impressions, row.clicks].some((item) =>
@@ -118,9 +122,9 @@ function validateRow(row: GoogleCampaignRow) {
 
 function sameRow(prior: {
   campaignName: string; channelType: string; costMicros: bigint;
-  impressions: bigint; clicks: bigint
+  impressions: bigint; clicks: bigint; creativeMetrics?: unknown
 }, row: GoogleCampaignRow) {
   return prior.campaignName === row.campaignName && prior.channelType === row.channelType &&
     prior.costMicros === row.costMicros && prior.impressions === row.impressions &&
-    prior.clicks === row.clicks;
+    prior.clicks === row.clicks && isDeepStrictEqual(prior.creativeMetrics ?? null, row.creativeMetrics ?? null);
 }

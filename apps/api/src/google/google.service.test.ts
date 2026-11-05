@@ -194,6 +194,20 @@ test("reader uses each dated campaign name and ignores conflicting legacy ID map
     assert.deepEqual(result.campaigns[0].productIds, ["p-ball", "p-bar"]);
     assert.ok(result.campaigns[0].warningCodes.includes("CAMPAIGN_PRODUCT_NOT_FOUND"));
     assert.equal(JSON.stringify(ads, (_, value) => typeof value === "bigint" ? value.toString() : value), snapshot);
+    Object.assign(ads[0], { creativeMetrics: { schemaVersion: 1, ads: [{
+      adId: "100", adGroupId: "200", adName: "첫 소재", adGroupName: "그룹", adType: "DEMAND_GEN_MULTI_ASSET_AD", status: "PAUSED",
+      costMicros: "20000000000", impressions: 1000, clicks: 10, purchaseCount: 1.25, purchaseValue: 50000,
+      videoViews: null, videoViewRate: null, videoP25: null, videoP50: null, videoP75: null, videoP100: null, assets: []
+    }] } });
+    const creative = await new GoogleReadService(db).report({ from: "2026-10-20", to: "2026-10-22" }, "creatives");
+    assert.equal(creative.creatives?.length, 1);
+    assert.equal(creative.creatives?.[0].adName, "첫 소재");
+    assert.deepEqual(creative.creatives?.[0].productIds, ["p-bar"]);
+    assert.equal(creative.creatives?.[0].adSpendKrwExact, "20000");
+    assert.equal(creative.creatives?.[0].cpaKrw, 16000);
+    assert.equal(creative.creatives?.[0].purchaseRoas, 2.5);
+    assert.equal(creative.creatives?.[0].videoViews, null);
+    assert.deepEqual(creative.creativeCompleteness, { complete: false, missingDates: ["2026-10-21", "2026-10-22"] });
   } finally {
     if (previous.google === undefined) delete process.env.GOOGLE_PERFORMANCE_ENABLED; else process.env.GOOGLE_PERFORMANCE_ENABLED = previous.google;
     if (previous.daily === undefined) delete process.env.DAILY_SYNC_FEATURE_ENABLED; else process.env.DAILY_SYNC_FEATURE_ENABLED = previous.daily;

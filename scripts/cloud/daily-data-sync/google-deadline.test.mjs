@@ -23,12 +23,12 @@ test('absolute deadline fences POST even when token resolution finishes before a
     assert.equal(calls,0);
   } finally {Date.now=originalNow;}
 });
-test('valid deadline preserves the normal three-query completed-day snapshot',async()=>{
+test('valid deadline completes parent and creative queries for a verified zero day',async()=>{
   const queries=[];
   const client=new GoogleAdsClient({getAccessToken:async()=> 'synthetic-token'},async(_url,options)=>{
     queries.push(JSON.parse(options.body).query);assert.equal(options.signal.aborted,false);
     return new Response(JSON.stringify(queries.length===1?{results:[{customer:{id:'1391592099',currencyCode:'KRW',timeZone:'Asia/Seoul'}}]}:{results:[]}),{status:200});
   });
   const snapshot=await client.fetchDay(input(Date.now()+5000));
-  assert.equal(queries.length,3);assert.equal(snapshot.accountCostMicros,0n);assert.equal(snapshot.currencyCode,'KRW');assert.equal(snapshot.rows.length,0);
+  assert.equal(queries.length,6);assert.equal(snapshot.accountCostMicros,0n);assert.equal(snapshot.currencyCode,'KRW');assert.equal(snapshot.rows.length,0);
 });
