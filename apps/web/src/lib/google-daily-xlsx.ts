@@ -20,8 +20,6 @@ export function buildGoogleDailyXlsxInput(report: GoogleDailyExport): XlsxWorkbo
     input.merges!.push({ fromRow: input.rows.length, toRow: input.rows.length, fromColumn: 1, toColumn: count });
   };
   banner(`Google Daily Report · ${report.reportDate} · 전일 ${report.previousDate}`);
-  banner(`표시 조건: ${report.filterLabel} · 합계는 전체 조회 범위 기준입니다.`, "GROUP_SAND");
-  banner("[유튜브] 판매 기준 · 설정가 매출 및 수집 판매금액은 실결제액/Google 전환매출이 아닙니다.", "GROUP_SAND");
   if (!report.data.completeness.complete || !report.previous.completeness.complete || !report.data.reconciliation.balanced) {
     banner("현재 또는 전일에 미확정 데이터가 있습니다. 빈 지표는 0이 아닌 미확정/자료 없음입니다.", "GROUP_SAND");
   }
