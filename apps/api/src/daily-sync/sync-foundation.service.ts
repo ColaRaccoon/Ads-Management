@@ -12,6 +12,7 @@ import { accountAllowlist, accountKey } from "./source-connections.service";
 import { scheduledRunPurpose } from "./schedule-definition";
 import { lockCanonicalConnection } from "./canonical-write-policy";
 import type { MetaFailureDiagnosticCode } from "./meta-failure-diagnostic";
+import { safeMetaFailureEvidence } from "./meta-failure-evidence";
 import type { Cafe24FailureDiagnosticCode } from "./cafe24-failure-diagnostic";
 import {
     assertBoundedRows, assertScheduledWindowCadence, assertSyncRunScope,
@@ -490,6 +491,8 @@ export class SyncFoundationService {
   async failUnit(input: {
     runId: string; generation: bigint; unitKey: string; dataKinds: SourceDataKind[];
     metricDate: Date; source: SourceKind; code: string; actionRequired: boolean;
+    metaEvidence?: unknown; metaAttempt?: number;
+    metaRetryDecision?: "RETRY_SCHEDULED" | "ACTION_REQUIRED" | "EXISTING_PROVIDER_RETRY";
     diagnosticCode?: "GOOGLE_AUTH_REFRESH_FAILED" | "GOOGLE_ACCESS_TOKEN_REJECTED" |
       "GOOGLE_ADS_ACCESS_DENIED" | "GOOGLE_CUSTOMER_NOT_FOUND" |
       Cafe24FailureDiagnosticCode | MetaFailureDiagnosticCode | null;
@@ -560,7 +563,12 @@ export class SyncFoundationService {
         result: SecurityAuditResult.FAILURE,
         afterJson: { connectionId: run.connectionId, requestKeyHash: requestKeyHash(run.requestKey),
           dataKinds: input.dataKinds, safeErrorCode: safeSyncCode(input.code),
-          diagnosticCode: input.diagnosticCode ?? null }
+          diagnosticCode: input.diagnosticCode ?? null,
+          ...(connection.provider === SourceProvider.META ? {
+            ...(safeMetaFailureEvidence(input.metaEvidence) ? { metaEvidence: safeMetaFailureEvidence(input.metaEvidence) as unknown as Prisma.InputJsonObject } : {}),
+            ...(Number.isInteger(input.metaAttempt) && input.metaAttempt! >= 1 && input.metaAttempt! <= 3 ? { attempt: input.metaAttempt!, maxAttempts: 3 } : {}),
+            ...(["RETRY_SCHEDULED","ACTION_REQUIRED","EXISTING_PROVIDER_RETRY"].includes(input.metaRetryDecision ?? "") ? { retryDecision: input.metaRetryDecision! } : {})
+          } : {}) }
       });
       if (input.actionRequired && input.code === "PROVIDER_AUTH_REQUIRED") {
         await writeSecurityAudit(tx, {

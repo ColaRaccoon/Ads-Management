@@ -4,6 +4,7 @@ import { stableMetadataJson, MetaMcpNullBasicProjection } from "../domain/meta-c
 import { META_REPORTING_FIELDS, metaReportingFields } from "../domain/meta-reporting-measurements";
 import { ProviderFailure } from "./bounded-request";
 import { metaReconciliationFailure, MetaReconciliationReason } from "./meta-failure-diagnostic";
+import { attachMetaCheck, MetaCheckEvidence, metaEntityFingerprint } from "./meta-failure-evidence";
 import { parseIsoDate } from "./sync-contract";
 import { metaMcpFields, MetaMcpProfile, META_MCP_PURCHASE_NAMES, MetaMcpLevel, MetaMcpWireSnapshot, validateMetaMcpWireRow } from "./meta-mcp-wire-reader";
 type Json=Record<string,unknown>;
@@ -51,32 +52,61 @@ export function validateMetaMcpCapture(value:unknown):MetaMcpWireSnapshot{
 }
 /** Narrow membership proof only. No raw metric is filled or changed. */
 function nullBasicParentProjection(wire:MetaMcpWireSnapshot){
- const money=(r:Json,field="amount_spent")=>{const v=r[field];if(!object(v)||v.unit!=="USD"||typeof v.value!=="string"||!/^(0|[1-9]\d{0,9})(\.\d{1,4})?$/.test(v.value))reject();return new Prisma.Decimal(v.value);};
- const count=(v:unknown)=>{if(typeof v!=="string"||!/^(0|[1-9]\d{0,18})$/.test(v)||BigInt(v)>9223372036854775807n)reject();return BigInt(v);};
+ const stop=(condition:MetaCheckEvidence["condition"],detail:Omit<MetaCheckEvidence,"condition">={},reason:MetaReconciliationReason="ZERO_PROJECTION"):never=>{
+  const error=metaReconciliationFailure(reason);attachMetaCheck(error,{condition,...detail});throw error;
+ };
+ const context=(row:Json,level:MetaMcpLevel,metric:string)=>({level,metric,entityFingerprint:metaEntityFingerprint(level,row.id)});
+ const money=(r:Json,field="amount_spent")=>{const v=r[field];if(!object(v)||v.unit!=="USD"||typeof v.value!=="string"||!/^(0|[1-9]\d{0,9})(\.\d{1,4})?$/.test(v.value))stop("MONEY_INVALID",{metric:field});return new Prisma.Decimal((v as Json).value as string);};
+ const count=(v:unknown,metric?:string)=>{if(typeof v!=="string"||!/^(0|[1-9]\d{0,18})$/.test(v)||BigInt(v)>9223372036854775807n)stop("COUNT_INVALID",{...(metric?{metric}:{})});return BigInt(v as string);};
  const pairs=[["omni_purchase","omni_purchase_values"],["offsite_conversion_fb_pixel_purchase","offsite_conversion_fb_pixel_purchase_values"]];
  const nullFields=["impressions","clicks","reach","frequency","link_click",...pairs.flat()];
  const parents=wire.levels.adset.filter(r=>money(r).isZero()&&nullFields.every(k=>r[k]===null)&&wire.levels.ad.some(a=>a.adset_id===r.id));
  if(!parents.length)return undefined;
- if(wire.profile!=="PURCHASE_V1"&&wire.profile!=="REPORTING_V2")reject();
+ if(wire.profile!=="PURCHASE_V1"&&wire.profile!=="REPORTING_V2")stop("PROFILE_UNSUPPORTED");
  const parentIds=new Set(parents.map(r=>r.id)),removed=wire.levels.ad.filter(r=>parentIds.has(r.adset_id));
  // A zero-spend row can still have attributed actions. Never discard those observations.
- if(parents.some(r=>hasReportingActivity(wire,r,false))||removed.some(r=>hasReportingActivity(wire,r,true)))reject();
+ for(const [rows,level,isAd]of [[parents,"adset",false],[removed,"ad",true]] as const)for(const row of rows){
+  const field=wire.profile==="REPORTING_V2"?metaReportingFields(isAd).map(key=>META_REPORTING_FIELDS[key]).find(field=>row[field]!=null&&row[field]!=="0"):undefined;
+  if(field)stop("REPORTING_ACTIVITY",context(row,level,field));
+ }
  const metrics=["impressions","clicks","link_click",...pairs.map(p=>p[0])];
- const total=(rows:Json[],f:string)=>rows.reduce((n,r)=>n+(r[f]===null?0n:count(r[f])),0n);
+ const total=(rows:Json[],f:string)=>rows.reduce((n,r)=>n+(r[f]===null?0n:count(r[f],f)),0n);
  const sumMoney=(rows:Json[])=>rows.reduce((n,r)=>n.plus(money(r)),new Prisma.Decimal(0));
- for(const rows of Object.values(wire.levels))for(const r of rows){money(r);for(const f of metrics)if(r[f]!==null)count(r[f]);for(const [c,v]of pairs){if((r[c]===null)!==(r[v]===null))reject();if(r[c]!==null&&count(r[c])===0n&&!money(r,v).isZero())reject();if(r[v]!==null)money(r,v);}}
- for(const r of removed){if(!money(r).isZero()||["impressions","clicks","reach","frequency"].some(f=>typeof r[f]!=="string"||!/^0(?:\.0+)?$/.test(r[f] as string))||metrics.some(f=>r[f]!==null&&count(r[f])!==0n)||pairs.some(([c,v])=>r[c]!==null&&(count(r[c])!==0n||!money(r,v).isZero())))reject();}
- const account=wire.levels.ad_account[0];for(const f of metrics)count(account[f]);
- const check=(p:Json,children:Json[],descendants:Json[])=>{if(!sumMoney(children).eq(money(p))||!sumMoney(descendants).eq(money(p)))reject();for(const f of metrics){const expected=p[f]===null?0n:count(p[f]);if(total(children,f)!==expected||total(descendants,f)!==expected)reject();}};
- for(const p of wire.levels.adset){const children=wire.levels.ad.filter(a=>a.adset_id===p.id);check(p,children,children);}
- for(const p of wire.levels.campaign)check(p,wire.levels.adset.filter(r=>r.campaign_id===p.id),wire.levels.ad.filter(r=>r.campaign_id===p.id));
- check(account,wire.levels.campaign,wire.levels.ad);for(const rows of [wire.levels.ad,wire.levels.adset]){if(!sumMoney(rows).eq(money(account))||metrics.some(f=>total(rows,f)!==count(account[f])))reject();}
+ for(const level of LEVELS)for(const r of wire.levels[level]){
+  money(r);for(const f of metrics)if(r[f]!==null)count(r[f],f);
+  for(const [c,v]of pairs){
+   if((r[c]===null)!==(r[v]===null))stop("PURCHASE_PAIR_NULL_MISMATCH",context(r,level,c));
+   if(r[c]!==null&&count(r[c],c)===0n&&!money(r,v).isZero())stop("ZERO_PURCHASE_NONZERO_VALUE",{...context(r,level,v),expected:"0",observed:money(r,v).toString()});
+   if(r[v]!==null)money(r,v);
+  }
+ }
+ for(const r of removed){
+  if(!money(r).isZero())stop("REMOVED_CHILD_NONZERO",{...context(r,"ad","amount_spent"),expected:"0",observed:money(r).toString()});
+  for(const f of ["impressions","clicks","reach","frequency"])if(typeof r[f]!=="string"||!/^0(?:\.0+)?$/.test(r[f] as string))stop("REMOVED_CHILD_NONZERO",context(r,"ad",f));
+  for(const f of metrics)if(r[f]!==null&&count(r[f],f)!==0n)stop("REMOVED_CHILD_NONZERO",{...context(r,"ad",f),expected:"0",observed:count(r[f],f).toString()});
+  for(const [c,v]of pairs)if(r[c]!==null&&(count(r[c],c)!==0n||!money(r,v).isZero()))stop("REMOVED_CHILD_NONZERO",context(r,"ad",c));
+ }
+ const account=wire.levels.ad_account[0];for(const f of metrics){if(account[f]===null)stop("ACCOUNT_METRIC_NULL",context(account,"ad_account",f));count(account[f],f);}
+ const check=(p:Json,children:Json[],descendants:Json[],level:MetaMcpLevel)=>{
+  for(const [rows,relation]of [[children,"CHILDREN"],[descendants,"DESCENDANTS"]] as const){
+   const expected=money(p),observed=sumMoney(rows);
+   if(!observed.eq(expected))stop("HIERARCHY_SPEND_TOTAL",{...context(p,level,"amount_spent"),relation,expected:expected.toString(),observed:observed.toString(),delta:observed.minus(expected).toString()},"BASIC_TOTALS");
+  }
+  for(const f of metrics){const expected=p[f]===null?0n:count(p[f],f);
+   for(const [rows,relation]of [[children,"CHILDREN"],[descendants,"DESCENDANTS"]] as const){const observed=total(rows,f);
+    if(observed!==expected)stop("HIERARCHY_METRIC_TOTAL",{...context(p,level,f),relation,expected:expected.toString(),observed:observed.toString(),delta:(observed-expected).toString()},f==="link_click"?"LINK_TOTALS":pairs.some(([c])=>c===f)?"PURCHASE_TOTALS":"BASIC_TOTALS");
+   }
+  }
+ };
+ for(const p of wire.levels.adset){const children=wire.levels.ad.filter(a=>a.adset_id===p.id);check(p,children,children,"adset");}
+ for(const p of wire.levels.campaign)check(p,wire.levels.adset.filter(r=>r.campaign_id===p.id),wire.levels.ad.filter(r=>r.campaign_id===p.id),"campaign");
+ check(account,wire.levels.campaign,wire.levels.ad,"ad_account");for(const rows of [wire.levels.ad,wire.levels.adset])check(account,rows,rows,"ad_account");
  const ids=new Set(removed.map(r=>r.id)),ads=wire.levels.ad.filter(r=>!ids.has(r.id)),references=new Set(ads.map(r=>r.adset_id));
- if(parents.some(p=>references.has(p.id)))reject();
+ if(parents.some(p=>references.has(p.id)))stop("PROJECTION_MEMBERSHIP");
  const sets=wire.levels.adset.filter(r=>references.has(r.id));
- for(const r of sets){if(["impressions","clicks","reach","frequency"].some(f=>r[f]===null))reject();}
- for(const rows of [ads,sets]){if(!sumMoney(rows).eq(money(account))||metrics.some(f=>total(rows,f)!==count(account[f])))reject();}
- for(const p of sets){const children=ads.filter(r=>r.adset_id===p.id);check(p,children,children);}for(const p of wire.levels.campaign)check(p,sets.filter(r=>r.campaign_id===p.id),ads.filter(r=>r.campaign_id===p.id));
+ for(const r of sets)for(const f of ["impressions","clicks","reach","frequency"])if(r[f]===null)stop("RETAINED_PARENT_NULL_METRIC",context(r,"adset",f));
+ for(const rows of [ads,sets])check(account,rows,rows,"ad_account");
+ for(const p of sets){const children=ads.filter(r=>r.adset_id===p.id);check(p,children,children,"adset");}for(const p of wire.levels.campaign)check(p,sets.filter(r=>r.campaign_id===p.id),ads.filter(r=>r.campaign_id===p.id),"campaign");
  const excludedAds=removed.map(r=>r.id as string).sort(),excludedSets=parents.map(r=>r.id as string).sort(),rawCaptureFingerprint=metaMcpFingerprint(wire),rule="EXPLICIT_ZERO_CHILDREN_OF_NULL_BASIC_ADSETS" as const;
  const projection:MetaMcpNullBasicProjection={version:1,rule,rawAdCount:wire.levels.ad.length,selectedAdCount:ads.length,excludedAdCount:removed.length,excludedAdsetCount:parents.length,excludedAdIdsFingerprint:metaMcpFingerprint(excludedAds),excludedAdsetIdsFingerprint:metaMcpFingerprint(excludedSets),proofFingerprint:metaMcpFingerprint({version:1,rule,rawCaptureFingerprint,excludedAds,excludedSets,accountObserved:true,allHierarchyCountsAndSpendPreserved:true,nullMetricsFilled:false,monetaryDifferencesAllocated:false})};
  return {wire:{...wire,levels:{...wire.levels,ad:ads}},projection};
@@ -87,7 +117,7 @@ export function selectMetaMcpDay(capture:unknown){
  for(const row of original.levels.adset){const parent=campaignMap.get(row.campaign_id);if(!parent||parent.name!==row.campaign_name)reject("PARENT_IDENTITY");}
  for(const row of original.levels.ad){const parent=setMap.get(row.adset_id),campaign=campaignMap.get(row.campaign_id);if(!parent||!campaign||parent.campaign_id!==row.campaign_id||parent.name!==row.adset_name||campaign.name!==row.campaign_name)reject("PARENT_IDENTITY");}
  let projected:ReturnType<typeof nullBasicParentProjection>;
- try{projected=nullBasicParentProjection(original);}catch(error){if(error instanceof ProviderFailure&&error.safeCode==="RECONCILIATION_FAILED")reject("ZERO_PROJECTION");throw error;}
+ try{projected=nullBasicParentProjection(original);}catch(error){if(error instanceof ProviderFailure&&error.safeCode==="RECONCILIATION_FAILED"&&!["ZERO_PROJECTION","BASIC_TOTALS","LINK_TOTALS","PURCHASE_TOTALS"].includes(error.diagnosticCode??""))reject("ZERO_PROJECTION");throw error;}
  const wire=projected?.wire??original,references=new Set(wire.levels.ad.map(r=>r.adset_id as string));
  const selected=wire.levels.adset.filter(r=>references.has(r.id as string)),excluded=wire.levels.adset.filter(r=>!references.has(r.id as string));if(selected.length!==references.size)reject("ADSET_MEMBERSHIP");
  if(excluded.some(r=>hasReportingActivity(wire,r,false)))reject("ADSET_MEMBERSHIP");

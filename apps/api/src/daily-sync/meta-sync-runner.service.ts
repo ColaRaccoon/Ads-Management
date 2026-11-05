@@ -1,4 +1,5 @@
-import { HttpException, Injectable } from "@nestjs/common";
+import { HttpException, Injectable, Logger } from "@nestjs/common";
+import { getMetaFailureEvidence } from "./meta-failure-evidence";
 import { SourceDataKind, SourceKind, SourceProvider, SyncRunStatus } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 import { CanonicalApiWriterService } from "./canonical-api-writer.service";
@@ -76,6 +77,7 @@ export function configuredMetaSettings(env: NodeJS.ProcessEnv = process.env): Me
 /** Synchronous manual/scheduled executor; no detached in-memory task is registered. */
 @Injectable()
 export class MetaSyncRunnerService {
+  private readonly logger = new Logger(MetaSyncRunnerService.name);
   constructor(private readonly prisma: PrismaService, private readonly foundation: SyncFoundationService,
     private readonly client: MetaDayReader, private readonly writer: CanonicalApiWriterService,
     private readonly resolver: MetaCredentialResolver) {}
@@ -166,6 +168,9 @@ export class MetaSyncRunnerService {
             expectedCredentialExpiresAt: credential.expiresAt,
             expectedMetaTransport: transport,
             pageCount: snapshot.pageCount });
+          this.logger.log(JSON.stringify({event:"META_DAY_SUCCEEDED",runId,day:unit.unitKey,
+            ads:snapshot.ads.length,adsets:snapshot.adsets.length,
+            ...(getMetaFailureEvidence(snapshot)?{metaEvidence:getMetaFailureEvidence(snapshot)}:{})}));
         } catch (error) {
           if (leaseLost) syncError("LEASE_LOST");
           const failure = error instanceof ProviderFailure ? error : null;
@@ -185,10 +190,15 @@ export class MetaSyncRunnerService {
           const actionRequired = !retryReconciliation && ["PROVIDER_AUTH_REQUIRED", "FIELD_UNSUPPORTED", "ATTRIBUTION_MISMATCH",
             "ACCOUNT_SCOPE_MISMATCH", "CURRENCY_MISMATCH", "TIMEZONE_MISMATCH",
             "SOURCE_SELECTION_REQUIRED", "RECONCILIATION_FAILED", "PROVIDER_VERSION_UNVERIFIED"].includes(code);
+          const metaEvidence = getMetaFailureEvidence(error);
+          const retryDecision = retryReconciliation ? "RETRY_SCHEDULED" : actionRequired ? "ACTION_REQUIRED" : "EXISTING_PROVIDER_RETRY";
+          this.logger.warn(JSON.stringify({event:"META_DAY_FAILED",runId,day:unit.unitKey,
+            attempt:unit.attempts+1,maxAttempts:3,code,diagnosticCode,retryDecision,
+            ...(metaEvidence?{metaEvidence}:{})}));
           await this.foundation.failUnit({ runId, generation: claim.generation,
             unitKey: unit.unitKey, dataKinds: [SourceDataKind.META_AD, SourceDataKind.META_ADSET],
             metricDate, source: SourceKind.API, code, actionRequired,
-            diagnosticCode });
+            diagnosticCode, metaEvidence, metaAttempt:unit.attempts+1, metaRetryDecision:retryDecision });
           if (actionRequired || code === "RUN_LIMIT_EXCEEDED" || code === "PROVIDER_RATE_LIMITED") break;
         }
       }

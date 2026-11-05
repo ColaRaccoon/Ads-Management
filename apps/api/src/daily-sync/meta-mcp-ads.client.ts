@@ -14,7 +14,8 @@ import { META_MCP_DAY_FIELDS, MetaMcpLevel, MetaMcpMoney, MetaMcpWireReader, Met
 import { ProviderFailure } from "./bounded-request";
 import { parseIsoDate } from "./sync-contract";
 import { assertMetaOperatingGate } from "./meta-operating-gate";
-import { selectMetaMcpDay } from "./meta-mcp-capture";
+import { selectMetaMcpDay, metaMcpFingerprint } from "./meta-mcp-capture";
+import { attachMetaCapture, metaCaptureSummary } from "./meta-failure-evidence";
 import { validateMetaMcpZeroProof } from "./meta-mcp-zero-proof";
 import { createMetaMcpResidualProof, validateMetaMcpResidualProof, metaMcpResidualLinkView, metaMcpNeedsLinkProof } from "./meta-mcp-residual-proof";
 import {convertMetaMcpPurchaseObservation,createMetaMcpPurchaseResidualProof,validateMetaMcpPurchaseResidualProof,metaMcpPurchaseValue} from "./meta-mcp-purchase";
@@ -184,8 +185,12 @@ export class MetaMcpAdsClient extends MetaDayReader {
     if(Date.now()>input.deadlineAt)fail("DEADLINE_EXCEEDED");
     const proof=needsProof?createMetaMcpResidualProof(wire,this.catalog):undefined;
     const normalized=normalizeMetaMcpPurchaseSnapshot(wire,{version:1,transport:"META_ADS_MCP",linkProof:proof,purchaseProof:createMetaMcpPurchaseResidualProof(wire,this.catalog)},this.catalog);
-    if(Date.now()>input.deadlineAt)fail("DEADLINE_EXCEEDED");assertMetaOperatingGate("MCP");return normalized;
-    } catch(error) { markMetaFailureStage(error,"META_NORMALIZE"); throw error; }
+    if(Date.now()>input.deadlineAt)fail("DEADLINE_EXCEEDED");assertMetaOperatingGate("MCP");
+    attachMetaCapture(normalized,metaCaptureSummary(wire,metaMcpFingerprint(wire)));return normalized;
+    } catch(error) {
+      if(error!==null && (typeof error==="object"||typeof error==="function"))attachMetaCapture(error,metaCaptureSummary(wire,metaMcpFingerprint(wire)));
+      markMetaFailureStage(error,"META_NORMALIZE"); throw error;
+    }
   }
 }
 export type MetaMcpPurchaseProofBundle={version:1;transport:"META_ADS_MCP";linkProof?:unknown;purchaseProof:unknown};
