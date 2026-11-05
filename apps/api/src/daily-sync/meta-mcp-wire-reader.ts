@@ -1,4 +1,5 @@
 import { META_REPORTING_FIELDS, metaReportingFields } from "../domain/meta-reporting-measurements";
+import { recordMetaPagination } from "./meta-failure-evidence";
 /** Raw MCP wire contract. This reader has no database, lifecycle or production activation path. */
 export type MetaMcpProfile = "PURCHASE_V1" | "REPORTING_V2";
 export type MetaMcpLevel = "ad" | "adset" | "campaign" | "ad_account";
@@ -205,12 +206,14 @@ export class MetaMcpWireReader {
       if(input.profile!==undefined&&input.profile!=="PURCHASE_V1"&&input.profile!=="REPORTING_V2")fail("INPUT_INVALID");
       const clientId = conversationId(input.clientConversationId); catalog(input.catalog, input.reporting, clientId,input.profile);
       if (input.allowUnverifiedIdentityCapture !== undefined && typeof input.allowUnverifiedIdentityCapture !== "boolean") fail("INPUT_INVALID");
-      const levels = {} as Record<MetaMcpLevel, Json[]>, queries = {} as Record<MetaMcpLevel, Json>; let byteCount = 0, rowCount = 0;
+      const levels = {} as Record<MetaMcpLevel, Json[]>, queries = {} as Record<MetaMcpLevel, Json>;
+      const pagination = {} as Record<MetaMcpLevel, { pages:number; received:number; reportedTotal:number|null; ended:boolean }>;
+      let byteCount = 0, rowCount = 0;
       for (const level of LEVELS) {
         const base: Json = { ad_account_id: input.accountId, fields: [...metaMcpFields(input.profile)[level]], level,
           time_range: JSON.stringify({ since: input.day, until: input.day }), time_increment: "1",
           object_state: "live", include_additional_context: false, client_conversation_id: clientId, limit: 1000 };
-        queries[level] = base; levels[level] = []; let cursor: string | null = null, expectedCount: number | null = null;
+        queries[level] = base; levels[level] = []; let cursor: string | null = null, expectedCount: number | null = null, pages = 0;
         const seenCursors = new Set<string>(), seenIds = new Set<string>();
         do {
           if (requestCount >= 100 || Date.now() >= input.deadlineAt) fail("RUN_LIMIT_EXCEEDED");
@@ -220,7 +223,7 @@ export class MetaMcpWireReader {
           const timer = setTimeout(() => { controller.abort(); rejectTimeout?.(new MetaMcpWireFailure("HTTP_UNAVAILABLE")); }, Math.min(20000,input.deadlineAt-Date.now()));
           let envelope: unknown;
           try {
-            requestCount++;
+            requestCount++; pages++;
             envelope = await Promise.race([(async () => {
               const response = await this.request(MCP, { method: "POST", redirect: "error", signal: controller.signal,
                 headers: { Authorization: `Bearer ${input.accessToken}`, "Content-Type": "application/json", Accept: "application/json, text/event-stream", "MCP-Protocol-Version": "2025-06-18" },
@@ -247,6 +250,7 @@ export class MetaMcpWireReader {
           if (fetched.nextCursor !== null) seenCursors.add(fetched.nextCursor); cursor = fetched.nextCursor;
         } while (cursor !== null);
         if (expectedCount !== null && expectedCount !== levels[level].length) fail("SUMMARY_MISMATCH");
+        pagination[level] = { pages, received: levels[level].length, reportedTotal: expectedCount, ended: cursor === null };
       }
       if (levels.ad_account.length !== 1) fail("ACCOUNT_SCOPE_MISMATCH");
       const campaigns = new Map(levels.campaign.map(r => [r.id,r])), adsets = new Map(levels.adset.map(r => [r.id,r]));
@@ -270,6 +274,7 @@ export class MetaMcpWireReader {
         ...(input.allowUnverifiedIdentityCapture ? {missingParentIds:{campaign:[...missingCampaigns].sort(),adset:[...missingAdsets].sort()},...(identityDiagnostic?{identityDiagnostic}:{})}:{}),
         currencyVerified: false, attributionVerified: false, metricsNormalized: false, productionReady: false };
       if (JSON.stringify(snapshot).includes(input.accessToken)) fail("TOKEN_REFLECTION");
+      recordMetaPagination(snapshot, pagination);
       return snapshot;
     } catch (error) { throw new MetaMcpWireFailure(error instanceof MetaMcpWireFailure ? error.safeCode : "HTTP_UNAVAILABLE",requestCount,error instanceof MetaMcpWireFailure ? error.diagnostic : undefined); }
   }

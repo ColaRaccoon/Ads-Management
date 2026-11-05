@@ -1,3 +1,4 @@
+import { META_SPEND_WARNING, MetaSpendReconciliation, validMetaSpendReconciliation } from "../domain/meta-spend-reconciliation";
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import { formatInTimeZone } from "date-fns-tz";
@@ -12,6 +13,7 @@ import { accountAllowlist, accountKey } from "./source-connections.service";
 import { scheduledRunPurpose } from "./schedule-definition";
 import { lockCanonicalConnection } from "./canonical-write-policy";
 import type { MetaFailureDiagnosticCode } from "./meta-failure-diagnostic";
+import { safeMetaFailureEvidence } from "./meta-failure-evidence";
 import type { Cafe24FailureDiagnosticCode } from "./cafe24-failure-diagnostic";
 import {
     assertBoundedRows, assertScheduledWindowCadence, assertSyncRunScope,
@@ -31,6 +33,7 @@ export type PublishSlice = {
   totalAmount?: Prisma.Decimal | null;
 };
 export type PublishUnit = {
+  metaSpendReconciliation?: MetaSpendReconciliation;
   runId: string;
   unitKey: string;
   generation: bigint;
@@ -262,6 +265,10 @@ export class SyncFoundationService {
   }
 
   async publishUnit(input: PublishUnit) {
+    if(input.metaSpendReconciliation&&(!validMetaSpendReconciliation(input.metaSpendReconciliation)||
+      input.metaSpendReconciliation.day!==input.metricDate.toISOString().slice(0,10)||!isMetaApiPublication(input.slices)||
+      input.slices.some(slice=>!slice.totalAmount?.eq(slice.dataKind===SourceDataKind.META_AD?input.metaSpendReconciliation!.adSpendUsd:input.metaSpendReconciliation!.adsetSpendUsd))))syncError("RECONCILIATION_FAILED");
+    const metaWarnings=input.metaSpendReconciliation?[META_SPEND_WARNING]:[];
     assertEnabled();
     for (const slice of input.slices) {
       assertBoundedRows(slice.dataKind, slice.fetchedCount, slice.pageCount, slice.complete);
@@ -331,11 +338,11 @@ export class SyncFoundationService {
             metricDate: input.metricDate, source: slice.source,
             state: count === 0 ? SourceCoverageState.COMPLETE_ZERO : SourceCoverageState.COMPLETE_NONZERO,
             lastAttemptRunId: run.id, lastSuccessRunId: run.id, lastAttemptAt: now, lastSuccessAt: now,
-            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: [] },
+            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: metaWarnings },
           update: { source: slice.source,
             state: count === 0 ? SourceCoverageState.COMPLETE_ZERO : SourceCoverageState.COMPLETE_NONZERO,
             lastAttemptRunId: run.id, lastSuccessRunId: run.id, lastAttemptAt: now, lastSuccessAt: now,
-            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: [] }
+            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: metaWarnings }
         });
       }
       await tx.syncRun.update({ where: { id: run.id }, data: {
@@ -345,7 +352,8 @@ export class SyncFoundationService {
         ...auditActor(run), action: "SYNC_UNIT_PUBLISHED", targetType: "RUN_UNIT",
         targetId: `${run.id}:${input.unitKey}`, result: SecurityAuditResult.SUCCESS,
         afterJson: { connectionId: run.connectionId, requestKeyHash: requestKeyHash(run.requestKey),
-          dataKinds: input.slices.map((slice) => slice.dataKind), fetched, published }
+          dataKinds: input.slices.map((slice) => slice.dataKind), fetched, published,
+          ...(input.metaSpendReconciliation?{warningCodes:metaWarnings,metaSpendReconciliation:input.metaSpendReconciliation}:{}) }
       });
       await assertFenced(tx, run.connectionId, run.id, input.generation);
       if (run.deadlineAt <= new Date()) syncError("RUN_LIMIT_EXCEEDED");
@@ -490,6 +498,8 @@ export class SyncFoundationService {
   async failUnit(input: {
     runId: string; generation: bigint; unitKey: string; dataKinds: SourceDataKind[];
     metricDate: Date; source: SourceKind; code: string; actionRequired: boolean;
+    metaEvidence?: unknown; metaAttempt?: number;
+    metaRetryDecision?: "RETRY_SCHEDULED" | "ACTION_REQUIRED" | "EXISTING_PROVIDER_RETRY";
     diagnosticCode?: "GOOGLE_AUTH_REFRESH_FAILED" | "GOOGLE_ACCESS_TOKEN_REJECTED" |
       "GOOGLE_ADS_ACCESS_DENIED" | "GOOGLE_CUSTOMER_NOT_FOUND" |
       Cafe24FailureDiagnosticCode | MetaFailureDiagnosticCode | null;
@@ -560,7 +570,12 @@ export class SyncFoundationService {
         result: SecurityAuditResult.FAILURE,
         afterJson: { connectionId: run.connectionId, requestKeyHash: requestKeyHash(run.requestKey),
           dataKinds: input.dataKinds, safeErrorCode: safeSyncCode(input.code),
-          diagnosticCode: input.diagnosticCode ?? null }
+          diagnosticCode: input.diagnosticCode ?? null,
+          ...(connection.provider === SourceProvider.META ? {
+            ...(safeMetaFailureEvidence(input.metaEvidence) ? { metaEvidence: safeMetaFailureEvidence(input.metaEvidence) as unknown as Prisma.InputJsonObject } : {}),
+            ...(Number.isInteger(input.metaAttempt) && input.metaAttempt! >= 1 && input.metaAttempt! <= 3 ? { attempt: input.metaAttempt!, maxAttempts: 3 } : {}),
+            ...(["RETRY_SCHEDULED","ACTION_REQUIRED","EXISTING_PROVIDER_RETRY"].includes(input.metaRetryDecision ?? "") ? { retryDecision: input.metaRetryDecision! } : {})
+          } : {}) }
       });
       if (input.actionRequired && input.code === "PROVIDER_AUTH_REQUIRED") {
         await writeSecurityAudit(tx, {
