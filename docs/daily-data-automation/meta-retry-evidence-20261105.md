@@ -34,3 +34,15 @@
 - 기존 동일 검증 후 광고 597행/광고세트 200행. 광고세트 200건은 200 제한이 아니라 null 기본지표 부모 114개와 명시적 0 자식 340개의 제외 증명 결과다. 현재 요청의 object_state=live 범위 안에서 커서가 끝날 때까지 조회한 결과이며 삭제 객체까지 포함한 전체 광고 계정 이력이라는 뜻은 아니다.
 
 격리 작업 폴더는 `C:/Users/seong/Desktop/workspace/Meta-Ads-meta-retry`, 기반은 실제 운영 SHA `6a5cc5d144c22325c7873c313cce8ce2916f4cb2`다. 원 작업 폴더의 다른 세션 미커밋 변경은 포함하지 않는다. 배포 검증 목록에 새 evidence 모듈 하나만 명시 추가했다.
+
+## 운영 적용 완료
+
+- 코드 커밋: `dea73bdbcc0551f77152bc45eb673a9efdefb309`, 브랜치 `codex/meta-retry-evidence`.
+- Railway 배포 `d0c6b15d-f78e-4a53-b655-645111673555`: SUCCESS. 환경은 `01ab3d5a-1036-45b0-aa9c-47179339c9be`, 운영 서비스 `b0835b08-7799-4c1c-8bcd-90746b9d4248`만 변경했다. 소스는 위 커밋에 고정했다.
+- 2026-11-05 09:14:00 KST 운영 health/ready: PASS, 정확한 위 releaseId와 일정 활성 확인. 카페24 매일 02:00/110분, Meta 매일 02:03/100분은 유지했다.
+- 운영 Docker의 기본 Turbopack 전체 빌드 및 runtime closure 검사도 통과했다. API source guard는 새 evidence 모듈을 포함해 검토 범위를 확인했다.
+- 진단/재시도/페이지/기존 측정값 회귀 28개와 배포 범위 검사 10개, 총 38개 테스트 통과.
+- 배포 후 읽기 점검에서도 카페24 328행/Meta 광고 597행·광고세트 200행 및 $3,938.27 합계는 보존됐다. 과거 Meta 정시 실패는 이력으로 남아 있으며 이 배포로 과거 실행이 성공으로 바뀌지는 않는다.
+- 이 배포는 다음 실패부터 적용된다. 새 코드의 미래 정시 재시도가 실제로 필요한 상황에서 성공하는지는 아직 관찰 전이다. 일시적인 공급자 불일치가 3회 내 해소되지 않으면 진단을 남기고 ACTION_REQUIRED로 종료한다.
+
+로컬 증거: `reports/meta-retry-evidence-20261105/live-compare.json`, `readiness.json`. 다른 서비스, 예약 설정, credential, DB schema와 원본 데이터는 변경하지 않았다.
