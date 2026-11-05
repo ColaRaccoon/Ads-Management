@@ -45,3 +45,18 @@ application_default_credentials.json
 
 # Private business exports and one-off report output
 /reports/
+
+# User deliverables and local operational evidence (retain locally).
+/outputs/
+/docs/performance/*-evidence*.json
+/docs/performance/*-logs-*.json
+
+# Date-bound incident tools and capture replay helpers are local only.
+/scripts/cafe24-incident-20261104.ts
+/scripts/meta-incident-20261104.ts
+/scripts/meta-capture-diagnostic.ts
+/scripts/daily-collection-preflight.ts
+/scripts/meta-evidence-live-compare.ts
+/scripts/cloud/daily-data-sync/production-request-id-repair.mjs
+/scripts/supabase-io-analyze.mjs
+/scripts/supabase-io-plan.ts

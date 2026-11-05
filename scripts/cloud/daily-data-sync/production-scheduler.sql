@@ -51,11 +51,14 @@ CREATE TABLE daily_data_sync_prod_ops.attempts (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   schedule_key text NOT NULL REFERENCES daily_data_sync_prod_ops.schedules(key),
   scheduled_for timestamptz NOT NULL, attempted_at timestamptz NOT NULL DEFAULT clock_timestamp(),
-  request_id bigint UNIQUE, inspection_only boolean NOT NULL DEFAULT false,
+  request_id bigint, inspection_only boolean NOT NULL DEFAULT false,
   status text NOT NULL, safe_code text NOT NULL,
   http_status integer, completed_units integer, total_units integer, completed_at timestamptz
 );
 CREATE INDEX production_sync_attempt_slot ON daily_data_sync_prod_ops.attempts(schedule_key,scheduled_for,id DESC);
+-- pg_net queue IDs can restart after a database restart. Completed audit rows
+-- retain them for diagnostics; only concurrently pending IDs must be unique.
+CREATE UNIQUE INDEX production_sync_inflight_request_id ON daily_data_sync_prod_ops.attempts(request_id) WHERE status='HTTP_QUEUED';
 ALTER TABLE daily_data_sync_prod_ops.settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_data_sync_prod_ops.schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_data_sync_prod_ops.attempts ENABLE ROW LEVEL SECURITY;
@@ -73,7 +76,10 @@ DECLARE a daily_data_sync_prod_ops.attempts; r record; b jsonb; result_state tex
   completed integer; total integer; expected_total integer;
 BEGIN
   FOR a IN SELECT * FROM daily_data_sync_prod_ops.attempts WHERE status='HTTP_QUEUED' ORDER BY id FOR UPDATE LOOP
-    SELECT status_code,content,timed_out,error_msg INTO r FROM net._http_response WHERE id=a.request_id;
+    SELECT status_code,content,timed_out,error_msg INTO r FROM net._http_response WHERE id=a.request_id
+      AND created >= a.attempted_at - interval '5 seconds'
+      AND created >= pg_catalog.pg_postmaster_start_time()
+      ORDER BY created DESC LIMIT 1;
     IF NOT FOUND AND clock_timestamp()<a.attempted_at+interval '100 seconds' THEN CONTINUE; END IF;
     result_state:='FAILED'; code:='TRANSPORT_FAILED'; completed:=NULL; total:=NULL;
     IF r.status_code IN (401,403) THEN result_state:='ACTION_REQUIRED'; code:='MACHINE_AUTH_REQUIRED';
