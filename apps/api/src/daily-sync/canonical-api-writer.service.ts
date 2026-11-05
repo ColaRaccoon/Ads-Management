@@ -1,3 +1,4 @@
+import { validMetaSpendReconciliation } from "../domain/meta-spend-reconciliation";
 import { beginMetaDayBatch } from "./meta-day-batch";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { createHash } from "node:crypto";
@@ -138,12 +139,17 @@ export class CanonicalApiWriterService {
     const spendByAdset = new Map<string, Prisma.Decimal>();
     for (const row of input.ads) spendByAdset.set(row.adsetId,
       (spendByAdset.get(row.adsetId) ?? new Prisma.Decimal(0)).plus(row.spendUsd));
-    if (input.adsets.some((row) =>
-      !(spendByAdset.get(row.adsetId) ?? new Prisma.Decimal(0)).eq(row.spendUsd)))
-      invalid("Meta ad and adset spend totals differ for a complete API day.");
+    const absoluteAdsetDifference=input.adsets.reduce((n,row)=>n.plus((spendByAdset.get(row.adsetId)??new Prisma.Decimal(0)).minus(row.spendUsd).abs()),new Prisma.Decimal(0));
     const adSpend = input.ads.reduce((sum, row) => sum.plus(row.spendUsd), new Prisma.Decimal(0));
     const adsetSpend = input.adsets.reduce((sum, row) => sum.plus(row.spendUsd), new Prisma.Decimal(0));
-    if (!adSpend.eq(adsetSpend)) invalid("Meta ad and adset spend totals differ for a complete API day.");
+    const spendEvidence=input.ads[0]?.currentMetadata?.sourceContext?.spendReconciliation??input.adsets[0]?.currentMetadata?.sourceContext?.spendReconciliation;
+    if(spendEvidence){
+      if(input.expectedMetaTransport!=="MCP"||!validMetaSpendReconciliation(spendEvidence)||spendEvidence.day!==day||
+        [...input.ads,...input.adsets].some(row=>stableMetadataJson(row.currentMetadata?.sourceContext?.spendReconciliation)!==stableMetadataJson(spendEvidence))||
+        !adSpend.eq(spendEvidence.adSpendUsd)||!adsetSpend.eq(spendEvidence.adsetSpendUsd)||!absoluteAdsetDifference.eq(spendEvidence.absoluteDifferencesUsd.adToAdset))
+        invalid("Meta spend tolerance evidence does not match the complete API day.");
+    }else if(!absoluteAdsetDifference.isZero()||!adSpend.eq(adsetSpend)||[...input.ads,...input.adsets].some(row=>row.currentMetadata?.sourceContext?.spendReconciliation))
+      invalid("Meta ad and adset spend totals differ without approved daily evidence.");
     const purchaseEvidence=input.ads[0]?.currentMetadata?.sourceContext?.purchaseMeasurement;
     if([...input.ads,...input.adsets].some(r=>r.currentMetadata?.sourceContext?.purchaseMeasurement)){
       if(!purchaseEvidence||[...input.ads,...input.adsets].some(r=>stableMetadataJson(r.currentMetadata?.sourceContext?.purchaseMeasurement)!==stableMetadataJson(purchaseEvidence)))invalid("Provider purchase evidence differs within the API day.");
@@ -156,6 +162,7 @@ export class CanonicalApiWriterService {
     return this.foundation.publishUnit({
       runId: input.runId, generation: input.generation, unitKey: day,
       metricDate: input.metricDate, checkpointValue: input.checkpointValue,
+      ...(spendEvidence?{metaSpendReconciliation:spendEvidence}:{}),
       slices: [
         { dataKind: SourceDataKind.META_AD, source: SourceKind.API, policyVersion: input.adPolicyVersion,
           fetchedCount: input.ads.length, pageCount: input.pageCount, complete: true, totalAmount: adSpend },

@@ -1,3 +1,4 @@
+import { META_SPEND_WARNING, MetaSpendReconciliation, validMetaSpendReconciliation } from "../domain/meta-spend-reconciliation";
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import { formatInTimeZone } from "date-fns-tz";
@@ -32,6 +33,7 @@ export type PublishSlice = {
   totalAmount?: Prisma.Decimal | null;
 };
 export type PublishUnit = {
+  metaSpendReconciliation?: MetaSpendReconciliation;
   runId: string;
   unitKey: string;
   generation: bigint;
@@ -263,6 +265,10 @@ export class SyncFoundationService {
   }
 
   async publishUnit(input: PublishUnit) {
+    if(input.metaSpendReconciliation&&(!validMetaSpendReconciliation(input.metaSpendReconciliation)||
+      input.metaSpendReconciliation.day!==input.metricDate.toISOString().slice(0,10)||!isMetaApiPublication(input.slices)||
+      input.slices.some(slice=>!slice.totalAmount?.eq(slice.dataKind===SourceDataKind.META_AD?input.metaSpendReconciliation!.adSpendUsd:input.metaSpendReconciliation!.adsetSpendUsd))))syncError("RECONCILIATION_FAILED");
+    const metaWarnings=input.metaSpendReconciliation?[META_SPEND_WARNING]:[];
     assertEnabled();
     for (const slice of input.slices) {
       assertBoundedRows(slice.dataKind, slice.fetchedCount, slice.pageCount, slice.complete);
@@ -332,11 +338,11 @@ export class SyncFoundationService {
             metricDate: input.metricDate, source: slice.source,
             state: count === 0 ? SourceCoverageState.COMPLETE_ZERO : SourceCoverageState.COMPLETE_NONZERO,
             lastAttemptRunId: run.id, lastSuccessRunId: run.id, lastAttemptAt: now, lastSuccessAt: now,
-            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: [] },
+            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: metaWarnings },
           update: { source: slice.source,
             state: count === 0 ? SourceCoverageState.COMPLETE_ZERO : SourceCoverageState.COMPLETE_NONZERO,
             lastAttemptRunId: run.id, lastSuccessRunId: run.id, lastAttemptAt: now, lastSuccessAt: now,
-            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: [] }
+            rowCount: count, totalAmount: slice.totalAmount ?? null, warningCodes: metaWarnings }
         });
       }
       await tx.syncRun.update({ where: { id: run.id }, data: {
@@ -346,7 +352,8 @@ export class SyncFoundationService {
         ...auditActor(run), action: "SYNC_UNIT_PUBLISHED", targetType: "RUN_UNIT",
         targetId: `${run.id}:${input.unitKey}`, result: SecurityAuditResult.SUCCESS,
         afterJson: { connectionId: run.connectionId, requestKeyHash: requestKeyHash(run.requestKey),
-          dataKinds: input.slices.map((slice) => slice.dataKind), fetched, published }
+          dataKinds: input.slices.map((slice) => slice.dataKind), fetched, published,
+          ...(input.metaSpendReconciliation?{warningCodes:metaWarnings,metaSpendReconciliation:input.metaSpendReconciliation}:{}) }
       });
       await assertFenced(tx, run.connectionId, run.id, input.generation);
       if (run.deadlineAt <= new Date()) syncError("RUN_LIMIT_EXCEEDED");

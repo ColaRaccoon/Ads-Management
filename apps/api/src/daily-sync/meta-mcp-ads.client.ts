@@ -1,3 +1,4 @@
+import { metaSpendWithinTolerance, metaSpendHierarchyEvidence } from "../domain/meta-spend-reconciliation";
 import { META_REPORTING_FIELDS, metaReportingFields, MetaReportingMeasurement } from "../domain/meta-reporting-measurements";
 import { markMetaFailureStage, metaReconciliationFailure, MetaReconciliationReason } from "./meta-failure-diagnostic";
 import { createHash } from "node:crypto";
@@ -123,6 +124,10 @@ export function normalizeMetaMcpSnapshot(input: unknown, proofInput?:unknown,cat
     const selectedIds=new Set(selected.selectedAdsets.map(row=>row.id));
     wire={...effective,levels:{...effective.levels,adset:effective.levels.adset.filter(row=>selectedIds.has(row.id))}};
   }else{if(proofInput!==undefined)fail("RECONCILIATION_FAILED");wire=validateMetaMcpSnapshot(input);}
+  const spendReconciliation=metaSpendHierarchyEvidence(wire.levels,wire.day);
+  if((!wire.levels.ad.length||!wire.levels.adset.length)&&[spendReconciliation.adSpendUsd,spendReconciliation.adsetSpendUsd,spendReconciliation.campaignSpendUsd,spendReconciliation.accountSpendUsd].some(n=>!new Prisma.Decimal(n).isZero()))fail("RECONCILIATION_FAILED","BASIC_TOTALS");
+  if(new Prisma.Decimal(spendReconciliation.maxAbsoluteDifferenceUsd).gt(10))fail("RECONCILIATION_FAILED","BASIC_TOTALS");
+  const spendWarning=new Prisma.Decimal(spendReconciliation.maxAbsoluteDifferenceUsd).gt(0);
   const campaigns=new Map(wire.levels.campaign.map(r=>[r.id,r])),sets=new Map(wire.levels.adset.map(r=>[r.id,r]));
   const parser=new CreativeNameParser(),observed=new Date(wire.observedAtUtc),account=wire.levels.ad_account[0];
   // Check all four independently read totals; only ads/adsets are published as their own levels.
@@ -131,7 +136,7 @@ export function normalizeMetaMcpSnapshot(input: unknown, proofInput?:unknown,cat
     const imps=wire.levels[level].reduce((s,r)=>s+BigInt(integer(r.impressions,true)),0n);
     const links=wire.levels[level].reduce((s,r)=>s+BigInt(integer(r.link_click)),0n);
     const clicks=wire.levels[level].reduce((s,r)=>s+BigInt(integer(r.clicks)),0n);
-    if (!sum.eq(spend(account)) || imps!==BigInt(integer(account.impressions,true)) || links!==BigInt(integer(account.link_click))||clicks!==BigInt(integer(account.clicks))) fail("RECONCILIATION_FAILED","BASIC_TOTALS");
+    if (!metaSpendWithinTolerance(sum,spend(account)) || imps!==BigInt(integer(account.impressions,true)) || links!==BigInt(integer(account.link_click))||clicks!==BigInt(integer(account.clicks))) fail("RECONCILIATION_FAILED","BASIC_TOTALS");
     for(const row of wire.levels[level]){integer(row.reach);fixedDecimal(row.frequency,12,6);}
   }
   for (const adset of wire.levels.adset) {const parent=campaigns.get(adset.campaign_id);if(!parent||parent.name!==adset.campaign_name)fail("RECONCILIATION_FAILED","PARENT_IDENTITY");}
@@ -139,6 +144,7 @@ export function normalizeMetaMcpSnapshot(input: unknown, proofInput?:unknown,cat
     const adset=sets.get(row.adset_id),campaign=campaigns.get(row.campaign_id);
     if(!adset||!campaign||adset.campaign_id!==row.campaign_id||adset.name!==row.adset_name||campaign.name!==row.campaign_name)fail("RECONCILIATION_FAILED","PARENT_IDENTITY");
     const currentMetadata=metadata(campaign,adset,row,evidence,derivedIds.has(row.id as string));
+    if(spendWarning&&currentMetadata.sourceContext)currentMetadata.sourceContext.spendReconciliation=spendReconciliation;
     const result:MetaApiAd={...common(row),campaignId:row.campaign_id as string,campaignName:row.campaign_name as string,
       adsetId:row.adset_id as string,adsetName:row.adset_name as string,adId:row.id as string,adName:row.name as string,creative:parser.parse(row.name as string),
       sourceRevision:"",currentMetadata,deliveryStatus:currentDeliveryStatus(currentMetadata.ad!),purchaseCount:null,addToCartCount:null,
@@ -148,16 +154,17 @@ export function normalizeMetaMcpSnapshot(input: unknown, proofInput?:unknown,cat
   });
   const adsets=wire.levels.adset.map(row=>{
     const campaign=campaigns.get(row.campaign_id)!;const children=ads.filter(r=>r.adsetId===row.id);
-    if(!children.reduce((s,r)=>s.plus(r.spendUsd),new Prisma.Decimal(0)).eq(spend(row)) ||
+    if(!metaSpendWithinTolerance(children.reduce((s,r)=>s.plus(r.spendUsd),new Prisma.Decimal(0)),spend(row)) ||
       children.reduce((s,r)=>s+BigInt(r.impressions),0n)!==BigInt(integer(row.impressions,true)) ||
       children.reduce((s,r)=>s+BigInt(r.inlineLinkClicks),0n)!==BigInt(integer(row.link_click))||children.reduce((s,r)=>s+BigInt(r.clicksAll!),0n)!==BigInt(integer(row.clicks))) fail("RECONCILIATION_FAILED","BASIC_TOTALS");
     const currentMetadata=metadata(campaign,row,null,evidence,derivedParentAdsets.has(row.id as string));
+    if(spendWarning&&currentMetadata.sourceContext)currentMetadata.sourceContext.spendReconciliation=spendReconciliation;
     const result:MetaApiAdset={...common(row),campaignId:row.campaign_id as string,campaignName:row.campaign_name as string,
       adsetId:row.id as string,adsetName:row.name as string,sourceRevision:"",currentMetadata,deliveryStatus:currentDeliveryStatus(currentMetadata.adset),startDate:null,endStatus:null};
     result.sourceRevision=hash({accountId:wire.accountId,day:wire.day,transport:"MCP",protocolVersion:"2025-06-18",row:result});result.metadataObservedAt=observed;return result;
   });
   for(const campaign of wire.levels.campaign){const children=ads.filter(r=>r.campaignId===campaign.id);
-    if(!children.reduce((s,r)=>s.plus(r.spendUsd),new Prisma.Decimal(0)).eq(spend(campaign))||children.reduce((s,r)=>s+BigInt(r.impressions),0n)!==BigInt(integer(campaign.impressions,true))||
+    if(!metaSpendWithinTolerance(children.reduce((s,r)=>s.plus(r.spendUsd),new Prisma.Decimal(0)),spend(campaign))||children.reduce((s,r)=>s+BigInt(r.impressions),0n)!==BigInt(integer(campaign.impressions,true))||
       children.reduce((s,r)=>s+BigInt(r.inlineLinkClicks),0n)!==BigInt(integer(campaign.link_click))||children.reduce((s,r)=>s+BigInt(r.clicksAll!),0n)!==BigInt(integer(campaign.clicks)))fail("RECONCILIATION_FAILED","BASIC_TOTALS");}
   return {ads,adsets,pageCount:wire.pageCount,accountSpendUsd:spend(account),currencyCode:"USD",timeZone:account.timezone_name as string,requestId:null,transport:"MCP",protocolVersion:"2025-06-18",
     settings:{actionReportTime:CONTEXT,attributionWindows:[]}};

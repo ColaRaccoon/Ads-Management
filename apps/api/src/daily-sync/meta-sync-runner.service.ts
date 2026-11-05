@@ -170,6 +170,7 @@ export class MetaSyncRunnerService {
             pageCount: snapshot.pageCount });
           this.logger.log(JSON.stringify({event:"META_DAY_SUCCEEDED",runId,day:unit.unitKey,
             ads:snapshot.ads.length,adsets:snapshot.adsets.length,
+            ...(snapshot.ads[0]?.currentMetadata?.sourceContext?.spendReconciliation?{warning:"META_SPEND_DIFFERENCE_WITHIN_10_USD",spendReconciliation:snapshot.ads[0].currentMetadata.sourceContext.spendReconciliation}:{}),
             ...(getMetaFailureEvidence(snapshot)?{metaEvidence:getMetaFailureEvidence(snapshot)}:{})}));
         } catch (error) {
           if (leaseLost) syncError("LEASE_LOST");

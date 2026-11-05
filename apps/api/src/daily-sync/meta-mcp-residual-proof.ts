@@ -1,3 +1,4 @@
+import { metaSpendWithinTolerance } from "../domain/meta-spend-reconciliation";
 import {Prisma} from "@prisma/client";
 import {stableMetadataJson} from "../domain/meta-current-metadata";
 import {metaReconciliationFailure,MetaReconciliationReason} from "./meta-failure-diagnostic";
@@ -30,7 +31,7 @@ function deriveLinkParentZeros(selected:ReturnType<typeof selectMetaMcpDay>){
  const total=(rows:Json[],field:string)=>rows.reduce((n,row)=>n+(row[field]===null?0n:integer(row[field])),0n);
  const infer=(parent:Json,children:Json[],level:"campaign"|"adset")=>{
   if(total(children,"link_click")!==integer(parent.link_click))fail("LINK_TOTALS");
-  if(!children.reduce((sum,row)=>sum.plus(spend(row)),new Prisma.Decimal(0)).eq(spend(parent))||["impressions","clicks"].some(field=>total(children,field)!==integer(parent[field])))fail("BASIC_TOTALS");
+  if(!metaSpendWithinTolerance(children.reduce((sum,row)=>sum.plus(spend(row)),new Prisma.Decimal(0)),spend(parent))||["impressions","clicks"].some(field=>total(children,field)!==integer(parent[field])))fail("BASIC_TOTALS");
   return children.map(row=>{if(row.link_click!==null)return row;targets.push({level,id:row.id as string,rawLinkClick:null,basis:"DERIVED_ZERO_RESIDUAL"});return {...row,link_click:"0"};});
  };
  const campaigns=infer(wire.levels.ad_account[0],wire.levels.campaign,"campaign");
@@ -57,7 +58,7 @@ function derive(capture:unknown,catalog:unknown){
   const totalSpend=children.reduce((n,r)=>n.plus(spend(r)),new Prisma.Decimal(0));
   const total=(rows:Json[],field:string)=>rows.reduce((n,r)=>n+(r[field]===null?0n:integer(r[field])),0n);
   const known=total(descendantAds,"link_click"),parentLinks=integer(parent.link_click);
-  if(!totalSpend.eq(spend(parent))||total(children,"impressions")!==integer(parent.impressions)||total(children,"clicks")!==integer(parent.clicks))fail("BASIC_TOTALS");
+  if(!metaSpendWithinTolerance(totalSpend,spend(parent))||total(children,"impressions")!==integer(parent.impressions)||total(children,"clicks")!==integer(parent.clicks))fail("BASIC_TOTALS");
   if(total(children,"link_click")!==parentLinks||known!==parentLinks)fail("LINK_TOTALS");
   parents.push({level,id:parent.id as string,childIdsFingerprint:metaMcpFingerprint(children.map(r=>r.id as string).sort()),spendUsd:totalSpend.toFixed(4),impressions:integer(parent.impressions).toString(),clicks:integer(parent.clicks).toString(),knownLinkClicks:known.toString(),parentLinkClicks:parentLinks.toString(),residualLinkClicks:"0",nullAdLinkCount:descendantAds.filter(r=>r.link_click===null).length});
  };
@@ -66,7 +67,7 @@ function derive(capture:unknown,catalog:unknown){
  check(wire.levels.ad_account[0],wire.levels.campaign,wire.levels.ad,"ad_account");
  // Independently conserve the account across ads and selected adsets as well.
  const account=wire.levels.ad_account[0];for(const rows of [wire.levels.ad,selected.selectedAdsets]){
-  if(!rows.reduce((n,r)=>n.plus(spend(r)),new Prisma.Decimal(0)).eq(spend(account))||
+  if(!metaSpendWithinTolerance(rows.reduce((n,r)=>n.plus(spend(r)),new Prisma.Decimal(0)),spend(account))||
    ["impressions","clicks","link_click"].some(f=>rows.reduce((n,r)=>n+(r[f]===null?0n:integer(r[f])),0n)!==integer(account[f])))fail("BASIC_TOTALS");
  }
  parents.sort((a,b)=>a.level.localeCompare(b.level)||a.id.localeCompare(b.id));

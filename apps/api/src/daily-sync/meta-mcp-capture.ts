@@ -1,3 +1,4 @@
+import { metaSpendWithinTolerance, metaSpendHierarchyEvidence } from "../domain/meta-spend-reconciliation";
 import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { stableMetadataJson, MetaMcpNullBasicProjection } from "../domain/meta-current-metadata";
@@ -90,7 +91,7 @@ function nullBasicParentProjection(wire:MetaMcpWireSnapshot){
  const check=(p:Json,children:Json[],descendants:Json[],level:MetaMcpLevel)=>{
   for(const [rows,relation]of [[children,"CHILDREN"],[descendants,"DESCENDANTS"]] as const){
    const expected=money(p),observed=sumMoney(rows);
-   if(!observed.eq(expected))stop("HIERARCHY_SPEND_TOTAL",{...context(p,level,"amount_spent"),relation,expected:expected.toString(),observed:observed.toString(),delta:observed.minus(expected).toString()},"BASIC_TOTALS");
+   if(!metaSpendWithinTolerance(observed,expected))stop("HIERARCHY_SPEND_TOTAL",{...context(p,level,"amount_spent"),relation,expected:expected.toString(),observed:observed.toString(),delta:observed.minus(expected).toString()},"BASIC_TOTALS");
   }
   for(const f of metrics){const expected=p[f]===null?0n:count(p[f],f);
    for(const [rows,relation]of [[children,"CHILDREN"],[descendants,"DESCENDANTS"]] as const){const observed=total(rows,f);
@@ -113,6 +114,8 @@ function nullBasicParentProjection(wire:MetaMcpWireSnapshot){
 }
 export function selectMetaMcpDay(capture:unknown){
  const original=validateMetaMcpCapture(capture);
+ const spendEvidence=metaSpendHierarchyEvidence(original.levels,original.day);
+ if(new Prisma.Decimal(spendEvidence.maxAbsoluteDifferenceUsd).gt(10)){const error=metaReconciliationFailure("BASIC_TOTALS");attachMetaCheck(error,{condition:"HIERARCHY_SPEND_TOTAL",metric:"amount_spent",expected:"10.0000",observed:spendEvidence.maxAbsoluteDifferenceUsd,delta:new Prisma.Decimal(spendEvidence.maxAbsoluteDifferenceUsd).minus(10).toString()});throw error;}
  const campaignMap=new Map(original.levels.campaign.map(r=>[r.id,r])),setMap=new Map(original.levels.adset.map(r=>[r.id,r]));
  for(const row of original.levels.adset){const parent=campaignMap.get(row.campaign_id);if(!parent||parent.name!==row.campaign_name)reject("PARENT_IDENTITY");}
  for(const row of original.levels.ad){const parent=setMap.get(row.adset_id),campaign=campaignMap.get(row.campaign_id);if(!parent||!campaign||parent.campaign_id!==row.campaign_id||parent.name!==row.adset_name||campaign.name!==row.campaign_name)reject("PARENT_IDENTITY");}

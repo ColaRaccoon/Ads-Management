@@ -7,7 +7,7 @@ import { safeMetaRuntimeFailureDiagnostic, retryableMetaReconciliationDiagnostic
 import { securityAuditData } from '../../../apps/api/src/security-audit/security-audit.types.ts';
 
 test('projection total mismatches keep exact metric/value/delta and enter only the existing bounded retry classes',()=>{
- for(const [field,reason]of [['impressions','BASIC_TOTALS'],['clicks','BASIC_TOTALS'],['link_click','LINK_TOTALS'],['omni_purchase','PURCHASE_TOTALS'],['amount_spent','BASIC_TOTALS']]){
+ for(const [field,reason]of [['impressions','BASIC_TOTALS'],['clicks','BASIC_TOTALS'],['link_click','LINK_TOTALS'],['omni_purchase','PURCHASE_TOTALS']]){
   const capture=projectedCapture();
   if(field==='amount_spent')capture.levels.ad_account[0][field].value='0.01';else capture.levels.ad_account[0][field]='1';
   const original=JSON.stringify(capture);
