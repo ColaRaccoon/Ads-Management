@@ -41,6 +41,20 @@ test("same-size item replacement across restart fails complete-day verification"
   await assert.rejects(collect(2, (stage, row) => stage === "ITEMS_VERIFY" ? { ...row, quantity: "2" } : row),
     (error: any) => error.safeCode === "RECONCILIATION_FAILED");
 });
+
+test("a present empty option survives both full passes and protected checkpoint restarts", async () => {
+  const result = await collect(42, (_stage, row) => ({ ...row, option_value: "" }));
+  assert.equal(result.itemCalls, 84);
+  assert.equal(result.last.snapshot.orders.length, 42);
+  assert(result.last.snapshot.orders.every((line: any) => line.optionValue === "" &&
+    line.optionName === "test product()" && line.quantity === "1.0000" && line.salePriceKrw === "100.00"));
+});
+
+test("an empty option replaced by a selected option still fails the second full pass", async () => {
+  await assert.rejects(collect(2, (stage, row) => ({ ...row,
+    option_value: stage === "ITEMS_VERIFY" ? "selected" : "" })),
+    (error: any) => error.safeCode === "RECONCILIATION_FAILED");
+});
 test("foreign connection/day checkpoint and incomplete first list fail before item requests", async () => {
   let requests = 0;
   const state: any = { version: 1, connectionId: "foreign", day: "2026-10-11", stage: "LIST_FIRST", count: 1, first: [], second: [], items: [], cursor: 0, verifiedItems: 0 };

@@ -63,7 +63,7 @@ test("CSV without dedicated option column never infers raw options",()=>{
   assert.equal(parser.parseRow({...csv,"옵션값":"색상=블랙"}).parsedRow?.optionValue,"색상=블랙");
 });
 
-test("completed-day reread versions a newly recovered option without duplicating financial rows",async()=>{
+for (const recoveredOption of ["색상=블랙", ""]) test(`completed-day reread preserves ${recoveredOption === "" ? "known empty" : "selected"} options without duplicating financial rows`,async()=>{
   const savedKey=process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_B64,savedVersion=process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_VERSION;
   process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_B64=Buffer.alloc(32,17).toString("base64");
   process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_VERSION="2";
@@ -79,13 +79,13 @@ test("completed-day reread versions a newly recovered option without duplicating
   const write=(input:any)=>(writer as any).writeCafe24Rows(tx,{connectionId:"connection",runId:"run"},[input],new Date("2026-10-28T00:00:00Z"));
   try {
     await write(base);const businessKey=lines[0].orderLineKey;
-    await write({...base,optionValue:"색상=블랙"});
+    await write({...base,optionValue:recoveredOption});
     assert.equal(versions.length,2);assert.equal(lines.length,2);
     const current=lines.filter(v=>v.isCurrent);assert.equal(current.length,1);
-    assert.equal(current[0].optionValue,"색상=블랙");assert.equal(current[0].orderLineKey,businessKey);
+    assert.equal(current[0].optionValue,recoveredOption);assert.equal(current[0].orderLineKey,businessKey);
     assert.equal(current[0].quantity.toString(),"1");assert.equal(current[0].totalPaidKrw.toString(),"10000");
-    assert.equal(versions.filter(v=>v.isCurrent)[0].optionValue,"색상=블랙");
-    await write({...base,optionValue:"색상=블랙"});assert.equal(lines.length,2);assert.equal(versions.length,2);
+    assert.equal(versions.filter(v=>v.isCurrent)[0].optionValue,recoveredOption);
+    await write({...base,optionValue:recoveredOption});assert.equal(lines.length,2);assert.equal(versions.length,2);
   } finally {
     if(savedKey===undefined)delete process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_B64;else process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_B64=savedKey;
     if(savedVersion===undefined)delete process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_VERSION;else process.env.DAILY_SYNC_CAFE24_OBSERVATION_KEY_VERSION=savedVersion;

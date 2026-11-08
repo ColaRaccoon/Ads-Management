@@ -137,9 +137,33 @@ test("normal preview query produces the same protected scope as activation", asy
   const preview = await cafe24ManualActivationPreview(f.db, connectionId, query);
   await f.review();
   assert.equal(preview.snapshotDigest, f.input.expectedSnapshotDigest);
+  assert.equal(preview.expectedPolicyVersion, 1);
+  assert.equal(preview.expectedSuccessRunId, runId);
+  assert.equal(preview.rowCount, 2);
+  assert.equal(preview.canRequestActivation, true);
+  assert.equal(f.state.audits.length, 0);
+  assert.equal(f.state.policies[0].primarySource, "CSV");
   f.input.expectedSnapshotDigest = preview.snapshotDigest;
   await f.service.activateCafe24Day(connectionId, f.input, actorId);
   assert.equal(f.state.policies[0].primarySource, "API");
+}));
+
+test("manual review never offers incomplete, superseded or already selected API evidence", async () => environment(async () => {
+  for (const mutate of [
+    (state: any) => { state.coverage.state = "UNSUPPORTED"; },
+    (state: any) => { state.coverage.lastAttemptRunId = "different-run"; },
+    (state: any) => { state.coverage.warningCodes = []; },
+    (state: any) => { state.coverage.rowCount = null; },
+    (state: any) => { state.coverage.lastSuccessAt = null; },
+    (state: any) => { state.policies[0].primarySource = "API"; },
+    (state: any) => { state.policies.push({...state.policies[0], id: "ambiguous-policy"}); }
+  ]) {
+    const f = fixture(); mutate(f.state);
+    const preview = await cafe24ManualActivationPreview(f.db, connectionId,
+      {day, mode: "API_ONLY", couponInputSource: "API_ACTUAL_PRODUCT_PLUS_SHIPPING"});
+    assert.equal(preview.canRequestActivation, false);
+    assert.equal(f.state.audits.length, 0);
+  }
 }));
 
 test("space review preserves complete option suffixes and item identity", () => {

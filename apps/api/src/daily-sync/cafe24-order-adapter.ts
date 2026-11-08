@@ -137,10 +137,12 @@ export function normalizeCafe24Order(rawOrder: unknown, rawItems: unknown,
     seen.add(lineOrderNo);
     if (!Object.prototype.hasOwnProperty.call(item, "option_value"))
       unsupported("CAFE24_FIELD_OPTION_VALUE");
-    // Null/empty options were not represented in either complete CSV/API sample.
-    if (typeof item.option_value !== "string" || !item.option_value.trim())
+    // A present empty string is a known provider option value (observed on
+    // 2026-11-07), distinct from a missing/null value. Preserve it exactly and
+    // keep the existing product_name(option_value) identity and sibling checks.
+    if (typeof item.option_value !== "string")
       unsupported("CAFE24_FIELD_OPTION_VALUE");
-    const option = requiredText(item.option_value, "CAFE24_FIELD_OPTION_VALUE",
+    const option = item.option_value === "" ? "" : requiredText(item.option_value, "CAFE24_FIELD_OPTION_VALUE",
       CAFE24_OPTION_COMPONENT_LIMIT);
     const productName = requiredText(item.product_name, "CAFE24_FIELD_PRODUCT_NAME",
       CAFE24_OPTION_COMPONENT_LIMIT);

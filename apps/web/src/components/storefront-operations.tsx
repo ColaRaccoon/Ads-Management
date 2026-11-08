@@ -7,6 +7,12 @@ import { STOREFRONT_QUERY_OPTIONS, storefrontError, storefrontLabel, storefrontT
 import { StorefrontConnection, StorefrontRun } from "@/types/storefront";
 import { DataTable } from "./data-table";
 
+type Cafe24ActivationReview = {
+  connectionId: string; day: string; snapshotDigest: string;
+  expectedPolicyVersion: number | null; expectedSuccessRunId: string | null;
+  rowCount: number | null; canRequestActivation: boolean;
+};
+
 export function StorefrontOperations({ connections, canManageImports, canManageSettings, onRefresh }: {
   connections: StorefrontConnection[]; canManageImports: boolean; canManageSettings: boolean;
   onRefresh: () => Promise<unknown>;
@@ -69,7 +75,27 @@ export function ConnectionOperations({ connection, canManageImports, canManageSe
       else setMessage("재연결 주소를 확인하지 못했습니다. 연결 담당자에게 확인하세요.");
     }
   });
-  const pending = manual.isPending || toggle.isPending || reconnect.isPending;
+  const activationReview = useMutation({
+    mutationFn: () => apiGet<Cafe24ActivationReview>(`/source-connections/${connection.id}/cafe24-activation-snapshot?day=${day}&mode=API_ONLY&couponInputSource=API_ACTUAL_PRODUCT_PLUS_SHIPPING`)
+  });
+  const activation = useMutation({
+    mutationFn: () => {
+      const review = activationReview.data;
+      if (!review?.canRequestActivation || review.day !== day || review.connectionId !== connection.id)
+        throw new Error("수집 자료를 다시 검토하세요.");
+      return apiPost(`/source-connections/${connection.id}/activate-cafe24-day`, {
+        day, mode: "API_ONLY", couponInputSource: "API_ACTUAL_PRODUCT_PLUS_SHIPPING",
+        expectedPolicyVersion: review.expectedPolicyVersion, expectedSuccessRunId: review.expectedSuccessRunId,
+        expectedSnapshotDigest: review.snapshotDigest, reason: "MANUAL_DAY_RECOVERY"
+      });
+    },
+    onSuccess: async () => {
+      activationReview.reset();
+      setMessage(`${day}의 검증된 API 자료를 집계에 적용했습니다.`);
+      await onRefresh().catch(() => setMessage("자료 적용은 완료됐습니다. 저장된 자료 새로고침으로 최신 집계를 확인하세요."));
+    }
+  });
+  const pending = manual.isPending || toggle.isPending || reconnect.isPending || activationReview.isPending || activation.isPending;
   const today = storefrontToday(connection.timeZone);
   const validDay = today !== null && /^\d{4}-\d{2}-\d{2}$/.test(day) && day < today;
   return <article aria-label={`${storefrontLabel(connection.provider)} 연결`} style={{ borderTop: "1px solid #dce3e8", paddingTop: 16, marginTop: 16 }}>
@@ -90,16 +116,32 @@ export function ConnectionOperations({ connection, canManageImports, canManageSe
       {connection.provider !== "CAFE24" && connection.reconnectRequired ? <span>새 인증의 확인·등록은 연결 담당자에게 요청하세요.</span> : null}
     </div> : null}
     {canManageImports ? <div className="toolbar" style={{ marginTop: 12, flexWrap: "wrap" }}>
-      <label>수동 수집 날짜 <input type="date" className="input" value={day} onChange={(event) => setDay(event.target.value)} aria-label={`${storefrontLabel(connection.provider)} 수동 수집 날짜`} /></label>
-      <button type="button" className="button primary" disabled={!validDay || pending || !connection.enabled || connection.reconnectRequired} onClick={() => manual.mutate()}>이 하루 동기화</button>
+      <label>수동 수집 날짜 <input type="date" className="input" value={day} disabled={pending} onChange={(event) => {
+        setDay(event.target.value); activationReview.reset(); activation.reset(); setMessage(null);
+      }} aria-label={`${storefrontLabel(connection.provider)} 수동 수집 날짜`} /></label>
+      <button type="button" className="button primary" disabled={!validDay || pending || !connection.enabled || connection.reconnectRequired} onClick={() => {
+        activationReview.reset(); activation.reset(); manual.mutate();
+      }}>이 하루 동기화</button>
       <button type="button" className="button" disabled={pending} onClick={() => setShowHistory((value) => !value)}>{showHistory ? "이력 닫기" : "실행 이력"}</button>
       {day && !validDay ? <span role="status">계정 현지시간 기준 완료된 하루를 선택하세요.</span> : null}
       {today === null ? <span role="status">계정 시간대를 확인하기 전에는 수동 수집을 실행할 수 없습니다.</span> : null}
     </div> : null}
+    {connection.provider === "CAFE24" && canManageSettings && canManageImports ? <div style={{ marginTop: 12 }}>
+      <button type="button" className="button" disabled={!validDay || pending} onClick={() => {
+        activation.reset(); activationReview.mutate();
+      }}>수집 자료 적용 검토</button>
+      {activationReview.data ? <div role="status">
+        <p>{activationReview.data.day} · 저장된 API 품목 {activationReview.data.rowCount ?? "—"}행</p>
+        {activationReview.data.canRequestActivation ? <>
+          <p>이 날짜의 CSV 대신 검증된 API 주문을 집계에 사용합니다. 쿠폰은 API 상품·배송비 입력 기준을 적용하며, 서버가 전체 자료를 다시 검증합니다.</p>
+          <button type="button" className="button primary" disabled={pending} onClick={() => activation.mutate()}>이 날짜의 API 자료 적용</button>
+        </> : <p>적용을 요청할 수 있는 미반영 수집 자료가 없습니다. 수집 완료 후 다시 검토하세요.</p>}
+      </div> : null}
+    </div> : null}
     {manual.isPending ? <p role="status">선택한 하루를 처리하고 있습니다. 화면을 다시 열어도 같은 수집을 자동 시작하지 않습니다.</p> : null}
     {message ? <p role="status">{message}</p> : null}
     {connectionCheckError ? <p role="alert">{connectionCheckError}</p> : null}
-    {[manual.error, toggle.error, reconnect.error].filter(Boolean).map((error, index) => <p role="alert" key={index}>{storefrontError(error)}</p>)}
+    {[manual.error, toggle.error, reconnect.error, activationReview.error, activation.error].filter(Boolean).map((error, index) => <p role="alert" key={index}>{storefrontError(error)}</p>)}
     {showHistory && canManageImports ? <div style={{ marginTop: 12 }}>
       <h4>최근 실행 이력</h4>
       <button type="button" className="button" disabled={history.isFetching} onClick={() => void history.refetch()}>이력 새로고침</button>
