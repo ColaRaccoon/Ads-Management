@@ -274,6 +274,16 @@ export class Cafe24ConnectionController {
     return this.orders.probeDayStatuses(params.id, day);
   }
 
+  @Get("connections/:id/orders/option-shapes")
+  @RequirePermissions("settings.manage")
+  @HeavyOperation()
+  optionShapes(@Param() params: IdParam, @Query("day") day: string,
+    @Query("offset") offset: string | undefined,
+    @Res({ passthrough: true }) response: Response) {
+    response.setHeader("Cache-Control", "no-store");
+    return this.orders.probeOptionShapes(params.id, day, offset);
+  }
+
 }
 
 @Controller("integrations/cafe24/oauth")

@@ -14,6 +14,8 @@ expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled, profile] = process.argv.slice(2);
 if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch profile');
 if (profile === 'reporting') {
+  // Bounded, admin-only option-shape diagnostics; no provider values or writes.
+  expected.add('daily-sync/cafe24-order-preflight.client.js');
   // Reviewed additive worker entry reuses the native sales/coupon calculators; HTTP formulas remain unchanged.
   expected.add('sales/sales-metrics.service.js');
   expected.add('domain/cafe24-coupon-line-allocation.js');
