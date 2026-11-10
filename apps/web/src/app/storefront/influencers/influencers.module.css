@@ -44,6 +44,18 @@
   font-size: 11px;
 }
 
+.creativeDetails {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .negative,
 .error {
   color: var(--red);
@@ -94,16 +106,6 @@
 
 .note {
   grid-column: 1 / -1;
-}
-
-.noteText {
-  margin: 0 0 14px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--bg);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font-size: 13px;
 }
 
 .dialogActions {
