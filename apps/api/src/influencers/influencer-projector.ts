@@ -5,16 +5,17 @@ import { formatDateOnly } from "../domain/date-number";
 import { metaAttributionContextKey } from "../domain/meta-conditional-metrics";
 import { creativeRowFinancials } from "../metrics/meta-ad-metric-aggregates";
 import { loadCreativeFinancialContext } from "../metrics/meta-ad-metrics-read.service";
-import { classifyInfluencerCreative } from "./influencer-matching";
+import { classifyInfluencerCreative, numberedCreativeName } from "./influencer-matching";
 
 const metricFields = {
   metricDate: true, connectionId: true, source: true, adNameSnapshot: true, campaignNameSnapshot: true,
-  spendUsd: true, productId: true, resultIndicator: true, resultCount: true, purchaseCount: true,
+  spendUsd: true, impressions: true, productId: true, creativeId: true, resultIndicator: true, resultCount: true, purchaseCount: true,
   attributionSetting: true, actionReportTime: true, attributionWindows: true
 } as const satisfies Prisma.MetaAdDailyMetricSelect;
 
 const collaborationFields = {
-  id: true, version: true, influencerKey: true, feeKrw: true, startDate: true, endDate: true
+  id: true, version: true, influencerKey: true, feeKrw: true, startDate: true, endDate: true,
+  needsBackfill: true, numberingRequired: true, productId: true, materials: { select: { creativeId: true } }
 } as const satisfies Prisma.InfluencerCollaborationSelect;
 
 type Collaboration = Prisma.InfluencerCollaborationGetPayload<{ select: typeof collaborationFields }>;
@@ -34,13 +35,18 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
   // Select canonical rows before filtering names so unbound CSV conflicts remain visible.
   const selected = await selectCurrentSourceRows(tx, SourceDataKind.META_AD, candidates, row => row.metricDate);
   const matched = selected.flatMap(row => {
-    const creative = classifyInfluencerCreative(row.adNameSnapshot, row.campaignNameSnapshot);
-    return creative ? [{ row, ...creative }] : [];
+    const legacy = classifyInfluencerCreative(row.adNameSnapshot, row.campaignNameSnapshot);
+    const material = row.creativeId && row.productId ? numberedCreativeName(row.adNameSnapshot) : null;
+    return [
+      ...(legacy ? [{ row, scope: "NICKNAME", ...legacy }] : []),
+      ...(material ? [{ row, scope: "MATERIAL", influencerKey: materialKey(row.productId!, row.creativeId!), creativeName: material }] : [])
+    ];
   });
   const context = await loadCreativeFinancialContext(tx, matched.map(item => item.row));
   const grouped = new Map<string, DailyPerformance>();
-  for (const { row, influencerKey, creativeName } of matched) {
-    const key = JSON.stringify([influencerKey, creativeName]);
+  for (const { row, scope, influencerKey, creativeName } of matched) {
+    const key = JSON.stringify([scope, influencerKey, creativeName, row.creativeId]);
+    const delivered = row.spendUsd.gt(0) || row.impressions > 0n;
     const attributionContext = metaAttributionContextKey(row);
     const { spendKrw, marginKrw } = creativeRowFinancials(row, context);
     const existing = grouped.get(key);
@@ -48,12 +54,13 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
       existing.adSpendKrw = addAmount(existing.adSpendKrw, spendKrw);
       existing.adMarginKrw = addAmount(existing.adMarginKrw, marginKrw);
       existing.hasApi ||= row.source === SourceKind.API;
+      existing.delivered ||= delivered;
       existing.mixedAttribution ||= existing.attributionContext !== attributionContext;
       if (attributionContext < existing.attributionContext) existing.attributionContext = attributionContext;
     } else {
       grouped.set(key, {
-        metricDate, influencerKey, creativeName,
-        creativeKey: createHash("sha256").update(creativeName).digest("hex"),
+        metricDate, scope, influencerKey, creativeName, sourceCreativeId: row.creativeId, delivered,
+        creativeKey: createHash("sha256").update(JSON.stringify([creativeName, row.creativeId])).digest("hex"),
         adSpendKrw: spendKrw === null ? null : new Prisma.Decimal(spendKrw),
         adMarginKrw: marginKrw === null ? null : new Prisma.Decimal(marginKrw),
         hasApi: row.source === SourceKind.API, attributionContext, mixedAttribution: false
@@ -65,22 +72,33 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
     adMarginKrw: row.adMarginKrw?.toDecimalPlaces(6) ?? null
   }));
   const previous = await tx.influencerDailyPerformance.findMany({ where: { metricDate } });
-  const changedKeys = changedInfluencerKeys(previous, next);
-  if (changedKeys.length === 0) return;
+  const changes = changedScopes(previous, next);
+  if (changes.size === 0) return;
 
   // Replace the affected day, including creatives removed by a correction or deletion.
-  await tx.influencerDailyPerformance.deleteMany({ where: { metricDate, influencerKey: { in: changedKeys } } });
-  const changed = new Set(changedKeys);
-  const replacements = next.filter(row => changed.has(row.influencerKey));
+  const legacyKeys = [...(changes.get("NICKNAME") ?? [])];
+  const numberedKeys = [...(changes.get("MATERIAL") ?? [])];
+  await tx.influencerDailyPerformance.deleteMany({
+    where: { metricDate, OR: [{ scope: "NICKNAME", influencerKey: { in: legacyKeys } }, { scope: "MATERIAL", influencerKey: { in: numberedKeys } }] }
+  });
+  const replacements = next.filter(row => changes.get(row.scope)?.has(row.influencerKey));
   if (replacements.length) await tx.influencerDailyPerformance.createMany({ data: replacements });
 
   const collaborations = await tx.influencerCollaboration.findMany({
     where: {
-      influencerKey: { in: changedKeys }, startDate: { lte: metricDate },
-      OR: [{ endDate: null }, { endDate: { gte: metricDate } }]
+      startDate: { lte: metricDate },
+      AND: [
+        { OR: [{ endDate: null }, { endDate: { gte: metricDate } }] },
+        { OR: [
+          { numberingRequired: false, influencerKey: { in: legacyKeys } },
+          { numberingRequired: true, materials: { some: { creativeId: { in: numberedKeys.map(key => key.split(":")[1]) } } } }
+        ] }
+      ]
     }, select: collaborationFields
   });
-  for (const collaboration of collaborations) await saveInfluencerRollup(tx, collaboration, now);
+  for (const collaboration of collaborations) {
+    await saveInfluencerRollup(tx, collaboration, now, collaboration.needsBackfill ? undefined : metricDate);
+  }
 }
 
 export async function backfillInfluencerCollaboration(tx: Prisma.TransactionClient, id: string, now: Date) {
@@ -90,19 +108,37 @@ export async function backfillInfluencerCollaboration(tx: Prisma.TransactionClie
   if (collaboration) await saveInfluencerRollup(tx, collaboration, now);
 }
 
-async function saveInfluencerRollup(tx: Prisma.TransactionClient, collaboration: Collaboration, now: Date) {
+const spendTotal = Prisma.sql`CASE WHEN bool_or(ad_spend_krw IS NULL) THEN NULL ELSE coalesce(sum(ad_spend_krw), 0) END`;
+const marginTotal = Prisma.sql`CASE WHEN bool_or(ad_margin_krw IS NULL)
+  OR (bool_or(has_api) AND (bool_or(mixed_attribution) OR min(attribution_context COLLATE "C") <> max(attribution_context COLLATE "C")))
+  THEN NULL ELSE coalesce(sum(ad_margin_krw), 0) END`;
+
+function materialKey(productId: string, creativeId: string) {
+  return `${productId}:${creativeId}`;
+}
+
+function matchesCollaboration(collaboration: Collaboration) {
+  const keys = collaboration.materials.map(material => materialKey(collaboration.productId!, material.creativeId));
+  const scope = collaboration.numberingRequired
+    ? keys.length ? Prisma.sql`scope = 'MATERIAL' AND influencer_key IN (${Prisma.join(keys)})` : Prisma.sql`false`
+    : Prisma.sql`scope = 'NICKNAME' AND influencer_key = ${collaboration.influencerKey}
+      AND NOT EXISTS (
+        SELECT 1 FROM influencer_material_assignments a WHERE a.creative_id = influencer_daily_performances.source_creative_id
+      )`;
+  return Prisma.sql`${scope}
+    AND metric_date >= ${formatDateOnly(collaboration.startDate)}::date
+    ${collaboration.endDate ? Prisma.sql`AND metric_date <= ${formatDateOnly(collaboration.endDate)}::date` : Prisma.empty}`;
+}
+
+async function saveInfluencerRollup(tx: Prisma.TransactionClient, collaboration: Collaboration, now: Date, metricDate?: Date) {
   // Only the compact daily projection is read here. GET requests read the resulting saved snapshot.
   const rows = await tx.$queryRaw<Rollup[]>`
     SELECT creative_name AS "creativeName",
-      CASE WHEN bool_or(ad_spend_krw IS NULL) THEN NULL ELSE coalesce(sum(ad_spend_krw), 0) END AS "adSpendKrw",
-      CASE WHEN bool_or(ad_margin_krw IS NULL)
-        OR (bool_or(has_api) AND (bool_or(mixed_attribution) OR min(attribution_context COLLATE "C") <> max(attribution_context COLLATE "C")))
-        THEN NULL ELSE coalesce(sum(ad_margin_krw), 0) END AS "adMarginKrw",
+      ${spendTotal} AS "adSpendKrw",
+      ${marginTotal} AS "adMarginKrw",
       max(metric_date) AS "dataThrough"
     FROM influencer_daily_performances
-    WHERE influencer_key = ${collaboration.influencerKey}
-      AND metric_date >= ${formatDateOnly(collaboration.startDate)}::date
-      ${collaboration.endDate ? Prisma.sql`AND metric_date <= ${formatDateOnly(collaboration.endDate)}::date` : Prisma.empty}
+    WHERE ${matchesCollaboration(collaboration)}
     GROUP BY GROUPING SETS ((creative_name), ())
     ORDER BY creative_name COLLATE "C" NULLS FIRST`;
   const [total, ...creatives] = rows;
@@ -127,26 +163,41 @@ async function saveInfluencerRollup(tx: Prisma.TransactionClient, collaboration:
     }
   });
   if (updated.count !== 1) throw new Error("INFLUENCER_COLLABORATION_CHANGED");
+  await tx.influencerCollaborationDay.deleteMany({ where: { collaborationId: collaboration.id, ...(metricDate ? { metricDate } : {}) } });
+  await tx.$executeRaw`
+    INSERT INTO influencer_collaboration_days (collaboration_id, metric_date, ad_spend_krw, ad_margin_krw, creative_count)
+    SELECT ${collaboration.id}::uuid, metric_date, ${spendTotal}, ${marginTotal}, count(DISTINCT creative_name)::int
+    FROM influencer_daily_performances
+    WHERE ${matchesCollaboration(collaboration)} AND delivered
+      ${metricDate ? Prisma.sql`AND metric_date = ${formatDateOnly(metricDate)}::date` : Prisma.empty}
+    GROUP BY metric_date`;
 }
 
 function addAmount(total: Prisma.Decimal | null, amount: number | null) {
   return amount === null ? null : total?.plus(amount) ?? null;
 }
 
-function changedInfluencerKeys(previous: DailyPerformance[], next: DailyPerformance[]) {
-  const index = new Map(previous.map(row => [JSON.stringify([row.influencerKey, row.creativeName]), row]));
-  const changed = new Set<string>();
+function changedScopes(previous: DailyPerformance[], next: DailyPerformance[]) {
+  const identity = (row: DailyPerformance) => JSON.stringify([row.scope, row.influencerKey, row.creativeKey]);
+  const index = new Map(previous.map(row => [identity(row), row]));
+  const changed = new Map<string, Set<string>>();
+  const mark = (row: DailyPerformance) => {
+    const keys = changed.get(row.scope) ?? new Set<string>();
+    keys.add(row.influencerKey);
+    changed.set(row.scope, keys);
+  };
   for (const row of next) {
-    const key = JSON.stringify([row.influencerKey, row.creativeName]);
+    const key = identity(row);
     const old = index.get(key);
     if (!old || !sameAmount(row.adSpendKrw, old.adSpendKrw) || !sameAmount(row.adMarginKrw, old.adMarginKrw) ||
-        row.hasApi !== old.hasApi || row.mixedAttribution !== old.mixedAttribution || row.attributionContext !== old.attributionContext) {
-      changed.add(row.influencerKey);
+        row.hasApi !== old.hasApi || row.delivered !== old.delivered ||
+        row.mixedAttribution !== old.mixedAttribution || row.attributionContext !== old.attributionContext) {
+      mark(row);
     }
     index.delete(key);
   }
-  for (const row of index.values()) changed.add(row.influencerKey);
-  return [...changed];
+  for (const row of index.values()) mark(row);
+  return changed;
 }
 
 function sameAmount(left: Prisma.Decimal | null, right: Prisma.Decimal | null) {

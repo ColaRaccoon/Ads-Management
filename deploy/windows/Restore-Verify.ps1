@@ -280,8 +280,11 @@ function Get-RoleMatrixCompatibilityDigest($Value,[string]$ReleaseId){
     Assert-RoleMatrixProof $Value 121 10 10 500
     return [string]$Value.digest
   }
-  if($Value.contractVersion-ne2){throw 'ROLE_MATRIX_RESULT_INVALID'}
-  Assert-RoleMatrixProof $Value 128 14 11 527
+  switch($Value.contractVersion){
+    2 { Assert-RoleMatrixProof $Value 128 14 11 527 }
+    3 { Assert-RoleMatrixProof $Value 131 17 12 540 }
+    default { throw 'ROLE_MATRIX_RESULT_INVALID' }
+  }
   Assert-RoleMatrixProof $Value.compatibility 121 10 10 500
   return [string]$Value.compatibility.digest
 }

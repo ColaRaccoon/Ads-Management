@@ -47,7 +47,8 @@ export class ProductsService {
       productChangeLogCount,
       cafe24OrderLineCount,
       cafe24ProductRuleCount,
-      cafe24AdCostSourceRuleCount
+      cafe24AdCostSourceRuleCount,
+      influencerCollaborationCount
     ] = await Promise.all([
       this.prisma.metaAdset.count({ where: { currentProductId: id } }),
       this.prisma.adsetProductHistory.count({ where: { productId: id } }),
@@ -58,7 +59,8 @@ export class ProductsService {
       this.prisma.productChangeLog.count({ where: { productId: id } }),
       this.prisma.cafe24OrderLine.count({ where: { productId: id } }),
       this.prisma.cafe24ProductRule.count({ where: { productId: id } }),
-      this.prisma.cafe24ProductRule.count({ where: { adCostSourceProductId: id } })
+      this.prisma.cafe24ProductRule.count({ where: { adCostSourceProductId: id } }),
+      this.prisma.influencerCollaboration.count({ where: { productId: id } })
     ]);
     const hasOperationalData =
       currentAdsetCount +
@@ -70,7 +72,8 @@ export class ProductsService {
         productChangeLogCount +
         cafe24OrderLineCount +
         cafe24ProductRuleCount +
-        cafe24AdCostSourceRuleCount >
+        cafe24AdCostSourceRuleCount +
+        influencerCollaborationCount >
       0;
 
     if (hasOperationalData) {

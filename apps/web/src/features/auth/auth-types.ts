@@ -6,6 +6,7 @@ export const PERMISSIONS = [
   "imports.manage",
   "mappings.manage",
   "influencers.manage",
+  "influencers.numbering",
   "operations.run",
   "settings.manage",
   "users.manage",

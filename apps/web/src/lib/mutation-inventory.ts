@@ -31,6 +31,7 @@ export const BUSINESS_MUTATION_INVENTORY: readonly BusinessMutationInventoryEntr
 
   entry("influencers.create", page("storefront/influencers"), "influencer collaboration registration", "POST", "/storefront/influencers", "influencers.manage", "협업 및 소재별 누적 성과 조회", "apiPost(resource, input)", "useCan(\"influencers.manage\")"),
   entry("influencers.update", page("storefront/influencers"), "influencer collaboration editor", "PATCH", "/storefront/influencers/:id", "influencers.manage", "협업 및 소재별 누적 성과 조회", "apiPatch(`${resource}/${encodeURIComponent(collaboration.id)}`", "useCan(\"influencers.manage\")"),
+  entry("influencers.numbering", page("storefront/influencers"), "influencer material assignment", "PATCH", "/storefront/influencers/:id/numbering", "influencers.numbering", "소재별 누적 성과 조회", "apiPatch(`${path}/numbering`", "useCan(\"influencers.numbering\")"),
 
   entry("mappings.product-rule-create", page("mappings"), "product rule form", "POST", "/mappings/product-rules", "mappings.manage", "저장된 제품 규칙 목록", "apiPost(\"/mappings/product-rules\"", "useCan(\"mappings.manage\")"),
   entry("mappings.cafe24-rule-create", page("mappings"), "Cafe24 rule create form", "POST", "/sales/cafe24/rules", "mappings.manage", "Cafe24 규칙 read-only detail", "apiPost(\"/sales/cafe24/rules\"", "useCan(\"mappings.manage\")"),

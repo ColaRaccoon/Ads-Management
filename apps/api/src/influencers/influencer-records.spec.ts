@@ -14,15 +14,16 @@ import { InfluencerController } from "./influencer.controller";
 import { InfluencerCollaborationInput } from "./influencer.dto";
 
 const input = {
-  influencerName: "혜민",
+  nickname: "혜민",
+  managerName: "담당자",
+  productId: randomUUID(),
   feeKrw: 150_000,
   startDate: "2026-11-01",
-  endDate: "2026-11-05",
   note: null
 };
 
 test("staff can maintain collaborations and read-only users can view their saved metrics", () => {
-  for (const action of ["list", "creatives"] as const) {
+  for (const action of ["list", "creatives", "daily"] as const) {
     assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, InfluencerController.prototype[action]), ["data.read"]);
   }
   for (const action of ["create", "update"] as const) {
@@ -31,6 +32,12 @@ test("staff can maintain collaborations and read-only users can view their saved
   for (const role of [AppRole.USER, AppRole.ADMIN, AppRole.SUPER_ADMIN]) {
     assert.ok(permissionsForRole(role).includes("influencers.manage"));
   }
+  for (const action of ["materials", "numbering"] as const) {
+    assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, InfluencerController.prototype[action]), ["influencers.numbering"]);
+  }
+  assert.ok(!permissionsForRole(AppRole.USER).includes("influencers.numbering"));
+  assert.ok(permissionsForRole(AppRole.ADMIN).includes("influencers.numbering"));
+  assert.ok(permissionsForRole(AppRole.SUPER_ADMIN).includes("influencers.numbering"));
   assert.deepEqual(permissionsForRole(AppRole.GUEST), ["data.read"]);
 });
 
@@ -39,17 +46,18 @@ test("transport accepts an open period and validates integer KRW amounts and req
     whitelist: true,
     forbidNonWhitelisted: true
   });
-  assert.deepEqual(await errors({ ...input, endDate: null, feeKrw: 0 }), []);
+  assert.deepEqual(await errors({ ...input, feeKrw: 0 }), []);
   for (const feeKrw of [-1, 1.5, "150000", 1_000_000_000_000]) {
     assert.ok((await errors({ ...input, feeKrw })).some(error => error.property === "feeKrw"));
   }
-  assert.ok((await errors({ ...input, endDate: undefined })).some(error => error.property === "endDate"));
+  assert.ok((await errors({ ...input, endDate: "2026-11-05" })).some(error => error.property === "endDate"));
+  assert.ok((await errors({ ...input, productId: undefined })).some(error => error.property === "productId"));
   assert.ok((await errors({ ...input, note: undefined })).some(error => error.property === "note"));
 });
 
 const fixtureUrl = process.env.INFLUENCER_FIXTURE_DATABASE_URL;
 
-test("PostgreSQL enforces inclusive overlap and preserves saved performance during fee edits", { skip: !fixtureUrl }, async () => {
+test("PostgreSQL keeps same-nickname collaborations separate and preserves saved performance during fee edits", { skip: !fixtureUrl }, async () => {
   const url = new URL(fixtureUrl!);
   assert.equal(url.protocol, "postgresql:");
   assert.equal(url.hostname, "127.0.0.1");
@@ -61,25 +69,21 @@ test("PostgreSQL enforces inclusive overlap and preserves saved performance duri
   url.username = "meta_ads_prod_runtime";
   const runtime = new PrismaClient({ datasourceUrl: url.toString() });
   const service = new InfluencerRecordsService(runtime as PrismaService);
-  const definition = { ...input, influencerName: `혜민 ${randomUUID()}` };
-  const marker = definition.influencerName.toUpperCase();
+  const definition = { ...input, nickname: `혜민 ${randomUUID()}`, productId: randomUUID() };
   try {
-    const outcomes = await Promise.allSettled([
-      service.create(definition), service.create({ ...definition, influencerName: ` ${marker} ` })
-    ]);
-    const first = outcomes.find(outcome => outcome.status === "fulfilled");
-    const overlap = outcomes.find(outcome => outcome.status === "rejected");
-    assert.ok(first && overlap);
-    assert.ok(hasStatus(409)(overlap.reason));
-    assert.equal(first.value.netPerformanceKrw, -150_000);
-    assert.equal(first.value.aggregatedAt, null);
+    await owner.product.create({ data: { id: definition.productId, name: "Fixture", displayName: "Fixture", code: randomUUID() } });
+    const first = await service.create(definition);
+    const next = await service.create(definition);
+    assert.equal(first.netPerformanceKrw, -150_000);
+    assert.equal(first.aggregatedAt, null);
+    assert.equal(first.managerName, definition.managerName);
+    assert.equal(first.productName, "Fixture");
+    assert.notEqual(next.id, first.id);
 
-    await assert.rejects(() => service.create({ ...definition, startDate: "2026-11-05", endDate: null }), hasStatus(409));
-    assert.throws(() => service.create({ ...definition, startDate: "2026-11-31", endDate: null }), hasStatus(400));
-    const next = await service.create({ ...definition, startDate: "2026-11-06", endDate: null });
-    assert.notEqual(next.id, first.value.id);
-    const version = first.value.version;
-    const id = first.value.id;
+    assert.throws(() => service.create({ ...definition, startDate: "2026-11-31" }), hasStatus(400));
+    await assert.rejects(() => service.numbering(first.id, { version: first.version, creativeIds: [randomUUID()] }), hasStatus(400));
+    const version = first.version;
+    const id = first.id;
     const creativeTotals = [{ creativeName: "두줄보호대_인플(혜민)0015", adSpendKrw: 150_000, adMarginKrw: 130_000, dataThrough: "2026-11-05" }];
     await owner.influencerCollaboration.update({ where: { id }, data: {
       adSpendKrw: 150_000, adMarginKrw: 130_000, netPerformanceKrw: -20_000, creativeCount: 1, creativeTotals,
@@ -94,7 +98,6 @@ test("PostgreSQL enforces inclusive overlap and preserves saved performance duri
     assert.equal((await owner.influencerCollaboration.findUniqueOrThrow({ where: { id } })).needsBackfill, false);
     assert.notEqual(saved.version, version);
     await assert.rejects(() => service.update(id, { ...definition, version }), hasStatus(409));
-    await assert.rejects(() => service.update(id, { ...definition, version: saved.version, endDate: null }), hasStatus(409));
     const rescheduled = await service.update(id, { ...definition, version: saved.version, startDate: "2026-11-02" });
     assert.equal(rescheduled.netPerformanceKrw, -150_000);
     assert.equal(rescheduled.aggregatedAt, null);
@@ -103,7 +106,10 @@ test("PostgreSQL enforces inclusive overlap and preserves saved performance duri
     assert.equal((await owner.influencerCollaboration.findUniqueOrThrow({ where: { id } })).needsBackfill, true);
     assert.ok((await service.list(1)).items.some(row => row.id === id));
   } finally {
-    try { await owner.influencerCollaboration.deleteMany({ where: { influencerName: { in: [definition.influencerName, marker] } } }); }
+    try {
+      await owner.influencerCollaboration.deleteMany({ where: { productId: definition.productId } });
+      await owner.product.deleteMany({ where: { id: definition.productId } });
+    }
     finally { await Promise.all([owner.$disconnect(), runtime.$disconnect()]); }
   }
 });

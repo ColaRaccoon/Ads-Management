@@ -92,19 +92,22 @@ export class InfluencerWorkerService implements OnModuleInit, OnModuleDestroy {
 
   private async runDueDay(db: PrismaClient, recentFrom: Date, recent: boolean) {
     const now = new Date();
-    let attempted: { metricDate: Date; nextCheckAt: Date } | undefined;
+    let attempted: { metricDate: Date; nextCheckAt: Date; numberingAttempted: boolean } | undefined;
     try {
       return await inWorkerTransaction(db, async tx => {
         const job = await tx.influencerProjectionDay.findFirst({
-          where: { nextCheckAt: { lte: now }, metricDate: recent ? { gte: recentFrom } : { lt: recentFrom } },
-          orderBy: [{ nextCheckAt: "asc" }, { metricDate: "desc" }]
+          where: {
+            OR: [{ numberingAttempted: false }, { nextCheckAt: { lte: now } }],
+            metricDate: recent ? { gte: recentFrom } : { lt: recentFrom }
+          },
+          orderBy: [{ numberingAttempted: "asc" }, { nextCheckAt: "asc" }, { metricDate: "desc" }]
         });
         if (!job) return false;
-        attempted = { metricDate: job.metricDate, nextCheckAt: job.nextCheckAt };
+        attempted = { metricDate: job.metricDate, nextCheckAt: job.nextCheckAt, numberingAttempted: job.numberingAttempted };
         await projectInfluencerDay(tx, job.metricDate, now);
         await tx.influencerProjectionDay.update({
           where: { metricDate: job.metricDate },
-          data: { nextCheckAt: new Date(now.getTime() + (recent ? 30 * MINUTE : 7 * DAY)) }
+          data: { numberingAttempted: true, nextCheckAt: new Date(now.getTime() + (recent ? 30 * MINUTE : 7 * DAY)) }
         });
         return true;
       });
@@ -113,7 +116,7 @@ export class InfluencerWorkerService implements OnModuleInit, OnModuleDestroy {
       this.warn(formatDateOnly(attempted.metricDate), error);
       await db.influencerProjectionDay.updateMany({
         where: attempted,
-        data: { nextCheckAt: new Date(now.getTime() + (recent ? 5 * MINUTE : HOUR)) }
+        data: { numberingAttempted: true, nextCheckAt: new Date(now.getTime() + (recent ? 5 * MINUTE : HOUR)) }
       });
       return true;
     }

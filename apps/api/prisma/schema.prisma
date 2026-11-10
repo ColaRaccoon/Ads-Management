@@ -12,6 +12,9 @@ model InfluencerCollaboration {
   id                String    @id @default(uuid()) @db.Uuid
   influencerName    String    @map("influencer_name")
   influencerKey     String    @map("influencer_key")
+  managerName       String?   @map("manager_name")
+  productId         String?   @map("product_id") @db.Uuid
+  numberingRequired Boolean  @default(false) @map("numbering_required")
   feeKrw            Decimal   @map("fee_krw") @db.Decimal(24, 6)
   startDate         DateTime  @map("start_date") @db.Date
   endDate           DateTime? @map("end_date") @db.Date
@@ -28,9 +31,13 @@ model InfluencerCollaboration {
   lastJobAt         DateTime? @map("last_job_at")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
+  product           Product?  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  materials         InfluencerMaterialAssignment[]
+  dailyTotals       InfluencerCollaborationDay[]
 
   @@index([influencerKey, startDate], map: "influencer_collaborations_name_date_idx")
   @@index([createdAt, id], map: "influencer_collaborations_list_idx")
+  @@index([productId])
   @@index([needsBackfill, lastJobAt, id], map: "influencer_collaborations_backfill_idx")
   @@map("influencer_collaborations")
 }
@@ -39,12 +46,15 @@ model InfluencerProjectionDay {
   metricDate         DateTime  @id @map("metric_date") @db.Date
   nextCheckAt        DateTime  @map("next_check_at")
   lastSourceChangeAt DateTime? @map("last_source_change_at") @db.Timestamptz(3)
+  numberingAttempted Boolean   @default(false) @map("numbering_attempted")
 
   @@index([nextCheckAt, metricDate(sort: Desc)], map: "influencer_projection_days_due_idx")
   @@map("influencer_projection_days")
 }
 
 model InfluencerDailyPerformance {
+  scope              String   @default("NICKNAME")
+  sourceCreativeId   String?  @map("source_creative_id") @db.Uuid
   metricDate         DateTime @map("metric_date") @db.Date
   influencerKey      String   @map("influencer_key")
   creativeKey        String   @map("creative_key")
@@ -54,10 +64,36 @@ model InfluencerDailyPerformance {
   hasApi             Boolean  @map("has_api")
   attributionContext String   @map("attribution_context")
   mixedAttribution   Boolean  @map("mixed_attribution")
+  delivered          Boolean  @default(false)
 
-  @@id([metricDate, influencerKey, creativeKey])
-  @@index([influencerKey, metricDate], map: "influencer_daily_performances_name_date_idx")
+  @@id([metricDate, scope, influencerKey, creativeKey])
+  @@index([scope, influencerKey, metricDate], map: "influencer_daily_performances_name_date_idx")
+  @@index([sourceCreativeId])
   @@map("influencer_daily_performances")
+}
+
+model InfluencerMaterialAssignment {
+  creativeId      String @id @map("creative_id") @db.Uuid
+  collaborationId String @map("collaboration_id") @db.Uuid
+  creativeName    String @map("creative_name")
+  materialNo      String @map("material_no")
+  collaboration   InfluencerCollaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+
+  @@index([collaborationId])
+  @@map("influencer_material_assignments")
+}
+
+model InfluencerCollaborationDay {
+  collaborationId String   @map("collaboration_id") @db.Uuid
+  metricDate      DateTime @map("metric_date") @db.Date
+  adSpendKrw      Decimal? @map("ad_spend_krw") @db.Decimal(24, 6)
+  adMarginKrw     Decimal? @map("ad_margin_krw") @db.Decimal(24, 6)
+  creativeCount   Int      @map("creative_count")
+  collaboration   InfluencerCollaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+
+  @@id([collaborationId, metricDate])
+  @@index([metricDate, collaborationId])
+  @@map("influencer_collaboration_days")
 }
 
 // Stage 02 additive unified-performance storage; public Naver sources remain external.
@@ -631,6 +667,7 @@ model SecurityAuditEvent {
 }
 
 model Product {
+  influencerCollaborations InfluencerCollaboration[]
   id              String                    @id @default(uuid()) @db.Uuid
   code            String                    @unique
   name            String

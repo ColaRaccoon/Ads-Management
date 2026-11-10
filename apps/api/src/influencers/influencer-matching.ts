@@ -19,3 +19,8 @@ export function classifyInfluencerCreative(adName: string, campaignName: string)
   const creativeName = parser.parse(adName.normalize("NFKC")).displayName;
   return creativeName ? { influencerKey: keys[0], creativeName } : null;
 }
+
+export function numberedCreativeName(adName: string) {
+  const { materialNo, displayName } = parser.parse(adName.normalize("NFKC"));
+  return materialNo && /[0-9]+(?:번소재)?$/.test(materialNo) ? displayName : null;
+}

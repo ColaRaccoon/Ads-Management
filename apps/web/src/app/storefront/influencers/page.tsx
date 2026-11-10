@@ -1,27 +1,29 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, List, Pencil, Plus, RefreshCw } from "lucide-react";
+import { format } from "date-fns";
 import { useId, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { DataTable, type Column } from "@/components/data-table";
-import { useCan } from "@/features/auth/use-auth";
+import { useAuth, useCan } from "@/features/auth/use-auth";
 import {
-  collaborationKey, influencerCreativesOptions, influencerListOptions, influencerResource as resource,
-  type Collaboration, type CollaborationInput
+  collaborationKey, influencerCreativesOptions, influencerDailyOptions, influencerListOptions, influencerResource as resource,
+  type Collaboration, type CollaborationInput, type InfluencerDailyRow, type NumberedMaterial
 } from "@/features/influencers/influencer-queries";
-import { apiErrorMessage, apiPatch, apiPost } from "@/lib/api";
-import { koreaTodayDateInput } from "@/lib/korea-date";
+import { apiErrorMessage, apiGet, apiPatch, apiPost } from "@/lib/api";
 import { storefrontTime } from "@/lib/storefront-display";
 import styles from "./influencers.module.css";
 
 const maxFeeKrw = 999_999_999_999;
 const moneyFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 6 });
 
-type ActiveDialog = { kind: "editor"; collaboration?: Collaboration } | { kind: "creatives"; collaboration: Collaboration };
+type ActiveDialog = { kind: "editor"; collaboration?: Collaboration } |
+  { kind: "creatives" | "numbering"; collaboration: Collaboration };
 
 export default function InfluencersPage() {
   const canRead = useCan("data.read");
   const canManage = useCan("influencers.manage");
+  const canNumber = useCan("influencers.numbering");
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [dialog, setDialog] = useState<ActiveDialog | null>(null);
@@ -38,8 +40,10 @@ export default function InfluencersPage() {
   }
 
   const columns: Column<Collaboration>[] = [
-    { key: "influencer", header: "인플루언서", render: (row) => <strong>{row.influencerName}</strong> },
-    { key: "period", header: "측정 기간", render: (row) => <>{row.startDate} ~ {row.endDate ?? "진행 중"}</> },
+    { key: "manager", header: "담당자 이름", render: (row) => <strong>{row.managerName ?? "미등록"}</strong> },
+    { key: "influencer", header: "인플루언서 닉네임", render: (row) => row.nickname },
+    { key: "product", header: "제품", render: (row) => row.productName ?? "미선택" },
+    { key: "period", header: "측정 시작일", render: (row) => row.startDate },
     { key: "fee", header: "섭외비", render: (row) => money(row.feeKrw) },
     { key: "spend", header: "누적 광고비", render: (row) => money(row.adSpendKrw) },
     { key: "margin", header: "누적 광고 성과", render: (row) => <Performance value={row.adMarginKrw} /> },
@@ -49,12 +53,16 @@ export default function InfluencersPage() {
       <div className="toolbar">
         <button className="button" type="button" onClick={() => openDialog({ kind: "creatives", collaboration: row })}
           onMouseEnter={() => prefetchCreatives(row)} onFocus={() => prefetchCreatives(row)}
-          aria-label={`${row.influencerName} 소재 ${row.creativeCount}개 보기`}>
+          aria-label={`${row.nickname} 소재 ${row.creativeCount}개 보기`}>
           <List size={15} aria-hidden="true" /> 소재 {row.creativeCount}개
         </button>
         {canManage ? <button className="button" type="button" onClick={() => openDialog({ kind: "editor", collaboration: row })}
-          aria-label={`${row.influencerName} 협업 수정`}>
+          aria-label={`${row.nickname} 협업 수정`}>
           <Pencil size={14} aria-hidden="true" /> 수정
+        </button> : null}
+        {canNumber ? <button className="button" type="button" onClick={() => openDialog({ kind: "numbering", collaboration: row })}
+          aria-label={`${row.nickname} 소재 넘버링`}>
+          넘버링{row.materialCount ? ` (${row.materialCount})` : ""}
         </button> : null}
       </div>
     ) }
@@ -67,7 +75,8 @@ export default function InfluencersPage() {
         <p>협업별로 섭외비를 기록하고, Meta 광고의 누적 성과와 섭외비를 차감한 최종 성과를 확인합니다.</p>
       </div>
       {canRead ? <div className="toolbar">
-        <button className="button" type="button" disabled={list.isFetching} onClick={() => void list.refetch()}>
+        <button className="button" type="button" disabled={list.isFetching}
+          onClick={() => void queryClient.invalidateQueries({ queryKey: collaborationKey })}>
           <RefreshCw size={15} aria-hidden="true" /> 저장값 새로고침
         </button>
         {canManage ? <button className="button primary" type="button" onClick={() => openDialog({ kind: "editor" })}>
@@ -76,6 +85,7 @@ export default function InfluencersPage() {
       </div> : null}
     </div>
 
+    {canRead ? <InfluencerDailyPanel /> : null}
     {canRead ? <section className="panel" aria-labelledby="influencer-list-heading">
       <h2 id="influencer-list-heading">협업별 누적 성과</h2>
       <p className={styles.help}>
@@ -108,10 +118,17 @@ export default function InfluencersPage() {
         void queryClient.invalidateQueries({ queryKey: collaborationKey });
       }} /> : null}
     {canRead && dialog?.kind === "creatives" ? <CreativesDialog collaboration={dialog.collaboration} onClose={() => setDialog(null)} /> : null}
+    {canRead && canNumber && dialog?.kind === "numbering" ? <NumberingDialog collaboration={dialog.collaboration}
+      onClose={() => setDialog(null)} onSaved={() => {
+        setDialog(null);
+        setSavedMessage("소재 연결을 저장했습니다. 집계에 순차 반영됩니다.");
+        void queryClient.invalidateQueries({ queryKey: collaborationKey });
+      }} /> : null}
   </section>;
 }
 
 function AggregationStatus({ row }: { row: Collaboration }) {
+  if (row.numberingRequired && row.materialCount === 0) return <span className="badge watch">넘버링 대기</span>;
   if (!row.aggregatedAt) return <span className="badge watch">집계 대기</span>;
   const status = !row.dataThrough ? "매칭 자료 없음" : row.netPerformanceKrw === null || row.adSpendKrw === null ? "자료 확인 필요" : "집계 반영";
   return <div className={styles.status}>
@@ -121,12 +138,97 @@ function AggregationStatus({ row }: { row: Collaboration }) {
   </div>;
 }
 
+function InfluencerDailyPanel() {
+  const managerField = useId();
+  const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [managerName, setManagerName] = useState("");
+  const [page, setPage] = useState(1);
+  const daily = useQuery({ ...influencerDailyOptions(date, managerName, page), enabled: Boolean(date) });
+  const managers = daily.data?.managers ?? (managerName ? [managerName] : []);
+  const columns: Column<InfluencerDailyRow>[] = [
+    { key: "manager", header: "담당자 이름", render: row => row.managerName ?? "미등록" },
+    { key: "nickname", header: "인플루언서 닉네임", render: row => <strong>{row.nickname}</strong> },
+    { key: "product", header: "제품", render: row => row.productName ?? "미선택" },
+    { key: "creativeCount", header: "집행 소재", render: row => `${row.creativeCount}개` },
+    { key: "spend", header: "당일 광고비", render: row => money(row.adSpendKrw) },
+    { key: "margin", header: "당일 광고 성과", render: row => <Performance value={row.adMarginKrw} /> }
+  ];
+  return <section className="panel" aria-labelledby="influencer-daily-heading">
+    <h2 id="influencer-daily-heading">인플루언서 데일리 성과</h2>
+    <div className={styles.dailyFilters}>
+      <label className="field">
+        <span className="field-label">성과 날짜</span>
+        <input className="input" type="date" value={date} onChange={event => { setDate(event.target.value); setPage(1); }} />
+      </label>
+      <div className="field">
+        <label className="field-label" htmlFor={managerField}>담당자</label>
+        <select id={managerField} className="select" value={managerName} onChange={event => { setManagerName(event.target.value); setPage(1); }}>
+          <option value="">전체 담당자</option>
+          {managers.map(name => <option key={name} value={name}>{name}</option>)}
+        </select>
+      </div>
+    </div>
+    <p className={styles.help}>선택한 날짜에 광고비나 노출이 기록된 소재의 성과를 표시합니다.</p>
+    {!date ? <p>성과 날짜를 선택해 주세요.</p> : null}
+    {date && daily.isPending ? <p role="status">당일 성과를 불러오는 중입니다.</p> : null}
+    {daily.isError ? <p className={styles.error} role="alert">당일 성과를 불러오지 못했습니다. 새로고침해 주세요.</p> : null}
+    {daily.data ? <DataTable rows={daily.data.items} columns={columns} getRowKey={row => row.id}
+      empty="선택한 날짜에 집계된 광고 집행 내역이 없습니다." /> : null}
+    {page > 1 || daily.data?.hasMore ? <nav className={`toolbar ${styles.pagination}`} aria-label="일일 성과 목록 페이지">
+      <button type="button" className="button" disabled={page === 1 || daily.isFetching} onClick={() => setPage(page - 1)}>이전</button>
+      <span aria-live="polite">{page}페이지</span>
+      <button type="button" className="button" disabled={!daily.data?.hasMore || daily.isFetching} onClick={() => setPage(page + 1)}>다음</button>
+    </nav> : null}
+  </section>;
+}
+
+function ProductPicker({ value, onChange, collaboration }: {
+  value: string;
+  onChange: (productId: string) => void;
+  collaboration?: Collaboration;
+}) {
+  const productField = useId();
+  const [search, setSearch] = useState("");
+  const locked = Boolean(collaboration?.materialCount);
+  const products = useQuery({
+    queryKey: ["products"],
+    queryFn: () => apiGet<{ id: string; displayName: string; name: string; code: string; isActive: boolean }[]>("/products"),
+    enabled: !locked,
+    staleTime: 30_000
+  });
+  const text = search.trim().normalize("NFKC").toLowerCase();
+  const matchesSearch = (product: NonNullable<typeof products.data>[number]) =>
+    [product.displayName, product.name, product.code].some(label => label.normalize("NFKC").toLowerCase().includes(text));
+  const options = (products.data ?? []).filter(product => product.isActive && (product.id === value || matchesSearch(product)));
+  const savedName = collaboration?.productName;
+  return <div className={styles.note}>
+    {!locked ? <label className="field">
+      <span className="field-label">제품 검색</span>
+      <input className="input" type="search" value={search} onChange={event => setSearch(event.target.value)}
+        placeholder="제품 이름 또는 코드" />
+    </label> : null}
+    <div className="field">
+      <label className="field-label" htmlFor={productField}>제품</label>
+      <select id={productField} className="select" value={value} required disabled={locked} onChange={event => onChange(event.target.value)}>
+        <option value="">{products.isPending && !locked ? "제품을 불러오는 중입니다" : "제품 선택"}</option>
+        {value && savedName && !options.some(product => product.id === value) ? <option value={value}>{savedName}</option> : null}
+        {options.map(product => <option key={product.id} value={product.id}>{product.displayName}</option>)}
+      </select>
+      {locked ? <span className="field-help">제품을 바꾸려면 관리자가 연결한 소재를 먼저 해제해야 합니다.</span> : null}
+    </div>
+    {products.isError ? <p className={styles.error} role="alert">제품 목록을 불러오지 못했습니다.</p> : null}
+    {text && products.data && !options.some(matchesSearch) ? <p className={styles.help}>일치하는 제품이 없습니다.</p> : null}
+  </div>;
+}
+
 function CollaborationEditor({ collaboration, onClose, onSaved }: {
   collaboration?: Collaboration;
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { user } = useAuth();
   const [formError, setFormError] = useState("");
+  const [productId, setProductId] = useState(collaboration?.productId ?? "");
   const save = useMutation({
     mutationFn: (input: CollaborationInput) => collaboration
       ? apiPatch(`${resource}/${encodeURIComponent(collaboration.id)}`, { ...input, version: collaboration.version })
@@ -138,36 +240,36 @@ function CollaborationEditor({ collaboration, onClose, onSaved }: {
     event.preventDefault();
     if (save.isPending) return;
     const fields = new FormData(event.currentTarget);
-    const influencerName = String(fields.get("influencerName")).trim();
+    const managerName = String(fields.get("managerName")).trim();
+    const nickname = String(fields.get("nickname")).trim();
     const feeKrw = Number(fields.get("feeKrw"));
     const startDate = String(fields.get("startDate"));
-    const endDate = String(fields.get("endDate")) || null;
     const note = String(fields.get("note")).trim() || null;
-    if (!influencerName || /[()]/.test(influencerName.normalize("NFKC"))) {
-      setFormError("광고 이름의 ‘인플(이름)’에서 괄호 안의 이름만 입력해 주세요.");
+    if (!managerName || !nickname || !productId) {
+      setFormError("담당자 이름, 인플루언서 닉네임, 제품을 입력해 주세요.");
       return;
     }
     if (!Number.isSafeInteger(feeKrw) || feeKrw < 0 || feeKrw > maxFeeKrw) {
       setFormError("섭외비를 0원 이상의 정수로 입력해 주세요.");
       return;
     }
-    if (endDate && endDate < startDate) {
-      setFormError("측정 종료일은 시작일 이후로 입력해 주세요.");
-      return;
-    }
     setFormError("");
-    save.mutate({ influencerName, feeKrw, startDate, endDate, note });
+    save.mutate({ managerName, nickname, productId, feeKrw, startDate, note });
   }
 
   return <InfluencerDialog title={collaboration ? "협업 수정" : "협업 등록"} onClose={onClose} busy={save.isPending}>
     <p className={styles.help}>
-      Meta 광고 소재명에 <code>인플(혜민)</code>이 있으면 인플루언서 이름에 ‘혜민’을 입력하세요. 소재명에 표기가 없으면 캠페인명을 확인합니다.
+      협업을 등록하면 관리자가 소재 번호로 광고를 찾아 연결할 수 있습니다.
     </p>
     <form onSubmit={submit}>
       <fieldset className={styles.fields} disabled={save.isPending}>
         <label className="field">
-          <span className="field-label">인플루언서 이름</span>
-          <input className="input" name="influencerName" placeholder="혜민" defaultValue={collaboration?.influencerName} maxLength={100} required />
+          <span className="field-label">담당자 이름</span>
+          <input className="input" name="managerName" defaultValue={collaboration ? collaboration.managerName ?? "" : user?.name ?? ""} maxLength={100} required />
+        </label>
+        <label className="field">
+          <span className="field-label">인플루언서 닉네임</span>
+          <input className="input" name="nickname" defaultValue={collaboration?.nickname} maxLength={100} required />
         </label>
         <label className="field">
           <span className="field-label">섭외비 (원)</span>
@@ -176,13 +278,9 @@ function CollaborationEditor({ collaboration, onClose, onSaved }: {
         </label>
         <label className="field">
           <span className="field-label">측정 시작일</span>
-          <input className="input" name="startDate" type="date" defaultValue={collaboration?.startDate ?? koreaTodayDateInput()} required />
+          <input className="input" name="startDate" type="date" defaultValue={collaboration?.startDate ?? format(new Date(), "yyyy-MM-dd")} required />
         </label>
-        <label className="field">
-          <span className="field-label">측정 종료일 (선택)</span>
-          <input className="input" name="endDate" type="date" defaultValue={collaboration?.endDate ?? ""} />
-          <span className="field-help">종료일을 포함합니다. 비워 두면 집계가 계속됩니다.</span>
-        </label>
+        <ProductPicker value={productId} onChange={setProductId} collaboration={collaboration} />
         <label className={`field ${styles.note}`}>
           <span className="field-label">메모 (선택)</span>
           <textarea className="textarea" name="note" defaultValue={collaboration?.note ?? ""} maxLength={1000} />
@@ -201,8 +299,8 @@ function CollaborationEditor({ collaboration, onClose, onSaved }: {
 
 function CreativesDialog({ collaboration, onClose }: { collaboration: Collaboration; onClose: () => void }) {
   const creatives = useQuery(influencerCreativesOptions(collaboration));
-  return <InfluencerDialog title={`${collaboration.influencerName} · 소재별 누적 성과`} onClose={onClose} wide>
-    <p className={styles.help}>{collaboration.startDate} ~ {collaboration.endDate ?? "진행 중"}. 섭외비는 협업의 최종 성과에 한 번 반영됩니다.</p>
+  return <InfluencerDialog title={`${collaboration.nickname} · 소재별 누적 성과`} onClose={onClose} wide>
+    <p className={styles.help}>측정 시작일 {collaboration.startDate}. 섭외비는 협업의 최종 성과에 한 번 반영됩니다.</p>
     {collaboration.note ? <p className={styles.noteText}><strong>메모</strong> {collaboration.note}</p> : null}
     {creatives.isPending ? <p role="status">저장된 소재별 성과를 불러오는 중입니다.</p> : null}
     {creatives.isError ? <p className={styles.error} role="alert">소재별 성과를 불러오지 못했습니다.</p> : null}
@@ -218,6 +316,80 @@ function CreativesDialog({ collaboration, onClose }: { collaboration: Collaborat
     <div className={`toolbar ${styles.dialogActions}`}>
       {creatives.isError ? <button className="button" type="button" onClick={() => void creatives.refetch()}>다시 조회</button> : null}
       <button className="button" type="button" onClick={onClose}>닫기</button>
+    </div>
+  </InfluencerDialog>;
+}
+
+function NumberingDialog({ collaboration, onClose, onSaved }: {
+  collaboration: Collaboration;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [number, setNumber] = useState("");
+  const [draft, setDraft] = useState<NumberedMaterial[] | null>(null);
+  const path = `${resource}/${encodeURIComponent(collaboration.id)}`;
+  const matches = useQuery({
+    queryKey: ["influencer-materials", collaboration.id, collaboration.version, number],
+    queryFn: () => apiGet<{ selected: NumberedMaterial[]; candidates: NumberedMaterial[] }>(
+      `${path}/materials${number ? `?number=${encodeURIComponent(number)}` : ""}`
+    ),
+    enabled: Boolean(collaboration.productId),
+    placeholderData: keepPreviousData
+  });
+  const selected = draft ?? matches.data?.selected ?? [];
+  const save = useMutation({
+    mutationFn: () => apiPatch(`${path}/numbering`, { version: collaboration.version, creativeIds: selected.map(row => row.creativeId) }),
+    onSuccess: onSaved
+  });
+  function search(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = String(new FormData(event.currentTarget).get("number")).trim();
+    if (query === number) void matches.refetch();
+    else setNumber(query);
+  }
+  function toggle(row: NumberedMaterial) {
+    if (selected.some(item => item.creativeId === row.creativeId)) {
+      setDraft(selected.filter(item => item.creativeId !== row.creativeId));
+    } else if (selected.length < 30) {
+      setDraft([...selected, row]);
+    }
+  }
+  return <InfluencerDialog title={`${collaboration.nickname} · 소재 넘버링`} onClose={onClose} busy={save.isPending} wide>
+    {collaboration.productId ? <>
+      <p className={styles.help}>{collaboration.productName}에 연결된 Meta 광고를 소재 번호로 검색합니다.</p>
+      <form className="toolbar" onSubmit={search}>
+        <label className="field">
+          <span className="field-label">소재 번호</span>
+          <input className="input" name="number" inputMode="numeric" pattern="[0-9]{1,16}" maxLength={16} placeholder="예: 0015" required />
+        </label>
+        <button className="button" type="submit" disabled={matches.isFetching || save.isPending}>검색</button>
+      </form>
+      <h3>연결할 소재 {selected.length}개</h3>
+      {selected.length ? <ul className={styles.materialList}>{selected.map(row => <li key={row.creativeId}>
+        <span>{row.creativeName}</span>
+        <button type="button" className="button" disabled={save.isPending} onClick={() => toggle(row)}
+          aria-label={`${row.creativeName} 연결 해제`}>해제</button>
+      </li>)}</ul> : <p className={styles.help}>선택된 소재가 없습니다.</p>}
+      {matches.isFetching ? <p role="status">소재를 조회하는 중입니다.</p> : null}
+      {matches.isError ? <p className={styles.error} role="alert">소재를 불러오지 못했습니다.</p> : null}
+      {number && matches.data && !matches.isPlaceholderData ? <div>
+        <h3>검색 결과</h3>
+        {matches.data.candidates.length ? <ul className={styles.materialList}>{matches.data.candidates.map(row => {
+          const checked = selected.some(item => item.creativeId === row.creativeId);
+          return <li key={row.creativeId}><label>
+            <input type="checkbox" checked={checked} disabled={save.isPending || (!checked && selected.length >= 30)}
+              onChange={() => toggle(row)} /> {row.creativeName}
+          </label></li>;
+        })}</ul> : <p className={styles.help}>이 제품에서 연결 가능한 해당 번호의 소재가 없습니다.</p>}
+      </div> : null}
+      {save.isError ? <p className={styles.error} role="alert">{apiErrorMessage(save.error, "소재 연결을 저장하지 못했습니다.")}</p> : null}
+    </> : <p>협업 수정에서 제품을 먼저 선택해 주세요.</p>}
+    <div className={`toolbar ${styles.dialogActions}`}>
+      <button className="button" type="button" onClick={onClose} disabled={save.isPending}>닫기</button>
+      {collaboration.productId ? <button className="button primary" type="button"
+        disabled={save.isPending || draft === null || !matches.data} onClick={() => save.mutate()}>
+        {save.isPending ? "저장 중…" : "소재 연결 저장"}
+      </button> : null}
     </div>
   </InfluencerDialog>;
 }

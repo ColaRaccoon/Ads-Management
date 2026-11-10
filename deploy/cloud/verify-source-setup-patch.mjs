@@ -55,6 +55,7 @@ if (profile === 'reporting') {
     // The existing build excludes *.spec.ts, but emits these *.test.ts files.
     'google/google-performance.test.js', 'google/google.service.test.js', 'google/google-campaign-matcher.test.js']) expected.add(name);
   // Influencer writes, saved projections, and the shared creative financial inputs.
+  expected.add('products/products.service.js');
   for (const name of ['auth/role-permissions.js', 'domain/meta-conditional-metrics.js',
     'metrics/meta-ad-metric-aggregates.js', 'influencers/influencer-matching.js',
     'influencers/influencer-projector.js', 'influencers/influencer-worker.service.js',

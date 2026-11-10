@@ -29,7 +29,7 @@ const cafe24 = ['daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24
   'daily-sync/cafe24-option-backfill.js', 'daily-sync/cafe24-order-adapter.js', 'daily-sync/cafe24-rule-loader.js',
   'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js',
   'daily-sync/cafe24-order-preflight.client.js'];
-const influencer = ['auth/role-permissions.js', 'domain/meta-conditional-metrics.js', 'metrics/meta-ad-metric-aggregates.js',
+const influencer = ['auth/role-permissions.js', 'domain/meta-conditional-metrics.js', 'metrics/meta-ad-metric-aggregates.js', 'products/products.service.js',
   'influencers/influencer-matching.js', 'influencers/influencer-projector.js', 'influencers/influencer-worker.service.js',
   'influencers/influencer-records.service.js', 'influencers/influencer.controller.js', 'influencers/influencer.dto.js',
   'influencers/influencer.module.js'];

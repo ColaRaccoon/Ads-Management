@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import { test } from "node:test";
-import { PrismaClient, SourceKind } from "@prisma/client";
+import { Prisma, PrismaClient, SourceKind } from "@prisma/client";
 import { classifyInfluencerCreative } from "./influencer-matching";
 import { backfillInfluencerCollaboration, projectInfluencerDay } from "./influencer-projector";
+import { InfluencerRecordsService } from "./influencer-records.service";
+import type { PrismaService } from "../common/prisma.service";
 
 test("classifies the creative marker before falling back to the campaign", () => {
   assert.deepEqual(classifyInfluencerCreative("261110_두줄보호대_인플（ 혜민 ）0015_IG", "인플(다른 사람)"), {
@@ -41,6 +43,7 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
       } });
       const campaign = await tx.metaCampaign.create({ data: { externalCampaignId: randomUUID(), campaignName: "fixture" } });
       const adset = await tx.metaAdset.create({ data: { campaignRefId: campaign.id, adsetName: "fixture", adsetNameKey: randomUUID() } });
+      const creative = await tx.creative.create({ data: { creativeKey: adName, displayName: adName, materialNo: `인플(${name})0015` } });
       const ad = await tx.metaAd.create({ data: {
         campaignRefId: campaign.id, metaAdsetRefId: adset.id, metaCampaignId: campaign.externalCampaignId,
         metaAdsetId: adset.id, syntheticAdKey: randomUUID(), adIdentityKey: randomUUID(), adName
@@ -53,7 +56,7 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
         metaCampaignId: campaign.externalCampaignId, metaAdsetId: adset.id,
         campaignNameSnapshot: campaign.campaignName, adsetNameSnapshot: adset.adsetName, adNameSnapshot: adName,
         syntheticAdKey: ad.syntheticAdKey, adIdentityKey: ad.adIdentityKey, productId: product.id, source: SourceKind.CSV,
-        uploadBatchId: batch.id
+        uploadBatchId: batch.id, creativeId: creative.id
       };
       await tx.metaAdDailyMetric.create({ data: {
         ...metric, metricDate: day1, dateStart: day1, dateEnd: day1, spendUsd: 120, purchaseCount: 15
@@ -135,6 +138,37 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
       assert.equal(empty.netPerformanceKrw?.toNumber(), -150_000);
       assert.equal(empty.dataThrough, null);
       assert.deepEqual(empty.creativeTotals, []);
+
+      const numbered = await tx.influencerCollaboration.create({ data: {
+        influencerName: "different nickname", influencerKey: "different nickname", managerName: name, productId: product.id,
+        numberingRequired: true, startDate: day1, feeKrw: 5000
+      } });
+      const transactionalClient = new Proxy(tx, {
+        get(target, key, receiver) {
+          if (key === "$transaction") return (work: (client: Prisma.TransactionClient) => Promise<unknown>) => work(tx);
+          return Reflect.get(target, key, receiver);
+        }
+      });
+      const records = new InfluencerRecordsService(transactionalClient as unknown as PrismaService);
+      assert.deepEqual((await records.materials(numbered.id, "15")).candidates.map(row => row.creativeId), [creative.id]);
+      assert.deepEqual((await records.materials(numbered.id, "150")).candidates, []);
+      const assigned = await records.numbering(numbered.id, { version: numbered.version, creativeIds: [creative.id] });
+      assert.equal(assigned.materialCount, 1);
+      await backfillInfluencerCollaboration(tx, numbered.id, now);
+      const daily = await records.daily({ date: "2038-11-02", managerName: name });
+      assert.equal(daily.items.length, 1);
+      assert.equal(daily.items[0].nickname, "different nickname");
+      assert.equal(daily.items[0].adSpendKrw, 30_000);
+      assert.equal(daily.items[0].adMarginKrw, 25_000);
+      assert.deepEqual((await records.daily({ date: "2038-11-02", managerName: "different manager" })).items, []);
+      await tx.metaAdDailyMetric.update({ where: { id: apiRow.id }, data: { spendUsd: 0 } });
+      await projectInfluencerDay(tx, day2, now);
+      assert.deepEqual((await records.daily({ date: "2038-11-02", managerName: name })).items, []);
+      const updated = await tx.influencerCollaboration.findUniqueOrThrow({ where: { id: numbered.id } });
+      assert.equal(updated.netPerformanceKrw?.toNumber(), 5000);
+      await records.numbering(numbered.id, { version: assigned.version, creativeIds: [] });
+      await backfillInfluencerCollaboration(tx, numbered.id, now);
+      assert.equal((await records.daily({ date: "2038-11-01", managerName: name })).items.length, 0);
       throw rollback;
     }, { timeout: 20_000 }), error => error === rollback);
   } finally {
