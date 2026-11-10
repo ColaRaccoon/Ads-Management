@@ -5,6 +5,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { PrismaService } from "../common/prisma.service";
 import { boundedProviderRequest, collectBoundedPages, ProviderFailure } from "./bounded-request";
 import { cafe24RetryAfterMs } from "./cafe24-rate-limit";
+import { CAFE24_OPTION_COMPONENT_LIMIT } from "./cafe24-option-projection";
 import { Cafe24OauthService } from "./cafe24-oauth.service";
 import { cafe24TestAllowed } from "./cafe24-test-connection.service";
 import { cafe24ObservedRevision, cafe24ObservationHmac,
@@ -1394,6 +1395,68 @@ export class Cafe24OrderPreflightClient {
       catch { return { status, kind: "invalid_json" }; }
     } catch { return { status, kind: Date.now() >= deadlineAt ? "deadline" : "transport_error" }; }
     finally { clearTimeout(timer); }
+  }
+
+  /** Diagnose rejected option shapes in small pages; never return provider values. */
+  async probeOptionShapes(connectionId: string, day: string, offsetText = "0") {
+    assertCafe24TestReadEnabled();
+    parseIsoDate(day);
+    if (!/^(0|[1-9]\d{0,3})$/.test(offsetText)) syncError("INVALID_REQUEST");
+    const offset = Number(offsetText);
+    const connection = await this.prisma.sourceConnection.findUnique({ where: { id: connectionId } });
+    if (!connection || connection.provider !== "CAFE24" ||
+        !/^[a-z0-9][a-z0-9-]{0,63}$/.test(connection.externalAccountId) ||
+        !cafe24TestAllowed(connection.externalAccountId, connection.shopKey) ||
+        connection.currencyCode !== "KRW" || connection.timeZone !== "Asia/Seoul" ||
+        !/^shop[1-9]\d*$/.test(connection.shopKey)) syncError("ACCOUNT_SCOPE_MISMATCH");
+    const mallId = connection.externalAccountId, shopNo = connection.shopKey.slice(4);
+    const access = await this.oauth.accessToken(connectionId, mallId, connection.shopKey);
+    // Small independent pages fit the HTTP proxy budget. This is diagnostic
+    // evidence only, never an input for canonical publication or activation.
+    const deadlineAt = Date.now() + 25_000, limit = 10;
+    const url = new URL(`https://${mallId}.cafe24api.com/api/v2/admin/orders`);
+    for (const [key, value] of Object.entries({ shop_no: shopNo, start_date: day, end_date: day,
+      date_type: "order_date", fields: "order_id,shop_no,order_date,currency",
+      limit: String(limit), offset: String(offset) })) url.searchParams.set(key, value);
+    const rows = record((await this.getJson(url, access, deadlineAt)).body).orders;
+    if (!Array.isArray(rows) || rows.length > limit) throw new ProviderFailure("PARTIAL_PAGE", false);
+    const shapes = { absent: 0, null: 0, empty: 0, whitespaceOnly: 0, padded: 0,
+      controlCharacters: 0, overLimit: 0, unsupportedType: 0, valid: 0 };
+    const seenOrders = new Set<string>();
+    let itemCount = 0;
+    for (const raw of rows) {
+      const order = record(raw), orderId = identifier(order.order_id);
+      if (seenOrders.has(orderId) || String(order.shop_no) !== shopNo ||
+          orderDay(order.order_date) !== day || order.currency !== "KRW")
+        throw new ProviderFailure("RECONCILIATION_FAILED", false);
+      seenOrders.add(orderId);
+      const itemUrl = new URL(`https://${mallId}.cafe24api.com/api/v2/admin/orders/${orderId}/items`);
+      itemUrl.searchParams.set("shop_no", shopNo);
+      itemUrl.searchParams.set("fields", "order_item_code,option_value");
+      const items = record((await this.getJson(itemUrl, access, deadlineAt)).body).items;
+      if (!Array.isArray(items) || !items.length || items.length >= CAFE24_PAGE_LIMIT)
+        throw new ProviderFailure("PARTIAL_PAGE", false);
+      const seenItems = new Set<string>();
+      for (const rawItem of items) {
+        const item = record(rawItem), key = identifier(item.order_item_code);
+        if (seenItems.has(key)) throw new ProviderFailure("RECONCILIATION_FAILED", false);
+        seenItems.add(key);
+        const value = item.option_value;
+        if (!Object.prototype.hasOwnProperty.call(item, "option_value")) shapes.absent++;
+        else if (value === null) shapes.null++;
+        else if (typeof value !== "string") shapes.unsupportedType++;
+        else if (value.length > CAFE24_OPTION_COMPONENT_LIMIT) shapes.overLimit++;
+        else if (/[\u0000-\u001f\u007f]/.test(value)) shapes.controlCharacters++;
+        else if (value === "") shapes.empty++;
+        else if (!value.trim()) shapes.whitespaceOnly++;
+        else if (value !== value.trim()) shapes.padded++;
+        else shapes.valid++;
+        itemCount++;
+      }
+    }
+    return { day, offset, orderCount: rows.length, itemCount, shapes,
+      nextOffset: rows.length === limit && offset + limit <= 9999 ? offset + limit : null,
+      snapshotComplete: false, canonicalMappingVerified: false };
   }
 
   /** Aggregate only non-personal provider status codes across a bounded day. */

@@ -115,6 +115,25 @@ export async function cafe24ManualActivationPreview(db: PrismaService, connectio
   return db.$transaction(async (tx) => {
     await allowedConnection(tx, connectionId);
     const snapshotDigest = await computeCafe24ActivationEvidence(tx, connectionId, input.day, input);
-    return { connectionId, ...input, snapshotDigest };
+    const date = new Date(`${input.day}T00:00:00.000Z`);
+    const [policies, coverage] = await Promise.all([
+      tx.sourcePolicy.findMany({ where: { connectionId, dataKind: "CAFE24_ORDER",
+        fromDate: { lte: date }, OR: [{ toDate: null }, { toDate: { gt: date } }] } }),
+      tx.sourceCoverage.findUnique({ where: { connectionId_dataKind_metricDate: {
+        connectionId, dataKind: "CAFE24_ORDER", metricDate: date } } })
+    ]);
+    const policy = policies.length === 1 ? policies[0] : null;
+    // These CAS inputs share the digest's read snapshot. Activation still
+    // rechecks the full source/financial evidence under its existing lock.
+    return { connectionId, ...input, snapshotDigest,
+      expectedPolicyVersion: policy?.version ?? null,
+      expectedSuccessRunId: coverage?.lastSuccessRunId ?? null,
+      rowCount: coverage?.rowCount ?? null,
+      canRequestActivation: policy?.primarySource === "CSV" && coverage?.source === "API" &&
+        ["COMPLETE_ZERO", "COMPLETE_NONZERO"].includes(coverage.state) &&
+        Number.isSafeInteger(coverage.rowCount) && (coverage.rowCount ?? -1) >= 0 &&
+        !!coverage.lastSuccessAt &&
+        !!coverage.lastSuccessRunId && coverage.lastAttemptRunId === coverage.lastSuccessRunId &&
+        coverage.warningCodes.includes("CAFE24_SHADOW_NOT_PRIMARY") };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 5_000 });
 }
