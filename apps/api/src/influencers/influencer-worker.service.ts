@@ -92,22 +92,22 @@ export class InfluencerWorkerService implements OnModuleInit, OnModuleDestroy {
 
   private async runDueDay(db: PrismaClient, recentFrom: Date, recent: boolean) {
     const now = new Date();
-    let attempted: { metricDate: Date; nextCheckAt: Date; numberingAttempted: boolean } | undefined;
+    let attempted: { metricDate: Date; nextCheckAt: Date; numberMatchingAttempted: boolean } | undefined;
     try {
       return await inWorkerTransaction(db, async tx => {
         const job = await tx.influencerProjectionDay.findFirst({
           where: {
-            OR: [{ numberingAttempted: false }, { nextCheckAt: { lte: now } }],
+            OR: [{ numberMatchingAttempted: false }, { nextCheckAt: { lte: now } }],
             metricDate: recent ? { gte: recentFrom } : { lt: recentFrom }
           },
-          orderBy: [{ numberingAttempted: "asc" }, { nextCheckAt: "asc" }, { metricDate: "desc" }]
+          orderBy: [{ numberMatchingAttempted: "asc" }, { nextCheckAt: "asc" }, { metricDate: "desc" }]
         });
         if (!job) return false;
-        attempted = { metricDate: job.metricDate, nextCheckAt: job.nextCheckAt, numberingAttempted: job.numberingAttempted };
+        attempted = { metricDate: job.metricDate, nextCheckAt: job.nextCheckAt, numberMatchingAttempted: job.numberMatchingAttempted };
         await projectInfluencerDay(tx, job.metricDate, now);
         await tx.influencerProjectionDay.update({
           where: { metricDate: job.metricDate },
-          data: { numberingAttempted: true, nextCheckAt: new Date(now.getTime() + (recent ? 30 * MINUTE : 7 * DAY)) }
+          data: { numberMatchingAttempted: true, nextCheckAt: new Date(now.getTime() + (recent ? 30 * MINUTE : 7 * DAY)) }
         });
         return true;
       });
@@ -116,7 +116,7 @@ export class InfluencerWorkerService implements OnModuleInit, OnModuleDestroy {
       this.warn(formatDateOnly(attempted.metricDate), error);
       await db.influencerProjectionDay.updateMany({
         where: attempted,
-        data: { numberingAttempted: true, nextCheckAt: new Date(now.getTime() + (recent ? 5 * MINUTE : HOUR)) }
+        data: { numberMatchingAttempted: true, nextCheckAt: new Date(now.getTime() + (recent ? 5 * MINUTE : HOUR)) }
       });
       return true;
     }

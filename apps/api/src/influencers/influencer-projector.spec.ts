@@ -31,7 +31,8 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
   const rollback = new Error("rollback synthetic fixture");
   const day1 = new Date("2038-11-01");
   const day2 = new Date("2038-11-02");
-  const now = new Date("2038-11-03");
+  const day3 = new Date("2038-11-03");
+  const now = new Date("2038-11-04");
   const name = `혜민 ${randomUUID()}`;
   const adName = `두줄보호대_인플(${name})0015`;
   const previousSourceFlag = process.env.DAILY_SYNC_FEATURE_ENABLED;
@@ -41,6 +42,21 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
       await tx.productCostRule.create({ data: {
         productId: product.id, salePriceKrw: 15_000, productCostKrw: 10_000, fxRateKrwPerUsd: 1000, effectiveFrom: day1
       } });
+      const numbered = await tx.influencerCollaboration.create({ data: {
+        influencerName: "different nickname", influencerKey: "different nickname", managerName: name, productId: product.id,
+        numberingRequired: true, startDate: day3, feeKrw: 5000
+      } });
+      const transactionalClient = new Proxy(tx, {
+        get(target, key, receiver) {
+          if (key === "$transaction") return (work: (client: Prisma.TransactionClient) => Promise<unknown>) => work(tx);
+          return Reflect.get(target, key, receiver);
+        }
+      });
+      const records = new InfluencerRecordsService(transactionalClient as unknown as PrismaService);
+      const reserved = await records.numbering(numbered.id, { version: numbered.version, numbers: ["0015"] });
+      assert.deepEqual(reserved.numbers, ["0015"]);
+      assert.equal(reserved.netPerformanceKrw, -5000);
+      assert.deepEqual(await records.creatives(numbered.id), { items: [] });
       const campaign = await tx.metaCampaign.create({ data: { externalCampaignId: randomUUID(), campaignName: "fixture" } });
       const adset = await tx.metaAdset.create({ data: { campaignRefId: campaign.id, adsetName: "fixture", adsetNameKey: randomUUID() } });
       const creative = await tx.creative.create({ data: { creativeKey: adName, displayName: adName, materialNo: `인플(${name})0015` } });
@@ -139,36 +155,35 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
       assert.equal(empty.dataThrough, null);
       assert.deepEqual(empty.creativeTotals, []);
 
-      const numbered = await tx.influencerCollaboration.create({ data: {
-        influencerName: "different nickname", influencerKey: "different nickname", managerName: name, productId: product.id,
-        numberingRequired: true, startDate: day1, feeKrw: 5000
+      process.env.DAILY_SYNC_FEATURE_ENABLED = "false";
+      const otherProduct = await tx.product.create({ data: { code: randomUUID(), name: "other", displayName: "other" } });
+      const day3Fields = { metricDate: day3, dateStart: day3, dateEnd: day3 };
+      const delivered = await tx.metaAdDailyMetric.create({ data: {
+        ...metric, ...day3Fields, creativeId: null, spendUsd: 30, purchaseCount: 11
       } });
-      const transactionalClient = new Proxy(tx, {
-        get(target, key, receiver) {
-          if (key === "$transaction") return (work: (client: Prisma.TransactionClient) => Promise<unknown>) => work(tx);
-          return Reflect.get(target, key, receiver);
-        }
-      });
-      const records = new InfluencerRecordsService(transactionalClient as unknown as PrismaService);
-      assert.deepEqual((await records.materials(numbered.id, "15")).candidates.map(row => row.creativeId), [creative.id]);
-      assert.deepEqual((await records.materials(numbered.id, "150")).candidates, []);
-      const assigned = await records.numbering(numbered.id, { version: numbered.version, creativeIds: [creative.id] });
-      assert.equal(assigned.materialCount, 1);
-      await backfillInfluencerCollaboration(tx, numbered.id, now);
-      const daily = await records.daily({ date: "2038-11-02", managerName: name });
+      for (const [productId, adNameSnapshot] of [[otherProduct.id, adName], [product.id, "두줄보호대_00150"]]) {
+        const adIdentityKey = randomUUID();
+        await tx.metaAdDailyMetric.create({ data: {
+          ...metric, ...day3Fields, productId, adNameSnapshot, adIdentityKey, syntheticAdKey: adIdentityKey, spendUsd: 99
+        } });
+      }
+      // Collection after numbering publishes the first match without a second admin action.
+      await projectInfluencerDay(tx, day3, now);
+      const daily = await records.daily({ date: "2038-11-03", managerName: name });
       assert.equal(daily.items.length, 1);
       assert.equal(daily.items[0].nickname, "different nickname");
       assert.equal(daily.items[0].adSpendKrw, 30_000);
       assert.equal(daily.items[0].adMarginKrw, 25_000);
-      assert.deepEqual((await records.daily({ date: "2038-11-02", managerName: "different manager" })).items, []);
-      await tx.metaAdDailyMetric.update({ where: { id: apiRow.id }, data: { spendUsd: 0 } });
-      await projectInfluencerDay(tx, day2, now);
-      assert.deepEqual((await records.daily({ date: "2038-11-02", managerName: name })).items, []);
+      assert.deepEqual((await records.daily({ date: "2038-11-03", managerName: "different manager" })).items, []);
+      await tx.metaAdDailyMetric.update({ where: { id: delivered.id }, data: { spendUsd: 0 } });
+      await projectInfluencerDay(tx, day3, now);
+      assert.deepEqual((await records.daily({ date: "2038-11-03", managerName: name })).items, []);
       const updated = await tx.influencerCollaboration.findUniqueOrThrow({ where: { id: numbered.id } });
-      assert.equal(updated.netPerformanceKrw?.toNumber(), 5000);
-      await records.numbering(numbered.id, { version: assigned.version, creativeIds: [] });
+      assert.equal(updated.netPerformanceKrw?.toNumber(), 50_000);
+      await records.numbering(numbered.id, { version: reserved.version, numbers: [] });
       await backfillInfluencerCollaboration(tx, numbered.id, now);
-      assert.equal((await records.daily({ date: "2038-11-01", managerName: name })).items.length, 0);
+      const cleared = await tx.influencerCollaboration.findUniqueOrThrow({ where: { id: numbered.id } });
+      assert.equal(cleared.netPerformanceKrw?.toNumber(), -5000);
       throw rollback;
     }, { timeout: 20_000 }), error => error === rollback);
   } finally {

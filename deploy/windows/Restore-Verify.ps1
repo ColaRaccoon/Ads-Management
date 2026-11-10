@@ -283,6 +283,7 @@ function Get-RoleMatrixCompatibilityDigest($Value,[string]$ReleaseId){
   switch($Value.contractVersion){
     2 { Assert-RoleMatrixProof $Value 128 14 11 527 }
     3 { Assert-RoleMatrixProof $Value 131 17 12 540 }
+    4 { Assert-RoleMatrixProof $Value 130 16 12 535 }
     default { throw 'ROLE_MATRIX_RESULT_INVALID' }
   }
   Assert-RoleMatrixProof $Value.compatibility 121 10 10 500

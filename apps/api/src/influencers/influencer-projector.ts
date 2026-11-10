@@ -5,7 +5,7 @@ import { formatDateOnly } from "../domain/date-number";
 import { metaAttributionContextKey } from "../domain/meta-conditional-metrics";
 import { creativeRowFinancials } from "../metrics/meta-ad-metric-aggregates";
 import { loadCreativeFinancialContext } from "../metrics/meta-ad-metrics-read.service";
-import { classifyInfluencerCreative, numberedCreativeName } from "./influencer-matching";
+import { classifyInfluencerCreative, materialNumberKey, numberedCreative } from "./influencer-matching";
 
 const metricFields = {
   metricDate: true, connectionId: true, source: true, adNameSnapshot: true, campaignNameSnapshot: true,
@@ -15,7 +15,7 @@ const metricFields = {
 
 const collaborationFields = {
   id: true, version: true, influencerKey: true, feeKrw: true, startDate: true, endDate: true,
-  needsBackfill: true, numberingRequired: true, productId: true, materials: { select: { creativeId: true } }
+  needsBackfill: true, numberingRequired: true, numberReservations: { select: { numberKey: true } }
 } as const satisfies Prisma.InfluencerCollaborationSelect;
 
 type Collaboration = Prisma.InfluencerCollaborationGetPayload<{ select: typeof collaborationFields }>;
@@ -36,16 +36,18 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
   const selected = await selectCurrentSourceRows(tx, SourceDataKind.META_AD, candidates, row => row.metricDate);
   const matched = selected.flatMap(row => {
     const legacy = classifyInfluencerCreative(row.adNameSnapshot, row.campaignNameSnapshot);
-    const material = row.creativeId && row.productId ? numberedCreativeName(row.adNameSnapshot) : null;
+    const material = row.productId ? numberedCreative(row.adNameSnapshot) : null;
+    const numberKey = material ? materialNumberKey(row.productId!, material.number) : null;
     return [
-      ...(legacy ? [{ row, scope: "NICKNAME", ...legacy }] : []),
-      ...(material ? [{ row, scope: "MATERIAL", influencerKey: materialKey(row.productId!, row.creativeId!), creativeName: material }] : [])
+      ...(legacy ? [{ row, scope: "NICKNAME", numberKey, ...legacy }] : []),
+      ...(material && numberKey ? [{ row, scope: "MATERIAL", numberKey: null, influencerKey: numberKey, creativeName: material.creativeName }] : [])
     ];
   });
   const context = await loadCreativeFinancialContext(tx, matched.map(item => item.row));
   const grouped = new Map<string, DailyPerformance>();
-  for (const { row, scope, influencerKey, creativeName } of matched) {
-    const key = JSON.stringify([scope, influencerKey, creativeName, row.creativeId]);
+  for (const { row, scope, influencerKey, creativeName, numberKey } of matched) {
+    const identity = JSON.stringify([creativeName, row.creativeId, numberKey]);
+    const key = JSON.stringify([scope, influencerKey, identity]);
     const delivered = row.spendUsd.gt(0) || row.impressions > 0n;
     const attributionContext = metaAttributionContextKey(row);
     const { spendKrw, marginKrw } = creativeRowFinancials(row, context);
@@ -59,8 +61,8 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
       if (attributionContext < existing.attributionContext) existing.attributionContext = attributionContext;
     } else {
       grouped.set(key, {
-        metricDate, scope, influencerKey, creativeName, sourceCreativeId: row.creativeId, delivered,
-        creativeKey: createHash("sha256").update(JSON.stringify([creativeName, row.creativeId])).digest("hex"),
+        metricDate, scope, influencerKey, creativeName, numberKey, sourceCreativeId: row.creativeId, delivered,
+        creativeKey: createHash("sha256").update(identity).digest("hex"),
         adSpendKrw: spendKrw === null ? null : new Prisma.Decimal(spendKrw),
         adMarginKrw: marginKrw === null ? null : new Prisma.Decimal(marginKrw),
         hasApi: row.source === SourceKind.API, attributionContext, mixedAttribution: false
@@ -91,7 +93,7 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
         { OR: [{ endDate: null }, { endDate: { gte: metricDate } }] },
         { OR: [
           { numberingRequired: false, influencerKey: { in: legacyKeys } },
-          { numberingRequired: true, materials: { some: { creativeId: { in: numberedKeys.map(key => key.split(":")[1]) } } } }
+          { numberingRequired: true, numberReservations: { some: { numberKey: { in: numberedKeys } } } }
         ] }
       ]
     }, select: collaborationFields
@@ -113,17 +115,17 @@ const marginTotal = Prisma.sql`CASE WHEN bool_or(ad_margin_krw IS NULL)
   OR (bool_or(has_api) AND (bool_or(mixed_attribution) OR min(attribution_context COLLATE "C") <> max(attribution_context COLLATE "C")))
   THEN NULL ELSE coalesce(sum(ad_margin_krw), 0) END`;
 
-function materialKey(productId: string, creativeId: string) {
-  return `${productId}:${creativeId}`;
-}
-
 function matchesCollaboration(collaboration: Collaboration) {
-  const keys = collaboration.materials.map(material => materialKey(collaboration.productId!, material.creativeId));
+  const keys = collaboration.numberReservations.map(reservation => reservation.numberKey);
   const scope = collaboration.numberingRequired
     ? keys.length ? Prisma.sql`scope = 'MATERIAL' AND influencer_key IN (${Prisma.join(keys)})` : Prisma.sql`false`
     : Prisma.sql`scope = 'NICKNAME' AND influencer_key = ${collaboration.influencerKey}
       AND NOT EXISTS (
-        SELECT 1 FROM influencer_material_assignments a WHERE a.creative_id = influencer_daily_performances.source_creative_id
+        SELECT 1 FROM influencer_number_reservations r
+        JOIN influencer_collaborations owner ON owner.id = r.collaboration_id
+        WHERE r.number_key = influencer_daily_performances.number_key
+          AND owner.start_date <= influencer_daily_performances.metric_date
+          AND (owner.end_date IS NULL OR owner.end_date >= influencer_daily_performances.metric_date)
       )`;
   return Prisma.sql`${scope}
     AND metric_date >= ${formatDateOnly(collaboration.startDate)}::date

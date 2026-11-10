@@ -33,6 +33,7 @@ model InfluencerCollaboration {
   updatedAt         DateTime  @updatedAt @map("updated_at")
   product           Product?  @relation(fields: [productId], references: [id], onDelete: Restrict)
   materials         InfluencerMaterialAssignment[]
+  numberReservations InfluencerNumberReservation[]
   dailyTotals       InfluencerCollaborationDay[]
 
   @@index([influencerKey, startDate], map: "influencer_collaborations_name_date_idx")
@@ -47,6 +48,7 @@ model InfluencerProjectionDay {
   nextCheckAt        DateTime  @map("next_check_at")
   lastSourceChangeAt DateTime? @map("last_source_change_at") @db.Timestamptz(3)
   numberingAttempted Boolean   @default(false) @map("numbering_attempted")
+  numberMatchingAttempted Boolean @default(false) @map("number_matching_attempted")
 
   @@index([nextCheckAt, metricDate(sort: Desc)], map: "influencer_projection_days_due_idx")
   @@map("influencer_projection_days")
@@ -55,6 +57,7 @@ model InfluencerProjectionDay {
 model InfluencerDailyPerformance {
   scope              String   @default("NICKNAME")
   sourceCreativeId   String?  @map("source_creative_id") @db.Uuid
+  numberKey          String?  @map("number_key")
   metricDate         DateTime @map("metric_date") @db.Date
   influencerKey      String   @map("influencer_key")
   creativeKey        String   @map("creative_key")
@@ -69,7 +72,18 @@ model InfluencerDailyPerformance {
   @@id([metricDate, scope, influencerKey, creativeKey])
   @@index([scope, influencerKey, metricDate], map: "influencer_daily_performances_name_date_idx")
   @@index([sourceCreativeId])
+  @@index([scope, numberKey, metricDate], map: "influencer_daily_performances_number_date_idx")
   @@map("influencer_daily_performances")
+}
+
+model InfluencerNumberReservation {
+  numberKey       String @id @map("number_key")
+  materialNo      String @map("material_no")
+  collaborationId String @map("collaboration_id") @db.Uuid
+  collaboration   InfluencerCollaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+
+  @@index([collaborationId])
+  @@map("influencer_number_reservations")
 }
 
 model InfluencerMaterialAssignment {

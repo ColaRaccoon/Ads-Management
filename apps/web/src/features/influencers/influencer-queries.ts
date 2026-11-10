@@ -21,7 +21,7 @@ export type Collaboration = Omit<CollaborationInput, "managerName" | "productId"
   productId: string | null;
   productName: string | null;
   numberingRequired: boolean;
-  materialCount: number;
+  numbers: string[];
   adSpendKrw: number | null;
   adMarginKrw: number | null;
   netPerformanceKrw: number | null;
@@ -41,8 +41,6 @@ type CollaborationPage = { items: Collaboration[]; page: number; hasMore: boolea
 
 export type InfluencerDailyRow = Pick<Collaboration,
   "id" | "managerName" | "nickname" | "productName" | "adSpendKrw" | "adMarginKrw" | "creativeCount">;
-
-export type NumberedMaterial = { creativeId: string; creativeName: string; materialNo: string };
 
 const queryDefaults = {
   ...STOREFRONT_QUERY_OPTIONS,

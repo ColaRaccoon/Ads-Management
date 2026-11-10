@@ -11,7 +11,7 @@ import { REQUIRED_PERMISSIONS } from "../auth/route-decorators";
 import type { PrismaService } from "../common/prisma.service";
 import { InfluencerRecordsService } from "./influencer-records.service";
 import { InfluencerController } from "./influencer.controller";
-import { InfluencerCollaborationInput } from "./influencer.dto";
+import { InfluencerCollaborationInput, UpdateInfluencerNumberingInput } from "./influencer.dto";
 
 const input = {
   nickname: "혜민",
@@ -32,9 +32,7 @@ test("staff can maintain collaborations and read-only users can view their saved
   for (const role of [AppRole.USER, AppRole.ADMIN, AppRole.SUPER_ADMIN]) {
     assert.ok(permissionsForRole(role).includes("influencers.manage"));
   }
-  for (const action of ["materials", "numbering"] as const) {
-    assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, InfluencerController.prototype[action]), ["influencers.numbering"]);
-  }
+  assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, InfluencerController.prototype.numbering), ["influencers.numbering"]);
   assert.ok(!permissionsForRole(AppRole.USER).includes("influencers.numbering"));
   assert.ok(permissionsForRole(AppRole.ADMIN).includes("influencers.numbering"));
   assert.ok(permissionsForRole(AppRole.SUPER_ADMIN).includes("influencers.numbering"));
@@ -53,6 +51,12 @@ test("transport accepts an open period and validates integer KRW amounts and req
   assert.ok((await errors({ ...input, endDate: "2026-11-05" })).some(error => error.property === "endDate"));
   assert.ok((await errors({ ...input, productId: undefined })).some(error => error.property === "productId"));
   assert.ok((await errors({ ...input, note: undefined })).some(error => error.property === "note"));
+});
+
+test("numbering accepts digit strings with leading zeros and rejects numeric values", async () => {
+  const version = randomUUID();
+  assert.deepEqual(await validate(plainToInstance(UpdateInfluencerNumberingInput, { version, numbers: ["0015"] })), []);
+  assert.ok((await validate(plainToInstance(UpdateInfluencerNumberingInput, { version, numbers: [15] }))).length);
 });
 
 const fixtureUrl = process.env.INFLUENCER_FIXTURE_DATABASE_URL;
@@ -81,8 +85,11 @@ test("PostgreSQL keeps same-nickname collaborations separate and preserves saved
     assert.notEqual(next.id, first.id);
 
     assert.throws(() => service.create({ ...definition, startDate: "2026-11-31" }), hasStatus(400));
-    await assert.rejects(() => service.numbering(first.id, { version: first.version, creativeIds: [randomUUID()] }), hasStatus(400));
-    const version = first.version;
+    await assert.rejects(() => service.numbering(first.id, { version: first.version, numbers: ["0015", "15"] }), hasStatus(400));
+    const reserved = await service.numbering(first.id, { version: first.version, numbers: ["0015"] });
+    assert.deepEqual(reserved.numbers, ["0015"]);
+    await assert.rejects(() => service.numbering(next.id, { version: next.version, numbers: ["15"] }), hasStatus(409));
+    const version = reserved.version;
     const id = first.id;
     const creativeTotals = [{ creativeName: "두줄보호대_인플(혜민)0015", adSpendKrw: 150_000, adMarginKrw: 130_000, dataThrough: "2026-11-05" }];
     await owner.influencerCollaboration.update({ where: { id }, data: {

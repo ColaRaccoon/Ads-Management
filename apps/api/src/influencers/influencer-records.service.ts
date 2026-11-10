@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { PrismaService } from "../common/prisma.service";
 import { formatDateOnly, toDateOnly } from "../domain/date-number";
-import { influencerKey } from "./influencer-matching";
+import { influencerKey, materialNumberKey } from "./influencer-matching";
 import type {
   InfluencerCollaborationInput, InfluencerDailyQuery, UpdateInfluencerCollaborationInput, UpdateInfluencerNumberingInput
 } from "./influencer.dto";
@@ -17,7 +17,7 @@ const SUMMARY = {
   productId: true,
   product: { select: { displayName: true } },
   numberingRequired: true,
-  _count: { select: { materials: true } },
+  numberReservations: { select: { materialNo: true }, orderBy: { materialNo: "asc" } },
   feeKrw: true,
   startDate: true,
   endDate: true,
@@ -29,9 +29,6 @@ const SUMMARY = {
   aggregatedAt: true,
   creativeCount: true
 } as const satisfies Prisma.InfluencerCollaborationSelect;
-
-const materialFields = { creativeId: true, creativeName: true, materialNo: true } as const;
-type Material = Prisma.InfluencerMaterialAssignmentGetPayload<{ select: typeof materialFields }>;
 
 @Injectable()
 export class InfluencerRecordsService {
@@ -86,75 +83,38 @@ export class InfluencerRecordsService {
     };
   }
 
-  async materials(id: string, number?: string) {
-    const record = await this.prisma.influencerCollaboration.findUnique({
-      where: { id }, select: { productId: true, materials: { select: materialFields } }
-    });
-    if (!record) throw collaborationNotFound();
-    const candidates = number && record.productId
-      ? await this.prisma.$queryRaw<Material[]>(Prisma.sql`
-          SELECT c.id AS "creativeId", c.display_name AS "creativeName", c.material_no AS "materialNo"
-          FROM creatives c
-          WHERE c.platform = 'META'
-            AND normalize(c.material_no, NFKC) ~ ${`(^|[^0-9])0*${number.replace(/^0+(?=\d)/, "")}(번소재)?$`}
-            AND EXISTS (
-              SELECT 1 FROM meta_ad_daily_metrics m
-              WHERE m.creative_id = c.id AND m.product_id = ${record.productId}::uuid AND m.is_current
-            )
-            AND NOT EXISTS (
-              SELECT 1 FROM influencer_material_assignments a WHERE a.creative_id = c.id AND a.collaboration_id <> ${id}::uuid
-            )
-          ORDER BY c.display_name, c.id LIMIT 50`)
-      : [];
-    return { selected: record.materials, candidates };
-  }
-
   numbering(id: string, input: UpdateInfluencerNumberingInput) {
     return this.mutate(async tx => {
       const current = await this.claim(tx, id, input.version);
-      const creativeIds = [...new Set(input.creativeIds.map(value => value.toLowerCase()))];
-      if (!current.productId && creativeIds.length) throw productRequired();
-      const other = await tx.influencerMaterialAssignment.findFirst({
-        where: { creativeId: { in: creativeIds }, collaborationId: { not: id } },
-        select: { creativeId: true }
-      });
-      if (other) throw new ConflictException("이미 다른 협업에 연결된 소재가 있습니다.");
-      const existing = new Map(current.materials.map(material => [material.creativeId, material]));
-      const newIds = creativeIds.filter(creativeId => !existing.has(creativeId));
-      const candidates = newIds.length ? await tx.creative.findMany({
-        where: {
-          id: { in: newIds }, platform: "META", materialNo: { not: null },
-          adDailyMetrics: { some: { productId: current.productId, isCurrent: true } }
-        },
-        select: { id: true, displayName: true, materialNo: true }
-      }) : [];
-      if (candidates.length !== newIds.length || candidates.some(c => !/[0-9]+(?:번소재)?$/.test(c.materialNo!.normalize("NFKC")))) {
-        throw new BadRequestException("선택한 제품의 번호가 있는 Meta 소재를 선택해 주세요.");
+      if (!current.productId && input.numbers.length) throw productRequired();
+      const reservations = input.numbers.map(materialNo => ({
+        collaborationId: id, materialNo, numberKey: materialNumberKey(current.productId!, materialNo)
+      }));
+      const keys = reservations.map(row => row.numberKey);
+      if (new Set(keys).size !== keys.length) {
+        throw new BadRequestException("같은 번호를 한 번만 입력해 주세요. 앞자리 0은 같은 번호로 처리합니다.");
       }
-      const removed = current.materials.filter(material => !creativeIds.includes(material.creativeId));
-      if (removed.length) await tx.influencerMaterialAssignment.deleteMany({
-        where: { collaborationId: id, creativeId: { in: removed.map(material => material.creativeId) } }
+      const conflict = await tx.influencerNumberReservation.findFirst({
+        where: { numberKey: { in: keys }, collaborationId: { not: id } },
+        select: { materialNo: true }
       });
-      if (candidates.length) await tx.influencerMaterialAssignment.createMany({
-        data: candidates.map(c => ({ collaborationId: id, creativeId: c.id, creativeName: c.displayName, materialNo: c.materialNo! }))
-      });
-      const changed = !current.numberingRequired || newIds.length > 0 || removed.length > 0;
+      if (conflict) throw new ConflictException(`같은 제품의 소재 번호 ${conflict.materialNo}은(는) 이미 다른 협업에 등록되어 있습니다.`);
+      const previous = new Map(current.numberReservations.map(row => [row.numberKey, row.materialNo]));
+      const changedKeys = [
+        ...keys.filter(key => !previous.has(key)),
+        ...[...previous.keys()].filter(key => !keys.includes(key))
+      ];
+      if (changedKeys.length || reservations.some(row => previous.get(row.numberKey) !== row.materialNo)) {
+        await tx.influencerNumberReservation.deleteMany({ where: { collaborationId: id } });
+        if (reservations.length) await tx.influencerNumberReservation.createMany({ data: reservations });
+      }
+      const matchingChanged = !current.numberingRequired || changedKeys.length > 0;
       const row = await tx.influencerCollaboration.update({
         where: { id },
-        data: { numberingRequired: true, ...(changed ? initialPerformance(current.feeKrw.toNumber()) : {}) },
+        data: { numberingRequired: true, ...(matchingChanged ? initialPerformance(current.feeKrw.toNumber()) : {}) },
         select: SUMMARY
       });
-      if (newIds.length || removed.length) {
-        // Explicit assignments take priority over pre-existing nickname matches.
-        const affected = await tx.influencerDailyPerformance.findMany({
-          where: { scope: "NICKNAME", sourceCreativeId: { in: [...newIds, ...removed.map(material => material.creativeId)] } },
-          select: { influencerKey: true }, distinct: ["influencerKey"]
-        });
-        if (affected.length) await tx.influencerCollaboration.updateMany({
-          where: { numberingRequired: false, influencerKey: { in: affected.map(entry => entry.influencerKey) } },
-          data: { needsBackfill: true, lastJobAt: null }
-        });
-      }
+      await queueLegacyForNumbers(tx, changedKeys);
       return serializeSummary(row);
     });
   }
@@ -176,7 +136,7 @@ export class InfluencerRecordsService {
     return this.mutate(async tx => {
       const current = await this.claim(tx, id, input.version);
       if (current.productId !== definition.productId) {
-        if (current.materials.length) throw new ConflictException("관리자가 연결된 소재를 해제한 뒤 제품을 변경할 수 있습니다.");
+        if (current.numberReservations.length) throw new ConflictException("관리자가 저장된 소재 번호를 지운 뒤 제품을 변경할 수 있습니다.");
         await validateProduct(tx, definition.productId);
       }
       if (current.endDate && definition.startDate > current.endDate) throw invalidDate();
@@ -184,6 +144,9 @@ export class InfluencerRecordsService {
       const matchingChanged = legacyNameChanged || current.startDate.getTime() !== definition.startDate.getTime();
       if (!current.numberingRequired && matchingChanged) {
         await assertNoLegacyOverlap(tx, definition.influencerKey, definition.startDate, current.endDate, id);
+      }
+      if (current.numberingRequired && matchingChanged) {
+        await queueLegacyForNumbers(tx, current.numberReservations.map(row => row.numberKey));
       }
       const performance = matchingChanged
         ? initialPerformance(definition.feeKrw)
@@ -201,7 +164,7 @@ export class InfluencerRecordsService {
     const current = await tx.influencerCollaboration.findUnique({
       where: { id },
       select: { influencerKey: true, productId: true, numberingRequired: true, startDate: true, endDate: true,
-        adMarginKrw: true, feeKrw: true, materials: { select: materialFields } }
+        adMarginKrw: true, feeKrw: true, numberReservations: { select: { numberKey: true, materialNo: true } } }
     });
     if (!current) throw collaborationNotFound();
     if (!updated.count) throw new ConflictException({
@@ -218,6 +181,19 @@ export class InfluencerRecordsService {
       return work(tx);
     }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
   }
+}
+
+async function queueLegacyForNumbers(tx: Prisma.TransactionClient, keys: string[]) {
+  if (!keys.length) return;
+  // A reservation takes precedence over the old nickname match within its dates.
+  await tx.$executeRaw`
+    UPDATE influencer_collaborations c
+    SET needs_backfill = true, last_job_at = NULL
+    WHERE NOT c.numbering_required AND EXISTS (
+      SELECT 1 FROM influencer_daily_performances p
+      WHERE p.scope = 'NICKNAME' AND p.number_key IN (${Prisma.join(keys)}) AND p.influencer_key = c.influencer_key
+        AND p.metric_date >= c.start_date AND (c.end_date IS NULL OR p.metric_date <= c.end_date)
+    )`;
 }
 
 function collaborationDefinition(input: InfluencerCollaborationInput) {
@@ -270,12 +246,12 @@ function collaborationNotFound() {
 }
 
 function serializeSummary(row: Prisma.InfluencerCollaborationGetPayload<{ select: typeof SUMMARY }>) {
-  const { influencerName, product, _count, endDate: _endDate, ...summary } = row;
+  const { influencerName, product, numberReservations, endDate: _endDate, ...summary } = row;
   return {
     ...summary,
     nickname: influencerName,
     productName: product?.displayName ?? null,
-    materialCount: _count.materials,
+    numbers: numberReservations.map(row => row.materialNo),
     feeKrw: row.feeKrw.toNumber(),
     adSpendKrw: row.adSpendKrw?.toNumber() ?? null,
     adMarginKrw: row.adMarginKrw?.toNumber() ?? null,

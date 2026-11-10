@@ -28,13 +28,6 @@ export class InfluencerDailyQuery extends InfluencerCollaborationQuery {
   managerName?: string;
 }
 
-export class InfluencerMaterialQuery {
-  @IsOptional()
-  @IsString()
-  @Matches(/^\d{1,16}$/)
-  number?: string;
-}
-
 export class UpdateInfluencerNumberingInput {
   @IsUUID("4")
   version!: string;
@@ -42,8 +35,9 @@ export class UpdateInfluencerNumberingInput {
   @IsArray()
   @ArrayMaxSize(30)
   @ArrayUnique()
-  @IsUUID("4", { each: true })
-  creativeIds!: string[];
+  @IsString({ each: true })
+  @Matches(/^[0-9]{1,16}$/, { each: true })
+  numbers!: string[];
 }
 
 export class InfluencerCollaborationInput {

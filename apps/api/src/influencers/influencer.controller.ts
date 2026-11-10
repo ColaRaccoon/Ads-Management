@@ -6,7 +6,6 @@ import {
   InfluencerCollaborationInput,
   InfluencerCollaborationQuery,
   InfluencerDailyQuery,
-  InfluencerMaterialQuery,
   UpdateInfluencerNumberingInput,
   UpdateInfluencerCollaborationInput
 } from "./influencer.dto";
@@ -34,13 +33,6 @@ export class InfluencerController {
   @RequirePermissions("data.read")
   creatives(@Param() params: InfluencerCollaborationId) {
     return this.records.creatives(params.id);
-  }
-
-  @Get(":id/materials")
-  @Header("Cache-Control", "private, no-store")
-  @RequirePermissions("influencers.numbering")
-  materials(@Param() params: InfluencerCollaborationId, @Query() query: InfluencerMaterialQuery) {
-    return this.records.materials(params.id, query.number);
   }
 
   @Patch(":id/numbering")

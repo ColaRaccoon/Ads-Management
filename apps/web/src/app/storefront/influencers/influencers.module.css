@@ -123,21 +123,6 @@
   margin-bottom: 10px;
 }
 
-.materialList {
-  display: grid;
-  gap: 8px;
-  padding: 0;
-  list-style: none;
-}
-
-.materialList li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  overflow-wrap: anywhere;
-}
-
 @media (max-width: 480px) {
   .fields {
     grid-template-columns: 1fr;

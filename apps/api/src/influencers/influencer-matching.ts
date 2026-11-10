@@ -20,7 +20,12 @@ export function classifyInfluencerCreative(adName: string, campaignName: string)
   return creativeName ? { influencerKey: keys[0], creativeName } : null;
 }
 
-export function numberedCreativeName(adName: string) {
+export function materialNumberKey(productId: string, number: string) {
+  return `${productId}:${number.replace(/^0+(?=\d)/, "")}`;
+}
+
+export function numberedCreative(adName: string) {
   const { materialNo, displayName } = parser.parse(adName.normalize("NFKC"));
-  return materialNo && /[0-9]+(?:번소재)?$/.test(materialNo) ? displayName : null;
+  const number = materialNo?.match(/([0-9]+)(?:번소재)?$/)?.[1];
+  return number && number.length <= 16 ? { number, creativeName: displayName } : null;
 }
