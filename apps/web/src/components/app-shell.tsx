@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import {
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import { Permission, roleLabel } from "@/features/auth/auth-types";
 import { useAuth } from "@/features/auth/use-auth";
+import { influencerListOptions, influencerResource } from "@/features/influencers/influencer-queries";
 import { DateRangePicker } from "./date-range-picker";
 import { GoogleDateRangePicker } from "./google-date-range-picker";
 
@@ -41,7 +43,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     label: "자사몰",
     items: [
       { href: "/storefront", label: "자사몰 통합", icon: Home, requiredPermission: "data.read" },
-      { href: "/storefront/influencers", label: "인플루언서 성과측정", icon: Users, requiredPermission: "data.read" },
+      { href: influencerResource, label: "인플루언서 성과측정", icon: Users, requiredPermission: "data.read" },
       { href: "/dashboard", label: "Meta Dashboard", icon: Home, requiredPermission: "data.read" },
       { href: "/uploads", label: "자사몰 데이터 업로드", icon: Upload, requiredPermission: "data.read" },
       { href: "/sales", label: "Cafe24 판매 / 상품 마진", icon: ShoppingCart, requiredPermission: "data.read" },
@@ -90,7 +92,11 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, can, logout } = useAuth();
+  const queryClient = useQueryClient();
   const visibleGroups = visibleNavGroups(can);
+  const prefetchInfluencers = () => {
+    void queryClient.prefetchQuery(influencerListOptions(1));
+  };
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -105,8 +111,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const active = pathname === item.href || (item.href !== "/storefront" && pathname.startsWith(`${item.href}/`));
+                const prefetchData = item.href === influencerResource && !active ? prefetchInfluencers : undefined;
                 return (
-                  <Link key={item.href} className={active ? "active" : ""} href={item.href}>
+                  <Link key={item.href} className={active ? "active" : ""} href={item.href}
+                    onMouseEnter={prefetchData} onFocus={prefetchData} onNavigate={prefetchData}>
                     <Icon size={17} />
                     {item.label}
                   </Link>

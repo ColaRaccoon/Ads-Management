@@ -5,43 +5,18 @@ import { ChevronLeft, ChevronRight, List, Pencil, Plus, RefreshCw } from "lucide
 import { useId, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { DataTable, type Column } from "@/components/data-table";
 import { useCan } from "@/features/auth/use-auth";
-import { apiErrorMessage, apiGet, apiPatch, apiPost } from "@/lib/api";
+import {
+  collaborationKey, influencerCreativesOptions, influencerListOptions, influencerResource as resource,
+  type Collaboration, type CollaborationInput
+} from "@/features/influencers/influencer-queries";
+import { apiErrorMessage, apiPatch, apiPost } from "@/lib/api";
 import { koreaTodayDateInput } from "@/lib/korea-date";
-import { STOREFRONT_QUERY_OPTIONS, storefrontTime } from "@/lib/storefront-display";
+import { storefrontTime } from "@/lib/storefront-display";
 import styles from "./influencers.module.css";
 
-const resource = "/storefront/influencers";
-const collaborationKey = ["storefront-influencers"];
 const maxFeeKrw = 999_999_999_999;
 const moneyFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 6 });
 
-type CollaborationInput = {
-  influencerName: string;
-  feeKrw: number;
-  startDate: string;
-  endDate: string | null;
-  note: string | null;
-};
-
-type Collaboration = CollaborationInput & {
-  id: string;
-  version: string;
-  adSpendKrw: number | null;
-  adMarginKrw: number | null;
-  netPerformanceKrw: number | null;
-  dataThrough: string | null;
-  aggregatedAt: string | null;
-  creativeCount: number;
-};
-
-type Creative = {
-  creativeName: string;
-  adSpendKrw: number | null;
-  adMarginKrw: number | null;
-  dataThrough: string;
-};
-
-type CollaborationPage = { items: Collaboration[]; page: number; hasMore: boolean };
 type ActiveDialog = { kind: "editor"; collaboration?: Collaboration } | { kind: "creatives"; collaboration: Collaboration };
 
 export default function InfluencersPage() {
@@ -51,12 +26,11 @@ export default function InfluencersPage() {
   const [page, setPage] = useState(1);
   const [dialog, setDialog] = useState<ActiveDialog | null>(null);
   const [savedMessage, setSavedMessage] = useState("");
-  const list = useQuery({
-    ...STOREFRONT_QUERY_OPTIONS,
-    queryKey: [...collaborationKey, page],
-    enabled: canRead,
-    queryFn: () => apiGet<CollaborationPage>(`${resource}?page=${page}`)
-  });
+  const list = useQuery({ ...influencerListOptions(page), enabled: canRead });
+
+  const prefetchCreatives = (collaboration: Collaboration) => {
+    void queryClient.prefetchQuery(influencerCreativesOptions(collaboration));
+  };
 
   function openDialog(dialog: ActiveDialog) {
     setSavedMessage("");
@@ -74,6 +48,7 @@ export default function InfluencersPage() {
     { key: "actions", header: "관리", render: (row) => (
       <div className="toolbar">
         <button className="button" type="button" onClick={() => openDialog({ kind: "creatives", collaboration: row })}
+          onMouseEnter={() => prefetchCreatives(row)} onFocus={() => prefetchCreatives(row)}
           aria-label={`${row.influencerName} 소재 ${row.creativeCount}개 보기`}>
           <List size={15} aria-hidden="true" /> 소재 {row.creativeCount}개
         </button>
@@ -225,11 +200,7 @@ function CollaborationEditor({ collaboration, onClose, onSaved }: {
 }
 
 function CreativesDialog({ collaboration, onClose }: { collaboration: Collaboration; onClose: () => void }) {
-  const creatives = useQuery({
-    ...STOREFRONT_QUERY_OPTIONS,
-    queryKey: ["storefront-influencer-creatives", collaboration.id, collaboration.version, collaboration.aggregatedAt],
-    queryFn: () => apiGet<{ items: Creative[] }>(`${resource}/${encodeURIComponent(collaboration.id)}/creatives`)
-  });
+  const creatives = useQuery(influencerCreativesOptions(collaboration));
   return <InfluencerDialog title={`${collaboration.influencerName} · 소재별 누적 성과`} onClose={onClose} wide>
     <p className={styles.help}>{collaboration.startDate} ~ {collaboration.endDate ?? "진행 중"}. 섭외비는 협업의 최종 성과에 한 번 반영됩니다.</p>
     {collaboration.note ? <p className={styles.noteText}><strong>메모</strong> {collaboration.note}</p> : null}
