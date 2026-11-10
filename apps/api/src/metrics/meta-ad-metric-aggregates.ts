@@ -44,66 +44,14 @@ export function aggregateCreativeDailyRows(
   rows: AdDailyMetricRow[],
   context: CreativeFinancialContext
 ) {
-  const periodRows = rows.map((row) => {
-    const metricDate = formatDateOnly(row.metricDate);
-    const spendUsd = numberFrom(row.spendUsd);
-    const purchaseCount = adPurchaseCount(row);
-    const costRule = row.productId
-      ? findRuleForDate(context.costRulesByProductId.get(row.productId) ?? [], row.metricDate)
-      : null;
-    const exchangeRate = context.exchangeRateByDate.get(metricDate) ?? null;
-    const legacyExchangeRate = costRule ? numberFrom(costRule.fxRateKrwPerUsd) : 0;
-    const exchangeRateKrwPerUsd = exchangeRate
-      ? numberFrom(exchangeRate.rate)
-      : legacyExchangeRate > 0
-        ? legacyExchangeRate
-        : null;
-    const spendKrw = spendUsd === 0
-      ? 0
-      : exchangeRateKrwPerUsd === null
-        ? null
-        : spendUsd * exchangeRateKrwPerUsd;
-    const salePriceKrw = costRule ? numberFrom(costRule.salePriceKrw) : null;
-    const revenueKrw =
-      purchaseCount === null ? null : purchaseCount === 0
-        ? 0
-        : salePriceKrw !== null && Number.isFinite(salePriceKrw)
-          ? purchaseCount * salePriceKrw
-          : null;
-    const margin = costRule && spendKrw !== null && purchaseCount !== null
-      ? marginCalculator.margin(
-          {
-            spendUsd,
-            purchaseCount,
-            exchangeRateKrwPerUsd: exchangeRateKrwPerUsd ?? 0
-          },
-          {
-            salePriceKrw: numberFrom(costRule.salePriceKrw),
-            vatKrw: numberFrom(costRule.vatKrw),
-            productCostKrw: numberFrom(costRule.productCostKrw),
-            shippingKrw: numberFrom(costRule.shippingKrw),
-            extraCostKrw: numberFrom(costRule.extraCostKrw)
-          }
-        )
-      : null;
-    // Meta Daily와 같은 원가 기준을 쓰되, 제품 매칭이 없으면 제품별 순이익을 확정하지 않는다.
-    const marginKrw = row.productId
-      ? margin?.marginKrw ?? (purchaseCount === 0 && spendKrw !== null ? -spendKrw : null)
-      : null;
-
-    return {
-      metricDate,
-      spendUsd,
-      spendKrw,
-      resultCount: purchaseCount ?? 0,
-      impressions: numberFrom(row.impressions),
-      linkClicks: row.linkClicks,
-      clicksAll: row.clicksAll,
-      landingPageViews: row.landingPageViews ?? 0,
-      revenueKrw,
-      marginKrw
-    };
-  });
+  const periodRows = rows.map((row) => ({
+    ...creativeRowFinancials(row, context),
+    resultCount: adPurchaseCount(row) ?? 0,
+    impressions: numberFrom(row.impressions),
+    linkClicks: row.linkClicks,
+    clicksAll: row.clicksAll,
+    landingPageViews: row.landingPageViews ?? 0
+  }));
   const totals = calculator.calculate(periodRows);
   const videoTotals = aggregateMetaVideoMetrics(rows);
   const hasUnknownSpendKrw = periodRows.some((row) => row.spendUsd > 0 && row.spendKrw === null);
@@ -128,6 +76,59 @@ export function aggregateCreativeDailyRows(
     },
     dataDays: totals.dataDays
   };
+}
+
+export type CreativeFinancialRow = Pick<AdDailyMetricRow,
+  "metricDate" | "spendUsd" | "productId" | "source" | "resultIndicator" | "resultCount" | "purchaseCount">;
+
+export function creativeRowFinancials(row: CreativeFinancialRow, context: CreativeFinancialContext) {
+  const metricDate = formatDateOnly(row.metricDate);
+  const spendUsd = numberFrom(row.spendUsd);
+  const purchaseCount = adPurchaseCount(row);
+  const costRule = row.productId
+    ? findRuleForDate(context.costRulesByProductId.get(row.productId) ?? [], row.metricDate)
+    : null;
+  const exchangeRate = context.exchangeRateByDate.get(metricDate) ?? null;
+  const legacyExchangeRate = costRule ? numberFrom(costRule.fxRateKrwPerUsd) : 0;
+  const exchangeRateKrwPerUsd = exchangeRate
+    ? numberFrom(exchangeRate.rate)
+    : legacyExchangeRate > 0
+      ? legacyExchangeRate
+      : null;
+  const spendKrw = spendUsd === 0
+    ? 0
+    : exchangeRateKrwPerUsd === null
+      ? null
+      : spendUsd * exchangeRateKrwPerUsd;
+  const salePriceKrw = costRule ? numberFrom(costRule.salePriceKrw) : null;
+  const revenueKrw =
+    purchaseCount === null ? null : purchaseCount === 0
+      ? 0
+      : salePriceKrw !== null && Number.isFinite(salePriceKrw)
+        ? purchaseCount * salePriceKrw
+        : null;
+  const margin = costRule && spendKrw !== null && purchaseCount !== null
+    ? marginCalculator.margin(
+        {
+          spendUsd,
+          purchaseCount,
+          exchangeRateKrwPerUsd: exchangeRateKrwPerUsd ?? 0
+        },
+        {
+          salePriceKrw: numberFrom(costRule.salePriceKrw),
+          vatKrw: numberFrom(costRule.vatKrw),
+          productCostKrw: numberFrom(costRule.productCostKrw),
+          shippingKrw: numberFrom(costRule.shippingKrw),
+          extraCostKrw: numberFrom(costRule.extraCostKrw)
+        }
+      )
+    : null;
+  // Meta Daily와 같은 원가 기준을 쓰되, 제품 매칭이 없으면 제품별 순이익을 확정하지 않는다.
+  const marginKrw = row.productId
+    ? margin?.marginKrw ?? (purchaseCount === 0 && spendKrw !== null ? -spendKrw : null)
+    : null;
+
+  return { metricDate, spendUsd, spendKrw, revenueKrw, marginKrw };
 }
 
 export function adPurchaseCount(row: { source?: string; resultIndicator: string | null; resultCount: number | null; purchaseCount: number | null }) {

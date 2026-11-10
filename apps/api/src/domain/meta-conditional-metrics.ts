@@ -9,13 +9,18 @@ export function sumComplete(values: readonly (number | null | undefined)[]): num
   return values.some((value) => value == null) ? null : values.reduce<number>((sum, value) => sum + value!, 0);
 }
 
-export function hasMixedMetaAttribution(rows: readonly {
-  source?: string; attributionSetting?: string | null; actionReportTime?: string | null;
+type AttributionContext = {
+  attributionSetting?: string | null; actionReportTime?: string | null;
   attributionWindows?: readonly string[];
-}[]): boolean {
+};
+
+export function metaAttributionContextKey(row: AttributionContext) {
+  return JSON.stringify([row.attributionSetting, row.actionReportTime, [...(row.attributionWindows ?? [])].sort()]);
+}
+
+export function hasMixedMetaAttribution(rows: readonly (AttributionContext & { source?: string })[]): boolean {
   if (!rows.some((row) => row.source === "API")) return false;
-  return new Set(rows.map((row) => JSON.stringify([row.attributionSetting, row.actionReportTime,
-    [...(row.attributionWindows ?? [])].sort()]))).size > 1;
+  return new Set(rows.map(metaAttributionContextKey)).size > 1;
 }
 
 export function aggregateMetricReasons(rows: readonly { metricUnavailableReasons?: unknown }[]) {

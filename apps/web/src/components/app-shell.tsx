@@ -41,6 +41,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     label: "자사몰",
     items: [
       { href: "/storefront", label: "자사몰 통합", icon: Home, requiredPermission: "data.read" },
+      { href: "/storefront/influencers", label: "인플루언서 성과측정", icon: Users, requiredPermission: "data.read" },
       { href: "/dashboard", label: "Meta Dashboard", icon: Home, requiredPermission: "data.read" },
       { href: "/uploads", label: "자사몰 데이터 업로드", icon: Upload, requiredPermission: "data.read" },
       { href: "/sales", label: "Cafe24 판매 / 상품 마진", icon: ShoppingCart, requiredPermission: "data.read" },
@@ -103,7 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="nav-group-label">{group.label}</span>
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const active = pathname === item.href || (item.href !== "/storefront" && pathname.startsWith(`${item.href}/`));
                 return (
                   <Link key={item.href} className={active ? "active" : ""} href={item.href}>
                     <Icon size={17} />
@@ -122,7 +123,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <strong>운영 대시보드</strong>
           </div>
           <Suspense fallback={<div className="toolbar" />}>
-            {pathname === "/products/performance" ? null : pathname.startsWith("/google/") ? <GoogleDateRangePicker /> : <DateRangePicker />}
+            {pathname === "/products/performance" || pathname === "/storefront/influencers" ? null : pathname.startsWith("/google/") ? <GoogleDateRangePicker /> : <DateRangePicker />}
           </Suspense>
           <div className="account-toolbar">
             <div className="account-summary">

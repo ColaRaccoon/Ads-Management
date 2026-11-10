@@ -371,38 +371,8 @@ export class MetaAdMetricsReadService {
     return aggregateCreativeLifetimes(placements, through);
   }
 
-  async creativeFinancialContext(metrics: AdDailyMetricRow[]): Promise<CreativeFinancialContext> {
-    if (metrics.length === 0) {
-      return { costRulesByProductId: new Map(), exchangeRateByDate: new Map() };
-    }
-
-    const productIds = Array.from(new Set(metrics.map((metric) => metric.productId).filter(Boolean))) as string[];
-    const metricDates = Array.from(new Set(metrics.map((metric) => formatDateOnly(metric.metricDate))));
-    const rateDates = metricDates.map((date) => toDateOnly(date)).filter((date): date is Date => Boolean(date));
-    const costRulesPromise =
-      productIds.length > 0
-        ? this.prisma.productCostRule.findMany({
-            where: { productId: { in: productIds } },
-            orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
-          })
-        : Promise.resolve([] as CostRule[]);
-    const exchangeRatesPromise =
-      rateDates.length > 0
-        ? this.prisma.exchangeRate.findMany({
-            where: {
-              baseCurrency: "USD",
-              quoteCurrency: "KRW",
-              provider: "KOREA_EXIM",
-              rateDate: { in: rateDates }
-            }
-          })
-        : Promise.resolve([] as ExchangeRateRow[]);
-    const [costRules, exchangeRates] = await Promise.all([costRulesPromise, exchangeRatesPromise]);
-
-    return {
-      costRulesByProductId: groupBy(costRules, (rule) => rule.productId),
-      exchangeRateByDate: new Map(exchangeRates.map((rate) => [formatDateOnly(rate.rateDate), rate]))
-    };
+  creativeFinancialContext(metrics: AdDailyMetricRow[]) {
+    return loadCreativeFinancialContext(this.prisma, metrics);
   }
 
   private parseCreativeRows(rows: AdDailyMetricRow[]) {
@@ -411,6 +381,43 @@ export class MetaAdMetricsReadService {
       parsedName: this.creativeNameParser.parse(row.adNameSnapshot)
     }));
   }
+}
+
+export async function loadCreativeFinancialContext(
+  client: Prisma.TransactionClient,
+  metrics: readonly Pick<AdDailyMetricRow, "productId" | "metricDate">[]
+): Promise<CreativeFinancialContext> {
+  if (metrics.length === 0) {
+    return { costRulesByProductId: new Map(), exchangeRateByDate: new Map() };
+  }
+
+  const productIds = Array.from(new Set(metrics.map((metric) => metric.productId).filter(Boolean))) as string[];
+  const metricDates = Array.from(new Set(metrics.map((metric) => formatDateOnly(metric.metricDate))));
+  const rateDates = metricDates.map((date) => toDateOnly(date)).filter((date): date is Date => Boolean(date));
+  const costRulesPromise =
+    productIds.length > 0
+      ? client.productCostRule.findMany({
+          where: { productId: { in: productIds } },
+          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }, { id: "desc" }]
+        })
+      : Promise.resolve([] as CostRule[]);
+  const exchangeRatesPromise =
+    rateDates.length > 0
+      ? client.exchangeRate.findMany({
+          where: {
+            baseCurrency: "USD",
+            quoteCurrency: "KRW",
+            provider: "KOREA_EXIM",
+            rateDate: { in: rateDates }
+          }
+        })
+      : Promise.resolve([] as ExchangeRateRow[]);
+  const [costRules, exchangeRates] = await Promise.all([costRulesPromise, exchangeRatesPromise]);
+
+  return {
+    costRulesByProductId: groupBy(costRules, (rule) => rule.productId),
+    exchangeRateByDate: new Map(exchangeRates.map((rate) => [formatDateOnly(rate.rateDate), rate]))
+  };
 }
 
 function latestMetadataObservations(rows: AdDailyMetricRow[]) {

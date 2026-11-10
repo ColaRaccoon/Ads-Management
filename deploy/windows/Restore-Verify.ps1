@@ -266,12 +266,31 @@ function Invoke-TargetLegacyDataProjectionSmoke([string]$ReleaseRoot,[string]$Re
   try{if(-not$process.Start()){throw 'LEGACY_BUSINESS_COMPATIBILITY_START_FAILED'};$startedProcess=$true;$run=Wait-DeadlineBoundStartedProcess $process 300000 8192 'LEGACY_BUSINESS_COMPATIBILITY_FAILED';$out=[string]$run.Output;if($out.Length-gt4096){throw 'LEGACY_BUSINESS_COMPATIBILITY_FAILED'};$value=$out.Trim()|ConvertFrom-Json;if($value.event-ne'legacy-business-compatibility-smoke'-or$value.releaseId-cne$ReleaseId-or$value.contractVersion-ne2-or$value.digest-notmatch'^[0-9a-f]{64}$'-or-not$value.outputCapsVerified-or$value.canonicalBytes-lt2-or$value.canonicalBytes-gt67108864-or$value.arrayItems-lt0-or$value.arrayItems-gt100000-or(@($value.services)-join'|')-cne'MetricsService|SalesMetricsService|CoupangService|Cafe24UploadsService'-or$value.authCalled-or$value.storageCalled){throw 'LEGACY_BUSINESS_COMPATIBILITY_RESULT_INVALID'};return [string]$value.digest}
   finally{if($startedProcess){Stop-RestoreProcessTree $process};$process.Dispose()}
 }
+function Assert-RoleMatrixProof($Proof,[int]$Routes,[int]$HttpRoutes,[int]$PermissionClasses,[int]$Blocked){
+  if($null-eq$Proof-or$Proof.routes-ne$Routes-or$Proof.httpRoutes-ne$HttpRoutes-or$Proof.permissionClasses-ne$PermissionClasses-or$Proof.blockedHandlerInvocations-ne$Blocked){throw 'ROLE_MATRIX_RESULT_INVALID'}
+  foreach($field in @('digest','routeInventoryDigest','fullMatrixDigest','httpMatrixDigest')){
+    if($Proof.$field-cnotmatch'^[0-9a-f]{64}$'){throw 'ROLE_MATRIX_RESULT_INVALID'}
+  }
+  $digest=Sha256Text (@($Proof.routeInventoryDigest,$Proof.fullMatrixDigest,$Proof.httpMatrixDigest)-join"`n")
+  if($Proof.digest-cne$digest){throw 'ROLE_MATRIX_RESULT_INVALID'}
+}
+function Get-RoleMatrixCompatibilityDigest($Value,[string]$ReleaseId){
+  if($Value.event-cne'auth-role-matrix-smoke'-or$Value.releaseId-cne$ReleaseId-or$Value.roles-ne7-or$Value.deniedServiceInvocations-ne0){throw 'ROLE_MATRIX_RESULT_INVALID'}
+  if($null-eq$Value.PSObject.Properties['contractVersion']){
+    Assert-RoleMatrixProof $Value 121 10 10 500
+    return [string]$Value.digest
+  }
+  if($Value.contractVersion-ne2){throw 'ROLE_MATRIX_RESULT_INVALID'}
+  Assert-RoleMatrixProof $Value 128 14 11 527
+  Assert-RoleMatrixProof $Value.compatibility 121 10 10 500
+  return [string]$Value.compatibility.digest
+}
 function Invoke-RoleMatrixSmoke([string]$ReleaseRoot,[string]$ReleaseId){
   Assert-PinnedFile $NodePath $ExpectedNodeSha256 'NODE_HASH_MISMATCH'
   $entry=Join-Path $ReleaseRoot 'api\dist\staging\auth-role-matrix-smoke.cli.js';if(-not(Test-Path -LiteralPath $entry -PathType Leaf)){throw 'ROLE_MATRIX_ENTRYPOINT_MISSING'}
   $info=[Diagnostics.ProcessStartInfo]::new();$info.FileName=[IO.Path]::GetFullPath($NodePath);$info.WorkingDirectory=[IO.Path]::GetFullPath($ReleaseRoot);$info.UseShellExecute=$false;$info.CreateNoWindow=$true;$info.RedirectStandardOutput=$true;$info.RedirectStandardError=$true;$info.ArgumentList.Add($entry);$info.Environment.Clear();foreach($name in @('SystemRoot','WINDIR','TEMP','TMP','PATH','PATHEXT')){if([Environment]::GetEnvironmentVariable($name)){$info.Environment[$name]=[Environment]::GetEnvironmentVariable($name)}};$info.Environment['NODE_ENV']='production';$info.Environment['LOCAL_RELEASE_ID']=$ReleaseId
   $process=[Diagnostics.Process]::new();$process.StartInfo=$info;$startedProcess=$false
-  try{if(-not$process.Start()){throw 'ROLE_MATRIX_START_FAILED'};$startedProcess=$true;$run=Wait-DeadlineBoundStartedProcess $process 120000 8192 'ROLE_MATRIX_FAILED';$out=[string]$run.Output;if($out.Length-gt4096){throw 'ROLE_MATRIX_FAILED'};$value=$out.Trim()|ConvertFrom-Json;if($value.event-ne'auth-role-matrix-smoke'-or$value.releaseId-cne$ReleaseId-or$value.digest-notmatch'^[0-9a-f]{64}$'-or$value.routeInventoryDigest-notmatch'^[0-9a-f]{64}$'-or$value.fullMatrixDigest-notmatch'^[0-9a-f]{64}$'-or$value.httpMatrixDigest-notmatch'^[0-9a-f]{64}$'-or$value.roles-ne7-or$value.routes-ne121-or$value.httpRoutes-ne10-or$value.permissionClasses-ne10-or$value.blockedHandlerInvocations-ne500-or$value.deniedServiceInvocations-ne0){throw 'ROLE_MATRIX_RESULT_INVALID'};return [string]$value.digest}
+  try{if(-not$process.Start()){throw 'ROLE_MATRIX_START_FAILED'};$startedProcess=$true;$run=Wait-DeadlineBoundStartedProcess $process 120000 8192 'ROLE_MATRIX_FAILED';$out=[string]$run.Output;if($out.Length-gt4096){throw 'ROLE_MATRIX_FAILED'};return Get-RoleMatrixCompatibilityDigest ($out.Trim()|ConvertFrom-Json) $ReleaseId}
   finally{if($startedProcess){Stop-RestoreProcessTree $process};$process.Dispose()}
 }
 function BusinessKpiSql { return "SELECT concat_ws('|',(SELECT count(*) FROM meta_adset_daily_metrics WHERE is_current),(SELECT coalesce(sum(spend_usd),0)::text FROM meta_adset_daily_metrics WHERE is_current),(SELECT coalesce(sum(result_count),0)::text FROM meta_adset_daily_metrics WHERE is_current),(SELECT count(*) FROM meta_ad_daily_metrics WHERE is_current),(SELECT coalesce(sum(purchase_count),0)::text FROM meta_ad_daily_metrics WHERE is_current),(SELECT count(*) FROM cafe24_order_lines WHERE is_current),(SELECT coalesce(sum(total_paid_krw),0)::text FROM cafe24_order_lines WHERE is_current),(SELECT count(*) FROM coupang_sale_lines WHERE is_current),(SELECT coalesce(sum(net_sales_krw),0)::text FROM coupang_sale_lines WHERE is_current),(SELECT count(*) FROM coupang_ad_metrics WHERE is_current),(SELECT coalesce(sum(ad_spend_krw),0)::text FROM coupang_ad_metrics WHERE is_current),(SELECT coalesce(sum(total_orders_1d),0)::text FROM coupang_ad_metrics WHERE is_current),(SELECT count(*) FROM coupang_manual_purchases),(SELECT coalesce(sum(quantity),0)::text FROM coupang_manual_purchases),(SELECT coalesce(sum(sales_amount_krw),0)::text FROM coupang_manual_purchases),(SELECT coalesce(sum(total_cost_krw),0)::text FROM coupang_manual_purchases),(SELECT count(*) FROM decision_logs),(SELECT count(*) FROM change_logs),(SELECT count(*) FROM report_exports))" }

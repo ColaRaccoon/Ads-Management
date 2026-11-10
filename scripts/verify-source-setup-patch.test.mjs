@@ -27,7 +27,12 @@ const google = ['daily-sync/google-ads.client.js', 'daily-sync/google-canonical-
   'google/google-performance.test.js', 'google/google.service.test.js'];
 const cafe24 = ['daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24-canonical-writer.service.js',
   'daily-sync/cafe24-option-backfill.js', 'daily-sync/cafe24-order-adapter.js', 'daily-sync/cafe24-rule-loader.js',
-  'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js'];
+  'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js',
+  'daily-sync/cafe24-order-preflight.client.js'];
+const influencer = ['auth/role-permissions.js', 'domain/meta-conditional-metrics.js', 'metrics/meta-ad-metric-aggregates.js',
+  'influencers/influencer-matching.js', 'influencers/influencer-projector.js', 'influencers/influencer-worker.service.js',
+  'influencers/influencer-records.service.js', 'influencers/influencer.controller.js', 'influencers/influencer.dto.js',
+  'influencers/influencer.module.js'];
 const unified = [
   'adapter-contract', 'adapter-contract.test', 'adapters/ad-reader', 'adapters/ad-reader.test', 'adapters/ad-source',
   'adapters/native-google-ad.test',
@@ -79,8 +84,13 @@ async function fixture(run, profile = 'reporting') {
       await put(compiled, name, 'reviewed Google module\n');
     }
     if (profile === 'reporting') for (const name of cafe24) {
-      if (name !== 'daily-sync/cafe24-option-backfill.js') await put(baseline, name, 'old Cafe24 module\n');
+      if (!['daily-sync/cafe24-option-backfill.js', 'daily-sync/cafe24-order-preflight.client.js'].includes(name))
+        await put(baseline, name, 'old Cafe24 module\n');
       await put(compiled, name, 'reviewed Cafe24 option mapping module\n');
+    }
+    if (profile === 'reporting') for (const name of influencer) {
+      if (!name.startsWith('influencers/')) await put(baseline, name, 'old shared module\n');
+      await put(compiled, name, 'reviewed influencer module\n');
     }
     if (profile === 'reporting') for (const name of unified) await put(compiled, name, 'reviewed unified module\n');
     if (profile === 'reporting') for (const name of [...metaMappings, ...reviewedCoupang]) {
@@ -100,7 +110,8 @@ async function fixture(run, profile = 'reporting') {
 test('reporting accepts the complete reviewed Google, Cafe24 and unified patch and proves legacy groups unchanged', () => fixture(async ({ verify }) => {
   const result = verify(); assert.equal(result.status, 0, result.stderr);
   const proof = JSON.parse(result.stdout);
-  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + metaMappings.length + reviewedCoupang.length + unified.length);
+  assert.equal(proof.changed, existing.length + reporting.length + google.length + cafe24.length + influencer.length +
+    metaMappings.length + reviewedCoupang.length + unified.length);
   for (const name of ['meta', 'cafe24', 'coupang', 'margin']) {
     assert.equal(proof.protectedUnchanged[name].files, 1);
     assert.match(proof.protectedUnchanged[name].sha256, /^[a-f0-9]{64}$/);

@@ -3,6 +3,7 @@ import { AppRole } from "@prisma/client";
 export const PERMISSIONS = [
   "data.read",
   "change_logs.create",
+  "influencers.manage",
   "reports.generate",
   "products.manage",
   "imports.manage",
@@ -20,13 +21,14 @@ export const ROLE_PERMISSIONS: Readonly<Record<AppRole, readonly Permission[]>> 
   [AppRole.ADMIN]: [
     "data.read",
     "change_logs.create",
+    "influencers.manage",
     "reports.generate",
     "products.manage",
     "imports.manage",
     "mappings.manage",
     "operations.run"
   ],
-  [AppRole.USER]: ["data.read", "change_logs.create", "reports.generate"],
+  [AppRole.USER]: ["data.read", "change_logs.create", "influencers.manage", "reports.generate"],
   [AppRole.GUEST]: ["data.read"]
 };
 

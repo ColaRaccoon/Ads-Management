@@ -1,0 +1,123 @@
+.heading {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.help {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+
+.help code {
+  background: var(--brand-weak);
+  color: var(--brand);
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+
+.listTable td {
+  height: 62px;
+  font-variant-numeric: tabular-nums;
+}
+
+.listTable td:first-child,
+.creativeTable td:first-child {
+  min-width: 125px;
+  max-width: 270px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.listTable td:last-child {
+  min-width: 175px;
+}
+
+.status {
+  display: grid;
+  gap: 3px;
+}
+
+.status small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.negative,
+.error {
+  color: var(--red);
+}
+
+.positive,
+.success {
+  color: var(--green);
+}
+
+.pagination {
+  justify-content: flex-end;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.dialog {
+  width: min(540px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  color: var(--text);
+  padding: 20px;
+  overflow: auto;
+  box-shadow: 0 16px 48px rgb(24 34 45 / 20%);
+}
+
+.dialog::backdrop {
+  background: rgb(24 34 45 / 48%);
+}
+
+.dialog h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.wideDialog {
+  width: min(760px, calc(100% - 24px));
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.note {
+  grid-column: 1 / -1;
+}
+
+.noteText {
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.dialogActions {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.creativeTable table {
+  min-width: 520px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+}

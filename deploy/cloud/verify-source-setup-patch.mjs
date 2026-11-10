@@ -54,6 +54,12 @@ if (profile === 'reporting') {
     'google/google.dto.js', 'google/google.module.js',
     // The existing build excludes *.spec.ts, but emits these *.test.ts files.
     'google/google-performance.test.js', 'google/google.service.test.js', 'google/google-campaign-matcher.test.js']) expected.add(name);
+  // Influencer writes, saved projections, and the shared creative financial inputs.
+  for (const name of ['auth/role-permissions.js', 'domain/meta-conditional-metrics.js',
+    'metrics/meta-ad-metric-aggregates.js', 'influencers/influencer-matching.js',
+    'influencers/influencer-projector.js', 'influencers/influencer-worker.service.js',
+    'influencers/influencer-records.service.js', 'influencers/influencer.controller.js',
+    'influencers/influencer.dto.js', 'influencers/influencer.module.js']) expected.add(name);
   // Product performance is additive and opt-in. Keep the compiled closure exact:
   // a new adapter/controller/helper still requires review, including test modules
   // emitted by the existing tsconfig (as with Google above). Existing platform

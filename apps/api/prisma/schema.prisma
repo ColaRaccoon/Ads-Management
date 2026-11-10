@@ -8,6 +8,58 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
+model InfluencerCollaboration {
+  id                String    @id @default(uuid()) @db.Uuid
+  influencerName    String    @map("influencer_name")
+  influencerKey     String    @map("influencer_key")
+  feeKrw            Decimal   @map("fee_krw") @db.Decimal(24, 6)
+  startDate         DateTime  @map("start_date") @db.Date
+  endDate           DateTime? @map("end_date") @db.Date
+  note              String?
+  version           String    @default(uuid()) @db.Uuid
+  adSpendKrw        Decimal?  @default(0) @map("ad_spend_krw") @db.Decimal(24, 6)
+  adMarginKrw       Decimal?  @default(0) @map("ad_margin_krw") @db.Decimal(24, 6)
+  netPerformanceKrw Decimal?  @map("net_performance_krw") @db.Decimal(24, 6)
+  dataThrough       DateTime? @map("data_through") @db.Date
+  aggregatedAt      DateTime? @map("aggregated_at")
+  creativeCount     Int       @default(0) @map("creative_count")
+  creativeTotals    Json      @default("[]") @map("creative_totals")
+  needsBackfill     Boolean   @default(true) @map("needs_backfill")
+  lastJobAt         DateTime? @map("last_job_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@index([influencerKey, startDate], map: "influencer_collaborations_name_date_idx")
+  @@index([createdAt, id], map: "influencer_collaborations_list_idx")
+  @@index([needsBackfill, lastJobAt, id], map: "influencer_collaborations_backfill_idx")
+  @@map("influencer_collaborations")
+}
+
+model InfluencerProjectionDay {
+  metricDate         DateTime  @id @map("metric_date") @db.Date
+  nextCheckAt        DateTime  @map("next_check_at")
+  lastSourceChangeAt DateTime? @map("last_source_change_at") @db.Timestamptz(3)
+
+  @@index([nextCheckAt, metricDate(sort: Desc)], map: "influencer_projection_days_due_idx")
+  @@map("influencer_projection_days")
+}
+
+model InfluencerDailyPerformance {
+  metricDate         DateTime @map("metric_date") @db.Date
+  influencerKey      String   @map("influencer_key")
+  creativeKey        String   @map("creative_key")
+  creativeName       String   @map("creative_name")
+  adSpendKrw         Decimal? @map("ad_spend_krw") @db.Decimal(24, 6)
+  adMarginKrw        Decimal? @map("ad_margin_krw") @db.Decimal(24, 6)
+  hasApi             Boolean  @map("has_api")
+  attributionContext String   @map("attribution_context")
+  mixedAttribution   Boolean  @map("mixed_attribution")
+
+  @@id([metricDate, influencerKey, creativeKey])
+  @@index([influencerKey, metricDate], map: "influencer_daily_performances_name_date_idx")
+  @@map("influencer_daily_performances")
+}
+
 // Stage 02 additive unified-performance storage; public Naver sources remain external.
 model UnifiedProduct {
   id             String   @id @default(uuid()) @db.Uuid
