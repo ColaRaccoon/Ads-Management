@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Header, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Query } from "@nestjs/common";
 import { RequirePermissions } from "../auth/route-decorators";
 import { InfluencerRecordsService } from "./influencer-records.service";
 import {
+  DeleteInfluencerCollaborationQuery,
   InfluencerCollaborationId,
   InfluencerCollaborationInput,
   InfluencerCollaborationQuery,
@@ -51,5 +52,12 @@ export class InfluencerController {
   @RequirePermissions("influencers.manage")
   update(@Param() params: InfluencerCollaborationId, @Body() input: UpdateInfluencerCollaborationInput) {
     return this.records.update(params.id, input);
+  }
+
+  @Delete(":id")
+  @HttpCode(204)
+  @RequirePermissions("influencers.manage")
+  remove(@Param() params: InfluencerCollaborationId, @Query() query: DeleteInfluencerCollaborationQuery) {
+    return this.records.remove(params.id, query.version);
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, List, Pencil, Plus, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, List, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useId, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { DataTable, type Column } from "@/components/data-table";
@@ -10,7 +10,7 @@ import {
   collaborationKey, influencerCreativesOptions, influencerDailyOptions, influencerListOptions, influencerResource as resource,
   type Collaboration, type CollaborationInput, type InfluencerDailyRow
 } from "@/features/influencers/influencer-queries";
-import { apiErrorMessage, apiGet, apiPatch, apiPost } from "@/lib/api";
+import { apiDelete, apiErrorMessage, apiGet, apiPatch, apiPost } from "@/lib/api";
 import { storefrontTime } from "@/lib/storefront-display";
 import styles from "./influencers.module.css";
 
@@ -18,7 +18,7 @@ const maxFeeKrw = 999_999_999_999;
 const moneyFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 6 });
 
 type ActiveDialog = { kind: "editor"; collaboration?: Collaboration } |
-  { kind: "creatives" | "numbering"; collaboration: Collaboration };
+  { kind: "creatives" | "numbering" | "remove"; collaboration: Collaboration };
 
 export default function InfluencersPage() {
   const canRead = useCan("data.read");
@@ -64,6 +64,10 @@ export default function InfluencersPage() {
         {canNumber ? <button className="button" type="button" onClick={() => openDialog({ kind: "numbering", collaboration: row })}
           aria-label={`${row.nickname} 소재 넘버링`}>
           넘버링{row.numbers.length ? ` (${row.numbers.length})` : ""}
+        </button> : null}
+        {canManage ? <button className="button danger" type="button" onClick={() => openDialog({ kind: "remove", collaboration: row })}
+          aria-label={`${row.nickname} 협업 삭제`}>
+          <Trash2 size={14} aria-hidden="true" /> 삭제
         </button> : null}
       </div>
     ) }
@@ -125,6 +129,13 @@ export default function InfluencersPage() {
         setSavedMessage("소재 번호를 저장했습니다. 같은 제품과 번호의 광고가 수집되면 자동으로 집계됩니다.");
         void queryClient.invalidateQueries({ queryKey: collaborationKey });
       }} /> : null}
+    {canRead && canManage && dialog?.kind === "remove" ? <DeleteCollaborationDialog collaboration={dialog.collaboration}
+      onClose={() => setDialog(null)} onDeleted={() => {
+        if (page > 1 && list.data?.items.length === 1 && !list.data.hasMore) setPage(page - 1);
+        setDialog(null);
+        setSavedMessage("협업을 삭제했습니다.");
+        void queryClient.invalidateQueries({ queryKey: collaborationKey });
+      }} /> : null}
   </section>;
 }
 
@@ -145,7 +156,7 @@ function InfluencerDailyPanel() {
   const [managerName, setManagerName] = useState("");
   const [page, setPage] = useState(1);
   const daily = useQuery({ ...influencerDailyOptions(date, managerName, page), enabled: Boolean(date) });
-  const managers = daily.data?.managers ?? (managerName ? [managerName] : []);
+  const managers = daily.data?.managers ?? [];
   const columns: Column<InfluencerDailyRow>[] = [
     { key: "manager", header: "담당자 이름", render: row => row.managerName ?? "미등록" },
     { key: "nickname", header: "인플루언서 닉네임", render: row => <strong>{row.nickname}</strong> },
@@ -165,6 +176,7 @@ function InfluencerDailyPanel() {
         <label className="field-label" htmlFor={managerField}>담당자</label>
         <select id={managerField} className="select" value={managerName} onChange={event => { setManagerName(event.target.value); setPage(1); }}>
           <option value="">전체 담당자</option>
+          {managerName && !managers.includes(managerName) ? <option>{managerName}</option> : null}
           {managers.map(name => <option key={name} value={name}>{name}</option>)}
         </select>
       </div>
@@ -365,6 +377,28 @@ function NumberingDialog({ collaboration, onClose, onSaved }: {
       <p>협업 수정에서 제품을 먼저 선택해 주세요.</p>
       <div className={`toolbar ${styles.dialogActions}`}><button className="button" type="button" onClick={onClose}>닫기</button></div>
     </>}
+  </InfluencerDialog>;
+}
+
+function DeleteCollaborationDialog({ collaboration, onClose, onDeleted }: {
+  collaboration: Collaboration;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const path = `${resource}/${encodeURIComponent(collaboration.id)}?${new URLSearchParams({ version: collaboration.version })}`;
+  const remove = useMutation({ mutationFn: () => apiDelete(path), onSuccess: onDeleted });
+  return <InfluencerDialog title="협업 삭제" onClose={onClose} busy={remove.isPending}>
+    <p><strong>{collaboration.nickname}</strong> 협업을 삭제할까요?</p>
+    <p className={styles.help}>데일리·누적 성과 목록에서 사라지고 이 협업에 저장된 소재 번호가 해제됩니다.</p>
+    {remove.isError ? <p className={styles.error} role="alert">
+      {apiErrorMessage(remove.error, "협업을 삭제하지 못했습니다.")}
+    </p> : null}
+    <div className={`toolbar ${styles.dialogActions}`}>
+      <button className="button" type="button" onClick={onClose} disabled={remove.isPending}>취소</button>
+      <button className="button danger" type="button" onClick={() => remove.mutate()} disabled={remove.isPending}>
+        {remove.isPending ? "삭제 중…" : "협업 삭제 확인"}
+      </button>
+    </div>
   </InfluencerDialog>;
 }
 

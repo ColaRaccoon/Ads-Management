@@ -26,7 +26,7 @@ test("staff can maintain collaborations and read-only users can view their saved
   for (const action of ["list", "creatives", "daily"] as const) {
     assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, InfluencerController.prototype[action]), ["data.read"]);
   }
-  for (const action of ["create", "update"] as const) {
+  for (const action of ["create", "update", "remove"] as const) {
     assert.deepEqual(Reflect.getMetadata(REQUIRED_PERMISSIONS, InfluencerController.prototype[action]), ["influencers.manage"]);
   }
   for (const role of [AppRole.USER, AppRole.ADMIN, AppRole.SUPER_ADMIN]) {
@@ -73,7 +73,7 @@ test("PostgreSQL keeps same-nickname collaborations separate and preserves saved
   url.username = "meta_ads_prod_runtime";
   const runtime = new PrismaClient({ datasourceUrl: url.toString() });
   const service = new InfluencerRecordsService(runtime as PrismaService);
-  const definition = { ...input, nickname: `혜민 ${randomUUID()}`, productId: randomUUID() };
+  const definition = { ...input, nickname: `혜민 ${randomUUID()}`, managerName: randomUUID(), productId: randomUUID() };
   try {
     await owner.product.create({ data: { id: definition.productId, name: "Fixture", displayName: "Fixture", code: randomUUID() } });
     const first = await service.create(definition);
@@ -112,6 +112,20 @@ test("PostgreSQL keeps same-nickname collaborations separate and preserves saved
     assert.deepEqual(await service.creatives(id), { items: [] });
     assert.equal((await owner.influencerCollaboration.findUniqueOrThrow({ where: { id } })).needsBackfill, true);
     assert.ok((await service.list(1)).items.some(row => row.id === id));
+
+    const daily = { date: "2026-11-05", managerName: definition.managerName };
+    await owner.influencerCollaboration.update({ where: { id }, data: { needsBackfill: false } });
+    await owner.influencerCollaborationDay.create({ data: {
+      collaborationId: id, metricDate: new Date(daily.date), adSpendKrw: 10_000, adMarginKrw: 20_000, creativeCount: 1
+    } });
+    assert.deepEqual((await service.daily(daily)).items.map(row => row.id), [id]);
+    await assert.rejects(() => service.remove(id, saved.version), hasStatus(409));
+    await service.remove(id, rescheduled.version);
+    assert.deepEqual((await service.daily(daily)).items, []);
+    assert.ok(!(await service.list(1)).items.some(row => row.id === id));
+    await assert.rejects(() => service.creatives(id), hasStatus(404));
+    assert.ok((await owner.influencerCollaboration.findUniqueOrThrow({ where: { id } })).deletedAt);
+    assert.deepEqual((await service.numbering(next.id, { version: next.version, numbers: ["0015"] })).numbers, ["0015"]);
   } finally {
     try {
       await owner.influencerCollaboration.deleteMany({ where: { productId: definition.productId } });

@@ -97,6 +97,7 @@ const influencerHttpRoutes = [
   { method:"GET", path:"/storefront/influencers/11111111-1111-4111-8111-111111111111/creatives", allowed:["GUEST","USER","ADMIN","SUPER_ADMIN"] },
   { method:"POST", path:"/storefront/influencers", allowed:["USER","ADMIN","SUPER_ADMIN"], body:{} },
   { method:"PATCH", path:"/storefront/influencers/11111111-1111-4111-8111-111111111111", allowed:["USER","ADMIN","SUPER_ADMIN"], body:{} },
+  { method:"DELETE", path:"/storefront/influencers/11111111-1111-4111-8111-111111111111?version=22222222-2222-4222-8222-222222222222", allowed:["USER","ADMIN","SUPER_ADMIN"] },
   { method:"GET", path:"/storefront/influencers/daily", allowed:["GUEST","USER","ADMIN","SUPER_ADMIN"] },
   { method:"PATCH", path:"/storefront/influencers/11111111-1111-4111-8111-111111111111/numbering", allowed:["ADMIN","SUPER_ADMIN"], body:{} }
 ] as const;
@@ -118,6 +119,7 @@ const additiveRoutes = new Map([
   ["GET /api/storefront/influencers/:id/creatives", "data.read"],
   ["POST /api/storefront/influencers", "influencers.manage"],
   ["PATCH /api/storefront/influencers/:id", "influencers.manage"],
+  ["DELETE /api/storefront/influencers/:id", "influencers.manage"],
   ["GET /api/storefront/influencers/daily", "data.read"],
   ["PATCH /api/storefront/influencers/:id/numbering", "influencers.numbering"]
 ]);
@@ -204,7 +206,7 @@ async function run(){
     const proof = matrixProof(inventory.map(inventoryLine), fullMatrix, matrix);
     const compatibility = matrixProof(original.map(inventoryLine), originalMatrix, originalHttp);
     process.stdout.write(`${JSON.stringify({
-      event:"auth-role-matrix-smoke", releaseId, contractVersion:4, ...proof, roles:7, routes:inventory.length,
+      event:"auth-role-matrix-smoke", releaseId, contractVersion:5, ...proof, roles:7, routes:inventory.length,
       httpRoutes:routes.length+influencerHttpRoutes.length, permissionClasses:inventoryPermissions.size,
       blockedHandlerInvocations, deniedServiceInvocations:0,
       compatibility:{ ...compatibility, routes:original.length, httpRoutes:routes.length,

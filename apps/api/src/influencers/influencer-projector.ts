@@ -88,6 +88,7 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
 
   const collaborations = await tx.influencerCollaboration.findMany({
     where: {
+      deletedAt: null,
       startDate: { lte: metricDate },
       AND: [
         { OR: [{ endDate: null }, { endDate: { gte: metricDate } }] },
@@ -105,7 +106,7 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
 
 export async function backfillInfluencerCollaboration(tx: Prisma.TransactionClient, id: string, now: Date) {
   const collaboration = await tx.influencerCollaboration.findFirst({
-    where: { id, needsBackfill: true }, select: collaborationFields
+    where: { id, deletedAt: null, needsBackfill: true }, select: collaborationFields
   });
   if (collaboration) await saveInfluencerRollup(tx, collaboration, now);
 }

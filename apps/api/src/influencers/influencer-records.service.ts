@@ -36,6 +36,7 @@ export class InfluencerRecordsService {
 
   async list(page: number) {
     const rows = await this.prisma.influencerCollaboration.findMany({
+      where: { deletedAt: null },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE + 1,
@@ -45,7 +46,7 @@ export class InfluencerRecordsService {
   }
 
   async creatives(id: string) {
-    const row = await this.prisma.influencerCollaboration.findUnique({ where: { id }, select: { creativeTotals: true } });
+    const row = await this.prisma.influencerCollaboration.findUnique({ where: { id, deletedAt: null }, select: { creativeTotals: true } });
     if (!row) throw collaborationNotFound();
     return { items: row.creativeTotals };
   }
@@ -56,7 +57,7 @@ export class InfluencerRecordsService {
     const page = query.page ?? 1;
     const [rows, managers] = await Promise.all([
       this.prisma.influencerCollaborationDay.findMany({
-        where: { metricDate, collaboration: { needsBackfill: false, ...(query.managerName ? { managerName: query.managerName } : {}) } },
+        where: { metricDate, collaboration: { deletedAt: null, needsBackfill: false, ...(query.managerName ? { managerName: query.managerName } : {}) } },
         orderBy: { collaborationId: "asc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE + 1,
         select: {
           collaborationId: true, adSpendKrw: true, adMarginKrw: true, creativeCount: true,
@@ -64,7 +65,7 @@ export class InfluencerRecordsService {
         }
       }),
       this.prisma.influencerCollaboration.findMany({
-        where: { managerName: { not: null } }, select: { managerName: true },
+        where: { deletedAt: null, managerName: { not: null } }, select: { managerName: true },
         distinct: ["managerName"], orderBy: { managerName: "asc" }
       })
     ]);
@@ -158,11 +159,22 @@ export class InfluencerRecordsService {
     });
   }
 
+  remove(id: string, version: string) {
+    return this.mutate(async tx => {
+      const current = await this.claim(tx, id, version);
+      await tx.influencerCollaboration.update({ where: { id }, data: { deletedAt: new Date(), needsBackfill: false } });
+      if (current.numberReservations.length) {
+        await tx.influencerNumberReservation.deleteMany({ where: { collaborationId: id } });
+        await queueLegacyForNumbers(tx, current.numberReservations.map(row => row.numberKey));
+      }
+    });
+  }
+
   private async claim(tx: Prisma.TransactionClient, id: string, version: string) {
     // Lock the record and check its version before reading totals or assignments.
-    const updated = await tx.influencerCollaboration.updateMany({ where: { id, version }, data: { version: randomUUID() } });
+    const updated = await tx.influencerCollaboration.updateMany({ where: { id, version, deletedAt: null }, data: { version: randomUUID() } });
     const current = await tx.influencerCollaboration.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       select: { influencerKey: true, productId: true, numberingRequired: true, startDate: true, endDate: true,
         adMarginKrw: true, feeKrw: true, numberReservations: { select: { numberKey: true, materialNo: true } } }
     });
@@ -189,7 +201,7 @@ async function queueLegacyForNumbers(tx: Prisma.TransactionClient, keys: string[
   await tx.$executeRaw`
     UPDATE influencer_collaborations c
     SET needs_backfill = true, last_job_at = NULL
-    WHERE NOT c.numbering_required AND EXISTS (
+    WHERE c.deleted_at IS NULL AND NOT c.numbering_required AND EXISTS (
       SELECT 1 FROM influencer_daily_performances p
       WHERE p.scope = 'NICKNAME' AND p.number_key IN (${Prisma.join(keys)}) AND p.influencer_key = c.influencer_key
         AND p.metric_date >= c.start_date AND (c.end_date IS NULL OR p.metric_date <= c.end_date)
@@ -222,7 +234,7 @@ function invalidDate() {
 async function assertNoLegacyOverlap(tx: Prisma.TransactionClient, key: string, startDate: Date, endDate: Date | null, id: string) {
   const overlap = await tx.influencerCollaboration.findFirst({
     where: {
-      influencerKey: key, numberingRequired: false, id: { not: id },
+      influencerKey: key, numberingRequired: false, deletedAt: null, id: { not: id },
       ...(endDate ? { startDate: { lte: endDate } } : {}),
       OR: [{ endDate: null }, { endDate: { gte: startDate } }]
     },

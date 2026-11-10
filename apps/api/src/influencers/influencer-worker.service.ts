@@ -128,7 +128,7 @@ export class InfluencerWorkerService implements OnModuleInit, OnModuleDestroy {
     try {
       return await inWorkerTransaction(db, async tx => {
         const record = await tx.influencerCollaboration.findFirst({
-          where: { needsBackfill: true, OR: [{ lastJobAt: null }, { lastJobAt: { lte: new Date(now.getTime() - 5 * MINUTE) } }] },
+          where: { deletedAt: null, needsBackfill: true, OR: [{ lastJobAt: null }, { lastJobAt: { lte: new Date(now.getTime() - 5 * MINUTE) } }] },
           orderBy: [{ lastJobAt: { sort: "asc", nulls: "first" } }, { id: "asc" }],
           select: { id: true, version: true, lastJobAt: true }
         });

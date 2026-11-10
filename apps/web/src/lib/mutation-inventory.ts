@@ -31,6 +31,7 @@ export const BUSINESS_MUTATION_INVENTORY: readonly BusinessMutationInventoryEntr
 
   entry("influencers.create", page("storefront/influencers"), "influencer collaboration registration", "POST", "/storefront/influencers", "influencers.manage", "협업 및 소재별 누적 성과 조회", "apiPost(resource, input)", "useCan(\"influencers.manage\")"),
   entry("influencers.update", page("storefront/influencers"), "influencer collaboration editor", "PATCH", "/storefront/influencers/:id", "influencers.manage", "협업 및 소재별 누적 성과 조회", "apiPatch(`${resource}/${encodeURIComponent(collaboration.id)}`", "useCan(\"influencers.manage\")"),
+  entry("influencers.remove", page("storefront/influencers"), "influencer collaboration deletion", "DELETE", "/storefront/influencers/:id", "influencers.manage", "협업 삭제 확인", "apiDelete(path)", "useCan(\"influencers.manage\")"),
   entry("influencers.numbering", page("storefront/influencers"), "influencer material number reservation", "PATCH", "/storefront/influencers/:id/numbering", "influencers.numbering", "번호 저장", "apiPatch(`${path}/numbering`", "useCan(\"influencers.numbering\")"),
 
   entry("mappings.product-rule-create", page("mappings"), "product rule form", "POST", "/mappings/product-rules", "mappings.manage", "저장된 제품 규칙 목록", "apiPost(\"/mappings/product-rules\"", "useCan(\"mappings.manage\")"),

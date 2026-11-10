@@ -17,6 +17,11 @@ export class InfluencerCollaborationId {
   id!: string;
 }
 
+export class DeleteInfluencerCollaborationQuery {
+  @IsUUID("4")
+  version!: string;
+}
+
 export class InfluencerDailyQuery extends InfluencerCollaborationQuery {
   @IsString()
   @Matches(DATE)
