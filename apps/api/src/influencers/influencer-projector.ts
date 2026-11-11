@@ -5,7 +5,7 @@ import { formatDateOnly } from "../domain/date-number";
 import { metaAttributionContextKey } from "../domain/meta-conditional-metrics";
 import { creativeRowFinancials } from "../metrics/meta-ad-metric-aggregates";
 import { loadCreativeFinancialContext } from "../metrics/meta-ad-metrics-read.service";
-import { classifyInfluencerCreative, materialNumberKey, numberedCreative } from "./influencer-matching";
+import { materialNumberKey, numberedCreative } from "./influencer-matching";
 
 const metricFields = {
   metricDate: true, connectionId: true, source: true, adNameSnapshot: true, campaignNameSnapshot: true,
@@ -35,9 +35,9 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
   // Select canonical rows before filtering names so unbound CSV conflicts remain visible.
   const selected = await selectCurrentSourceRows(tx, SourceDataKind.META_AD, candidates, row => row.metricDate);
   const matched = selected.flatMap(row => {
-    const legacy = classifyInfluencerCreative(row.adNameSnapshot, row.campaignNameSnapshot);
-    const material = row.productId ? numberedCreative(row.adNameSnapshot) : null;
-    const numberKey = material ? materialNumberKey(row.productId!, material.number) : null;
+    const material = numberedCreative(row.adNameSnapshot);
+    const legacy = material ? { influencerKey: material.managerKey, creativeName: material.creativeName } : null;
+    const numberKey = material && row.productId ? materialNumberKey(row.productId, material.managerKey, material.number) : null;
     return [
       ...(legacy ? [{ row, scope: "NICKNAME", numberKey, ...legacy }] : []),
       ...(material && numberKey ? [{ row, scope: "MATERIAL", numberKey: null, influencerKey: numberKey, creativeName: material.creativeName }] : [])
@@ -61,7 +61,7 @@ export async function projectInfluencerDay(tx: Prisma.TransactionClient, metricD
       if (attributionContext < existing.attributionContext) existing.attributionContext = attributionContext;
     } else {
       grouped.set(key, {
-        metricDate, scope, influencerKey, creativeName, numberKey, sourceCreativeId: row.creativeId, delivered,
+        metricDate, scope, influencerKey, creativeName, numberKey, matchingVersion: 2, sourceCreativeId: row.creativeId, delivered,
         creativeKey: createHash("sha256").update(identity).digest("hex"),
         adSpendKrw: spendKrw === null ? null : new Prisma.Decimal(spendKrw),
         adMarginKrw: marginKrw === null ? null : new Prisma.Decimal(marginKrw),
@@ -128,7 +128,7 @@ function matchesCollaboration(collaboration: Collaboration) {
           AND owner.start_date <= influencer_daily_performances.metric_date
           AND (owner.end_date IS NULL OR owner.end_date >= influencer_daily_performances.metric_date)
       )`;
-  return Prisma.sql`${scope}
+  return Prisma.sql`${scope} AND matching_version = 2
     AND metric_date >= ${formatDateOnly(collaboration.startDate)}::date
     ${collaboration.endDate ? Prisma.sql`AND metric_date <= ${formatDateOnly(collaboration.endDate)}::date` : Prisma.empty}`;
 }
@@ -192,7 +192,7 @@ function changedScopes(previous: DailyPerformance[], next: DailyPerformance[]) {
   for (const row of next) {
     const key = identity(row);
     const old = index.get(key);
-    if (!old || !sameAmount(row.adSpendKrw, old.adSpendKrw) || !sameAmount(row.adMarginKrw, old.adMarginKrw) ||
+    if (!old || row.matchingVersion !== old.matchingVersion || !sameAmount(row.adSpendKrw, old.adSpendKrw) || !sameAmount(row.adMarginKrw, old.adMarginKrw) ||
         row.hasApi !== old.hasApi || row.delivered !== old.delivered ||
         row.mixedAttribution !== old.mixedAttribution || row.attributionContext !== old.attributionContext) {
       mark(row);

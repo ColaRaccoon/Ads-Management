@@ -50,6 +50,7 @@ model InfluencerProjectionDay {
   lastSourceChangeAt DateTime? @map("last_source_change_at") @db.Timestamptz(3)
   numberingAttempted Boolean   @default(false) @map("numbering_attempted")
   numberMatchingAttempted Boolean @default(false) @map("number_matching_attempted")
+  managerMatchingAttempted Boolean @default(false) @map("manager_matching_attempted")
 
   @@index([nextCheckAt, metricDate(sort: Desc)], map: "influencer_projection_days_due_idx")
   @@map("influencer_projection_days")
@@ -59,6 +60,7 @@ model InfluencerDailyPerformance {
   scope              String   @default("NICKNAME")
   sourceCreativeId   String?  @map("source_creative_id") @db.Uuid
   numberKey          String?  @map("number_key")
+  matchingVersion    Int      @default(1) @map("matching_version")
   metricDate         DateTime @map("metric_date") @db.Date
   influencerKey      String   @map("influencer_key")
   creativeKey        String   @map("creative_key")

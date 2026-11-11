@@ -131,7 +131,7 @@ export default function InfluencersPage() {
     {canRead && canNumber && dialog?.kind === "numbering" ? <NumberingDialog collaboration={dialog.collaboration}
       onClose={() => setDialog(null)} onSaved={() => {
         setDialog(null);
-        setSavedMessage("소재 번호를 저장했습니다. 같은 제품과 번호의 광고가 수집되면 자동으로 집계됩니다.");
+        setSavedMessage("소재 번호를 저장했습니다. 인플(담당자 이름)번호 형식의 광고가 수집되면 제품·담당자·번호가 일치하는 협업에 자동으로 집계됩니다.");
         void queryClient.invalidateQueries({ queryKey: collaborationKey });
       }} /> : null}
     {canRead && canManage && dialog?.kind === "remove" ? <DeleteCollaborationDialog collaboration={dialog.collaboration}
@@ -391,7 +391,8 @@ function NumberingDialog({ collaboration, onClose, onSaved }: {
   }
   return <InfluencerDialog title={`${collaboration.nickname} · 소재 넘버링`} onClose={onClose} busy={save.isPending}>
     {collaboration.productId ? <form onSubmit={submit}>
-      <p className={styles.help}>제품 {collaboration.productName}에 사용할 번호를 미리 저장합니다. 광고가 수집되면 제품과 번호가 일치하는 소재를 자동으로 집계합니다.</p>
+      <p className={styles.help}>제품 {collaboration.productName}, 담당자 {collaboration.managerName}의 번호를 미리 저장합니다.
+        광고명에 <code>인플({collaboration.managerName})번호</code>가 있어야 자동으로 매칭됩니다.</p>
       <label className="field">
         <span className="field-label">소재 번호</span>
         <textarea className="input" name="numbers" rows={3} maxLength={600}

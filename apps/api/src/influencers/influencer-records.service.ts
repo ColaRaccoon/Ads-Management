@@ -88,8 +88,9 @@ export class InfluencerRecordsService {
     return this.mutate(async tx => {
       const current = await this.claim(tx, id, input.version);
       if (!current.productId && input.numbers.length) throw productRequired();
+      if (!current.managerName && input.numbers.length) throw new BadRequestException("협업 수정에서 담당자 이름을 먼저 입력해 주세요.");
       const reservations = input.numbers.map(materialNo => ({
-        collaborationId: id, materialNo, numberKey: materialNumberKey(current.productId!, materialNo)
+        collaborationId: id, materialNo, numberKey: materialNumberKey(current.productId!, current.managerName!, materialNo)
       }));
       const keys = reservations.map(row => row.numberKey);
       if (new Set(keys).size !== keys.length) {
@@ -99,7 +100,7 @@ export class InfluencerRecordsService {
         where: { numberKey: { in: keys }, collaborationId: { not: id } },
         select: { materialNo: true }
       });
-      if (conflict) throw new ConflictException(`같은 제품의 소재 번호 ${conflict.materialNo}은(는) 이미 다른 협업에 등록되어 있습니다.`);
+      if (conflict) throw new ConflictException(`같은 담당자와 제품의 소재 번호 ${conflict.materialNo}은(는) 이미 다른 협업에 등록되어 있습니다.`);
       const previous = new Map(current.numberReservations.map(row => [row.numberKey, row.materialNo]));
       const changedKeys = [
         ...keys.filter(key => !previous.has(key)),
@@ -141,8 +142,22 @@ export class InfluencerRecordsService {
         await validateProduct(tx, definition.productId);
       }
       if (current.endDate && definition.startDate > current.endDate) throw invalidDate();
+      const managerChanged = influencerKey(current.managerName ?? "") !== influencerKey(definition.managerName);
+      if (managerChanged && current.numberReservations.length) {
+        const reservations = current.numberReservations.map(row => ({
+          collaborationId: id, materialNo: row.materialNo,
+          numberKey: materialNumberKey(definition.productId, definition.managerName, row.materialNo)
+        }));
+        const conflict = await tx.influencerNumberReservation.findFirst({
+          where: { numberKey: { in: reservations.map(row => row.numberKey) }, collaborationId: { not: id } }, select: { materialNo: true }
+        });
+        if (conflict) throw new ConflictException(`변경할 담당자와 제품의 소재 번호 ${conflict.materialNo}은(는) 이미 다른 협업에 등록되어 있습니다.`);
+        await tx.influencerNumberReservation.deleteMany({ where: { collaborationId: id } });
+        await tx.influencerNumberReservation.createMany({ data: reservations });
+        await queueLegacyForNumbers(tx, reservations.map(row => row.numberKey));
+      }
       const legacyNameChanged = !current.numberingRequired && current.influencerKey !== definition.influencerKey;
-      const matchingChanged = legacyNameChanged || current.startDate.getTime() !== definition.startDate.getTime();
+      const matchingChanged = legacyNameChanged || (current.numberingRequired && managerChanged) || current.startDate.getTime() !== definition.startDate.getTime();
       if (!current.numberingRequired && matchingChanged) {
         await assertNoLegacyOverlap(tx, definition.influencerKey, definition.startDate, current.endDate, id);
       }
@@ -175,7 +190,7 @@ export class InfluencerRecordsService {
     const updated = await tx.influencerCollaboration.updateMany({ where: { id, version, deletedAt: null }, data: { version: randomUUID() } });
     const current = await tx.influencerCollaboration.findUnique({
       where: { id, deletedAt: null },
-      select: { influencerKey: true, productId: true, numberingRequired: true, startDate: true, endDate: true,
+      select: { influencerKey: true, managerName: true, productId: true, numberingRequired: true, startDate: true, endDate: true,
         adMarginKrw: true, feeKrw: true, numberReservations: { select: { numberKey: true, materialNo: true } } }
     });
     if (!current) throw collaborationNotFound();

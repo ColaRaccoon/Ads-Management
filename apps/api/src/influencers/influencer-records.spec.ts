@@ -89,7 +89,18 @@ test("PostgreSQL keeps same-nickname collaborations separate and preserves saved
     const reserved = await service.numbering(first.id, { version: first.version, numbers: ["0015"] });
     assert.deepEqual(reserved.numbers, ["0015"]);
     await assert.rejects(() => service.numbering(next.id, { version: next.version, numbers: ["15"] }), hasStatus(409));
-    const version = reserved.version;
+    const otherHandler = await service.create({ ...definition, managerName: "다른 담당자" });
+    const otherReserved = await service.numbering(otherHandler.id, { version: otherHandler.version, numbers: ["15"] });
+    assert.deepEqual(otherReserved.numbers, ["15"]);
+    await assert.rejects(() => service.update(first.id, {
+      ...definition, managerName: "다른 담당자", version: reserved.version
+    }), hasStatus(409));
+    const renamed = await service.update(first.id, { ...definition, managerName: "새 담당자", version: reserved.version });
+    assert.deepEqual(renamed.numbers, ["0015"]);
+    const migratedKey = await owner.influencerNumberReservation.findFirstOrThrow({ where: { collaborationId: first.id } });
+    assert.equal(migratedKey.numberKey, definition.productId + ":새 담당자:15");
+    const restored = await service.update(first.id, { ...definition, version: renamed.version });
+    const version = restored.version;
     const id = first.id;
     const creativeTotals = [{ creativeName: "두줄보호대_인플(혜민)0015", adSpendKrw: 150_000, adMarginKrw: 130_000, dataThrough: "2026-11-05" }];
     await owner.influencerCollaboration.update({ where: { id }, data: {

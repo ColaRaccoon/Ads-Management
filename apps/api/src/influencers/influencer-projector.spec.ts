@@ -2,20 +2,27 @@ import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { Prisma, PrismaClient, SourceKind } from "@prisma/client";
-import { classifyInfluencerCreative } from "./influencer-matching";
+import { materialNumberKey, numberedCreative } from "./influencer-matching";
 import { backfillInfluencerCollaboration, projectInfluencerDay } from "./influencer-projector";
 import { InfluencerRecordsService } from "./influencer-records.service";
 import type { PrismaService } from "../common/prisma.service";
 
-test("classifies the creative marker before falling back to the campaign", () => {
-  assert.deepEqual(classifyInfluencerCreative("261110_두줄보호대_인플（ 혜민 ）0015_IG", "인플(다른 사람)"), {
-    influencerKey: "혜민", creativeName: "두줄보호대_인플( 혜민 )0015"
+test("requires the influencer marker, handler, and exact number in the ad name", () => {
+  assert.deepEqual(numberedCreative("261110_버닝웨이브바_인플（ 혜민 ）0013_IG"), {
+    number: "0013", managerKey: "혜민", creativeName: "버닝웨이브바_인플( 혜민 )0013"
   });
-  assert.deepEqual(classifyInfluencerCreative("두줄보호대_0015", "두줄보호대_인플( ＨＹＥＭＩＮ )"), {
-    influencerKey: "hyemin", creativeName: "두줄보호대_0015"
+  assert.deepEqual(numberedCreative("인플(혜민)0013"), {
+    number: "0013", managerKey: "혜민", creativeName: "인플(혜민)0013"
   });
-  assert.equal(classifyInfluencerCreative("두줄보호대_인플(혜민)_인플(지민)", "인플(혜민)"), null);
-  assert.equal(classifyInfluencerCreative("두줄보호대_0015", "일반 캠페인"), null);
+  assert.deepEqual(numberedCreative("제품_인플( ＨＹＥＭＩＮ )0013"), {
+    managerKey: "hyemin", number: "0013", creativeName: "제품_인플( HYEMIN )0013"
+  });
+  for (const name of ["버닝웨이브바_0013", "제품_비인플(혜민)0013", "제품_인플()0013",
+    "제품_인플(혜민)", "제품_인플(혜민)_0013", "제품_인플(혜민)_인플(지민)0013"]) {
+    assert.equal(numberedCreative(name), null, name);
+  }
+  assert.equal(materialNumberKey("product", " 혜민 ", "0013"), materialNumberKey("product", "혜민", "13"));
+  assert.notEqual(materialNumberKey("product", "혜민", "0013"), materialNumberKey("product", "한별", "0013"));
 });
 
 const databaseUrl = process.env.INFLUENCER_FIXTURE_DATABASE_URL;
@@ -57,6 +64,11 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
       assert.deepEqual(reserved.numbers, ["0015"]);
       assert.equal(reserved.netPerformanceKrw, -5000);
       assert.deepEqual(await records.creatives(numbered.id), { items: [] });
+      const otherHandler = await records.create({
+        nickname: "another influencer", managerName: "다른담당자", productId: product.id,
+        startDate: "2038-11-03", feeKrw: 1000, note: null
+      });
+      await records.numbering(otherHandler.id, { version: otherHandler.version, numbers: ["0015"] });
       const campaign = await tx.metaCampaign.create({ data: { externalCampaignId: randomUUID(), campaignName: "fixture" } });
       const adset = await tx.metaAdset.create({ data: { campaignRefId: campaign.id, adsetName: "fixture", adsetNameKey: randomUUID() } });
       const creative = await tx.creative.create({ data: { creativeKey: adName, displayName: adName, materialNo: `인플(${name})0015` } });
@@ -161,10 +173,11 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
       const delivered = await tx.metaAdDailyMetric.create({ data: {
         ...metric, ...day3Fields, creativeId: null, spendUsd: 30, purchaseCount: 11
       } });
-      for (const [productId, adNameSnapshot] of [[otherProduct.id, adName], [product.id, "두줄보호대_00150"]]) {
+      for (const [productId, adNameSnapshot] of [[otherProduct.id, adName], [product.id, "두줄보호대_인플(" + name + ")00150"],
+        [product.id, "두줄보호대_0015"], [product.id, "두줄보호대_인플(다른담당자)0015"]]) {
         const adIdentityKey = randomUUID();
         await tx.metaAdDailyMetric.create({ data: {
-          ...metric, ...day3Fields, productId, adNameSnapshot, adIdentityKey, syntheticAdKey: adIdentityKey, spendUsd: 99
+          ...metric, ...day3Fields, productId, adNameSnapshot, campaignNameSnapshot: "인플(" + name + ")0015", adIdentityKey, syntheticAdKey: adIdentityKey, spendUsd: 99
         } });
       }
       // Collection after numbering publishes the first match without a second admin action.
@@ -174,6 +187,10 @@ test("publishes day replacements, removes stale totals and keeps incomplete amou
       assert.equal(daily.items[0].nickname, "different nickname");
       assert.equal(daily.items[0].adSpendKrw, 30_000);
       assert.equal(daily.items[0].adMarginKrw, 25_000);
+      const otherDaily = await records.daily({ date: "2038-11-03", managerName: "다른담당자" });
+      assert.equal(otherDaily.items.length, 1);
+      assert.equal(otherDaily.items[0].nickname, "another influencer");
+      assert.equal(otherDaily.items[0].adSpendKrw, 99_000);
       assert.deepEqual((await records.daily({ date: "2038-11-03", managerName: "different manager" })).items, []);
       await tx.metaAdDailyMetric.update({ where: { id: delivered.id }, data: { spendUsd: 0 } });
       await projectInfluencerDay(tx, day3, now);
