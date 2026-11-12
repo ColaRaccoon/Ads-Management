@@ -15,7 +15,7 @@ import { storefrontTime } from "@/lib/storefront-display";
 import styles from "./influencers.module.css";
 
 const maxFeeKrw = 999_999_999_999;
-const moneyFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 6 });
+const moneyFormat = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
 
 type ActiveDialog = { kind: "editor"; collaboration?: Collaboration } |
   { kind: "creatives" | "numbering" | "remove"; collaboration: Collaboration };
