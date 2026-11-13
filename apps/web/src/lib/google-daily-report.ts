@@ -119,7 +119,7 @@ export function buildGoogleDailyGroups(data: GoogleReportResponse, productName: 
   return [...groups.values()].filter(group => {
     const hasSpend = group.creatives.some(row => /^\d+$/.test(row.costMicros) && BigInt(row.costMicros) > 0n);
     return (!settings.spendOnly || hasSpend) && (!needle || group.productName.toLocaleLowerCase("ko-KR").includes(needle) ||
-      group.creatives.some(row => [row.adName, row.campaignName, ...row.assets.map(asset => asset.name)].some(name => name.toLocaleLowerCase("ko-KR").includes(needle))));
+      group.creatives.some(row => [row.adName, row.campaignName, row.adGroupName, row.adId, row.adGroupId, row.campaignId, ...row.assets.map(asset => asset.name)].some(name => name.toLocaleLowerCase("ko-KR").includes(needle))));
   });
 }
 

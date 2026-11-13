@@ -44,14 +44,14 @@ export function buildGoogleDailyXlsxInput(report: GoogleDailyExport): XlsxWorkbo
     for (const row of group.creatives) {
       const prior = previous.get(googleCreativeKey(row));
       input.rows.push({ height: 48, cells: columns.flatMap(column => {
-        if (column.key === "creative") return [{ value: `${row.adName}\n${row.campaignName} · ${row.adId}`, style: "Text" as const, wrapText: true }];
+        if (column.key === "creative") return [{ value: row.adName, style: "Text" as const, wrapText: true }];
         const style: XlsxCellStyle = column.key === "ctr" || column.key === "videoViewRate" || column.key.startsWith("videoP") ? "Percent1"
           : column.key === "purchaseRoas" ? "Ratio" : column.key === "purchaseCount" ? "Decimal"
           : ["impressions", "clicks", "videoViews"].includes(column.key) ? "Number" : "Krw";
         return [numeric(googleDailyCreativeValue(row, column.key), style), numeric(googleDailyCreativeValue(prior, column.key), style)];
       }) });
     }
-    if (!group.creatives.length) banner("해당 날짜에 연결된 Google 소재이 없습니다.", "GROUP_SAND");
+    if (!group.creatives.length) banner("해당 날짜에 연결된 Google 소재가 없습니다.", "GROUP_SAND");
     banner("카페24 [유튜브] 판매 기반 마진", "GROUP_BLUE");
     const sales = googleDailySalesMetrics(group.sales);
     input.rows.push({ height: 36, cells: ["제품", ...sales.map(metric => metric.label)].map(value => ({ value, style: "Header", wrapText: true })) });

@@ -98,6 +98,32 @@ test("previous day identity includes account, and incomplete or absent metrics n
   assert.equal(googleDailyCreativeValue({ ...current, adSpendKrw: null, adSpendKrwExact: null }, "adSpendKrw"), null);
 });
 
+test("ads in the same campaign keep separate metrics and previous-day matches in the workbook", () => {
+  const first = { ...campaign("ad-1"), campaignId: "shared-campaign", campaignName: "공통 캠페인", adName: "같은 소재명" };
+  const second = { ...first, adId: "ad-2", adGroupId: "group-2", adGroupName: "리타겟 그룹", clicks: 20, ctr: 0.02, cpcKrw: 200.00625, cpaKrw: 1600.05 };
+  const data = report([product("p1")], [first, second]);
+  const previous = report([product("p1")], [{ ...second, clicks: 8 }, { ...first, clicks: 3 }]);
+  for (const query of ["리타겟 그룹", "group-2", "shared-campaign", "ad-2"]) {
+    const groups = buildGoogleDailyGroups(data, () => "제품", { query, spendOnly: false });
+    assert.equal(groups.length, 1);
+    assert.equal(groups[0].creatives.length, 2);
+  }
+  const workbook = buildGoogleDailyXlsxInput({ reportDate: "2026-10-26", previousDate: "2026-10-25", data, previous,
+    groups: buildGoogleDailyGroups(data, () => "제품", DEFAULT_GOOGLE_DAILY_SETTINGS),
+    columns: ["creative", "clicks", "ctr", "cpcKrw", "cpmKrw", "cpaKrw"], filterLabel: "전체" });
+  const rows = workbook.rows.map(row => Array.isArray(row) ? row : row.cells);
+  const adRows = rows.filter(row => row[0]?.value === "같은 소재명");
+  assert.equal(adRows.length, 2);
+  const expectedMetrics = [
+    [10, 3, 0.01, 0.01, 400.0125, 400.0125, 4000.125, 4000.125, 3200.1, 3200.1],
+    [20, 8, 0.02, 0.02, 200.00625, 200.00625, 4000.125, 4000.125, 1600.05, 1600.05]
+  ];
+  adRows.forEach((row, index) => row.slice(1).forEach((cell, metric) => {
+    assert.equal(typeof cell.value, "number");
+    assert.ok(Math.abs(Number(cell.value) - expectedMetrics[index][metric]) < 1e-9);
+  }));
+});
+
 test("settings stay channel-specific and cannot remove the campaign identity column", () => {
   assert.deepEqual(normalizeGoogleDailySettings({ columns: [], query: "검색", spendOnly: true }), { columns: ["creative"], query: "검색", spendOnly: true });
   assert.deepEqual(normalizeGoogleDailySettings({ columns: ["unknown", "clicks", "clicks"] }).columns, ["creative", "clicks"]);
@@ -115,7 +141,7 @@ test("daily workbook includes selected columns, current/previous values, sales m
   const rows = workbook.rows.map(row => Array.isArray(row) ? row : (row as XlsxRow).cells);
   assert.equal(rows[1][0].value, "전체 제품수");
   assert.equal(rows.some(row => row.some(cell => String(cell.value).startsWith("표시 조건:"))), false);
-  const campaignRow = rows.find(row => row[0]?.value === `${data.creatives[0].adName}\n${data.creatives[0].campaignName} · c1`)!;
+  const campaignRow = rows.find(row => row[0]?.value === data.creatives[0].adName)!;
   assert.equal(campaignRow[1].value, 10); assert.equal(campaignRow[2].value, 3);
   const sales = rows.find(row => row[0]?.value === "제품 A")!;
   assert.equal(sales[2].value, 10000); assert.equal(sales[3].value, 9000); assert.equal(sales[9].value, "");
@@ -132,7 +158,7 @@ test("creative purchase fractions and video unavailability survive XLSX export",
     groups: buildGoogleDailyGroups(data, String, DEFAULT_GOOGLE_DAILY_SETTINGS),
     columns: ["creative", "purchaseCount", "purchaseRoas", "videoViews"], filterLabel: "전체" });
   const rows = input.rows.map(row => Array.isArray(row) ? row : row.cells);
-  const cells = rows.find(row => String(row[0]?.value).startsWith("소재 c1\n"))!;
+  const cells = rows.find(row => row[0]?.value === "소재 c1")!;
   assert.equal(cells[1].value, 1.25); assert.equal(cells[1].style, "Decimal");
   assert.equal(cells[3].value, 2.5); assert.equal(cells[3].style, "Ratio");
   assert.equal(cells[5].value, "");
