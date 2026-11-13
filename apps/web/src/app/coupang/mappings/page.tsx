@@ -3,12 +3,13 @@
 import { RefreshCw, Save, Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost, rangeQuery } from "@/lib/api";
 import { koreaYesterdayDateInput } from "@/lib/korea-date";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
 import { useCan } from "@/features/auth/use-auth";
+import { CoupangMappingReviewPanel, mappingReviewKey, type CoupangMappingReview } from "@/components/coupang-mapping-review";
 
 type CoupangProductSetting = {
   id: string;
@@ -52,6 +53,7 @@ type CoupangMappingIssue = {
 
 type CoupangMappingIssuesResponse = {
   period: { from: string; to: string };
+  filteredCount: number; offset: number; take: number; hasMore: boolean;
   summary: {
     totalCount: number;
     unmatchedCount: number;
@@ -101,6 +103,14 @@ export default function CoupangMappingsPage() {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("ALL");
   const [targetFilter, setTargetFilter] = useState<TargetFilter>("ALL");
+  const [issuePage, setIssuePage] = useState({ key: "", offset: 0 });
+  const issueKey = JSON.stringify([range, issueFilter, targetFilter]);
+  const issueOffset = issuePage.key === issueKey ? issuePage.offset : 0;
+  const [verified, setVerified] = useState<{ key: string; review: CoupangMappingReview } | null>(null);
+  const [verifiedDraft, setVerifiedDraft] = useState<string | null>(null);
+  const draftBody = { ruleId: editingRuleId ?? undefined, rule: rulePayload(draft) };
+  const draftKey = mappingReviewKey(range, draftBody);
+  const verifiedSaved = verified?.key === mappingReviewKey(range, {}) ? verified.review : null;
 
   const products = useQuery({
     queryKey: ["coupang-products"],
@@ -111,11 +121,13 @@ export default function CoupangMappingsPage() {
     queryFn: () => apiGet<CoupangMappingRule[]>("/coupang/mapping-rules?includeInactive=true")
   });
   const issues = useQuery({
-    queryKey: ["coupang-mapping-issues", range],
-    queryFn: () => apiGet<CoupangMappingIssuesResponse>(`/coupang/mapping-issues?${rangeQuery(range)}`)
+    queryKey: ["coupang-mapping-issues", range, issueFilter, targetFilter, issueOffset],
+    queryFn: () => apiGet<CoupangMappingIssuesResponse>(`/coupang/mapping-issues?${rangeQuery(range)}&take=100&offset=${issueOffset}&issueType=${issueFilter}&targetKind=${targetFilter}`)
   });
 
   const invalidateMappingQueries = () => {
+    setVerified(null);
+    setVerifiedDraft(null);
     void queryClient.invalidateQueries({ queryKey: ["coupang-product-rules"] });
     void queryClient.invalidateQueries({ queryKey: ["coupang-mapping-issues"] });
   };
@@ -141,15 +153,11 @@ export default function CoupangMappingsPage() {
     onSuccess: invalidateMappingQueries
   });
   const rematch = useMutation({
-    mutationFn: () => apiPost(`/coupang/rematch?${rangeQuery(range)}`, {}),
-    onSuccess: () => void queryClient.invalidateQueries()
+    mutationFn: () => apiPost(`/coupang/rematch?${rangeQuery(range)}`, { previewToken: verifiedSaved?.previewToken }),
+    onSuccess: () => { setVerified(null); setVerifiedDraft(null); void queryClient.invalidateQueries(); }
   });
 
-  const filteredIssues = useMemo(() => {
-    return (issues.data?.rows ?? []).filter((issue) => {
-      return (issueFilter === "ALL" || issue.issueType === issueFilter) && (targetFilter === "ALL" || issue.targetKind === targetFilter);
-    });
-  }, [issueFilter, issues.data?.rows, targetFilter]);
+  const filteredIssues = issues.data?.rows ?? [];
 
   const productOptions = products.data ?? [];
   const savedRules = rules.data ?? [];
@@ -158,6 +166,7 @@ export default function CoupangMappingsPage() {
 
   const submitRule = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (verifiedDraft !== draftKey) return;
     const body = rulePayload(draft);
     if (editingRuleId) {
       updateRule.mutate({ id: editingRuleId, body });
@@ -184,12 +193,13 @@ export default function CoupangMappingsPage() {
 
   const createRuleFromIssue = (issue: CoupangMappingIssue) => {
     setEditingRuleId(null);
-    setDraft((current) => ({
-      ...current,
+    setDraft({
+      ...defaultDraft(),
       displayName: issue.productText,
       includeKeywords: issue.productText,
+      validFrom: issue.date && issue.date < range.from ? issue.date : range.from,
       note: issue.reason
-    }));
+    });
   };
 
   return (
@@ -200,15 +210,17 @@ export default function CoupangMappingsPage() {
           <p>쿠팡 판매/광고/프로모션 데이터의 상품 자동매핑 규칙과 확인 필요 항목을 관리합니다.</p>
         </div>
         {canManageMappings ? (
-          <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending}>
+          <button className="button" type="button" onClick={() => rematch.mutate()} disabled={rematch.isPending || !verifiedSaved?.previewToken}>
             <RefreshCw size={16} />
-            {rematch.isPending ? "계산 중" : "자동매핑 다시 계산"}
+            {rematch.isPending ? "계산 중" : "검증한 기간의 자동매핑 반영"}
           </button>
         ) : null}
       </div>
 
       {mutationError ? <div className="warning-strip"><span>처리 실패: {mutationError.message}</span></div> : null}
       {rematch.isSuccess ? <div className="warning-strip"><span>자동매핑 계산이 반영되었습니다.</span></div> : null}
+      <p className="field-help">규칙 저장만으로 과거 자료가 변경되지는 않습니다. 아래 전체 검증에서 상품 변경·매칭 해제를 확인한 뒤 반영하세요. 반영은 선택한 기간 전체에 적용됩니다.</p>
+      <CoupangMappingReviewPanel range={range} onReviewed={(review, key) => setVerified({ review, key })} />
 
       <div className="warning-strip">
         <span>미매칭 {issues.data?.summary.unmatchedCount ?? 0}</span>
@@ -237,10 +249,10 @@ export default function CoupangMappingsPage() {
             <Field label="규칙 표시명" help="목록과 충돌 후보에 표시되는 이름">
               <input className="input" value={draft.displayName} onChange={(event) => setDraftValue("displayName", event.target.value, setDraft)} />
             </Field>
-            <Field label="포함 키워드" help="모두 포함되어야 매칭">
+            <Field label="포함 키워드" help="쉼표·줄바꿈으로 나눈 조건을 모두 만족해야 합니다. 다른 표기·별칭은 같은 상품의 별도 규칙으로 등록하세요. 판매 수량 조건은 원천 옵션명을 우선 확인합니다.">
               <TextareaInput value={draft.includeKeywords} onChange={(value) => setDraftValue("includeKeywords", value, setDraft)} placeholder="상품명 또는 키워드" />
             </Field>
-            <Field label="제외 키워드" help="하나라도 포함되면 제외">
+            <Field label="제외 키워드" help="포함 조건을 만족한 후보에서만 제외합니다. 다른 상품을 구분하는 데 필요한 조건만 입력하세요.">
               <TextareaInput value={draft.excludeKeywords} onChange={(value) => setDraftValue("excludeKeywords", value, setDraft)} placeholder="제외할 키워드" />
             </Field>
             <Field label="우선순위" help="낮은 숫자가 먼저 적용">
@@ -262,7 +274,7 @@ export default function CoupangMappingsPage() {
               <TextareaInput value={draft.note} onChange={(value) => setDraftValue("note", value, setDraft)} />
             </Field>
             <div className="toolbar" style={{ alignSelf: "end" }}>
-              <button className="button primary" disabled={isSaving || !draft.coupangProductId || listValue(draft.includeKeywords).length === 0} type="submit">
+              <button className="button primary" disabled={isSaving || verifiedDraft !== draftKey || !draft.coupangProductId || listValue(draft.includeKeywords).length === 0} type="submit">
                 <Save size={16} />
                 {editingRuleId ? "규칙 저장" : "규칙 생성"}
               </button>
@@ -273,6 +285,8 @@ export default function CoupangMappingsPage() {
               ) : null}
             </div>
           </div>
+          <CoupangMappingReviewPanel range={range} body={draftBody} disabled={!draft.coupangProductId || listValue(draft.includeKeywords).length === 0}
+            onReviewed={(_review, key) => setVerifiedDraft(key)} />
         </form> : (
           <div className="panel">
             <h2>매핑 규칙</h2>
@@ -282,6 +296,7 @@ export default function CoupangMappingsPage() {
 
         <div className="panel">
           <h2>확인 필요 항목</h2>
+          {issues.error && <p role="alert">조회 실패: {issues.error.message}</p>}
           <div className="toolbar" style={{ marginBottom: 10 }}>
             <select className="select" value={issueFilter} onChange={(event) => setIssueFilter(event.target.value as IssueFilter)}>
               <option value="ALL">전체</option>
@@ -308,6 +323,7 @@ export default function CoupangMappingsPage() {
               { key: "text", header: "상품 텍스트", render: (row) => row.productText },
               { key: "amount", header: "금액", render: (row) => money(row.amountKrw) },
               { key: "candidates", header: "후보", render: (row) => keywordBadges(row.candidates, "후보") },
+              { key: "reason", header: "사유", render: (row) => mappingReasonLabel(row.reason) },
               ...(canManageMappings ? [{
                 key: "action",
                 header: "작업",
@@ -319,6 +335,11 @@ export default function CoupangMappingsPage() {
               }] : [])
             ]}
           />
+          <div className="toolbar">
+            <button className="button" type="button" disabled={issues.isFetching || issueOffset === 0} onClick={() => setIssuePage({ key: issueKey, offset: Math.max(0, issueOffset - 100) })}>이전</button>
+            <span>{issues.data?.filteredCount ? issueOffset + 1 : 0}–{Math.min(issueOffset + filteredIssues.length, issues.data?.filteredCount ?? 0)} / {issues.data?.filteredCount ?? 0}건</span>
+            <button className="button" type="button" disabled={issues.isFetching || !issues.data?.hasMore} onClick={() => setIssuePage({ key: issueKey, offset: issueOffset + 100 })}>다음</button>
+          </div>
         </div>
       </div>
 
@@ -373,6 +394,12 @@ function TextareaInput({ value, onChange, placeholder }: { value: string; onChan
 function IssueBadge({ type }: { type: CoupangMappingIssue["issueType"] }) {
   const className = type === "AMBIGUOUS" ? "watch" : type === "EXCLUDED" ? "stop_candidate" : "keep";
   return <span className={`badge ${className}`}>{issueTypeLabel(type)}</span>;
+}
+
+function mappingReasonLabel(reason: string) {
+  const code = reason.replace(/^(SPEND_|CONVERSION_)/, "");
+  return ({ NO_MATCH: "조건 일치 없음", AMBIGUOUS_MATCH: "다른 상품 후보 충돌", EXCLUDED_BY_KEYWORD: "후보 규칙의 제외 키워드",
+    OPTION_CONFLICT: "옵션 수량·구성 충돌", AD_DISABLED: "광고 반영 꺼짐" } as Record<string, string>)[code] ?? reason;
 }
 
 function rulePayload(draft: RuleDraft) {

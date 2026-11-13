@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { normalizeCoupangText } from "../../domain/coupang-product-matcher";
+import { normalizeCoupangText, evaluateCoupangRule } from "../../domain/coupang-product-matcher";
 import { assertBusinessDate, normalizeProductName, type CatalogProduct, type NameRule } from "../domain/product-name-resolver";
 import type { CoupangSaleCostRule } from "./coupang-sales";
 
@@ -89,14 +89,18 @@ export function coupangConfiguration(input: CoupangConfigurationInput): {
   const uniqueObservations = [...new Map(observed.map(observation => [JSON.stringify(observation), observation])).values()];
   for (const observation of uniqueObservations) {
     if (!observation.text.trim() || observation.text.trim() === "-") continue;
-    const combined = normalizeCoupangText(observation.ad ? observation.text : `${observation.text} ${observation.option}`);
+    const sourceText = { productName: observation.text, optionName: observation.option };
+    if (prepared.some(({ product, effective }) => product.isActive !== false && effective.some(({ rule }) =>
+      (!observation.ad || rule.adEnabled !== false) && evaluateCoupangRule(sourceText, {
+        includeKeywords: terms(rule.includeKeywords), excludeKeywords: terms(rule.excludeKeywords)
+      }).quantityConflict))) continue;
     for (const { product, identity, productRules, effective: effectiveRules, aliases } of prepared) {
       const effective = observation.ad ? effectiveRules.filter(item => item.rule.adEnabled !== false) : effectiveRules;
       const directAlias = product.isActive !== false && aliases.includes(normalizeProductName(observation.text));
-      const matching = effective.filter(({ include, exclude }) => include.length > 0 && include.every(term => combined.includes(term)) &&
-        !exclude.some(term => combined.includes(term))).map(item => item.rule);
+      const matching = product.isActive === false ? [] : effective.filter(({ rule }) => evaluateCoupangRule(sourceText,
+        { includeKeywords: terms(rule.includeKeywords), excludeKeywords: terms(rule.excludeKeywords) }).matched).map(item => item.rule);
       // A configured period must be effective even for a collected standard/display-name alias.
-      if (!matching.length && !(directAlias && (!productRules.length || effective.length))) continue;
+      if (!matching.length && !(directAlias && !productRules.length)) continue;
       const generated: NameRule = { id: `coupang-observed:${hash([observation, identity.productName, identity.saleUnitName, matching.map(rule => rule.id).sort()])}`,
         canonicalProductName: identity.productName, matchType: "EXACT", terms: [observation.text],
         optionExact: observation.ad ? null : observation.option, nameField: observation.field, platform: "COUPANG", scopeKey: input.scopeKey,

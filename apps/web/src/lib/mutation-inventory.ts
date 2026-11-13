@@ -48,7 +48,6 @@ export const BUSINESS_MUTATION_INVENTORY: readonly BusinessMutationInventoryEntr
   entry("coupang-mappings.rule-update", page("coupang/mappings"), "mapping edit form", "PATCH", "/coupang/mapping-rules/:id", "mappings.manage", "action 열 없는 저장 규칙", "apiPatch<CoupangMappingRule>(`/coupang/mapping-rules/${id}`", "useCan(\"mappings.manage\")"),
   entry("coupang-mappings.rule-disable", page("coupang/mappings"), "saved rule action column", "DELETE", "/coupang/mapping-rules/:id", "mappings.manage", "action 열 없는 저장 규칙", "apiDelete<CoupangMappingRule>(`/coupang/mapping-rules/${id}`", "useCan(\"mappings.manage\")"),
   entry("coupang-mappings.rematch", page("coupang/mappings"), "rematch button", "POST", "/coupang/rematch", "mappings.manage", "issue filters와 저장 규칙", "apiPost(`/coupang/rematch?${rangeQuery(range)}`", "useCan(\"mappings.manage\")"),
-  entry("coupang-unmatched.rematch", page("coupang/unmatched"), "rematch button", "POST", "/coupang/rematch", "mappings.manage", "미매칭 table", "apiPost(`/coupang/rematch?${rangeQuery(range)}`", "useCan(\"mappings.manage\")"),
 
   entry("coupang-uploads.sales", page("coupang/uploads"), "sales XLSX form", "POST", "/coupang/uploads/sales", "imports.manage", "Coupang 배치 이력", "uploadCoupangSalesXlsx(salesFile", "useCan(\"imports.manage\")"),
   entry("coupang-uploads.ads", page("coupang/uploads"), "ads XLSX form", "POST", "/coupang/uploads/ads", "imports.manage", "Coupang 배치 이력", "uploadCoupangAdsXlsx(adsFile", "useCan(\"imports.manage\")"),

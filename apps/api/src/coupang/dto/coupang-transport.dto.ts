@@ -352,6 +352,48 @@ export class CoupangManualPurchasesBodyDto {
 
 export class CoupangRematchQueryDto extends DateRangeTakeQueryDto {}
 
+export class CoupangMappingPreviewDto {
+  @IsOptionalUndefined()
+  @IsUuidV4()
+  ruleId?: string;
+
+  @IsOptionalUndefined()
+  @ValidateNested()
+  @Type(() => CoupangMappingRuleDto)
+  rule?: CoupangMappingRuleDto;
+}
+
+export class CoupangRematchBodyDto {
+  @IsString()
+  @Matches(/^[a-f0-9]{64}$/)
+  previewToken!: string;
+}
+
+export class CoupangMappingPageQueryDto extends DateRangeQueryDto {
+  @IsOptionalUndefined()
+  @StrictPositiveInteger(2_000)
+  take?: number;
+
+  @IsOptionalUndefined()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(10_000_000)
+  offset?: number;
+
+  @IsOptionalUndefined()
+  @IsIn(["ALL", "UNMATCHED", "AMBIGUOUS", "EXCLUDED"])
+  issueType?: string;
+
+  @IsOptionalUndefined()
+  @IsIn(["ALL", "SALES_PRODUCT", "ADS_SPEND_PRODUCT", "ADS_CONVERSION_PRODUCT", "PROMOTION_PRODUCT"])
+  targetKind?: string;
+
+  @IsOptionalUndefined()
+  @IsIn(["ALL", "REVIEW", "CHANGED"])
+  reviewFilter?: string;
+}
+
 export class CoupangGroupQueryDto extends DateRangeQueryDto {
   @IsOptionalUndefined()
   @IsIn(["product", "group"])

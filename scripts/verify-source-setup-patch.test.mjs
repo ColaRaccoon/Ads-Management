@@ -65,10 +65,13 @@ const unified = [
   'types', 'unified-performance.module'
 ].map(name => `unified-performance/${name}.js`);
 const reviewedCoupang = ['coupang/coupang.service.js', 'coupang/coupang-native-results.js', 'coupang/coupang-native-results.test.js',
+  'coupang/coupang.controller.js', 'coupang/dto/coupang-transport.dto.js', 'coupang/coupang-mapping-review.test.js',
+  'domain/coupang-product-matcher.js', 'domain/coupang-product-matcher.test.js',
+  'domain/coupang-mapping-review.js', 'domain/coupang-mapping-review.test.js',
   'domain/coupang-profit-pipeline.js', 'domain/coupang-profit-pipeline.test.js', 'sales/sales-metrics.service.js',
   'domain/cafe24-coupon-line-allocation.js', 'domain/cafe24-coupon-line-allocation.test.js'];
 const preserved = ['metrics/metrics.service.js', 'domain/cafe24-sales-calculator.js',
-  'coupang/coupang.controller.js', 'domain/margin-calculator.js'];
+  'coupang/coupang-daily-report-filter.js', 'domain/margin-calculator.js'];
 const metaMappings = ['mappings/mappings.service.js', 'mappings/mappings.controller.js', 'mappings/dto/mappings-transport.dto.js'];
 
 async function fixture(run, profile = 'reporting') {
@@ -153,7 +156,7 @@ test('another Google module cannot bypass the exact allowlist', () => fixture(as
 }));
 
 test('Meta and Coupang calculation mutations remain blocked', async () => {
-  for (const name of ['metrics/metrics.service.js', 'coupang/coupang.controller.js', 'domain/margin-calculator.js', 'domain/cafe24-sales-calculator.js', 'domain/cafe24-coupon-matcher.js'])
+  for (const name of ['metrics/metrics.service.js', 'coupang/coupang-daily-report-filter.js', 'domain/margin-calculator.js', 'domain/cafe24-sales-calculator.js', 'domain/cafe24-coupon-matcher.js'])
     await fixture(async ({ compiled, put, verify }) => { await put(compiled, name, 'regression'); const result = verify();
       assert.notEqual(result.status, 0); assert.ok(result.stderr.includes(`Unreviewed C7 API change: ${name}`)); });
 });

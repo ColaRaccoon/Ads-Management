@@ -87,3 +87,15 @@ test("native unified rules are preserved alongside legacy name materialization",
   assert.equal(result.canonicalProductName, "새제품");
   assert.throws(() => coupangConfiguration({ ...data, scopeKey: "mixed-account" }), /configuration scope/);
 });
+
+test("legacy quantity matching uses option boundaries instead of numeric substrings", () => {
+  const data = base(); data.observedSales = [{ productName: "파티마 버닝웨이브바", optionName: "12개입" }];
+  assert.equal(resolve(data, "파티마 버닝웨이브바", "12개입").matchStatus, "UNMATCHED");
+});
+test("an exact display alias cannot bypass a configured exclusion", () => {
+  const data = base();
+  data.products[0].displayName = "버닝웨이브바 제외상품";
+  data.rules[0].excludeKeywords = ["제외상품"];
+  data.observedSales = [{ productName: "버닝웨이브바 제외상품", optionName: "2개입" }];
+  assert.equal(resolve(data, "버닝웨이브바 제외상품", "2개입").matchStatus, "UNMATCHED");
+});

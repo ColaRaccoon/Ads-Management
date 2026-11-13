@@ -17,6 +17,9 @@ import {
   CoupangManualPurchasesBodyDto,
   CoupangManualPurchasesQueryDto,
   CoupangMappingRuleDto,
+  CoupangMappingPreviewDto,
+  CoupangMappingPageQueryDto,
+  CoupangRematchBodyDto,
   CoupangMarginUploadFormDto,
   CoupangProductCostParamDto,
   CoupangProductGroupDto,
@@ -301,16 +304,25 @@ export class CoupangController {
   }
 
   @Post("rematch")
+  @HeavyOperation()
   @RequirePermissions("mappings.manage")
   rematch(
     @CurrentUser() actor: AuthenticatedUser,
-    @Query() query: CoupangRematchQueryDto
+    @Query() query: CoupangRematchQueryDto,
+    @Body() body: CoupangRematchBodyDto
   ) {
     return this.coupangService.rematch({
       from: query.from,
       to: query.to,
       take: query.take === undefined ? undefined : String(query.take)
-    }, actor.id);
+    }, actor.id, body.previewToken);
+  }
+
+  @Post("mapping-preview")
+  @HeavyOperation()
+  @RequirePermissions("data.read")
+  mappingPreview(@Query() query: CoupangMappingPageQueryDto, @Body() body: CoupangMappingPreviewDto) {
+    return this.coupangService.previewMappings(query, body);
   }
 
   @Get("dashboard")
@@ -343,11 +355,12 @@ export class CoupangController {
 
   @Get("mapping-issues")
   @RequirePermissions("data.read")
-  mappingIssues(@Query() query: CoupangUnmatchedQueryDto) {
+  mappingIssues(@Query() query: CoupangMappingPageQueryDto) {
     return this.coupangService.mappingIssues({
       from: query.from,
       to: query.to,
-      take: query.take === undefined ? undefined : String(query.take)
+      take: query.take === undefined ? undefined : String(query.take),
+      offset: query.offset, issueType: query.issueType, targetKind: query.targetKind
     });
   }
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPost, rangeQuery } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { apiGet, rangeQuery } from "@/lib/api";
 import { useRange } from "@/lib/use-range";
 import { DataTable } from "@/components/data-table";
 import { useCan } from "@/features/auth/use-auth";
@@ -25,15 +24,11 @@ type UnmatchedRow = {
 export default function CoupangUnmatchedPage() {
   const canManageMappings = useCan("mappings.manage");
   const range = useRange();
-  const queryClient = useQueryClient();
   const unmatched = useQuery({
     queryKey: ["coupang-unmatched", range],
     queryFn: () => apiGet<CoupangUnmatched>(`/coupang/unmatched?${rangeQuery(range)}`)
   });
-  const rematch = useMutation({
-    mutationFn: () => apiPost(`/coupang/rematch?${rangeQuery(range)}`, {}),
-    onSuccess: () => void queryClient.invalidateQueries()
-  });
+
 
   return (
     <section className="page">
@@ -43,17 +38,9 @@ export default function CoupangUnmatchedPage() {
           <p>Review no-match, ambiguous, missing cost, and warning rows.</p>
         </div>
         {canManageMappings ? (
-          <button className="button primary" type="button" disabled={rematch.isPending} onClick={() => rematch.mutate()}>
-            <RefreshCw size={16} />
-            Rematch
-          </button>
+          <a className="button primary" href={`/coupang/mappings?${rangeQuery(range)}`}>원천 비교 후 재매핑</a>
         ) : null}
       </div>
-      {rematch.data ? (
-        <div className="warning-strip">
-          <span>{JSON.stringify(rematch.data)}</span>
-        </div>
-      ) : null}
       <div className="panel">
         <DataTable
           rows={unmatched.data?.rows ?? []}

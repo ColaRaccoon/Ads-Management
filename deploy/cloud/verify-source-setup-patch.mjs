@@ -24,6 +24,12 @@ if (profile === 'reporting') {
   for (const name of ['coupang/coupang.service.js', 'domain/coupang-profit-pipeline.js',
     'coupang/coupang-native-results.js', 'coupang/coupang-native-results.test.js',
     'domain/coupang-profit-pipeline.test.js']) expected.add(name);
+  // Reviewed source-option matching, read-only previews, and fingerprint-bound
+  // rematch transport. Keep the exact module list; financial calculators remain protected.
+  for (const name of ['coupang/coupang.controller.js', 'coupang/dto/coupang-transport.dto.js',
+    'coupang/coupang-mapping-review.test.js', 'domain/coupang-product-matcher.js',
+    'domain/coupang-product-matcher.test.js', 'domain/coupang-mapping-review.js',
+    'domain/coupang-mapping-review.test.js']) expected.add(name);
   // Rule editing, dated reapplication and transport authorization are reviewed
   // together. Other mapping modules and all financial calculators remain fixed.
   for (const name of ['mappings/mappings.service.js', 'mappings/mappings.controller.js',

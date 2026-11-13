@@ -27,7 +27,8 @@ import {
 } from "../domain/coupang-ads-xlsx";
 import { CoupangMarginCsvParser, COUPANG_MARGIN_SCHEMA_VERSION, ParsedCoupangMarginRow } from "../domain/coupang-margin-csv";
 import { isInactivePromotionStatus, resolveCoupangSalePrice } from "../domain/coupang-price-resolver";
-import { CoupangProductMatcher, CoupangRuleInput } from "../domain/coupang-product-matcher";
+import { CoupangProductMatcher, CoupangRuleInput, normalizeCoupangText, containsCoupangKeyword } from "../domain/coupang-product-matcher";
+import { reviewCoupangMappings, coupangMappingReviewToken, type MappingReviewInput } from "../domain/coupang-mapping-review";
 import {
   CoupangPriceTextParser,
   COUPANG_PRICE_TEXT_SCHEMA_VERSION,
@@ -473,22 +474,6 @@ type CoupangAdProductMatchResolution = {
   conversionMatched: boolean;
 };
 
-type CoupangSpendMatchInput = {
-  matcher: CoupangProductMatcher;
-  rules: CoupangRuleInput[];
-  metricDate: Date;
-  adExecutionProductName: string;
-  adName?: string | null;
-};
-
-type CoupangSpendMatchResolution = {
-  productId: string | null;
-  ruleId: string | null;
-  matchSource: MatchSource;
-  warning: RowIssue | null;
-  matched: boolean;
-};
-
 type CoupangAdsImportRow = Omit<ParsedCoupangAdsRowResult, "rawRow"> & {
   rawRow: Prisma.InputJsonObject;
 };
@@ -608,7 +593,7 @@ export class CoupangService {
         const parsedRow = row.parsedRow;
 
         if (parsedRow) {
-          const match = this.matcher.matchText(`${parsedRow.productName} ${parsedRow.optionName}`, rules, parsedRow.saleDate);
+          const match = this.matcher.matchProduct(parsedRow, rules, parsedRow.saleDate);
           if (match.reason === "MATCHED") {
             productId = match.productId;
             ruleId = match.matchRuleId;
@@ -617,7 +602,7 @@ export class CoupangService {
           } else {
             warnings.push(matchIssue(match.reason, match.candidates));
             unmatchedCount += match.reason === "NO_MATCH" || match.reason === "EXCLUDED_BY_KEYWORD" ? 1 : 0;
-            ambiguousCount += match.reason === "AMBIGUOUS_MATCH" ? 1 : 0;
+            ambiguousCount += (match.reason === "AMBIGUOUS_MATCH" || match.reason === "OPTION_CONFLICT") ? 1 : 0;
           }
           if (parsedRow.saleDate) {
             dataStart = minDate(dataStart, parsedRow.saleDate);
@@ -1242,7 +1227,7 @@ export class CoupangService {
           } else {
             warnings.push(matchIssue(match.reason, match.candidates));
             unmatchedCount += match.reason === "NO_MATCH" || match.reason === "EXCLUDED_BY_KEYWORD" ? 1 : 0;
-            ambiguousCount += match.reason === "AMBIGUOUS_MATCH" ? 1 : 0;
+            ambiguousCount += (match.reason === "AMBIGUOUS_MATCH" || match.reason === "OPTION_CONFLICT") ? 1 : 0;
           }
           if (isInactivePromotionStatus(parsedRow.promotionStatus)) {
             warnings.push(invalidPromotionStatusIssue(parsedRow.promotionStatus));
@@ -1829,6 +1814,7 @@ export class CoupangService {
     const coupangProductId = requiredString(body.coupangProductId ?? body.productId, "coupangProductId");
     const product = await this.assertProduct(coupangProductId);
     const includeKeywords = requiredStringArray(body.includeKeywords, "includeKeywords");
+    assertCoupangMappingRule({ ...body, includeKeywords });
     const save = async (client: Pick<Prisma.TransactionClient, "coupangProductRule">) => client.coupangProductRule.create({ data: {
         coupangProductId,
         displayName: optionalString(body.displayName) ?? product.displayName,
@@ -1862,6 +1848,7 @@ export class CoupangService {
 
   async updateMappingRule(id: string, body: Record<string, unknown>, actorId?: string) {
     const before = await this.assertMappingRule(id);
+    assertCoupangMappingRule({ ...before, ...body });
     const data: Prisma.CoupangProductRuleUncheckedUpdateInput = {};
     const nextProductId = body.coupangProductId ?? body.productId;
     if (nextProductId !== undefined) {
@@ -2708,251 +2695,72 @@ export class CoupangService {
     `);
   }
 
-  async rematch(query: { from?: string; to?: string; take?: string }, actorId?: string) {
+  async rematch(query: { from?: string; to?: string; take?: string }, actorId?: string, previewToken?: string) {
     const range = parseDateRange(query.from, query.to);
-    const take = Math.min(Math.max(Number(query.take ?? 1000) || 1000, 1), 5000);
-    const rules = await this.matcherRules();
-    let matchedSalesCount = 0;
-    let scannedSalesCount = 0;
-    let saleCursor: { saleDate: Date; rowNumber: number; id: string } | null = null;
-    while (true) {
-      const candidates: CoupangSaleLine[] = await this.prisma.coupangSaleLine.findMany({
-        where: {
-          isCurrent: true,
-          saleDate: { gte: range.fromDate, lte: range.toDate },
-          validationStatus: { not: RowValidationStatus.ERROR },
-          ...(saleCursor ? { OR: [
-            { saleDate: { gt: saleCursor.saleDate } },
-            { saleDate: saleCursor.saleDate, rowNumber: { gt: saleCursor.rowNumber } },
-            { saleDate: saleCursor.saleDate, rowNumber: saleCursor.rowNumber, id: { gt: saleCursor.id } }
-          ] } : {})
-        },
-        take: take + 1,
-        orderBy: [{ saleDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
-      });
-      const saleLines = candidates.slice(0, take);
-      for (const line of saleLines) {
-      const match = this.matcher.matchText(`${line.productName} ${line.optionName}`, rules, line.saleDate);
-      const matched = match.reason === "MATCHED";
-      const warnings = matched ? [] : [matchIssue(match.reason, match.candidates)];
-      const validationStatus = validationStatusFor([], warnings, matched ? match.productId : null);
-      await this.prisma.$transaction(async (tx) => {
-      await tx.coupangSaleLine.update({
-        where: { id: line.id },
-        data: {
-          coupangProductId: matched ? match.productId : null,
-          coupangProductRuleId: matched ? match.matchRuleId : null,
-          matchSource: matched ? MatchSource.RULE : MatchSource.UNMATCHED,
-          validationStatus,
-          validationErrors: warnings as unknown as Prisma.InputJsonValue
-        }
-      });
-      await this.replaceCoupangRowWarnings({
-        uploadBatchId: line.uploadBatchId,
-        sourceType: CoupangUploadSourceType.SALES,
-        saleLineId: line.id,
-        adMetricId: null,
-        rowNumber: line.rowNumber,
-        warnings
-      }, tx);
-      if (actorId) {
-        await writeSecurityAudit(tx, {
-          actorUserId: actorId,
-          actorType: SecurityAuditActorType.USER,
-          action: "COUPANG_MAPPING_REMATCH",
-          targetType: "COUPANG_SALE_LINE",
-          targetId: line.id,
-          result: SecurityAuditResult.SUCCESS,
-          beforeJson: { matched: Boolean(line.coupangProductId), validationStatus: line.validationStatus },
-          afterJson: { matched, validationStatus }
-        });
+    if (!previewToken) throw new BadRequestException({ code: "MAPPING_PREVIEW_REQUIRED", message: "먼저 전체 매핑 검증을 실행해 변경되는 상품을 확인하세요." });
+    // The reviewed source and all updates share a serializable transaction. A failure
+    // rolls back the entire period; newly imported rows cannot enter an unreviewed page.
+    return this.prisma.$transaction(async tx => {
+      const snapshot = await this.mappingReviewInput(range, tx);
+      if (previewToken !== coupangMappingReviewToken(snapshot, range.from, range.to)) {
+        throw new ConflictException({ code: "MAPPING_PREVIEW_STALE", message: "원천 데이터 또는 규칙이 변경되었습니다. 전체 매핑 검증을 다시 실행하세요." });
       }
-      }, COUPANG_TRANSACTION_OPTIONS);
-      matchedSalesCount += matched ? 1 : 0;
+      const rules = snapshot.rules;
+      const counts = { scannedSalesCount: snapshot.sales.length, matchedSalesCount: 0, scannedAdsCount: snapshot.ads.length,
+        matchedSpendCount: 0, matchedConversionCount: 0, scannedPromotionCount: snapshot.promotions.length, matchedPromotionCount: 0, updatedRowCount: 0 };
+      const audit = async (targetType: string, id: string, before: Prisma.InputJsonObject, after: Prisma.InputJsonObject) => {
+        counts.updatedRowCount++;
+        if (actorId) await writeSecurityAudit(tx, { actorUserId: actorId, actorType: SecurityAuditActorType.USER,
+          action: "COUPANG_MAPPING_REMATCH", targetType, targetId: id, result: SecurityAuditResult.SUCCESS, beforeJson: before, afterJson: after });
+      };
+      for (const line of snapshot.sales) {
+        const match = this.matcher.matchProduct(line, rules, line.saleDate);
+        const warnings = [...preservedCoupangWarnings(line.validationErrors as Prisma.JsonValue), ...(match.productId ? [] : [matchIssue(match.reason, match.candidates)])];
+        const validationStatus = validationStatusFor([], warnings, match.productId);
+        counts.matchedSalesCount += match.productId ? 1 : 0;
+        if (line.coupangProductId === match.productId && line.coupangProductRuleId === match.matchRuleId &&
+            line.validationStatus === validationStatus && JSON.stringify(line.validationErrors) === JSON.stringify(warnings)) continue;
+        await tx.coupangSaleLine.update({ where: { id: line.id }, data: { coupangProductId: match.productId, coupangProductRuleId: match.matchRuleId,
+          matchSource: match.productId ? MatchSource.RULE : MatchSource.UNMATCHED, validationStatus, validationErrors: warnings as unknown as Prisma.InputJsonValue } });
+        await this.replaceCoupangRowWarnings({ uploadBatchId: line.uploadBatchId!, sourceType: CoupangUploadSourceType.SALES,
+          saleLineId: line.id, adMetricId: null, rowNumber: line.rowNumber, warnings }, tx);
+        await audit("COUPANG_SALE_LINE", line.id, { productId: line.coupangProductId, ruleId: line.coupangProductRuleId ?? null },
+          { productId: match.productId, ruleId: match.matchRuleId, validationStatus });
       }
-      scannedSalesCount += saleLines.length;
-      if (candidates.length <= take) break;
-      const last = saleLines.at(-1);
-      if (!last) break;
-      saleCursor = { saleDate: last.saleDate!, rowNumber: last.rowNumber, id: last.id };
-    }
-
-    let matchedSpendCount = 0;
-    let matchedConversionCount = 0;
-    let scannedAdsCount = 0;
-    let adCursor: { metricDate: Date; rowNumber: number; id: string } | null = null;
-    while (true) {
-      const candidates: CoupangAdMetric[] = await this.prisma.coupangAdMetric.findMany({
-        where: {
-          isCurrent: true,
-          metricDate: { gte: range.fromDate, lte: range.toDate },
-          validationStatus: { not: RowValidationStatus.ERROR },
-          ...(adCursor ? { OR: [
-            { metricDate: { gt: adCursor.metricDate } },
-            { metricDate: adCursor.metricDate, rowNumber: { gt: adCursor.rowNumber } },
-            { metricDate: adCursor.metricDate, rowNumber: adCursor.rowNumber, id: { gt: adCursor.id } }
-          ] } : {})
-        },
-        take: take + 1,
-        orderBy: [{ metricDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
-      });
-      const adMetrics = candidates.slice(0, take);
-      for (const metric of adMetrics) {
-      const productMatches = resolveCoupangAdProductMatches({
-        matcher: this.matcher,
-        rules,
-        metricDate: metric.metricDate,
-        adExecutionProductName: metric.adExecutionProductName,
-        adName: metric.adName,
-        conversionProductName: metric.conversionProductName
-      });
-      const warnings = productMatches.warnings;
-      const validationStatus = validationStatusFor(
-        [],
-        warnings,
-        productMatches.spendProductId || productMatches.conversionProductId
-      );
-      await this.prisma.$transaction(async (tx) => {
-      await tx.coupangAdMetric.update({
-        where: { id: metric.id },
-        data: {
-          spendProductId: productMatches.spendProductId,
-          spendProductRuleId: productMatches.spendRuleId,
-          conversionProductId: productMatches.conversionProductId,
-          conversionProductRuleId: productMatches.conversionRuleId,
-          spendMatchSource: productMatches.spendMatchSource,
-          conversionMatchSource: productMatches.conversionMatchSource,
-          validationStatus,
-          validationErrors: warnings as unknown as Prisma.InputJsonValue
-        }
-      });
-      await this.replaceCoupangRowWarnings({
-        uploadBatchId: metric.uploadBatchId,
-        sourceType: CoupangUploadSourceType.ADS,
-        saleLineId: null,
-        adMetricId: metric.id,
-        rowNumber: metric.rowNumber,
-        warnings
-      }, tx);
-      if (actorId) {
-        await writeSecurityAudit(tx, {
-          actorUserId: actorId,
-          actorType: SecurityAuditActorType.USER,
-          action: "COUPANG_MAPPING_REMATCH",
-          targetType: "COUPANG_AD_METRIC",
-          targetId: metric.id,
-          result: SecurityAuditResult.SUCCESS,
-          beforeJson: {
-            spendMatched: Boolean(metric.spendProductId),
-            conversionMatched: Boolean(metric.conversionProductId),
-            validationStatus: metric.validationStatus
-          },
-          afterJson: {
-            spendMatched: productMatches.spendMatched,
-            conversionMatched: productMatches.conversionMatched,
-            validationStatus
-          }
-        });
+      for (const metric of snapshot.ads) {
+        const matches = resolveCoupangAdProductMatches({ matcher: this.matcher, rules, ...metric, metricDate: asDateOnly(String(metric.metricDate instanceof Date ? formatDateOnly(metric.metricDate) : metric.metricDate)) });
+        const warnings = [...preservedCoupangWarnings(metric.validationErrors as Prisma.JsonValue), ...matches.warnings];
+        const validationStatus = validationStatusFor([], warnings, matches.spendProductId || matches.conversionProductId);
+        counts.matchedSpendCount += matches.spendMatched ? 1 : 0; counts.matchedConversionCount += matches.conversionMatched ? 1 : 0;
+        if (metric.spendProductId === matches.spendProductId && metric.conversionProductId === matches.conversionProductId &&
+            metric.spendProductRuleId === matches.spendRuleId && metric.conversionProductRuleId === matches.conversionRuleId &&
+            metric.validationStatus === validationStatus && JSON.stringify(metric.validationErrors) === JSON.stringify(warnings)) continue;
+        await tx.coupangAdMetric.update({ where: { id: metric.id }, data: { spendProductId: matches.spendProductId, spendProductRuleId: matches.spendRuleId,
+          conversionProductId: matches.conversionProductId, conversionProductRuleId: matches.conversionRuleId,
+          spendMatchSource: matches.spendMatchSource, conversionMatchSource: matches.conversionMatchSource,
+          validationStatus, validationErrors: warnings as unknown as Prisma.InputJsonValue } });
+        await this.replaceCoupangRowWarnings({ uploadBatchId: metric.uploadBatchId!, sourceType: CoupangUploadSourceType.ADS,
+          saleLineId: null, adMetricId: metric.id, rowNumber: metric.rowNumber, warnings }, tx);
+        await audit("COUPANG_AD_METRIC", metric.id, { spendProductId: metric.spendProductId, conversionProductId: metric.conversionProductId },
+          { spendProductId: matches.spendProductId, conversionProductId: matches.conversionProductId, validationStatus });
       }
-      }, COUPANG_TRANSACTION_OPTIONS);
-      matchedSpendCount += productMatches.spendMatched ? 1 : 0;
-      matchedConversionCount += productMatches.conversionMatched ? 1 : 0;
+      for (const promotion of snapshot.promotions) {
+        const match = this.matcher.matchText(promotion.productText, rules, promotion.promotionStartDate);
+        const warnings = [...preservedCoupangWarnings(promotion.validationErrors as Prisma.JsonValue).filter(issue => issue.errorCode !== "INVALID_PROMOTION_STATUS"),
+          ...(match.productId ? [] : [matchIssue(match.reason, match.candidates)]),
+          ...(isInactivePromotionStatus(promotion.promotionStatus) ? [invalidPromotionStatusIssue(promotion.promotionStatus ?? null)] : [])];
+        const validationStatus = validationStatusFor([], warnings, match.productId);
+        counts.matchedPromotionCount += match.productId ? 1 : 0;
+        if (promotion.coupangProductId === match.productId && promotion.coupangProductRuleId === match.matchRuleId &&
+            promotion.validationStatus === validationStatus && JSON.stringify(promotion.validationErrors) === JSON.stringify(warnings)) continue;
+        await tx.coupangPromotionPrice.update({ where: { id: promotion.id }, data: { coupangProductId: match.productId, coupangProductRuleId: match.matchRuleId,
+          matchSource: match.productId ? MatchSource.RULE : MatchSource.UNMATCHED, validationStatus, validationErrors: warnings as unknown as Prisma.InputJsonValue } });
+        await this.replaceCoupangRowWarnings({ uploadBatchId: promotion.uploadBatchId!, sourceType: CoupangUploadSourceType.PROMOTION,
+          saleLineId: null, adMetricId: null, promotionPriceId: promotion.id, rowNumber: promotion.rowNumber, warnings }, tx);
+        await audit("COUPANG_PROMOTION_PRICE", promotion.id, { productId: promotion.coupangProductId }, { productId: match.productId, validationStatus });
       }
-      scannedAdsCount += adMetrics.length;
-      if (candidates.length <= take) break;
-      const last = adMetrics.at(-1);
-      if (!last) break;
-      adCursor = { metricDate: last.metricDate, rowNumber: last.rowNumber, id: last.id };
-    }
-
-    let matchedPromotionCount = 0;
-    let scannedPromotionCount = 0;
-    let promotionCursor: { promotionStartDate: Date; rowNumber: number; id: string } | null = null;
-    while (true) {
-      const candidates: CoupangPromotionPrice[] = await this.prisma.coupangPromotionPrice.findMany({
-        where: {
-          promotionStartDate: { lte: range.toDate },
-          promotionEndDate: { gte: range.fromDate },
-          validationStatus: { not: RowValidationStatus.ERROR },
-          ...(promotionCursor ? { OR: [
-            { promotionStartDate: { gt: promotionCursor.promotionStartDate } },
-            { promotionStartDate: promotionCursor.promotionStartDate, rowNumber: { gt: promotionCursor.rowNumber } },
-            { promotionStartDate: promotionCursor.promotionStartDate, rowNumber: promotionCursor.rowNumber, id: { gt: promotionCursor.id } }
-          ] } : {})
-        },
-        take: take + 1,
-        orderBy: [{ promotionStartDate: "asc" }, { rowNumber: "asc" }, { id: "asc" }]
-      });
-      const promotionPrices = candidates.slice(0, take);
-      for (const promotion of promotionPrices) {
-      const match = this.matcher.matchText(promotion.productText, rules, promotion.promotionStartDate);
-      const matched = match.reason === "MATCHED";
-      const warnings = [
-        ...(matched ? [] : [matchIssue(match.reason, match.candidates)]),
-        ...(isInactivePromotionStatus(promotion.promotionStatus) ? [invalidPromotionStatusIssue(promotion.promotionStatus)] : [])
-      ];
-      const validationStatus = validationStatusFor([], warnings, matched ? match.productId : null);
-      await this.prisma.$transaction(async (tx) => {
-      await tx.coupangPromotionPrice.update({
-        where: { id: promotion.id },
-        data: {
-          coupangProductId: matched ? match.productId : null,
-          coupangProductRuleId: matched ? match.matchRuleId : null,
-          matchSource: matched ? MatchSource.RULE : MatchSource.UNMATCHED,
-          validationStatus,
-          validationErrors: warnings as unknown as Prisma.InputJsonValue
-        }
-      });
-      await this.replaceCoupangRowWarnings({
-        uploadBatchId: promotion.uploadBatchId,
-        sourceType: CoupangUploadSourceType.PROMOTION,
-        saleLineId: null,
-        adMetricId: null,
-        promotionPriceId: promotion.id,
-        rowNumber: promotion.rowNumber,
-        warnings
-      }, tx);
-      if (actorId) {
-        await writeSecurityAudit(tx, {
-          actorUserId: actorId,
-          actorType: SecurityAuditActorType.USER,
-          action: "COUPANG_MAPPING_REMATCH",
-          targetType: "COUPANG_PROMOTION_PRICE",
-          targetId: promotion.id,
-          result: SecurityAuditResult.SUCCESS,
-          beforeJson: { matched: Boolean(promotion.coupangProductId), validationStatus: promotion.validationStatus },
-          afterJson: { matched, validationStatus }
-        });
-      }
-      }, COUPANG_TRANSACTION_OPTIONS);
-      matchedPromotionCount += matched ? 1 : 0;
-      }
-      scannedPromotionCount += promotionPrices.length;
-      if (candidates.length <= take) break;
-      const last = promotionPrices.at(-1);
-      if (!last) break;
-      promotionCursor = { promotionStartDate: last.promotionStartDate, rowNumber: last.rowNumber, id: last.id };
-    }
-    if (actorId && scannedSalesCount === 0 && scannedAdsCount === 0 && scannedPromotionCount === 0) {
-      await this.prisma.$transaction((tx) => writeSecurityAudit(tx, {
-        actorUserId: actorId,
-        actorType: SecurityAuditActorType.USER,
-        action: "COUPANG_MAPPING_REMATCH",
-        targetType: "COUPANG_MAPPING",
-        result: SecurityAuditResult.SUCCESS,
-        afterJson: { scannedCount: 0, matchedCount: 0 }
-      }));
-    }
-    return {
-      period: { from: range.from, to: range.to },
-      scannedSalesCount,
-      matchedSalesCount,
-      scannedAdsCount,
-      matchedSpendCount,
-      matchedConversionCount,
-      scannedPromotionCount,
-      matchedPromotionCount
-    };
+      return { period: { from: range.from, to: range.to }, ...counts };
+    }, { ...COUPANG_TRANSACTION_OPTIONS, isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
   async dashboard(query: { from?: string; to?: string; groupBy?: string }) {
@@ -3149,7 +2957,69 @@ export class CoupangService {
     };
   }
 
-  async mappingIssues(query: { from?: string; to?: string; take?: string }) {
+  async previewMappings(query: { from?: string; to?: string; take?: number; offset?: number; targetKind?: string; reviewFilter?: string },
+    body: { ruleId?: string; rule?: Record<string, unknown> } = {}) {
+    const range = parseDateRange(query.from, query.to);
+    const input = await this.mappingReviewInput(range);
+    const previewToken = coupangMappingReviewToken(input, range.from, range.to);
+    if (body.ruleId && !body.rule) throw new BadRequestException("검토할 규칙이 필요합니다.");
+    if (body.rule) {
+      const prior = body.ruleId ? input.rules.find(rule => rule.id === body.ruleId) : undefined;
+      if (!prior && !body.rule.validFrom) throw new BadRequestException("새 규칙의 적용 시작일을 입력하세요.");
+      if (body.ruleId && !prior) throw new BadRequestException("검토할 활성 규칙을 찾을 수 없습니다. 새 규칙으로 검토하세요.");
+      const productId = requiredString(body.rule.coupangProductId ?? body.rule.productId ?? prior?.productId, "coupangProductId");
+      if (!input.products.some(product => product.id === productId && product.isActive !== false)) throw new BadRequestException("활성 상품을 선택하세요.");
+      const rule: CoupangRuleInput = { ...prior, id: body.ruleId ?? "preview:new", productId,
+        displayName: optionalString(body.rule.displayName) ?? prior?.displayName,
+        includeKeywords: requiredStringArray(body.rule.includeKeywords ?? prior?.includeKeywords, "includeKeywords"),
+        excludeKeywords: stringArray(body.rule.excludeKeywords) ?? prior?.excludeKeywords ?? [],
+        priority: numberOrDefault(body.rule.priority, prior?.priority ?? 100),
+        validFrom: body.rule.validFrom ? asDateOnly(String(body.rule.validFrom)) : prior?.validFrom ?? range.from,
+        validTo: body.rule.validTo === undefined ? prior?.validTo : dateOrNullFromBody(body.rule.validTo),
+        adEnabled: body.rule.adEnabled === undefined ? prior?.adEnabled ?? true : Boolean(body.rule.adEnabled),
+        isActive: body.rule.isActive === undefined ? prior?.isActive ?? true : Boolean(body.rule.isActive) };
+      assertCoupangMappingRule(rule);
+      input.rules = [...input.rules.filter(item => item.id !== rule.id), rule];
+    }
+    const review = reviewCoupangMappings(input);
+    const rows = review.rows.filter(row => (!query.targetKind || query.targetKind === "ALL" || row.targetKind === query.targetKind) &&
+      (query.reviewFilter === "CHANGED" ? row.change !== "UNCHANGED" : query.reviewFilter === "ALL" || row.needsReview));
+    const offset = Math.max(0, query.offset ?? 0), take = Math.min(2000, Math.max(1, query.take ?? 100));
+    return { period: { from: range.from, to: range.to }, previewToken: body.rule ? null : previewToken, draft: !!body.rule,
+      summary: review.summary, amounts: review.amounts, filteredCount: rows.length, offset, take,
+      hasMore: offset + take < rows.length, rows: rows.slice(offset, offset + take) };
+  }
+
+  private async mappingReviewInput(range: ReturnType<typeof parseDateRange>, client?: Prisma.TransactionClient): Promise<MappingReviewInput> {
+    const maxRows = 100_000;
+    const read = async (tx: Prisma.TransactionClient) => {
+      const batch = { select: { originalFilename: true } };
+      const [products, savedRules, sales, ads, promotions] = await Promise.all([
+        tx.coupangProduct.findMany({ select: { id: true, displayName: true, standardName: true, isActive: true }, orderBy: { id: "asc" } }),
+        tx.coupangProductRule.findMany({ orderBy: { id: "asc" } }),
+        tx.coupangSaleLine.findMany({ where: { isCurrent: true, saleDate: { gte: range.fromDate, lte: range.toDate }, validationStatus: { not: RowValidationStatus.ERROR } },
+          select: { id: true, uploadBatchId: true, validationStatus: true, saleDate: true, rowNumber: true, productName: true, optionName: true, optionId: true, netSalesKrw: true,
+            coupangProductId: true, coupangProductRuleId: true, validationErrors: true, batch }, orderBy: { id: "asc" }, take: maxRows + 1 }),
+        tx.coupangAdMetric.findMany({ where: { isCurrent: true, metricDate: { gte: range.fromDate, lte: range.toDate }, validationStatus: { not: RowValidationStatus.ERROR } },
+          select: { id: true, uploadBatchId: true, validationStatus: true, metricDate: true, rowNumber: true, adExecutionProductName: true, adName: true, conversionProductName: true,
+            adExecutionOptionId: true, conversionOptionId: true, adSpendKrw: true, totalConversionSales1dKrw: true, spendProductId: true,
+            conversionProductId: true, spendProductRuleId: true, conversionProductRuleId: true, validationErrors: true, batch }, orderBy: { id: "asc" }, take: maxRows + 1 }),
+        tx.coupangPromotionPrice.findMany({ where: { promotionStartDate: { lte: range.toDate }, promotionEndDate: { gte: range.fromDate }, validationStatus: { not: RowValidationStatus.ERROR } },
+          select: { id: true, uploadBatchId: true, validationStatus: true, promotionStatus: true, promotionStartDate: true, promotionEndDate: true, rowNumber: true, productText: true, optionId: true,
+            promotionPriceKrw: true, coupangProductId: true, coupangProductRuleId: true, validationErrors: true, batch }, orderBy: { id: "asc" }, take: maxRows + 1 })
+      ]);
+      if ([sales, ads, promotions].some(rows => rows.length > maxRows)) throw new BadRequestException({
+        code: "MAPPING_REVIEW_RANGE_TOO_LARGE", message: "검증 원천이 종류별 10만 행을 초과합니다. 기간을 나누어 전체 검증하세요." });
+      const rules = savedRules.map(rule => ({ id: rule.id, productId: rule.coupangProductId, displayName: rule.displayName,
+        includeKeywords: jsonStringArray(rule.includeKeywords), excludeKeywords: jsonStringArray(rule.excludeKeywords), priority: rule.priority,
+        validFrom: rule.validFrom, validTo: rule.validTo, adEnabled: rule.adEnabled,
+        isActive: rule.isActive && products.some(product => product.id === rule.coupangProductId && product.isActive) }));
+      return { products, rules, sales, ads, promotions };
+    };
+    return client ? read(client) : this.prisma.$transaction(read, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 90_000, maxWait: 30_000 });
+  }
+
+  async mappingIssues(query: { from?: string; to?: string; take?: string; offset?: number; issueType?: string; targetKind?: string }) {
     const range = parseDateRange(query.from, query.to);
     const take = Math.min(Math.max(Number(query.take ?? 500) || 500, 1), 2000);
     const [sales, ads, promotions] = await Promise.all([
@@ -3193,10 +3063,15 @@ export class CoupangService {
       ...ads.flatMap((metric) => adsMappingIssueRows(metric)),
       ...promotions.flatMap((promotion) => promotionMappingIssueRows(promotion))
     ].sort(compareMappingIssues);
+    const filtered = allRows.filter(row => (!query.issueType || query.issueType === "ALL" || row.issueType === query.issueType) &&
+      (!query.targetKind || query.targetKind === "ALL" || row.targetKind === query.targetKind));
+    const offset = Math.max(0, query.offset ?? 0);
     return {
       period: { from: range.from, to: range.to },
       summary: mappingIssueSummary(allRows),
-      rows: allRows.slice(0, take)
+      filteredCount: filtered.length,
+      offset, take, hasMore: offset + take < filtered.length,
+      rows: filtered.slice(offset, offset + take)
     };
   }
 
@@ -3360,7 +3235,8 @@ export class CoupangService {
       priority: rule.priority,
       validFrom: formatDateOnly(rule.validFrom),
       validTo: rule.validTo ? formatDateOnly(rule.validTo) : null,
-      isActive: rule.isActive
+      isActive: rule.isActive,
+      adEnabled: rule.adEnabled
     }));
   }
 
@@ -4681,6 +4557,17 @@ function matchIssue(errorCode: string, candidates: string[]): RowIssue {
   };
 }
 
+function assertCoupangMappingRule(rule: { includeKeywords?: unknown; excludeKeywords?: unknown; validFrom?: unknown; validTo?: unknown }) {
+  const include = requiredStringArray(rule.includeKeywords, "includeKeywords").map(normalizeCoupangText);
+  const exclude = (stringArray(rule.excludeKeywords) ?? []).map(normalizeCoupangText).filter(Boolean);
+  if (include.some(term => exclude.some(blocked => containsCoupangKeyword(term, blocked)))) {
+    throw new BadRequestException({ code: "CONTRADICTORY_MAPPING_RULE", message: "필수 포함 키워드를 제외하는 규칙은 저장할 수 없습니다." });
+  }
+  const date = (value: unknown) => value instanceof Date ? formatDateOnly(value) : value ? String(value).slice(0, 10) : null;
+  const from = date(rule.validFrom), to = date(rule.validTo);
+  if (from && to && to < from) throw new BadRequestException({ code: "INVALID_RULE_PERIOD", message: "적용 종료일은 시작일보다 빠를 수 없습니다." });
+}
+
 function aggregateCoupangAdsImportRows(rows: ParsedCoupangAdsRowResult[]): CoupangAdsImportRow[] {
   const passthroughRows: CoupangAdsImportRow[] = [];
   const groups = new Map<string, ParsedCoupangAdsRowResult[]>();
@@ -4766,88 +4653,16 @@ function resolveCoupangAdProductMatches(input: {
   adName?: string | null;
   conversionProductName: string;
 }): CoupangAdProductMatchResolution {
+  const { spend, conversion, inferred, conversionMissing } = input.matcher.matchAdProducts(input, input.rules, input.metricDate);
   const warnings: RowIssue[] = [];
-  const conversionIsPlaceholder = isPlaceholderCoupangProductText(input.conversionProductName);
-  const spendMatch = resolveCoupangAdSpendProductMatch(input);
-  let spendProductId: string | null = spendMatch.productId;
-  let spendRuleId: string | null = spendMatch.ruleId;
-  let conversionProductId: string | null = null;
-  let conversionRuleId: string | null = null;
-  let spendMatchSource: MatchSource = spendMatch.matchSource;
-  let conversionMatchSource: MatchSource = MatchSource.UNMATCHED;
-  let spendMatched = spendMatch.matched;
-  let conversionMatched = false;
-
-  if (spendMatch.warning) {
-    warnings.push(spendMatch.warning);
-  }
-
-  if (conversionIsPlaceholder && spendProductId) {
-    conversionProductId = spendProductId;
-    conversionRuleId = spendRuleId;
-    conversionMatchSource = MatchSource.INFERRED;
-    conversionMatched = true;
-  } else if (!conversionIsPlaceholder) {
-    const conversionMatch = input.matcher.matchText(input.conversionProductName, input.rules, input.metricDate);
-    if (conversionMatch.reason === "MATCHED") {
-      conversionProductId = conversionMatch.productId;
-      conversionRuleId = conversionMatch.matchRuleId;
-      conversionMatchSource = MatchSource.RULE;
-      conversionMatched = true;
-    } else {
-      warnings.push(matchIssue(`CONVERSION_${conversionMatch.reason}`, conversionMatch.candidates));
-    }
-  }
-
+  if (spend.reason !== "MATCHED") warnings.push(matchIssue(`SPEND_${spend.reason}`, spend.candidates));
+  if (!conversionMissing && conversion.reason !== "MATCHED") warnings.push(matchIssue(`CONVERSION_${conversion.reason}`, conversion.candidates));
   return {
-    spendProductId,
-    spendRuleId,
-    conversionProductId,
-    conversionRuleId,
-    spendMatchSource,
-    conversionMatchSource,
-    warnings,
-    spendMatched,
-    conversionMatched
-  };
-}
-
-function resolveCoupangAdSpendProductMatch(input: CoupangSpendMatchInput): CoupangSpendMatchResolution {
-  if (!isPlaceholderCoupangProductText(input.adExecutionProductName)) {
-    return matchCoupangAdSpendText(input.adExecutionProductName, input);
-  }
-
-  if (!isPlaceholderCoupangProductText(input.adName)) {
-    return matchCoupangAdSpendText(input.adName!, input);
-  }
-
-  return {
-    productId: null,
-    ruleId: null,
-    matchSource: MatchSource.UNMATCHED,
-    warning: matchIssue("SPEND_NO_MATCH", []),
-    matched: false
-  };
-}
-
-function matchCoupangAdSpendText(text: string, input: CoupangSpendMatchInput): CoupangSpendMatchResolution {
-  const match = input.matcher.matchText(text, input.rules, input.metricDate);
-  if (match.reason === "MATCHED") {
-    return {
-      productId: match.productId,
-      ruleId: match.matchRuleId,
-      matchSource: MatchSource.RULE,
-      warning: null,
-      matched: true
-    };
-  }
-
-  return {
-    productId: null,
-    ruleId: null,
-    matchSource: MatchSource.UNMATCHED,
-    warning: matchIssue(`SPEND_${match.reason}`, match.candidates),
-    matched: false
+    spendProductId: spend.productId, spendRuleId: spend.matchRuleId,
+    conversionProductId: conversion.productId, conversionRuleId: conversion.matchRuleId,
+    spendMatchSource: spend.productId ? MatchSource.RULE : MatchSource.UNMATCHED,
+    conversionMatchSource: inferred ? MatchSource.INFERRED : conversion.productId ? MatchSource.RULE : MatchSource.UNMATCHED,
+    warnings, spendMatched: spend.reason === "MATCHED", conversionMatched: conversion.reason === "MATCHED"
   };
 }
 
@@ -4863,7 +4678,7 @@ function coupangAdSpendDisplayText(metric: {
   campaignName?: string | null;
 }) {
   return (
-    [metric.adExecutionProductName, metric.adName, metric.adGroupName, metric.campaignName].find(
+    [metric.adExecutionProductName, metric.adName].find(
       (value) => !isPlaceholderCoupangProductText(value)
     ) ?? "-"
   );
@@ -4986,10 +4801,10 @@ function mappingIssueType(errorCode: string): CoupangMappingIssueRow["issueType"
   if (code === "NO_MATCH") {
     return "UNMATCHED";
   }
-  if (code === "AMBIGUOUS_MATCH") {
+  if (code === "AMBIGUOUS_MATCH" || code === "OPTION_CONFLICT") {
     return "AMBIGUOUS";
   }
-  if (code === "EXCLUDED_BY_KEYWORD") {
+  if (code === "EXCLUDED_BY_KEYWORD" || code === "AD_DISABLED") {
     return "EXCLUDED";
   }
   return null;
@@ -5002,6 +4817,12 @@ function syntheticMappingIssue(errorCode: string): ParsedValidationIssue {
     rawValue: null,
     candidates: []
   };
+}
+
+function preservedCoupangWarnings(value: Prisma.JsonValue): RowIssue[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((issue): issue is Prisma.JsonObject => isJsonObject(issue) &&
+    typeof issue.errorCode === "string" && !mappingIssueType(issue.errorCode)) as unknown as RowIssue[];
 }
 
 function parseValidationIssues(value: Prisma.JsonValue): ParsedValidationIssue[] {
