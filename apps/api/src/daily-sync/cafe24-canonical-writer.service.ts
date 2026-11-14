@@ -15,7 +15,7 @@ import { cafe24ObservationKey } from "./cafe24-observed-revision";
 import { cafe24CanonicalFingerprint } from "./cafe24-canonical-fingerprint";
 import type { Cafe24ApiOrder } from "./cafe24-api-order";
 import { cafe24ProviderCouponSignal } from "./cafe24-order-adapter";
-import { cafe24OptionCompositionFits } from "./cafe24-option-projection";
+import { CAFE24_OPTION_VALUE_LIMIT, CAFE24_BUSINESS_KEY_BYTE_LIMIT, cafe24OptionCompositionFits } from "./cafe24-option-projection";
 
 type PublishHeader = {
   connectionId: string; runId: string; generation: bigint; metricDate: Date;
@@ -53,6 +53,8 @@ export class Cafe24CanonicalWriterService {
       if ([row.orderStatus, row.lineStatus].some(requiresCafe24RawAllItemsEvidence))
         assertCafe24RawAllItemsV1Evidence(day);
       const key = cafe24Key(input.connectionId, row);
+      if (Buffer.byteLength(key, "utf8") > CAFE24_BUSINESS_KEY_BYTE_LIMIT)
+        invalid("Cafe24 business identity exceeds the indexed key byte limit.");
       if (keys.has(key)) invalid("Duplicate Cafe24 line business key in one API unit.");
       keys.add(key);
     }
@@ -331,7 +333,7 @@ function validateCafe24Order(row: Cafe24ApiOrder) {
   [row.orderNo, row.lineOrderNo, row.productNo].forEach(requiredId);
   requiredName(row.productName);
   if (!cafe24OptionCompositionFits(row.optionName) ||
-      (row.optionValue != null && (typeof row.optionValue !== "string" || row.optionValue.length > 256 ||
+      (row.optionValue != null && (typeof row.optionValue !== "string" || row.optionValue.length > CAFE24_OPTION_VALUE_LIMIT ||
         /[\u0000-\u001f\u007f]/.test(row.optionValue))) ||
       (row.paymentMethod !== null &&
         (typeof row.paymentMethod !== "string" || row.paymentMethod.length > 256)) ||

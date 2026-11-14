@@ -1,3 +1,5 @@
+import { CAFE24_OPTION_VALUE_LIMIT } from "./cafe24-option-projection";
+
 /** Pure projection used by the one-off option recovery command. No parsing of names. */
 export function cafe24OriginalOptionItems(value: unknown) {
   if (!Array.isArray(value)) throw new Error("OPTION_ITEMS_REQUIRED");
@@ -8,7 +10,7 @@ export function cafe24OriginalOptionItems(value: unknown) {
     const id = String(item.order_item_code ?? ""), productNo = String(item.product_no ?? "");
     if (!/^[A-Za-z0-9_-]{1,128}$/.test(id) || !/^[A-Za-z0-9_-]{1,128}$/.test(productNo) || seen.has(id))
       throw new Error("OPTION_ITEM_IDENTITY_INVALID");
-    if (typeof item.option_value !== "string" || item.option_value.length > 256 ||
+    if (typeof item.option_value !== "string" || item.option_value.length > CAFE24_OPTION_VALUE_LIMIT ||
         /[\u0000-\u001f\u007f]/.test(item.option_value)) throw new Error("OPTION_VALUE_INVALID");
     seen.add(id);
     return { lineOrderNo: id, productNo, optionValue: item.option_value };

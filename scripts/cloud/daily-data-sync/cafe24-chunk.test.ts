@@ -55,6 +55,17 @@ test("an empty option replaced by a selected option still fails the second full 
     option_value: stage === "ITEMS_VERIFY" ? "selected" : "" })),
     (error: any) => error.safeCode === "RECONCILIATION_FAILED");
 });
+
+test("long concatenated options survive both passes and checkpoint restarts without truncation", async () => {
+  const option = "선택옵션=" + "긴구성".repeat(100);
+  const result = await collect(42, (_stage, row) => ({...row, option_value: option}));
+  assert(result.last.snapshot.orders.every((line: any) => line.optionValue === option &&
+    line.optionName === `test product(${option})`));
+  assert.equal(result.itemCalls, 84);
+  await assert.rejects(collect(2, (stage, row) => ({...row,
+    option_value: stage === "ITEMS_VERIFY" ? option + "변경" : option})),
+    (error: any) => error.safeCode === "RECONCILIATION_FAILED");
+});
 test("foreign connection/day checkpoint and incomplete first list fail before item requests", async () => {
   let requests = 0;
   const state: any = { version: 1, connectionId: "foreign", day: "2026-10-11", stage: "LIST_FIRST", count: 1, first: [], second: [], items: [], cursor: 0, verifiedItems: 0 };

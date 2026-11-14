@@ -16,6 +16,8 @@ if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch
 if (profile === 'reporting') {
   // Bounded, admin-only option-shape diagnostics; no provider values or writes.
   expected.add('daily-sync/cafe24-order-preflight.client.js');
+  // Separate product-name and concatenated option-value capacity; no formulas change.
+  expected.add('daily-sync/cafe24-option-projection.js');
   // Reviewed additive worker entry reuses the native sales/coupon calculators; HTTP formulas remain unchanged.
   expected.add('sales/sales-metrics.service.js');
   expected.add('domain/cafe24-coupon-line-allocation.js');

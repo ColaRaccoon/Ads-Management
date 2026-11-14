@@ -3,7 +3,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import type { Cafe24ApiOrder } from "./cafe24-api-order";
 import { ProviderFailure } from "./bounded-request";
 import type { Cafe24FailureDiagnosticCode } from "./cafe24-failure-diagnostic";
-import { CAFE24_OPTION_COMPONENT_LIMIT, cafe24OptionCompositionFits } from "./cafe24-option-projection";
+import { CAFE24_OPTION_COMPONENT_LIMIT, CAFE24_OPTION_VALUE_LIMIT, cafe24OptionCompositionFits } from "./cafe24-option-projection";
 
 function unsupported(code: Cafe24FailureDiagnosticCode): never {
   throw new ProviderFailure("FIELD_UNSUPPORTED", false, null, null, code);
@@ -143,7 +143,7 @@ export function normalizeCafe24Order(rawOrder: unknown, rawItems: unknown,
     if (typeof item.option_value !== "string")
       unsupported("CAFE24_FIELD_OPTION_VALUE");
     const option = item.option_value === "" ? "" : requiredText(item.option_value, "CAFE24_FIELD_OPTION_VALUE",
-      CAFE24_OPTION_COMPONENT_LIMIT);
+      CAFE24_OPTION_VALUE_LIMIT);
     const productName = requiredText(item.product_name, "CAFE24_FIELD_PRODUCT_NAME",
       CAFE24_OPTION_COMPONENT_LIMIT);
     if (option !== item.option_value || /[\u0000-\u001f\u007f]/.test(option))

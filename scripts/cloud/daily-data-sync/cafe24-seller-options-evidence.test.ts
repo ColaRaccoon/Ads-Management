@@ -86,7 +86,7 @@ test("real option-value validation still rejects malformed provider data", () =>
     option_value: "S", quantity: 1, product_price: "100", order_status: "N00"};
   const options = {verifiedSellerDropdown: true, csvOptionEvidence: {mallId: "didadi0729", shopKey: "shop1"}};
   assert.equal(normalizeCafe24Order(order, [item], options)[0].optionName, "Synthetic(S)");
-  for (const value of [null, undefined, " ", " S", "S\u0000", "S".repeat(257)])
+  for (const value of [null, undefined, " ", " S", "S\u0000", "S".repeat(1025)])
     assert.throws(() => normalizeCafe24Order(order, [{...item, option_value: value}], options),
       (error: unknown) => error instanceof ProviderFailure && error.safeCode === "FIELD_UNSUPPORTED" &&
         error.diagnosticCode === "CAFE24_FIELD_OPTION_VALUE");

@@ -25,7 +25,7 @@ const google = ['daily-sync/google-ads.client.js', 'daily-sync/google-canonical-
   'google/google-performance.js', 'google/google-read.service.js', 'google/google-sale-configuration.js', 'google/google-sale-matcher.js', 'google/google-sale-matcher.test.js',
   'google/google.controller.js', 'google/google.dto.js', 'google/google.module.js',
   'google/google-performance.test.js', 'google/google.service.test.js'];
-const cafe24 = ['daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24-canonical-writer.service.js',
+const cafe24 = ['daily-sync/cafe24-option-projection.js', 'daily-sync/cafe24-canonical-fingerprint.js', 'daily-sync/cafe24-canonical-writer.service.js',
   'daily-sync/cafe24-option-backfill.js', 'daily-sync/cafe24-order-adapter.js', 'daily-sync/cafe24-rule-loader.js',
   'domain/cafe24-csv.js', 'domain/cafe24-matcher.js', 'sales/cafe24-uploads.service.js', 'sales/dto/sales-transport.dto.js',
   'daily-sync/cafe24-order-preflight.client.js'];

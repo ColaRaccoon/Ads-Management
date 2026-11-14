@@ -5,7 +5,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { PrismaService } from "../common/prisma.service";
 import { boundedProviderRequest, collectBoundedPages, ProviderFailure } from "./bounded-request";
 import { cafe24RetryAfterMs } from "./cafe24-rate-limit";
-import { CAFE24_OPTION_COMPONENT_LIMIT } from "./cafe24-option-projection";
+import { CAFE24_OPTION_VALUE_LIMIT } from "./cafe24-option-projection";
 import { Cafe24OauthService } from "./cafe24-oauth.service";
 import { cafe24TestAllowed } from "./cafe24-test-connection.service";
 import { cafe24ObservedRevision, cafe24ObservationHmac,
@@ -1423,7 +1423,7 @@ export class Cafe24OrderPreflightClient {
     const shapes = { absent: 0, null: 0, empty: 0, whitespaceOnly: 0, padded: 0,
       controlCharacters: 0, overLimit: 0, unsupportedType: 0, valid: 0 };
     const seenOrders = new Set<string>();
-    let itemCount = 0;
+    let itemCount = 0, maxOptionValueLength = 0;
     for (const raw of rows) {
       const order = record(raw), orderId = identifier(order.order_id);
       if (seenOrders.has(orderId) || String(order.shop_no) !== shopNo ||
@@ -1442,10 +1442,11 @@ export class Cafe24OrderPreflightClient {
         if (seenItems.has(key)) throw new ProviderFailure("RECONCILIATION_FAILED", false);
         seenItems.add(key);
         const value = item.option_value;
+        if (typeof value === "string") maxOptionValueLength = Math.max(maxOptionValueLength, value.length);
         if (!Object.prototype.hasOwnProperty.call(item, "option_value")) shapes.absent++;
         else if (value === null) shapes.null++;
         else if (typeof value !== "string") shapes.unsupportedType++;
-        else if (value.length > CAFE24_OPTION_COMPONENT_LIMIT) shapes.overLimit++;
+        else if (value.length > CAFE24_OPTION_VALUE_LIMIT) shapes.overLimit++;
         else if (/[\u0000-\u001f\u007f]/.test(value)) shapes.controlCharacters++;
         else if (value === "") shapes.empty++;
         else if (!value.trim()) shapes.whitespaceOnly++;
@@ -1454,7 +1455,7 @@ export class Cafe24OrderPreflightClient {
         itemCount++;
       }
     }
-    return { day, offset, orderCount: rows.length, itemCount, shapes,
+    return { day, offset, orderCount: rows.length, itemCount, shapes, maxOptionValueLength,
       nextOffset: rows.length === limit && offset + limit <= 9999 ? offset + limit : null,
       snapshotComplete: false, canonicalMappingVerified: false };
   }

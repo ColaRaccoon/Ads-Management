@@ -2,6 +2,7 @@ import { parse } from "csv-parse/sync";
 import { createHash } from "node:crypto";
 import { decode } from "iconv-lite";
 import { formatDateOnly, ParseIssue, toDateOnly } from "./date-number";
+import { CAFE24_OPTION_VALUE_LIMIT } from "../daily-sync/cafe24-option-projection";
 
 export const CAFE24_ORDER_SCHEMA_VERSION = 2;
 
@@ -116,7 +117,7 @@ export class Cafe24CsvParser {
     const productName = this.requiredText(rawRow, "productName", issues);
     const optionName = this.requiredText(rawRow, "optionName", issues);
     const optionValue = textValue(readColumn(rawRow, "optionValue")) || null;
-    if (optionValue != null && (optionValue.length > 256 || /[\u0000-\u001f\u007f]/.test(optionValue))) {
+    if (optionValue != null && (optionValue.length > CAFE24_OPTION_VALUE_LIMIT || /[\u0000-\u001f\u007f]/.test(optionValue))) {
       issues.push({ columnName: "옵션값", errorCode: "INVALID_OPTION_VALUE", message: "Original option value exceeds its field limit or contains control characters." });
     }
     const quantity = this.requiredNumber(rawRow, "quantity", issues);

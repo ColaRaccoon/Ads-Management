@@ -28,7 +28,7 @@ function fixture(orders: unknown[], items: unknown[], scope = connection) {
 test("classifies every rejected option shape without returning provider identifiers or values", async () => {
   const items = [
     { order_item_code: "PRIVATE_ABSENT" }, line(null, 1), line("", 2), line("  ", 3),
-    line(" PRIVATE_PADDED", 4), line("PRIVATE\nCONTROL", 5), line("X".repeat(257), 6),
+    line(" PRIVATE_PADDED", 4), line("PRIVATE\nCONTROL", 5), line("X".repeat(1025), 6),
     line({ private: "PRIVATE_OBJECT" }, 7), line("PRIVATE_VALID", 8)
   ];
   const f = fixture([order(1)], items);
