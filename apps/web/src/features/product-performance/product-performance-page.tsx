@@ -103,7 +103,7 @@ function Performance({ identity }: { identity: string }) {
     {invalid ? <div className="panel" role="alert">{invalid}</div> : null}
     {!invalid && options.isError ? <div className="panel" role="alert">조회 조건 목록: {dashboardError(options.error)}</div> : null}
     {!invalid && empty ? <div className="panel" role="status">{filters.platforms.length === 0 ? "플랫폼을 선택하세요." : "계정·스토어를 선택하세요."} 선택하지 않은 범위는 0원으로 표시하지 않습니다.</div> : null}
-    {!invalid && !empty && view === "daily" ? <DailyReport identity={identity} filters={filters} options={optionData} requestedDate={searchParams.get("dailyDate") ?? ""} onDateChange={setDailyDate} onRefreshLatest={() => { void options.refetch(); }} /> : null}
+    {!invalid && !empty && view === "daily" ? <DailyReport identity={identity} filters={filters} options={optionData} loadingOptions={options.isFetching} requestedDate={searchParams.get("dailyDate") ?? ""} onDateChange={setDailyDate} onRefreshLatest={() => { void options.refetch(); }} /> : null}
     {view === "analysis" && !invalid && !empty && query.isFetching && !data ? <div className="panel" role="status" aria-busy="true">선택한 범위의 성과와 발행 버전을 확인하고 있습니다.</div> : null}
     {view === "analysis" && !invalid && !empty && query.isError ? <div className="panel" role="alert">{dashboardError(query.error)}</div> : null}
     {view === "analysis" && data ? <div id="performance-analysis-panel" role="tabpanel" aria-labelledby="performance-analysis-tab" style={{ display: "grid", gap: 16 }}>

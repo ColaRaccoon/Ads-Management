@@ -31,7 +31,12 @@ export class UnifiedManagementRepository {
     return this.prisma.$transaction(async tx => {
       await tx.$executeRaw(Prisma.sql`SET TRANSACTION READ ONLY`);
       return work(tx);
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, ...(options?{timeout:options.timeoutMs}:{}) });
+    }, {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+      // Report and selection reads can queue behind another report in the runtime pool.
+      // Prisma's transaction execution timeout does not cover that initial wait.
+      ...(options ? { maxWait: options.timeoutMs, timeout: options.timeoutMs } : {})
+    });
   }
   /** Snapshot boundary for adapters: never read catalog and revisions separately. */
   snapshot(tx?: ManagementTransaction) {

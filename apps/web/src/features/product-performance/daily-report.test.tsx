@@ -1,11 +1,26 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { authCoordinator } from "@/features/auth/auth-coordination";
-import { DailyReportSheet, dailyChangeLabel, dailyReportFilters, dailyReportKey } from "./daily-report";
+import { DailyReport, DailyReportSheet, dailyChangeLabel, dailyReportFilters, dailyReportKey } from "./daily-report";
 import { buildDailyReport } from "./daily-report-model";
 import { testData, testFilters } from "./test-fixture";
 after(() => (authCoordinator as unknown as { channel: BroadcastChannel | null }).channel?.close());
+
+test("latest-date lookup can be retried after options fail before a report date is available", () => {
+  const client = new QueryClient();
+  const render = (loadingOptions: boolean) => renderToStaticMarkup(
+    <QueryClientProvider client={client}>
+      <DailyReport identity="test" filters={testFilters()} requestedDate="" loadingOptions={loadingOptions}
+        onDateChange={() => {}} onRefreshLatest={() => {}} />
+    </QueryClientProvider>
+  );
+  assert.match(render(true), /<button[^>]*disabled[^>]*>다시 조회<\/button>/);
+  const failed = render(false);
+  assert.match(failed, /<button type="button">다시 조회<\/button>/);
+  assert.doesNotMatch(failed, /최신 발행일을 확인하고 있습니다/);
+});
 
 function fixture() {
   const filters = testFilters({ productName: "베놈무릎보호대", scopeKeys: ["store-a"] });

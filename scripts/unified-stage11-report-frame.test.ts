@@ -60,6 +60,21 @@ test("report-only one-statement frame equals the previous Prisma reader under ac
   for(const platform of PLATFORMS)for(const date of ["2026-10-25","2026-10-26"])if(!(platform==="NAVER"&&date==="2026-10-25"))await seed(platform,date);
   await seed("CAFE24","2026-10-24","0.000000",true);
   await owner.unifiedAggregationRun.create({data:{sourceSystem:"META",platform:"META",scopeKey:scopes.META,businessDate:new Date("2026-10-26"),status:"FAILED",contractVersion:CONTRACT_VERSION,versions:{},readSnapshotId:"failed",sourceWatermarks:{},controlTotals:[],issues:["SYNTHETIC"],startedAt:new Date("2026-10-28"),completedAt:new Date("2026-10-28")}});
+  await t.test("daily report and selection options survive contention for the single report connection", async () => {
+    let acquired!: () => void;
+    const ready = new Promise<void>(resolve => { acquired = resolve; });
+    const blocker = management.read(async () => {
+      acquired();
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    });
+    await Promise.race([ready, blocker]);
+    const [, options, daily] = await Promise.all([
+      blocker, service.selectionOptions(input, actor), service.read("daily-products", input, actor)
+    ]);
+    assert(options.availableDateRanges.some(row => row.to === input.to));
+    assert("products" in daily && daily.products.some(row => row.productName === input.productName));
+    assert("reportDate" in daily && daily.reportDate === input.to && daily.previousDate === input.from);
+  });
   await t.test("32 platform selections preserve Dates, nulls, exact strings, partial/stale and endpoint/cursor semantics",async()=>{
    for(let mask=0;mask<32;mask++){
     const selected=PLATFORMS.filter((_,index)=>mask&(1<<index)),q=parseReportQuery({...input,platforms:selected});

@@ -16,7 +16,7 @@ test("report read budget preserves read-only RR and leaves adapter defaults unch
   const repository=new UnifiedManagementRepository(prisma);
   assert.equal(await repository.read(async()=>"source"),"source");
   assert.equal(await repository.read(async()=>"report",{timeoutMs:20000}),"report");
-  assert.deepEqual(calls,[{isolationLevel:"RepeatableRead"},{isolationLevel:"RepeatableRead",timeout:20000}]);
+  assert.deepEqual(calls,[{isolationLevel:"RepeatableRead"},{isolationLevel:"RepeatableRead",maxWait:20000,timeout:20000}]);
   assert.deepEqual(statements,["SET TRANSACTION READ ONLY","SET TRANSACTION READ ONLY"]);
   for(const timeoutMs of [0,20001,Infinity,NaN,1.5]) assert.throws(()=>repository.read(async()=>null,{timeoutMs}),/UNIFIED_READ_TIMEOUT_INVALID/);
   assert.equal(calls.length,2);
