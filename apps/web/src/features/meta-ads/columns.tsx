@@ -22,7 +22,9 @@ export const META_ADS_COLUMNS: SortableColumn[] = [
   { key: "providerPurchase", header: "Meta ROAS", render: (row) => <span title="Meta 구매전환금액 ÷ 광고비 · 공급자 기본 기여 기준">{formatPercent(row.totals.providerPurchaseRoas == null ? null : row.totals.providerPurchaseRoas * 100)}</span> },
   { key: "profit", header: "순이익", render: (row) => money(row.totals.marginKrw, "KRW") },
   { key: "cpa", header: "CPA (원)", render: (row) => money(row.totals.cpaKrw, "KRW") },
-  { key: "ctr", header: "CTR", render: (row) => formatPercent(row.totals.ctrLinkPct) },
+  { key: "ctr", header: "링크 CTR", render: (row) => formatPercent(row.totals.ctrLinkPct) },
+  { key: "outboundClicks", header: "아웃바운드 클릭수", render: (row) => numberFmt(row.totals.outboundClicks) },
+  { key: "outboundCtrPct", header: "아웃바운드 CTR", render: (row) => formatPercent(row.totals.outboundCtrPct) },
   { key: "cpm", header: "CPM", render: (row) => money(row.totals.cpmUsd, "USD") },
   { key: "reach", header: "도달", render: (row) => numberFmt(row.totals.reach) },
   ...META_VIDEO_RATE_COLUMNS.map((column): SortableColumn => ({

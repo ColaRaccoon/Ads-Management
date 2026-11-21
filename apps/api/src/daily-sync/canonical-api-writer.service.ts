@@ -516,7 +516,7 @@ function metaMeasures(row: MetaApiAd | MetaApiAdset, isAd: boolean) {
     if ((row.deliveryStatus ?? null) !== currentDeliveryStatus(asset))
       invalid("Meta delivery status must match the observed current effective status.");
   }
-  const allowedReasonFields = ["resultCount", "purchaseCount", "shopClicks", "landingPageViews", "videoPlay3sCount",
+  const allowedReasonFields = ["outboundClicks", "outboundCtrPct", "resultCount", "purchaseCount", "shopClicks", "landingPageViews", "videoPlay3sCount",
     "videoPlay25Count", "videoPlay50Count", "videoPlay75Count", "videoPlay100Count", "addToCartCount"];
   if (!row.metricUnavailableReasons || typeof row.metricUnavailableReasons !== "object" || Array.isArray(row.metricUnavailableReasons) ||
       Object.entries(row.metricUnavailableReasons).some(([field, reason]) => !allowedReasonFields.includes(field) ||

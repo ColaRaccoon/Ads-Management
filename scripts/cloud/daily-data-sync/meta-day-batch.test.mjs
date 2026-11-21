@@ -37,17 +37,22 @@ test('55 API ads use bounded batch I/O while preserving normalized purchases, me
  assert(state.metaAdDailyMetric.every(r=>r.source==='API'&&r.connectionId===connectionId&&r.rawRow===null));
 }));
 
-test('V2 optional counts survive batched canonical persistence and version replay with explicit nulls',()=>enabled(async()=>{
+for (const profile of ['REPORTING_V2', 'REPORTING_V3']) test(profile+' optional metrics survive batched canonical persistence and version replay with explicit nulls',()=>enabled(async()=>{
  const {db,state}=memoryMetaDatabase(),service=writer(db),snapshot=metaBatchSnapshot({ads:2,positive:true});
  for(const [isAd,rows] of [[true,snapshot.ads],[false,snapshot.adsets]])for(const row of rows){
-  const values=Object.fromEntries(metaReportingFields(isAd).map(field=>[field,field==='shopClicks'?null:7]));
+  const values=Object.fromEntries(metaReportingFields(isAd,profile).map(field=>[field,field==='shopClicks'||field==='outboundClicks'?null:field==='outboundCtrPct'?1.375:7]));
   Object.assign(row,values);
-  row.currentMetadata.sourceContext.reportingMeasurement={profile:'REPORTING_V2',rawRowFingerprint:'a'.repeat(64),values};
+  row.currentMetadata.sourceContext.reportingMeasurement={profile,rawRowFingerprint:'a'.repeat(64),values};
   for(const [field,value]of Object.entries(values))if(value===null)row.metricUnavailableReasons[field]='PARTIAL_METRIC';else delete row.metricUnavailableReasons[field];
-  row.sourceRevision+='-reporting-v2';
+  row.sourceRevision+='-'+profile;
  }
  await service.publishMetaDay(input(snapshot));
  for(const row of state.metaAdDailyMetric){assert.equal(row.videoPlay25Count,7);assert.equal(row.addToCartCount,7);assert.equal(row.landingPageViews,7);assert.equal(row.shopClicks,null);assert.equal(row.currentMetadata.sourceContext.reportingMeasurement.values.videoPlay25Count,7);}
+ if (profile === 'REPORTING_V3') for (const row of [...state.metaAdDailyMetric,...state.metaAdsetDailyMetric]) {
+   const values = row.currentMetadata.sourceContext.reportingMeasurement.values;
+   assert.equal(values.outboundClicks, null);
+   assert.equal(values.outboundCtrPct, 1.375);
+ }
  assert.equal(state.metaAdsetDailyMetric[0].landingPageViews,7);
  await service.publishMetaDay(input(snapshot));assert.equal(state.metaAdDailyMetric.length,2);assert.equal(state.metaAdsetDailyMetric.length,1);
  const changed=structuredClone(snapshot);changed.ads[0].videoPlay25Count=8;changed.ads[0].currentMetadata.sourceContext.reportingMeasurement.values.videoPlay25Count=8;changed.ads[0].sourceRevision+='-updated';

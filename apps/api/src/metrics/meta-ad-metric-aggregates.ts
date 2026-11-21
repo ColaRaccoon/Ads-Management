@@ -1,4 +1,5 @@
 import { aggregateMetricReasons, hasMixedMetaAttribution, sumComplete } from "../domain/meta-conditional-metrics";
+import { validCurrentMetadata } from "../domain/meta-current-metadata";
 import { numberFrom } from "../common/date-range";
 import { formatDateOnly } from "../domain/date-number";
 import { MarginCalculator } from "../domain/margin-calculator";
@@ -200,6 +201,16 @@ export function summarizeParseStatus(values: Array<"PARSED" | "FALLBACK">) {
   return values.includes("FALLBACK") ? "FALLBACK" : "PARSED";
 }
 
+export function aggregateOutboundMetrics(rows: readonly Pick<AdDailyMetricRow, "source" | "currentMetadata" | "impressions">[]) {
+  const values = rows.map(row => row.source === "API" && validCurrentMetadata(row.currentMetadata)
+    ? row.currentMetadata.sourceContext?.reportingMeasurement?.values : undefined);
+  const outboundClicks = rows.length ? sumComplete(values.map(value => value?.outboundClicks)) : null;
+  const impressions = rows.reduce((sum, row) => sum + Number(row.impressions), 0);
+  const outboundCtrPct = impressions === 0 ? null : rows.length === 1 && values[0]?.outboundCtrPct != null
+    ? values[0].outboundCtrPct : divideOrNull(outboundClicks === null ? null : outboundClicks * 100, impressions);
+  return { outboundClicks, outboundCtrPct };
+}
+
 function conditionalTotals(rows: AdDailyMetricRow[], totals: { cpaUsd: number | null; cpaKrw: number | null }) {
   const mixed = hasMixedMetaAttribution(rows);
   const purchaseCount = mixed ? null : sumComplete(rows.map(adPurchaseCount));
@@ -218,7 +229,7 @@ function conditionalTotals(rows: AdDailyMetricRow[], totals: { cpaUsd: number | 
       metricUnavailableReasons[`${field}Count`] = "MIXED_ATTRIBUTION";
     }
   }
-  return { ...conversionOverrides, purchaseCount, landingPageViews, shopClicks, metricUnavailableReasons,
+  return { ...aggregateOutboundMetrics(rows), ...conversionOverrides, purchaseCount, landingPageViews, shopClicks, metricUnavailableReasons,
     hasApiMetrics: rows.some((row) => row.source === "API"), attributionContexts: [...new Set(rows.map((row) => JSON.stringify([row.attributionSetting, row.actionReportTime, [...(row.attributionWindows ?? [])].sort()])))],
     attributionSettings: attributions, actionReportTimes: [...new Set(rows.map((row) => row.actionReportTime))],
     cpaUsd: purchaseCount === null ? null : totals.cpaUsd,

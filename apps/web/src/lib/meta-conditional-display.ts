@@ -1,4 +1,5 @@
 const fields: Record<string, string> = {
+  outboundClicks: "아웃바운드 클릭수", outboundCtrPct: "아웃바운드 CTR",
   purchaseCount: "구매", resultCount: "결과", landingPageViews: "랜딩 페이지 조회", shopClicks: "샵 클릭",
   addToCartCount: "장바구니", videoPlay3sCount: "영상 3초", videoPlay25Count: "영상 25%",
   videoPlay50Count: "영상 50%", videoPlay75Count: "영상 75%", videoPlay100Count: "영상 100%"

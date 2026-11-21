@@ -1,7 +1,7 @@
-import { META_REPORTING_FIELDS, metaReportingFields } from "../domain/meta-reporting-measurements";
+import { META_REPORTING_FIELDS, metaReportingFields, isReportingProfile, type ReportingProfile } from "../domain/meta-reporting-measurements";
 import { recordMetaPagination } from "./meta-failure-evidence";
 /** Raw MCP wire contract. This reader has no database, lifecycle or production activation path. */
-export type MetaMcpProfile = "PURCHASE_V1" | "REPORTING_V2";
+export type MetaMcpProfile = "PURCHASE_V1" | ReportingProfile;
 export type MetaMcpLevel = "ad" | "adset" | "campaign" | "ad_account";
 export type MetaMcpEnvelopeReader = (response: Response, maxBytes: number) => Promise<unknown>;
 type Json = Record<string, unknown>;
@@ -37,12 +37,15 @@ export const META_MCP_DAY_FIELDS: Readonly<Record<MetaMcpLevel, readonly string[
 for (const fields of Object.values(META_MCP_DAY_FIELDS)) Object.freeze(fields);
 export const META_MCP_PURCHASE_NAMES = Object.freeze(["omni_purchase","offsite_conversion_fb_pixel_purchase","omni_purchase_values","offsite_conversion_fb_pixel_purchase_values"]);
 export const META_MCP_PURCHASE_FIELDS = Object.freeze(Object.fromEntries(Object.entries(META_MCP_DAY_FIELDS).map(([level,fields])=>[level,Object.freeze([...fields,...META_MCP_PURCHASE_NAMES])])) as Record<MetaMcpLevel,readonly string[]>);
-export const META_MCP_REPORTING_FIELDS = Object.freeze(Object.fromEntries(
+const reportingFields = (profile: ReportingProfile) => Object.freeze(Object.fromEntries(
   Object.entries(META_MCP_PURCHASE_FIELDS).map(([level, fields]) => [level, Object.freeze([
-    ...fields, ...(["ad", "adset"].includes(level) ? metaReportingFields(level === "ad").map(key => META_REPORTING_FIELDS[key]) : [])
+    ...fields, ...(["ad", "adset"].includes(level) ? metaReportingFields(level === "ad", profile).map(key => META_REPORTING_FIELDS[key]) : [])
   ])])
 ) as Record<MetaMcpLevel, readonly string[]>);
+export const META_MCP_REPORTING_FIELDS = reportingFields("REPORTING_V2");
+const outboundReportingFields = reportingFields("REPORTING_V3");
 export function metaMcpFields(profile?: MetaMcpProfile) {
+  if (profile === "REPORTING_V3") return outboundReportingFields;
   return profile === "REPORTING_V2" ? META_MCP_REPORTING_FIELDS : profile === "PURCHASE_V1" ? META_MCP_PURCHASE_FIELDS : META_MCP_DAY_FIELDS;
 }
 const DROP = new Set(["next_actions", "_additional_context", "additional_info", "error", "errors", "token", "access_token", "authorization"]);
@@ -105,7 +108,7 @@ function row(raw: unknown, level: MetaMcpLevel, accountId: string, day: string, 
       if (!Object.hasOwn(raw,field)) fail("METRIC_INVALID");
       out[field]=value===null?null:field.endsWith("_values")?money(value):metric(value,true);
     } else if (Object.values(META_REPORTING_FIELDS).includes(field as typeof META_REPORTING_FIELDS[keyof typeof META_REPORTING_FIELDS])) {
-      out[field] = value == null ? null : metric(value, true);
+      out[field] = value == null ? null : metric(value, field !== "outbound_clicks_ctr");
     } else if (field === "amount_spent") out[field] = money(value);
     // Wire-only scalars retain explicit null; missing fields still fail.
     // Canonical normalization independently requires verified numeric values.
@@ -181,8 +184,8 @@ function catalog(catalog: unknown, reporting: unknown, clientId: string, profile
   for (const level of LEVELS) for (const name of metaMcpFields(profile)[level]) {
     const matches = fields.filter(f => object(f) && f.name === name);
     if (matches.length !== 1 || !object(matches[0]) || !Array.isArray(matches[0].levels) || !matches[0].levels.includes(level)) fail("CATALOG_INVALID");
-    if (profile === "REPORTING_V2" && Object.values(META_REPORTING_FIELDS).includes(name as typeof META_REPORTING_FIELDS[keyof typeof META_REPORTING_FIELDS]) &&
-        (matches[0].type !== "INTEGER" || matches[0].is_metric !== true)) fail("CATALOG_INVALID");
+    if (isReportingProfile(profile) && Object.values(META_REPORTING_FIELDS).includes(name as typeof META_REPORTING_FIELDS[keyof typeof META_REPORTING_FIELDS]) &&
+        (matches[0].type !== (name === "outbound_clicks_ctr" ? "FLOAT" : "INTEGER") || matches[0].is_metric !== true)) fail("CATALOG_INVALID");
   }
   if (!object(reporting) || reporting.server !== MCP || !object(reporting.reportingTool)) fail("SCHEMA_INVALID");
   const tool = reporting.reportingTool;
@@ -203,7 +206,7 @@ export class MetaMcpWireReader {
     try {
       const date = new Date(`${input.day}T00:00:00Z`);
       if (!/^\d{1,30}$(?![\s\S])/.test(input.accountId) || !/^\d{4}-\d{2}-\d{2}$(?![\s\S])/.test(input.day) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0,10) !== input.day || !/^[\x21-\x7e]{40,4096}$(?![\s\S])/.test(input.accessToken) || !Number.isFinite(input.deadlineAt) || input.deadlineAt <= Date.now() || input.deadlineAt > Date.now() + 600000) fail("INPUT_INVALID");
-      if(input.profile!==undefined&&input.profile!=="PURCHASE_V1"&&input.profile!=="REPORTING_V2")fail("INPUT_INVALID");
+      if(input.profile!==undefined&&input.profile!=="PURCHASE_V1"&&!isReportingProfile(input.profile))fail("INPUT_INVALID");
       const clientId = conversationId(input.clientConversationId); catalog(input.catalog, input.reporting, clientId,input.profile);
       if (input.allowUnverifiedIdentityCapture !== undefined && typeof input.allowUnverifiedIdentityCapture !== "boolean") fail("INPUT_INVALID");
       const levels = {} as Record<MetaMcpLevel, Json[]>, queries = {} as Record<MetaMcpLevel, Json>;

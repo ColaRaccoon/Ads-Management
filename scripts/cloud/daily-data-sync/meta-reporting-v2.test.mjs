@@ -5,6 +5,7 @@ import { metaMcpFields, validateMetaMcpCatalog } from '../../../apps/api/src/dai
 import { META_REPORTING_FIELDS, metaReportingFields } from '../../../apps/api/src/domain/meta-reporting-measurements.ts';
 import { createMetaMcpPurchaseResidualProof } from '../../../apps/api/src/daily-sync/meta-mcp-purchase.ts';
 import { normalizeMetaMcpPurchaseSnapshot } from '../../../apps/api/src/daily-sync/meta-mcp-ads.client.ts';
+import { aggregateOutboundMetrics } from '../../../apps/api/src/metrics/meta-ad-metric-aggregates.ts';
 import { validCurrentMetadata } from '../../../apps/api/src/domain/meta-current-metadata.ts';
 import { CanonicalApiWriterService } from '../../../apps/api/src/daily-sync/canonical-api-writer.service.ts';
 import { aggregateMetaVideoMetrics } from '../../../apps/api/src/domain/meta-video-metrics.ts';
@@ -15,15 +16,15 @@ function fixture(profile = 'REPORTING_V2') {
   const wire = metaPurchaseWire(); wire.profile = profile;
   for (const [level, rows] of Object.entries(wire.levels)) {
     wire.queries[level].fields = [...metaMcpFields(profile)[level]];
-    if (profile === 'REPORTING_V2' && ['ad', 'adset'].includes(level)) {
-      for (const row of rows) for (const field of metaReportingFields(level === 'ad')) row[META_REPORTING_FIELDS[field]] = '7';
+    if (profile.startsWith('REPORTING_') && ['ad', 'adset'].includes(level)) {
+      for (const row of rows) for (const field of metaReportingFields(level === 'ad', profile)) row[META_REPORTING_FIELDS[field]] = '7';
     }
     for (const row of rows) { row.amount_spent.value = '10'; row.impressions = '100'; row.reach = '80'; }
   }
   const catalog = metaPurchaseCatalog(wire);
   const allFields = [...new Set(Object.values(metaMcpFields(profile)).flat())];
   for (const name of allFields) if (!catalog.fields.some(f => f.name === name))
-    catalog.fields.push({ name, type: 'INTEGER', is_metric: true, levels: Object.keys(wire.levels).filter(level => metaMcpFields(profile)[level].includes(name)) });
+    catalog.fields.push({ name, type: name === 'outbound_clicks_ctr' ? 'FLOAT' : 'INTEGER', is_metric: true, levels: Object.keys(wire.levels).filter(level => metaMcpFields(profile)[level].includes(name)) });
   return { wire, catalog };
 }
 function normalize({ wire, catalog }) {
@@ -127,4 +128,25 @@ test('catalog validation requires advertised integer fields at the correct level
     const bad = structuredClone(catalog); mutation(bad.fields.find(f => f.name === 'video_p25_watched_actions'));
     assert.throws(() => validateMetaMcpCatalog(bad, reporting, wire.clientConversationId, 'REPORTING_V2'));
   }
+});
+
+test('outbound reporting preserves the independent source fields, missing values and weighted CTR', () => {
+  const input = fixture('REPORTING_V3');
+  function measured(count, rate, impressions) {
+    const raw = input.wire.levels.ad[0];
+    raw.outbound_clicks = count;
+    raw.outbound_clicks_ctr = rate;
+    const { currentMetadata } = normalize(input).ads[0];
+    assert.deepEqual(currentMetadata.sourceContext.reportingMeasurement.values.outboundClicks,
+      count === null ? null : Number(count));
+    return { source: 'API', currentMetadata, impressions: BigInt(impressions) };
+  }
+  const first = measured('3', '2.500000', 120);
+  const second = measured('0', '0.000000', 80);
+  assert.deepEqual(aggregateOutboundMetrics([first]), { outboundClicks: 3, outboundCtrPct: 2.5 });
+  assert.deepEqual(aggregateOutboundMetrics([first, second]), { outboundClicks: 3, outboundCtrPct: 1.5 });
+  const missing = measured(null, null, 30);
+  for (const incomplete of [missing, { ...first, currentMetadata: normalize(fixture()).ads[0].currentMetadata }])
+    assert.deepEqual(aggregateOutboundMetrics([incomplete, first]), { outboundClicks: null, outboundCtrPct: null });
+  assert.deepEqual(aggregateOutboundMetrics([{ ...second, impressions: 0n }]), { outboundClicks: 0, outboundCtrPct: null });
 });

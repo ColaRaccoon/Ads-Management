@@ -11,6 +11,8 @@ export type MetaAdsSortKey =
   | "providerPurchase"
   | "profit"
   | "cpa"
+  | "outboundClicks"
+  | "outboundCtrPct"
   | "ctr"
   | "cpm"
   | "reach"
@@ -29,6 +31,8 @@ export const META_ADS_SORT_KEYS: readonly MetaAdsSortKey[] = [
   "profit",
   "cpa",
   "ctr",
+  "outboundClicks",
+  "outboundCtrPct",
   "cpm",
   "reach",
   ...META_VIDEO_RATE_COLUMNS.map((column) => column.key)
@@ -66,6 +70,9 @@ function sortValue(row: MetaCreativePerformanceRow, key: MetaAdsSortKey) {
       return row.totals.marginKrw;
     case "cpa":
       return row.totals.cpaKrw;
+    case "outboundClicks":
+    case "outboundCtrPct":
+      return row.totals[key] ?? null;
     case "ctr":
       return row.totals.ctrLinkPct;
     case "cpm":

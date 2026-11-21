@@ -23,6 +23,8 @@ export type MetaCreativeMetricTotals = MetaVideoMetricTotals & {
   cpaUsd: number | null;
   cpaKrw: number | null;
   ctrLinkPct: number | null;
+  outboundClicks?: number | null;
+  outboundCtrPct?: number | null;
   cpmUsd: number | null;
   roas: number | null;
   revenueKrw: number | null;
@@ -51,8 +53,8 @@ export type MetaCurrentMetadata = {
   scope: "CURRENT_ACCESSIBLE_ASSETS"; currencyCode: "USD"; budgetUnit: "UNVERIFIED";
   campaign: MetaCurrentAsset; adset: MetaCurrentAsset; ad: MetaCurrentAsset | null;
   sourceContext?: { transport: "MCP"; protocolVersion: "2025-06-18";
-    reportingMeasurement?: { profile: "REPORTING_V2"; rawRowFingerprint: string;
-      values: Partial<Record<"landingPageViews" | "shopClicks" | "addToCartCount" | "videoPlay25Count" | "videoPlay50Count" | "videoPlay75Count" | "videoPlay100Count", number | null>> };
+    reportingMeasurement?: { profile: "REPORTING_V2" | "REPORTING_V3"; rawRowFingerprint: string;
+      values: Partial<Record<"outboundClicks" | "outboundCtrPct" | "landingPageViews" | "shopClicks" | "addToCartCount" | "videoPlay25Count" | "videoPlay50Count" | "videoPlay75Count" | "videoPlay100Count", number | null>> };
     actionReportTime: "MCP_PROVIDER_DEFAULT_UNVERIFIED"; budgetValueFormat: "PROVIDER_DECIMAL";
     measurementEvidence?:{policy:"REFERENCED_ADSETS_FROM_COMPLETE_WIRE";rawStatus:"COMPLETE_WIRE_UNVERIFIED_IDENTITY";rawIdentityVerified:false;
       captureSemanticFingerprint:string;selectionFingerprint:string;proofSemanticFingerprint:string|null;rawAdsetCount:number;selectedAdsetCount:number;excludedAdsetCount:number;

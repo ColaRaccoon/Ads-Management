@@ -5,6 +5,7 @@ import {
   DEFAULT_META_DAILY_REPORT_SETTINGS,
   META_DAILY_REPORT_SETTINGS_V1_KEY,
   META_DAILY_REPORT_SETTINGS_V2_KEY,
+  META_DAILY_REPORT_SETTINGS_V3_KEY,
   migrateMetaDailyReportSettingsV1,
   normalizeMetaDailyReportSettings
 } from "@/lib/meta-daily-settings";
@@ -51,13 +52,15 @@ export function useMetaDailyReportSettings() {
 function readDailyReportSettings(): DailyReportSettings {
   if (typeof window === "undefined") return DEFAULT_META_DAILY_REPORT_SETTINGS;
   try {
+    const v3 = window.localStorage.getItem(META_DAILY_REPORT_SETTINGS_V3_KEY);
+    if (v3) return normalizeMetaDailyReportSettings(JSON.parse(v3));
     const v2 = window.localStorage.getItem(META_DAILY_REPORT_SETTINGS_V2_KEY);
-    if (v2) return normalizeMetaDailyReportSettings(JSON.parse(v2));
     const v1 = window.localStorage.getItem(META_DAILY_REPORT_SETTINGS_V1_KEY);
-    if (!v1) return DEFAULT_META_DAILY_REPORT_SETTINGS;
-    const migrated = migrateMetaDailyReportSettingsV1(JSON.parse(v1));
-    window.localStorage.setItem(META_DAILY_REPORT_SETTINGS_V2_KEY, JSON.stringify(migrated));
-    return migrated;
+    if (!v2 && !v1) return DEFAULT_META_DAILY_REPORT_SETTINGS;
+    const previous = v2 ? normalizeMetaDailyReportSettings(JSON.parse(v2))
+      : migrateMetaDailyReportSettingsV1(JSON.parse(v1!));
+    return normalizeMetaDailyReportSettings({ ...previous,
+      visibleColumns: [...previous.visibleColumns, "outboundClicks", "outboundCtrPct"] });
   } catch {
     return DEFAULT_META_DAILY_REPORT_SETTINGS;
   }
@@ -65,5 +68,5 @@ function readDailyReportSettings(): DailyReportSettings {
 
 function writeDailyReportSettings(settings: DailyReportSettings) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(META_DAILY_REPORT_SETTINGS_V2_KEY, JSON.stringify(settings));
+  window.localStorage.setItem(META_DAILY_REPORT_SETTINGS_V3_KEY, JSON.stringify(settings));
 }

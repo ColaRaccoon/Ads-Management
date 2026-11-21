@@ -2,7 +2,7 @@ import { metaSpendWithinTolerance, metaSpendHierarchyEvidence } from "../domain/
 import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { stableMetadataJson, MetaMcpNullBasicProjection } from "../domain/meta-current-metadata";
-import { META_REPORTING_FIELDS, metaReportingFields } from "../domain/meta-reporting-measurements";
+import { META_REPORTING_FIELDS, metaReportingFields, isReportingProfile } from "../domain/meta-reporting-measurements";
 import { ProviderFailure } from "./bounded-request";
 import { metaReconciliationFailure, MetaReconciliationReason } from "./meta-failure-diagnostic";
 import { attachMetaCheck, MetaCheckEvidence, metaEntityFingerprint } from "./meta-failure-evidence";
@@ -12,9 +12,9 @@ type Json=Record<string,unknown>;
 const LEVELS:MetaMcpLevel[]=["ad","adset","campaign","ad_account"];
 function reject(reason:MetaReconciliationReason='CAPTURE_INVALID'):never{throw metaReconciliationFailure(reason);}
 function hasReportingActivity(wire: MetaMcpWireSnapshot, row: Json, isAd: boolean) {
- return wire.profile === "REPORTING_V2" && metaReportingFields(isAd).some(key => {
+ return isReportingProfile(wire.profile) && metaReportingFields(isAd, wire.profile).some(key => {
   const value = row[META_REPORTING_FIELDS[key]];
-  return value != null && value !== "0";
+  return value != null && Number(value) !== 0;
  });
 }
 const object=(v:unknown):v is Json=>!!v&&typeof v==="object"&&!Array.isArray(v);
@@ -31,7 +31,7 @@ export function validateMetaMcpCapture(value:unknown):MetaMcpWireSnapshot{
   !object(value.levels)||!object(value.queries)||!object(value.missingParentIds)||!Array.isArray(value.moneyUnits)||
   ["paginationComplete","datesVerified"].some(k=>value[k]!==true)||["currencyVerified","attributionVerified","metricsNormalized","productionReady"].some(k=>value[k]!==false))reject();
  parseIsoDate(value.day);
- if(value.profile!==undefined&&value.profile!=="PURCHASE_V1"&&value.profile!=="REPORTING_V2")reject();
+ if(value.profile!==undefined&&value.profile!=="PURCHASE_V1"&&!isReportingProfile(value.profile))reject();
  const fields=metaMcpFields(value.profile as MetaMcpProfile | undefined);
  if(Object.keys(value.levels).sort().join()!==[...LEVELS].sort().join()||Object.keys(value.queries).sort().join()!==[...LEVELS].sort().join())reject();
  const levels={} as Record<MetaMcpLevel,Json[]>;let count=0;
@@ -63,11 +63,11 @@ function nullBasicParentProjection(wire:MetaMcpWireSnapshot){
  const nullFields=["impressions","clicks","reach","frequency","link_click",...pairs.flat()];
  const parents=wire.levels.adset.filter(r=>money(r).isZero()&&nullFields.every(k=>r[k]===null)&&wire.levels.ad.some(a=>a.adset_id===r.id));
  if(!parents.length)return undefined;
- if(wire.profile!=="PURCHASE_V1"&&wire.profile!=="REPORTING_V2")stop("PROFILE_UNSUPPORTED");
+ if(wire.profile!=="PURCHASE_V1"&&!isReportingProfile(wire.profile))stop("PROFILE_UNSUPPORTED");
  const parentIds=new Set(parents.map(r=>r.id)),removed=wire.levels.ad.filter(r=>parentIds.has(r.adset_id));
  // A zero-spend row can still have attributed actions. Never discard those observations.
  for(const [rows,level,isAd]of [[parents,"adset",false],[removed,"ad",true]] as const)for(const row of rows){
-  const field=wire.profile==="REPORTING_V2"?metaReportingFields(isAd).map(key=>META_REPORTING_FIELDS[key]).find(field=>row[field]!=null&&row[field]!=="0"):undefined;
+  const field=isReportingProfile(wire.profile)?metaReportingFields(isAd, wire.profile).map(key=>META_REPORTING_FIELDS[key]).find(field=>row[field]!=null&&Number(row[field])!==0):undefined;
   if(field)stop("REPORTING_ACTIVITY",context(row,level,field));
  }
  const metrics=["impressions","clicks","link_click",...pairs.map(p=>p[0])];

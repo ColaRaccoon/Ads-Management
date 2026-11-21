@@ -15,6 +15,8 @@ export type MetaDailyReportSettings = {
 export const META_DAILY_REPORT_SETTINGS_V1_KEY = "meta-ads-performance:daily-report-settings:v1";
 export const META_DAILY_REPORT_SETTINGS_V2_KEY = "meta-ads-performance:daily-report-settings:v2";
 
+export const META_DAILY_REPORT_SETTINGS_V3_KEY = "meta-ads-performance:daily-report-settings:v3";
+
 export const DEFAULT_META_DAILY_REPORT_SETTINGS: MetaDailyReportSettings = {
   query: "",
   deliveryStatus: "active",

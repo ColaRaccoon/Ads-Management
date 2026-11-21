@@ -42,6 +42,10 @@ export function renderColumnValue(
         formatPercent(row.totals.ctrLinkPct),
         previous ? formatPercent(previous.totals.ctrLinkPct) : "-"
       );
+    case "outboundClicks":
+      return metric(numberFmt(row.totals.outboundClicks), numberFmt(previous?.totals.outboundClicks));
+    case "outboundCtrPct":
+      return metric(formatPercent(row.totals.outboundCtrPct), formatPercent(previous?.totals.outboundCtrPct));
     case "cpm":
       return metric(
         money(row.totals.cpmUsd, "USD"),

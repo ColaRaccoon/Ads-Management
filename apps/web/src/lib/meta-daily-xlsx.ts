@@ -244,10 +244,14 @@ function creativeColumnsFor(key: MetaDailyColumnKey): ExpandedCreativeColumn[] {
       return [metricColumn("CPA (원)", 15, (row) => cpaCell(row.totals))];
     case "ctr":
       return [metricColumn(
-        "CTR",
+        "링크 CTR",
         12,
         (row) => percentCell(percentToRatio(row.totals.ctrLinkPct))
       )];
+    case "outboundClicks":
+      return [metricColumn("아웃바운드 클릭수", 18, (row) => numberCell(row.totals.outboundClicks))];
+    case "outboundCtrPct":
+      return [metricColumn("아웃바운드 CTR", 18, (row) => percentCell(percentToRatio(row.totals.outboundCtrPct)))];
     case "cpm":
       return [metricColumn("CPM", 14, (row) => moneyCell(row.totals.cpmUsd, "Usd"))];
     case "reach":
