@@ -14,6 +14,8 @@ expected.add('auth/machine-sync.guard.js');
 const [baseline, compiled, profile] = process.argv.slice(2);
 if (profile !== undefined && profile !== 'reporting') throw Error('Unknown patch profile');
 if (profile === 'reporting') {
+  expected.add('daily-sync/cafe24-scheduled-chunk.js');
+  expected.add('daily-sync/meta-day-preload.js');
   // Bounded, admin-only option-shape diagnostics; no provider values or writes.
   expected.add('daily-sync/cafe24-order-preflight.client.js');
   // Separate product-name and concatenated option-value capacity; no formulas change.
