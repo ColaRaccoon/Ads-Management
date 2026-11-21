@@ -41,7 +41,8 @@ test("helper preserves original exception identity, safe code, retryability and 
  assert.throws(()=>withCafe24Diagnostic("CAFE24_FIELD_ITEM_SHAPE",()=>{throw original;}),e=>e===original&&e.retryable&&e.retryAfterMs===42&&e.diagnosticCode==="CAFE24_FIELD_ITEM_ID");
  const unrelated=new ProviderFailure("PROVIDER_UNAVAILABLE",true);assert.throws(()=>withCafe24Diagnostic("CAFE24_FIELD_ITEM_SHAPE",()=>{throw unrelated;}),e=>e===unrelated&&e.diagnosticCode===null);
 });
-for(const gate of ["APP_VERSION","SELLER_OPTIONS"] as const)test(`scheduled ${gate} stops before database and credential access`,async()=>{
+for(const gate of ["APP_VERSION","SELLER_OPTIONS"] as const)test(`scheduled ${gate} stops before database and credential access`,async t=>{
+ t.mock.timers.enable({apis:["Date"],now});
  setup();process.env.DAILY_SYNC_FEATURE_ENABLED="true";let reads=0;
  const client=new Cafe24OrdersClient({sourceConnection:{findUnique:async()=>{reads++;throw Error("UNEXPECTED");}}} as any,{accessToken:async()=>{reads++;throw Error("UNEXPECTED");}} as any);
  process.env.DAILY_SYNC_CAFE24_APP_API_VERSION=gate==="APP_VERSION"?"invalid":"2026-09-01";

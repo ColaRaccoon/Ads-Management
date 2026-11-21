@@ -11,7 +11,7 @@ const ITEM_FIELDS = ["order_item_code", "product_no", "product_name", "option_va
 export type Cafe24ChunkState = { version: 1; connectionId: string; day: string; startedAt: string;
   stage: "LIST_FIRST" | "ITEMS_FIRST" | "LIST_VERIFY" | "ITEMS_VERIFY" | "READY";
   count: number; pages: number; first: Record<string, unknown>[]; second: Record<string, unknown>[];
-  items: unknown[][]; cursor: number; verifiedItems: number };
+  items: unknown[][]; cursor: number; verifiedItems: number; restarted?: true };
 const project = (row: unknown, keys: string[]) => {
   const source = record(row);
   return Object.fromEntries(keys.filter((key) => source[key] !== undefined).map((key) => [key,
@@ -26,10 +26,23 @@ export async function cafe24Chunk(input: { connectionId: string; mallId: string;
   listing: (offset: number) => Promise<unknown[]>; items: (orderId: string) => Promise<unknown[]>;
   now?: () => number; wait?: (ms: number) => Promise<void> }) {
   const now = input.now ?? Date.now;
-  const state: Cafe24ChunkState = input.state ?? { version: 1, connectionId: input.connectionId, day: input.day,
-    startedAt: new Date(now()).toISOString(), stage: "LIST_FIRST", count: await input.count(),
-    pages: 0, first: [], second: [], items: [], cursor: 0, verifiedItems: 0 };
+  const freshState = async (): Promise<Cafe24ChunkState> => {
+    const startedAt = new Date(now()).toISOString();
+    const count = await input.count();
+    if (!Number.isInteger(count) || count < 0 || count > 8_000)
+      throw new ProviderFailure("RECONCILIATION_FAILED", false);
+    return { version: 1, connectionId: input.connectionId, day: input.day, startedAt, count,
+      stage: "LIST_FIRST", pages: 0, first: [], second: [], items: [], cursor: 0, verifiedItems: 0 };
+  };
+  const state = input.state ?? await freshState();
+  const restartVerification = async () => {
+    if (state.restarted) throw new ProviderFailure("RECONCILIATION_FAILED", false);
+    const next = await freshState();
+    next.restarted = true;
+    return { state: next, snapshot: null };
+  };
   if (state.version !== 1 || state.connectionId !== input.connectionId || state.day !== input.day ||
+      (state.restarted !== undefined && state.restarted !== true) ||
       !Number.isInteger(state.count) || state.count < 0 || state.count > 8_000 ||
       !["LIST_FIRST", "ITEMS_FIRST", "LIST_VERIFY", "ITEMS_VERIFY", "READY"].includes(state.stage) ||
       !Array.isArray(state.first) || !Array.isArray(state.second) || !Array.isArray(state.items) ||
@@ -79,20 +92,25 @@ export async function cafe24Chunk(input: { connectionId: string; mallId: string;
         product_name: "validation", option_value: "validation", quantity: "0", product_price: "0", order_status: "N00" }],
       { verifiedSellerDropdown: true, csvOptionEvidence: { mallId: input.mallId, shopKey: input.shopKey },
         paymentMethodCsvLabels: withCafe24Diagnostic("CAFE24_EVIDENCE_PAYMENT_MAP", () => cafe24PaymentMethodCsvMap()) })[0];
-      if (validated.providerUpdatedAt && validated.providerUpdatedAt > new Date(state.startedAt))
+      if (validated.providerUpdatedAt && validated.providerUpdatedAt > new Date(state.startedAt)) {
+        if (state.stage === "LIST_VERIFY" && validated.providerUpdatedAt.getTime() <= now())
+          return restartVerification();
         throw new ProviderFailure("FIELD_UNSUPPORTED", false, null, null, "CAFE24_PROVIDER_TIME_FUTURE");
+      }
       if (validated.orderStatus && !withCafe24Diagnostic("CAFE24_EVIDENCE_STATUS_SET", () => verifiedCafe24V1Statuses()).has(validated.orderStatus))
         throw new ProviderFailure("FIELD_UNSUPPORTED", false, null, null, "CAFE24_STATUS_APPROVAL_MISMATCH");
       seen.add(id); rows.push(row);
     }
     state.pages++;
+    if (state.stage === "LIST_VERIFY" && (rows.length > state.count ||
+        (page.length < CAFE24_PAGE_LIMIT && rows.length !== state.count))) return restartVerification();
     if (page.length < CAFE24_PAGE_LIMIT) {
       if (rows.length !== state.count) throw new ProviderFailure("RECONCILIATION_FAILED", false);
       if (state.stage === "LIST_VERIFY") {
-        if (await input.count() !== state.count) throw new ProviderFailure("RECONCILIATION_FAILED", false);
+        if (await input.count() !== state.count) return restartVerification();
         const first = new Map(state.first.map((row) => [identifier(row.order_id), signature(row)]));
         if (state.second.some((row) => first.get(identifier(row.order_id)) !== signature(row)))
-          throw new ProviderFailure("RECONCILIATION_FAILED", false);
+          return restartVerification();
       }
       state.stage = state.stage === "LIST_FIRST" ? "ITEMS_FIRST" : "ITEMS_VERIFY";
       state.cursor = 0;
@@ -110,7 +128,7 @@ export async function cafe24Chunk(input: { connectionId: string; mallId: string;
       else {
         const prior = normalize(row, state.items[state.cursor], new Map());
         const view = (lines: typeof current) => JSON.stringify([...lines].sort((a, b) => a.lineOrderNo.localeCompare(b.lineOrderNo)));
-        if (view(prior) !== view(current)) throw new ProviderFailure("RECONCILIATION_FAILED", false);
+        if (view(prior) !== view(current)) return restartVerification();
         state.verifiedItems++;
       }
       state.cursor++; reads++;

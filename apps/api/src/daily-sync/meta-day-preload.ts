@@ -32,13 +32,15 @@ export function decodeMetaDayPreload(rows:unknown){const r=(rows as any)?.[0];if
 export async function preloadMetaDay(tx:Prisma.TransactionClient,scope:{connectionId:string;metricDate:Date;ads:MetaApiAd[];adsets:MetaApiAdset[]}){
  const day=scope.metricDate.toISOString().slice(0,10),keyHash=(...p:string[])=>createHash('sha256').update(JSON.stringify(p.map(v=>v.trim()))).digest('hex');
  const arg={connectionId:scope.connectionId,day,adsets:[...new Set(scope.adsets.map(r=>r.adsetId))],campaigns:[...new Set(scope.adsets.map(r=>r.campaignId))],ads:[...new Set(scope.ads.map(r=>r.adId))],creativeKeys:[...new Set(scope.ads.map(r=>r.creative.creativeKey))],hashes:[...scope.ads.map(r=>keyHash(scope.connectionId,day,r.campaignId,r.adsetId,r.adId)),...scope.adsets.map(r=>keyHash(scope.connectionId,day,r.adsetId))]};
+ // The account/day input is constant. Keep its ID sets uncorrelated so
+ // PostgreSQL can build them once instead of expanding the JSON per table row.
  const filters:Record<string,string>={
  metaAdDailyMetric:`t.connection_id=s.id AND t.metric_date=s.metric_day`,
- metaAdset:`t.connection_id=s.id AND (t.external_adset_id IN(SELECT jsonb_array_elements_text(s.body->'adsets') UNION SELECT meta_adset_id FROM day_ads) OR t.id IN(SELECT meta_adset_ref_id FROM day_ads UNION SELECT meta_adset_id FROM day_adsets))`,
- metaCampaign:`t.connection_id=s.id AND (t.meta_campaign_id IN(SELECT jsonb_array_elements_text(s.body->'campaigns')) OR t.id IN(SELECT campaign_ref_id FROM selected_adsets))`,
- metaAd:`t.connection_id=s.id AND (t.ad_identity_key IN(SELECT jsonb_array_elements_text(s.body->'ads')) OR t.id IN(SELECT meta_ad_ref_id FROM day_ads))`,
- sourceRecordLink:`t.connection_id=s.id AND (t.canonical_key_hash IN(SELECT jsonb_array_elements_text(s.body->'hashes')) OR t.record_id IN(SELECT id FROM day_ads UNION SELECT id FROM day_adsets))`,
- creative:`t.platform='META' AND (t.creative_key IN(SELECT jsonb_array_elements_text(s.body->'creativeKeys')) OR t.id IN(SELECT creative_id FROM selected_ads))`,
+ metaAdset:`t.connection_id=s.id AND (t.external_adset_id IN(SELECT jsonb_array_elements_text(body->'adsets') FROM scope UNION SELECT meta_adset_id FROM day_ads) OR t.id IN(SELECT meta_adset_ref_id FROM day_ads UNION SELECT meta_adset_id FROM day_adsets))`,
+ metaCampaign:`t.connection_id=s.id AND (t.meta_campaign_id IN(SELECT jsonb_array_elements_text(body->'campaigns') FROM scope) OR t.id IN(SELECT campaign_ref_id FROM selected_adsets))`,
+ metaAd:`t.connection_id=s.id AND (t.ad_identity_key IN(SELECT jsonb_array_elements_text(body->'ads') FROM scope) OR t.id IN(SELECT meta_ad_ref_id FROM day_ads))`,
+ sourceRecordLink:`t.connection_id=s.id AND (t.canonical_key_hash IN(SELECT jsonb_array_elements_text(body->'hashes') FROM scope) OR t.record_id IN(SELECT id FROM day_ads UNION SELECT id FROM day_adsets))`,
+ creative:`t.platform='META' AND (t.creative_key IN(SELECT jsonb_array_elements_text(body->'creativeKeys') FROM scope) OR t.id IN(SELECT creative_id FROM selected_ads))`,
  creativeAlias:`t.creative_id IN(SELECT id FROM selected_creatives)`,creativePlacement:`t.connection_id=s.id AND t.creative_id IN(SELECT id FROM selected_creatives)`,
  adsetProductHistory:`t.meta_adset_id IN(SELECT id FROM selected_adsets)`,adsetStageHistory:`t.meta_adset_id IN(SELECT id FROM selected_adsets)`,
  productMatchRule:`t.is_active AND EXISTS(SELECT 1 FROM ${table('product')} p WHERE p.id=t.product_id AND p.is_active)`};
@@ -47,7 +49,7 @@ export async function preloadMetaDay(tx:Prisma.TransactionClient,scope:{connecti
  const sources:Record<string,string>={metaAdDailyMetric:'day_ads',metaAdsetDailyMetric:'day_adsets',metaAdset:'selected_adsets',metaAd:'selected_ads',creative:'selected_creatives'};
  for(const model of META_PRELOAD_MODELS)if(!sources[model]){sources[model]='pre_'+model;ctes.push(cte(sources[model],model,filters[model]));}
  const pairs=[...META_PRELOAD_MODELS.map(model=>`'${model}',(SELECT coalesce(jsonb_agg(${jsonRow(model)}),'[]'::jsonb) FROM ${sources[model]} t)`),`'${META_PRELOAD_HISTORY_MODEL}',(SELECT coalesce(jsonb_agg(${jsonRow('metaAdsetDailyMetric',META_PRELOAD_POINTER_FIELDS)}),'[]'::jsonb) FROM historical_adsets t)`];
- const sql=`WITH ${ctes.join(',')}, envelope AS(SELECT jsonb_build_object(${pairs.join(',')})::text payload) SELECT octet_length(payload)>${META_PRELOAD_MAX_BYTES} AS oversized,CASE WHEN octet_length(payload)<=${META_PRELOAD_MAX_BYTES} THEN payload ELSE NULL END AS payload FROM envelope`;
+ const sql=`WITH ${ctes.join(',')}, envelope AS MATERIALIZED (SELECT jsonb_build_object(${pairs.join(',')})::text payload) SELECT octet_length(payload)>${META_PRELOAD_MAX_BYTES} AS oversized,CASE WHEN octet_length(payload)<=${META_PRELOAD_MAX_BYTES} THEN payload ELSE NULL END AS payload FROM envelope`;
  const serialized=JSON.stringify(arg);if(Buffer.byteLength(serialized)>META_PRELOAD_MAX_BYTES)syncError('RUN_LIMIT_EXCEEDED');
  return decodeMetaDayPreload(await tx.$queryRawUnsafe(sql,serialized));
 }

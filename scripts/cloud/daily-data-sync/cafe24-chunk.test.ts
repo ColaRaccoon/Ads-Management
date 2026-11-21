@@ -33,6 +33,35 @@ test("complete zero day requires both listings and then succeeds with explicit z
   const result = await collect(0); assert.equal(result.last.snapshot.orders.length, 0);
   assert.equal(result.itemCalls, 0); assert.equal(result.calls, 4);
 });
+test("a changed order amount requires two fresh matching reads and survives a worker restart", async () => {
+  let state: Cafe24ChunkState | null = null;
+  let listReads = 0, itemReads = 0;
+  for (let step = 0; step < 9; step++) {
+    const result = await cafe24Chunk({ connectionId: "connection", mallId: "didadi0729", shopKey: "shop1",
+      day: "2026-10-11", state, deadlineAt: Date.now() + 55_000, count: async () => 1,
+      listing: async () => {
+        const row = order(0);
+        row.actual_order_amount.order_price_amount = ++listReads === 1 ? "100" : "110";
+        return [row];
+      },
+      items: async id => { itemReads++; return [item(id)]; } });
+    if (result.snapshot) {
+      assert.equal(result.snapshot.orders.length, 1);
+      assert.deepEqual(result.state.first[0].actual_order_amount,
+        { order_price_amount: "110", payment_amount: "100", shipping_fee: "0" });
+      assert.equal(listReads, 4);
+      assert.equal(itemReads, 3);
+      return;
+    }
+    if (listReads === 2 && result.state.stage === "LIST_FIRST") {
+      assert.deepEqual(result.state.items, []);
+      assert.deepEqual(result.state.first, []);
+      assert.equal(result.state.restarted, true);
+    }
+    state = JSON.parse(JSON.stringify(result.state));
+  }
+  assert.fail("stable replacement snapshot did not finish");
+});
 test("422 synthetic orders finish in 54 continuations rather than repeat entire day", async () => {
   const result = await collect(422); assert.equal(result.itemCalls, 844); assert.equal(result.calls, 54);
   assert.equal(result.last.snapshot.orders.length, 422);
