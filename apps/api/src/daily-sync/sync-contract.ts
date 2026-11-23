@@ -148,19 +148,20 @@ export function assertCafe24AuthorizationEnabled(env: NodeJS.ProcessEnv = proces
   assertCafe24TestReadEnabled(env);
 }
 
-/** Headerless Order GET follows the app setting, which read_order cannot inspect. */
+/** Headerless Order GET follows the confirmed app setting, which read_order cannot
+ * inspect. A known setting change revokes confirmation until reviewed again. */
 export function assertCafe24AppVersionEvidence(env: NodeJS.ProcessEnv = process.env,
   now = new Date()) {
   const version = env.DAILY_SYNC_CAFE24_APP_API_VERSION;
   const verifiedAt = env.DAILY_SYNC_CAFE24_APP_API_VERSION_VERIFIED_AT;
+  const reviewRequired = env.DAILY_SYNC_CAFE24_APP_API_VERSION_REVIEW_REQUIRED;
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul",
     year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
-  const oldest = new Date(`${today}T00:00:00.000Z`);
-  oldest.setUTCDate(oldest.getUTCDate() - 30);
-  if (version !== "2026-09-01" || !verifiedAt || !/^\d{4}-\d{2}-\d{2}$/.test(verifiedAt) ||
+  if ((reviewRequired !== undefined && reviewRequired !== "false") ||
+      version !== "2026-09-01" || !verifiedAt || !/^\d{4}-\d{2}-\d{2}$/.test(verifiedAt) ||
       Number.isNaN(Date.parse(`${verifiedAt}T00:00:00.000Z`)) ||
       new Date(`${verifiedAt}T00:00:00.000Z`).toISOString().slice(0, 10) !== verifiedAt ||
-      verifiedAt > today || verifiedAt < oldest.toISOString().slice(0, 10))
+      verifiedAt > today)
     syncError("PROVIDER_VERSION_UNVERIFIED");
 }
 

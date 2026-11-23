@@ -43,8 +43,8 @@ test("missing, revoked, invalid or future confirmations never become approved", 
   assert.throws(() => assertCafe24OptionProjectionDayEvidence("2027-11-01", confirmed(), now), unsupported);
 });
 
-test("other provider-version and all-items review lifetimes keep their existing rules", () => {
-  assert.throws(() => assertCafe24AppVersionEvidence({
+test("confirmed app versions remain valid while all-items review keeps its lifetime", () => {
+  assert.doesNotThrow(() => assertCafe24AppVersionEvidence({
     DAILY_SYNC_CAFE24_APP_API_VERSION: "2026-09-01",
     DAILY_SYNC_CAFE24_APP_API_VERSION_VERIFIED_AT: "2026-10-01"
   }, now));

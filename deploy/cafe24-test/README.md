@@ -6,8 +6,9 @@ Cafe24 공식 [버전 가이드](https://apidocs.cafe24.com/en/docs/guide/versio
 
 - `DAILY_SYNC_CAFE24_APP_API_VERSION=2026-09-01`
 - `DAILY_SYNC_CAFE24_APP_API_VERSION_VERIFIED_AT=YYYY-MM-DD` (확인한 한국 날짜)
+- `DAILY_SYNC_CAFE24_APP_API_VERSION_REVIEW_REQUIRED=false` (설정 변경을 알게 되면 `true`로 전환하고 재확인 후 `false`로 해제)
 
-코드는 버전이 `2026-09-01`과 정확히 일치하고 확인일이 미래가 아니며 최근 30일 이내일 때만 canonical snapshot·발행을 허용한다. OAuth, 비발행 진단·probe·상태 건수·일별 summary는 이 관문 없이 조사할 수 있다. 앱 설정이 바뀌거나 30일이 지나면 버전 계약과 필드 의미를 재검토하고 코드·확인일을 갱신해야 한다. 환경 변수는 수동 확인의 기록일 뿐, 앱 설정의 이후 변경을 자동 감지하지 못한다.
+코드는 버전이 `2026-09-01`과 정확히 일치하고 확인일이 유효한 과거 또는 오늘 날짜이며 재검토가 요구되지 않을 때 canonical snapshot·발행을 허용한다. 확인 기록은 설정 변경이 확인될 때까지 유지한다. 2026-11-24부터 30일 경과만으로 수집을 중단하던 조건을 제거했다. 설정이 바뀌면 `DAILY_SYNC_CAFE24_APP_API_VERSION_REVIEW_REQUIRED=true`로 차단하고 버전 계약과 필드 의미를 재검토한다. 재확인한 날짜와 버전을 기록한 뒤 해당 값을 `false`로 해제한다. 환경 변수는 수동 확인의 기록이며, 앱 설정의 이후 변경을 자동 감지하지 못한다. OAuth, 비발행 진단·probe·상태 건수·일별 summary는 이 관문 없이 조사할 수 있다.
 
 API 원본 응답·주문 식별자·개인정보·토큰을 이 문서나 로그에 기록하지 않는다.
 
